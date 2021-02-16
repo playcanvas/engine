@@ -22,7 +22,7 @@ import { Mesh } from './mesh.js';
  * @function
  * @name calculateNormals
  * @description Generates normal information from the specified positions and
- * triangle indices. See {@link pc.createMesh}.
+ * triangle indices. See {@link createMesh}.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
@@ -100,7 +100,7 @@ function calculateNormals(positions, indices) {
  * @function
  * @name calculateTangents
  * @description Generates tangent information from the specified positions,
- * normals, texture coordinates and triangle indices. See {@link pc.createMesh}.
+ * normals, texture coordinates and triangle indices. See {@link createMesh}.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} normals - An array of 3-dimensional vertex normals.
  * @param {number[]} uvs - An array of 2-dimensional vertex texture coordinates.

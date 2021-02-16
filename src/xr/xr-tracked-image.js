@@ -5,8 +5,8 @@ import { Quat } from '../math/quat.js';
 /**
  * @class
  * @name XrTrackedImage
- * @classdesc The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
- * @description The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
+ * @classdesc The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
+ * @description The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
  * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image that is matching the real world image as closely as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
  * @param {number} width - Width (in meters) of image in real world. Providing this value as close to the real value will improve tracking quality.
  * @property {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image Image that is used for tracking.

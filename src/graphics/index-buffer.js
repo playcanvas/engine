@@ -6,11 +6,11 @@ import {
 /**
  * @class
  * @name IndexBuffer
- * @classdesc An index buffer stores index values into a {@link pc.VertexBuffer}.
+ * @classdesc An index buffer stores index values into a {@link VertexBuffer}.
  * Indexed graphical primitives can normally utilize less memory that unindexed
  * primitives (if vertices are shared).
  *
- * Typically, index buffers are set on {@link pc.Mesh} objects.
+ * Typically, index buffers are set on {@link Mesh} objects.
  * @description Creates a new index buffer.
  * @example
  * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
@@ -26,16 +26,16 @@ import {
  * @param {number} format - The type of each index to be stored in the index
  * buffer. Can be:
  *
- * * {@link pc.INDEXFORMAT_UINT8}
- * * {@link pc.INDEXFORMAT_UINT16}
- * * {@link pc.INDEXFORMAT_UINT32}
+ * * {@link INDEXFORMAT_UINT8}
+ * * {@link INDEXFORMAT_UINT16}
+ * * {@link INDEXFORMAT_UINT32}
  * @param {number} numIndices - The number of indices to be stored in the index
  * buffer.
  * @param {number} [usage] - The usage type of the vertex buffer. Can be:
  *
- * * {@link pc.BUFFER_DYNAMIC}
- * * {@link pc.BUFFER_STATIC}
- * * {@link pc.BUFFER_STREAM}
+ * * {@link BUFFER_DYNAMIC}
+ * * {@link BUFFER_STATIC}
+ * * {@link BUFFER_STREAM}
  *
  * Defaults to pc.BUFFER_STATIC.
  * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
@@ -113,9 +113,9 @@ class IndexBuffer {
      * @description Returns the data format of the specified index buffer.
      * @returns {number} The data format of the specified index buffer. Can be:
      *
-     * * {@link pc.INDEXFORMAT_UINT8}
-     * * {@link pc.INDEXFORMAT_UINT16}
-     * * {@link pc.INDEXFORMAT_UINT32}
+     * * {@link INDEXFORMAT_UINT8}
+     * * {@link INDEXFORMAT_UINT16}
+     * * {@link INDEXFORMAT_UINT32}
      */
     getFormat() {
         return this.format;

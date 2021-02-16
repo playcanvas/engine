@@ -13,7 +13,7 @@ const MAX_DISTANCE = 10000;
  * @class
  * @name SoundInstance3d
  * @augments SoundInstance
- * @classdesc A pc.SoundInstance3d plays a {@link pc.Sound} in 3D.
+ * @classdesc A pc.SoundInstance3d plays a {@link Sound} in 3D.
  * @param {pc.SoundManager} manager - The sound manager.
  * @param {pc.Sound} sound - The sound to play.
  * @param {object} options - Options for the instance.
@@ -26,11 +26,11 @@ const MAX_DISTANCE = 10000;
  * @param {pc.Vec3} [options.velocity=null] - The velocity of the sound.
  * @param {string} [options.distanceModel=pc.DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
  *
- * * {@link pc.DISTANCE_LINEAR}
- * * {@link pc.DISTANCE_INVERSE}
- * * {@link pc.DISTANCE_EXPONENTIAL}
+ * * {@link DISTANCE_LINEAR}
+ * * {@link DISTANCE_INVERSE}
+ * * {@link DISTANCE_EXPONENTIAL}
  *
- * Default is {@link pc.DISTANCE_LINEAR}.
+ * Default is {@link DISTANCE_LINEAR}.
  * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the sound source moves further from the listener.
  * @param {number} [options.maxDistance=10000] - The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
  * @param {number} [options.rollOffFactor=1] - The factor used in the falloff equation.
@@ -38,11 +38,11 @@ const MAX_DISTANCE = 10000;
  * @property {pc.Vec3} velocity The velocity of the sound.
  * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
  *
- * * {@link pc.DISTANCE_LINEAR}
- * * {@link pc.DISTANCE_INVERSE}
- * * {@link pc.DISTANCE_EXPONENTIAL}
+ * * {@link DISTANCE_LINEAR}
+ * * {@link DISTANCE_INVERSE}
+ * * {@link DISTANCE_EXPONENTIAL}
  *
- * Default is {@link pc.DISTANCE_LINEAR}.
+ * Default is {@link DISTANCE_LINEAR}.
  * @property {number} refDistance The reference distance for reducing volume as the sound source moves further from the listener.
  * @property {number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
  * @property {number} rollOffFactor The factor used in the falloff equation.

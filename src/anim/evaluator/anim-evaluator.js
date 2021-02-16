@@ -4,7 +4,7 @@
  * @name AnimEvaluator
  * @classdesc AnimEvaluator blends multiple sets of animation clips together.
  * @description Create a new animation evaluator.
- * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
+ * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
  * @property {pc.AnimClip[]} clips - the list of animation clips
  */
 class AnimEvaluator {
@@ -250,8 +250,8 @@ class AnimEvaluator {
      * @private
      * @function
      * @name AnimEvaluator#update
-     * @description Evaluator frame update function. All the attached {@link pc.AnimClip}s are evaluated,
-     * blended and the results set on the {@link pc.AnimTarget}.
+     * @description Evaluator frame update function. All the attached {@link AnimClip}s are evaluated,
+     * blended and the results set on the {@link AnimTarget}.
      * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
      */
     update(deltaTime) {

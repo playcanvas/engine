@@ -2328,13 +2328,13 @@ class GraphicsDevice extends EventHandler {
      * @description Submits a graphical primitive to the hardware for immediate rendering.
      * @param {object} primitive - Primitive object describing how to submit current vertex/index buffers defined as follows:
      * @param {number} primitive.type - The type of primitive to render. Can be:
-     * * {@link pc.PRIMITIVE_POINTS}
-     * * {@link pc.PRIMITIVE_LINES}
-     * * {@link pc.PRIMITIVE_LINELOOP}
-     * * {@link pc.PRIMITIVE_LINESTRIP}
-     * * {@link pc.PRIMITIVE_TRIANGLES}
-     * * {@link pc.PRIMITIVE_TRISTRIP}
-     * * {@link pc.PRIMITIVE_TRIFAN}
+     * * {@link PRIMITIVE_POINTS}
+     * * {@link PRIMITIVE_LINES}
+     * * {@link PRIMITIVE_LINELOOP}
+     * * {@link PRIMITIVE_LINESTRIP}
+     * * {@link PRIMITIVE_TRIANGLES}
+     * * {@link PRIMITIVE_TRISTRIP}
+     * * {@link PRIMITIVE_TRIFAN}
      * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the draw call.
      * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
@@ -2640,14 +2640,14 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setDepthFunc
      * @description Configures the depth test.
      * @param {number} func - A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
-     * * {@link pc.FUNC_NEVER}: don't draw
-     * * {@link pc.FUNC_LESS}: draw if new depth < depth buffer
-     * * {@link pc.FUNC_EQUAL}: draw if new depth == depth buffer
-     * * {@link pc.FUNC_LESSEQUAL}: draw if new depth <= depth buffer
-     * * {@link pc.FUNC_GREATER}: draw if new depth > depth buffer
-     * * {@link pc.FUNC_NOTEQUAL}: draw if new depth != depth buffer
-     * * {@link pc.FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
-     * * {@link pc.FUNC_ALWAYS}: always draw
+     * * {@link FUNC_NEVER}: don't draw
+     * * {@link FUNC_LESS}: draw if new depth < depth buffer
+     * * {@link FUNC_EQUAL}: draw if new depth == depth buffer
+     * * {@link FUNC_LESSEQUAL}: draw if new depth <= depth buffer
+     * * {@link FUNC_GREATER}: draw if new depth > depth buffer
+     * * {@link FUNC_NOTEQUAL}: draw if new depth != depth buffer
+     * * {@link FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
+     * * {@link FUNC_ALWAYS}: always draw
      */
     setDepthFunc(func) {
         if (this.depthFunc === func) return;
@@ -2845,14 +2845,14 @@ class GraphicsDevice extends EventHandler {
      * @description Configures stencil test for both front and back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
      * reference value, and mask value. Can be:
-     * * {@link pc.FUNC_NEVER}: never pass
-     * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link pc.FUNC_ALWAYS}: always pass
+     * * {@link FUNC_NEVER}: never pass
+     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * * {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2873,14 +2873,14 @@ class GraphicsDevice extends EventHandler {
      * @description Configures stencil test for front faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
-     * * {@link pc.FUNC_NEVER}: never pass
-     * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link pc.FUNC_ALWAYS}: always pass
+     * * {@link FUNC_NEVER}: never pass
+     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * * {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2900,14 +2900,14 @@ class GraphicsDevice extends EventHandler {
      * @description Configures stencil test for back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
-     * * {@link pc.FUNC_NEVER}: never pass
-     * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link pc.FUNC_ALWAYS}: always pass
+     * * {@link FUNC_NEVER}: never pass
+     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * * {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2930,14 +2930,14 @@ class GraphicsDevice extends EventHandler {
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link pc.STENCILOP_ZERO}: set value to zero
-     * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
-     * * {@link pc.STENCILOP_INCREMENT}: increment the value
-     * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link pc.STENCILOP_DECREMENT}: decrement the value
-     * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * * {@link STENCILOP_ZERO}: set value to zero
+     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * * {@link STENCILOP_INCREMENT}: increment the value
+     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * * {@link STENCILOP_DECREMENT}: decrement the value
+     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * * {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperation(fail, zfail, zpass, writeMask) {
@@ -2964,14 +2964,14 @@ class GraphicsDevice extends EventHandler {
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link pc.STENCILOP_ZERO}: set value to zero
-     * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
-     * * {@link pc.STENCILOP_INCREMENT}: increment the value
-     * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link pc.STENCILOP_DECREMENT}: decrement the value
-     * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * * {@link STENCILOP_ZERO}: set value to zero
+     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * * {@link STENCILOP_INCREMENT}: increment the value
+     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * * {@link STENCILOP_DECREMENT}: decrement the value
+     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * * {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
@@ -2996,14 +2996,14 @@ class GraphicsDevice extends EventHandler {
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link pc.STENCILOP_ZERO}: set value to zero
-     * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
-     * * {@link pc.STENCILOP_INCREMENT}: increment the value
-     * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link pc.STENCILOP_DECREMENT}: decrement the value
-     * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * * {@link STENCILOP_ZERO}: set value to zero
+     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * * {@link STENCILOP_INCREMENT}: increment the value
+     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * * {@link STENCILOP_DECREMENT}: decrement the value
+     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * * {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
@@ -3024,17 +3024,17 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setBlendFunction
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
-     * * {@link pc.BLENDMODE_ZERO}
-     * * {@link pc.BLENDMODE_ONE}
-     * * {@link pc.BLENDMODE_SRC_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * * {@link pc.BLENDMODE_DST_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
-     * * {@link pc.BLENDMODE_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_DST_ALPHA}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * * {@link BLENDMODE_ZERO}
+     * * {@link BLENDMODE_ONE}
+     * * {@link BLENDMODE_SRC_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
+     * * {@link BLENDMODE_DST_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_DST_COLOR}
+     * * {@link BLENDMODE_SRC_ALPHA}
+     * * {@link BLENDMODE_SRC_ALPHA_SATURATE}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
+     * * {@link BLENDMODE_DST_ALPHA}
+     * * {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
      */
@@ -3052,17 +3052,17 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setBlendFunctionSeparate
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
-     * * {@link pc.BLENDMODE_ZERO}
-     * * {@link pc.BLENDMODE_ONE}
-     * * {@link pc.BLENDMODE_SRC_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * * {@link pc.BLENDMODE_DST_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
-     * * {@link pc.BLENDMODE_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_DST_ALPHA}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * * {@link BLENDMODE_ZERO}
+     * * {@link BLENDMODE_ONE}
+     * * {@link BLENDMODE_SRC_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
+     * * {@link BLENDMODE_DST_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_DST_COLOR}
+     * * {@link BLENDMODE_SRC_ALPHA}
+     * * {@link BLENDMODE_SRC_ALPHA_SATURATE}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
+     * * {@link BLENDMODE_DST_ALPHA}
+     * * {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
      * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
@@ -3086,11 +3086,11 @@ class GraphicsDevice extends EventHandler {
      * @description Configures the blending equation. The default blend equation is
      * pc.BLENDEQUATION_ADD.
      * @param {number} blendEquation - The blend equation. Can be:
-     * * {@link pc.BLENDEQUATION_ADD}
-     * * {@link pc.BLENDEQUATION_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_MIN}
-     * * {@link pc.BLENDEQUATION_MAX}
+     * * {@link BLENDEQUATION_ADD}
+     * * {@link BLENDEQUATION_SUBTRACT}
+     * * {@link BLENDEQUATION_REVERSE_SUBTRACT}
+     * * {@link BLENDEQUATION_MIN}
+     * * {@link BLENDEQUATION_MAX}
      *
      * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
      */
@@ -3108,11 +3108,11 @@ class GraphicsDevice extends EventHandler {
      * @description Configures the blending equation. The default blend equation is
      * pc.BLENDEQUATION_ADD.
      * @param {number} blendEquation - The blend equation. Can be:
-     * * {@link pc.BLENDEQUATION_ADD}
-     * * {@link pc.BLENDEQUATION_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_MIN}
-     * * {@link pc.BLENDEQUATION_MAX}
+     * * {@link BLENDEQUATION_ADD}
+     * * {@link BLENDEQUATION_SUBTRACT}
+     * * {@link BLENDEQUATION_REVERSE_SUBTRACT}
+     * * {@link BLENDEQUATION_MIN}
+     * * {@link BLENDEQUATION_MAX}
      *
      * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
      * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel. Accepts same values as blendEquation.
@@ -3132,10 +3132,10 @@ class GraphicsDevice extends EventHandler {
      * @description Controls how triangles are culled based on their face direction.
      * The default cull mode is pc.CULLFACE_BACK.
      * @param {number} cullMode - The cull mode to set. Can be:
-     * * {@link pc.CULLFACE_NONE}
-     * * {@link pc.CULLFACE_BACK}
-     * * {@link pc.CULLFACE_FRONT}
-     * * {@link pc.CULLFACE_FRONTANDBACK}
+     * * {@link CULLFACE_NONE}
+     * * {@link CULLFACE_BACK}
+     * * {@link CULLFACE_FRONT}
+     * * {@link CULLFACE_FRONTANDBACK}
      */
     setCullMode(cullMode) {
         if (this.cullMode !== cullMode) {
@@ -3177,7 +3177,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setVertexBuffer
      * @description Sets the current vertex buffer on the graphics device. On subsequent calls to
-     * {@link pc.GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
+     * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
      * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
      */
     setVertexBuffer(vertexBuffer) {
@@ -3474,7 +3474,7 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#resizeCanvas
      * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
      * Note that the specified width and height values will be multiplied by the value of
-     * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
+     * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
      * the canvas.
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.

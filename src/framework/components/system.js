@@ -144,7 +144,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#addComponent
-     * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity.
+     * @description Create new {@link Component} and {@link ComponentData} instances and attach them to the entity.
      * @param {pc.Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
      * @returns {pc.Component} Returns a Component of type defined by the component system.
@@ -178,7 +178,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#removeComponent
-     * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}.
+     * @description Remove the {@link Component} from the entity and delete the associated {@link ComponentData}.
      * @param {pc.Entity} entity - The entity to remove the component from.
      * @example
      * app.systems.model.removeComponent(entity);
@@ -213,7 +213,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#initializeComponentData
-     * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
+     * @description Called during {@link ComponentSystem#addComponent} to initialize the {@link ComponentData} in the store
      * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely.
      * @param {pc.Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.

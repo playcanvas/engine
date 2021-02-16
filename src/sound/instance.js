@@ -18,7 +18,7 @@ function capTime(time, duration) {
  * @class
  * @name SoundInstance
  * @augments EventHandler
- * @classdesc A pc.SoundInstance plays a {@link pc.Sound}.
+ * @classdesc A pc.SoundInstance plays a {@link Sound}.
  * @param {pc.SoundManager} manager - The sound manager.
  * @param {pc.Sound} sound - The sound to play.
  * @param {object} options - Options for the instance.
@@ -534,7 +534,7 @@ if (hasAudioContext()) {
         /**
          * @function
          * @name SoundInstance#clearExternalNodes
-         * @description Clears any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
+         * @description Clears any external nodes set by {@link SoundInstance#setExternalNodes}.
          */
         clearExternalNodes: function () {
             const speakers = this._manager.context.destination;
@@ -558,8 +558,8 @@ if (hasAudioContext()) {
         /**
          * @function
          * @name SoundInstance#getExternalNodes
-         * @description Gets any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
-         * @returns {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
+         * @description Gets any external nodes set by {@link SoundInstance#setExternalNodes}.
+         * @returns {AudioNode[]} Returns an array that contains the two nodes set by {@link SoundInstance#setExternalNodes}.
          */
         getExternalNodes: function () {
             return [this._firstNode, this._lastNode];

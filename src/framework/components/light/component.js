@@ -73,10 +73,10 @@ var _lightPropsDefault = [];
  * to 45.
  * @property {number} falloffMode Controls the rate at which a light attenuates from
  * its position. Can be:
- * * {@link pc.LIGHTFALLOFF_LINEAR}: Linear.
- * * {@link pc.LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
+ * * {@link LIGHTFALLOFF_LINEAR}: Linear.
+ * * {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
  * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
- * @property {number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
+ * @property {number} mask Defines a mask to determine which {@link MeshInstance}s are
  * lit by this light. Defaults to 1.
  * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects
  * @property {boolean} affectLightmapped If enabled the light will affect lightmapped objects
@@ -86,18 +86,18 @@ var _lightPropsDefault = [];
  * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
  * The error is not always visible though, and highly scene-dependent.
  * @property {number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
- * * {@link pc.SHADOWUPDATE_NONE}: Don't render shadows.
- * * {@link pc.SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).
- * * {@link pc.SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
+ * * {@link SHADOWUPDATE_NONE}: Don't render shadows.
+ * * {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).
+ * * {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
  * @property {number} shadowType Type of shadows being rendered by this light. Options:
- * * {@link pc.SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
- * * {@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
- * * {@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
- * * {@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
- * * {@link pc.SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
+ * * {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
+ * * {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
+ * * {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
+ * * {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
+ * * {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps:
- * * {@link pc.BLUR_BOX}: Box filter.
- * * {@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
+ * * {@link BLUR_BOX}: Box filter.
+ * * {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
  * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
  * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
  * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
@@ -108,7 +108,7 @@ var _lightPropsDefault = [];
  * @property {pc.Vec2} cookieScale Spotlight cookie scale.
  * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
  * @property {boolean} isStatic Mark light as non-movable (optimization)
- * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
 class LightComponent extends Component {

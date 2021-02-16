@@ -39,7 +39,7 @@ class Animation {
     /**
      * @function
      * @name Animation#getNode
-     * @description Gets a {@link pc.Node} by name.
+     * @description Gets a {@link Node} by name.
      * @param {string} name - The name of the pc.Node.
      * @returns {pc.Node} The pc.Node with the specified name.
      */

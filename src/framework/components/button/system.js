@@ -26,7 +26,7 @@ const _schema = [
  * @class
  * @name ButtonComponentSystem
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link pc.ButtonComponent}s.
+ * @classdesc Manages creation of {@link ButtonComponent}s.
  * @description Create a new ButtonComponentSystem.
  * @param {pc.Application} app - The application.
  */

@@ -9,7 +9,7 @@ import { XrInputSource } from './xr-input-source.js';
  * @classdesc Provides access to input sources for WebXR.
  * @description Provides access to input sources for WebXR.
  * @param {pc.XrManager} manager - WebXR Manager.
- * @property {pc.XrInputSource[]} inputSources List of active {@link pc.XrInputSource}.
+ * @property {pc.XrInputSource[]} inputSources List of active {@link XrInputSource}.
  */
 class XrInput extends EventHandler {
     constructor(manager) {
@@ -32,7 +32,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#add
-     * @description Fired when new {@link pc.XrInputSource} is added to the list.
+     * @description Fired when new {@link XrInputSource} is added to the list.
      * @param {pc.XrInputSource} inputSource - Input source that has been added
      * @example
      * app.xr.input.on('add', function (inputSource) {
@@ -43,7 +43,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#remove
-     * @description Fired when {@link pc.XrInputSource} is removed to the list.
+     * @description Fired when {@link XrInputSource} is removed to the list.
      * @param {pc.XrInputSource} inputSource - Input source that has been removed
      * @example
      * app.xr.input.on('remove', function (inputSource) {
@@ -54,7 +54,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#select
-     * @description Fired when {@link pc.XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
+     * @description Fired when {@link XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
      * @param {pc.XrInputSource} inputSource - Input source that triggered select event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example

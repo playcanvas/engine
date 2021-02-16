@@ -25,10 +25,10 @@ import { VertexBuffer } from './vertex-buffer.js';
  * @param {pc.VertexBuffer} inputBuffer - The input vertex buffer.
  * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
  *
- * * {@link pc.BUFFER_STATIC}
- * * {@link pc.BUFFER_DYNAMIC}
- * * {@link pc.BUFFER_STREAM}
- * * {@link pc.BUFFER_GPUDYNAMIC}
+ * * {@link BUFFER_STATIC}
+ * * {@link BUFFER_DYNAMIC}
+ * * {@link BUFFER_STREAM}
+ * * {@link BUFFER_GPUDYNAMIC}
  *
  * Defaults to pc.BUFFER_GPUDYNAMIC (which is recommended for continuous update).
  * @example

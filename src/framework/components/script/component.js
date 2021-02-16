@@ -108,7 +108,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#create
      * @description Fired when a script instance is created and attached to component.
      * @param {string} name - The name of the Script Type.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been created.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
      * @example
      * entity.script.on('create', function (name, scriptInstance) {
      *     // new script instance added to component
@@ -119,7 +119,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#create:[name]
      * @description Fired when a script instance is created and attached to component.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been created.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
      * @example
      * entity.script.on('create:playerController', function (scriptInstance) {
      *     // new script instance 'playerController' is added to component
@@ -131,7 +131,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#destroy
      * @description Fired when a script instance is destroyed and removed from component.
      * @param {string} name - The name of the Script Type.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been destroyed.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy', function (name, scriptInstance) {
      *     // script instance has been destroyed and removed from component
@@ -142,7 +142,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#destroy:[name]
      * @description Fired when a script instance is destroyed and removed from component.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been destroyed.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy:playerController', function (scriptInstance) {
      *     // script instance 'playerController' has been destroyed and removed from component
@@ -154,7 +154,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#move
      * @description Fired when a script instance is moved in component.
      * @param {string} name - The name of the Script Type.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been moved.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
      * @param {number} ind - New position index.
      * @param {number} indOld - Old position index.
      * @example
@@ -167,7 +167,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#move:[name]
      * @description Fired when a script instance is moved in component.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been moved.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
      * @param {number} ind - New position index.
      * @param {number} indOld - Old position index.
      * @example
@@ -180,7 +180,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#error
      * @description Fired when a script instance had an exception.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that raised the exception.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that raised the exception.
      * @param {Error} err - Native JS Error object with details of an error.
      * @param {string} method - The method of the script instance that the exception originated from.
      * @example
@@ -499,7 +499,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#has
      * @description Detect if script is attached to an entity.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If script is attached to an entity.
      * @example
      * if (entity.script.has('playerController')) {
@@ -525,7 +525,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#get
      * @description Get a script instance (if attached).
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {pc.ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
      * @example
      * var controller = entity.script.get('playerController');
@@ -550,15 +550,15 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#create
      * @description Create a script instance and attach to an entity script component.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
      * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
      * @param {boolean} [args.preloading] - If script instance is created during preload. If true, script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to -1, which means append it at the end.
-     * @returns {pc.ScriptType} Returns an instance of a {@link pc.ScriptType} if successfully attached to an entity,
+     * @returns {pc.ScriptType} Returns an instance of a {@link ScriptType} if successfully attached to an entity,
      * or null if it failed because a script with a same name has already been added
-     * or if the {@link pc.ScriptType} cannot be found by name in the {@link pc.ScriptRegistry}.
+     * or if the {@link ScriptType} cannot be found by name in the {@link ScriptRegistry}.
      * @example
      * entity.script.create('playerController', {
      *     attributes: {
@@ -652,7 +652,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#destroy
      * @description Destroy the script instance that is attached to an entity.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
      * entity.script.destroy('playerController');
@@ -712,7 +712,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#swap
      * @description Swap the script instance.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully swapped.
      */
     /* eslint-enable jsdoc/no-undefined-types */
@@ -886,7 +886,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#move
      * @description Move script instance to different position to alter update order of scripts within entity.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.
      * @example

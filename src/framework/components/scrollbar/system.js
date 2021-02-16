@@ -16,7 +16,7 @@ const _schema = [
  * @class
  * @name ScrollbarComponentSystem
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
+ * @classdesc Manages creation of {@link ScrollbarComponent}s.
  * @description Create a new ScrollbarComponentSystem.
  * @param {pc.Application} app - The application.
  */

@@ -19,14 +19,14 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @class
  * @name RigidBodyComponent
  * @augments Component
- * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
+ * @classdesc The rigidbody component, when combined with a {@link CollisionComponent}, allows your
  * entities to be simulated using realistic physics.
  * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
  * can apply forces and impulses to rigid bodies.
  * @description Create a new RigidBodyComponent.
  * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component.
  * @param {pc.Entity} entity - The entity this component is attached to.
- * @property {number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
+ * @property {number} mass The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC}
  * bodies, other types have infinite mass. Defaults to 1.
  * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
  * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
@@ -52,9 +52,9 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * of 16 bits, the first 8 bits are reserved for engine use. Defaults to 65535.
  * @property {string} type The rigid body type determines how the body is simulated. Can be:
  *
- * * {@link pc.BODYTYPE_STATIC}: infinite mass and cannot move.
- * * {@link pc.BODYTYPE_DYNAMIC}: simulated according to applied forces.
- * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
+ * * {@link BODYTYPE_STATIC}: infinite mass and cannot move.
+ * * {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
+ * * {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
  * by setting their velocity or position.
  *
  * Defaults to pc.BODYTYPE_STATIC.
@@ -109,21 +109,21 @@ class RigidBodyComponent extends Component {
      * @event
      * @name RigidBodyComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this rigid body.
+     * @param {pc.Entity} other - The {@link Entity} that stopped touching this rigid body.
      */
 
     /**
      * @event
      * @name RigidBodyComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     * @param {pc.Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
      */
 
     /**
      * @event
      * @name RigidBodyComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     * @param {pc.Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
      */
 
     get linearVelocity() {
@@ -574,7 +574,7 @@ class RigidBodyComponent extends Component {
     /**
      * @function
      * @name RigidBodyComponent#isStatic
-     * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}.
+     * @description Returns true if the rigid body is of type {@link BODYTYPE_STATIC}.
      * @returns {boolean} True if static.
      */
     isStatic() {
@@ -584,7 +584,7 @@ class RigidBodyComponent extends Component {
     /**
      * @function
      * @name RigidBodyComponent#isStaticOrKinematic
-     * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}.
+     * @description Returns true if the rigid body is of type {@link BODYTYPE_STATIC} or {@link BODYTYPE_KINEMATIC}.
      * @returns {boolean} True if static or kinematic.
      */
     isStaticOrKinematic() {
@@ -594,7 +594,7 @@ class RigidBodyComponent extends Component {
     /**
      * @function
      * @name RigidBodyComponent#isKinematic
-     * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}.
+     * @description Returns true if the rigid body is of type {@link BODYTYPE_KINEMATIC}.
      * @returns {boolean} True if kinematic.
      */
     isKinematic() {
@@ -624,7 +624,7 @@ class RigidBodyComponent extends Component {
      * @function
      * @name RigidBodyComponent#syncEntityToBody
      * @description Set the rigid body transform to be the same as the Entity transform.
-     * This must be called after any Entity transformation functions (e.g. {@link pc.Entity#setPosition}) are called
+     * This must be called after any Entity transformation functions (e.g. {@link Entity#setPosition}) are called
      * in order to update the rigid body to match the Entity.
      */
     syncEntityToBody() {

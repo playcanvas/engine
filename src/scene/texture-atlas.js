@@ -5,7 +5,7 @@ import { EventHandler } from '../core/event-handler.js';
  * @name TextureAtlas
  * @augments EventHandler
  * @classdesc A pc.TextureAtlas contains a number of frames from a texture. Each frame
- * defines a region in a texture. The pc.TextureAtlas is referenced by {@link pc.Sprite}s.
+ * defines a region in a texture. The pc.TextureAtlas is referenced by {@link Sprite}s.
  * @property {pc.Texture} texture The texture atlas.
  * @property {object} frames Contains frames which define portions of the texture atlas.
  * @example

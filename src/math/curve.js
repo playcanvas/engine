@@ -14,13 +14,13 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @property {number} length The number of keys in the curve. [read only].
  * @property {number} type The curve interpolation scheme. Can be:
  *
- * * {@link pc.CURVE_LINEAR}
- * * {@link pc.CURVE_SMOOTHSTEP}
- * * {@link pc.CURVE_SPLINE}
- * * {@link pc.CURVE_STEP}
+ * * {@link CURVE_LINEAR}
+ * * {@link CURVE_SMOOTHSTEP}
+ * * {@link CURVE_SPLINE}
+ * * {@link CURVE_STEP}
  *
- * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
- * @property {number} tension Controls how {@link pc.CURVE_SPLINE} tangents are calculated.
+ * Defaults to {@link CURVE_SMOOTHSTEP}.
+ * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated.
  * Valid range is between 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
  * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
  *

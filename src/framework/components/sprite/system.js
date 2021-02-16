@@ -21,7 +21,7 @@ const _schema = ['enabled'];
  * @class
  * @name SpriteComponentSystem
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link pc.SpriteComponent}s.
+ * @classdesc Manages creation of {@link SpriteComponent}s.
  * @param {pc.Application} app - The application.
  */
 class SpriteComponentSystem extends ComponentSystem {

@@ -47,12 +47,12 @@ class Command {
 /**
  * @class
  * @name MeshInstance
- * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
+ * @classdesc An instance of a {@link Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
  * @param {pc.Mesh} mesh - The graphics mesh being instanced.
  * @param {pc.Material} material - The material used to render this instance.
- * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link pc.RenderComponent} and will use the node the component is attached to.
+ * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
  * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -61,18 +61,18 @@ class Command {
  * @property {pc.Material} material The material used by this mesh instance.
  * @property {number} renderStyle The render style of the mesh instance. Can be:
  *
- * * {@link pc.RENDERSTYLE_SOLID}
- * * {@link pc.RENDERSTYLE_WIREFRAME}
- * * {@link pc.RENDERSTYLE_POINTS}
+ * * {@link RENDERSTYLE_SOLID}
+ * * {@link RENDERSTYLE_WIREFRAME}
+ * * {@link RENDERSTYLE_POINTS}
  *
  * Defaults to pc.RENDERSTYLE_SOLID.
- * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
+ * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
  * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
- * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
+ * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
  * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
  * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
  * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
- * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
+ * @property {boolean} visibleThisFrame Read this value in {@link Layer#onPostCull} to determine if the object is actually going to be rendered.
  * @example
  * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
  * var mesh = pc.createBox(graphicsDevice);
@@ -442,7 +442,7 @@ class MeshInstance {
     /**
      * @name MeshInstance#mask
      * @type {number}
-     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
+     * @description Mask controlling which {@link LightComponent}s light this mesh instance, which {@link CameraComponent} sees it and in which {@link Layer} it is rendered.
      * Defaults to 1.
      */
     get mask() {
@@ -542,7 +542,7 @@ class MeshInstance {
     /**
      * @function
      * @name MeshInstance#setInstancing
-     * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
+     * @description Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
      * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
      * Pass null to turn off hardware instancing.
      */

@@ -62,7 +62,7 @@ class SceneRegistry {
     /**
      * @function
      * @name  pc.SceneRegistry#find
-     * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}.
+     * @description  Find a Scene by name and return the {@link SceneRegistryItem}.
      * @param  {string} name - The name of the scene.
      * @returns {pc.SceneRegistryItem} The stored data about a scene.
      */
@@ -77,7 +77,7 @@ class SceneRegistry {
     /**
      * @function
      * @name  pc.SceneRegistry#findByUrl
-     * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}.
+     * @description  Find a scene by the URL and return the {@link SceneRegistryItem}.
      * @param  {string} url - The URL to search by.
      * @returns {pc.SceneRegistryItem} The stored data about a scene.
      */
@@ -226,7 +226,7 @@ class SceneRegistry {
      * @param {string} url - The URL of the scene file.
      * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the
-     * {@link pc.Scene}.
+     * {@link Scene}.
      */
     loadScene(url, callback) {
         var self = this;

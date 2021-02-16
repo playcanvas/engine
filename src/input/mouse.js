@@ -71,7 +71,7 @@ class Mouse extends EventHandler {
      * @static
      * @function
      * @name Mouse.isPointerLocked
-     * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}.
+     * @description Check if the mouse pointer has been locked, using {@link Mouse#enabledPointerLock}.
      * @returns {boolean} True if locked.
      */
     static isPointerLocked() {
@@ -141,7 +141,7 @@ class Mouse extends EventHandler {
      * Allowing raw access to mouse movement input without risking the mouse exiting the element.
      * Notes:
      *
-     * * In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
+     * * In some browsers this will only work when the browser is running in fullscreen mode. See {@link Application#enableFullscreen}
      * * Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
      *
      * @param {pc.callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
@@ -214,9 +214,9 @@ class Mouse extends EventHandler {
      * @description Returns true if the mouse button is currently pressed.
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link pc.MOUSEBUTTON_LEFT}
-     * * {@link pc.MOUSEBUTTON_MIDDLE}
-     * * {@link pc.MOUSEBUTTON_RIGHT}
+     * * {@link MOUSEBUTTON_LEFT}
+     * * {@link MOUSEBUTTON_MIDDLE}
+     * * {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button is current pressed.
      */
@@ -230,9 +230,9 @@ class Mouse extends EventHandler {
      * @description Returns true if the mouse button was pressed this frame (since the last call to update).
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link pc.MOUSEBUTTON_LEFT}
-     * * {@link pc.MOUSEBUTTON_MIDDLE}
-     * * {@link pc.MOUSEBUTTON_RIGHT}
+     * * {@link MOUSEBUTTON_LEFT}
+     * * {@link MOUSEBUTTON_MIDDLE}
+     * * {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button was pressed since the last update.
      */
@@ -246,9 +246,9 @@ class Mouse extends EventHandler {
      * @description Returns true if the mouse button was released this frame (since the last call to update).
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link pc.MOUSEBUTTON_LEFT}
-     * * {@link pc.MOUSEBUTTON_MIDDLE}
-     * * {@link pc.MOUSEBUTTON_RIGHT}
+     * * {@link MOUSEBUTTON_LEFT}
+     * * {@link MOUSEBUTTON_MIDDLE}
+     * * {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button was released since the last update.
      */

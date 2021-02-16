@@ -115,7 +115,7 @@ var path = {
      * @function
      * @name path.getBasename
      * @description Return the basename of the path. That is the second element of the pair returned by
-     * passing path into {@link pc.path.split}.
+     * passing path into {@link path.split}.
      * @param {string} pathname - The path to process.
      * @returns {string} The basename.
      * @example

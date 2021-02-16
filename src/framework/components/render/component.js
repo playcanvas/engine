@@ -19,7 +19,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @class
  * @name RenderComponent
  * @augments Component
- * @classdesc Enables an Entity to render a {@link pc.Mesh} or a primitive shape. This component attaches {@link pc.MeshInstance} geometry to the Entity.
+ * @classdesc Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches {@link MeshInstance} geometry to the Entity.
  * @description Create a new RenderComponent.
  * @param {pc.RenderComponentSystem} system - The ComponentSystem that created this Component.
  * @param {pc.Entity} entity - The Entity that this Component is attached to.
@@ -33,7 +33,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * * "sphere": The component will render a sphere (radius 0.5)
  * @property {pc.Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
  * @property {pc.Asset[]|number[]} materialAssets The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
- * @property {pc.Material} material The material {@link pc.Material} that will be used to render the meshes (not used on renders of type 'asset').
+ * @property {pc.Material} material The material {@link Material} that will be used to render the meshes (not used on renders of type 'asset').
  * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on attached meshes.
  * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering lightmaps.
@@ -43,14 +43,14 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
  * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
- * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
- * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which the meshes should belong.
+ * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which the meshes should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  * @property {pc.Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
- * @property {number} renderStyle Set rendering of all {@link pc.MeshInstance}s to the specified render style. Can be one of the following:
- * * {@link pc.RENDERSTYLE_SOLID}
- * * {@link pc.RENDERSTYLE_WIREFRAME}
- * * {@link pc.RENDERSTYLE_POINTS}
+ * @property {number} renderStyle Set rendering of all {@link MeshInstance}s to the specified render style. Can be one of the following:
+ * * {@link RENDERSTYLE_SOLID}
+ * * {@link RENDERSTYLE_WIREFRAME}
+ * * {@link RENDERSTYLE_POINTS}
  */
 class RenderComponent extends Component {
     constructor(system, entity)   {
@@ -244,8 +244,8 @@ class RenderComponent extends Component {
      * @private
      * @function
      * @name RenderComponent#hide
-     * @description Stop rendering {@link pc.MeshInstance}s without removing them from the scene hierarchy.
-     * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance to false.
+     * @description Stop rendering {@link MeshInstance}s without removing them from the scene hierarchy.
+     * This method sets the {@link MeshInstance#visible} property of every MeshInstance to false.
      * Note, this does not remove the mesh instances from the scene hierarchy or draw call list.
      * So the render component still incurs some CPU overhead.
      */
@@ -261,8 +261,8 @@ class RenderComponent extends Component {
      * @private
      * @function
      * @name RenderComponent#show
-     * @description Enable rendering of the render {@link pc.MeshInstance}s if hidden using {@link pc.RenderComponent#hide}.
-     * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
+     * @description Enable rendering of the render {@link MeshInstance}s if hidden using {@link RenderComponent#hide}.
+     * This method sets all the {@link MeshInstance#visible} property on all mesh instances to true.
      */
     show() {
         if (this._meshInstances) {

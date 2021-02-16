@@ -175,14 +175,14 @@ var tempGraphNode = new GraphNode();
  * @description Create a new Application.
  * @param {Element} canvas - The canvas element.
  * @param {object} options
- * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link pc.ElementComponent}s.
+ * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
  * @param {pc.Keyboard} [options.keyboard] - Keyboard handler for input.
  * @param {pc.Mouse} [options.mouse] - Mouse handler for input.
  * @param {pc.TouchDevice} [options.touch] - TouchDevice handler for input.
  * @param {pc.GamePads} [options.gamepads] - Gamepad handler for input.
  * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
  * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
- * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link pc.GraphicsDevice} constructor.
+ * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
  * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
  * @example
  * // Engine-only example: create the application manually
@@ -256,24 +256,24 @@ var tempGraphNode = new GraphNode();
  * @description The application's component system registry. The pc.Application
  * constructor adds the following component systems to its component system registry:
  *
- * * animation ({@link pc.AnimationComponentSystem})
- * * audiolistener ({@link pc.AudioListenerComponentSystem})
- * * button ({@link pc.ButtonComponentSystem})
- * * camera ({@link pc.CameraComponentSystem})
- * * collision ({@link pc.CollisionComponentSystem})
- * * element ({@link pc.ElementComponentSystem})
- * * layoutchild ({@link pc.LayoutChildComponentSystem})
- * * layoutgroup ({@link pc.LayoutGroupComponentSystem})
- * * light ({@link pc.LightComponentSystem})
- * * model ({@link pc.ModelComponentSystem})
- * * particlesystem ({@link pc.ParticleSystemComponentSystem})
- * * rigidbody ({@link pc.RigidBodyComponentSystem})
- * * screen ({@link pc.ScreenComponentSystem})
- * * script ({@link pc.ScriptComponentSystem})
- * * scrollbar ({@link pc.ScrollbarComponentSystem})
- * * scrollview ({@link pc.ScrollViewComponentSystem})
- * * sound ({@link pc.SoundComponentSystem})
- * * sprite ({@link pc.SpriteComponentSystem})
+ * * animation ({@link AnimationComponentSystem})
+ * * audiolistener ({@link AudioListenerComponentSystem})
+ * * button ({@link ButtonComponentSystem})
+ * * camera ({@link CameraComponentSystem})
+ * * collision ({@link CollisionComponentSystem})
+ * * element ({@link ElementComponentSystem})
+ * * layoutchild ({@link LayoutChildComponentSystem})
+ * * layoutgroup ({@link LayoutGroupComponentSystem})
+ * * light ({@link LightComponentSystem})
+ * * model ({@link ModelComponentSystem})
+ * * particlesystem ({@link ParticleSystemComponentSystem})
+ * * rigidbody ({@link RigidBodyComponentSystem})
+ * * screen ({@link ScreenComponentSystem})
+ * * script ({@link ScriptComponentSystem})
+ * * scrollbar ({@link ScrollbarComponentSystem})
+ * * scrollview ({@link ScrollViewComponentSystem})
+ * * sound ({@link SoundComponentSystem})
+ * * sprite ({@link SpriteComponentSystem})
  * @example
  * // Set global gravity to zero
  * this.app.systems.rigidbody.gravity.set(0, 0, 0);
@@ -342,7 +342,7 @@ var tempGraphNode = new GraphNode();
 /**
  * @name Application#elementInput
  * @type {pc.ElementInput}
- * @description Used to handle input for {@link pc.ElementComponent}s.
+ * @description Used to handle input for {@link ElementComponent}s.
  */
 
 /**
@@ -378,7 +378,7 @@ var tempGraphNode = new GraphNode();
  * @name Application#renderNextFrame
  * @type {boolean}
  * @description Set to true to render the scene on the next iteration of the main loop.
- * This only has an effect if {@link pc.Application#autoRender} is set to false. The
+ * This only has an effect if {@link Application#autoRender} is set to false. The
  * value of renderNextFrame is set back to false again as soon as the scene has been
  * rendered.
  * @example
@@ -842,9 +842,9 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
      *
-     * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      */
     get fillMode() {
         return this._fillMode;
@@ -856,8 +856,8 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
      *
-     * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      */
     get resolutionMode() {
         return this._resolutionMode;
@@ -1349,7 +1349,7 @@ class Application extends EventHandler {
      * @function
      * @name Application#render
      * @description Render the application's scene. More specifically, the scene's
-     * {@link pc.LayerComposition} is rendered by the application's {@link pc.ForwardRenderer}.
+     * {@link LayerComposition} is rendered by the application's {@link ForwardRenderer}.
      * This function is called internally in the application's main loop and
      * does not need to be called explicitly.
      */
@@ -1463,9 +1463,9 @@ class Application extends EventHandler {
      * @description Controls how the canvas fills the window and resizes when the window changes.
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
-     * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      * @param {number} [width] - The width of the canvas (only used when mode is pc.FILLMODE_NONE).
      * @param {number} [height] - The height of the canvas (only used when mode is pc.FILLMODE_NONE).
      */
@@ -1480,8 +1480,8 @@ class Application extends EventHandler {
      * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
      * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
      */
@@ -1525,11 +1525,11 @@ class Application extends EventHandler {
      * @function
      * @name Application#resizeCanvas
      * @description Resize the application's canvas element in line with the current fill mode.
-     * In {@link pc.FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
-     * In {@link pc.FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
-     * In {@link pc.FILLMODE_NONE} mode, the canvas will always match the size provided.
-     * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
-     * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
+     * In {@link FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * In {@link FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
+     * In {@link FILLMODE_NONE} mode, the canvas will always match the size provided.
+     * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
+     * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @returns {object} A object containing the values calculated to use as width and height.
      */
     resizeCanvas(width, height) {
@@ -1597,25 +1597,25 @@ class Application extends EventHandler {
      * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
-     * * {@link pc.FOG_NONE}
-     * * {@link pc.FOG_LINEAR}
-     * * {@link pc.FOG_EXP}
-     * * {@link pc.FOG_EXP2}
+     * * {@link FOG_NONE}
+     * * {@link FOG_LINEAR}
+     * * {@link FOG_EXP}
+     * * {@link FOG_EXP2}
      * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
      * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
      * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
      * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
      *
-     * * {@link pc.GAMMA_NONE}
-     * * {@link pc.GAMMA_SRGB}
+     * * {@link GAMMA_NONE}
+     * * {@link GAMMA_SRGB}
      * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      *
-     * * {@link pc.TONEMAP_LINEAR}
-     * * {@link pc.TONEMAP_FILMIC}
-     * * {@link pc.TONEMAP_HEJL}
-     * * {@link pc.TONEMAP_ACES}
+     * * {@link TONEMAP_LINEAR}
+     * * {@link TONEMAP_FILMIC}
+     * * {@link TONEMAP_HEJL}
+     * * {@link TONEMAP_ACES}
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
@@ -1625,8 +1625,8 @@ class Application extends EventHandler {
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
      *
-     * * {@link pc.BAKE_COLOR}: single color lightmap
-     * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * * {@link BAKE_COLOR}: single color lightmap
+     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
      * @example
@@ -1749,7 +1749,7 @@ class Application extends EventHandler {
      * @deprecated
      * @function
      * @name Application#enableVr
-     * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
+     * @description Create and assign a {@link VrManager} object to allow this application render in VR.
      */
     enableVr() {
         if (!this.vr) {
@@ -1762,7 +1762,7 @@ class Application extends EventHandler {
      * @deprecated
      * @function
      * @name Application#disableVr
-     * @description Destroy the {@link pc.VrManager}.
+     * @description Destroy the {@link VrManager}.
      */
     disableVr() {
         if (this.vr) {
@@ -1875,14 +1875,14 @@ class Application extends EventHandler {
      * that color. If two colors are supplied, the line will be smooth shaded between
      * those colors. It is also possible to control which scene layer the line is
      * rendered into. By default, lines are rendered into the immediate layer
-     * {@link pc.LAYERID_IMMEDIATE}.
+     * {@link LAYERID_IMMEDIATE}.
      * @param {pc.Vec3} start - The start world-space coordinate of the line.
      * @param {pc.Vec3} end - The end world-space coordinate of the line.
      * @param {pc.Color} color - The start color of the line.
      * @param {pc.Color} [endColor] - The end color of the line.
      * @param {object} [options] - Options to set rendering properties.
      * @param {pc.Layer} [options.layer] - The layer to render the line into. Defaults
-     * to {@link pc.LAYERID_IMMEDIATE}.
+     * to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
      * var start = new pc.Vec3(0, 0, 0);

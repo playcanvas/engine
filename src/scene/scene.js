@@ -27,10 +27,10 @@ import { Mat4 } from '../math/mat4.js';
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
  *
- * * {@link pc.FOG_NONE}
- * * {@link pc.FOG_LINEAR}
- * * {@link pc.FOG_EXP}
- * * {@link pc.FOG_EXP2}
+ * * {@link FOG_NONE}
+ * * {@link FOG_LINEAR}
+ * * {@link FOG_EXP}
+ * * {@link FOG_EXP2}
  *
  * Defaults to pc.FOG_NONE.
  * @property {pc.Color} fogColor The color of the fog (if enabled). Defaults to black
@@ -45,17 +45,17 @@ import { Mat4 } from '../math/mat4.js';
  * @property {number} gammaCorrection The gamma correction to apply when rendering the
  * scene. Can be:
  *
- * * {@link pc.GAMMA_NONE}
- * * {@link pc.GAMMA_SRGB}
+ * * {@link GAMMA_NONE}
+ * * {@link GAMMA_SRGB}
  *
  * Defaults to pc.GAMMA_NONE.
  * @property {number} toneMapping The tonemapping transform to apply when writing
  * fragments to the frame buffer. Can be:
  *
- * * {@link pc.TONEMAP_LINEAR}
- * * {@link pc.TONEMAP_FILMIC}
- * * {@link pc.TONEMAP_HEJL}
- * * {@link pc.TONEMAP_ACES}
+ * * {@link TONEMAP_LINEAR}
+ * * {@link TONEMAP_FILMIC}
+ * * {@link TONEMAP_HEJL}
+ * * {@link TONEMAP_ACES}
  *
  * Defaults to pc.TONEMAP_LINEAR.
  * @property {number} exposure The exposure value tweaks the overall brightness of
@@ -68,7 +68,7 @@ import { Mat4 } from '../math/mat4.js';
  * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
  * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
- * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link pc.Quat.IDENTITY}.
+ * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
  * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
  * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
  * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
@@ -77,13 +77,13 @@ import { Mat4 } from '../math/mat4.js';
  * 2048.
  * @property {number} lightmapMode The lightmap baking mode. Can be:
  *
- * * {@link pc.BAKE_COLOR}: single color lightmap
- * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
+ * * {@link BAKE_COLOR}: single color lightmap
+ * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
  * bump/specular). Only lights with bakeDir=true will be used for generating the dominant
  * light direction.
  *
  * Defaults to pc.BAKE_COLORDIR.
- * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines
+ * @property {pc.LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
  * @property {pc.StandardMaterial} defaultMaterial The default material used in case no
  * other material is available.
@@ -550,15 +550,15 @@ class Scene extends EventHandler {
      * @event
      * @name Scene#set:skybox
      * @description Fired when the skybox is set.
-     * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+     * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
      */
 
     /**
      * @event
      * @name Scene#set:layers
      * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
-     * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
-     * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.
+     * @param {pc.LayerComposition} oldComp - Previously used {@link LayerComposition}.
+     * @param {pc.LayerComposition} newComp - Newly set {@link LayerComposition}.
      * @example
      * this.app.scene.on('set:layers', function (oldComp, newComp) {
      *     var list = newComp.layerList;

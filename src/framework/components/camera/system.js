@@ -13,7 +13,7 @@ const _schema = ['enabled'];
  * @class
  * @name CameraComponentSystem
  * @augments ComponentSystem
- * @classdesc Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
+ * @classdesc Used to add and remove {@link CameraComponent}s from Entities. It also holds an
  * array of all active cameras.
  * @description Create a new CameraComponentSystem.
  * @param {pc.Application} app - The Application.

@@ -128,7 +128,7 @@ class VrDisplay extends EventHandler {
      * @deprecated
      * @function
      * @name VrDisplay#poll
-     * @description Called once per frame to update the current status from the display. Usually called by {@link pc.VrManager}.
+     * @description Called once per frame to update the current status from the display. Usually called by {@link VrManager}.
      */
     poll() {
         if (this.display) {
@@ -230,7 +230,7 @@ class VrDisplay extends EventHandler {
      * @name VrDisplay#requestPresent
      * @description Try to present full screen VR content on this display.
      * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
-     * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#enterVr}.
+     * if presenting fails, or null if the call succeeds. Usually called by {@link CameraComponent#enterVr}.
      */
     requestPresent(callback) {
         if (!this.display) {
@@ -257,7 +257,7 @@ class VrDisplay extends EventHandler {
      * @name VrDisplay#exitPresent
      * @description Try to stop presenting VR content on this display.
      * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
-     * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.
+     * if presenting fails, or null if the call succeeds. Usually called by {@link CameraComponent#exitVr}.
      */
     exitPresent(callback) {
         if (!this.display) {
@@ -281,7 +281,7 @@ class VrDisplay extends EventHandler {
      * @deprecated
      * @function
      * @name VrDisplay#requestAnimationFrame
-     * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}.
+     * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link Application}.
      * @param {pc.callbacks.VrFrame} fn - Function called when it is time to update the frame.
      */
     requestAnimationFrame(fn) {
@@ -293,7 +293,7 @@ class VrDisplay extends EventHandler {
      * @deprecated
      * @function
      * @name VrDisplay#submitFrame
-     * @description Called when animation update is complete and the frame is ready to be sent to the display. Usually only called from inside {@link pc.Application}.
+     * @description Called when animation update is complete and the frame is ready to be sent to the display. Usually only called from inside {@link Application}.
      */
     submitFrame() {
         if (this.display) this.display.submitFrame();

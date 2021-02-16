@@ -461,7 +461,7 @@ export const DETAILMODE_ADD = 'add';
  * @constant
  * @name DETAILMODE_SCREEN
  * @type {string}
- * @description Softer version of {@link pc.DETAILMODE_ADD}.
+ * @description Softer version of {@link DETAILMODE_ADD}.
  */
 export const DETAILMODE_SCREEN = 'screen';
 /**
@@ -741,7 +741,7 @@ export const SORTMODE_NONE = 0;
  * @constant
  * @name SORTMODE_MANUAL
  * @type {number}
- * @description Mesh instances are sorted based on {@link pc.MeshInstance#drawOrder}.
+ * @description Mesh instances are sorted based on {@link MeshInstance#drawOrder}.
  */
 export const SORTMODE_MANUAL = 1;
 

@@ -233,7 +233,7 @@ class EntityReference extends EventHandler {
      * @function
      * @name EntityReference#onParentComponentEnable
      * @description Must be called from the parent component's onEnable() method in
-     * order for entity references to be correctly resolved when {@link pc.Entity#clone}
+     * order for entity references to be correctly resolved when {@link Entity#clone}
      * is called.
      */
     onParentComponentEnable() {

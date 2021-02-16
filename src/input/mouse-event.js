@@ -17,9 +17,9 @@ function isMousePointerLocked() {
  * @property {number} dy The change in y co-ordinate since the last mouse event.
  * @property {number} button The mouse button associated with this event. Can be:
  *
- * * {@link pc.MOUSEBUTTON_LEFT}
- * * {@link pc.MOUSEBUTTON_MIDDLE}
- * * {@link pc.MOUSEBUTTON_RIGHT}
+ * * {@link MOUSEBUTTON_LEFT}
+ * * {@link MOUSEBUTTON_MIDDLE}
+ * * {@link MOUSEBUTTON_RIGHT}
  *
  * @property {number} wheelDelta A value representing the amount the mouse wheel has moved, only
  * valid for {@link mousewheel} events.

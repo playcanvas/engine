@@ -7,10 +7,10 @@ import { Component } from '../component.js';
  * @class
  * @name CollisionComponent
  * @augments Component
- * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent}
+ * @classdesc A collision volume. Use this in conjunction with a {@link RigidBodyComponent}
  * to make a collision volume that can be simulated using the physics engine.
  *
- * If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision
+ * If the {@link Entity} does not have a {@link RigidBodyComponent} then this collision
  * volume will act as a trigger volume. When an entity with a dynamic or kinematic body enters
  * or leaves an entity with a trigger volume, both entities will receive trigger events.
  *
@@ -87,23 +87,23 @@ class CollisionComponent extends Component {
      * @event
      * @name CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
+     * @param {pc.Entity} other - The {@link Entity} that stopped touching this collision volume.
      */
 
     /**
      * @event
      * @name CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
+     * a {@link RigidBodyComponent} attached.
+     * @param {pc.Entity} other - The {@link Entity} that entered this collision volume.
      */
 
     /**
      * @event
      * @name CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.
+     * a {@link RigidBodyComponent} attached.
+     * @param {pc.Entity} other - The {@link Entity} that exited this collision volume.
      */
 
     onSetType(name, oldValue, newValue) {

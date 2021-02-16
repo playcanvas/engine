@@ -10,7 +10,7 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
  * @class
  * @name ScriptType
  * @augments EventHandler
- * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}.
+ * @classdesc Represents the type of a script. It is returned by {@link createScript}.
  * Also referred to as Script Type.
  *
  * The type is to be extended using its JavaScript prototype. There is a **list of methods**
@@ -29,20 +29,20 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
  * **update** and **postUpdate** - methods are called if defined for enabled (running state)
  * scripts on each tick.
  *
- * **swap** - This method will be called when a {@link pc.ScriptType} that already exists in
- * the registry gets redefined. If the new {@link pc.ScriptType} has a `swap` method in its
+ * **swap** - This method will be called when a {@link ScriptType} that already exists in
+ * the registry gets redefined. If the new {@link ScriptType} has a `swap` method in its
  * prototype, then it will be executed to perform hot-reload at runtime.
- * @property {pc.Application} app The {@link pc.Application} that the instance of this type
+ * @property {pc.Application} app The {@link Application} that the instance of this type
  * belongs to.
- * @property {pc.Entity} entity The {@link pc.Entity} that the instance of this type belongs to.
+ * @property {pc.Entity} entity The {@link Entity} that the instance of this type belongs to.
  * @property {boolean} enabled True if the instance of this type is in running state. False
  * when script is not running, because the Entity or any of its parents are disabled or the
  * Script Component is disabled or the Script Instance is disabled. When disabled no update
  * methods will be called on each tick. initialize and postInitialize methods will run once
  * when the script instance is in `enabled` state during app tick.
  * @param {object} args - The input arguments object
- * @param {pc.Application} args.app - The {@link pc.Application} that is running the script
- * @param {pc.Entity} args.entity - The {@link pc.Entity} that the script is attached to
+ * @param {pc.Application} args.app - The {@link Application} that is running the script
+ * @param {pc.Entity} args.entity - The {@link Entity} that the script is attached to
  *
  */
 class ScriptType extends EventHandler {
@@ -108,7 +108,7 @@ class ScriptType extends EventHandler {
      * @readonly
      * @name ScriptType.attributes
      * @type {pc.ScriptAttributes}
-     * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
+     * @description The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *

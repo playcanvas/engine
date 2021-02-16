@@ -487,8 +487,8 @@ class Lightmapper {
      * lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
-     * * {@link pc.BAKE_COLOR}: single color lightmap
-     * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * * {@link BAKE_COLOR}: single color lightmap
+     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.

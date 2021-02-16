@@ -1,9 +1,9 @@
 /**
  * @private
  * @callback pc.AnimSetter
- * @description Callback function that the {@link pc.AnimEvaluator} uses to set final animation values.
- * These callbacks are stored in {@link pc.AnimTarget} instances which are constructed by an
- * {@link pc.AnimBinder}.
+ * @description Callback function that the {@link AnimEvaluator} uses to set final animation values.
+ * These callbacks are stored in {@link AnimTarget} instances which are constructed by an
+ * {@link AnimBinder}.
  * @param {number[]} value - updated animation value.
  */
 
@@ -11,9 +11,9 @@
  * @private
  * @class
  * @name AnimTarget
- * @classdesc Stores the information required by {@link pc.AnimEvaluator} for updating a target value.
+ * @classdesc Stores the information required by {@link AnimEvaluator} for updating a target value.
  * @param {pc.AnimSetter} func - this function will be called when a new animation value is output by
- * the {@link pc.AnimEvaluator}.
+ * the {@link AnimEvaluator}.
  * @param {'vector'|'quaternion'} type - the type of animation data this target expects.
  * @param {number} components - the number of components on this target (this should ideally match the number
  * of components found on all attached animation curves).

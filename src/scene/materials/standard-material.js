@@ -67,13 +67,13 @@ class Chunks {
  * @property {pc.Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
  * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {string} diffuseDetailMode Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
- * * {@link pc.DETAILMODE_MUL}: Multiply together the primary and secondary colors.
- * * {@link pc.DETAILMODE_ADD}: Add together the primary and secondary colors.
- * * {@link pc.DETAILMODE_SCREEN}: Softer version of {@link pc.DETAILMODE_ADD}.
- * * {@link pc.DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
- * * {@link pc.DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
- * * {@link pc.DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
- * Defaults to {@link pc.DETAILMODE_MUL}.
+ * * {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+ * * {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
+ * * {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
+ * * {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+ * * {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
+ * * {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
+ * Defaults to {@link DETAILMODE_MUL}.
  *
  * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
  * where each component is between 0 and 1.
@@ -87,8 +87,8 @@ class Chunks {
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  *
- * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link pc.StandardMaterial#anisotropy}  parameter to set material anisotropy.
- * @property {number} anisotropy Defines amount of anisotropy. Requires {@link pc.StandardMaterial#enableGGXSpecular} is set to true.
+ * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
+ * @property {number} anisotropy Defines amount of anisotropy. Requires {@link StandardMaterial#enableGGXSpecular} is set to true.
  * * When anisotropy == 0, specular is isotropic.
  * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
  * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
@@ -160,8 +160,8 @@ class Chunks {
  *
  * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
  * transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to
- * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
- * Also note that for most semi-transparent objects you want {@link pc.Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
+ * set the {@link Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
+ * Also note that for most semi-transparent objects you want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
  * @property {pc.Texture|null} opacityMap The opacity map of the material (default is null).
  * @property {number} opacityMapUv Opacity map UV channel.
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
@@ -170,8 +170,8 @@ class Chunks {
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
- * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.StandardMaterial#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
- * @property {number} alphaFade used to fade out materials when {@link pc.StandardMaterial#opacityFadesSpecular} is set to false.
+ * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use {@link Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade used to fade out materials when {@link StandardMaterial#opacityFadesSpecular} is set to false.
  *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
@@ -200,8 +200,8 @@ class Chunks {
  * @property {pc.Texture|null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
  * @property {pc.Texture|null} cubeMap The cubic environment map of the material (default is null). Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
- * * {@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
- * * {@link pc.CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
+ * * {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
+ * * {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to pc.CUBEPROJ_NONE.
  * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
  * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
@@ -224,9 +224,9 @@ class Chunks {
  * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
  * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
- * * {@link pc.SPECOCC_NONE}: No specular occlusion
- * * {@link pc.SPECOCC_AO}: Use AO directly to occlude specular.
- * * {@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.
+ * * {@link SPECOCC_NONE}: No specular occlusion
+ * * {@link SPECOCC_AO}: Use AO directly to occlude specular.
+ * * {@link SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {number} occludeDirect Tells if AO should darken directional lighting.
  *
@@ -234,13 +234,13 @@ class Chunks {
  * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
  * It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
  * @property {number} shadingModel Defines the shading model.
- * * {@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
- * * {@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
+ * * {@link SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
+ * * {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
  * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behavior is defined by conserveEnergy parameter.
- * * {@link pc.FRESNEL_NONE}: No Fresnel.
- * * {@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
+ * * {@link FRESNEL_NONE}: No Fresnel.
+ * * {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
@@ -254,37 +254,37 @@ class Chunks {
  * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
  * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.
  * Properties of the object passed into this function are:
- * * pass: value of {@link pc.Layer#shaderPass} of the Layer being rendered.
+ * * pass: value of {@link Layer#shaderPass} of the Layer being rendered.
  * * chunks: Object containing custom shader chunks that will replace default ones.
  * * customFragmentShader: Completely replace fragment shader with this code.
  * * forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be declared as "vUv1" and passed to the fragment shader.
- * * fog: the type of fog being applied in the shader. See {@link pc.Scene#fog} for the list of possible values.
- * * gamma: the type of gamma correction being applied in the shader. See {@link pc.Scene#gammaCorrection} for the list of possible values.
- * * toneMap: the type of tone mapping being applied in the shader. See {@link pc.Scene#toneMapping} for the list of possible values.
- * * ambientTint: the value of {@link pc.StandardMaterial#ambientTint}.
- * * specularAntialias: the value of {@link pc.StandardMaterial#specularAntialias}.
- * * conserveEnergy: the value of {@link pc.StandardMaterial#conserveEnergy}.
- * * occludeSpecular: the value of {@link pc.StandardMaterial#occludeSpecular}.
- * * occludeDirect: the value of {@link pc.StandardMaterial#occludeDirect}.
- * * shadingModel: the value of {@link pc.StandardMaterial#shadingModel}.
- * * fresnelModel: the value of {@link pc.StandardMaterial#fresnelModel}.
- * * cubeMapProjection: the value of {@link pc.StandardMaterial#cubeMapProjection}.
- * * useMetalness: the value of {@link pc.StandardMaterial#useMetalness}.
- * * blendType: the value of {@link pc.Material#blendType}.
- * * twoSidedLighting: the value of {@link pc.Material#twoSidedLighting}.
- * * diffuseTint: defines if {@link pc.StandardMaterial#diffuse} constant should affect diffuse color.
- * * specularTint: defines if {@link pc.StandardMaterial#specular} constant should affect specular color.
- * * metalnessTint: defines if {@link pc.StandardMaterial#metalness} constant should affect metalness value.
- * * glossTint: defines if {@link pc.StandardMaterial#shininess} constant should affect glossiness value.
- * * emissiveTint: defines if {@link pc.StandardMaterial#emissive} constant should affect emission value.
- * * opacityTint: defines if {@link pc.StandardMaterial#opacity} constant should affect opacity value.
- * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
- * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
- * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
- * * opacityFadesSpecular: enable specular fade. See {@link pc.Material#opacityFadesSpecular}.
- * * alphaFade: fade value. See {@link pc.Material#alphaFade}.
- * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
- * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
+ * * fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of possible values.
+ * * gamma: the type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection} for the list of possible values.
+ * * toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the list of possible values.
+ * * ambientTint: the value of {@link StandardMaterial#ambientTint}.
+ * * specularAntialias: the value of {@link StandardMaterial#specularAntialias}.
+ * * conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
+ * * occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
+ * * occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
+ * * shadingModel: the value of {@link StandardMaterial#shadingModel}.
+ * * fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
+ * * cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
+ * * useMetalness: the value of {@link StandardMaterial#useMetalness}.
+ * * blendType: the value of {@link Material#blendType}.
+ * * twoSidedLighting: the value of {@link Material#twoSidedLighting}.
+ * * diffuseTint: defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
+ * * specularTint: defines if {@link StandardMaterial#specular} constant should affect specular color.
+ * * metalnessTint: defines if {@link StandardMaterial#metalness} constant should affect metalness value.
+ * * glossTint: defines if {@link StandardMaterial#shininess} constant should affect glossiness value.
+ * * emissiveTint: defines if {@link StandardMaterial#emissive} constant should affect emission value.
+ * * opacityTint: defines if {@link StandardMaterial#opacity} constant should affect opacity value.
+ * * occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
+ * * alphaTest: enable alpha testing. See {@link Material#alphaTest}.
+ * * alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
+ * * opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
+ * * alphaFade: fade value. See {@link Material#alphaFade}.
+ * * sphereMap: if {@link StandardMaterial#sphereMap} is used.
+ * * cubeMap: if {@link StandardMaterial#cubeMap} is used.
  * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
  * * ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.
  * * useSpecular: if any specular or reflections are needed at all.
@@ -292,13 +292,13 @@ class Chunks {
  * * hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.
  * * rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.
  * * hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.
- * * fixSeams: if cubemaps require seam fixing (see {@link pc.Texture#options.fixCubemapSeams}).
+ * * fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
  * * prefilteredCubemap: if prefiltered cubemaps are used.
- * * emissiveFormat: how emissiveMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:
+ * * emissiveFormat: how emissiveMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
  *   * 0: sRGB texture
  *   * 1: RGBM-encoded HDR texture
  *   * 2: Simple read (no conversion from sRGB)
- * * lightMapFormat: how lightMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:
+ * * lightMapFormat: how lightMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
  *   * 0: sRGB texture
  *   * 1: RGBM-encoded HDR texture
  *   * 2: Simple read (no conversion from sRGB)
@@ -311,7 +311,7 @@ class Chunks {
  * * useCubeMapRotation: if cube map rotation is enabled.
  * * useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
- * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
+ * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
  * * useMorphNormal: if morphing code should be generated to morph normals.
  * @example
