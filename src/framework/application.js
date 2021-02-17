@@ -1097,8 +1097,8 @@ class Application extends EventHandler {
             this.i18n.assets = props.i18nAssets;
         }
 
-        if (props.areaLightData) {
-            this._handleAreaLightDataProperty(props.areaLightData);
+        if (props.areaLightDataAsset) {
+            this._handleAreaLightDataProperty(props.areaLightDataAsset);
         }
 
         this._loadLibraries(props.libraries, callback);
