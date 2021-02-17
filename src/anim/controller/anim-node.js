@@ -39,6 +39,13 @@ class AnimNode {
         return this._point;
     }
 
+    get pointLength() {
+        if (!this._pointLength) {
+            this._pointLength = this.point.length();
+        }
+        return this._pointLength;
+    }
+
     get weight() {
         return this._parent ? this._parent.weight * this._weight : this._weight;
     }

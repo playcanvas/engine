@@ -84,14 +84,22 @@ class AnimBlendTree extends AnimNode {
         }
     }
 
+    parametersEqual(updatedParameters) {
+        if (!this._parameterValues) return false;
+        for (let i = 0; i < updatedParameters.length; i++) {
+            if (this._parameterValues[i] !== updatedParameters[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     calculateWeights() {
         var i, j, p, pi, pj, pip, pipj, parameterValues, minj, result, weightSum;
         switch (this._type) {
             case ANIM_BLEND_1D: {
                 var parameterValue = this._findParameter(this._parameters[0]).value;
-                if (this._parameterValues && (this._parameterValues[0] === parameterValue)) {
-                    return;
-                }
+                if (this.parametersEqual([parameterValue])) return;
                 this._parameterValues = [parameterValue];
                 this._children[0].weight = 0.0;
                 for (i = 0; i < this._children.length - 1; i++) {
@@ -113,22 +121,20 @@ class AnimBlendTree extends AnimNode {
                 parameterValues = this._parameters.map(function (param) {
                     return this._findParameter(param).value;
                 }.bind(this));
-                if (this._parameterValues && (JSON.stringify(this._parameterValues) === JSON.stringify(parameterValues))) {
-                    return;
-                }
+                if (this.parametersEqual(parameterValues)) return;
                 this._parameterValues = parameterValues;
                 p = new Vec2(this._parameterValues);
 
                 weightSum = 0.0;
                 for (i = 0; i < this._children.length; i++) {
-                    pi = this._children[i].point.clone();
+                    pi = this._children[i].point;
                     minj = Number.MAX_VALUE;
                     for (j = 0; j < this._children.length; j++) {
                         if (i === j) continue;
-                        pj = this._children[j].point.clone();
+                        pj = this._children[j].point;
                         pipj = pj.clone().sub(pi);
                         pip = p.clone().sub(pi);
-                        result = clamp(1.0 - (pip.clone().dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
+                        result = clamp(1.0 - (pip.dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
                         if (result < minj) minj = result;
                     }
                     this._children[i].weight = minj;
@@ -143,25 +149,26 @@ class AnimBlendTree extends AnimNode {
                 parameterValues = this._parameters.map(function (param) {
                     return this._findParameter(param).value;
                 }.bind(this));
-                if (this._parameterValues && (JSON.stringify(this._parameterValues) === JSON.stringify(parameterValues))) {
-                    return;
-                }
+                if (this.parametersEqual(parameterValues)) return;
                 this._parameterValues = parameterValues;
                 p = new Vec2(this._parameterValues);
+                var pLength = p.length();
 
 
                 weightSum = 0.0;
                 for (i = 0; i < this._children.length; i++) {
-                    pi = this._children[i].point.clone();
+                    pi = this._children[i].point;
+                    var piLength = this._children[i].pointLength;
                     minj = Number.MAX_VALUE;
                     for (j = 0; j < this._children.length; j++) {
                         if (i === j) continue;
-                        pj = this._children[j].point.clone();
+                        pj = this._children[j].point;
+                        var pjLength = this._children[j].pointLength;
                         var pipAngle = getAngleRad(pi, p);
                         var pipjAngle = getAngleRad(pi, pj);
-                        pipj = new Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
-                        pip = new Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
-                        result = clamp(1.0 - Math.abs((pip.clone().dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
+                        pipj = new Vec2((pjLength - piLength) / ((pjLength + piLength) / 2), pipjAngle * 2.0);
+                        pip = new Vec2((pLength - piLength) / ((pjLength + piLength) / 2), pipAngle * 2.0);
+                        result = clamp(1.0 - Math.abs((pip.dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
                         if (result < minj) minj = result;
                     }
                     this._children[i].weight = minj;
@@ -176,9 +183,8 @@ class AnimBlendTree extends AnimNode {
                 parameterValues = this._parameters.map(function (param) {
                     return this._findParameter(param).value;
                 }.bind(this));
-                if (this._parameterValues === parameterValues) {
-                    return;
-                }
+
+                if (this.parametersEqual(parameterValues)) return;
                 this._parameterValues = parameterValues;
                 weightSum = 0.0;
                 for (i = 0; i < this._children.length; i++) {
