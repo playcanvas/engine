@@ -18,7 +18,7 @@ class TemplateHandler {
 
         var assets = this._app.assets;
 
-        http.get(url.load, function (err, response) {
+        http.get(url.load, {}, function (err, response) {
             if (err) {
                 callback("Error requesting template: " + url.original);
             } else {

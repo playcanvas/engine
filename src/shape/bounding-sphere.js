@@ -2,8 +2,6 @@ import { Vec3 } from '../math/vec3.js';
 
 var tmpVecA = new Vec3();
 var tmpVecB = new Vec3();
-var tmpVecC = new Vec3();
-var tmpVecD = new Vec3();
 
 /**
  * @class
@@ -26,49 +24,6 @@ class BoundingSphere {
         var lenSq = tmpVecA.sub2(point, this.center).lengthSq();
         var r = this.radius;
         return lenSq < r * r;
-    }
-
-    compute(vertices) {
-        var i;
-        var numVerts = vertices.length / 3;
-
-        var vertex = tmpVecA;
-        var avgVertex = tmpVecB;
-        var sum = tmpVecC;
-
-        // FIRST PASS:
-        // Find the "average vertex", which is the sphere's center...
-
-        for (i = 0; i < numVerts; i++) {
-            vertex.set(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
-            sum.addSelf(vertex);
-
-            // apply a part-result to avoid float-overflows
-            if (i % 100 === 0) {
-                sum.scale(1 / numVerts);
-                avgVertex.add(sum);
-                sum.set(0, 0, 0);
-            }
-        }
-
-        sum.scale(1 / numVerts);
-        avgVertex.add(sum);
-
-        this.center.copy(avgVertex);
-
-        // SECOND PASS:
-        // Find the maximum (squared) distance of all vertices to the center...
-        var maxDistSq = 0;
-        var centerToVert = tmpVecD;
-
-        for (i = 0; i < numVerts; i++) {
-            vertex.set(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
-
-            centerToVert.sub2(vertex, this.center);
-            maxDistSq = Math.max(centerToVert.lengthSq(), maxDistSq);
-        }
-
-        this.radius = Math.sqrt(maxDistSq);
     }
 
     /**

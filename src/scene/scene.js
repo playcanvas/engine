@@ -420,7 +420,7 @@ class Scene extends EventHandler {
             if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
                 if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
                 if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
-                this._skyboxRotationMat4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
+                this._skyboxRotationMat4.setTRS(Vec3.ZERO, this._skyboxRotation, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
                 material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
             }

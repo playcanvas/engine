@@ -104,8 +104,8 @@ class AnimEvaluator {
 
     /**
      * @private
-     * @name AnimEvaluator
-     * @type {number}
+     * @name AnimEvaluator#clips
+     * @type {AnimClip[]}
      * @description The number of clips.
      */
     get clips() {

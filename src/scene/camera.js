@@ -320,9 +320,17 @@ class Camera {
      * @returns {Camera} A cloned Camera.
      */
     clone() {
-        return new this.constructor().copy(this);
+        return new Camera().copy(this);
     }
 
+    /**
+     * @private
+     * @function
+     * @name Camera#copy
+     * @param {Camera} other - Camera to copy.
+     * @description Copies one camera to another.
+     * @returns {Camera} Self for chaining.
+     */
     copy(other) {
         this.aspectRatio = other.aspectRatio;
         this.aspectRatioMode = other.aspectRatioMode;
@@ -349,6 +357,7 @@ class Camera {
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
         this.vrDisplay = other.vrDisplay;
+        return this;
     }
 
     _updateViewProjMat() {

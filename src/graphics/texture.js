@@ -607,7 +607,7 @@ class Texture {
 
                 if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
                     format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    blockWidth = Math.floor(blockWidth / 2, 1);
+                    blockWidth = Math.floor(blockWidth / 2);
                 }
 
                 result += blockWidth * blockHeight * blockDepth * blockSize;
@@ -656,6 +656,10 @@ class Texture {
      * @param {object} [options] - Optional options object. Valid properties are as follows:
      * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
+     * @param {number} [options.mode] - The lock mode. Can be:
+     * * {@link TEXTURELOCK_READ}
+     * * {@link TEXTURELOCK_WRITE}
+     * Defaults to {@link TEXTURELOCK_WRITE}.
      * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
      */
     lock(options = {}) {

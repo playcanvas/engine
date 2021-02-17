@@ -278,7 +278,7 @@ class XrInputSource extends EventHandler {
      * @function
      * @name XrInputSource#getRotation
      * @description Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
-     * @returns {Vec3|null} The world space rotation of handheld input source.
+     * @returns {Quat|null} The world space rotation of handheld input source.
      */
     getRotation() {
         if (! this._rotation) return null;

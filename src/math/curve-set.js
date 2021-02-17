@@ -132,7 +132,7 @@ class CurveSet {
      * @param {number} precision - The number of samples to return.
      * @param {number} min - The minimum output value.
      * @param {number} max - The maximum output value.
-     * @returns {number[]} The set of quantized values.
+     * @returns {Float32Array} The set of quantized values.
      */
     quantizeClamped(precision, min, max) {
         var result = this.quantize(precision);
