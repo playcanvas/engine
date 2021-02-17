@@ -1,3 +1,5 @@
+import { EventHandler } from '../core/event-handler.js';
+
 import { ScriptHandler } from '../resources/script.js';
 
 import { script } from '../framework/script.js';
@@ -61,7 +63,8 @@ function createScript(name, app) {
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
     var scriptType = function (args) {
-        ScriptType.call(this, args);
+        EventHandler.prototype.initEventHandler.call(this);
+        ScriptType.prototype.initScriptType.call(this, args);
     };
 
     scriptType.prototype = Object.create(ScriptType.prototype);

@@ -16,6 +16,10 @@
  */
 class EventHandler {
     constructor() {
+        this.initEventHandler();
+    }
+
+    initEventHandler() {
         this._callbacks = { };
         this._callbackActive = { };
     }

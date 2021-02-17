@@ -48,7 +48,10 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
 class ScriptType extends EventHandler {
     constructor(args) {
         super();
+        this.initScriptType(args);
+    }
 
+    initScriptType(args) {
         var script = this.constructor; // get script type, i.e. function (class)
 
         // #ifdef DEBUG
