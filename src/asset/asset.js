@@ -112,6 +112,13 @@ class Asset extends EventHandler {
 
     /**
      * @event
+     * @name Asset#unload
+     * @description Fired just before the asset unloads the resource.
+     * @param {Asset} asset - The asset that is due to be unloaded.
+     */
+
+    /**
+     * @event
      * @name Asset#remove
      * @description Fired when the asset is removed from the asset registry.
      * @param {Asset} asset - The asset that was removed.
