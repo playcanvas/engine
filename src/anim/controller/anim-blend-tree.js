@@ -1,3 +1,5 @@
+import { Vec2 } from '../../math/vec2.js';
+
 import { AnimNode } from './anim-node.js';
 import {
     ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
@@ -115,7 +117,7 @@ class AnimBlendTree extends AnimNode {
                     return;
                 }
                 this._parameterValues = parameterValues;
-                p = new pc.Vec2(this._parameterValues);
+                p = new Vec2(this._parameterValues);
 
                 weightSum = 0.0;
                 for (i = 0; i < this._children.length; i++) {
@@ -145,7 +147,7 @@ class AnimBlendTree extends AnimNode {
                     return;
                 }
                 this._parameterValues = parameterValues;
-                p = new pc.Vec2(this._parameterValues);
+                p = new Vec2(this._parameterValues);
 
 
                 weightSum = 0.0;
@@ -157,8 +159,8 @@ class AnimBlendTree extends AnimNode {
                         pj = this._children[j].point.clone();
                         var pipAngle = getAngleRad(pi, p);
                         var pipjAngle = getAngleRad(pi, pj);
-                        pipj = new pc.Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
-                        pip = new pc.Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
+                        pipj = new Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
+                        pip = new Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
                         result = clamp(1.0 - Math.abs((pip.clone().dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
                         if (result < minj) minj = result;
                     }

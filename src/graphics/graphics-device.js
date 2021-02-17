@@ -268,7 +268,7 @@ class GraphicsDevice extends EventHandler {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        this._contextLostHandler = function (event) {
+        this._contextLostHandler = event => {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
@@ -276,16 +276,16 @@ class GraphicsDevice extends EventHandler {
             console.log('pc.GraphicsDevice: WebGL context lost.');
             // #endif
             this.fire('devicelost');
-        }.bind(this);
+        };
 
-        this._contextRestoredHandler = function () {
+        this._contextRestoredHandler = () => {
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
             // #endif
             this.restoreContext();
             this.contextLost = false;
             this.fire('devicerestored');
-        }.bind(this);
+        };
 
         // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
@@ -2484,6 +2484,7 @@ class GraphicsDevice extends EventHandler {
      * * {@link CLEARFLAG_COLOR}
      * * {@link CLEARFLAG_DEPTH}
      * * {@link CLEARFLAG_STENCIL}
+     * @param {number} options.stencil - The stencil value to clear the stencil buffer to. Defaults to 0.
      * @example
      * // Clear color buffer to black and depth buffer to 1.0
      * device.clear();
@@ -3616,11 +3617,11 @@ class GraphicsDevice extends EventHandler {
         this._enableAutoInstancing = value && this.extInstancing;
     }
 
-/**
- * @name GraphicsDevice#maxPixelRatio
- * @type {number}
- * @description Maximum pixel ratio.
- */
+    /**
+     * @name GraphicsDevice#maxPixelRatio
+     * @type {number}
+     * @description Maximum pixel ratio.
+     */
     get maxPixelRatio() {
         return this._maxPixelRatio;
     }
@@ -3633,7 +3634,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @readonly
      * @name GraphicsDevice#textureFloatHighPrecision
-     * @type {number}
+     * @type {boolean}
      * @description Check if high precision floating-point textures are supported.
      */
     get textureFloatHighPrecision() {
@@ -3646,7 +3647,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @readonly
      * @name GraphicsDevice#textureHalfFloatUpdatable
-     * @type {number}
+     * @type {boolean}
      * @description Check if texture with half float format can be updated with data.
      */
     get textureHalfFloatUpdatable() {

@@ -247,7 +247,6 @@ function prefilterCubemap(options) {
             cubemap._levels[i] = mips[i]._levels[0];
 
         cubemap.upload();
-        cubemap._prefilteredMips = true;
         options.singleFilteredFixed = cubemap;
     }
 
@@ -268,7 +267,6 @@ function prefilterCubemap(options) {
             cubemap._levels[i] = mips[i]._levels[0];
         }
         cubemap.upload();
-        cubemap._prefilteredMips = true;
         options.singleFilteredFixedRgbm = cubemap;
     }
 }

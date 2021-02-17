@@ -1,3 +1,5 @@
+import { Vec2 } from '../../math/vec2.js';
+
 /**
  * @private
  * @class
@@ -15,7 +17,7 @@ class AnimNode {
         this._state = state;
         this._parent = parent;
         this._name = name;
-        this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
+        this._point = Array.isArray(point) ? new Vec2(point[0], point[1]) : point;
         this._speed = speed;
         this._weight = 1.0;
         this._animTrack = null;
