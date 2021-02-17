@@ -1,3 +1,5 @@
+import { EventHandler } from '../core/event-handler.js';
+
 import { ScriptHandler } from '../resources/script.js';
 
 import { script } from '../framework/script.js';
@@ -5,7 +7,6 @@ import { Application } from '../framework/application.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
-import { EventHandler } from '../core/event-handler.js';
 
 const reservedScriptNames = new Set([
     'system', 'entity', 'create', 'destroy', 'swap', 'move',
