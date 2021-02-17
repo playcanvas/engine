@@ -216,6 +216,40 @@
             var pointRadius = 5;
             var pointHeight = 10;
 
+            // Create a 2D screen
+            var screen = new pc.Entity();
+            screen.addComponent("screen", {
+                referenceResolution: new pc.Vec2(1280, 720),
+                scaleBlend: 0.5,
+                scaleMode: pc.SCALEMODE_BLEND,
+                screenSpace: true
+            });
+            app.root.addChild(screen);
+
+            // Load a font
+            var fontAsset = new pc.Asset('arial.json', "font", {
+                url: "../assets/fonts/arial.json"
+            });
+            fontAsset.on('load', onFontLoaded);
+            app.assets.add(fontAsset);
+            app.assets.load(fontAsset);
+
+            // When the font is loaded, create text to show which effects are enabled
+            var text;
+            function onFontLoaded() {
+                // Create a basic text element
+                text = new pc.Entity();
+                text.addComponent("element", {
+                    anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
+                    fontAsset: fontAsset,
+                    fontSize: 28,
+                    pivot: new pc.Vec2(0.5, 0.1),
+                    type: pc.ELEMENTTYPE_TEXT,
+                    alignment: pc.Vec2.ZERO
+                });
+                screen.addChild(text);
+            }
+
             app.on("update", function (dt) {
                 angle += 20 * dt;
                 if (angle > 360) {
@@ -228,7 +262,18 @@
                     
                     pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
 
-                    camera.script.bokeh.focus = light.getLocalPosition().z - camera.getLocalPosition().z;
+                    if (camera.script.bokeh) {
+                        camera.script.bokeh.focus = light.getLocalPosition().z - camera.getLocalPosition().z;
+                    }
+                }
+
+                // update text showing which post effects are enabled
+                if (text) {
+                    text.element.text = 
+                        "[Key 1] Bloom: " + camera.script.bloom.enabled +
+                        "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
+                        "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
+                        "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled;
                 }
             });
         }

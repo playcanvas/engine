@@ -243,7 +243,10 @@ class Layer {
         this._lightComponents = [];
         this._lights = [];
         this._splitLights = [[], [], []];
+
+        // array of CameraComponent
         this.cameras = [];
+
         this._dirty = false;
         this._dirtyLights = false;
         this._dirtyCameras = false;
