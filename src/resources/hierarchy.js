@@ -2,8 +2,6 @@ import { http } from '../net/http.js';
 
 import { SceneParser } from './parser/scene.js';
 
-import { TemplateUtils } from '../templates/template-utils.js';
-
 class HierarchyHandler {
     constructor(app) {
         this._app = app;
@@ -25,7 +23,6 @@ class HierarchyHandler {
             maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
-
                 callback(err, response);
             } else {
                 var errMsg = 'Error while loading scene ' + url.original;

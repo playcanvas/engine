@@ -2,8 +2,6 @@ import { http } from '../net/http.js';
 
 import { SceneParser } from './parser/scene.js';
 
-import { TemplateUtils } from '../templates/template-utils.js';
-
 /**
  * @class
  * @name pc.SceneHandler
@@ -32,10 +30,7 @@ class SceneHandler {
             maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
-                TemplateUtils.waitForTemplatesInScene(
-                    response,
-                    assets,
-                    callback);
+                callback(err, response);
             } else {
                 var errMsg = 'Error while loading scene ' + url.original;
                 if (err.message) {

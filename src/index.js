@@ -278,7 +278,6 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
 export { Template } from './templates/template.js';
-export { TemplateUtils } from './templates/template-utils.js';
 
 // VR
 export { VrDisplay } from './vr/vr-display.js';
