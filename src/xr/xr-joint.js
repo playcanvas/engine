@@ -3,11 +3,11 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
 var tipJointIds = window.XRHand ? [
-    XRHand.THUMB_PHALANX_TIP,
-    XRHand.INDEX_PHALANX_TIP,
-    XRHand.MIDDLE_PHALANX_TIP,
-    XRHand.RING_PHALANX_TIP,
-    XRHand.LITTLE_PHALANX_TIP
+    'thumb-tip',
+    'index-finger-tip',
+    'middle-finger-tip',
+    'ring-finger-tip',
+    'pinky-finger-tip'
 ] : [];
 
 var tipJointIdsIndex = {};
@@ -22,7 +22,7 @@ for (var i = 0; i < tipJointIds.length; i++) {
  * @classdesc Represents joint of a finger
  * @description Represents joint of a finger
  * @param {number} index - Index of a joint within a finger
- * @param {number} id - Id of a joint based on XRHand specs
+ * @param {string} id - Id of a joint based on WebXR Hand Input Specs
  * @param {XrHand} hand - Hand that joint relates to
  * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint
  * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger
@@ -44,7 +44,7 @@ class XrJoint {
         this._finger = finger;
         if (this._finger) this._finger._joints.push(this);
 
-        this._wrist = id === XRHand.WRIST;
+        this._wrist = id === 'wrist';
         if (this._wrist) this._hand._wrist = this;
 
         this._tip = this._finger && !! tipJointIdsIndex[id];
