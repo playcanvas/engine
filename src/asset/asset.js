@@ -113,7 +113,7 @@ class Asset extends EventHandler {
     /**
      * @event
      * @name Asset#unload
-     * @description Fired just before the asset unloads the resource.
+     * @description Fired just before the asset unloads the resource. This allows for the opportunity to prepare for an asset that will be unloaded. E.g. Changing the texture of a model to a default before the one it was using is unloaded.
      * @param {Asset} asset - The asset that is due to be unloaded.
      */
 
