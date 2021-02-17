@@ -14,7 +14,7 @@
  * @returns {string} A URI string.
  */
 function createURI(options) {
-    var s = "";
+    let s = "";
     if ((options.authority || options.scheme) && (options.host || options.hostpath)) {
         throw new Error("Can't have 'scheme' or 'authority' and 'host' or 'hostpath' option");
     }
@@ -56,58 +56,32 @@ function createURI(options) {
     return s;
 }
 
-/**
- * @private
- * @class
- * @name URI
- * @description Create a new URI object.
- * @classdesc A URI object.
- * @param {string} uri - URI string.
- */
-function URI(uri) {
-    // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
-    var re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/,
-        result = uri.match(re);
+// See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
+const re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
+class URI {
     /**
      * @private
-     * @name URI#scheme
-     * @type {string}
-     * @description The scheme. (e.g. Http).
+     * @class
+     * @name URI
+     * @description Create a new URI object.
+     * @classdesc A URI object.
+     * @param {string} uri - URI string.
+     * @property {string} scheme The scheme. (e.g. http).
+     * @property {string} authority The authority. (e.g. www.example.com).
+     * @property {string} path The path. (e.g. /users/example).
+     * @property {string} query The query, the section after a ?. (e.g. search=value).
+     * @property {string} fragment The fragment, the section after a #.
      */
-    this.scheme = result[2];
+    constructor(uri) {
+        let result = uri.match(re);
 
-    /**
-     * @private
-     * @name URI#authority
-     * @type {string}
-     * @description The authority. (e.g. Www.example.com).
-     */
-    this.authority = result[4];
-
-    /**
-     * @private
-     * @name URI#path
-     * @type {string}
-     * @description The path. (e.g. /users/example).
-     */
-    this.path = result[5];
-
-    /**
-     * @private
-     * @name URI#query
-     * @type {string}
-     * @description The query, the section after a ?. (e.g. Search=value).
-     */
-    this.query = result[7];
-
-    /**
-     * @private
-     * @name URI#fragment
-     * @type {string}
-     * @description The fragment, the section after a #.
-     */
-    this.fragment = result[9];
+        this.scheme = result[2];
+        this.authority = result[4];
+        this.path = result[5];
+        this.query = result[7];
+        this.fragment = result[9];
+    }
 
     /**
      * @private
@@ -116,8 +90,8 @@ function URI(uri) {
      * @description Convert URI back to string.
      * @returns {string} The URI as a string.
      */
-    this.toString = function () {
-        var s = "";
+    toString() {
+        let s = "";
 
         if (this.scheme) {
             s += this.scheme + ":";
@@ -138,7 +112,7 @@ function URI(uri) {
         }
 
         return s;
-    };
+    }
 
     /**
      * @private
@@ -154,21 +128,19 @@ function URI(uri) {
      * console.log(q.b); // logs "2"
      * console.log(q.c); // logs "3"
      */
-    this.getQuery = function () {
-        var vars;
-        var pair;
-        var result = {};
+    getQuery() {
+        const result = {};
 
         if (this.query) {
-            vars = decodeURIComponent(this.query).split("&");
-            vars.forEach(function (item, index, arr) {
-                pair = item.split("=");
+            const queryParams = decodeURIComponent(this.query).split("&");
+            for (const queryParam of queryParams) {
+                let pair = queryParam.split("=");
                 result[pair[0]] = pair[1];
-            }, this);
+            }
         }
 
         return result;
-    };
+    }
 
     /**
      * @private
@@ -185,9 +157,9 @@ function URI(uri) {
      * });
      * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
      */
-    this.setQuery = function (params) {
-        var q = "";
-        for (var key in params) {
+    setQuery(params) {
+        let q = "";
+        for (const key in params) {
             if (params.hasOwnProperty(key)) {
                 if (q !== "") {
                     q += "&";
@@ -197,7 +169,7 @@ function URI(uri) {
         }
 
         this.query = q;
-    };
+    }
 }
 
 export { createURI, URI };
