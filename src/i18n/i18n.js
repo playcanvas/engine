@@ -264,7 +264,7 @@ class I18n extends EventHandler {
      * @name I18n#destroy
      * @description Frees up memory.
      */
-    destroy = function () {
+    destroy() {
         this._translations = null;
         this._availableLangs = null;
         this._assets = null;
