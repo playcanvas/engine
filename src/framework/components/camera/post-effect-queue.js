@@ -4,8 +4,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
 
-import { LAYERID_DEPTH, LAYERID_UI, SORTMODE_NONE } from '../../../scene/constants.js';
-import { Layer } from '../../../scene/layer.js';
+import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
 let depthLayer;
 

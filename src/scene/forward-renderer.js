@@ -2892,7 +2892,7 @@ class ForwardRenderer {
         var device = this.device;
         var camera;
         var renderAction, renderActions = comp._renderActions;
-        var i, layer, layerIndex, transparent, rt, k;
+        var i, layer, layerIndex, transparent;
 
         // update the skybox, since this might change _meshInstances
         if (this.scene.updateSkybox) {
