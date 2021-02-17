@@ -437,7 +437,7 @@ class LayerComposition extends EventHandler {
                                 // camera index in the layer array
                                 cameraIndex = layer.cameras.indexOf(camera);
                                 if (cameraIndex >= 0) {
-                                    
+
                                     // add render action to describe rendering step
                                     lastRenderAction = addRenderAction(layer, j, cameraIndex, cameraFirstRenderAction, postProcessMarked);
                                     cameraFirstRenderAction = false;
@@ -451,7 +451,7 @@ class LayerComposition extends EventHandler {
                 if (!postProcessMarked && lastRenderAction) {
                     lastRenderAction.triggerPostprocess = true;
                 }
-                
+
                 // handle camera stacking if this render action has postprocessing enabled
                 if (camera.renderTarget && camera.postEffectsEnabled) {
                     // process previous render actions starting with previous camera

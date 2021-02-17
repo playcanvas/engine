@@ -119,7 +119,7 @@ class CameraComponent extends Component {
         this._camera.node = entity;
 
         this._priority = 0;
-        
+
         // event called when postprocessing should execute
         this.onPostprocessing = null;
 

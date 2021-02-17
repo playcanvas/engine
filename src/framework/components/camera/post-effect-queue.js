@@ -32,7 +32,7 @@ class PostEffectQueue {
 
         this.app = app;
         this.camera = camera;
-        
+
         // stores all of the post effects of type PostEffect
         this.effects = [];
 
@@ -283,7 +283,7 @@ class PostEffectQueue {
             this.camera.renderTarget = this.effects[0].inputTarget;
 
             // callback when postprocessing takes place
-            this.camera.onPostprocessing = function(camera) {
+            this.camera.onPostprocessing = function (camera) {
 
                 if (self.enabled) {
                     var rect = null;
@@ -333,7 +333,7 @@ class PostEffectQueue {
             this.app.graphicsDevice.off('resizecanvas', this._onCanvasResized, this);
 
             this._releaseDepthMaps();
-            
+
             this._destroyOffscreenTarget(this._sourceTarget);
 
             this.camera.renderTarget = null;
