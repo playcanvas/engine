@@ -5,6 +5,7 @@ import { Application } from '../framework/application.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
+import { EventHandler } from '../core/event-handler.js';
 
 const reservedScriptNames = new Set([
     'system', 'entity', 'create', 'destroy', 'swap', 'move',
@@ -61,7 +62,8 @@ function createScript(name, app) {
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
     var scriptType = function (args) {
-        ScriptType.call(this, args);
+        EventHandler.prototype.initEventHandler.call(this);
+        ScriptType.prototype.initScriptType.call(this, args);
     };
 
     scriptType.prototype = Object.create(ScriptType.prototype);
