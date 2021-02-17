@@ -105,6 +105,7 @@ class AnimComponent extends Component {
             var layer = this.data.layers[i];
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
+                if ([ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY].includes(stateName)) continue;
                 var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
                     this.removeNodeAnimations(stateName, layer.name);

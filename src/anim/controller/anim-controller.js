@@ -420,6 +420,9 @@ class AnimController {
     }
 
     removeNodeAnimations(nodeName) {
+        if ([ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY].includes(nodeName)) {
+            return;
+        }
         var state = this._findState(nodeName);
         if (!state) {
             // #ifdef DEBUG
@@ -429,6 +432,7 @@ class AnimController {
         }
 
         state.animations = [];
+        return true;
     }
 
     play(stateName) {
