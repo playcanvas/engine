@@ -22,7 +22,7 @@ for (var i = 0; i < tipJointIds.length; i++) {
  * @classdesc Represents joint of a finger
  * @description Represents joint of a finger
  * @param {number} index - Index of a joint within a finger
- * @param {number} id - Id of a joint based on XRHand specs
+ * @param {string} id - Id of a joint based on WebXR Hand Input Specs
  * @param {XrHand} hand - Hand that joint relates to
  * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint
  * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger
