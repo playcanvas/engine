@@ -7,11 +7,11 @@ import { JsonModelParser } from './parser/json-model.js';
 
 /**
  * @class
- * @name pc.ModelHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Model} resources.
- * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
- * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ * @name ModelHandler
+ * @implements {ResourceHandler}
+ * @classdesc Resource handler used for loading {@link Model} resources.
+ * @param {GraphicsDevice} device - The graphics device that will be rendering.
+ * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ModelHandler {
     constructor(device, defaultMaterial) {
@@ -137,12 +137,12 @@ class ModelHandler {
 
     /**
      * @function
-     * @name pc.ModelHandler#addParser
-     * @description Add a parser that converts raw data into a {@link pc.Model}
+     * @name ModelHandler#addParser
+     * @description Add a parser that converts raw data into a {@link Model}
      * Default parser is for JSON models.
      * @param {object} parser - See JsonModelParser for example.
-     * @param {pc.callbacks.AddParser} decider - Function that decides on which parser to use.
-     * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
+     * @param {callbacks.AddParser} decider - Function that decides on which parser to use.
+     * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link Model}.
      * The first parser to return true is used.
      */
     addParser(parser, decider) {

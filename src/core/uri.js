@@ -1,7 +1,7 @@
 /**
  * @private
  * @function
- * @name pc.createURI
+ * @name createURI
  * @description Create a URI object from constituent parts.
  * @param {object} options - Parts of the URI to build.
  * @param {string} [options.scheme] - The URI scheme (e.g. http).
@@ -59,7 +59,7 @@ function createURI(options) {
 /**
  * @private
  * @class
- * @name pc.URI
+ * @name URI
  * @description Create a new URI object.
  * @classdesc A URI object.
  * @param {string} uri - URI string.
@@ -71,7 +71,7 @@ function URI(uri) {
 
     /**
      * @private
-     * @name pc.URI#scheme
+     * @name URI#scheme
      * @type {string}
      * @description The scheme. (e.g. Http).
      */
@@ -79,7 +79,7 @@ function URI(uri) {
 
     /**
      * @private
-     * @name pc.URI#authority
+     * @name URI#authority
      * @type {string}
      * @description The authority. (e.g. Www.example.com).
      */
@@ -87,7 +87,7 @@ function URI(uri) {
 
     /**
      * @private
-     * @name pc.URI#path
+     * @name URI#path
      * @type {string}
      * @description The path. (e.g. /users/example).
      */
@@ -95,7 +95,7 @@ function URI(uri) {
 
     /**
      * @private
-     * @name pc.URI#query
+     * @name URI#query
      * @type {string}
      * @description The query, the section after a ?. (e.g. Search=value).
      */
@@ -103,7 +103,7 @@ function URI(uri) {
 
     /**
      * @private
-     * @name pc.URI#fragment
+     * @name URI#fragment
      * @type {string}
      * @description The fragment, the section after a #.
      */
@@ -112,7 +112,7 @@ function URI(uri) {
     /**
      * @private
      * @function
-     * @name pc.URI#toString
+     * @name URI#toString
      * @description Convert URI back to string.
      * @returns {string} The URI as a string.
      */
@@ -143,7 +143,7 @@ function URI(uri) {
     /**
      * @private
      * @function
-     * @name pc.URI#getQuery
+     * @name URI#getQuery
      * @description Returns the query parameters as an Object.
      * @returns {object} The URI's query parameters converted to an Object.
      * @example
@@ -173,7 +173,7 @@ function URI(uri) {
     /**
      * @private
      * @function
-     * @name pc.URI#setQuery
+     * @name URI#setQuery
      * @description Set the query section of the URI from a Object.
      * @param {object} params - Key-Value pairs to encode into the query string.
      * @example

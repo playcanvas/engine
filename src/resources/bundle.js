@@ -9,9 +9,9 @@ import { Untar, UntarWorker } from './untar.js';
 /**
  * @private
  * @class
- * @name pc.BundleHandler
- * @implements {pc.ResourceHandler}
- * @param {pc.AssetRegistry} assets - The asset registry.
+ * @name BundleHandler
+ * @implements {ResourceHandler}
+ * @param {AssetRegistry} assets - The asset registry.
  * @classdesc Loads Bundle Assets.
  */
 class BundleHandler {

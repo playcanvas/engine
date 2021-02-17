@@ -15,7 +15,7 @@ function makeKeyboardEvent(event) {
 /**
  * @private
  * @function
- * @name pc.toKeyCode
+ * @name toKeyCode
  * @description Convert a string or keycode to a keycode.
  * @param {string|number} s - Either a character code or the key character.
  * @returns {number} The character code.
@@ -47,9 +47,9 @@ const _keyCodeToKeyIdentifier = {
 
 /**
  * @event
- * @name pc.Keyboard#keydown
+ * @name Keyboard#keydown
  * @description Event fired when a key is pressed.
- * @param {pc.KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
+ * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
  * @example
  * var onKeyDown = function (e) {
  *     if (e.key === pc.KEY_SPACE) {
@@ -62,9 +62,9 @@ const _keyCodeToKeyIdentifier = {
 
 /**
  * @event
- * @name pc.Keyboard#keyup
+ * @name Keyboard#keyup
  * @description Event fired when a key is released.
- * @param {pc.KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
+ * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
  * @example
  * var onKeyUp = function (e) {
  *     if (e.key === pc.KEY_SPACE) {
@@ -77,8 +77,8 @@ const _keyCodeToKeyIdentifier = {
 
 /**
  * @class
- * @name pc.Keyboard
- * @augments pc.EventHandler
+ * @name Keyboard
+ * @augments EventHandler
  * @classdesc A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
  * Note, Keyboard object must be attached to an Element before it can detect any key presses.
  * @description Create a new Keyboard object.
@@ -113,7 +113,7 @@ class Keyboard extends EventHandler {
 
     /**
      * @function
-     * @name pc.Keyboard#attach
+     * @name Keyboard#attach
      * @description Attach the keyboard event handlers to an Element.
      * @param {Element} element - The element to listen for keyboard events on.
      */
@@ -130,7 +130,7 @@ class Keyboard extends EventHandler {
 
     /**
      * @function
-     * @name pc.Keyboard#detach
+     * @name Keyboard#detach
      * @description Detach the keyboard event handlers from the element it is attached to.
      */
     detach() {
@@ -143,7 +143,7 @@ class Keyboard extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Keyboard#toKeyIdentifier
+     * @name Keyboard#toKeyIdentifier
      * @description Convert a key code into a key identifier.
      * @param {number} keyCode - The key code.
      * @returns {string} The key identifier.
@@ -229,7 +229,7 @@ class Keyboard extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Keyboard#update
+     * @name Keyboard#update
      * @description Called once per frame to update internal state.
      */
     update() {
@@ -249,9 +249,9 @@ class Keyboard extends EventHandler {
 
     /**
      * @function
-     * @name pc.Keyboard#isPressed
+     * @name Keyboard#isPressed
      * @description Return true if the key is currently down.
-     * @param {number} key - The keyCode of the key to test. See the pc.KEY_* constants.
+     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed, false if not.
      */
     isPressed(key) {
@@ -263,9 +263,9 @@ class Keyboard extends EventHandler {
 
     /**
      * @function
-     * @name pc.Keyboard#wasPressed
+     * @name Keyboard#wasPressed
      * @description Returns true if the key was pressed since the last update.
-     * @param {number} key - The keyCode of the key to test. See the pc.KEY_* constants.
+     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed.
      */
     wasPressed(key) {
@@ -277,9 +277,9 @@ class Keyboard extends EventHandler {
 
     /**
      * @function
-     * @name pc.Keyboard#wasReleased
+     * @name Keyboard#wasReleased
      * @description Returns true if the key was released since the last update.
-     * @param {number} key - The keyCode of the key to test. See the pc.KEY_* constants.
+     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed.
      */
     wasReleased(key) {

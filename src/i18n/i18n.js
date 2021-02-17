@@ -18,15 +18,15 @@ import {
 
 /**
  * @class
- * @name pc.I18n
- * @augments pc.EventHandler
+ * @name I18n
+ * @augments EventHandler
  * @classdesc Handles localization. Responsible for loading localization assets
  * and returning translations for a certain key. Can also handle plural forms. To override
- * its default behavior define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.
- * @param {pc.Application} app - The application.
+ * its default behavior define a different implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
+ * @param {Application} app - The application.
  * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
  * change language to the new locale.
- * @property {number[]|pc.Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
+ * @property {number[]|Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
  * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
  */
 class I18n extends EventHandler {
@@ -44,7 +44,7 @@ class I18n extends EventHandler {
     /**
      * @static
      * @function
-     * @name pc.I18n#findAvailableLocale
+     * @name I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
      * @param {string} desiredLocale - The desired locale e.g. En-US.
@@ -57,7 +57,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#getText
+     * @name I18n#getText
      * @description Returns the translation for the specified key and locale. If the locale is not specified
      * it will use the current locale.
      * @param {string} key - The localization key.
@@ -107,7 +107,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#getPluralText
+     * @name I18n#getPluralText
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
      * it will use the current locale.
      * @param {string} key - The localization key.
@@ -158,7 +158,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#addData
+     * @name I18n#addData
      * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
      * @param {object} data - The localization data. See example for the expected format of the data.
      * @example
@@ -217,9 +217,9 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#removeData
+     * @name I18n#removeData
      * @description Removes localization data.
-     * @param {object} data - The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
+     * @param {object} data - The localization data. The data is expected to be in the same format as {@link I18n#addData}.
      */
     removeData(data) {
         var parsed;
@@ -261,7 +261,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#destroy
+     * @name I18n#destroy
      * @description Frees up memory.
      */
     destroy = function () {

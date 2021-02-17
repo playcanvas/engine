@@ -29,11 +29,11 @@ var instanceOptions = {
 
 /**
  * @class
- * @name pc.SoundSlot
- * @augments pc.EventHandler
+ * @name SoundSlot
+ * @augments EventHandler
  * @classdesc The SoundSlot controls playback of an audio asset.
  * @description Create a new SoundSlot.
- * @param {pc.SoundComponent} component - The Component that created this slot.
+ * @param {SoundComponent} component - The Component that created this slot.
  * @param {string} name - The name of the slot.
  * @param {object} options - Settings for the slot.
  * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
@@ -57,7 +57,7 @@ var instanceOptions = {
  * @property {boolean} isPlaying Returns true if the slot is currently playing.
  * @property {boolean} isPaused Returns true if the slot is currently paused.
  * @property {boolean} isStopped Returns true if the slot is currently stopped.
- * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
+ * @property {SoundInstance[]} instances An array that contains all the {@link SoundInstance}s currently being played by the slot.
  */
 class SoundSlot extends EventHandler {
     constructor(component, name, options) {
@@ -95,11 +95,12 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * @function pc.SoundSlot#play
-     * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
+     * @function
+     * @name SoundSlot#play
+     * @description Plays a sound. If {@link SoundSlot#overlap} is true the new sound
      * instance will be played independently of any other instances already playing.
      * Otherwise existing sound instances will stop before playing the new sound.
-     * @returns {pc.SoundInstance} The new sound instance.
+     * @returns {SoundInstance} The new sound instance.
      */
     play() {
         // stop if overlap is false
@@ -141,8 +142,8 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#pause
-     * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
+     * @name SoundSlot#pause
+     * @description Pauses all sound instances. To continue playback call {@link SoundSlot#resume}.
      * @returns {boolean} True if the sound instances paused successfully, false otherwise.
      */
     pause() {
@@ -160,7 +161,7 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#resume
+     * @name SoundSlot#resume
      * @description Resumes playback of all paused sound instances.
      * @returns {boolean} True if any instances were resumed.
      */
@@ -177,7 +178,7 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#stop
+     * @name SoundSlot#stop
      * @description Stops playback of all sound instances.
      * @returns {boolean} True if any instances were stopped.
      */
@@ -200,7 +201,7 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#load
+     * @name SoundSlot#load
      * @description Loads the asset assigned to this slot.
      */
     load() {
@@ -231,7 +232,7 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#setExternalNodes
+     * @name SoundSlot#setExternalNodes
      * @description Connect external Web Audio API nodes. Any sound played by this slot will
      * automatically attach the specified nodes to the source that plays the sound. You need to pass
      * the first node of the node graph that you created externally and the last node of that graph. The first
@@ -272,8 +273,8 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#clearExternalNodes
-     * @description Clears any external nodes set by {@link pc.SoundSlot#setExternalNodes}.
+     * @name SoundSlot#clearExternalNodes
+     * @description Clears any external nodes set by {@link SoundSlot#setExternalNodes}.
      */
     clearExternalNodes() {
         this._firstNode = null;
@@ -290,9 +291,9 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function
-     * @name pc.SoundSlot#getExternalNodes
-     * @description Gets an array that contains the two external nodes set by {@link pc.SoundSlot#setExternalNodes}.
-     * @returns {AudioNode[]} An array of 2 elements that contains the first and last nodes set by {@link pc.SoundSlot#setExternalNodes}.
+     * @name SoundSlot#getExternalNodes
+     * @description Gets an array that contains the two external nodes set by {@link SoundSlot#setExternalNodes}.
+     * @returns {AudioNode[]} An array of 2 elements that contains the first and last nodes set by {@link SoundSlot#setExternalNodes}.
      */
     getExternalNodes() {
         return [this._firstNode, this._lastNode];
@@ -301,7 +302,7 @@ class SoundSlot extends EventHandler {
     /**
      * @function
      * @private
-     * @name pc.SoundSlot#_hasAsset
+     * @name SoundSlot#_hasAsset
      * @returns {boolean} Returns true if the slot has an asset assigned.
      */
     _hasAsset() {
@@ -312,9 +313,9 @@ class SoundSlot extends EventHandler {
     /**
      * @function
      * @private
-     * @name pc.SoundSlot#_createInstance
-     * @description Creates a new pc.SoundInstance with the properties of the slot.
-     * @returns {pc.SoundInstance} The new instance.
+     * @name SoundSlot#_createInstance
+     * @description Creates a new {@link SoundInstance} with the properties of the slot.
+     * @returns {SoundInstance} The new instance.
      */
     _createInstance() {
         var instance = null;
@@ -617,37 +618,37 @@ class SoundSlot extends EventHandler {
 
     /**
      * @event
-     * @name pc.SoundSlot#play
+     * @name SoundSlot#play
      * @description Fired when a sound instance starts playing.
-     * @param {pc.SoundInstance} instance - The instance that started playing.
+     * @param {SoundInstance} instance - The instance that started playing.
      */
 
     /**
      * @event
-     * @name pc.SoundSlot#pause
+     * @name SoundSlot#pause
      * @description Fired when a sound instance is paused.
-     * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound.
+     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
      */
 
     /**
      * @event
-     * @name pc.SoundSlot#resume
+     * @name SoundSlot#resume
      * @description Fired when a sound instance is resumed..
-     * @param {pc.SoundInstance} instance - The instance that was resumed.
+     * @param {SoundInstance} instance - The instance that was resumed.
      */
 
     /**
      * @event
-     * @name pc.SoundSlot#stop
+     * @name SoundSlot#stop
      * @description Fired when a sound instance is stopped.
-     * @param {pc.SoundInstance} instance - The instance that was stopped.
+     * @param {SoundInstance} instance - The instance that was stopped.
      */
 
     /**
      * @event
-     * @name pc.SoundSlot#load
+     * @name SoundSlot#load
      * @description Fired when the asset assigned to the slot is loaded.
-     * @param {pc.Sound} sound - The sound resource that was loaded.
+     * @param {Sound} sound - The sound resource that was loaded.
      */
 }
 

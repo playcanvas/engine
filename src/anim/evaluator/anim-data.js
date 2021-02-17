@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimData
+ * @name AnimData
  * @classdesc Wraps a set of data used in animation.
  * @description Create a new animation data container.
  * @param {number} components - Specifies how many components make up an element of data.

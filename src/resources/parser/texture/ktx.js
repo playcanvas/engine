@@ -26,8 +26,8 @@ const KNOWN_FORMATS = {
 
 /**
  * @class
- * @name pc.KtxParser
- * @implements {pc.TextureParser}
+ * @name KtxParser
+ * @implements {TextureParser}
  * @classdesc Texture parser for ktx files.
  */
 class KtxParser {
