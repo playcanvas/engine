@@ -607,7 +607,7 @@ class Texture {
 
                 if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
                     format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    blockWidth = Math.floor(blockWidth / 2);
+                    blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
                 }
 
                 result += blockWidth * blockHeight * blockDepth * blockSize;
