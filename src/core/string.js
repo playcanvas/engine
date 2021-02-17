@@ -201,10 +201,10 @@ var string = {
      * @function
      * @name string.getSymbols
      * @description Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
-     * some symbols (such as emoji or accented characters) are actually made up of multiple character codes.
+     * some symbols (such as emoji or accented characters) are actually made up of multiple character codes. See
+     * {@link https://mathiasbynens.be/notes/javascript-unicode here} for more info.
      * @param {string} string - The string to break into symbols.
      * @returns {string[]} The symbols in the string.
-     * @see {@link https://mathiasbynens.be/notes/javascript-unicode Unicode strings in JavaScript}
      */
     getSymbols: function (string) {
         if (typeof string !== 'string') {
