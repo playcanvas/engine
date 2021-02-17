@@ -3,11 +3,11 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
 var tipJointIds = window.XRHand ? [
-    XRHand.THUMB_PHALANX_TIP,
-    XRHand.INDEX_PHALANX_TIP,
-    XRHand.MIDDLE_PHALANX_TIP,
-    XRHand.RING_PHALANX_TIP,
-    XRHand.LITTLE_PHALANX_TIP
+    'thumb-tip',
+    'index-finger-tip',
+    'middle-finger-tip',
+    'ring-finger-tip',
+    'pinky-finger-tip'
 ] : [];
 
 var tipJointIdsIndex = {};
@@ -44,7 +44,7 @@ class XrJoint {
         this._finger = finger;
         if (this._finger) this._finger._joints.push(this);
 
-        this._wrist = id === XRHand.WRIST;
+        this._wrist = id === 'wrist';
         if (this._wrist) this._hand._wrist = this;
 
         this._tip = this._finger && !! tipJointIdsIndex[id];
