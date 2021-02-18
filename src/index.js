@@ -166,6 +166,7 @@ export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';
 export { SceneHandler } from './resources/scene.js';
 export { SceneSettingsHandler } from './resources/scene-settings.js';
+export { SceneUtils } from './resources/scene-utils';
 export { ShaderHandler } from './resources/shader.js';
 export { SpriteHandler } from './resources/sprite.js';
 export { TemplateHandler } from './resources/template.js';
