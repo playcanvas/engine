@@ -9,7 +9,7 @@ import { _matTex2D, standard } from '../../graphics/program-lib/programs/standar
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
-    FRESNEL_NONE,
+    FRESNEL_SCHLICK,
     SHADER_FORWARDHDR, SHADER_PICK,
     SPECOCC_AO,
     SPECULAR_BLINN, SPECULAR_PHONG
@@ -1112,7 +1112,7 @@ function _defineMaterialProps(obj) {
     _defineFlag(obj, "opacityFadesSpecular", true);
     _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
     _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
-    _defineFlag(obj, "fresnelModel", FRESNEL_NONE);
+    _defineFlag(obj, "fresnelModel", FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag(obj, "cubeMapProjection", CUBEPROJ_NONE);
     _defineFlag(obj, "customFragmentShader", null);
     _defineFlag(obj, "forceFragmentPrecision", null);
