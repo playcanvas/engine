@@ -115,18 +115,10 @@ class SceneRegistry {
         }
     }
 
-    /**
-     * @function
-     * @name pc.SceneRegistry#loadSceneData
-     * @description Use to load the scene data and handles caching of that data to reduce the number of the network
-     * requests when the same scenes are loaded multiple times. Can also be used to load data ahead of
-     * {@link pc.SceneRegistry.loadSceneHierarchy} and {@link pc.SceneRegistry.loadSceneSettings} calls to make
-     * scene loading quicker for the user.
-     * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
-     * @param {pc.callbacks.LoadSceneData} callback - The function to call after loading,
-     * passed (err, sceneItem) where err is null if no errors occurred.
-     */
-    loadSceneData(sceneItem, callback) {
+    // Private function to load scene data with the option to cache
+    // This allows us to retain expected behavior of loadSceneSettings and loadSceneHierarchy where they
+    // don't store loaded data which may be undesired behavior with projects that have many scenes.
+    _loadSceneData(sceneItem, storeInCache, callback) {
         // If it's a sceneItem, we want to be able to cache the data
         // that is loaded so we don't do a subsequent http requests
         // on the same scene later
@@ -176,11 +168,31 @@ class SceneRegistry {
                     sceneItem._onLoadedCallbacks[i](err, sceneItem);
                 }
 
+                // Remove the data if it's not been requested to store in cache
+                if (!storeInCache) {
+                    sceneItem.data = null;
+                }
+
                 sceneItem._onLoadedCallbacks.length = 0;
             });
         }
 
         sceneItem._loading = true;
+    }
+
+    /**
+     * @function
+     * @name pc.SceneRegistry#loadSceneData
+     * @description Use to load the scene data and handles caching of that data to reduce the number of the network
+     * requests when the same scenes are loaded multiple times. Can also be used to load data ahead of
+     * {@link pc.SceneRegistry.loadSceneHierarchy} and {@link pc.SceneRegistry.loadSceneSettings} calls to make
+     * scene loading quicker for the user.
+     * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+     * @param {pc.callbacks.LoadSceneData} callback - The function to call after loading,
+     * passed (err, sceneItem) where err is null if no errors occurred.
+     */
+    loadSceneData(sceneItem, callback) {
+        this._loadSceneData(sceneItem, true, callback);
     }
 
     /**
@@ -231,7 +243,7 @@ class SceneRegistry {
         // Split loading into load and open
         var handler = this._app.loader.getHandler("hierarchy");
 
-        this.loadSceneData(sceneItem, function (err, sceneItem) {
+        this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (err) {
                 if (callback) callback(err);
                 return;
@@ -261,7 +273,7 @@ class SceneRegistry {
             };
 
             // load priority and referenced scripts before opening scene
-            self._app._preloadScripts(sceneItem.data, _loaded);
+            self._app._preloadScripts(data, _loaded);
         });
     }
 
@@ -286,7 +298,7 @@ class SceneRegistry {
     loadSceneSettings(sceneItem, callback) {
         var self = this;
 
-        this.loadSceneData(sceneItem, function (err, sceneItem) {
+        this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (!err) {
                 self._app.applySceneSettings(sceneItem.data.settings);
                 if (callback) {
