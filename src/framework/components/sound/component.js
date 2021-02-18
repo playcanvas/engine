@@ -7,35 +7,35 @@ import { SoundSlot } from './slot.js';
 /**
  * @component
  * @class
- * @name pc.SoundComponent
- * @augments pc.Component
- * @classdesc The Sound Component controls playback of {@link pc.Sound}s.
+ * @name SoundComponent
+ * @augments Component
+ * @classdesc The Sound Component controls playback of {@link Sound}s.
  * @description Create a new Sound Component.
- * @param {pc.SoundComponentSystem} system - The ComponentSystem that created this
+ * @param {SoundComponentSystem} system - The ComponentSystem that created this
  * component.
- * @param {pc.Entity} entity - The entity that the Component is attached to.
+ * @param {Entity} entity - The entity that the Component is attached to.
  * @property {number} volume The volume modifier to play the audio with. In range 0-1.
  * Defaults to 1.
  * @property {number} pitch The pitch modifier to play the audio with. Must be larger
  * than 0.01. Defaults to 1.
  * @property {boolean} positional If true the audio will play back at the location
  * of the Entity in space, so the audio will be affected by the position of the
- * {@link pc.AudioListenerComponent}. Defaults to true.
+ * {@link AudioListenerComponent}. Defaults to true.
  * @property {string} distanceModel Determines which algorithm to use to reduce the
  * volume of the sound as it moves away from the listener. Can be:
  *
- * * {@link pc.DISTANCE_LINEAR}
- * * {@link pc.DISTANCE_INVERSE}
- * * {@link pc.DISTANCE_EXPONENTIAL}
+ * * {@link DISTANCE_LINEAR}
+ * * {@link DISTANCE_INVERSE}
+ * * {@link DISTANCE_EXPONENTIAL}
  *
- * Defaults to {@link pc.DISTANCE_LINEAR}.
+ * Defaults to {@link DISTANCE_LINEAR}.
  * @property {number} refDistance The reference distance for reducing volume as the
  * sound source moves further from the listener. Defaults to 1.
  * @property {number} maxDistance The maximum distance from the listener at which audio
  * falloff stops. Note the volume of the audio is not 0 after this distance, but just
  * doesn't fall off anymore. Defaults to 10000.
  * @property {number} rollOffFactor The factor used in the falloff equation. Defaults to 1.
- * @property {object} slots A dictionary that contains the {@link pc.SoundSlot}s managed
+ * @property {object} slots A dictionary that contains the {@link SoundSlot}s managed
  * by this SoundComponent.
  */
 class SoundComponent extends Component {
@@ -174,8 +174,8 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#addSlot
-     * @description Creates a new {@link pc.SoundSlot} with the specified name.
+     * @name SoundComponent#addSlot
+     * @description Creates a new {@link SoundSlot} with the specified name.
      * @param {string} name - The name of the slot.
      * @param {object} [options] - Settings for the slot.
      * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
@@ -186,7 +186,7 @@ class SoundComponent extends Component {
      * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
      * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
      * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
-     * @returns {pc.SoundSlot} The new slot.
+     * @returns {SoundSlot} The new slot.
      * @example
      * // get an asset by id
      * var asset = app.assets.get(10);
@@ -218,8 +218,8 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#removeSlot
-     * @description Removes the {@link pc.SoundSlot} with the specified name.
+     * @name SoundComponent#removeSlot
+     * @description Removes the {@link SoundSlot} with the specified name.
      * @param {string} name - The name of the slot.
      * @example
      * // remove a slot called 'beep'
@@ -235,10 +235,10 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#slot
+     * @name SoundComponent#slot
      * @description Returns the slot with the specified name.
      * @param {string} name - The name of the slot.
-     * @returns {pc.SoundSlot} The slot.
+     * @returns {SoundSlot} The slot.
      * @example
      * // get a slot and set its volume
      * this.entity.sound.slot('beep').volume = 0.5;
@@ -250,9 +250,9 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#play
+     * @name SoundComponent#play
      * @description Begins playing the sound slot with the specified name. The slot will restart playing if it is already playing unless the overlap field is true in which case a new sound will be created and played.
-     * @param {string} name - The name of the {@link pc.SoundSlot} to play.
+     * @param {string} name - The name of the {@link SoundSlot} to play.
      * @example
      * // get asset by id
      * var asset = app.assets.get(10);
@@ -261,7 +261,7 @@ class SoundComponent extends Component {
      *     asset: asset
      * });
      * this.entity.sound.play('beep');
-     * @returns {pc.SoundInstance} The sound instance that will be played.
+     * @returns {SoundInstance} The sound instance that will be played.
      */
     play(name) {
         if (!this.enabled || !this.entity.enabled) {
@@ -281,8 +281,8 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#pause
-     * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link pc.SoundComponent#resume}.
+     * @name SoundComponent#pause
+     * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link SoundComponent#resume}.
      * @param {string} [name] - The name of the slot to pause. Leave undefined to pause everything.
      * @example
      * // pause all sounds
@@ -313,7 +313,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#resume
+     * @name SoundComponent#resume
      * @description Resumes playback of the sound slot with the specified name if it's paused. If no
      * name is specified all slots will be resumed.
      * @param {string} [name] - The name of the slot to resume. Leave undefined to resume everything.
@@ -347,7 +347,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#stop
+     * @name SoundComponent#stop
      * @description Stops playback of the sound slot with the specified name if it's paused. If no
      * name is specified all slots will be stopped.
      * @param {string} [name] - The name of the slot to stop. Leave undefined to stop everything.
@@ -435,42 +435,42 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
 
 /**
  * @event
- * @name pc.SoundComponent#play
+ * @name SoundComponent#play
  * @description Fired when a sound instance starts playing.
- * @param {pc.SoundSlot} slot - The slot whose instance started playing.
- * @param {pc.SoundInstance} instance - The instance that started playing.
+ * @param {SoundSlot} slot - The slot whose instance started playing.
+ * @param {SoundInstance} instance - The instance that started playing.
  */
 
 /**
  * @event
- * @name pc.SoundComponent#pause
+ * @name SoundComponent#pause
  * @description Fired when a sound instance is paused.
- * @param {pc.SoundSlot} slot - The slot whose instance was paused.
- * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound.
+ * @param {SoundSlot} slot - The slot whose instance was paused.
+ * @param {SoundInstance} instance - The instance that was paused created to play the sound.
  */
 
 /**
  * @event
- * @name pc.SoundComponent#resume
+ * @name SoundComponent#resume
  * @description Fired when a sound instance is resumed..
- * @param {pc.SoundSlot} slot - The slot whose instance was resumed.
- * @param {pc.SoundInstance} instance - The instance that was resumed.
+ * @param {SoundSlot} slot - The slot whose instance was resumed.
+ * @param {SoundInstance} instance - The instance that was resumed.
  */
 
 /**
  * @event
- * @name pc.SoundComponent#stop
+ * @name SoundComponent#stop
  * @description Fired when a sound instance is stopped.
- * @param {pc.SoundSlot} slot - The slot whose instance was stopped.
- * @param {pc.SoundInstance} instance - The instance that was stopped.
+ * @param {SoundSlot} slot - The slot whose instance was stopped.
+ * @param {SoundInstance} instance - The instance that was stopped.
  */
 
 /**
  * @event
- * @name pc.SoundComponent#end
+ * @name SoundComponent#end
  * @description Fired when a sound instance stops playing because it reached its ending.
- * @param {pc.SoundSlot} slot - The slot whose instance ended.
- * @param {pc.SoundInstance} instance - The instance that ended.
+ * @param {SoundSlot} slot - The slot whose instance ended.
+ * @param {SoundInstance} instance - The instance that ended.
  */
 
 export { SoundComponent };

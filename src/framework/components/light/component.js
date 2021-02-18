@@ -22,8 +22,8 @@ var _lightPropsDefault = [];
 /**
  * @component
  * @class
- * @name pc.LightComponent
- * @augments pc.Component
+ * @name LightComponent
+ * @augments Component
  * @classdesc The Light Component enables the Entity to light the scene. There are three types
  * of light: directional, point and spot. Directional lights are global in that they are
  * considered to be infinitely far away and light the entire scene. Point and spot lights
@@ -31,8 +31,8 @@ var _lightPropsDefault = [];
  * a point light where light is emitted in a cone rather than in all directions. Lights
  * also have the ability to cast shadows to add realism to your scenes.
  * @description Creates a new Light Component.
- * @param {pc.LightComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @example
  * // Add a pc.LightComponent to an entity
  * var entity = new pc.Entity();
@@ -52,7 +52,7 @@ var _lightPropsDefault = [];
  * * "point": A light that illuminates in all directions from a point.
  * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
  * Defaults to "directional".
- * @property {pc.Color} color The Color of the light. The alpha component of the color is
+ * @property {Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
@@ -73,10 +73,10 @@ var _lightPropsDefault = [];
  * to 45.
  * @property {number} falloffMode Controls the rate at which a light attenuates from
  * its position. Can be:
- * * {@link pc.LIGHTFALLOFF_LINEAR}: Linear.
- * * {@link pc.LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
- * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
- * @property {number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
+ * * {@link LIGHTFALLOFF_LINEAR}: Linear.
+ * * {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
+ * Affects point and spot lights only. Defaults to {@link LIGHTFALLOFF_LINEAR}.
+ * @property {number} mask Defines a mask to determine which {@link MeshInstance}s are
  * lit by this light. Defaults to 1.
  * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects
  * @property {boolean} affectLightmapped If enabled the light will affect lightmapped objects
@@ -86,29 +86,29 @@ var _lightPropsDefault = [];
  * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
  * The error is not always visible though, and highly scene-dependent.
  * @property {number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
- * * {@link pc.SHADOWUPDATE_NONE}: Don't render shadows.
- * * {@link pc.SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).
- * * {@link pc.SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
+ * * {@link SHADOWUPDATE_NONE}: Don't render shadows.
+ * * {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to {@link SHADOWUPDATE_NONE}.
+ * * {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
  * @property {number} shadowType Type of shadows being rendered by this light. Options:
- * * {@link pc.SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
- * * {@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
- * * {@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
- * * {@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
- * * {@link pc.SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
+ * * {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
+ * * {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
+ * * {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
+ * * {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
+ * * {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps:
- * * {@link pc.BLUR_BOX}: Box filter.
- * * {@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
+ * * {@link BLUR_BOX}: Box filter.
+ * * {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
  * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
  * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
- * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
+ * @property {Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
  * @property {number} cookieIntensity Projection texture intensity (default is 1).
  * @property {boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
  * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} cookieAngle Angle for spotlight cookie rotation.
- * @property {pc.Vec2} cookieScale Spotlight cookie scale.
- * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
+ * @property {Vec2} cookieScale Spotlight cookie scale.
+ * @property {Vec2} cookieOffset Spotlight cookie position offset.
  * @property {boolean} isStatic Mark light as non-movable (optimization)
- * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
 class LightComponent extends Component {

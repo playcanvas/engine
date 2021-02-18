@@ -8,15 +8,15 @@ import { Component } from '../component.js';
  * @private
  * @component
  * @class
- * @name pc.AudioSourceComponent
- * @augments pc.Component
+ * @name AudioSourceComponent
+ * @augments Component
  * @classdesc The AudioSource Component controls playback of an audio sample. This
- * class will be deprecated in favor of {@link pc.SoundComponent}.
+ * class will be deprecated in favor of {@link SoundComponent}.
  * @description Create a new AudioSource Component.
- * @param {pc.AudioSourceComponentSystem} system - The ComponentSystem that created
+ * @param {AudioSourceComponentSystem} system - The ComponentSystem that created
  * this component.
- * @param {pc.Entity} entity - The entity that the Component is attached to.
- * @property {pc.Asset[]} assets The list of audio assets - can also be an array of
+ * @param {Entity} entity - The entity that the Component is attached to.
+ * @property {Asset[]} assets The list of audio assets - can also be an array of
  * asset ids.
  * @property {boolean} activate If true the audio will begin playing as soon as the
  * scene is loaded.
@@ -26,7 +26,7 @@ import { Component } from '../component.js';
  * @property {boolean} loop If true the audio will restart when it finishes playing.
  * @property {boolean} 3d If true the audio will play back at the location of the*
  * entity in space, so the audio will be affect by the position of the
- * {@link pc.AudioListenerComponent}.
+ * {@link AudioListenerComponent}.
  * @property {string} distanceModel Determines which algorithm to use to reduce the
  * volume of the audio as it moves away from the listener. Can be:
  *
@@ -60,7 +60,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#play
+     * @name AudioSourceComponent#play
      * @description Begin playback of an audio asset in the component attached to an entity.
      * @param {string} name - The name of the Asset to play.
      */
@@ -93,8 +93,8 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#pause
-     * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}.
+     * @name AudioSourceComponent#pause
+     * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link AudioSourceComponent#unpause}.
      */
     pause() {
         if (this.channel) {
@@ -105,7 +105,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#unpause
+     * @name AudioSourceComponent#unpause
      * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
      */
     unpause() {
@@ -117,7 +117,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#stop
+     * @name AudioSourceComponent#stop
      * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
      */
     stop() {

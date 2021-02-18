@@ -20,52 +20,52 @@ var _blockSizeTable = null;
 
 /**
  * @class
- * @name pc.Texture
+ * @name Texture
  * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
  * Typically, the texel data represents an image that is mapped over geometry.
  * @description Creates a new texture.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
  * @param {object} [options] - Object for passing optional arguments.
  * @param {string} [options.name] - The name of the texture.
  * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
  * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
  * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
  * @param {number} [options.format] - The pixel format of the texture. Can be:
- * * {@link pc.PIXELFORMAT_A8}
- * * {@link pc.PIXELFORMAT_L8}
- * * {@link pc.PIXELFORMAT_L8_A8}
- * * {@link pc.PIXELFORMAT_R5_G6_B5}
- * * {@link pc.PIXELFORMAT_R5_G5_B5_A1}
- * * {@link pc.PIXELFORMAT_R4_G4_B4_A4}
- * * {@link pc.PIXELFORMAT_R8_G8_B8}
- * * {@link pc.PIXELFORMAT_R8_G8_B8_A8}
- * * {@link pc.PIXELFORMAT_DXT1}
- * * {@link pc.PIXELFORMAT_DXT3}
- * * {@link pc.PIXELFORMAT_DXT5}
- * * {@link pc.PIXELFORMAT_RGB16F}
- * * {@link pc.PIXELFORMAT_RGBA16F}
- * * {@link pc.PIXELFORMAT_RGB32F}
- * * {@link pc.PIXELFORMAT_RGBA32F}
- * * {@link pc.PIXELFORMAT_ETC1}
- * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}
- * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}
- * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}
- * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}
- * * {@link pc.PIXELFORMAT_111110F}
- * * {@link pc.PIXELFORMAT_ASTC_4x4}>/li>
- * * {@link pc.PIXELFORMAT_ATC_RGB}
- * * {@link pc.PIXELFORMAT_ATC_RGBA}
- * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
- * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
- * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
+ * * {@link PIXELFORMAT_A8}
+ * * {@link PIXELFORMAT_L8}
+ * * {@link PIXELFORMAT_L8_A8}
+ * * {@link PIXELFORMAT_R5_G6_B5}
+ * * {@link PIXELFORMAT_R5_G5_B5_A1}
+ * * {@link PIXELFORMAT_R4_G4_B4_A4}
+ * * {@link PIXELFORMAT_R8_G8_B8}
+ * * {@link PIXELFORMAT_R8_G8_B8_A8}
+ * * {@link PIXELFORMAT_DXT1}
+ * * {@link PIXELFORMAT_DXT3}
+ * * {@link PIXELFORMAT_DXT5}
+ * * {@link PIXELFORMAT_RGB16F}
+ * * {@link PIXELFORMAT_RGBA16F}
+ * * {@link PIXELFORMAT_RGB32F}
+ * * {@link PIXELFORMAT_RGBA32F}
+ * * {@link PIXELFORMAT_ETC1}
+ * * {@link PIXELFORMAT_PVRTC_2BPP_RGB_1}
+ * * {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+ * * {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
+ * * {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+ * * {@link PIXELFORMAT_111110F}
+ * * {@link PIXELFORMAT_ASTC_4x4}>/li>
+ * * {@link PIXELFORMAT_ATC_RGB}
+ * * {@link PIXELFORMAT_ATC_RGBA}
+ * Defaults to {@link PIXELFORMAT_R8_G8_B8_A8}.
+ * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
+ * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
  * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
- * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
- * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
- * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
+ * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link ADDRESS_REPEAT}
+ * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link ADDRESS_REPEAT}
+ * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link ADDRESS_REPEAT}
  * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
  * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
  * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
- * @param {string} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
+ * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}
  * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
  * seam fixing shader code to look right. Defaults to false.
  * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
@@ -73,17 +73,17 @@ var _blockSizeTable = null;
  * pixel data. Defaults to true.
  * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color
  * channels. Defaults to false.
- * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+ * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL},
  * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
  * Defaults to false.
- * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+ * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to {@link FUNC_LESS}.
  * Possible values:
- * * {@link pc.FUNC_LESS}
- * * {@link pc.FUNC_LESSEQUAL}
- * * {@link pc.FUNC_GREATER}
- * * {@link pc.FUNC_GREATEREQUAL}
- * * {@link pc.FUNC_EQUAL}
- * * {@link pc.FUNC_NOTEQUAL}
+ * * {@link FUNC_LESS}
+ * * {@link FUNC_LESSEQUAL}
+ * * {@link FUNC_GREATER}
+ * * {@link FUNC_GREATEREQUAL}
+ * * {@link FUNC_EQUAL}
+ * * {@link FUNC_NOTEQUAL}
  * @example
  * // Create a 8x8x24-bit texture
  * var texture = new pc.Texture(graphicsDevice, {
@@ -216,15 +216,15 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#minFilter
+     * @name Texture#minFilter
      * @type {number}
      * @description The minification filter to be applied to the texture. Can be:
-     * * {@link pc.FILTER_NEAREST}
-     * * {@link pc.FILTER_LINEAR}
-     * * {@link pc.FILTER_NEAREST_MIPMAP_NEAREST}
-     * * {@link pc.FILTER_NEAREST_MIPMAP_LINEAR}
-     * * {@link pc.FILTER_LINEAR_MIPMAP_NEAREST}
-     * * {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
+     * * {@link FILTER_NEAREST}
+     * * {@link FILTER_LINEAR}
+     * * {@link FILTER_NEAREST_MIPMAP_NEAREST}
+     * * {@link FILTER_NEAREST_MIPMAP_LINEAR}
+     * * {@link FILTER_LINEAR_MIPMAP_NEAREST}
+     * * {@link FILTER_LINEAR_MIPMAP_LINEAR}
      */
     get minFilter() {
         return this._minFilter;
@@ -238,11 +238,11 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#magFilter
+     * @name Texture#magFilter
      * @type {number}
      * @description The magnification filter to be applied to the texture. Can be:
-     * * {@link pc.FILTER_NEAREST}
-     * * {@link pc.FILTER_LINEAR}
+     * * {@link FILTER_NEAREST}
+     * * {@link FILTER_LINEAR}
      */
     get magFilter() {
         return this._magFilter;
@@ -256,12 +256,12 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#addressU
+     * @name Texture#addressU
      * @type {number}
      * @description The addressing mode to be applied to the texture horizontally. Can be:
-     * * {@link pc.ADDRESS_REPEAT}
-     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
-     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
+     * * {@link ADDRESS_REPEAT}
+     * * {@link ADDRESS_CLAMP_TO_EDGE}
+     * * {@link ADDRESS_MIRRORED_REPEAT}
      */
     get addressU() {
         return this._addressU;
@@ -275,12 +275,12 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#addressV
+     * @name Texture#addressV
      * @type {number}
      * @description The addressing mode to be applied to the texture vertically. Can be:
-     * * {@link pc.ADDRESS_REPEAT}
-     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
-     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
+     * * {@link ADDRESS_REPEAT}
+     * * {@link ADDRESS_CLAMP_TO_EDGE}
+     * * {@link ADDRESS_MIRRORED_REPEAT}
      */
     get addressV() {
         return this._addressV;
@@ -294,12 +294,12 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#addressW
+     * @name Texture#addressW
      * @type {number}
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
-     * * {@link pc.ADDRESS_REPEAT}
-     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
-     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
+     * * {@link ADDRESS_REPEAT}
+     * * {@link ADDRESS_CLAMP_TO_EDGE}
+     * * {@link ADDRESS_MIRRORED_REPEAT}
      */
     get addressW() {
         return this._addressW;
@@ -320,9 +320,9 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#compareOnRead
+     * @name Texture#compareOnRead
      * @type {boolean}
-     * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * @description When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL},
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
     get compareOnRead() {
@@ -337,16 +337,16 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#compareFunc
+     * @name Texture#compareFunc
      * @type {number}
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
      * Possible values:
-     * * {@link pc.FUNC_LESS}
-     * * {@link pc.FUNC_LESSEQUAL}
-     * * {@link pc.FUNC_GREATER}
-     * * {@link pc.FUNC_GREATEREQUAL}
-     * * {@link pc.FUNC_EQUAL}
-     * * {@link pc.FUNC_NOTEQUAL}
+     * * {@link FUNC_LESS}
+     * * {@link FUNC_LESSEQUAL}
+     * * {@link FUNC_GREATER}
+     * * {@link FUNC_GREATEREQUAL}
+     * * {@link FUNC_EQUAL}
+     * * {@link FUNC_NOTEQUAL}
      */
     get compareFunc() {
         return this._compareFunc;
@@ -360,10 +360,10 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#anisotropy
+     * @name Texture#anisotropy
      * @type {number}
      * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
+     * ranging from 1 (no anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
      */
     get anisotropy() {
         return this._anisotropy;
@@ -379,7 +379,7 @@ class Texture {
     /**
      * @private
      * @deprecated
-     * @name pc.Texture#autoMipmap
+     * @name Texture#autoMipmap
      * @type {boolean}
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
@@ -392,7 +392,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#mipmaps
+     * @name Texture#mipmaps
      * @type {boolean}
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
@@ -411,7 +411,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#width
+     * @name Texture#width
      * @type {number}
      * @description The width of the texture in pixels.
      */
@@ -421,7 +421,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#height
+     * @name Texture#height
      * @type {number}
      * @description The height of the texture in pixels.
      */
@@ -431,7 +431,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#depth
+     * @name Texture#depth
      * @type {number}
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
@@ -441,33 +441,33 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#format
+     * @name Texture#format
      * @type {number}
      * @description The pixel format of the texture. Can be:
-     * * {@link pc.PIXELFORMAT_A8}
-     * * {@link pc.PIXELFORMAT_L8}
-     * * {@link pc.PIXELFORMAT_L8_A8}
-     * * {@link pc.PIXELFORMAT_R5_G6_B5}
-     * * {@link pc.PIXELFORMAT_R5_G5_B5_A1}
-     * * {@link pc.PIXELFORMAT_R4_G4_B4_A4}
-     * * {@link pc.PIXELFORMAT_R8_G8_B8}
-     * * {@link pc.PIXELFORMAT_R8_G8_B8_A8}
-     * * {@link pc.PIXELFORMAT_DXT1}
-     * * {@link pc.PIXELFORMAT_DXT3}
-     * * {@link pc.PIXELFORMAT_DXT5}
-     * * {@link pc.PIXELFORMAT_RGB16F}
-     * * {@link pc.PIXELFORMAT_RGBA16F}
-     * * {@link pc.PIXELFORMAT_RGB32F}
-     * * {@link pc.PIXELFORMAT_RGBA32F}
-     * * {@link pc.PIXELFORMAT_ETC1}
-     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}
-     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}
-     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}
-     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * * {@link pc.PIXELFORMAT_111110F}
-     * * {@link pc.PIXELFORMAT_ASTC_4x4}>/li>
-     * * {@link pc.PIXELFORMAT_ATC_RGB}
-     * * {@link pc.PIXELFORMAT_ATC_RGBA}
+     * * {@link PIXELFORMAT_A8}
+     * * {@link PIXELFORMAT_L8}
+     * * {@link PIXELFORMAT_L8_A8}
+     * * {@link PIXELFORMAT_R5_G6_B5}
+     * * {@link PIXELFORMAT_R5_G5_B5_A1}
+     * * {@link PIXELFORMAT_R4_G4_B4_A4}
+     * * {@link PIXELFORMAT_R8_G8_B8}
+     * * {@link PIXELFORMAT_R8_G8_B8_A8}
+     * * {@link PIXELFORMAT_DXT1}
+     * * {@link PIXELFORMAT_DXT3}
+     * * {@link PIXELFORMAT_DXT5}
+     * * {@link PIXELFORMAT_RGB16F}
+     * * {@link PIXELFORMAT_RGBA16F}
+     * * {@link PIXELFORMAT_RGB32F}
+     * * {@link PIXELFORMAT_RGBA32F}
+     * * {@link PIXELFORMAT_ETC1}
+     * * {@link PIXELFORMAT_PVRTC_2BPP_RGB_1}
+     * * {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+     * * {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
+     * * {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+     * * {@link PIXELFORMAT_111110F}
+     * * {@link PIXELFORMAT_ASTC_4x4}>/li>
+     * * {@link PIXELFORMAT_ATC_RGB}
+     * * {@link PIXELFORMAT_ATC_RGBA}
      */
     get format() {
         return this._format;
@@ -475,7 +475,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#cubemap
+     * @name Texture#cubemap
      * @type {boolean}
      * @description Returns true if this texture is a cube map and false otherwise.
      */
@@ -490,7 +490,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#volume
+     * @name Texture#volume
      * @type {boolean}
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
@@ -499,7 +499,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#flipY
+     * @name Texture#flipY
      * @type {boolean}
      * @description Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
@@ -529,7 +529,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#pot
+     * @name Texture#pot
      * @type {boolean}
      * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
      */
@@ -541,12 +541,12 @@ class Texture {
     /**
      * @private
      * @function
-     * @name pc.Texture.calcGpuSize
+     * @name Texture.calcGpuSize
      * @description Calculate the GPU memory required for a texture.
      * @param {number} [width] - Texture's width.
      * @param {number} [height] - Texture's height.
      * @param {number} [depth] - Texture's depth.
-     * @param {number} [format] - Texture's pixel format (pc.PIXELFORMAT_***).
+     * @param {number} [format] - Texture's pixel format PIXELFORMAT_***.
      * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise.
      * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise.
      * @returns {number} The amount of GPU memory required for the texture, in bytes.
@@ -607,7 +607,7 @@ class Texture {
 
                 if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
                     format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    blockWidth = Math.floor(blockWidth / 2, 1);
+                    blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
                 }
 
                 result += blockWidth * blockHeight * blockDepth * blockSize;
@@ -627,7 +627,7 @@ class Texture {
     // Public methods
     /**
      * @function
-     * @name pc.Texture#destroy
+     * @name Texture#destroy
      * @description Forcibly free up the underlying WebGL resource owned by the texture.
      */
     destroy() {
@@ -651,11 +651,15 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#lock
+     * @name Texture#lock
      * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
      * @param {object} [options] - Optional options object. Valid properties are as follows:
      * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
+     * @param {number} [options.mode] - The lock mode. Can be:
+     * * {@link TEXTURELOCK_READ}
+     * * {@link TEXTURELOCK_WRITE}
+     * Defaults to {@link TEXTURELOCK_WRITE}.
      * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
      */
     lock(options = {}) {
@@ -719,7 +723,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#setSource
+     * @name Texture#setSource
      * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
      * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
      * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A canvas, image or video element,
@@ -814,7 +818,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#getSource
+     * @name Texture#getSource
      * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
      * a single image.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
@@ -827,7 +831,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#unlock
+     * @name Texture#unlock
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
@@ -844,9 +848,9 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#upload
+     * @name Texture#upload
      * @description Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link pc.Texture#setSource} and {@link pc.Texture#unlock}. However, it still needs to
+     * is called by internally by {@link Texture#setSource} and {@link Texture#unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,
      * this is done once every frame before video textured geometry is rendered.
      */

@@ -5,10 +5,10 @@ import { SceneUtils } from "./scene-utils";
 
 /**
  * @class
- * @name pc.SceneHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Scene} resources.
- * @param {pc.Application} app - The running {@link pc.Application}.
+ * @name SceneHandler
+ * @implements {ResourceHandler}
+ * @classdesc Resource handler used for loading {@link Scene} resources.
+ * @param {Application} app - The running {@link Application}.
  */
 class SceneHandler {
     constructor(app) {

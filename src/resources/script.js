@@ -2,12 +2,12 @@ import { script } from '../framework/script.js';
 
 /**
  * @class
- * @name pc.ScriptHandler
- * @implements {pc.ResourceHandler}
+ * @name ScriptHandler
+ * @implements {ResourceHandler}
  * @classdesc Resource handler for loading JavaScript files dynamically
- * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link pc.createScript},
+ * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link createScript},
  * or regular JavaScript files, such as third-party libraries.
- * @param {pc.Application} app - The running {@link pc.Application}.
+ * @param {Application} app - The running {@link Application}.
  */
 class ScriptHandler {
     constructor(app) {

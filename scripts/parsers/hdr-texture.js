@@ -43,7 +43,7 @@ Object.assign(Reader.prototype, {
 /**
  * @class
  * @name HdrParser
- * @implements {pc.TextureParser}
+ * @implements {TextureParser}
  * @classdesc Texture parser for hdr files.
  */
 function HdrParser(registry) {

@@ -27,8 +27,8 @@ function syncToCpu(device, targ, face) {
 /**
  * @static
  * @function
- * @name pc.prefilterCubemap
- * @description Prefilter a cubemap for use by a {@link pc.StandardMaterial} as an environment map. Should only be used for cubemaps that can't be prefiltered ahead of time (in the editor).
+ * @name prefilterCubemap
+ * @description Prefilter a cubemap for use by a {@link StandardMaterial} as an environment map. Should only be used for cubemaps that can't be prefiltered ahead of time (in the editor).
  * @param {object} options - The options for how the cubemap is prefiltered.
  */
 function prefilterCubemap(options) {
@@ -247,7 +247,6 @@ function prefilterCubemap(options) {
             cubemap._levels[i] = mips[i]._levels[0];
 
         cubemap.upload();
-        cubemap._prefilteredMips = true;
         options.singleFilteredFixed = cubemap;
     }
 
@@ -268,7 +267,6 @@ function prefilterCubemap(options) {
             cubemap._levels[i] = mips[i]._levels[0];
         }
         cubemap.upload();
-        cubemap._prefilteredMips = true;
         options.singleFilteredFixedRgbm = cubemap;
     }
 }

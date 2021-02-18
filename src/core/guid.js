@@ -1,5 +1,5 @@
 /**
- * @name pc.guid
+ * @name guid
  * @namespace
  * @description Basically a very large random number (128-bit) which means the probability of creating two that clash is vanishingly small.
  * GUIDs are used as the unique identifiers for Entities.
@@ -7,7 +7,7 @@
 export var guid = {
     /**
      * @function
-     * @name pc.guid.create
+     * @name guid.create
      * @description Create an RFC4122 version 4 compliant GUID.
      * @returns {string} A new GUID.
      */
