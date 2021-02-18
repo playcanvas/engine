@@ -24,3 +24,5 @@ export const ANIM_BLEND_DIRECT = 'DIRECT';
 export const ANIM_STATE_START = 'START';
 export const ANIM_STATE_END = 'END';
 export const ANIM_STATE_ANY = 'ANY';
+
+export const ANIM_CONTROL_STATES = [ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY];

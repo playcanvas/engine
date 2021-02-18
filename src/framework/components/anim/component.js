@@ -6,7 +6,7 @@ import { AnimController } from '../../../anim/controller/anim-controller.js';
 import { Component } from '../component.js';
 
 import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
 } from '../../../anim/controller/constants.js';
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
@@ -87,7 +87,7 @@ class AnimComponent extends Component {
             var layerName = layer.name;
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
-                if (stateName !== ANIM_STATE_START && stateName !== ANIM_STATE_END && stateName !== ANIM_STATE_ANY) {
+                if (!ANIM_CONTROL_STATES.includes(stateName)) {
                     var stateKey = layerName + ':' + stateName;
                     if (!this.data.animationAssets[stateKey]) {
                         this.data.animationAssets[stateKey] = {
@@ -105,7 +105,7 @@ class AnimComponent extends Component {
             var layer = this.data.layers[i];
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
-                if ([ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY].includes(stateName)) continue;
+                if (ANIM_CONTROL_STATES.includes(stateName)) continue;
                 var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
                     this.removeNodeAnimations(stateName, layer.name);

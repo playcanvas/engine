@@ -1,7 +1,10 @@
-import { AnimBlendTree1D, AnimBlendTreeCartesian2D, AnimBlendTreeDirectional2D, AnimBlendTreeDirect } from './anim-blend-tree.js';
+import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
+import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
+import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js';
+import { AnimBlendTreeDirect } from './anim-blend-tree-direct.js';
 import { AnimNode } from './anim-node.js';
 import {
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_CONTROL_STATES
 } from './constants.js';
 
 import {
@@ -30,22 +33,32 @@ class AnimState {
         this._loop = loop === undefined ? true : loop;
         var findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
-            switch (blendTree.type) {
-                case ANIM_BLEND_1D:
-                    this._blendTree = new AnimBlendTree1D(this, null, name, 1.0, [blendTree.parameter], blendTree.children, findParameter);
-                    break;
-                case ANIM_BLEND_2D_CARTESIAN:
-                    this._blendTree = new AnimBlendTreeCartesian2D(this, null, name, 1.0, blendTree.parameters, blendTree.children, findParameter);
-                    break;
-                case ANIM_BLEND_2D_DIRECTIONAL:
-                    this._blendTree = new AnimBlendTreeDirectional2D(this, null, name, 1.0, blendTree.parameters, blendTree.children, findParameter);
-                    break;
-                case ANIM_BLEND_DIRECT:
-                    this._blendTree = new AnimBlendTreeDirect(this, null, name, 1.0, blendTree.parameters, blendTree.children, findParameter);
-                    break;
-            }
+            this._blendTree = this._createTree(
+                blendTree.type,
+                this,
+                null,
+                name,
+                1.0,
+                blendTree.parameter ? [blendTree.parameter] : blendTree.parameters,
+                blendTree.children,
+                this._createTree,
+                findParameter
+            );
         } else {
             this._blendTree = new AnimNode(this, null, name, 1.0, speed);
+        }
+    }
+
+    _createTree(type, state, parent, name, point, parameters, children, createTree, findParameter) {
+        switch (type) {
+            case ANIM_BLEND_1D:
+                return new AnimBlendTree1D(state, parent, name, point, parameters, children, createTree, findParameter);
+            case ANIM_BLEND_2D_CARTESIAN:
+                return new AnimBlendTreeCartesian2D(state, parent, name, point, parameters, children, createTree, findParameter);
+            case ANIM_BLEND_2D_DIRECTIONAL:
+                return new AnimBlendTreeDirectional2D(state, parent, name, point, parameters, children, createTree, findParameter);
+            case ANIM_BLEND_DIRECT:
+                return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, createTree, findParameter);
         }
     }
 
@@ -92,12 +105,12 @@ class AnimState {
     }
 
     get nodeCount() {
-        if (!this._blendTree || !(this._blendTree.constructor === AnimBlendTree)) return 1;
+        if (!this._blendTree || (this._blendTree.constructor === AnimNode)) return 1;
         return this._blendTree.getNodeCount();
     }
 
     get playable() {
-        return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.name === ANIM_STATE_ANY || this.animations.length === this.nodeCount);
+        return (ANIM_CONTROL_STATES.includes(this.name) || this.animations.length === this.nodeCount);
     }
 
     get looping() {

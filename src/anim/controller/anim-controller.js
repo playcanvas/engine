@@ -6,7 +6,7 @@ import { AnimTransition } from './anim-transition.js';
 import {
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
 /**
@@ -420,7 +420,7 @@ class AnimController {
     }
 
     removeNodeAnimations(nodeName) {
-        if ([ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY].includes(nodeName)) {
+        if (ANIM_CONTROL_STATES.includes(nodeName)) {
             return;
         }
         var state = this._findState(nodeName);

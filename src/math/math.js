@@ -329,7 +329,24 @@ var math = {
             bits += m & 1;
             return bits;
         };
-    }())
+    }()),
+
+
+    /**
+     * @function
+     * @name math.between
+     * @description Checks whether a given number resides between two other given numbers.
+     * @returns {boolean} true if between or false otherwise.
+     * @param {number} num - The number to check the position of.
+     * @param {number} a - The first upper or lower threshold to check between.
+     * @param {number} b - The second upper or lower threshold to check between.
+     * @param {boolean} inclusive - If true, a num param which is equal to a or b will return true.
+     */
+    between: function (num, a, b, inclusive) {
+        var min = Math.min(a, b),
+            max = Math.max(a, b);
+        return inclusive ? num >= min && num <= max : num > min && num < max;
+    }
 };
 
 export { math };
