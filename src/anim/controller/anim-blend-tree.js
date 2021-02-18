@@ -1,5 +1,3 @@
-import { Vec2 } from '../../math/vec2.js';
-
 import { AnimNode } from './anim-node.js';
 
 /**
