@@ -142,6 +142,12 @@ class SceneRegistry {
             return;
         }
 
+        // If we have the data already loaded, no need to do another HTTP request
+        if (sceneItem.loaded) {
+            callback(null, sceneItem);
+            return;
+        }
+
         // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
         // Split loading into load and open
         var handler = this._app.loader.getHandler("hierarchy");
@@ -149,12 +155,6 @@ class SceneRegistry {
         // include asset prefix if present
         if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
             url = path.join(this._app.assets.prefix, url);
-        }
-
-        // If we have the data already loaded, no need to do another HTTP request
-        if (sceneItem.loaded) {
-            callback(null, sceneItem);
-            return;
         }
 
         sceneItem._onLoadedCallbacks.push(callback);
