@@ -77,7 +77,8 @@ class PostEffectQueue {
         var colorBuffer = new Texture(device, {
             format: format,
             width: width,
-            height: height
+            height: height,
+            mipmaps: false
         });
         colorBuffer.name = this.camera.entity.name + '-posteffect-' + this.effects.length;
 
@@ -103,7 +104,8 @@ class PostEffectQueue {
         var colorBuffer = new Texture(device, {
             format: format,
             width: width,
-            height: height
+            height: height,
+            mipmaps: false
         });
         colorBuffer.name = 'posteffect';
 
