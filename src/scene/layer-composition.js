@@ -355,7 +355,8 @@ class LayerComposition extends EventHandler {
                 rt = null;
             }
 
-            // store the properties
+            // store the properties - write all as we reuse previously allocated class instances
+            renderAction.triggerPostprocess = false;
             renderAction.layerIndex = layerIndex;
             renderAction.cameraIndex = cameraIndex;
             renderAction.renderTarget = rt;
@@ -518,6 +519,7 @@ class LayerComposition extends EventHandler {
 
         // #ifdef DEBUG
         if (this.logRenderActions) {
+            console.log("Render Actions");
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;

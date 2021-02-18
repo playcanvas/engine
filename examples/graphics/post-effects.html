@@ -205,6 +205,9 @@
                     case pc.KEY_4:
                         camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
                         break;
+                    case pc.KEY_5:
+                        camera.camera.stopPostprocessingLayer = camera.camera.stopPostprocessingLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
+                        break;
                 }
             }, this);
 
@@ -273,7 +276,9 @@
                         "[Key 1] Bloom: " + camera.script.bloom.enabled +
                         "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
                         "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
-                        "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled;
+                        "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
+                        "\n[Key 5] Post-process UI: " + (camera.camera.stopPostprocessingLayer !== pc.LAYERID_UI);
+
                 }
             });
         }

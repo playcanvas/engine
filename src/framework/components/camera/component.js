@@ -107,9 +107,9 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * camera should belong. Don't push/pop/splice or modify this array, if you want to
  * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
  * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
- * @property {number} stopPostprocessingLayer Layer ID of layer which stops postprocessing of the camera.
+ * @property {number} stopPostprocessingLayer Layer ID of a layer which stops postprocessing of the camera.
  * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
- * any following layers for the camera.
+ * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
  */
 class CameraComponent extends Component {
     constructor(system, entity) {
