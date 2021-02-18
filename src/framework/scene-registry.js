@@ -183,9 +183,9 @@ class SceneRegistry {
     /**
      * @function
      * @name pc.SceneRegistry#loadSceneData
-     * @description Use to load the scene data and handles caching of that data to reduce the number of the network
-     * requests when the same scenes are loaded multiple times. Can also be used to load data ahead of
-     * {@link pc.SceneRegistry.loadSceneHierarchy} and {@link pc.SceneRegistry.loadSceneSettings} calls to make
+     * @description Loads and stores the scene data to reduce the number of the network
+     * requests when the same scenes are loaded multiple times. Can also be used to load data before calling
+     * {@link pc.SceneRegistry.loadSceneHierarchy} and {@link pc.SceneRegistry#loadSceneSettings} to make
      * scene loading quicker for the user.
      * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
      * @param {pc.callbacks.LoadSceneData} callback - The function to call after loading,
@@ -198,7 +198,7 @@ class SceneRegistry {
     /**
      * @function
      * @name pc.SceneRegistry#unloadSceneData
-     * @description Unloads scene data that has been loaded previously.
+     * @description Unloads scene data that has been loaded previously using {@link pc.SceneRegistry#loadSceneData}.
      * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
      * @param {pc.callbacks.UnloadSceneData} callback - The function to call after loading,
      */
