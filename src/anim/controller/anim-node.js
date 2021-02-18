@@ -22,7 +22,7 @@ class AnimNode {
             this._pointLength = this._point.length();
         } else {
             this._point = point;
-            this._pointLength = point;
+            this._pointLength = point.length();
         }
 
         this._speed = speed;
