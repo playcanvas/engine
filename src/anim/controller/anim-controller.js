@@ -1,6 +1,6 @@
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
-import { AnimBlendTree } from './anim-blend-tree.js';
+import { AnimNode } from './anim-node.js';
 import { AnimTransition } from './anim-transition.js';
 
 import {
@@ -521,7 +521,7 @@ class AnimController {
                 }
             }
         } else {
-            if (this.activeState._blendTree.constructor === AnimBlendTree) {
+            if (this.activeState._blendTree.constructor !== AnimNode) {
                 state = this.activeState;
                 for (i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
