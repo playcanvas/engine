@@ -9,7 +9,7 @@ import { Command } from './mesh-instance.js';
 import { Layer } from './layer.js';
 import { LayerComposition } from './layer-composition.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 var _deviceDeprecationWarning = false;
 var _getSelectionDeprecationWarning = false;
@@ -17,20 +17,20 @@ var _prepareDeprecationWarning = false;
 
 /**
  * @class
- * @name pc.Picker
+ * @name Picker
  * @classdesc Picker object used to select mesh instances from screen coordinates.
  * @description Create a new instance of a Picker object.
- * @param {pc.Application} app - The application managing this picker instance.
+ * @param {Application} app - The application managing this picker instance.
  * @param {number} width - The width of the pick buffer in pixels.
  * @param {number} height - The height of the pick buffer in pixels.
  * @property {number} width Width of the pick buffer in pixels (read-only).
  * @property {number} height Height of the pick buffer in pixels (read-only).
- * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
+ * @property {RenderTarget} renderTarget The render target used by the picker internally (read-only).
  */
 class Picker {
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
-            app = Application.getApplication();
+            app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
                 // #ifdef DEBUG
@@ -76,14 +76,14 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#getSelection
+     * @name Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
      * previously prepared pick buffer.The rectangle using top-left coordinate system.
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle.
      * @param {number} [height] - The height of the rectangle.
-     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection.
+     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection(10, 20);
@@ -156,14 +156,14 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#prepare
+     * @name Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
+     * of the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera - The camera component used to render the scene.
-     * @param {pc.Scene} scene - The scene containing the pickable mesh instances.
-     * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+     * in any way, {@link Picker#prepare} does not need to be called again.
+     * @param {CameraComponent} camera - The camera component used to render the scene.
+     * @param {Scene} scene - The scene containing the pickable mesh instances.
+     * @param {Layer|RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
      * If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     prepare(camera, scene, arg) {
@@ -237,7 +237,7 @@ class Picker {
                 }
             });
 
-            this.layerComp = new LayerComposition();
+            this.layerComp = new LayerComposition("picker");
             this.layerComp.pushOpaque(this.layer);
 
             this.meshInstances = this.layer.opaqueMeshInstances;
@@ -305,7 +305,7 @@ class Picker {
         }
 
         // save old camera state
-        this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
+        let originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
 
         // clear registered meshes, rendering will register them again
         self.mapping.length = 0;
@@ -314,10 +314,10 @@ class Picker {
         this.app.renderer.renderComposition(this.layerComp);
 
         // restore old camera state
-        this.onLayerPostRender(this.layer);
+        this.onLayerPostRender(this.layer, camera, originalLayers);
     }
 
-    onLayerPreRender(layer, sourceLayer, sourceRt) {
+    onLayerPreRender(layer, sourceLayer, sourceRt, camera) {
         if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
             layer.onDisable();
             layer.onEnable();
@@ -334,23 +334,34 @@ class Picker {
         var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
         layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
         this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
+
+        // add layer to be rendered by the camera
+        let originalLayers = camera.layers.slice();
+        let cameraLayers = camera.layers;
+        cameraLayers.push(this.layer.id);
+        camera.layers = cameraLayers;
+
+        return originalLayers;
     }
 
-    onLayerPostRender(layer) {
+    onLayerPostRender(layer, camera, originalLayers) {
 
         // restore original settings
         layer.cameras[0].camera._clearOptions = layer.oldClear;
         layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
         layer.cameras[0].aspectRatio = layer.oldAspect;
+
+        // restore camera layers to original condition
+        camera.layers = originalLayers;
     }
 
     /**
      * @function
-     * @name pc.Picker#resize
+     * @name Picker#resize
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
      * to match the resolution of the corresponding frame buffer use for general rendering of the
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
+     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers will
      * yield greater performance, so there is a trade off.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.

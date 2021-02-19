@@ -10,22 +10,25 @@ import { RenderAction } from './render-action.js';
 
 /**
  * @class
- * @name pc.LayerComposition
- * @augments pc.EventHandler
- * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
+ * @name LayerComposition
+ * @augments EventHandler
+ * @classdesc Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define rendering order.
  * @description Create a new layer composition.
- * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
- * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+ * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
+ * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
+ * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
  * True means only semi-transparent objects are rendered, and false means opaque.
- * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+ * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link Layer#layerList}.
  * True means the layer is rendered, false means it's skipped.
- * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering. e.g. Inside
- * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
+ * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be used during rendering. e.g. Inside
+ * {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  */
 // Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
-    constructor() {
+    constructor(name = "Untitled") {
         super();
+
+        this.name = name;
 
         // all layers added into the composition
         this.layerList = [];
@@ -335,14 +338,17 @@ class LayerComposition extends EventHandler {
                 renderAction = renderActions[renderActionCount] = new RenderAction();
             }
 
+            // render target from the camera takes precedence over the render target from the layer
+            var rt = layer.renderTarget;
+            var camera = layer.cameras[cameraIndex];
+            if (camera && camera.renderTarget) {
+                rt = camera.renderTarget;
+            }
+
             // store the properties
             renderAction.layerIndex = layerIndex;
             renderAction.cameraIndex = cameraIndex;
-
-            // render target for rendering - target from the camera overrrides target from the layer
-            var camera = layer.cameras[cameraIndex];
-            var cameraTarget = camera ? camera.renderTarget : undefined;
-            renderAction.renderTarget = cameraTarget ? cameraTarget : layer.renderTarget;
+            renderAction.renderTarget = rt;
 
             renderActionCount++;
         }
@@ -353,14 +359,13 @@ class LayerComposition extends EventHandler {
             this._dirtyCameras = false;
             result |= COMPUPDATED_CAMERAS;
 
+            // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
-
-            // walk the layers
             for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 layer._dirtyCameras = false;
 
-                // build array of unique cameras from all layers
+                // for all cameras in the layer
                 for (j = 0; j < layer.cameras.length; j++) {
                     camera = layer.cameras[j];
                     index = this.cameras.indexOf(camera);
@@ -370,61 +375,40 @@ class LayerComposition extends EventHandler {
                 }
             }
 
-            var hash, groupLength;
-            var skipCount = 0;
+            // sort cameras by priority
+            if (this.cameras.length > 1) {
+                this.cameras.sort((a, b) => a.priority - b.priority);
+            }
 
-            // build render actions array which is the actual rendering sequence based on layers and cameras attached to them
-            for (i = 0; i < len; i++) {
+            // render in order of cameras sorted by priority
+            for (i = 0; i < this.cameras.length; i++) {
+                camera = this.cameras[i];
 
-                if (skipCount) {
-                    skipCount--;
-                    continue;
-                }
+                // walk all global sorted list of layers (sublayers) to check if camera renders it
+                // this adds both opaque and transparent sublayers if camera renders the layer
+                for (j = 0; j < len; j++) {
 
-                layer = this.layerList[i];
-                if (layer.cameras.length === 0 && !layer.isPostEffect) {
-                    continue;
-                }
+                    layer = this.layerList[j];
+                    if (layer) {
 
-                hash = layer._cameraHash;
+                        // if layer needs to be rendered
+                        if (layer.cameras.length > 0 || layer.isPostEffect) {
 
-                // single camera in layer
-                if (hash === 0) {
-                    addRenderAction(layer, i, 0);
+                            // if the camera renders this layer
+                            if (camera.layers.indexOf(layer.id) >= 0) {
 
-                } else { // multiple cameras in a layer
+                                // camera index in the layer array
+                                cameraIndex = layer.cameras.indexOf(camera);
+                                if (cameraIndex >= 0) {
+                                    addRenderAction(layer, j, cameraIndex);
+                                }
 
-                    // count a sequence of following sublayers with the same cameras
-                    groupLength = 1;
-                    for (j = i + 1; j < len; j++) {
-                        if (hash !== this.layerList[j]._cameraHash) {
-                            groupLength = (j - i) - 1;
-                            break;
-                        } else if (j === len - 1) {
-                            groupLength = j - i;
-                        }
-                    }
+                            } else if (layer.isPostEffect) {
 
-                    if (groupLength === 1) {
-
-                        // no sequence - render all cameras for this layer
-                        for (cameraIndex = 0; cameraIndex < layer.cameras.length; cameraIndex++) {
-                            addRenderAction(layer, i, cameraIndex);
-                        }
-
-                    } else {
-
-                        // sequence of groupLength - add a whole sequence for each camera
-                        // sequence is added by camera to minimize number of times directional shadows gets re-rendered, which is done per camera
-                        // this changes sequence: Layer1 (Camera1, Camera2), Layer2 (Camera1, Camera2) to sequence:
-                        // Camera1(Layer1, Layer2), Camera2 (Layer1, Layer2) to group layer rendering into the same camera.
-                        for (cameraIndex = 0; cameraIndex < layer.cameras.length; cameraIndex++) {
-                            for (j = 0; j <= groupLength; j++) {
-                                addRenderAction(layer, i + j, cameraIndex);
+                                // post-effect layers don't have camera
+                                addRenderAction(layer, j, -1);
                             }
                         }
-                        // skip the sequence sublayers (can't just modify i in JS)
-                        skipCount = groupLength;
                     }
                 }
             }
@@ -481,9 +465,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#push
-     * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @name LayerComposition#push
+     * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to add.
      */
     push(layer) {
         // add both opaque and transparent to the end of the array
@@ -502,9 +486,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#insert
-     * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @name LayerComposition#insert
+     * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
     insert(layer, index) {
@@ -525,9 +509,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#remove
-     * @description Removes a layer (both opaque and semi-transparent parts) from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
+     * @name LayerComposition#remove
+     * @description Removes a layer (both opaque and semi-transparent parts) from {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to remove.
      */
     remove(layer) {
         // remove all occurrences of a layer
@@ -557,9 +541,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#pushOpaque
-     * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @name LayerComposition#pushOpaque
+     * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to add.
      */
     pushOpaque(layer) {
         // add opaque to the end of the array
@@ -575,9 +559,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#insertOpaque
-     * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @name LayerComposition#insertOpaque
+     * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
     insertOpaque(layer, index) {
@@ -598,9 +582,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#removeOpaque
-     * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
+     * @name LayerComposition#removeOpaque
+     * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeOpaque(layer) {
         // remove opaque occurrences of a layer
@@ -626,9 +610,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#pushTransparent
-     * @description Adds part of the layer with semi-transparent objects to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @name LayerComposition#pushTransparent
+     * @description Adds part of the layer with semi-transparent objects to the end of the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to add.
      */
     pushTransparent(layer) {
         // add transparent to the end of the array
@@ -644,9 +628,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#insertTransparent
-     * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @name LayerComposition#insertTransparent
+     * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
     insertTransparent(layer, index) {
@@ -667,9 +651,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#removeTransparent
-     * @description Removes a transparent part of the layer from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
+     * @name LayerComposition#removeTransparent
+     * @description Removes a transparent part of the layer from {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeTransparent(layer) {
         // remove transparent occurrences of a layer
@@ -710,9 +694,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getOpaqueIndex
-     * @description Gets index of the opaque part of the supplied layer in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
+     * @name LayerComposition#getOpaqueIndex
+     * @description Gets index of the opaque part of the supplied layer in the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer.
      */
     getOpaqueIndex(layer) {
@@ -721,9 +705,9 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getTransparentIndex
-     * @description Gets index of the semi-transparent part of the supplied layer in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
+     * @name LayerComposition#getTransparentIndex
+     * @description Gets index of the semi-transparent part of the supplied layer in the {@link Layer#layerList}.
+     * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer.
      */
     getTransparentIndex(layer) {
@@ -732,10 +716,10 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getLayerById
+     * @name LayerComposition#getLayerById
      * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
      * @param {number} id - An ID of the layer to find.
-     * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
+     * @returns {Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
     getLayerById(id) {
         for (var i = 0; i < this.layerList.length; i++) {
@@ -746,10 +730,10 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getLayerByName
+     * @name LayerComposition#getLayerByName
      * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
      * @param {string} name - The name of the layer to find.
-     * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
+     * @returns {Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
     getLayerByName(name) {
         for (var i = 0; i < this.layerList.length; i++) {
@@ -816,7 +800,7 @@ class LayerComposition extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.LayerComposition#sortTransparentLayers
+     * @name LayerComposition#sortTransparentLayers
      * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.
@@ -830,7 +814,7 @@ class LayerComposition extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.LayerComposition#sortOpaqueLayers
+     * @name LayerComposition#sortOpaqueLayers
      * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.

@@ -1,8 +1,7 @@
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
 import { Light } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
@@ -12,11 +11,11 @@ import { LightComponentData } from './data.js';
 
 /**
  * @class
- * @name pc.LightComponentSystem
- * @augments pc.ComponentSystem
+ * @name LightComponentSystem
+ * @augments ComponentSystem
  * @classdesc A Light Component is used to dynamically light the scene.
  * @description Create a new LightComponentSystem.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
@@ -68,6 +67,10 @@ class LightComponentSystem extends ComponentSystem {
         if (data.enable) {
             console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
             data.enabled = data.enable;
+        }
+
+        if (!data.shape) {
+            data.shape = LIGHTSHAPE_PUNCTUAL;
         }
 
         var light = new Light();

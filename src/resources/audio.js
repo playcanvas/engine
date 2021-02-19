@@ -2,7 +2,7 @@ import { path } from '../core/path.js';
 
 import { http, Http } from '../net/http.js';
 
-import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
@@ -42,10 +42,10 @@ const toMIME = {
 
 /**
  * @class
- * @name pc.AudioHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Sound} resources.
- * @param {pc.SoundManager} manager - The sound manager.
+ * @name AudioHandler
+ * @implements {ResourceHandler}
+ * @classdesc Resource handler used for loading {@link Sound} resources.
+ * @param {SoundManager} manager - The sound manager.
  */
 class AudioHandler {
     constructor(manager) {
@@ -102,7 +102,7 @@ class AudioHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundHandler._createSound
+     * @name SoundHandler._createSound
      * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively.
      * @param {string} url - The url of the audio asset.
      * @param {Function} success - Function to be called if the audio asset was loaded or if we
@@ -136,7 +136,7 @@ class AudioHandler {
 
                 manager.context.decodeAudioData(response, success, error);
             });
-        } else if (hasAudio()) {
+        } else {
             var audio = null;
 
             try {

@@ -68,50 +68,50 @@ function arrayGet4(offset, outputArray, outputIndex) {
 
 /**
  * @class
- * @name pc.VertexIteratorAccessor
+ * @name VertexIteratorAccessor
  * @classdesc Helps with accessing a specific vertex attribute.
- * @description Returns a new pc.VertexIteratorAccessor object.
+ * @description Returns a new VertexIteratorAccessor object.
  * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
  * @param {object} vertexElement - The vertex attribute to be accessed.
  * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
  * the vertex data to a shader input. Can be:
  *
- * * {@link pc.SEMANTIC_POSITION}
- * * {@link pc.SEMANTIC_NORMAL}
- * * {@link pc.SEMANTIC_TANGENT}
- * * {@link pc.SEMANTIC_BLENDWEIGHT}
- * * {@link pc.SEMANTIC_BLENDINDICES}
- * * {@link pc.SEMANTIC_COLOR}
- * * {@link pc.SEMANTIC_TEXCOORD0}
- * * {@link pc.SEMANTIC_TEXCOORD1}
- * * {@link pc.SEMANTIC_TEXCOORD2}
- * * {@link pc.SEMANTIC_TEXCOORD3}
- * * {@link pc.SEMANTIC_TEXCOORD4}
- * * {@link pc.SEMANTIC_TEXCOORD5}
- * * {@link pc.SEMANTIC_TEXCOORD6}
- * * {@link pc.SEMANTIC_TEXCOORD7}
+ * * {@link SEMANTIC_POSITION}
+ * * {@link SEMANTIC_NORMAL}
+ * * {@link SEMANTIC_TANGENT}
+ * * {@link SEMANTIC_BLENDWEIGHT}
+ * * {@link SEMANTIC_BLENDINDICES}
+ * * {@link SEMANTIC_COLOR}
+ * * {@link SEMANTIC_TEXCOORD0}
+ * * {@link SEMANTIC_TEXCOORD1}
+ * * {@link SEMANTIC_TEXCOORD2}
+ * * {@link SEMANTIC_TEXCOORD3}
+ * * {@link SEMANTIC_TEXCOORD4}
+ * * {@link SEMANTIC_TEXCOORD5}
+ * * {@link SEMANTIC_TEXCOORD6}
+ * * {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
- * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+ * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
  * @param {number} vertexElement.numComponents - The number of components of the vertex attribute.
  * Can be 1, 2, 3 or 4.
  * @param {number} vertexElement.dataType - The data type of the attribute. Can be:
  *
- * * {@link pc.TYPE_INT8}
- * * {@link pc.TYPE_UINT8}
- * * {@link pc.TYPE_INT16}
- * * {@link pc.TYPE_UINT16}
- * * {@link pc.TYPE_INT32}
- * * {@link pc.TYPE_UINT32}
- * * {@link pc.TYPE_FLOAT32}
+ * * {@link TYPE_INT8}
+ * * {@link TYPE_UINT8}
+ * * {@link TYPE_INT16}
+ * * {@link TYPE_UINT16}
+ * * {@link TYPE_INT32}
+ * * {@link TYPE_UINT32}
+ * * {@link TYPE_FLOAT32}
  * @param {boolean} vertexElement.normalize - If true, vertex attribute data will be mapped from a
  * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
  * unchanged. If this property is unspecified, false is assumed.
  * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex that are not relevant to this attribute.
  * @param {number} vertexElement.stride - The number of total bytes that are between the start of one vertex, and the start of the next.
- * @param {pc.ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
+ * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
  * @param {number} vertexElement.size - The size of the attribute in bytes.
- * @param {pc.VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
+ * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
  */
 class VertexIteratorAccessor {
     constructor(buffer, vertexElement, vertexFormat) {
@@ -158,7 +158,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#get
+     * @name VertexIteratorAccessor#get
      * @description Get a attribute component at the iterator's current index.
      * @param {number} offset - The component offset. Should be either 0, 1, 2, or 3.
      * @returns {number} The value of a attribute component.
@@ -169,7 +169,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#set
+     * @name VertexIteratorAccessor#set
      * @description Set all the attribute components at the iterator's current index.
      * @param {number} a - The first component value.
      * @param {number} [b] - The second component value (if applicable).
@@ -182,7 +182,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#getToArray
+     * @name VertexIteratorAccessor#getToArray
      * @description Read attribute components to an output array.
      * @param {number} offset - The component offset at which to read data from the buffer. Will be used instead of the iterator's current index.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} outputArray - The output array to write data into.
@@ -194,7 +194,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#setFromArray
+     * @name VertexIteratorAccessor#setFromArray
      * @description Write attribute components from an input array.
      * @param {number} index - The starting index at which to write data into the buffer. Will be used instead of the iterator's current index.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
@@ -207,11 +207,11 @@ class VertexIteratorAccessor {
 
 /**
  * @class
- * @name pc.VertexIterator
+ * @name VertexIterator
  * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
- * @description Returns a new pc.VertexIterator object.
- * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
- * @property {object<string, pc.VertexIteratorAccessor>} element The vertex buffer elements.
+ * @description Returns a new VertexIterator object.
+ * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
+ * @property {object<string, VertexIteratorAccessor>} element The vertex buffer elements.
  */
 class VertexIterator {
     constructor(vertexBuffer) {
@@ -237,7 +237,7 @@ class VertexIterator {
 
     /**
      * @function
-     * @name pc.VertexIterator#next
+     * @name VertexIterator#next
      * @description Moves the vertex iterator on to the next vertex.
      * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to 1.
      * @example
@@ -264,7 +264,7 @@ class VertexIterator {
 
     /**
      * @function
-     * @name pc.VertexIterator#end
+     * @name VertexIterator#end
      * @description Notifies the vertex buffer being iterated that writes are complete. Internally
      * the vertex buffer is unlocked and vertex data is uploaded to video memory.
      * @example

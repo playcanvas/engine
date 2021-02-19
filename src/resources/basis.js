@@ -2,7 +2,7 @@ import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/const
 
 import { http } from '../net/http.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 // Basis worker function. The function assumes pc.PIXELFORMAT_ enums are available.
 function BasisWorker() {
@@ -292,7 +292,7 @@ var downloadConfig = null;
 
 function basisTargetFormat() {
     if (!format) {
-        format = chooseTargetFormat(Application.getApplication().graphicsDevice);
+        format = chooseTargetFormat(getApplication().graphicsDevice);
     }
     return format;
 }

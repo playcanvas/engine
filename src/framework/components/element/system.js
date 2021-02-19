@@ -1,5 +1,4 @@
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec4 } from '../../../math/vec4.js';
 
@@ -22,10 +21,10 @@ const _schema = ['enabled'];
 
 /**
  * @class
- * @name pc.ElementComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Manages creation of {@link pc.ElementComponent}s.
- * @param {pc.Application} app - The application.
+ * @name ElementComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Manages creation of {@link ElementComponent}s.
+ * @param {Application} app - The application.
  */
 class ElementComponentSystem extends ComponentSystem {
     constructor(app) {

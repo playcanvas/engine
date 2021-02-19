@@ -160,8 +160,8 @@ function _collectGlobalTempVars(code, list) {
 /**
  * @private
  * @class
- * @name pc.PostEffectPass
- * @param {pc.Application} app - The application.
+ * @name PostEffectPass
+ * @param {Application} app - The application.
  * @param {object} options - Optional options object.
  */
 class PostEffectPass {
@@ -233,7 +233,6 @@ class PostEffectPass {
             }
         });
 
-        this.layer._generateCameraHash(); // post effect doesn't contain actual cameras, but we need to generate cam data
         this.layer.isPostEffect = true;
         this.layer.unmodifiedUvs = options.unmodifiedUvs;
         this.layer.postEffectBilinear = options.bilinear;

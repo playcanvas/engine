@@ -1,6 +1,6 @@
-import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
+import { Color } from '../math/color.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
@@ -14,18 +14,18 @@ var mat4B = new Mat4();
 
 /**
  * @class
- * @name pc.XrLightEstimation
- * @augments pc.EventHandler
+ * @name XrLightEstimation
+ * @augments EventHandler
  * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
  * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
  * A more simplified approximation of light is provided by L2 Spherical Harmonics data.
  * And the most simple level of light estimation is the most prominent directional light, its rotation, intensity and color.
- * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link pc.XrManager}.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link XrManager}.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
  * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
- * @property {pc.Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
- * @property {pc.Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
+ * @property {Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
+ * @property {Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
  */
 class XrLightEstimation extends EventHandler {
     constructor(manager) {
@@ -51,13 +51,13 @@ class XrLightEstimation extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrLightEstimation#available
+     * @name XrLightEstimation#available
      * @description Fired when light estimation data becomes available.
      */
 
     /**
      * @event
-     * @name pc.XrLightEstimation#error
+     * @name XrLightEstimation#error
      * @param {Error} error - Error object related to failure of light estimation start.
      * @description Fired when light estimation has failed to start.
      * @example
@@ -82,7 +82,7 @@ class XrLightEstimation extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrLightEstimation#start
+     * @name XrLightEstimation#start
      * @description Start estimation of illimunation data.
      * Availability of such data will come later and an `available` event will be fired.
      * If it failed to start estimation, an `error` event will be fired.
@@ -136,7 +136,7 @@ class XrLightEstimation extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrLightEstimation#end
+     * @name XrLightEstimation#end
      * @description End estimation of illumination data.
      */
     end() {
@@ -181,7 +181,7 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @name pc.XrLightEstimation#available
+     * @name XrLightEstimation#available
      * @type {boolean}
      * @description True if estimated light information is available.
      * @example

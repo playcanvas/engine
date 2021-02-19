@@ -22,11 +22,11 @@ const OPPOSITE_AXIS = {
 
 /**
  * @class
- * @name pc.ElementDragHelper
- * @augments pc.EventHandler
+ * @name ElementDragHelper
+ * @augments EventHandler
  * @description Create a new ElementDragHelper.
  * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
- * @param {pc.ElementComponent} element - The Element that should become draggable.
+ * @param {ElementComponent} element - The Element that should become draggable.
  * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
  */
 class ElementDragHelper extends EventHandler {
@@ -229,21 +229,21 @@ class ElementDragHelper extends EventHandler {
 
     /**
      * @event
-     * @name pc.ElementDragHelper#drag:start
+     * @name ElementDragHelper#drag:start
      * @description Fired when a new drag operation starts.
      */
 
     /**
      * @event
-     * @name pc.ElementDragHelper#drag:end
+     * @name ElementDragHelper#drag:end
      * @description Fired when the current new drag operation ends.
      */
 
     /**
      * @event
-     * @name pc.ElementDragHelper#drag:move
+     * @name ElementDragHelper#drag:move
      * @description Fired whenever the position of the dragged element changes.
-     * @param {pc.Vec3} value - The current position.
+     * @param {Vec3} value - The current position.
      */
 }
 

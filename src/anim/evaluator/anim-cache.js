@@ -5,7 +5,7 @@ import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '.
 /**
  * @private
  * @class
- * @name pc.AnimCache
+ * @name AnimCache
  * @classdesc Internal cache data for the evaluation of a single curve timeline.
  * @description Create a new animation cache.
  */

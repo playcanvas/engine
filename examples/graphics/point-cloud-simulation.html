@@ -28,7 +28,7 @@
         uniform mat4   matrix_model;
 
         // position of the camera
-        uniform vec3 cameraPos;
+        uniform vec3 view_position;
 
         // Color to fragment program
         varying vec4 outColor;
@@ -43,7 +43,7 @@
             vec4 vertexWorld = matrix_model * aPosition;
 
             // point sprite size depends on its distance to camera
-            float dist = 25.0 - length(vertexWorld.xyz - cameraPos);
+            float dist = 25.0 - length(vertexWorld.xyz - view_position);
             gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);
 
             // color depends on position of particle
@@ -141,7 +141,7 @@
 
         // Create the mesh instance
         var node = new pc.GraphNode();
-        var meshInstance = new pc.MeshInstance(node, this.mesh, material);
+        var meshInstance = new pc.MeshInstance(this.mesh, material, node);
 
         // Create a model and add the mesh instance to it
         var model = new pc.Model();
@@ -205,9 +205,6 @@
             var cameraPos = new pc.Vec3(20 * Math.sin(cameraTime), 10, 20 * Math.cos(cameraTime));
             self.camera.setLocalPosition(cameraPos);
             self.camera.lookAt(pc.Vec3.ZERO);
-
-            // pass the camera position to shader
-            material.setParameter('cameraPos', [cameraPos.x, cameraPos.y, cameraPos.z]);
         });
     </script>
 </body>

@@ -12,6 +12,7 @@ const _schema = [
 // order matters here
 const _properties = [
     'material',
+    'meshInstances',
     'asset',
     'materialAssets',
     'castShadows',
@@ -19,6 +20,7 @@ const _properties = [
     'castShadowsLightmap',
     'lightmapped',
     'lightmapSizeMultiplier',
+    'renderStyle',
     'type',
     'layers',
     'isStatic',
@@ -28,11 +30,11 @@ const _properties = [
 /**
  * @private
  * @class
- * @name pc.RenderComponentSystem
- * @augments pc.ComponentSystem
+ * @name RenderComponentSystem
+ * @augments ComponentSystem
  * @classdesc Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder, cone etc.
  * @description Create a new RenderComponentSystem.
- * @param {pc.Application} app - The Application.
+ * @param {Application} app - The Application.
  */
 class RenderComponentSystem extends ComponentSystem {
     constructor(app) {
@@ -75,6 +77,9 @@ class RenderComponentSystem extends ComponentSystem {
         for (i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
+
+        // we cannot copy mesh instances, delete them and component recreates them properly
+        delete data.meshInstances;
 
         var component = this.addComponent(clone, data);
 

@@ -2,8 +2,7 @@ import { AnimTarget } from '../../../anim/evaluator/anim-target.js';
 import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
 import { AnimBinder } from '../../../anim/binder/anim-binder.js';
 
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -67,7 +66,8 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     resolve(path) {
-        var target = this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)];
+        var encodedPath = AnimBinder.encode(path.entityPath, path.component, path.propertyPath);
+        var target = this.targetCache[encodedPath];
         if (target) return target;
 
         var entity;
@@ -85,9 +85,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 propertyComponent = entity;
                 break;
             case 'graph':
-                entity = this.animComponent.entity;
-                var graph = entity.model && entity.model.model && entity.model.model.graph;
-                propertyComponent = this.findNode(graph, path);
+                propertyComponent = this.findNode(path);
                 if (!propertyComponent) return null;
                 targetPath = AnimBinder.encode(
                     propertyComponent.path,
@@ -109,7 +107,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         }
 
         target = this._createAnimTargetForProperty(propertyComponent, path.propertyPath, targetPath);
-        this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)] = target;
+        this.targetCache[encodedPath] = target;
         return target;
     }
 
@@ -133,7 +131,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         if (entityHierarchy.length === 1) {
             return currEntity;
         }
-        return currEntity._parent.findByPath(Array.isArray(entityHierarchy) ? entityHierarchy.join('/') : entityHierarchy);
+        return currEntity._parent.findByPath(entityHierarchy);
     }
 
     // resolve an object path
@@ -265,10 +263,11 @@ class AnimComponentBinder extends DefaultAnimBinder {
         // #ifdef DEBUG
         this.visitedFallbackGraphPaths = {};
         // #endif
-        var entity = this.animComponent && this.animComponent.entity;
-        var graph = entity.model && entity.model.model && entity.model.model.graph;
-        if (!graph) return;
-        this.graph = graph;
+
+        if (this.animComponent.entity.model?.model?.graph) {
+            this.graph = this.animComponent.entity.model?.model?.graph;
+        }
+
         var nodes = { };
         // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {

@@ -1,7 +1,7 @@
 import { now } from '../../../core/time.js';
-import { Color } from '../../../core/color.js';
 
 import { math } from '../../../math/math.js';
+import { Color } from '../../../math/color.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
@@ -37,25 +37,25 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 /**
  * @component
  * @class
- * @name pc.ButtonComponent
- * @augments pc.Component
+ * @name ButtonComponent
+ * @augments Component
  * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
  * @description Create a new ButtonComponent.
- * @param {pc.ButtonComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
- * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
- * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
+ * @property {Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
+ * @property {Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
  * @property {number} transitionMode Controls how the button responds when the user hovers over it/presses it.
- * @property {pc.Color} hoverTint Color to be used on the button image when the user hovers over it.
- * @property {pc.Color} pressedTint Color to be used on the button image when the user presses it.
- * @property {pc.Color} inactiveTint Color to be used on the button image when the button is not interactive.
+ * @property {Color} hoverTint Color to be used on the button image when the user hovers over it.
+ * @property {Color} pressedTint Color to be used on the button image when the user presses it.
+ * @property {Color} inactiveTint Color to be used on the button image when the button is not interactive.
  * @property {number} fadeDuration Duration to be used when fading between tints, in milliseconds.
- * @property {pc.Asset} hoverSpriteAsset Sprite to be used as the button image when the user hovers over it.
+ * @property {Asset} hoverSpriteAsset Sprite to be used as the button image when the user hovers over it.
  * @property {number} hoverSpriteFrame Frame to be used from the hover sprite.
- * @property {pc.Asset} pressedSpriteAsset Sprite to be used as the button image when the user presses it.
+ * @property {Asset} pressedSpriteAsset Sprite to be used as the button image when the user presses it.
  * @property {number} pressedSpriteFrame Frame to be used from the pressed sprite.
- * @property {pc.Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
+ * @property {Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
  */
 class ButtonComponent extends Component {
@@ -511,116 +511,116 @@ function toColor3(color4) {
 
 /**
  * @event
- * @name pc.ButtonComponent#mousedown
+ * @name ButtonComponent#mousedown
  * @description Fired when the mouse is pressed while the cursor is on the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#mouseup
+ * @name ButtonComponent#mouseup
  * @description Fired when the mouse is released while the cursor is on the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#mouseenter
+ * @name ButtonComponent#mouseenter
  * @description Fired when the mouse cursor enters the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#mouseleave
+ * @name ButtonComponent#mouseleave
  * @description Fired when the mouse cursor leaves the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#click
+ * @name ButtonComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
- * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event - The event.
+ * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#touchstart
+ * @name ButtonComponent#touchstart
  * @description Fired when a touch starts on the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#touchend
+ * @name ButtonComponent#touchend
  * @description Fired when a touch ends on the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#touchcancel
+ * @name ButtonComponent#touchcancel
  * @description Fired when a touch is canceled on the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#touchleave
+ * @name ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#selectstart
+ * @name ButtonComponent#selectstart
  * @description Fired when a xr select starts on the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#selectend
+ * @name ButtonComponent#selectend
  * @description Fired when a xr select ends on the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#selectenter
+ * @name ButtonComponent#selectenter
  * @description Fired when a xr select now hovering over the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#selectleave
+ * @name ButtonComponent#selectleave
  * @description Fired when a xr select not hovering over the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#hoverstart
+ * @name ButtonComponent#hoverstart
  * @description Fired when the button changes state to be hovered.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#hoverend
+ * @name ButtonComponent#hoverend
  * @description Fired when the button changes state to be not hovered.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#pressedstart
+ * @name ButtonComponent#pressedstart
  * @description Fired when the button changes state to be pressed.
  */
 
 /**
  * @event
- * @name pc.ButtonComponent#pressedend
+ * @name ButtonComponent#pressedend
  * @description Fired when the button changes state to be not pressed.
  */
 

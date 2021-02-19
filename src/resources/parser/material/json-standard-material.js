@@ -1,5 +1,4 @@
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -15,8 +14,8 @@ import { standardMaterialParameterTypes } from '../../../scene/materials/standar
 
 /**
  * @private
- * @name pc.JsonStandardMaterialParser
- * @description Convert incoming JSON data into a {@link pc.StandardMaterial}.
+ * @name JsonStandardMaterialParser
+ * @description Convert incoming JSON data into a {@link StandardMaterial}.
  */
 class JsonStandardMaterialParser {
     constructor() {
@@ -36,9 +35,9 @@ class JsonStandardMaterialParser {
     /**
      * @private
      * @function
-     * @name pc.JsonStandardMaterialParser#initialize
-     * @description  Initialize material properties from the material data block e.g. Loading from server.
-     * @param {pc.StandardMaterial} material - The material to be initialized.
+     * @name JsonStandardMaterialParser#initialize
+     * @description Initialize material properties from the material data block e.g. Loading from server.
+     * @param {StandardMaterial} material - The material to be initialized.
      * @param {object} data - The data block that is used to initialize.
      */
     initialize(material, data) {

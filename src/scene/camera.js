@@ -1,5 +1,4 @@
-import { Color } from '../core/color.js';
-
+import { Color } from '../math/color.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
@@ -20,7 +19,7 @@ var _invViewProjMat = new Mat4();
 /**
  * @private
  * @class
- * @name pc.Camera
+ * @name Camera
  * @classdesc A camera.
  */
 class Camera {
@@ -316,14 +315,22 @@ class Camera {
     /**
      * @private
      * @function
-     * @name pc.Camera#clone
+     * @name Camera#clone
      * @description Creates a duplicate of the camera.
-     * @returns {pc.Camera} A cloned Camera.
+     * @returns {Camera} A cloned Camera.
      */
     clone() {
-        return new this.constructor().copy(this);
+        return new Camera().copy(this);
     }
 
+    /**
+     * @private
+     * @function
+     * @name Camera#copy
+     * @param {Camera} other - Camera to copy.
+     * @description Copies one camera to another.
+     * @returns {Camera} Self for chaining.
+     */
     copy(other) {
         this.aspectRatio = other.aspectRatio;
         this.aspectRatioMode = other.aspectRatioMode;
@@ -350,6 +357,7 @@ class Camera {
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
         this.vrDisplay = other.vrDisplay;
+        return this;
     }
 
     _updateViewProjMat() {
@@ -364,13 +372,13 @@ class Camera {
     /**
      * @private
      * @function
-     * @name pc.Camera#worldToScreen
+     * @name Camera#worldToScreen
      * @description Convert a point from 3D world space to 2D canvas pixel space.
-     * @param {pc.Vec3} worldCoord - The world space coordinate to transform.
+     * @param {Vec3} worldCoord - The world space coordinate to transform.
      * @param {number} cw - The width of PlayCanvas' canvas element.
      * @param {number} ch - The height of PlayCanvas' canvas element.
-     * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
-     * @returns {pc.Vec3} The screen space coordinate.
+     * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
+     * @returns {Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, cw, ch, screenCoord = new Vec3()) {
         this._updateViewProjMat();
@@ -392,15 +400,15 @@ class Camera {
     /**
      * @private
      * @function
-     * @name pc.Camera#screenToWorld
+     * @name Camera#screenToWorld
      * @description Convert a point from 2D canvas pixel space to 3D world space.
      * @param {number} x - X coordinate on PlayCanvas' canvas element.
      * @param {number} y - Y coordinate on PlayCanvas' canvas element.
      * @param {number} z - The distance from the camera in world space to create the new point.
      * @param {number} cw - The width of PlayCanvas' canvas element.
      * @param {number} ch - The height of PlayCanvas' canvas element.
-     * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
-     * @returns {pc.Vec3} The world space coordinate.
+     * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
+     * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 

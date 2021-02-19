@@ -108,7 +108,7 @@ Object.assign(ObjModelParser.prototype, {
                 normals: currentGroup.normals,
                 uvs: currentGroup.uvs
             });
-            var mi = new pc.MeshInstance(new pc.GraphNode(), mesh, this._defaultMaterial);
+            var mi = new pc.MeshInstance(mesh, this._defaultMaterial, new pc.GraphNode());
             model.meshInstances.push(mi);
             root.addChild(mi.node);
         }

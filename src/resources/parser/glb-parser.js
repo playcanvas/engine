@@ -20,6 +20,7 @@ import {
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
+import { Texture } from '../../graphics/texture.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
@@ -315,18 +316,18 @@ var cloneTexture = function (texture) {
         return result;
     };
 
-    var result = new pc.Texture(texture.device, texture);   // duplicate texture
+    var result = new Texture(texture.device, texture);   // duplicate texture
     result._levels = shallowCopyLevels(texture);            // shallow copy the levels structure
     return result;
 };
 
 // given a texture asset, clone it
 var cloneTextureAsset = function (src) {
-    var result = new pc.Asset(src.name + '_clone',
-                              src.type,
-                              src.file,
-                              src.data,
-                              src.options);
+    var result = new Asset(src.name + '_clone',
+                           src.type,
+                           src.file,
+                           src.data,
+                           src.options);
     result.loaded = true;
     result.resource = cloneTexture(src.resource);
     src.registry.add(result);
@@ -1253,8 +1254,10 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
         var target = channel.target;
         var curve = curves[channel.sampler];
 
+        var node = nodes[target.node];
+        var entityPath = node.path.length > 0 ? AnimBinder.splitPath(node.path, '/') : [node.name];
         curve._paths.push({
-            entityPath: AnimBinder.splitPath(nodes[target.node].path, '/'),
+            entityPath: entityPath,
             component: 'graph',
             propertyPath: [transformSchema[target.path]]
         });
@@ -2040,7 +2043,7 @@ class GlbParser {
 
         var createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-            var meshInstance = new MeshInstance(node, mesh, material);
+            var meshInstance = new MeshInstance(mesh, material, node);
 
             if (mesh.morph) {
                 var morphInstance = new MorphInstance(mesh.morph);

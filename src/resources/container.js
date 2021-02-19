@@ -11,12 +11,12 @@ import { SkinInstance } from '../scene/skin-instance.js';
 
 /**
  * @class
- * @name pc.ContainerResource
+ * @name ContainerResource
  * @classdesc Container for a list of animations, textures, materials and a model.
  * @param {object} data - The loaded GLB data.
- * @property {pc.Asset[]} animations - Array of assets of animations in the GLB container.
- * @property {pc.Asset[]} textures - Array of assets of textures in the GLB container.
- * @property {pc.Asset[]} materials - Array of assets of materials in the GLB container.
+ * @property {Asset[]} animations - Array of assets of animations in the GLB container.
+ * @property {Asset[]} textures - Array of assets of textures in the GLB container.
+ * @property {Asset[]} materials - Array of assets of materials in the GLB container.
  */
 class ContainerResource {
     constructor(data) {
@@ -50,7 +50,7 @@ class ContainerResource {
                     if (mi.node === node) {
 
                         // clone mesh instance
-                        var cloneMi = new MeshInstance(entity, mi.mesh, mi.material);
+                        var cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
 
                         // clone morph instance
                         if (mi.morphInstance) {
@@ -161,8 +161,8 @@ class ContainerResource {
 
 /**
  * @class
- * @name pc.ContainerHandler
- * @implements {pc.ResourceHandler}
+ * @name ContainerHandler
+ * @implements {ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
  * The asset options object can be used to pass load time callbacks for handling the various resources
@@ -190,8 +190,8 @@ class ContainerResource {
  *     },
  * });
  * ```
- * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
- * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ * @param {GraphicsDevice} device - The graphics device that will be rendering.
+ * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ContainerHandler {
     constructor(device, defaultMaterial) {

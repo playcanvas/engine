@@ -1,5 +1,4 @@
-import { Color } from '../core/color.js';
-
+import { Color } from '../math/color.js';
 import { Curve } from '../math/curve.js';
 import { CurveSet } from '../math/curve-set.js';
 import { Vec2 } from '../math/vec2.js';
@@ -152,10 +151,10 @@ function rawToValue(app, args, value, old) {
 /* eslint-disable jsdoc/no-undefined-types */
 /**
  * @class
- * @name pc.ScriptAttributes
- * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
- * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
- * @param {Class<pc.ScriptType>} scriptType - Script Type that attributes relate to.
+ * @name ScriptAttributes
+ * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link ScriptType}.
+ * Note: An instance of ScriptAttributes is created automatically by each {@link ScriptType}.
+ * @param {Class<ScriptType>} scriptType - Script Type that attributes relate to.
  */
 /* eslint-enable jsdoc/no-undefined-types */
 class ScriptAttributes {
@@ -172,11 +171,11 @@ class ScriptAttributes {
 
     /**
      * @function
-     * @name pc.ScriptAttributes#add
+     * @name ScriptAttributes#add
      * @description Add Attribute.
      * @param {string} name - Name of an attribute.
      * @param {object} args - Object with Arguments for an attribute.
-     * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type - Type of an attribute value.
+     * @param {string} args.type - Type of an attribute value. Can be one of "boolean", "number", "string", "json", "asset", "entity", "rgb", "rgba", "vec2", "vec3", "vec4" or "curve".
      * @param {*} [args.default] - Default attribute value.
      * @param {string} [args.title] - Title for Editor's for field UI.
      * @param {string} [args.description] - Description for Editor's for field UI.
@@ -295,7 +294,7 @@ class ScriptAttributes {
 
     /**
      * @function
-     * @name pc.ScriptAttributes#remove
+     * @name ScriptAttributes#remove
      * @description Remove Attribute.
      * @param {string} name - Name of an attribute.
      * @returns {boolean} True if removed or false if not defined.
@@ -313,7 +312,7 @@ class ScriptAttributes {
 
     /**
      * @function
-     * @name pc.ScriptAttributes#has
+     * @name ScriptAttributes#has
      * @description Detect if Attribute is added.
      * @param {string} name - Name of an attribute.
      * @returns {boolean} True if Attribute is defined.
@@ -328,7 +327,7 @@ class ScriptAttributes {
 
     /**
      * @function
-     * @name pc.ScriptAttributes#get
+     * @name ScriptAttributes#get
      * @description Get object with attribute arguments.
      * Note: Changing argument properties will not affect existing Script Instances.
      * @param {string} name - Name of an attribute.

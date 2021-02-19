@@ -51,19 +51,19 @@
         var assetManifest = [
             {
                 type: "script",
-                url: "../assets/scripts/camera/tracking-camera.js"
+                url: "../../scripts/camera/tracking-camera.js"
             },
             {
                 type: "script",
-                url: "../assets/scripts/physics/render-physics.js"
+                url: "../../scripts/physics/render-physics.js"
             },
             {
                 type: "script",
-                url: "../assets/scripts/physics/reset-physics.js"
+                url: "../../scripts/physics/action-physics-reset.js"
             },
             {
                 type: "script",
-                url: "../assets/scripts/physics/vehicle.js"
+                url: "../../scripts/physics/vehicle.js"
             }
         ];
 
@@ -131,6 +131,11 @@
                 }
             });
             vehicle.script.create('vehicleControls');
+            vehicle.script.create('actionPhysicsReset', {
+                attributes: {
+                    event: 'reset'
+                }
+            });
             vehicle.setLocalPosition(0, 2, 0);
 
             // Create the car chassis, offset upwards in Y from the compound body
@@ -166,6 +171,12 @@
                     });
                     block.addComponent('collision', {
                         type: 'box'
+                    });
+                    block.addComponent('script');
+                    block.script.create('actionPhysicsReset', {
+                        attributes: {
+                            event: 'reset'
+                        }
                     });
                     block.setLocalPosition(i - 4.5, j + 0.5, -10);
                     app.root.addChild(block);
@@ -207,7 +218,12 @@
                     opacity: 1
                 }
             });
-            app.root.script.create('resetPhysics');
+
+            app.keyboard.on(pc.EVENT_KEYDOWN, function (e) {
+                if (e.key === pc.KEY_R) {
+                    app.fire('reset');
+                }
+            });
         }
     }
     </script>

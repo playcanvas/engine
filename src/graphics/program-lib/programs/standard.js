@@ -251,9 +251,9 @@ var standard = {
      * @function
      * @name _getUvSourceExpression
      * @description Get the code with which to to replace '$UV' in the map shader functions.
-     * @param  {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
-     * @param  {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
-     * @param  {object} options - The options passed into createShaderDefinition.
+     * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
+     * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
+     * @param {object} options - The options passed into createShaderDefinition.
      * @returns {string} The code used to replace "$UV" in the shader code.
      */
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
@@ -412,10 +412,10 @@ var standard = {
      * @function
      * @name _fsAddBaseCode
      * @description Add "Base" Code section to fragment shader.
-     * @param  {string} code - Current fragment shader code.
-     * @param  {pc.GraphicsDevice} device - The graphics device.
-     * @param  {object} chunks - All available shader chunks.
-     * @param  {object} options - The Shader Definition options.
+     * @param {string} code - Current fragment shader code.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {object} chunks - All available shader chunks.
+     * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
      */
     _fsAddBaseCode: function (code, device, chunks, options) {
@@ -432,12 +432,12 @@ var standard = {
     /**
      * @private
      * @function
-     * @name  _fsAddStartCode
+     * @name _fsAddStartCode
      * @description Add "Start" Code section to fragment shader.
-     * @param  {string} code -  Current fragment shader code.
-     * @param  {pc.GraphicsDevice} device - The graphics device.
-     * @param  {object} chunks - All available shader chunks.
-     * @param  {object} options - The Shader Definition options.
+     * @param {string} code -  Current fragment shader code.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {object} chunks - All available shader chunks.
+     * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
      */
     _fsAddStartCode: function (code, device, chunks, options) {
@@ -458,7 +458,6 @@ var standard = {
 
         if (options.dirLightMap) {
             lighting = true;
-            options.useSpecular = true;
         }
 
         if (options.shadingModel === SPECULAR_PHONG) {
@@ -783,6 +782,7 @@ var standard = {
 
         code += chunks.startVS;
         code += codeBody;
+        code += chunks.endVS;
         code += "}";
 
         var vshader = code;
@@ -1018,15 +1018,18 @@ var standard = {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
-        if (device._areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
+        if (device.areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
             // use offset and scale for rgb8 format luts
             code += "#define AREA_R8_G8_B8_A8_LUTS\n";
+            code += "#define AREA_LUTS_PRECISION lowp\n";
+        } else {
+            code += "#define AREA_LUTS_PRECISION highp\n";
         }
 
         if (hasAreaLights) {
             code += "#define AREA_LIGHTS\n";
-            code += "uniform sampler2D areaLightsLutTex1;\n";
-            code += "uniform sampler2D areaLightsLutTex2;\n";
+            code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex1;\n";
+            code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
         }
 
         var lightShape = LIGHTSHAPE_PUNCTUAL;
@@ -1348,7 +1351,7 @@ var standard = {
 
         var addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
-            var lightmapChunkPropName = options.dirLightMap ? 'lightmapDirPS' : 'lightmapSinglePS';
+            var lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
             code += this._addMap("light", lightmapChunkPropName, options, chunks, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
@@ -1697,7 +1700,7 @@ var standard = {
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 if (options.clearCoat > 0 ) {
-                    code += "   ccSpecularity = vec3(1);\n";
+                    code += "   ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {
                     code += "   dSpecularity = vec3(1);\n";

@@ -38,6 +38,7 @@ import dilatePS from './dilate.frag';
 import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
+import endVS from './end.vert';
 import envConstPS from './envConst.frag';
 import envMultiplyPS from './envMultiply.frag';
 import extensionPS from './extension.frag';
@@ -198,7 +199,7 @@ import viewNormalVS from './viewNormal.vert';
  * @static
  * @readonly
  * @type {object}
- * @name pc.shaderChunks
+ * @name shaderChunks
  * @description Object containing all default shader chunks used by shader generators.
  */
 var shaderChunks = {
@@ -242,6 +243,7 @@ var shaderChunks = {
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
+    endVS: endVS,
     envConstPS: envConstPS,
     envMultiplyPS: envMultiplyPS,
     extensionPS: extensionPS,

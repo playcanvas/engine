@@ -5,7 +5,7 @@ import { VertexBuffer } from './vertex-buffer.js';
 /* eslint-disable jsdoc/check-examples */
 /**
  * @class
- * @name pc.TransformFeedback
+ * @name TransformFeedback
  * @classdesc Transform feedback helper object.
  * @description This object allows you to configure and use the transform feedback feature (WebGL2
  * only). How to use:
@@ -14,23 +14,23 @@ import { VertexBuffer } from './vertex-buffer.js';
  * 2. Define the outputs in your vertex shader. The syntax is `out vec3 out_vertex_position`,
  * note that there must be out_ in the name. You can then simply assign values to these outputs
  * in VS. The order and size of shader outputs must match the output buffer layout.
- * 3. Create the shader using `pc.TransformFeedback.createShader(device, vsCode, yourShaderName)`.
- * 4. Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created,
- * or from a pc.Mesh.
- * 5. Create the pc.TransformFeedback object: `var tf = new pc.TransformFeedback(inputBuffer)`.
+ * 3. Create the shader using `TransformFeedback.createShader(device, vsCode, yourShaderName)`.
+ * 4. Create/acquire the input vertex buffer. Can be any VertexBuffer, either manually created,
+ * or from a Mesh.
+ * 5. Create the TransformFeedback object: `var tf = new TransformFeedback(inputBuffer)`.
  * This object will internally create an output buffer.
  * 6. Run the shader: `tf.process(shader)`. Shader will take the input buffer, process it and
  * write to the output buffer, then the input/output buffers will be automatically swapped, so
  * you'll immediately see the result.
- * @param {pc.VertexBuffer} inputBuffer - The input vertex buffer.
+ * @param {VertexBuffer} inputBuffer - The input vertex buffer.
  * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
  *
- * * {@link pc.BUFFER_STATIC}
- * * {@link pc.BUFFER_DYNAMIC}
- * * {@link pc.BUFFER_STREAM}
- * * {@link pc.BUFFER_GPUDYNAMIC}
+ * * {@link BUFFER_STATIC}
+ * * {@link BUFFER_DYNAMIC}
+ * * {@link BUFFER_STREAM}
+ * * {@link BUFFER_GPUDYNAMIC}
  *
- * Defaults to pc.BUFFER_GPUDYNAMIC (which is recommended for continuous update).
+ * Defaults to {@link BUFFER_GPUDYNAMIC} (which is recommended for continuous update).
  * @example
  * // *** shader asset ***
  * attribute vec3 vertex_position;
@@ -58,7 +58,7 @@ import { VertexBuffer } from './vertex-buffer.js';
  *     var device = this.app.graphicsDevice;
  *     var mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
  *     var node = new pc.GraphNode();
- *     var meshInstance = new pc.MeshInstance(node, mesh, this.material.resource);
+ *     var meshInstance = new pc.MeshInstance(mesh, this.material.resource, node);
  *     var model = new pc.Model();
  *     model.graph = node;
  *     model.meshInstances = [ meshInstance ];
@@ -100,12 +100,12 @@ class TransformFeedback {
 
     /**
      * @function
-     * @name pc.TransformFeedback.createShader
+     * @name TransformFeedback.createShader
      * @description Creates a transform feedback ready vertex shader from code.
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
-     * @returns {pc.Shader} A shader to use in the process() function.
+     * @returns {Shader} A shader to use in the process() function.
      */
     static createShader(graphicsDevice, vsCode, name) {
         return createShaderFromCode(graphicsDevice, vsCode, null, name, true);
@@ -113,7 +113,7 @@ class TransformFeedback {
 
     /**
      * @function
-     * @name pc.TransformFeedback#destroy
+     * @name TransformFeedback#destroy
      * @description Destroys the transform feedback helper object.
      */
     destroy() {
@@ -122,9 +122,9 @@ class TransformFeedback {
 
     /**
      * @function
-     * @name pc.TransformFeedback#process
+     * @name TransformFeedback#process
      * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
-     * @param {pc.Shader} shader - A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
+     * @param {Shader} shader - A vertex shader to run. Should be created with {@link TransformFeedback.createShader}.
      * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
      */
     process(shader, swap = true) {
@@ -169,8 +169,8 @@ class TransformFeedback {
 
     /**
      * @readonly
-     * @name pc.TransformFeedback#inputBuffer
-     * @type {pc.VertexBuffer}
+     * @name TransformFeedback#inputBuffer
+     * @type {VertexBuffer}
      * @description The current input buffer.
      */
     get inputBuffer() {
@@ -179,8 +179,8 @@ class TransformFeedback {
 
     /**
      * @readonly
-     * @name pc.TransformFeedback#outputBuffer
-     * @type {pc.VertexBuffer}
+     * @name TransformFeedback#outputBuffer
+     * @type {VertexBuffer}
      * @description The current output buffer.
      */
     get outputBuffer() {

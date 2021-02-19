@@ -5,23 +5,23 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
 
 /**
  * @class
- * @name pc.Morph
- * @classdesc Contains a list of pc.MorphTarget, a combined delta AABB and some associated data.
- * @param {pc.MorphTarget[]} targets - A list of morph targets.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
- * from the {@link pc.Application}.
+ * @name Morph
+ * @classdesc Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
+ * @param {MorphTarget[]} targets - A list of morph targets.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
+ * from the {@link Application}.
  */
 class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
         super();
 
-        this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this._targets = targets;
 
         // default to texture based morphing if available
@@ -206,7 +206,7 @@ class Morph extends RefCountedObject {
 
     /**
      * @function
-     * @name pc.Morph#destroy
+     * @name Morph#destroy
      * @description Frees video memory allocated by this object.
      */
     destroy() {
@@ -223,10 +223,10 @@ class Morph extends RefCountedObject {
 
     /**
      * @function
-     * @name pc.Morph#getTarget
+     * @name Morph#getTarget
      * @description Gets the morph target by index.
      * @param {number} index - An index of morph target.
-     * @returns {pc.MorphTarget} A morph target object.
+     * @returns {MorphTarget} A morph target object.
      */
     getTarget(index) {
         return this._targets[index];

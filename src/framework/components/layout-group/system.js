@@ -13,11 +13,11 @@ var MAX_ITERATIONS = 100;
 
 /**
  * @class
- * @name pc.LayoutGroupComponentSystem
- * @augments pc.ComponentSystem
+ * @name LayoutGroupComponentSystem
+ * @augments ComponentSystem
  * @description Create a new LayoutGroupComponentSystem.
- * @classdesc Manages creation of {@link pc.LayoutGroupComponent}s.
- * @param {pc.Application} app - The application.
+ * @classdesc Manages creation of {@link LayoutGroupComponent}s.
+ * @param {Application} app - The application.
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
     constructor(app) {

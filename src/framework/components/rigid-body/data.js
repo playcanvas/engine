@@ -5,8 +5,8 @@ import { BODYGROUP_STATIC, BODYMASK_NOT_STATIC, BODYTYPE_STATIC } from './consta
 /**
  * @private
  * @class
- * @name pc.RigidBodyComponentData
- * @augments pc.ComponentData
+ * @name RigidBodyComponentData
+ * @augments ComponentData
  * @classdesc Contains data for the RigidBodyComponent.
  * @description Create a new data structure for a RigidBodyComponent.
  */
@@ -20,6 +20,7 @@ class RigidBodyComponentData {
         this.angularFactor = new Vec3(1, 1, 1);
 
         this.friction = 0.5;
+        this.rollingFriction = 0;
         this.restitution = 0;
 
         this.type = BODYTYPE_STATIC;

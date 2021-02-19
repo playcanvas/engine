@@ -8,9 +8,9 @@ import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**
  * @class
- * @name pc.SceneRegistry
+ * @name SceneRegistry
  * @description Container for storing the name and url for scene files.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class SceneRegistry {
     constructor(app) {
@@ -26,9 +26,9 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#list
+     * @name SceneRegistry#list
      * @description Return the list of scene.
-     * @returns {pc.SceneRegistryItem[]} All items in the registry.
+     * @returns {SceneRegistryItem[]} All items in the registry.
      */
     list() {
         return this._list;
@@ -36,8 +36,8 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#add
-     * @description  Add a new item to the scene registry.
+     * @name SceneRegistry#add
+     * @description Add a new item to the scene registry.
      * @param {string} name - The name of the scene.
      * @param {string} url -  The url of the scene file.
      * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise.
@@ -61,10 +61,10 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#find
-     * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}.
-     * @param  {string} name - The name of the scene.
-     * @returns {pc.SceneRegistryItem} The stored data about a scene.
+     * @name SceneRegistry#find
+     * @description Find a Scene by name and return the {@link SceneRegistryItem}.
+     * @param {string} name - The name of the scene.
+     * @returns {SceneRegistryItem} The stored data about a scene.
      */
     find(name) {
         if (this._index.hasOwnProperty(name)) {
@@ -76,10 +76,10 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#findByUrl
-     * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}.
-     * @param  {string} url - The URL to search by.
-     * @returns {pc.SceneRegistryItem} The stored data about a scene.
+     * @name SceneRegistry#findByUrl
+     * @description Find a scene by the URL and return the {@link SceneRegistryItem}.
+     * @param {string} url - The URL to search by.
+     * @returns {SceneRegistryItem} The stored data about a scene.
      */
     findByUrl(url) {
         if (this._urlIndex.hasOwnProperty(url)) {
@@ -90,9 +90,9 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#remove
-     * @description  Remove an item from the scene registry.
-     * @param  {string} name - The name of the scene.
+     * @name SceneRegistry#remove
+     * @description Remove an item from the scene registry.
+     * @param {string} name - The name of the scene.
      */
     remove(name) {
         if (this._index.hasOwnProperty(name)) {
@@ -118,11 +118,11 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#loadSceneHierarchy
+     * @name SceneRegistry#loadSceneHierarchy
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
      * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
-     * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading,
+     * @param {callbacks.LoadHierarchy} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
      *
@@ -179,10 +179,10 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#loadSceneSettings
+     * @name SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene.
      * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl.
-     * @param {pc.callbacks.LoadSettings} callback - The function called after the settings
+     * @param {callbacks.LoadSettings} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
      *
@@ -220,13 +220,13 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#loadScene
+     * @name SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used
-     * by the pc.Application.
+     * by the {@link Application}.
      * @param {string} url - The URL of the scene file.
-     * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
+     * @param {callbacks.LoadScene} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the
-     * {@link pc.Scene}.
+     * {@link Scene}.
      */
     loadScene(url, callback) {
         var self = this;

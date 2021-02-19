@@ -1,7 +1,7 @@
 import { extend } from '../../../core/core.js';
 import { events } from '../../../core/events.js';
-import { Color } from '../../../core/color.js';
 
+import { Color } from '../../../math/color.js';
 import { Curve } from '../../../math/curve.js';
 import { CurveSet } from '../../../math/curve-set.js';
 import { Vec2 } from '../../../math/vec2.js';
