@@ -10,7 +10,7 @@ function isMousePointerLocked() {
  * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
  * @description Create an new MouseEvent.
  * @param {Mouse} mouse - The Mouse device that is firing this event.
- * @param {MouseEvent} event - The original browser event that fired.
+ * @param {globalThis.MouseEvent} event - The original browser event that fired.
  * @property {number} x The x co-ordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
  * @property {number} y The y co-ordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
  * @property {number} dx The change in x co-ordinate since the last mouse event.
@@ -28,7 +28,7 @@ function isMousePointerLocked() {
  * @property {boolean} shiftKey True if the shift key was pressed when this event was fired.
  * @property {boolean} altKey True if the alt key was pressed when this event was fired.
  * @property {boolean} metaKey True if the meta key was pressed when this event was fired.
- * @property {MouseEvent} event The original browser event.
+ * @property {globalThis.MouseEvent} event The original browser event.
  */
 class MouseEvent {
     constructor(mouse, event) {
