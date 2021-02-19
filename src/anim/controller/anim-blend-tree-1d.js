@@ -6,7 +6,7 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @private
  * @class
  * @name AnimBlendTree1D
- * @classdesc An AnimBlendTree that calculates it's weights using a 1D algorithm
+ * @classdesc An AnimBlendTree that calculates its weights using a 1D algorithm
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTree1D extends AnimBlendTree {
