@@ -5,12 +5,12 @@ import {
 
 /**
  * @class
- * @name pc.IndexBuffer
- * @classdesc An index buffer stores index values into a {@link pc.VertexBuffer}.
+ * @name IndexBuffer
+ * @classdesc An index buffer stores index values into a {@link VertexBuffer}.
  * Indexed graphical primitives can normally utilize less memory that unindexed
  * primitives (if vertices are shared).
  *
- * Typically, index buffers are set on {@link pc.Mesh} objects.
+ * Typically, index buffers are set on {@link Mesh} objects.
  * @description Creates a new index buffer.
  * @example
  * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
@@ -21,23 +21,23 @@ import {
  *                                      3,
  *                                      pc.BUFFER_STATIC,
  *                                      indices);
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to
  * manage this index buffer.
  * @param {number} format - The type of each index to be stored in the index
  * buffer. Can be:
  *
- * * {@link pc.INDEXFORMAT_UINT8}
- * * {@link pc.INDEXFORMAT_UINT16}
- * * {@link pc.INDEXFORMAT_UINT32}
+ * * {@link INDEXFORMAT_UINT8}
+ * * {@link INDEXFORMAT_UINT16}
+ * * {@link INDEXFORMAT_UINT32}
  * @param {number} numIndices - The number of indices to be stored in the index
  * buffer.
  * @param {number} [usage] - The usage type of the vertex buffer. Can be:
  *
- * * {@link pc.BUFFER_DYNAMIC}
- * * {@link pc.BUFFER_STATIC}
- * * {@link pc.BUFFER_STREAM}
+ * * {@link BUFFER_DYNAMIC}
+ * * {@link BUFFER_STATIC}
+ * * {@link BUFFER_STREAM}
  *
- * Defaults to pc.BUFFER_STATIC.
+ * Defaults to {@link BUFFER_STATIC}.
  * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
  * index buffer will be initialized to zeros.
  */
@@ -80,7 +80,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#destroy
+     * @name IndexBuffer#destroy
      * @description Frees resources associated with this index buffer.
      */
     destroy() {
@@ -109,13 +109,13 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#getFormat
+     * @name IndexBuffer#getFormat
      * @description Returns the data format of the specified index buffer.
      * @returns {number} The data format of the specified index buffer. Can be:
      *
-     * * {@link pc.INDEXFORMAT_UINT8}
-     * * {@link pc.INDEXFORMAT_UINT16}
-     * * {@link pc.INDEXFORMAT_UINT32}
+     * * {@link INDEXFORMAT_UINT8}
+     * * {@link INDEXFORMAT_UINT16}
+     * * {@link INDEXFORMAT_UINT32}
      */
     getFormat() {
         return this.format;
@@ -123,7 +123,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#getNumIndices
+     * @name IndexBuffer#getNumIndices
      * @description Returns the number of indices stored in the specified index buffer.
      * @returns {number} The number of indices stored in the specified index buffer.
      */
@@ -133,7 +133,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#lock
+     * @name IndexBuffer#lock
      * @description Gives access to the block of memory that stores the buffer's indices.
      * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
      */
@@ -143,7 +143,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#unlock
+     * @name IndexBuffer#unlock
      * @description Signals that the block of memory returned by a call to the lock function is
      * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
      * currently active device.

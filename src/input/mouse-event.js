@@ -6,20 +6,20 @@ function isMousePointerLocked() {
 
 /**
  * @class
- * @name pc.MouseEvent
+ * @name MouseEvent
  * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
  * @description Create an new MouseEvent.
- * @param {pc.Mouse} mouse - The Mouse device that is firing this event.
+ * @param {Mouse} mouse - The Mouse device that is firing this event.
  * @param {MouseEvent} event - The original browser event that fired.
- * @property {number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to.
- * @property {number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to.
+ * @property {number} x The x co-ordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
+ * @property {number} y The y co-ordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
  * @property {number} dx The change in x co-ordinate since the last mouse event.
  * @property {number} dy The change in y co-ordinate since the last mouse event.
  * @property {number} button The mouse button associated with this event. Can be:
  *
- * * {@link pc.MOUSEBUTTON_LEFT}
- * * {@link pc.MOUSEBUTTON_MIDDLE}
- * * {@link pc.MOUSEBUTTON_RIGHT}
+ * * {@link MOUSEBUTTON_LEFT}
+ * * {@link MOUSEBUTTON_MIDDLE}
+ * * {@link MOUSEBUTTON_RIGHT}
  *
  * @property {number} wheelDelta A value representing the amount the mouse wheel has moved, only
  * valid for {@link mousewheel} events.

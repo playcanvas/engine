@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.ComponentSystemRegistry
+ * @name ComponentSystemRegistry
  * @classdesc Store, access and delete instances of the various ComponentSystems.
  * @description Create a new ComponentSystemRegistry.
  */
@@ -13,9 +13,9 @@ class ComponentSystemRegistry {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystemRegistry#add
+     * @name ComponentSystemRegistry#add
      * @description Add a component system to the registry.
-     * @param {object} system - The {pc.ComponentSystem} instance.
+     * @param {object} system - The {@link ComponentSystem} instance.
      */
     add(system) {
         var id = system.id;
@@ -32,9 +32,9 @@ class ComponentSystemRegistry {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystemRegistry#remove
+     * @name ComponentSystemRegistry#remove
      * @description Remove a component system from the registry.
-     * @param {object} system - The {pc.ComponentSystem} instance.
+     * @param {object} system - The {@link ComponentSystem} instance.
      */
     remove(system) {
         var id = system.id;

@@ -7,8 +7,8 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @private
  * @class
- * @name pc.EntityReference
- * @augments pc.EventHandler
+ * @name EntityReference
+ * @augments EventHandler
  * @description Helper class used for managing component properties that represent entity references.
  * @classdesc An EntityReference can be used in scenarios where a component has one or more properties that
  * refer to entities in the scene graph. Using an EntityReference simplifies the job of dealing with the
@@ -108,10 +108,10 @@ import { EventHandler } from '../../core/event-handler.js';
  * Additionally, any callbacks listed in the event config will automatically be called in the scope
  * of the parent component – you should never have to worry about manually calling `Function.bind()`.
  *
- * @param {pc.Component} parentComponent - A reference to the parent component that owns this entity reference.
+ * @param {Component} parentComponent - A reference to the parent component that owns this entity reference.
  * @param {string} entityPropertyName - The name of the component property that contains the entity guid.
  * @param {object<string, Function>} [eventConfig] - A map of event listener configurations.
- * @property {pc.Entity} entity A reference to the entity, if present.
+ * @property {Entity} entity A reference to the entity, if present.
  */
 class EntityReference extends EventHandler {
     constructor(parentComponent, entityPropertyName, eventConfig) {
@@ -231,9 +231,9 @@ class EntityReference extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.EntityReference#onParentComponentEnable
+     * @name EntityReference#onParentComponentEnable
      * @description Must be called from the parent component's onEnable() method in
-     * order for entity references to be correctly resolved when {@link pc.Entity#clone}
+     * order for entity references to be correctly resolved when {@link Entity#clone}
      * is called.
      */
     onParentComponentEnable() {
@@ -399,7 +399,7 @@ class EntityReference extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.EntityReference#hasComponent
+     * @name EntityReference#hasComponent
      * @description Convenience method indicating whether the entity exists and has a
      * component of the provided type.
      * @param {string} componentName - Name of the component.

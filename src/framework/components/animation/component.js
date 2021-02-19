@@ -12,20 +12,20 @@ import { Component } from '../component.js';
 /**
  * @component Animation
  * @class
- * @name pc.AnimationComponent
- * @augments pc.Component
+ * @name AnimationComponent
+ * @augments Component
  * @classdesc The Animation Component allows an Entity to playback animations on models.
  * @description Create a new AnimationComponent.
- * @param {pc.AnimationComponentSystem} system - The {@link pc.ComponentSystem} that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
- * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
+ * @property {Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
  * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
  * @property {number} duration Get the duration in seconds of the current animation. [read only]
- * @property {pc.Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
- * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
+ * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
+ * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
  */
 class AnimationComponent extends Component {
     constructor(system, entity) {
@@ -43,7 +43,7 @@ class AnimationComponent extends Component {
 
     /**
      * @function
-     * @name pc.AnimationComponent#play
+     * @name AnimationComponent#play
      * @description Start playing an animation.
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
@@ -120,10 +120,10 @@ class AnimationComponent extends Component {
 
     /**
      * @function
-     * @name pc.AnimationComponent#getAnimation
+     * @name AnimationComponent#getAnimation
      * @description Return an animation.
      * @param {string} name - The name of the animation asset.
-     * @returns {pc.Animation} An Animation.
+     * @returns {Animation} An Animation.
      */
     getAnimation(name) {
         return this.data.animations[name];

@@ -1,3 +1,5 @@
+import { Vec2 } from '../../math/vec2.js';
+
 import { AnimNode } from './anim-node.js';
 import {
     ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
@@ -21,16 +23,16 @@ function clamp(num, min, max) {
 /**
  * @private
  * @class
- * @name pc.AnimBlendTree
+ * @name AnimBlendTree
  * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
  * @description Create a new BlendTree.
- * @param {pc.AnimState} state - The AnimState that this AnimBlendTree belongs to.
- * @param {pc.AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the AnimNode is stored as part of a pc.AnimBlendTree hierarchy.
- * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
- * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.AnimBlendTree.
- * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
+ * @param {AnimState} state - The AnimState that this AnimBlendTree belongs to.
+ * @param {AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the AnimNode is stored as part of a {@link AnimBlendTree} hierarchy.
+ * @param {string} name - The name of the BlendTree. Used when assigning a {@link AnimTrack} to its children.
+ * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a {@link AnimBlendTree}.
+ * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of ANIM_BLEND_*.
  * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
- * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
+ * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type {@link AnimNode} or {@link BlendTree}.
  * @param {Function} findParameter - Used at runtime to get the current parameter values.
  */
 class AnimBlendTree extends AnimNode {
@@ -115,7 +117,7 @@ class AnimBlendTree extends AnimNode {
                     return;
                 }
                 this._parameterValues = parameterValues;
-                p = new pc.Vec2(this._parameterValues);
+                p = new Vec2(this._parameterValues);
 
                 weightSum = 0.0;
                 for (i = 0; i < this._children.length; i++) {
@@ -145,7 +147,7 @@ class AnimBlendTree extends AnimNode {
                     return;
                 }
                 this._parameterValues = parameterValues;
-                p = new pc.Vec2(this._parameterValues);
+                p = new Vec2(this._parameterValues);
 
 
                 weightSum = 0.0;
@@ -157,8 +159,8 @@ class AnimBlendTree extends AnimNode {
                         pj = this._children[j].point.clone();
                         var pipAngle = getAngleRad(pi, p);
                         var pipjAngle = getAngleRad(pi, pj);
-                        pipj = new pc.Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
-                        pip = new pc.Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
+                        pipj = new Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
+                        pip = new Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
                         result = clamp(1.0 - Math.abs((pip.clone().dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
                         if (result < minj) minj = result;
                     }

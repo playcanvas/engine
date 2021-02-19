@@ -251,9 +251,9 @@ var standard = {
      * @function
      * @name _getUvSourceExpression
      * @description Get the code with which to to replace '$UV' in the map shader functions.
-     * @param  {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
-     * @param  {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
-     * @param  {object} options - The options passed into createShaderDefinition.
+     * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
+     * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
+     * @param {object} options - The options passed into createShaderDefinition.
      * @returns {string} The code used to replace "$UV" in the shader code.
      */
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
@@ -412,10 +412,10 @@ var standard = {
      * @function
      * @name _fsAddBaseCode
      * @description Add "Base" Code section to fragment shader.
-     * @param  {string} code - Current fragment shader code.
-     * @param  {pc.GraphicsDevice} device - The graphics device.
-     * @param  {object} chunks - All available shader chunks.
-     * @param  {object} options - The Shader Definition options.
+     * @param {string} code - Current fragment shader code.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {object} chunks - All available shader chunks.
+     * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
      */
     _fsAddBaseCode: function (code, device, chunks, options) {
@@ -432,12 +432,12 @@ var standard = {
     /**
      * @private
      * @function
-     * @name  _fsAddStartCode
+     * @name _fsAddStartCode
      * @description Add "Start" Code section to fragment shader.
-     * @param  {string} code -  Current fragment shader code.
-     * @param  {pc.GraphicsDevice} device - The graphics device.
-     * @param  {object} chunks - All available shader chunks.
-     * @param  {object} options - The Shader Definition options.
+     * @param {string} code -  Current fragment shader code.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {object} chunks - All available shader chunks.
+     * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
      */
     _fsAddStartCode: function (code, device, chunks, options) {
