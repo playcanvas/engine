@@ -1,7 +1,7 @@
 import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE
+    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE, TEXTUREPROJECTION_NONE
 } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
@@ -29,6 +29,10 @@ function getCoding(texture) {
 }
 
 function getProjectionName(projection) {
+    // default to equirect if not specified
+    if (projection === TEXTUREPROJECTION_NONE) {
+        projection = TEXTUREPROJECTION_EQUIRECT;
+    }
     switch (projection) {
         case TEXTUREPROJECTION_CUBE: return "Cubemap";
         case TEXTUREPROJECTION_EQUIRECT: return "Equirect";
@@ -58,10 +62,10 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
     const encodeFunc = "encode" + getCoding(target);
 
     // source projection type
-    let sourceFunc = "sample" + getProjectionName(source.projection);
+    const sourceFunc = "sample" + getProjectionName(source.projection);
 
     // target projection type
-    let targetFunc = "getDirection" + getProjectionName(target.projection);
+    const targetFunc = "getDirection" + getProjectionName(target.projection);
 
     const shader = createShaderFromCode(
         device,

@@ -1002,6 +1002,14 @@ export const TEXHINT_LIGHTMAP = 3;
 
 /**
  * @constant
+ * @name TEXTUREPROJECTION_NONE
+ * @type {number}
+ * @description Texture data is not stored a specific projection format.
+ */
+export const TEXTUREPROJECTION_NONE = "none";
+
+/**
+ * @constant
  * @name TEXTUREPROJECTION_CUBE
  * @type {number}
  * @description Texture data is stored in cubemap projection format.

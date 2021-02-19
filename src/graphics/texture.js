@@ -12,7 +12,7 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
     TEXTURELOCK_WRITE,
-    TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE,
+    TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
@@ -122,9 +122,7 @@ class Texture {
 
         this._format = PIXELFORMAT_R8_G8_B8_A8;
         this.type = TEXTURETYPE_DEFAULT;
-
-        // texture projection type, used only when texture needs to be projected
-        this.projection = TEXTUREPROJECTION_EQUIRECT;
+        this.projection = TEXTUREPROJECTION_NONE;
 
         this._cubemap = false;
         this._volume = false;
