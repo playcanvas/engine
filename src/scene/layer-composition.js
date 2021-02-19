@@ -1,6 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
 import {
+    LAYERID_DEPTH,
     BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
@@ -29,6 +30,9 @@ class LayerComposition extends EventHandler {
         super();
 
         this.name = name;
+
+        // enable logging
+        this.logRenderActions = false;
 
         // all layers added into the composition
         this.layerList = [];
@@ -66,13 +70,6 @@ class LayerComposition extends EventHandler {
 
 
         this._globalLightCameraIds = []; // array mapping _globalLights to camera ids in composition
-
-        // working array of render targets already cleared within a frame, to avoid clearing an array multiple times by the same camera
-        this._renderedRt = [];
-
-        // working arrays of cameras and layers already used during the rendering, written to in sync to allow single execution per camera / layer
-        this._renderedByCam = [];
-        this._renderedLayer = [];
 
         // the actual rendering sequence, generated based on layers and cameras
         this._renderActions = [];
@@ -330,7 +327,7 @@ class LayerComposition extends EventHandler {
         // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
         var renderActionCount = 0;
         var renderActions = this._renderActions;
-        function addRenderAction(layer, layerIndex, cameraIndex) {
+        function addRenderAction(layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
 
             // try and reuse object, otherwise allocate new
             var renderAction = renderActions[renderActionCount];
@@ -342,15 +339,34 @@ class LayerComposition extends EventHandler {
             var rt = layer.renderTarget;
             var camera = layer.cameras[cameraIndex];
             if (camera && camera.renderTarget) {
-                rt = camera.renderTarget;
+                if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
+                    rt = camera.renderTarget;
+                }
             }
 
-            // store the properties
+            // clear flags - use camera clear flags in the first render action for each camera, other render actions don't clear
+            let clearColor = cameraFirstRenderAction ? camera.clearColorBuffer : false;
+            let clearDepth = cameraFirstRenderAction ? camera.clearDepthBuffer : false;
+            let clearStencil = cameraFirstRenderAction ? camera.clearStencilBuffer : false;
+
+            // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
+            // don't render them to render target anymore
+            if (postProcessMarked && camera.postEffectsEnabled) {
+                rt = null;
+            }
+
+            // store the properties - write all as we reuse previously allocated class instances
+            renderAction.triggerPostprocess = false;
             renderAction.layerIndex = layerIndex;
             renderAction.cameraIndex = cameraIndex;
             renderAction.renderTarget = rt;
-
+            renderAction.clearColor = clearColor;
+            renderAction.clearDepth = clearDepth;
+            renderAction.clearStencil = clearStencil;
+            renderAction.firstCameraUse = cameraFirstRenderAction;
             renderActionCount++;
+
+            return renderAction;
         }
 
         var camera, index, cameraIndex;
@@ -384,6 +400,16 @@ class LayerComposition extends EventHandler {
             for (i = 0; i < this.cameras.length; i++) {
                 camera = this.cameras[i];
 
+                // first render action for this camera
+                let cameraFirstRenderAction = true;
+                let cameraFirstRenderActionIndex = renderActionCount;
+
+                // last render action for the camera
+                let lastRenderAction = null;
+
+                // true if post processing stop layer was found for the camera
+                let postProcessMarked = false;
+
                 // walk all global sorted list of layers (sublayers) to check if camera renders it
                 // this adds both opaque and transparent sublayers if camera renders the layer
                 for (j = 0; j < len; j++) {
@@ -392,28 +418,51 @@ class LayerComposition extends EventHandler {
                     if (layer) {
 
                         // if layer needs to be rendered
-                        if (layer.cameras.length > 0 || layer.isPostEffect) {
+                        if (layer.cameras.length > 0) {
 
                             // if the camera renders this layer
                             if (camera.layers.indexOf(layer.id) >= 0) {
 
+                                // if this layer is the stop layer for postprocessing
+                                if (layer.id === camera.disablePostEffectsLayer) {
+                                    postProcessMarked = true;
+
+                                    // the previously added render action is the last post-processed layer
+                                    if (lastRenderAction) {
+
+                                        // mark it to trigger postprocessing callback
+                                        lastRenderAction.triggerPostprocess = true;
+                                    }
+                                }
+
                                 // camera index in the layer array
                                 cameraIndex = layer.cameras.indexOf(camera);
                                 if (cameraIndex >= 0) {
-                                    addRenderAction(layer, j, cameraIndex);
+
+                                    // add render action to describe rendering step
+                                    lastRenderAction = addRenderAction(layer, j, cameraIndex, cameraFirstRenderAction, postProcessMarked);
+                                    cameraFirstRenderAction = false;
                                 }
-
-                            } else if (layer.isPostEffect) {
-
-                                // post-effect layers don't have camera
-                                addRenderAction(layer, j, -1);
                             }
                         }
                     }
                 }
+
+                // if no render action for this camera was marked for end of posprocessing, mark last one
+                if (!postProcessMarked && lastRenderAction) {
+                    lastRenderAction.triggerPostprocess = true;
+                }
+
+                // handle camera stacking if this render action has postprocessing enabled
+                if (camera.renderTarget && camera.postEffectsEnabled) {
+                    // process previous render actions starting with previous camera
+                    this.propagateRenderTarget(cameraFirstRenderActionIndex - 1, camera.renderTarget);
+                }
             }
 
             this._renderActions.length = renderActionCount;
+
+            this._logRenderActions();
         }
 
         var arr;
@@ -437,6 +486,60 @@ class LayerComposition extends EventHandler {
         }
 
         return result;
+    }
+
+    // executes when post-processing camera's render actions were created to propage rendering to
+    // render targets to previous camera as needed
+    propagateRenderTarget(startIndex, renderTarget) {
+        for (let a = startIndex; a >= 0; a--) {
+
+            let ra = this._renderActions[a];
+            const layer = this.layerList[ra.layerIndex];
+
+            // if we hit render action with a render target (other than depth layer), that marks the end of camera stack
+            // TODO: refactor this as part of depth layer refactoring
+            if (ra.renderTarget && layer.id !== LAYERID_DEPTH) {
+                break;
+            }
+
+            // skip over depth layer
+            if (layer.id === LAYERID_DEPTH) {
+                continue;
+            }
+
+            // render it to render target
+            ra.renderTarget = renderTarget;
+        }
+    }
+
+    // logs render action and their properties
+    _logRenderActions() {
+
+        // #ifdef DEBUG
+        if (this.logRenderActions) {
+            console.log("Render Actions");
+            for (let i = 0; i < this._renderActions.length; i++) {
+                const ra = this._renderActions[i];
+                const layerIndex = ra.layerIndex;
+                const layer = this.layerList[layerIndex];
+                const enabled = layer.enabled && this.subLayerEnabled[layerIndex];
+                const transparent = this.subLayerList[layerIndex];
+                const camera = layer.cameras[ra.cameraIndex];
+                const clear = (ra.clearColor ? "Color " : "..... ") + (ra.clearDepth ? "Depth " : "..... ") + (ra.clearStencil ? "Stencil" : ".......");
+
+                console.log(i +
+                    (" Cam: " + (camera ? camera.entity.name : "-")).padEnd(22, " ") +
+                    (" Lay: " + layer.name).padEnd(22, " ") +
+                    (transparent ? " TRANSP" : " OPAQUE") +
+                    (enabled ? " ENABLED " : " DISABLED") +
+                    " Meshes: ", (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
+                    (" RT: " + (ra.renderTarget ? ra.renderTarget.name : "-")).padEnd(30, " ") +
+                    " Clear: " + clear +
+                    (ra.firstCameraUse ? " CAM-FIRST" : "") +
+                    (ra.triggerPostprocess ? " POSTPROCESS" : ""));
+            }
+        }
+        // #endif
     }
 
     _isLayerAdded(layer) {

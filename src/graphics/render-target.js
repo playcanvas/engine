@@ -23,6 +23,7 @@ var defaultOptions = {
  * Defaults to true.
  * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option to specify the
  * face of the cubemap to render to. Can be:
+ * @param {string} [options.name] - The name of the render target.
  *
  * * {@link CUBEFACE_POSX}
  * * {@link CUBEFACE_NEGX}
@@ -99,6 +100,18 @@ class RenderTarget {
         this._glResolveFrameBuffer = null;
         this._glMsaaColorBuffer = null;
         this._glMsaaDepthBuffer = null;
+
+        // use specified name, othewise get one from color or depth buffer
+        this.name = options.name;
+        if (!this.name) {
+            this.name = this._colorBuffer?.name;
+        }
+        if (!this.name) {
+            this.name = this._depthBuffer?.name;
+        }
+        if (!this.name) {
+            this.name = "Untitled";
+        }
     }
 
     /**
