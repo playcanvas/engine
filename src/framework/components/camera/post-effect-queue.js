@@ -53,6 +53,26 @@ class PostEffectQueue {
         camera.on('set_rect', this.onCameraRectChanged, this);
     }
 
+    _allocateColorBuffer(format, name) {
+        var rect = this.camera.rect;
+        var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
+        var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
+
+        var colorBuffer = new Texture(this.app.graphicsDevice, {
+            format: format,
+            width: width,
+            height: height,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+        colorBuffer.name = name;
+
+        return colorBuffer;
+    }
+
     /**
      * @private
      * @function
@@ -62,59 +82,26 @@ class PostEffectQueue {
      * @param {boolean} hdr - Use HDR render target format.
      * @returns {RenderTarget} The render target.
      */
-
     _createOffscreenTarget(useDepth, hdr) {
-        var rect = this.camera.rect;
-
-        var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
-        var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
         var device = this.app.graphicsDevice;
-        var format = hdr ? device.getHdrFormat() : PIXELFORMAT_R8_G8_B8_A8;
+        const format = hdr ? device.getHdrFormat() : PIXELFORMAT_R8_G8_B8_A8;
+        const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
+
+        let colorBuffer = this._allocateColorBuffer(format, name);
+
         var useStencil =  this.app.graphicsDevice.supportsStencil;
         var samples = useDepth ? device.samples : 1;
 
-        var colorBuffer = new Texture(device, {
-            format: format,
-            width: width,
-            height: height,
-            mipmaps: false
-        });
-        colorBuffer.name = this.camera.entity.name + '-posteffect-' + this.effects.length;
-
-        colorBuffer.minFilter = FILTER_NEAREST;
-        colorBuffer.magFilter = FILTER_NEAREST;
-        colorBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-
-        return new RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
+        return new RenderTarget(device, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
     }
 
     _resizeOffscreenTarget(rt) {
-        var rect = this.camera.rect;
-
-        var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
-        var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
-
-        var device = this.app.graphicsDevice;
-        var format = rt.colorBuffer.format;
+        const format = rt.colorBuffer.format;
+        const name = rt.colorBuffer.name;
 
         rt._colorBuffer.destroy();
-
-        var colorBuffer = new Texture(device, {
-            format: format,
-            width: width,
-            height: height,
-            mipmaps: false
-        });
-        colorBuffer.name = 'posteffect';
-
-        colorBuffer.minFilter = FILTER_NEAREST;
-        colorBuffer.magFilter = FILTER_NEAREST;
-        colorBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-
-        rt._colorBuffer = colorBuffer;
+        rt._colorBuffer = this._allocateColorBuffer(format, name);
         rt.destroy();
     }
 
