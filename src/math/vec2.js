@@ -435,7 +435,7 @@ class Vec2 {
      * @description Calculates the angle between two Vec2's in radians.
      * @param {Vec2} lhs - The first vector operand for the calculation.
      * @param {Vec2} rhs - The second vector operand for the calculation.
-     * @returns {number} the calculated angle
+     * @returns {number} The calculated angle in radians.
      */
     static angleRad(lhs, rhs) {
         return Math.atan2(lhs.x * rhs.y - lhs.y * rhs.x, lhs.x * rhs.x + lhs.y * rhs.y);
