@@ -1006,7 +1006,7 @@ export const TEXHINT_LIGHTMAP = 3;
  * @type {number}
  * @description Texture data is stored in cubemap projection format.
  */
-export const TEXTUREPROJECTION_CUBE = 0;
+export const TEXTUREPROJECTION_CUBE = "cube";
 
 /**
  * @constant
@@ -1014,7 +1014,7 @@ export const TEXTUREPROJECTION_CUBE = 0;
  * @type {number}
  * @description Texture data is stored in equirectangular projection format.
  */
-export const TEXTUREPROJECTION_EQUIRECT = 1;
+export const TEXTUREPROJECTION_EQUIRECT = "equirect";
 
 /**
  * @constant
@@ -1022,7 +1022,7 @@ export const TEXTUREPROJECTION_EQUIRECT = 1;
  * @type {number}
  * @description Texture data is stored in octahedral projection format.
  */
-export const TEXTUREPROJECTION_OCTAHEDRAL = 2;
+export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
 
 /**
  * @constant
@@ -1099,11 +1099,11 @@ export const UNIFORMTYPE_VEC2ARRAY = 21;
 export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
 
-// map of engine pc.TYPE_*** enums to their corresponding typed array constructors and byte sizes
+// map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
 
-// map of typed array to engine pc.TYPE_***
+// map of typed array to engine TYPE_***
 export const typedArrayToType = {
     "Int8Array": TYPE_INT8,
     "Uint8Array": TYPE_UINT8,
@@ -1114,7 +1114,7 @@ export const typedArrayToType = {
     "Float32Array": TYPE_FLOAT32
 };
 
-// map of engine pc.INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
+// map of engine INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
 
