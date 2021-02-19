@@ -193,10 +193,9 @@ class Asset extends EventHandler {
             return null;
 
         if (this.type === 'texture' || this.type === 'textureatlas' || this.type === 'bundle') {
-            var app = this.registry?._loader?._app || getApplication() || null;
-            var device = app?.graphicsDevice || null;
-
-            if (device !== null) {
+            var app = this.registry?._loader?._app || getApplication();
+            var device = app?.graphicsDevice;
+            if (device) {
                 for (var i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
                     var variant = VARIANT_DEFAULT_PRIORITY[i];
                     // if the device supports the variant
