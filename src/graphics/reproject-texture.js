@@ -1,7 +1,7 @@
 import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXTUREPROJECTION_OCTAHEDRAL
+    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE
 } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
@@ -28,6 +28,14 @@ function getCoding(texture) {
     }
 }
 
+function getProjectionName(projection) {
+    switch (projection) {
+        case TEXTUREPROJECTION_CUBE: return "Cubemap";
+        case TEXTUREPROJECTION_EQUIRECT: return "Equirect";
+        case TEXTUREPROJECTION_OCTAHEDRAL: return "Octahedral";
+    }
+}
+
 /**
  * @static
  * @function
@@ -43,48 +51,17 @@ function getCoding(texture) {
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
  * @param {number} [numSamples] - optional number of samples (default is 1024).
- * @param {number} [sourceProjection] - optional source projection. (default is TEXTUREPROJECTION_CUBE if source is cubemap,
- * otherwise TEXTUREPROJECTION_EQUIRECT). Can be:
- *
- * * {@link pc.TEXTUREPROJECTION_CUBE}
- * * {@link pc.TEXTUREPROJECTION_EQUIRECT}
- * * {@link pc.TEXTUREPROJECTION_OCTAHEDRAL}
- *
- * @param {number} [targetProjection] - optional target projection. (default is TEXTUREPROJECTION_CUBE if target is cubemap,
- * otherwise TEXTUREPROJECTION_EQUIRECT). Can be:
- *
- * * {@link pc.TEXTUREPROJECTION_CUBE}
- * * {@link pc.TEXTUREPROJECTION_EQUIRECT}
- * * {@link pc.TEXTUREPROJECTION_OCTAHEDRAL}
  */
-function reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024, sourceProjection = TEXTUREPROJECTION_EQUIRECT, targetProjection = TEXTUREPROJECTION_EQUIRECT) {
+function reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024) {
     const processFunc = (specularPower === 1) ? 'reproject' : 'prefilter';
     const decodeFunc = "decode" + getCoding(source);
     const encodeFunc = "encode" + getCoding(target);
 
     // source projection type
-    let sourceFunc;
-    if (source.cubemap) {
-        sourceFunc = "sampleCubemap";
-    } else {
-        if (sourceProjection === TEXTUREPROJECTION_OCTAHEDRAL) {
-            sourceFunc = "sampleOctahedral";
-        } else {
-            sourceFunc = "sampleEquirect";
-        }
-    }
+    let sourceFunc = "sample" + getProjectionName(source.projection);
 
     // target projection type
-    let targetFunc;
-    if (target.cubemap) {
-        targetFunc = "getDirectionCubemap";
-    } else {
-        if (targetProjection === TEXTUREPROJECTION_OCTAHEDRAL) {
-            targetFunc = "getDirectionOctahedral";
-        } else {
-            targetFunc = "getDirectionEquirect";
-        }
-    }
+    let targetFunc = "getDirection" + getProjectionName(target.projection);
 
     const shader = createShaderFromCode(
         device,
