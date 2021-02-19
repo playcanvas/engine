@@ -43,20 +43,22 @@ function getCoding(texture) {
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
  * @param {number} [numSamples] - optional number of samples (default is 1024).
- * @param {number} [sourceProjection] - optional source projection. Can be:
+ * @param {number} [sourceProjection] - optional source projection. (default is TEXTUREPROJECTION_CUBE if source is cubemap,
+ * otherwise TEXTUREPROJECTION_EQUIRECT). Can be:
  *
  * * {@link pc.TEXTUREPROJECTION_CUBE}
  * * {@link pc.TEXTUREPROJECTION_EQUIRECT}
  * * {@link pc.TEXTUREPROJECTION_OCTAHEDRAL}
  *
- * @param {number} [targetProjection] - optional target projection. Can be:
+ * @param {number} [targetProjection] - optional target projection. (default is TEXTUREPROJECTION_CUBE if target is cubemap,
+ * otherwise TEXTUREPROJECTION_EQUIRECT). Can be:
  *
  * * {@link pc.TEXTUREPROJECTION_CUBE}
  * * {@link pc.TEXTUREPROJECTION_EQUIRECT}
  * * {@link pc.TEXTUREPROJECTION_OCTAHEDRAL}
  */
-function reprojectTexture(device, source, target, specularPower, numSamples = 1024, sourceProjection, targetProjection) {
-    const processFunc = (specularPower !== undefined) ? 'prefilter' : 'reproject';
+function reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024, sourceProjection = TEXTUREPROJECTION_EQUIRECT, targetProjection = TEXTUREPROJECTION_EQUIRECT) {
+    const processFunc = (specularPower === 1) ? 'reproject' : 'prefilter';
     const decodeFunc = "decode" + getCoding(source);
     const encodeFunc = "encode" + getCoding(target);
 
@@ -108,7 +110,7 @@ function reprojectTexture(device, source, target, specularPower, numSamples = 10
 
     const constantParams = device.scope.resolve("params");
     let params = new Float32Array(4);
-    params[1] = (specularPower !== undefined) ? specularPower : 1;
+    params[1] = specularPower;
     params[2] = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
     params[3] = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
 
