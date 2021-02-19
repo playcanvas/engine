@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/playcanvas.js"></script>
+    <script src="../../../engine/build/playcanvas.dbg.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="http://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
     <style>
@@ -39,6 +39,7 @@
                             "loop": true,
                             "blendTree": {
                                 "type": pc.ANIM_BLEND_2D_DIRECTIONAL,
+                                "syncDurations": true,
                                 "parameters": ["posX", "posY"],
                                 "children": [
                                     {
