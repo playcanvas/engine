@@ -281,6 +281,10 @@ class Light {
         }
     }
 
+    layersDirty() {
+        this._scene.layers._dirtyLights = true;
+    }
+
     updateKey() {
         // Key definition:
         // Bit
@@ -315,7 +319,7 @@ class Light {
         }
 
         if (key !== this.key && this._scene !== null) {
-            this._scene.layers._dirtyLights = true;
+            this.layersDirty();
         }
 
         this.key = key;
