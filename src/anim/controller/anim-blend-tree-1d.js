@@ -10,9 +10,9 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTree1D extends AnimBlendTree {
-    constructor(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter) {
+    constructor(state, parent, name, point, parameters, children, createTree, findParameter) {
         children.sort((a, b) => a.point - b.point);
-        super(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter);
+        super(state, parent, name, point, parameters, children, createTree, findParameter);
     }
 
     calculateWeights() {
