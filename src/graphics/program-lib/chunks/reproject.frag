@@ -150,9 +150,9 @@ vec2 signNotZero(vec2 v) {
 
 // Returns a unit vector. Argument o is an octahedral vector packed via octEncode, on the [-1, +1] square
 vec3 octDecode(vec2 o) {
-    vec3 v = vec3(o.x, o.y, 1.0 - abs(o.x) - abs(o.y));
-    if (v.z < 0.0) {
-        v.xy = (1.0 - abs(v.yx)) * signNotZero(v.xy);
+    vec3 v = vec3(o.x, 1.0 - abs(o.x) - abs(o.y), o.y);
+    if (v.y < 0.0) {
+        v.xz = (1.0 - abs(v.zx)) * signNotZero(v.xz);
     }
     return normalize(v);
 }
@@ -164,8 +164,8 @@ vec3 getDirectionOctahedral() {
 // Assumes that v is a unit vector. The result is an octahedral vector on the [-1, +1] square
 vec2 octEncode(in vec3 v) {
     float l1norm = abs(v.x) + abs(v.y) + abs(v.z);
-    vec2 result = v.xy * (1.0 / l1norm);
-    if (v.z < 0.0) {
+    vec2 result = v.xz * (1.0 / l1norm);
+    if (v.y < 0.0) {
         result = (1.0 - abs(result.yx)) * signNotZero(result.xy);
     }
     return result;
