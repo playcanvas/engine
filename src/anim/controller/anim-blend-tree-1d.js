@@ -22,7 +22,10 @@ class AnimBlendTree1D extends AnimBlendTree {
         for (i = 0; i < this._children.length - 1; i++) {
             var c1 = this._children[i];
             var c2 = this._children[i + 1];
-            if (math.between(parameterValue, c1.point, c2.point, true)) {
+            if (c1.point === c2.point) {
+                c1.weight = 0.5;
+                c2.weight = 0.5;
+            } else if (math.between(parameterValue, c1.point, c2.point, true)) {
                 var child2Distance = Math.abs(c1.point - c2.point);
                 var parameterDistance = Math.abs(c1.point - parameterValue);
                 var weight = (child2Distance - parameterDistance) / child2Distance;
