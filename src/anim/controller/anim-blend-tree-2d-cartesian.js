@@ -7,7 +7,7 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @private
  * @class
  * @name AnimBlendTreeCartesian2D
- * @classdesc An AnimBlendTree that calculates it's weights using a 2D catesian algorithm
+ * @classdesc An AnimBlendTree that calculates its weights using a 2D Cartesian algorithm
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeCartesian2D extends AnimBlendTree {
