@@ -61,7 +61,7 @@ var _blockSizeTable = null;
  * * {@link TEXTUREPROJECTION_CUBE}
  * * {@link TEXTUREPROJECTION_EQUIRECT}
  * * {@link TEXTUREPROJECTION_OCTAHEDRAL}
- * Defaults to {@link TEXTUREPROJECTION_CUBE} if if options.cubemap was specified, otherwise {@link TEXTUREPROJECTION_EQUIRECT}.
+ * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap was specified, otherwise {@link TEXTUREPROJECTION_EQUIRECT}.
  * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
  * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
  * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
@@ -186,7 +186,7 @@ class Texture {
 
             if (this._cubemap) {
                 this.projection = TEXTUREPROJECTION_CUBE;
-            } else if (options.projection) {
+            } else if (options.projection !== TEXTUREPROJECTION_CUBE) {
                 this.projection = options.projection;
             }
 
