@@ -58,10 +58,11 @@ var _blockSizeTable = null;
  * * {@link PIXELFORMAT_ATC_RGBA}
  * Defaults to {@link PIXELFORMAT_R8_G8_B8_A8}.
  * @param {string} [options.projection] - The projection type of the texture, used when the texture represents an environment. Can be:
+ * * {@link TEXTUREPROJECTION_NONE}
  * * {@link TEXTUREPROJECTION_CUBE}
  * * {@link TEXTUREPROJECTION_EQUIRECT}
  * * {@link TEXTUREPROJECTION_OCTAHEDRAL}
- * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap was specified, otherwise {@link TEXTUREPROJECTION_EQUIRECT}.
+ * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is specified, otherwise {@link TEXTUREPROJECTION_NONE}.
  * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
  * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
  * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
