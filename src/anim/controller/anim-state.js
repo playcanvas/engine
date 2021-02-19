@@ -110,7 +110,7 @@ class AnimState {
     }
 
     get playable() {
-        return (ANIM_CONTROL_STATES.includes(this.name) || this.animations.length === this.nodeCount);
+        return (ANIM_CONTROL_STATES.indexOf(this.name) !== -1 || this.animations.length === this.nodeCount);
     }
 
     get looping() {

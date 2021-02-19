@@ -431,6 +431,7 @@ class Vec2 {
 
     /**
      * @function
+     * @private
      * @name Vec2#angleRad
      * @description Calculates the angle between two Vec2's in radians.
      * @param {Vec2} lhs - The first vector operand for the calculation.

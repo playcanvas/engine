@@ -420,7 +420,7 @@ class AnimController {
     }
 
     removeNodeAnimations(nodeName) {
-        if (ANIM_CONTROL_STATES.includes(nodeName)) {
+        if (ANIM_CONTROL_STATES.indexOf(nodeName) !== -1) {
             return;
         }
         var state = this._findState(nodeName);

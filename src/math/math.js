@@ -334,6 +334,7 @@ var math = {
 
     /**
      * @function
+     * @private
      * @name math.between
      * @description Checks whether a given number resides between two other given numbers.
      * @returns {boolean} true if between or false otherwise.

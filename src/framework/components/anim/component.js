@@ -87,7 +87,7 @@ class AnimComponent extends Component {
             var layerName = layer.name;
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
-                if (!ANIM_CONTROL_STATES.includes(stateName)) {
+                if (ANIM_CONTROL_STATES.indexOf(stateName) === -1) {
                     var stateKey = layerName + ':' + stateName;
                     if (!this.data.animationAssets[stateKey]) {
                         this.data.animationAssets[stateKey] = {
@@ -105,7 +105,7 @@ class AnimComponent extends Component {
             var layer = this.data.layers[i];
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
-                if (ANIM_CONTROL_STATES.includes(stateName)) continue;
+                if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
                 var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
                     this.removeNodeAnimations(stateName, layer.name);
