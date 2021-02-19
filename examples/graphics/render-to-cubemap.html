@@ -252,19 +252,19 @@
             var srcCube = shinyBall.script.cubemapRenderer.cubeMap;
 
             // cube -> equi1
-            pc.reprojectTexture(device, srcCube, textureEqui, undefined, 1, pc.TEXTUREPROJECTION_CUBE, pc.TEXTUREPROJECTION_EQUIRECT);
+            pc.reprojectTexture(device, srcCube, textureEqui, undefined, 1);
             app.renderTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
 
             // cube -> octa1
-            pc.reprojectTexture(device, srcCube, textureOcta, undefined, 1, pc.TEXTUREPROJECTION_CUBE, pc.TEXTUREPROJECTION_OCTAHEDRAL);
+            pc.reprojectTexture(device, srcCube, textureOcta, undefined, 1);
             app.renderTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
 
             // equi1 -> octa2
-            pc.reprojectTexture(device, textureEqui, textureOcta2, undefined, 1, pc.TEXTUREPROJECTION_EQUIRECT, pc.TEXTUREPROJECTION_OCTAHEDRAL);
+            pc.reprojectTexture(device, textureEqui, textureOcta2, undefined, 1);
             app.renderTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
 
             // octa1 -> equi2
-            pc.reprojectTexture(device, textureOcta, textureEqui2, undefined, 1, pc.TEXTUREPROJECTION_OCTAHEDRAL, pc.TEXTUREPROJECTION_EQUIRECT);
+            pc.reprojectTexture(device, textureOcta, textureEqui2, undefined, 1);
             app.renderTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
 
 
