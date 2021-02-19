@@ -210,10 +210,10 @@
         app.root.addChild(light);
 
         // helper function to create a texture that can be used to project cubemap to
-        function createReprojectionTexture(projection) {
+        function createReprojectionTexture(projection, size) {
             return new pc.Texture(this.app.graphicsDevice, {
-                width: 256,
-                height: 256,
+                width: size,
+                height: size,
                 format: pc.PIXELFORMAT_R8_G8_B8,
                 mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,
@@ -225,10 +225,10 @@
         }
 
         // create 2 uqirect and 2 octahedral textures
-        var textureEqui = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT);
-        var textureEqui2 = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT);
-        var textureOcta = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL);
-        var textureOcta2 = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL);
+        var textureEqui = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT, 256);
+        var textureEqui2 = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT, 256);
+        var textureOcta = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 64);
+        var textureOcta2 = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 32);
 
         // update things each frame
         var time = 0;
@@ -260,11 +260,11 @@
             app.renderTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
 
             // equi1 -> octa2
-            pc.reprojectTexture(device, textureEqui, textureOcta2, undefined, 1);
+            pc.reprojectTexture(device, textureEqui, textureOcta2, 32, 1024);
             app.renderTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
 
             // octa1 -> equi2
-            pc.reprojectTexture(device, textureOcta, textureEqui2, undefined, 1);
+            pc.reprojectTexture(device, textureOcta, textureEqui2, 16, 512);
             app.renderTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
 
 
