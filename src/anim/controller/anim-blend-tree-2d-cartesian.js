@@ -26,7 +26,7 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
 
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        var i, j, pi, minj, result, weightSum, meanDuration;
+        var i, j, pi, pipj, minj, result, weightSum, meanDuration;
         AnimBlendTreeCartesian2D._p.set(...this._parameterValues);
         weightSum = 0.0;
         meanDuration = 0.0;
