@@ -16,12 +16,13 @@ import { AnimNode } from './anim-node.js';
  * @param {Function} findParameter - Used at runtime to get the current parameter values.
  */
 class AnimBlendTree extends AnimNode {
-    constructor(state, parent, name, point, parameters, children, createTree, findParameter) {
+    constructor(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter) {
         super(state, parent, name, point);
         this._parameters = parameters;
         this._parameterValues = new Array(parameters.length);
         this._children = [];
         this._findParameter = findParameter;
+        this._syncDurations = syncDurations;
         this._pointCache = {};
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
@@ -46,6 +47,10 @@ class AnimBlendTree extends AnimNode {
     get weight() {
         this.calculateWeights();
         return this._parent ? this._parent.weight * this._weight : this._weight;
+    }
+
+    get syncDurations() {
+        return this._syncDurations;
     }
 
     getChild(name) {

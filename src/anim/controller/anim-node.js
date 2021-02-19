@@ -26,6 +26,7 @@ class AnimNode {
         }
 
         this._speed = speed;
+        this._weightedSpeed = 1.0;
         this._weight = 1.0;
         this._animTrack = null;
     }
@@ -65,7 +66,7 @@ class AnimNode {
     }
 
     get speed() {
-        return this._speed;
+        return this._weightedSpeed * this._speed;
     }
 
     get animTrack() {

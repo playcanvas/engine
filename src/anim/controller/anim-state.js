@@ -41,6 +41,7 @@ class AnimState {
                 1.0,
                 blendTree.parameter ? [blendTree.parameter] : blendTree.parameters,
                 blendTree.children,
+                blendTree.syncDurations,
                 this._createTree,
                 findParameter
             );
@@ -49,16 +50,16 @@ class AnimState {
         }
     }
 
-    _createTree(type, state, parent, name, point, parameters, children, createTree, findParameter) {
+    _createTree(type, state, parent, name, point, parameters, children, syncDurations, createTree, findParameter) {
         switch (type) {
             case ANIM_BLEND_1D:
-                return new AnimBlendTree1D(state, parent, name, point, parameters, children, createTree, findParameter);
+                return new AnimBlendTree1D(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter);
             case ANIM_BLEND_2D_CARTESIAN:
-                return new AnimBlendTreeCartesian2D(state, parent, name, point, parameters, children, createTree, findParameter);
+                return new AnimBlendTreeCartesian2D(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter);
             case ANIM_BLEND_2D_DIRECTIONAL:
-                return new AnimBlendTreeDirectional2D(state, parent, name, point, parameters, children, createTree, findParameter);
+                return new AnimBlendTreeDirectional2D(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter);
             case ANIM_BLEND_DIRECT:
-                return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, createTree, findParameter);
+                return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter);
         }
     }
 

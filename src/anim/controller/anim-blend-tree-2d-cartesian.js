@@ -26,9 +26,10 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
 
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        var i, j, pi, minj, result, weightSum;
+        var i, j, pi, minj, result, weightSum, meanDuration;
         AnimBlendTreeCartesian2D._p.set(...this._parameterValues);
         weightSum = 0.0;
+        meanDuration = 0.0;
         for (i = 0; i < this._children.length; i++) {
             pi = this._children[i].point;
             minj = Number.MAX_VALUE;
@@ -41,9 +42,15 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
             }
             this._children[i].weight = minj;
             weightSum += minj;
+            if (this._syncDurations) {
+                meanDuration += this._children[i].animTrack.duration * this._children[i].weight;
+            }
         }
         for (i = 0; i < this._children.length; i++) {
             this._children[i].weight = this._children[i]._weight / weightSum;
+            if (this._syncDurations) {
+                this._children[i]._weightedSpeed = this._children[i].animTrack.duration / meanDuration;
+            }
         }
     }
 }
