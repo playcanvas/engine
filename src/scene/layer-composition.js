@@ -424,7 +424,7 @@ class LayerComposition extends EventHandler {
                             if (camera.layers.indexOf(layer.id) >= 0) {
 
                                 // if this layer is the stop layer for postprocessing
-                                if (layer.id === camera.stopPostprocessingLayer) {
+                                if (layer.id === camera.disablePostEffectsLayer) {
                                     postProcessMarked = true;
 
                                     // the previously added render action is the last post-processed layer

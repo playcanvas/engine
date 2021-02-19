@@ -107,7 +107,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * camera should belong. Don't push/pop/splice or modify this array, if you want to
  * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
  * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
- * @property {number} stopPostprocessingLayer Layer ID of a layer which stops postprocessing of the camera.
+ * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of the camera stops being applied to.
  * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
  * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
  */
@@ -124,7 +124,7 @@ class CameraComponent extends Component {
         this.onPostprocessing = null;
 
         // layer id at which the postprocessing stops for the camera
-        this._stopPostprocessingLayer = LAYERID_UI;
+        this._disablePostEffectsLayer = LAYERID_UI;
 
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
@@ -159,12 +159,12 @@ class CameraComponent extends Component {
         layerComp._dirtyCameras = true;
     }
 
-    get stopPostprocessingLayer() {
-        return this._stopPostprocessingLayer;
+    get disablePostEffectsLayer() {
+        return this._disablePostEffectsLayer;
     }
 
-    set stopPostprocessingLayer(layer) {
-        this._stopPostprocessingLayer = layer;
+    set disablePostEffectsLayer(layer) {
+        this._disablePostEffectsLayer = layer;
         this.dirtyLayerCompositionCameras();
     }
 
