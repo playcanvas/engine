@@ -491,8 +491,6 @@ class LayerComposition extends EventHandler {
     // executes when post-processing camera's render actions were created to propage rendering to
     // render targets to previous camera as needed
     propagateRenderTarget(startIndex, renderTarget) {
-        // let lastFixed = null;
-        // let lastFixedClearColor = false;
         for (let a = startIndex; a >= 0; a--) {
 
             let ra = this._renderActions[a];
