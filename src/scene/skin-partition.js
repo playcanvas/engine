@@ -24,6 +24,8 @@ class SkinPartition {
         // to this particular partition. speeds up checking for duplicate vertices so we don't
         // add the same vertex more than once.
         this.indexMap = {};
+
+        this.originalMesh = null;
     }
 
     addVertex(vertex, idx, vertexArray) {

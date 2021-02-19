@@ -20,6 +20,7 @@ import {
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
+import { Texture } from '../../graphics/texture.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
@@ -315,18 +316,18 @@ var cloneTexture = function (texture) {
         return result;
     };
 
-    var result = new pc.Texture(texture.device, texture);   // duplicate texture
+    var result = new Texture(texture.device, texture);   // duplicate texture
     result._levels = shallowCopyLevels(texture);            // shallow copy the levels structure
     return result;
 };
 
 // given a texture asset, clone it
 var cloneTextureAsset = function (src) {
-    var result = new pc.Asset(src.name + '_clone',
-                              src.type,
-                              src.file,
-                              src.data,
-                              src.options);
+    var result = new Asset(src.name + '_clone',
+                           src.type,
+                           src.file,
+                           src.data,
+                           src.options);
     result.loaded = true;
     result.resource = cloneTexture(src.resource);
     src.registry.add(result);

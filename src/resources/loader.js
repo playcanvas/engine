@@ -1,7 +1,7 @@
 /**
  * @class
- * @name pc.ResourceLoader
- * @param {pc.Application} app - The application.
+ * @name ResourceLoader
+ * @param {Application} app - The application.
  * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
  * multiple requests. Add ResourceHandlers to handle different types of resources.
  */
@@ -15,27 +15,27 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#addHandler
-     * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
+     * @name ResourceLoader#addHandler
+     * @description Add a {@link ResourceHandler} for a resource type. Handler should support atleast load() and open().
      * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
      * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
      *
-     * * {@link pc.ASSET_ANIMATION}
-     * * {@link pc.ASSET_AUDIO}
-     * * {@link pc.ASSET_IMAGE}
-     * * {@link pc.ASSET_JSON}
-     * * {@link pc.ASSET_MODEL}
-     * * {@link pc.ASSET_MATERIAL}
-     * * {@link pc.ASSET_TEXT}
-     * * {@link pc.ASSET_TEXTURE}
-     * * {@link pc.ASSET_CUBEMAP}
-     * * {@link pc.ASSET_SHADER}
-     * * {@link pc.ASSET_CSS}
-     * * {@link pc.ASSET_HTML}
-     * * {@link pc.ASSET_SCRIPT}
-     * * {@link pc.ASSET_CONTAINER}
+     * * {@link ASSET_ANIMATION}
+     * * {@link ASSET_AUDIO}
+     * * {@link ASSET_IMAGE}
+     * * {@link ASSET_JSON}
+     * * {@link ASSET_MODEL}
+     * * {@link ASSET_MATERIAL}
+     * * {@link ASSET_TEXT}
+     * * {@link ASSET_TEXTURE}
+     * * {@link ASSET_CUBEMAP}
+     * * {@link ASSET_SHADER}
+     * * {@link ASSET_CSS}
+     * * {@link ASSET_HTML}
+     * * {@link ASSET_SCRIPT}
+     * * {@link ASSET_CONTAINER}
      *
-     * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
+     * @param {ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
      * @example
      * var loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
@@ -47,8 +47,8 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#removeHandler
-     * @description Remove a {@link pc.ResourceHandler} for a resource type.
+     * @name ResourceLoader#removeHandler
+     * @description Remove a {@link ResourceHandler} for a resource type.
      * @param {string} type - The name of the type that the handler will be removed.
      */
     removeHandler(type) {
@@ -57,10 +57,10 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#getHandler
-     * @description Get a {@link pc.ResourceHandler} for a resource type.
+     * @name ResourceLoader#getHandler
+     * @description Get a {@link ResourceHandler} for a resource type.
      * @param {string} type - The name of the resource type that the handler is registered with.
-     * @returns {pc.ResourceHandler} The registered handler.
+     * @returns {ResourceHandler} The registered handler.
      */
     getHandler(type) {
         return this._handlers[type];
@@ -68,14 +68,14 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#load
+     * @name ResourceLoader#load
      * @description Make a request for a resource from a remote URL. Parse the returned data using the
      * handler for the specified type. When loaded and parsed, use the callback to return an instance of
      * the resource.
      * @param {string} url - The URL of the resource to load.
      * @param {string} type - The type of resource expected.
-     * @param {pc.callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an error occurs.
-     * @param {pc.Asset} [asset] - Optional asset that is passed into handler
+     * @param {callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed into handler
      * Passed (err, resource) where err is null if there are no errors.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
@@ -194,8 +194,8 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
+     * @name ResourceLoader#open
+     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} type - The type of resource.
      * @param {*} data - The raw resource data.
      * @returns {*} The parsed resource data.
@@ -213,11 +213,11 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#patch
+     * @name ResourceLoader#patch
      * @description Perform any operations on a resource, that requires a dependency on its asset data
      * or any other asset data.
-     * @param {pc.Asset} asset - The asset to patch.
-     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {Asset} asset - The asset to patch.
+     * @param {AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         var handler = this._handlers[asset.type];
@@ -233,7 +233,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#clearCache
+     * @name ResourceLoader#clearCache
      * @description Remove resource from cache.
      * @param {string} url - The URL of the resource.
      * @param {string} type - The type of resource.
@@ -244,7 +244,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#getFromCache
+     * @name ResourceLoader#getFromCache
      * @description Check cache for resource from a URL. If present, return the cached value.
      * @param {string} url - The URL of the resource to get from the cache.
      * @param {string} type - The type of the resource.
@@ -259,7 +259,7 @@ class ResourceLoader {
     /**
      * @private
      * @function
-     * @name pc.ResourceLoader#enableRetry
+     * @name ResourceLoader#enableRetry
      * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults to 5.
      * @description Enables retrying of failed requests when loading assets.
      */
@@ -274,7 +274,7 @@ class ResourceLoader {
     /**
      * @private
      * @function
-     * @name pc.ResourceLoader#disableRetry
+     * @name ResourceLoader#disableRetry
      * @description Disables retrying of failed requests when loading assets.
      */
     disableRetry() {
@@ -285,7 +285,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#destroy
+     * @name ResourceLoader#destroy
      * @description Destroys the resource loader.
      */
     destroy() {

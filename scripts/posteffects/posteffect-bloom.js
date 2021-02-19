@@ -55,8 +55,8 @@ function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {
  * @name BloomEffect
  * @classdesc Implements the BloomEffect post processing effect.
  * @description Creates new instance of the post effect.
- * @augments pc.PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @augments PostEffect
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1.
  * @property {number} blurAmount Controls the amount of blurring.
  * @property {number} bloomIntensity The intensity of the effect.
@@ -179,7 +179,8 @@ function BloomEffect(graphicsDevice) {
         var colorBuffer = new pc.Texture(graphicsDevice, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
-            height: height >> 1
+            height: height >> 1,
+            mipmaps: false
         });
         colorBuffer.minFilter = pc.FILTER_LINEAR;
         colorBuffer.magFilter = pc.FILTER_LINEAR;

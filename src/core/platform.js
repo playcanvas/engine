@@ -1,6 +1,6 @@
 /**
  * @namespace
- * @name pc.platform
+ * @name platform
  * @description Global namespace that stores flags regarding platform environment and features support.
  * @example
  * if (pc.platform.touch) {
@@ -12,7 +12,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.desktop
+     * @name platform.desktop
      * @description Is it a desktop or laptop device.
      */
     desktop: false,
@@ -21,7 +21,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.mobile
+     * @name platform.mobile
      * @description Is it a mobile or tablet device.
      */
     mobile: false,
@@ -30,7 +30,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.ios
+     * @name platform.ios
      * @description If it is iOS.
      */
     ios: false,
@@ -39,7 +39,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.android
+     * @name platform.android
      * @description If it is Android.
      */
     android: false,
@@ -48,7 +48,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.windows
+     * @name platform.windows
      * @description If it is Windows.
      */
     windows: false,
@@ -57,7 +57,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.xbox
+     * @name platform.xbox
      * @description If it is Xbox.
      */
     xbox: false,
@@ -66,7 +66,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.gamepads
+     * @name platform.gamepads
      * @description If platform supports gamepads.
      */
     gamepads: false,
@@ -75,7 +75,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.touch
+     * @name platform.touch
      * @description If platform supports touch input.
      */
     touch: false,
@@ -84,7 +84,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.workers
+     * @name platform.workers
      * @description If the platform supports Web Workers.
      */
     workers: false,
@@ -94,7 +94,7 @@ var platform = {
      * @static
      * @readonly
      * @type {boolean}
-     * @name pc.platform.passiveEvents
+     * @name platform.passiveEvents
      * @description If the platform supports an options object as the third parameter
      * to `EventTarget.addEventListener()` and the passive property is supported.
      */

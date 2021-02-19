@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimStateGraph
+ * @name AnimStateGraph
  * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
  */
 class AnimStateGraph {

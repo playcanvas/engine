@@ -20,9 +20,9 @@ import { Mesh } from './mesh.js';
 
 /**
  * @function
- * @name pc.calculateNormals
+ * @name calculateNormals
  * @description Generates normal information from the specified positions and
- * triangle indices. See {@link pc.createMesh}.
+ * triangle indices. See {@link createMesh}.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
@@ -98,9 +98,9 @@ function calculateNormals(positions, indices) {
 
 /**
  * @function
- * @name pc.calculateTangents
+ * @name calculateTangents
  * @description Generates tangent information from the specified positions,
- * normals, texture coordinates and triangle indices. See {@link pc.createMesh}.
+ * normals, texture coordinates and triangle indices. See {@link createMesh}.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} normals - An array of 3-dimensional vertex normals.
  * @param {number[]} uvs - An array of 2-dimensional vertex texture coordinates.
@@ -222,9 +222,9 @@ function calculateTangents(positions, normals, uvs, indices) {
 
 /**
  * @function
- * @name pc.createMesh
+ * @name createMesh
  * @description Creates a new mesh object from the supplied vertex information and topology.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
@@ -238,7 +238,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
  * component is in the range 0 to 1 and the sum of the weights should equal 1.
  * @param {number[]} [opts.indices] - An array of triangle indices.
- * @returns {pc.Mesh} A new Mesh constructed from the supplied vertex and triangle data.
+ * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
  * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
@@ -346,7 +346,7 @@ function createMesh(device, positions, opts) {
 
 /**
  * @function
- * @name pc.createTorus
+ * @name createTorus
  * @description Creates a procedural torus-shaped mesh.
  *
  * The size, shape and tesselation properties of the torus can be controlled via function parameters.
@@ -355,13 +355,13 @@ function createMesh(device, positions, opts) {
  *
  * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the torus's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus (defaults to 0.2).
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
  * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring (defaults to 30).
- * @returns {pc.Mesh} A new torus-shaped mesh.
+ * @returns {Mesh} A new torus-shaped mesh.
  */
 function createTorus(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -645,7 +645,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 
 /**
  * @function
- * @name pc.createCylinder
+ * @name createCylinder
  * @description Creates a procedural cylinder-shaped mesh.
  *
  * The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
@@ -654,13 +654,13 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  *
  * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cylinder's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {number} [opts.height] - The length of the body of the cylinder (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the length of the cylinder (defaults to 5).
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cylinder (defaults to 20).
- * @returns {pc.Mesh} A new cylinder-shaped mesh.
+ * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCylinder(device, opts) {
     // #ifdef DEBUG
@@ -689,7 +689,7 @@ function createCylinder(device, opts) {
 
 /**
  * @function
- * @name pc.createCapsule
+ * @name createCapsule
  * @description Creates a procedural capsule-shaped mesh.
  *
  * The size, shape and tesselation properties of the capsule can be controlled via function
@@ -699,13 +699,13 @@ function createCylinder(device, opts) {
  *
  * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the capsule's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults to 0.3).
  * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the capsule (defaults to 1).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule (defaults to 20).
- * @returns {pc.Mesh} A new cylinder-shaped mesh.
+ * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCapsule(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -727,7 +727,7 @@ function createCapsule(device, opts) {
 
 /**
  * @function
- * @name pc.createCone
+ * @name createCone
  * @description Creates a procedural cone-shaped mesh.
  *
  * The size, shape and tesselation properties of the cone can be controlled via function
@@ -737,14 +737,14 @@ function createCapsule(device, opts) {
  *
  * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the cone's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
  * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
  * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone (defaults to 5).
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone (defaults to 18).
- * @returns {pc.Mesh} A new cone-shaped mesh.
+ * @returns {Mesh} A new cone-shaped mesh.
  */
 function createCone(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -766,7 +766,7 @@ function createCone(device, opts) {
 
 /**
  * @function
- * @name pc.createSphere
+ * @name createSphere
  * @description Creates a procedural sphere-shaped mesh.
  *
  * The size and tesselation properties of the sphere can be controlled via function
@@ -775,12 +775,12 @@ function createCone(device, opts) {
  *
  * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the sphere's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
  * @param {number} [opts.segments] - The number of divisions along the longitudinal
  * and latitudinal axes of the sphere (defaults to 16).
- * @returns {pc.Mesh} A new sphere-shaped mesh.
+ * @returns {Mesh} A new sphere-shaped mesh.
  */
 function createSphere(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -848,7 +848,7 @@ function createSphere(device, opts) {
 
 /**
  * @function
- * @name pc.createPlane
+ * @name createPlane
  * @description Creates a procedural plane-shaped mesh.
  *
  * The size and tesselation properties of the plane can be controlled via function
@@ -858,12 +858,12 @@ function createSphere(device, opts) {
  *
  * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the plane's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {pc.Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
+ * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane (defaults to 5).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane (defaults to 5).
- * @returns {pc.Mesh} A new plane-shaped mesh.
+ * @returns {Mesh} A new plane-shaped mesh.
  */
 function createPlane(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -928,7 +928,7 @@ function createPlane(device, opts) {
 
 /**
  * @function
- * @name pc.createBox
+ * @name createBox
  * @description Creates a procedural box-shaped mesh.
  *
  * The size, shape and tesselation properties of the box can be controlled via function parameters. By
@@ -937,13 +937,13 @@ function createPlane(device, opts) {
  *
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
  * information is generated into the vertex buffer of the box's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {pc.Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
+ * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box (defaults to 1).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box (defaults to 1).
  * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box (defaults to 1).
- * @returns {pc.Mesh} A new box-shaped mesh.
+ * @returns {Mesh} A new box-shaped mesh.
  */
 function createBox(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones

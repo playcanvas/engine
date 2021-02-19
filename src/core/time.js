@@ -1,7 +1,7 @@
 /**
  * @private
  * @function
- * @name pc.now
+ * @name now
  * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
  * @returns {number} The time in milliseconds.
  */
@@ -12,7 +12,7 @@ var now = (typeof window !== 'undefined') && window.performance && window.perfor
 /**
  * @private
  * @class
- * @name pc.Timer
+ * @name Timer
  * @description Create a new Timer instance.
  * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
  */
@@ -26,7 +26,7 @@ class Timer {
     /**
      * @private
      * @function
-     * @name pc.Timer#start
+     * @name Timer#start
      * @description Start the timer.
      */
     start() {
@@ -37,7 +37,7 @@ class Timer {
     /**
      * @private
      * @function
-     * @name pc.Timer#stop
+     * @name Timer#stop
      * @description Stop the timer.
      */
     stop() {
@@ -48,7 +48,7 @@ class Timer {
     /**
      * @private
      * @function
-     * @name pc.Timer#getMilliseconds
+     * @name Timer#getMilliseconds
      * @description Get the number of milliseconds that passed between start() and stop() being called.
      * @returns {number} The elapsed milliseconds.
      */
