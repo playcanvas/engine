@@ -3,8 +3,8 @@
 // PROCESS_FUNC - must be one of reproject, prefilter
 // DECODE_FUNC - must be one of decodeRGBM, decodeRGBE, decodeGamma or decodeLinear
 // ENCODE_FUNC - must be one of encodeRGBM, encodeRGBE, encideGamma or encodeLinear
-// SOURCE_FUNC - must be one of sampleCubemap, sampleEquirect
-// TARGET_FUNC - must be one of getDirectionCubemap, getDirectionEquirect
+// SOURCE_FUNC - must be one of sampleCubemap, sampleEquirect, sampleOctahedral
+// TARGET_FUNC - must be one of getDirectionCubemap, getDirectionEquirect, getDirectionOctahedral
 //
 // When filtering:
 // NUM_SAMPLES - number of samples
@@ -136,6 +136,50 @@ vec4 sampleCubemap(vec2 sph) {
 vec3 getDirectionEquirect() {
     return fromSpherical((vUv0 * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
+
+// octahedral code, based on http://jcgt.org/published/0003/02/01
+// "Survey of Efficient Representations for Independent Unit Vectors" by Cigolle, Donow, Evangelakos, Mara, McGuire, Meyer
+
+float signNotZero(float k){
+    return(k >= 0.0) ? 1.0 : -1.0;
+}
+
+vec2 signNotZero(vec2 v) {
+    return vec2(signNotZero(v.x), signNotZero(v.y));
+}
+
+// Returns a unit vector. Argument o is an octahedral vector packed via octEncode, on the [-1, +1] square
+vec3 octDecode(vec2 o) {
+    vec3 v = vec3(o.x, 1.0 - abs(o.x) - abs(o.y), o.y);
+    if (v.y < 0.0) {
+        v.xz = (1.0 - abs(v.zx)) * signNotZero(v.xz);
+    }
+    return normalize(v);
+}
+
+vec3 getDirectionOctahedral() {
+    return octDecode(vUv0 * 2.0 - 1.0);
+}
+
+// Assumes that v is a unit vector. The result is an octahedral vector on the [-1, +1] square
+vec2 octEncode(in vec3 v) {
+    float l1norm = abs(v.x) + abs(v.y) + abs(v.z);
+    vec2 result = v.xz * (1.0 / l1norm);
+    if (v.y < 0.0) {
+        result = (1.0 - abs(result.yx)) * signNotZero(result.xy);
+    }
+    return result;
+}
+
+vec4 sampleOctahedral(vec3 dir) {
+    return texture2D(sourceTex, octEncode(dir) * 0.5 + 0.5);
+}
+
+vec4 sampleOctahedral(vec2 sph) {
+    return sampleOctahedral(fromSpherical(sph));
+}
+
+/////////////////////////////////////////////////////////////////////
 
 vec3 getDirectionCubemap() {
     vec2 st = vUv0 * 2.0 - 1.0;
