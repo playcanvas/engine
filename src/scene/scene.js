@@ -160,6 +160,7 @@ class Scene extends EventHandler {
     }
 
     destroy() {
+        this._resetSkyboxModel();
         this.root = null;
         this.defaultMaterial.destroy();
         this.defaultMaterial = null;
@@ -501,10 +502,6 @@ class Scene extends EventHandler {
             this._skyboxPrefiltered[i] = cubemaps[i + 1];
 
         this.skybox = cubemaps[0];
-    }
-
-    destroy = function () {
-        this.skybox = null;
     }
 
     // Backwards compatibility
