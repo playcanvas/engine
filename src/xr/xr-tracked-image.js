@@ -64,7 +64,7 @@ class XrTrackedImage extends EventHandler {
             });
     }
 
-    destroy = function () {
+    destroy() {
         this._image = null;
         this._pose = null;
 
@@ -97,7 +97,7 @@ class XrTrackedImage extends EventHandler {
      * // update entity rotation to match tracked image rotation
      * entity.setRotation(trackedImage.getRotation());
      */
-    getRotation = function () {
+    getRotation() {
         if (this._pose) this._rotation.copy(this._pose.transform.orientation);
         return this._rotation;
     }
