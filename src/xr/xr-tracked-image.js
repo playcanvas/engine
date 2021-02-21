@@ -64,7 +64,7 @@ class XrTrackedImage extends EventHandler {
             });
     }
 
-    destroy = function () {
+    destroy() {
         this._image = null;
         this._pose = null;
 
