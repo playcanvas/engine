@@ -221,7 +221,7 @@ class ScriptRegistry extends EventHandler {
      * }));
      */
     /* eslint-enable jsdoc/no-undefined-types */
-    list = function () {
+    list() {
         return this._list;
     }
 }
