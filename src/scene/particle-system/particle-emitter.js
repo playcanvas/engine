@@ -50,7 +50,7 @@ const particleVerts = [
     [-1, 1]
 ];
 
-var _createTexture = function (device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
+function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     var mipFilter = FILTER_NEAREST;
     if (filter && format === PIXELFORMAT_R8_G8_B8_A8)
