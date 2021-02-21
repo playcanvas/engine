@@ -84,7 +84,7 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
     texture.unlock();
 
     return texture;
-};
+}
 
 function saturate(x) {
     return Math.max(Math.min(x, 1), 0);
