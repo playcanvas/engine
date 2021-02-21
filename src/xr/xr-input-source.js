@@ -229,7 +229,7 @@ class XrInputSource extends EventHandler {
         }
     }
 
-    _updateRayTransforms = function () {
+    _updateRayTransforms() {
         var dirty = this._dirtyRay;
         this._dirtyRay = false;
 
@@ -295,7 +295,7 @@ class XrInputSource extends EventHandler {
      * @description Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      * @returns {Vec3|null} The world space rotation of handheld input source.
      */
-    getLocalRotation = function () {
+    getLocalRotation() {
         return this._localRotation;
     }
 
@@ -305,7 +305,7 @@ class XrInputSource extends EventHandler {
      * @description Get the world space origin of input source ray.
      * @returns {Vec3} The world space origin of input source ray.
      */
-    getOrigin = function () {
+    getOrigin() {
         this._updateRayTransforms();
         return this._ray.origin;
     }

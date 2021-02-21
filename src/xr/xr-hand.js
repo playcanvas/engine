@@ -79,7 +79,7 @@ class XrHand extends EventHandler {
      * @description Fired when tracking is lost.
      */
 
-    update = function (frame) {
+    update(frame) {
         var xrInputSource = this._inputSource._xrInputSource;
 
         // joints

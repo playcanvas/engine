@@ -75,7 +75,7 @@ class ParticleGPUUpdater {
         this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
     }
 
-    randomize = function () {
+    randomize() {
         this.frameRandomUniform[0] = Math.random();
         this.frameRandomUniform[1] = Math.random();
         this.frameRandomUniform[2] = Math.random();
