@@ -17,7 +17,14 @@ class AnimNode {
         this._state = state;
         this._parent = parent;
         this._name = name;
-        this._point = Array.isArray(point) ? new Vec2(point[0], point[1]) : point;
+        if (Array.isArray(point)) {
+            this._point = new Vec2(point[0], point[1]);
+            this._pointLength = this._point.length();
+        } else {
+            this._point = point;
+            this._pointLength = point;
+        }
+
         this._speed = speed;
         this._weight = 1.0;
         this._animTrack = null;
@@ -37,6 +44,10 @@ class AnimNode {
 
     get point() {
         return this._point;
+    }
+
+    get pointLength() {
+        return this._pointLength;
     }
 
     get weight() {
