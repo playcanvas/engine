@@ -231,7 +231,7 @@ class Asset extends EventHandler {
     /**
      * @private
      * @function
-     * @name pcAsset#getAbsoluteUrl
+     * @name Asset#getAbsoluteUrl
      * @description Construct an asset URL from this asset's location and a relative path
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url
      * @returns {string} Resulting URL of the asset

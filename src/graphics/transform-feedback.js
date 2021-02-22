@@ -131,9 +131,10 @@ class TransformFeedback {
         var device = this.device;
 
         // #ifdef DEBUG
-        this.device.pushMarker("TransformFeedback");
+        device.pushMarker("TransformFeedback");
         // #endif
 
+        const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
         device.updateBegin();
         device.setVertexBuffer(this._inputBuffer, 0);
@@ -149,9 +150,10 @@ class TransformFeedback {
         device.setTransformFeedbackBuffer(null);
         device.setRaster(true);
         device.updateEnd();
+        device.setRenderTarget(oldRt);
 
         // #ifdef DEBUG
-        this.device.popMarker();
+        device.popMarker();
         // #endif
 
         // swap buffers

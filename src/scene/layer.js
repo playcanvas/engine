@@ -1,9 +1,5 @@
 import { hashCode } from '../core/hash.js';
 
-import { Color } from '../math/color.js';
-
-import { CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL } from '../graphics/constants.js';
-
 import {
     BLEND_NONE,
     LAYER_FX,
@@ -117,12 +113,9 @@ class InstanceList {
  * Defaults to {@link SHADER_FORWARD}.
  * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
  *
- * @property {boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link Layer#clearColor}, {@link Layer#clearColorBuffer},
- * {@link Layer#clearDepthBuffer} and {@link Layer#clearStencilBuffer}.
- * @property {Color} clearColor The color used to clear the canvas to before each camera starts to render.
- * @property {boolean} clearColorBuffer If true cameras will clear the color buffer to the color set in clearColor.
- * @property {boolean} clearDepthBuffer If true cameras will clear the depth buffer.
- * @property {boolean} clearStencilBuffer If true cameras will clear the stencil buffer.
+ * @property {boolean} clearColorBuffer If true, the camera will clear the color buffer when it renders this layer.
+ * @property {boolean} clearDepthBuffer If true, the camera will clear the depth buffer when it renders this layer.
+ * @property {boolean} clearStencilBuffer If true, the camera will clear the stencil buffer when it renders this layer.
  *
  * @property {Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
  * Both layers must share cameras. Frustum culling is only performed for one layer. Useful for rendering multiple passes using different shaders.
@@ -193,20 +186,10 @@ class Layer {
         // true if the layer is just pass-through meshInstance drawing - used for UI and Gizmo layers. The layers doesn't have lights, shadows, culling ..
         this.passThrough = options.passThrough === undefined ? false : options.passThrough;
 
-        this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
-        this._clearColor = new Color(0, 0, 0, 1);
-        if (options.clearColor) {
-            this._clearColor.copy(options.clearColor);
-        }
-        this._clearColorBuffer = options.clearColorBuffer === undefined ? false : options.clearColorBuffer;
-        this._clearDepthBuffer = options.clearDepthBuffer === undefined ? false : options.clearDepthBuffer;
-        this._clearStencilBuffer = options.clearStencilBuffer === undefined ? false : options.clearStencilBuffer;
-        this._clearOptions = {
-            color: [this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a],
-            depth: 1,
-            stencil: 0,
-            flags: (this._clearColorBuffer ? CLEARFLAG_COLOR : 0) | (this._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) | (this._clearStencilBuffer ? CLEARFLAG_STENCIL : 0)
-        };
+        // clear flags
+        this._clearColorBuffer = options.clearColorBuffer ? options.clearColorBuffer : false;
+        this._clearDepthBuffer = options.clearDepthBuffer ? options.clearDepthBuffer : false;
+        this._clearStencilBuffer = options.clearStencilBuffer ? options.clearStencilBuffer : false;
 
         this.onPreCull = options.onPreCull;
         this.onPreRender = options.onPreRender;
@@ -304,28 +287,13 @@ class Layer {
         this._clearColor.copy(val);
     }
 
-    _updateClearFlags() {
-        var flags = 0;
-
-        if (this._clearColorBuffer)
-            flags |= CLEARFLAG_COLOR;
-
-        if (this._clearDepthBuffer)
-            flags |= CLEARFLAG_DEPTH;
-
-        if (this._clearStencilBuffer)
-            flags |= CLEARFLAG_STENCIL;
-
-        this._clearOptions.flags = flags;
-    }
-
     get clearColorBuffer() {
         return this._clearColorBuffer;
     }
 
     set clearColorBuffer(val) {
         this._clearColorBuffer = val;
-        this._updateClearFlags();
+        this._dirtyCameras = true;
     }
 
     get clearDepthBuffer() {
@@ -334,7 +302,7 @@ class Layer {
 
     set clearDepthBuffer(val) {
         this._clearDepthBuffer = val;
-        this._updateClearFlags();
+        this._dirtyCameras = true;
     }
 
     get clearStencilBuffer() {
@@ -343,7 +311,7 @@ class Layer {
 
     set clearStencilBuffer(val) {
         this._clearStencilBuffer = val;
-        this._updateClearFlags();
+        this._dirtyCameras = true;
     }
 
     /**

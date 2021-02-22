@@ -3039,8 +3039,8 @@ class ForwardRenderer {
             camera = layer.cameras[cameraPass];
 
             // #ifdef DEBUG
-            this.device.pushMarker(layer.name);
             this.device.pushMarker(camera ? camera.entity.name : "noname");
+            this.device.pushMarker(layer.name);
             // #endif
 
             // #ifdef PROFILER
@@ -3066,8 +3066,8 @@ class ForwardRenderer {
 
             if (camera) {
 
-                // Each camera must only clear each render target once
-                if (renderAction.firstCameraUse) {
+                // clear buffers
+                if (renderAction.clearColor || renderAction.clearDepth || renderAction.clearStencil) {
 
                     // TODO: refactor clearView to accept flags from renderAction directly as well
                     const backupColor = camera.camera._clearColorBuffer;
