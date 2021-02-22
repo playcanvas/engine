@@ -6,6 +6,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
+import { Mat4 } from '../math/mat4.js';
 
 import { http } from '../net/http.js';
 
@@ -14,17 +15,12 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     FILTER_NEAREST,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8,
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
-    SEMANTIC_POSITION,
-    TYPE_FLOAT32
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
 import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
-import { VertexIterator } from '../graphics/vertex-iterator.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -34,13 +30,10 @@ import {
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/forward-renderer.js';
-import { GraphNode } from '../scene/graph-node.js';
-import { ImmediateData, LineBatch } from '../scene/immediate.js';
+import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
-import { Mesh } from '../scene/mesh.js';
-import { MeshInstance } from '../scene/mesh-instance.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 
@@ -143,7 +136,6 @@ class Progress {
 }
 
 var _deprecationWarning = false;
-var tempGraphNode = new GraphNode();
 
 /**
  * @class
@@ -489,7 +481,8 @@ class Application extends EventHandler {
                     var depthBuffer = new Texture(self.graphicsDevice, {
                         format: PIXELFORMAT_DEPTHSTENCIL,
                         width: self.graphicsDevice.width,
-                        height: self.graphicsDevice.height
+                        height: self.graphicsDevice.height,
+                        mipmaps: false
                     });
                     depthBuffer.name = 'rt-depth2';
                     depthBuffer.minFilter = FILTER_NEAREST;
@@ -560,7 +553,8 @@ class Application extends EventHandler {
                     var colorBuffer = new Texture(self.graphicsDevice, {
                         format: PIXELFORMAT_R8_G8_B8_A8,
                         width: self.graphicsDevice.width,
-                        height: self.graphicsDevice.height
+                        height: self.graphicsDevice.height,
+                        mipmaps: false
                     });
                     colorBuffer.name = 'rt-depth1';
                     colorBuffer.minFilter = FILTER_NEAREST;
@@ -808,8 +802,6 @@ class Application extends EventHandler {
                 document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
             }
         }
-
-        this.meshInstanceArray = [];
 
         // bind tick function to current scope
 
@@ -1813,19 +1805,11 @@ class Application extends EventHandler {
 
     // IMMEDIATE MODE API
     _preRenderImmediate() {
-        for (var i = 0; i < this._immediateData.lineBatches.length; i++) {
-            if (this._immediateData.lineBatches[i]) {
-                this._immediateData.lineBatches[i].finalize(this.meshInstanceArray);
-            }
-        }
+        this._immediateData.finalize();
     }
 
     _postRenderImmediate() {
-        for (var i = 0; i < this._immediateData.layers.length; i++) {
-            this._immediateData.layers[i].clearMeshInstances(true);
-        }
-
-        this._immediateData.layers.length = 0;
+        this._immediateData.clear();
     }
 
     _initImmediate() {
@@ -1844,27 +1828,10 @@ class Application extends EventHandler {
         var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
+        let lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
 
-        this._immediateData.addLayer(layer);
-
-        var idx = this._immediateData.getLayerIdx(layer);
-        if (idx === undefined) {
-            // Init used batch once
-            var batch = new LineBatch();
-            batch.init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
-            batch.material.depthTest = depthTest;
-            if (mask) batch.meshInstance.mask = mask;
-
-            idx = this._immediateData.lineBatches.push(batch) - 1; // push into list and get index
-            this._immediateData.addLayerIdx(idx, layer);
-        } else {
-            // Possibly reallocate buffer if it's small
-            this._immediateData.lineBatches[idx].init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
-            this._immediateData.lineBatches[idx].material.depthTest = depthTest;
-            if (mask) this._immediateData.lineBatches[idx].meshInstance.mask = mask;
-        }
         // Append
-        this._immediateData.lineBatches[idx].addLines(position, color);
+        lineBatch.addLines(position, color);
     }
 
     /**
@@ -2094,88 +2061,45 @@ class Application extends EventHandler {
         ], color, options);
     }
 
+    _getDefaultImmediateOptions() {
+        return {
+            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE)
+        };
+    }
+
     // Draw meshInstance at this frame
-    renderMeshInstance(meshInstance, options) {
-        if (!options) {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE)
-            };
-        }
-
+    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions()) {
         this._initImmediate();
-
-        this._immediateData.addLayer(options.layer);
-
-        this.meshInstanceArray[0] = meshInstance;
-        options.layer.addMeshInstances(this.meshInstanceArray, true);
+        this._immediateData.renderMesh(null, null, null, meshInstance, options);
     }
 
     // Draw mesh at this frame
-    renderMesh(mesh, material, matrix, options) {
-        if (!options) {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE)
-            };
-        }
-
+    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions()) {
         this._initImmediate();
-        tempGraphNode.worldTransform = matrix;
-        tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
-
-        var instance = new MeshInstance(mesh, material, tempGraphNode);
-        instance.cull = false;
-
-        if (options.mask) instance.mask = options.mask;
-        this._immediateData.addLayer(options.layer);
-
-        this.meshInstanceArray[0] = instance;
-        options.layer.addMeshInstances(this.meshInstanceArray, true);
+        this._immediateData.renderMesh(material, matrix, mesh, null, options);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    renderQuad(matrix, material, options) {
-        if (!options) {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE)
-            };
-        }
+    renderQuad(matrix, material, options = this._getDefaultImmediateOptions()) {
+        this._initImmediate();
+        this._immediateData.renderMesh(material, matrix, this._immediateData.getQuadMesh(), null, options);
+    }
 
+    // draws a texture on [x,y] position on screen, with size [width, height].
+    // Coordinates / sizes are in projected space (-1 .. 1)
+    renderTexture(x, y, width, height, texture, options) {
         this._initImmediate();
 
-        // Init quad data once
-        if (!this._immediateData.quadMesh) {
-            var format = new VertexFormat(this.graphicsDevice, [
-                { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
-            ]);
-            var quadVb = new VertexBuffer(this.graphicsDevice, format, 4);
-            var iterator = new VertexIterator(quadVb);
-            iterator.element[SEMANTIC_POSITION].set(-0.5, -0.5, 0);
-            iterator.next();
-            iterator.element[SEMANTIC_POSITION].set(0.5, -0.5, 0);
-            iterator.next();
-            iterator.element[SEMANTIC_POSITION].set(-0.5, 0.5, 0);
-            iterator.next();
-            iterator.element[SEMANTIC_POSITION].set(0.5, 0.5, 0);
-            iterator.end();
-            this._immediateData.quadMesh = new Mesh(this.graphicsDevice);
-            this._immediateData.quadMesh.vertexBuffer = quadVb;
-            this._immediateData.quadMesh.primitive[0].type = PRIMITIVE_TRISTRIP;
-            this._immediateData.quadMesh.primitive[0].base = 0;
-            this._immediateData.quadMesh.primitive[0].count = 4;
-            this._immediateData.quadMesh.primitive[0].indexed = false;
-        }
+        // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
+        let matrix = new Mat4();
+        matrix.setTRS(new Vec3(x, y, 0.0), pc.Quat.IDENTITY, new Vec3(width, height, 0.0));
 
-        // Issue quad drawcall
-        tempGraphNode.worldTransform = matrix;
-        tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
+        let material = new pc.Material();
+        material.setParameter("colorMap", texture);
+        material.shader = this._immediateData.getTextureShader();
+        material.update();
 
-        var quad = new MeshInstance(this._immediateData.quadMesh, material, tempGraphNode);
-        quad.cull = false;
-        this.meshInstanceArray[0] = quad;
-
-        this._immediateData.addLayer(options.layer);
-
-        options.layer.addMeshInstances(this.meshInstanceArray, true);
+        this.renderQuad(matrix, material, options);
     }
 
     /**

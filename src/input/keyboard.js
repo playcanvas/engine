@@ -20,7 +20,7 @@ function makeKeyboardEvent(event) {
  * @param {string|number} s - Either a character code or the key character.
  * @returns {number} The character code.
  */
-function toKeyCode(s){
+function toKeyCode(s) {
     if (typeof s === "string") {
         return s.toUpperCase().charCodeAt(0);
     }
@@ -99,6 +99,8 @@ class Keyboard extends EventHandler {
         this._keyDownHandler = this._handleKeyDown.bind(this);
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
+        this._visibilityChangeHandler = this._handleVisibilityChange.bind(this);
+        this._windowBlurHandler = this._handleWindowBlur.bind(this);
 
         this._keymap = {};
         this._lastmap = {};
@@ -126,6 +128,8 @@ class Keyboard extends EventHandler {
         this._element.addEventListener("keydown", this._keyDownHandler, false);
         this._element.addEventListener("keypress", this._keyPressHandler, false);
         this._element.addEventListener("keyup", this._keyUpHandler, false);
+        document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
+        window.addEventListener('blur', this._windowBlurHandler, false);
     }
 
     /**
@@ -138,6 +142,8 @@ class Keyboard extends EventHandler {
         this._element.removeEventListener("keypress", this._keyPressHandler);
         this._element.removeEventListener("keyup", this._keyUpHandler);
         this._element = null;
+        document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+        window.removeEventListener('blur', this._windowBlurHandler, false);
     }
 
     /**
@@ -148,7 +154,7 @@ class Keyboard extends EventHandler {
      * @param {number} keyCode - The key code.
      * @returns {string} The key identifier.
      */
-    toKeyIdentifier(keyCode){
+    toKeyIdentifier(keyCode) {
         keyCode = toKeyCode(keyCode);
         var count;
         var hex;
@@ -192,7 +198,7 @@ class Keyboard extends EventHandler {
         }
     }
 
-    _handleKeyUp(event){
+    _handleKeyUp(event) {
         var code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
@@ -215,7 +221,7 @@ class Keyboard extends EventHandler {
         }
     }
 
-    _handleKeyPress(event){
+    _handleKeyPress(event) {
         this.fire("keypress", makeKeyboardEvent(event));
 
         if (this.preventDefault) {
@@ -224,6 +230,17 @@ class Keyboard extends EventHandler {
         if (this.stopPropagation) {
             event.stopPropagation();
         }
+    }
+
+    _handleVisibilityChange() {
+        if (document.visibilityState === 'hidden') {
+            this._handleWindowBlur();
+        }
+    }
+
+    _handleWindowBlur() {
+        this._keymap = {};
+        this._lastmap = {};
     }
 
     /**

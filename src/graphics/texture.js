@@ -12,6 +12,7 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
     TEXTURELOCK_WRITE,
+    TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
@@ -56,6 +57,12 @@ var _blockSizeTable = null;
  * * {@link PIXELFORMAT_ATC_RGB}
  * * {@link PIXELFORMAT_ATC_RGBA}
  * Defaults to {@link PIXELFORMAT_R8_G8_B8_A8}.
+ * @param {string} [options.projection] - The projection type of the texture, used when the texture represents an environment. Can be:
+ * * {@link TEXTUREPROJECTION_NONE}
+ * * {@link TEXTUREPROJECTION_CUBE}
+ * * {@link TEXTUREPROJECTION_EQUIRECT}
+ * * {@link TEXTUREPROJECTION_OCTAHEDRAL}
+ * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is specified, otherwise {@link TEXTUREPROJECTION_NONE}.
  * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
  * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
  * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
@@ -116,6 +123,7 @@ class Texture {
 
         this._format = PIXELFORMAT_R8_G8_B8_A8;
         this.type = TEXTURETYPE_DEFAULT;
+        this.projection = TEXTUREPROJECTION_NONE;
 
         this._cubemap = false;
         this._volume = false;
@@ -174,6 +182,12 @@ class Texture {
 
             this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
             this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
+
+            if (this._cubemap) {
+                this.projection = TEXTUREPROJECTION_CUBE;
+            } else if (options.projection !== TEXTUREPROJECTION_CUBE) {
+                this.projection = options.projection;
+            }
 
             this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
             this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;

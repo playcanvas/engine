@@ -179,7 +179,8 @@ function BloomEffect(graphicsDevice) {
         var colorBuffer = new pc.Texture(graphicsDevice, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
-            height: height >> 1
+            height: height >> 1,
+            mipmaps: false
         });
         colorBuffer.minFilter = pc.FILTER_LINEAR;
         colorBuffer.magFilter = pc.FILTER_LINEAR;
