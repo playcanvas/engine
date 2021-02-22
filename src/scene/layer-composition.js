@@ -517,7 +517,7 @@ class LayerComposition extends EventHandler {
 
         // #ifdef DEBUG
         if (this.logRenderActions) {
-            console.log("Render Actions");
+            console.log("Render Actions for composition: " + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
