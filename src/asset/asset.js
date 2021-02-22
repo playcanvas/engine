@@ -99,6 +99,8 @@ class Asset extends EventHandler {
         this.loaded = false;
         this.loading = false;
 
+        this.error = null;
+
         this.registry = null;
 
         if (file) this.file = file;

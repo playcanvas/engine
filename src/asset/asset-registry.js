@@ -366,6 +366,7 @@ class AssetRegistry extends EventHandler {
             asset.loading = false;
 
             if (err) {
+                asset.error = err;
                 self.fire("error", err, asset);
                 self.fire("error:" + asset.id, err, asset);
                 asset.fire("error", err, asset);
@@ -444,6 +445,10 @@ class AssetRegistry extends EventHandler {
         if (!asset) {
             asset = new Asset(name, type, file);
             self.add(asset);
+        } else if (asset.loaded) {
+            // if the asset is already loaded
+            callback(asset.error, asset);
+            return;
         }
 
         var startLoad = function (asset) {
@@ -457,7 +462,7 @@ class AssetRegistry extends EventHandler {
                 }
             });
             asset.once("error", function (err) {
-                callback(err);
+                callback(err, asset);
             });
             self.load(asset);
         };
