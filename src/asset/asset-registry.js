@@ -366,7 +366,6 @@ class AssetRegistry extends EventHandler {
             asset.loading = false;
 
             if (err) {
-                asset.error = err;
                 self.fire("error", err, asset);
                 self.fire("error:" + asset.id, err, asset);
                 asset.fire("error", err, asset);
