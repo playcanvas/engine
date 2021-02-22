@@ -3039,8 +3039,8 @@ class ForwardRenderer {
             camera = layer.cameras[cameraPass];
 
             // #ifdef DEBUG
-            this.device.pushMarker(layer.name);
             this.device.pushMarker(camera ? camera.entity.name : "noname");
+            this.device.pushMarker(layer.name);
             // #endif
 
             // #ifdef PROFILER
