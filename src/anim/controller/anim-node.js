@@ -69,6 +69,14 @@ class AnimNode {
         return this._weightedSpeed * this._speed;
     }
 
+    get weightedSpeed() {
+        return this._weightedSpeed;
+    }
+
+    set weightedSpeed(value) {
+        this._weightedSpeed = value;
+    }
+
     get animTrack() {
         return this._animTrack;
     }

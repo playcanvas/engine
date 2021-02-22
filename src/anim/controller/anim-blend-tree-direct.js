@@ -22,7 +22,7 @@ class AnimBlendTreeDirect extends AnimBlendTree {
         for (i = 0; i < this._children.length; i++) {
             this._children[i].weight = Math.max(this._parameterValues[i], 0.0) / weightSum;
             if (this._syncDurations) {
-                this._children[i]._weightedSpeed = this._children[i].animTrack.duration / meanDuration;
+                this._children[i].weightedSpeed = this._children[i].animTrack.duration / meanDuration;
             }
         }
     }
