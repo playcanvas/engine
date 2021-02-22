@@ -113,9 +113,9 @@ class InstanceList {
  * Defaults to {@link SHADER_FORWARD}.
  * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
  *
- * @property {boolean} clearColorBuffer If true the camera will clear the color buffer when it renders this layer.
- * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer when it renders this layer.
- * @property {boolean} clearStencilBuffer If true the camera will clear the stencil buffer when it renders this layer.
+ * @property {boolean} clearColorBuffer If true, the camera will clear the color buffer when it renders this layer.
+ * @property {boolean} clearDepthBuffer If true, the camera will clear the depth buffer when it renders this layer.
+ * @property {boolean} clearStencilBuffer If true, the camera will clear the stencil buffer when it renders this layer.
  *
  * @property {Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
  * Both layers must share cameras. Frustum culling is only performed for one layer. Useful for rendering multiple passes using different shaders.
