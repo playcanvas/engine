@@ -446,7 +446,7 @@ class AssetRegistry extends EventHandler {
             asset = new Asset(name, type, file);
             self.add(asset);
         } else if (asset.loaded) {
-            // if the asset is already loaded
+            // asset is already loaded
             callback(asset.error, asset);
             return;
         }
