@@ -349,6 +349,11 @@ class LayerComposition extends EventHandler {
             let clearDepth = cameraFirstRenderAction ? camera.clearDepthBuffer : false;
             let clearStencil = cameraFirstRenderAction ? camera.clearStencilBuffer : false;
 
+            // clear buffers if requested by the layer
+            clearColor |= layer.clearColorBuffer;
+            clearDepth |= layer.clearDepthBuffer;
+            clearStencil |= layer.clearStencilBuffer;
+
             // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
             // don't render them to render target anymore
             if (postProcessMarked && camera.postEffectsEnabled) {

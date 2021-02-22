@@ -3066,8 +3066,8 @@ class ForwardRenderer {
 
             if (camera) {
 
-                // Each camera must only clear each render target once
-                if (renderAction.firstCameraUse) {
+                // clear buffers
+                if (renderAction.clearColor || renderAction.clearDepth || renderAction.clearStencil) {
 
                     // TODO: refactor clearView to accept flags from renderAction directly as well
                     const backupColor = camera.camera._clearColorBuffer;
