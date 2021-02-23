@@ -444,6 +444,10 @@ class AssetRegistry extends EventHandler {
         if (!asset) {
             asset = new Asset(name, type, file);
             self.add(asset);
+        } else if (asset.loaded) {
+            // asset is already loaded
+            callback(asset.loadFromUrlError || null, asset);
+            return;
         }
 
         var startLoad = function (asset) {
@@ -457,7 +461,11 @@ class AssetRegistry extends EventHandler {
                 }
             });
             asset.once("error", function (err) {
-                callback(err);
+                // store the error on the asset in case user requests this asset again
+                if (err) {
+                    this.loadFromUrlError = err;
+                }
+                callback(err, asset);
             });
             self.load(asset);
         };
