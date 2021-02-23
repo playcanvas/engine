@@ -30,7 +30,7 @@ function getCoding(texture) {
 
 function getProjectionName(projection) {
     // default to equirect if not specified
-    if (!projection || projection === TEXTUREPROJECTION_NONE) {
+    if (projection === TEXTUREPROJECTION_NONE) {
         projection = TEXTUREPROJECTION_EQUIRECT;
     }
     switch (projection) {

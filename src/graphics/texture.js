@@ -185,7 +185,7 @@ class Texture {
 
             if (this._cubemap) {
                 this.projection = TEXTUREPROJECTION_CUBE;
-            } else if (options.projection !== TEXTUREPROJECTION_CUBE) {
+            } else if (options.projection && options.projection !== TEXTUREPROJECTION_CUBE) {
                 this.projection = options.projection;
             }
 
