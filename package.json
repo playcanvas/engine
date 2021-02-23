@@ -35,6 +35,20 @@
     "examples/lib/*", 
     "src/polyfill/*"
   ], 
+  "files": [
+    "build/playcanvas.js",
+    "build/playcanvas.min.js",
+    "build/playcanvas.mjs",
+    "build/playcanvas.dbg.js",
+    "build/playcanvas.prf.js",
+    "build/playcanvas.d.ts",
+    "build/playcanvas-extras.js",
+    "index.d.ts",
+    "LICENSE",
+    "package.json",
+    "README.md",
+    "README-zh.md"
+  ],
   "devDependencies": {
     "@babel/core": "7.12.13", 
     "@babel/plugin-proposal-class-properties": "7.12.13", 
