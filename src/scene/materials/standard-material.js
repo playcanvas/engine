@@ -328,10 +328,10 @@ class Chunks {
  * // Create a new Standard material
  * var material = new pc.StandardMaterial();
  *
- * // assign a texture to diffuse slot
+ * // Assign a texture to the diffuse slot
  * material.diffuseMap = texture;
  *
- * // use the alpha channel of the texture for alpha testing with a reference value of 0.5
+ * // Use the alpha channel of the texture for alpha testing with a reference value of 0.5
  * material.opacityMap = texture;
  * material.alphaTest = 0.5;
  *
