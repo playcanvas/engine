@@ -591,9 +591,9 @@ class MeshInstance {
      * @param {number|number[]|Texture} data - The value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included in.
      */
-    setParameter(name, data, passFlags = -524285) {
+    setParameter(name, data, passFlags = -262141) {
 
-        // note on -524285: All bits set except 2 - 18 range
+        // note on -262141: All bits set except 2 - 19 range
 
         if (data === undefined && typeof name === 'object') {
             var uniformObject = name;
