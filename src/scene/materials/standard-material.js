@@ -333,7 +333,6 @@ class Chunks {
  *
  * // use the alpha channel of the texture for alpha testing with a reference value of 0.5
  * material.opacityMap = texture;
- * material.opacityMapChannel = "a";
  * material.alphaTest = 0.5;
  *
  * // Notify the material that it has been modified
