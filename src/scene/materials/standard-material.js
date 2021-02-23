@@ -324,6 +324,19 @@ class Chunks {
  *
  * // Notify the material that it has been modified
  * material.update();
+ * @example
+ * // Create a new Standard material
+ * var material = new pc.StandardMaterial();
+ *
+ * // Assign a texture to the diffuse slot
+ * material.diffuseMap = texture;
+ *
+ * // Use the alpha channel of the texture for alpha testing with a reference value of 0.5
+ * material.opacityMap = texture;
+ * material.alphaTest = 0.5;
+ *
+ * // Notify the material that it has been modified
+ * material.update();
  */
 class StandardMaterial extends Material {
 
