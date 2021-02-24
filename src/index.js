@@ -1,5 +1,6 @@
 // POLYFILLS
 import './polyfill/array-find.js';
+import './polyfill/array-find-index.js';
 import './polyfill/math-log2.js';
 import './polyfill/math-sign.js';
 import './polyfill/object-assign.js';
