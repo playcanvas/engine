@@ -21,7 +21,7 @@ FollowCamera.attributes.add('lerpAmount', {
 });
 
 // initialize code called once per entity
-FollowCamera.prototype.initialize = function() {
+FollowCamera.prototype.initialize = function () {
     this.targetPos = new pc.Vec3();
     this.matrix = new pc.Mat4();
     this.quat = new pc.Quat();
@@ -50,7 +50,7 @@ FollowCamera.prototype.updateTargetPosition = function () {
 };
 
 // update code called every frame
-FollowCamera.prototype.postUpdate = function(dt) {
+FollowCamera.prototype.postUpdate = function (dt) {
     if (this.target) {
         // Calculate where we want the camera to be
         this.updateTargetPosition();

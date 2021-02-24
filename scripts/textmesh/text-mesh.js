@@ -16,7 +16,7 @@ const vTemp6 = new pc.Vec2();
 
 // Utility class for converting path commands into point data
 class Polygon {
-    constructor () {
+    constructor() {
         this.points = [];
         this.children = [];
         this.area = 0;
@@ -47,7 +47,7 @@ class Polygon {
         const steps = Math.max(2, Math.min(maxSteps, dist / BEZIER_STEP_SIZE));
         for (let i = 1; i <= steps; i++) {
             const t = i / steps;
-            
+
             vTemp1.lerp(p0, p1, t);
             vTemp2.lerp(p1, p, t);
             vTemp3.lerp(vTemp1, vTemp2, t);
@@ -169,7 +169,7 @@ TextMesh.attributes.add('material', {
     description: 'The material to apply to the 3D text mesh'
 });
 
-TextMesh.prototype.initialize = function() {
+TextMesh.prototype.initialize = function () {
     this.characters = [];
     this.fontData = null;
 
@@ -179,7 +179,7 @@ TextMesh.prototype.initialize = function() {
     }
 
     // Handle any and all attribute changes
-    this.on('attr', function(name, value, prev) {
+    this.on('attr', function (name, value, prev) {
         if (value !== prev) {
             if (name === 'font') {
                 if (this.font) {
@@ -199,7 +199,7 @@ TextMesh.prototype.initialize = function() {
 TextMesh.prototype.parseCommands = function (commands) {
     // Convert all outlines for the character to polygons
     var polygons = [];
-    commands.forEach(({type, x, y, x1, y1, x2, y2}) => {
+    commands.forEach(({ type, x, y, x1, y1, x2, y2 }) => {
         switch (type) {
             case 'M':
                 polygons.push(new Polygon());
@@ -250,13 +250,13 @@ TextMesh.prototype.parseCommands = function (commands) {
         // Construct input for earcut
         const coords = [];
         const holes = [];
-        poly.points.forEach(({x, y}) => coords.push(x, y));
+        poly.points.forEach(({ x, y }) => coords.push(x, y));
         poly.children.forEach(child => {
             // Children's children are new, separate shapes
             child.children.forEach(process);
 
             holes.push(coords.length / 2);
-            child.points.forEach(({x, y}) => coords.push(x, y));
+            child.points.forEach(({ x, y }) => coords.push(x, y));
         });
 
         // Add vertex data
@@ -270,7 +270,7 @@ TextMesh.prototype.parseCommands = function (commands) {
     root.forEach(process);
 
     const scalar = this.characterSize / this.fontData.unitsPerEm;
-    
+
     // Generate front vertices
     let vertices = [];
     for (let p = 0; p < vertexData.length; p += 2) {
@@ -299,9 +299,9 @@ TextMesh.prototype.parseCommands = function (commands) {
             indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
         }
     });
-    
+
     let normals = pc.calculateNormals(vertices, indices);
-    
+
     return { vertices, normals, indices };
 };
 
@@ -375,13 +375,13 @@ TextMesh.prototype.createText = function () {
             // Add a child entity for this character
             var entity = new pc.Entity(character);
             entity.addComponent('render', {
-                meshInstances: [ meshInstance ],
+                meshInstances: [meshInstance],
                 renderStyle: this.renderStyle
             });
             this.entity.addChild(entity);
 
             entity.setLocalPosition(cursor, 0, 0);
-            
+
             this.characters.push(entity);
         }
 
