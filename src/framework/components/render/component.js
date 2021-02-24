@@ -124,7 +124,7 @@ class RenderComponent extends Component {
     // function that logs out the state of the skin instances cache
     static logCachedSkinInstances() {
         console.log("CachedSkinInstances");
-        RenderComponent._skinInstanceCache.forEach(function(array, rootBone) {
+        RenderComponent._skinInstanceCache.forEach(function (array, rootBone) {
             console.log(rootBone.name + ': Array(' + array.length + ")");
             for (let i = 0; i < array.length; i++) {
                 console.log("  " + i + ": RefCount " + array[i].getRefCount());
