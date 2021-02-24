@@ -43,7 +43,6 @@
     "build/playcanvas.prf.js", 
     "build/playcanvas.d.ts", 
     "build/playcanvas-extras.js", 
-    "index.d.ts", 
     "LICENSE", 
     "package.json", 
     "README.md", 
