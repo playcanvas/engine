@@ -156,6 +156,7 @@ TextMesh.attributes.add('maxCurveSteps', {
 });
 TextMesh.attributes.add('renderStyle', {
     type: 'number',
+    default: 0,
     enum: [
         { 'Solid': 0 },
         { 'Wireframe': 1 }
