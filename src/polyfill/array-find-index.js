@@ -31,7 +31,7 @@ if (!Array.prototype.findIndex) {
                 // d. If testResult is true, return k.
                 var kValue = o[k];
                 if (predicate.call(thisArg, kValue, k, o)) {
-                return k;
+                    return k;
                 }
                 // e. Increase k by 1.
                 k++;
