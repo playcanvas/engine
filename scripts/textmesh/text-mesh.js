@@ -112,6 +112,7 @@ TextMesh.attributes.add('text', {
 });
 TextMesh.attributes.add('alignment', {
     type: 'number',
+    default: 0,
     enum: [
         { 'Left': 0 },
         { 'Center': 1 },
