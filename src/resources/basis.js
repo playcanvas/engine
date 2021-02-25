@@ -501,11 +501,26 @@ function basisTranscode(url, data, callback, options) {
     }
 }
 
+function isBasisAvailable() {
+    if (downloadConfig) {
+        return true;
+    } else {
+        // get config from global PC config structure
+        var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
+        var wasmModule = modules.find(function (m) {
+            return m.moduleName === 'BASIS';
+        });
+
+        return !!wasmModule;
+    }
+}
+
 export {
     basisDownload,
     basisSetDownloadConfig,
     basisDownloadFromConfig,
     basisInitialize,
     basisTargetFormat,
-    basisTranscode
+    basisTranscode,
+    isBasisAvailable
 };
