@@ -55,20 +55,35 @@ class InstanceList {
         this.transparentMeshInstances = [];
         this.shadowCasters = [];
 
-        // arrays of VisibleInstanceList for each camera
+        // arrays of VisibleInstanceList for each camera of this layer
         this.visibleOpaque = [];
         this.visibleTransparent = [];
     }
 
-    clearVisibleLists(cameraPass) {
-        if (this.visibleOpaque[cameraPass]) {
-            this.visibleOpaque[cameraPass].length = 0;
-            this.visibleOpaque[cameraPass].list.length = 0;
+    // prepare for culling of camera with specified index
+    prepare(index) {
+
+        // make sure visibility lists are allocated
+        if (!this.visibleOpaque[index]) {
+            this.visibleOpaque[index] = new VisibleInstanceList();
         }
 
-        if (this.visibleTransparent[cameraPass]) {
-            this.visibleTransparent[cameraPass].length = 0;
-            this.visibleTransparent[cameraPass].list.length = 0;
+        if (!this.visibleTransparent[index]) {
+            this.visibleTransparent[index] = new VisibleInstanceList();
+        }
+
+        // mark them as not processed yet
+        this.visibleOpaque[index].done = false;
+        this.visibleTransparent[index].done = false;
+    }
+
+    // delete entry for a camera with specified index
+    delete(index) {
+        if (index < this.visibleOpaque.length) {
+            this.visibleOpaque.splice(index, 1);
+        }
+        if (index < this.visibleTransparent.length) {
+            this.visibleTransparent.splice(index, 1);
         }
     }
 }
@@ -602,14 +617,14 @@ class Layer {
      * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
-        var id = this.cameras.indexOf(camera);
-        if (id < 0) return;
-        this.cameras.splice(id, 1);
-        this._dirtyCameras = true;
+        var index = this.cameras.indexOf(camera);
+        if (index >= 0) {
+            this.cameras.splice(index, 1);
+            this._dirtyCameras = true;
 
-        // visible lists in layer are not updated after camera is removed
-        // so clear out any remaining mesh instances
-        this.instances.clearVisibleLists(id);
+            // delete the visible list for this camera
+            this.instances.delete(index);
+        }
     }
 
     /**

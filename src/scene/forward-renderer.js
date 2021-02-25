@@ -2580,22 +2580,9 @@ class ForwardRenderer {
             }
             layer._postRenderCounterMax = layer._postRenderCounter;
 
+            // prepare layer for culling with the camera
             for (j = 0; j < layer.cameras.length; j++) {
-                // Create visible arrays for every camera inside each layer if not present
-                if (!layer.instances.visibleOpaque[j]) layer.instances.visibleOpaque[j] = new VisibleInstanceList();
-                if (!layer.instances.visibleTransparent[j]) layer.instances.visibleTransparent[j] = new VisibleInstanceList();
-                // Mark visible arrays as not processed yet
-                layer.instances.visibleOpaque[j].done = false;
-                layer.instances.visibleTransparent[j].done = false;
-            }
-
-            // remove visible lists if cameras have been removed, remove one per frame
-            if (layer.cameras.length < layer.instances.visibleOpaque.length) {
-                layer.instances.visibleOpaque.splice(layer.cameras.length, 1);
-            }
-
-            if (layer.cameras.length < layer.instances.visibleTransparent.length) {
-                layer.instances.visibleTransparent.splice(layer.cameras.length, 1);
+                layer.instances.prepare(j);
             }
 
             // Generate static lighting for meshes in this layer if needed
