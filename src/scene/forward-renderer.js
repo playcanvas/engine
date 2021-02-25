@@ -568,7 +568,7 @@ class ForwardRenderer {
     getShadowCamera(device, light) {
         var shadowCam = light._shadowCamera;
 
-        if (shadowCam === null) {
+        if (!shadowCam) {
             shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type);
             createShadowBuffer(device, light);
         } else {
@@ -1524,7 +1524,6 @@ class ForwardRenderer {
         // #endif
 
         var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
-        var numInstances;
         var meshInstance, mesh, material;
         var style;
         var settings;
@@ -1649,7 +1648,7 @@ class ForwardRenderer {
                     smode = shadowType + type * numShadowModes;
 
                     // Render
-                    for (j = 0, numInstances = visibleLength; j < numInstances; j++) {
+                    for (j = 0; j < visibleLength; j++) {
                         meshInstance = visibleList[j];
                         mesh = meshInstance.mesh;
                         material = meshInstance.material;
@@ -2603,14 +2602,13 @@ class ForwardRenderer {
     }
 
     cullLocalShadowmap(light, drawCalls) {
-        var i, type, shadowCam, shadowCamNode, passes, pass, numInstances, meshInstance, visibleList, vlen, visible;
+        var i, type, passes, pass, numInstances, meshInstance, visibleList, vlen, visible;
         var lightNode;
         type = light._type;
         if (type === LIGHTTYPE_DIRECTIONAL) return;
         light.visibleThisFrame = true; // force light visibility if function was manually called
 
-        shadowCam = this.getShadowCamera(this.device, light);
-
+        let shadowCam = this.getShadowCamera(this.device, light);
         shadowCam.projection = PROJECTION_PERSPECTIVE;
         shadowCam.nearClip = light.attenuationEnd / 1000;
         shadowCam.farClip = light.attenuationEnd;
@@ -2622,7 +2620,7 @@ class ForwardRenderer {
             shadowCam.fov = 90;
             passes = 6;
         }
-        shadowCamNode = shadowCam._node;
+        let shadowCamNode = shadowCam._node;
         lightNode = light._node;
         shadowCamNode.setPosition(lightNode.getPosition());
         if (type === LIGHTTYPE_SPOT) {
@@ -2875,6 +2873,45 @@ class ForwardRenderer {
         // #endif
     }
 
+    cullShadowmaps(comp) {
+
+        // #ifdef PROFILER
+        const cullTime = now();
+        // #endif
+
+        // Shadowmap culling for directional and visible local lights
+        // collected into light._visibleList
+        // objects are also globally marked as visible
+        // Also sets up local shadow camera matrices
+
+        let globalLightCounter = -1;
+        for (let i = 0; i < comp._lights.length; i++) {
+            let light = comp._lights[i];
+
+            if (light._type === LIGHTTYPE_DIRECTIONAL) {
+                // directional light
+                globalLightCounter++;
+                if (light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
+                    const casters = comp._lightShadowCasters[i];
+                    let cameras = comp._globalLightCameras[globalLightCounter];
+                    for (let j = 0; j < cameras.length; j++) {
+                        this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
+                    }
+                }
+            } else {
+                // local light - omni or spot
+                if (light.visibleThisFrame && light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
+                    const casters = comp._lightShadowCasters[i];
+                    this.cullLocalShadowmap(light, casters);
+                }
+            }
+        }
+
+        // #ifdef PROFILER
+        this._cullTime += now() - cullTime;
+        // #endif
+    }
+
     renderComposition(comp) {
         var device = this.device;
         var camera;
@@ -2964,43 +3001,8 @@ class ForwardRenderer {
             camera.frameEnd();
         }
 
-        // Shadowmap culling for directional and visible local lights
-        // collected into light._visibleList
-        // objects are also globally marked as visible
-        // Also sets up local shadow camera matrices
-        var light, casters;
-
-        // #ifdef PROFILER
-        var cullTime = now();
-        // #endif
-
-        // Local light casters - culled once for the whole frame
-        for (i = 0; i < comp._lights.length; i++) {
-            light = comp._lights[i];
-            if (!light.visibleThisFrame) continue;
-            if (light._type === LIGHTTYPE_DIRECTIONAL) continue;
-            if (!light.castShadows || !light.enabled || light.shadowUpdateMode === SHADOWUPDATE_NONE) continue;
-            casters = comp._lightShadowCasters[i];
-            this.cullLocalShadowmap(light, casters);
-        }
-
-        // Directional light casters - culled once for each camera
-        var globalLightCounter = -1;
-        for (i = 0; i < comp._lights.length; i++) {
-            light = comp._lights[i];
-            if (light._type !== LIGHTTYPE_DIRECTIONAL) continue;
-            globalLightCounter++;
-            if (!light.castShadows || !light.enabled || light.shadowUpdateMode === SHADOWUPDATE_NONE) continue;
-            casters = comp._lightShadowCasters[i];
-            let cameras = comp._globalLightCameras[globalLightCounter];
-            for (let j = 0; j < cameras.length; j++) {
-                this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
-            }
-        }
-
-        // #ifdef PROFILER
-        this._cullTime += now() - cullTime;
-        // #endif
+        // cull shadow casters for all lights
+        this.cullShadowmaps(comp);
 
         // Can call script callbacks here and tell which objects are visible
 

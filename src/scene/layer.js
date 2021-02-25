@@ -238,7 +238,6 @@ class Layer {
         this.customSortCallback = null;
         this.customCalculateSortValues = null;
 
-        this._lightComponents = [];
         this._lights = [];
         this._splitLights = [[], [], []];
 
@@ -495,11 +494,11 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
-        if (this._lightComponents.indexOf(light) >= 0) return;
-        this._lightComponents.push(light);
-        this._lights.push(light.light);
-        this._dirtyLights = true;
-        this._generateLightHash();
+        if (this._lights.indexOf(light.light) < 0) {
+            this._lights.push(light.light);
+            this._dirtyLights = true;
+            this._generateLightHash();
+        }
     }
 
     /**
@@ -509,15 +508,13 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
-        var id = this._lightComponents.indexOf(light);
-        if (id < 0) return;
-        this._lightComponents.splice(id, 1);
+        const id = this._lights.indexOf(light.light);
+        if (id >= 0) {
+            this._lights.splice(id, 1);
 
-        id = this._lights.indexOf(light.light);
-        this._lights.splice(id, 1);
-
-        this._dirtyLights = true;
-        this._generateLightHash();
+            this._dirtyLights = true;
+            this._generateLightHash();
+        }
     }
 
     /**
@@ -526,7 +523,6 @@ class Layer {
      * @description Removes all lights from this layer.
      */
     clearLights() {
-        this._lightComponents.length = 0;
         this._lights.length = 0;
         this._dirtyLights = true;
     }
