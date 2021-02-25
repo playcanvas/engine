@@ -195,7 +195,7 @@ class RenderComponent extends Component {
 
                         // last reference, needs to be destroyed
                         if (cachedObj.getRefCount() === 0) {
-                            cachedObjArray.splice(cachedObjIndex);
+                            cachedObjArray.splice(cachedObjIndex, 1);
 
                             // if the array is empty
                             if (!cachedObjArray.length) {
