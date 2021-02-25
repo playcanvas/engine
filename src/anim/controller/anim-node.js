@@ -73,8 +73,12 @@ class AnimNode {
         return this._weightedSpeed;
     }
 
-    set weightedSpeed(value) {
-        this._weightedSpeed = value;
+    set weightedSpeed(meanDuration) {
+        this._weightedSpeed = this.animTrack.duration / Math.abs(this._speed) / meanDuration;
+    }
+
+    get weightedDuration() {
+        return this.animTrack.duration / Math.abs(this._speed) * this.weight;
     }
 
     get animTrack() {

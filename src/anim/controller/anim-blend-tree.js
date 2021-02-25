@@ -71,6 +71,10 @@ class AnimBlendTree extends AnimNode {
         return paramsEqual;
     }
 
+    getNodeWeightedDuration(i) {
+        return this._children[i].animTrack.duration / this._children[i].speedMultiplier * this._children[i].weight;
+    }
+
     getNodeCount() {
         var count = 0;
         for (var i = 0; i < this._children.length; i++) {

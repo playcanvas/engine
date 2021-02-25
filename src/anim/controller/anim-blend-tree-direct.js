@@ -16,13 +16,13 @@ class AnimBlendTreeDirect extends AnimBlendTree {
         for (i = 0; i < this._children.length; i++) {
             weightSum += Math.max(this._parameterValues[i], 0.0);
             if (this._syncDurations) {
-                meanDuration += this._children[i].animTrack.duration * this._children[i].weight;
+                meanDuration += this._children[i].weightedDuration;
             }
         }
         for (i = 0; i < this._children.length; i++) {
             this._children[i].weight = Math.max(this._parameterValues[i], 0.0) / weightSum;
             if (this._syncDurations) {
-                this._children[i].weightedSpeed = this._children[i].animTrack.duration / meanDuration;
+                this._children[i].weightedSpeed = meanDuration;
             }
         }
     }

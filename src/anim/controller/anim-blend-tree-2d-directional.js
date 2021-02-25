@@ -49,13 +49,13 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
             this._children[i].weight = minj;
             weightSum += minj;
             if (this._syncDurations) {
-                meanDuration += this._children[i].animTrack.duration * this._children[i].weight;
+                meanDuration += this._children[i].weightedDuration;
             }
         }
         for (i = 0; i < this._children.length; i++) {
             this._children[i].weight = this._children[i]._weight / weightSum;
             if (this._syncDurations) {
-                this._children[i].weightedSpeed = this._children[i].animTrack.duration / meanDuration;
+                this._children[i].weightedSpeed = meanDuration;
             }
         }
     }

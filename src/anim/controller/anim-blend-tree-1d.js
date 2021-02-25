@@ -22,7 +22,7 @@ class AnimBlendTree1D extends AnimBlendTree {
         this._children[0].weight = 0.0;
         for (i = 0; i < this._children.length; i++) {
             if (this._syncDurations) {
-                meanDuration += this._children[i].animTrack.duration * this._children[i].weight;
+                meanDuration += this._children[i].weightedDuration;
             }
             if (i === this._children.length - 1) continue;
             var c1 = this._children[i];
@@ -42,7 +42,7 @@ class AnimBlendTree1D extends AnimBlendTree {
         }
         if (this._syncDurations) {
             for (i = 0; i < this._children.length; i++) {
-                this._children[i].weightedSpeed = this._children[i].animTrack.duration / meanDuration;
+                this._children[i].weightedSpeed = meanDuration;
             }
         }
     }
