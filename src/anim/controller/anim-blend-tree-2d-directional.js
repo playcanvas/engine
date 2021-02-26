@@ -8,6 +8,7 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @class
  * @name AnimBlendTreeDirectional2D
  * @classdesc An AnimBlendTree that calculates its weights using a 2D directional algorithm
+ * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeDirectional2D extends AnimBlendTree {
