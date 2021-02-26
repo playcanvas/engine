@@ -14,6 +14,7 @@ import { ComponentSystem } from '../system.js';
 import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
+import { Asset } from '../../../asset/asset.js';
 
 var mat4 = new Mat4();
 var vec3 = new Vec3();
@@ -433,7 +434,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         var data = component.data;
         var assets = this.system.app.assets;
 
-        var asset = assets.get(id);
+        var asset = (id instanceof Asset) ? id : assets.get(id);
         if (asset) {
             asset.ready(function (asset) {
                 data.model = asset.resource;
