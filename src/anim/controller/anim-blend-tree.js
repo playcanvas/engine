@@ -12,17 +12,18 @@ import { AnimNode } from './anim-node.js';
  * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a {@link AnimBlendTree}.
  * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
  * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type {@link AnimNode} or {@link BlendTree}.
+ * @param {boolean} syncAnimations - If true, the playback duration of each blended animation will be synchonised.
  * @param {Function} createTree - Used to create child blend trees of varying types.
  * @param {Function} findParameter - Used at runtime to get the current parameter values.
  */
 class AnimBlendTree extends AnimNode {
-    constructor(state, parent, name, point, parameters, children, syncDurations, createTree, findParameter) {
+    constructor(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter) {
         super(state, parent, name, point);
         this._parameters = parameters;
         this._parameterValues = new Array(parameters.length);
         this._children = [];
         this._findParameter = findParameter;
-        this._syncDurations = syncDurations;
+        this._syncAnimations = syncAnimations !== false;
         this._pointCache = {};
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
@@ -49,8 +50,8 @@ class AnimBlendTree extends AnimNode {
         return this._parent ? this._parent.weight * this._weight : this._weight;
     }
 
-    get syncDurations() {
-        return this._syncDurations;
+    get syncAnimations() {
+        return this._syncAnimations;
     }
 
     getChild(name) {

@@ -528,7 +528,7 @@ class AnimController {
                     clip = this._animEvaluator.findClip(animation.name);
                     if (clip) {
                         clip.blendWeight = animation.normalizedWeight;
-                        if (animation.parent.syncDurations) {
+                        if (animation.parent.syncAnimations) {
                             clip.speed = animation.speed;
                         }
                     }
