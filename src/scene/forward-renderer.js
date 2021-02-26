@@ -2887,12 +2887,12 @@ class ForwardRenderer {
         let globalLightCounter = -1;
         for (let i = 0; i < comp._lights.length; i++) {
             let light = comp._lights[i];
+            const casters = comp._lightShadowCasters[i];
 
             if (light._type === LIGHTTYPE_DIRECTIONAL) {
                 // directional light
                 globalLightCounter++;
                 if (light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightShadowCasters[i];
                     let cameras = comp._globalLightCameras[globalLightCounter];
                     for (let j = 0; j < cameras.length; j++) {
                         this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
@@ -2901,7 +2901,6 @@ class ForwardRenderer {
             } else {
                 // local light - omni or spot
                 if (light.visibleThisFrame && light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightShadowCasters[i];
                     this.cullLocalShadowmap(light, casters);
                 }
             }
