@@ -12,7 +12,7 @@ import { AnimNode } from './anim-node.js';
  * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a {@link AnimBlendTree}.
  * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
  * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type {@link AnimNode} or {@link BlendTree}.
- * @param {boolean} syncAnimations - If true, the playback duration of each blended animation will be synchonised.
+ * @param {boolean} syncAnimations - If true, the speed of each blended animation will be synchonised.
  * @param {Function} createTree - Used to create child blend trees of varying types.
  * @param {Function} findParameter - Used at runtime to get the current parameter values.
  */
@@ -58,6 +58,7 @@ class AnimBlendTree extends AnimNode {
         for (var i = 0; i < this._children.length; i++) {
             if (this._children[i].name === name) return this._children[i];
         }
+        return null;
     }
 
     updateParameterValues() {
