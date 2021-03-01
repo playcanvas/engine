@@ -8,6 +8,7 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @class
  * @name AnimBlendTreeDirectional2D
  * @classdesc An AnimBlendTree that calculates its weights using a 2D directional algorithm
+ * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeDirectional2D extends AnimBlendTree {
@@ -29,13 +30,15 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
 
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        var i, j, pi, pipj, minj, result, weightSum;
+        var i, j, pi, pipj, minj, result, weightSum, weightedDurationSum;
         AnimBlendTreeDirectional2D._p.set(...this._parameterValues);
         var pLength = AnimBlendTreeDirectional2D._p.length();
         weightSum = 0.0;
+        weightedDurationSum = 0.0;
         for (i = 0; i < this._children.length; i++) {
-            pi = this._children[i].point;
-            var piLength = this._children[i].pointLength;
+            const child = this._children[i];
+            pi = child.point;
+            var piLength = child.pointLength;
             minj = Number.MAX_VALUE;
             for (j = 0; j < this._children.length; j++) {
                 if (i === j) continue;
@@ -45,11 +48,18 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
                 result = math.clamp(1.0 - Math.abs((AnimBlendTreeDirectional2D._pip.dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
                 if (result < minj) minj = result;
             }
-            this._children[i].weight = minj;
+            child.weight = minj;
             weightSum += minj;
+            if (this._syncAnimations) {
+                weightedDurationSum += child.animTrack.duration / child.absoluteSpeed * child.weight;
+            }
         }
         for (i = 0; i < this._children.length; i++) {
-            this._children[i].weight = this._children[i]._weight / weightSum;
+            const child = this._children[i];
+            child.weight = child._weight / weightSum;
+            if (this._syncAnimations) {
+                child.weightedSpeed = child.animTrack.duration / child.absoluteSpeed / weightedDurationSum;
+            }
         }
     }
 }
