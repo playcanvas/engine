@@ -59,7 +59,7 @@
     "@rollup/pluginutils": "4.1.0", 
     "babel-eslint": "10.1.0", 
     "chai": "4.3.0", 
-    "eslint": "7.19.0", 
+    "eslint": "7.21.0", 
     "http-server": "0.12.3", 
     "jsdoc": "3.6.6", 
     "karma": "6.1.0", 
