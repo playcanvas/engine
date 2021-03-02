@@ -8,7 +8,6 @@ import { findAvailableLocale } from '../i18n/utils.js';
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetVariants } from './asset-variants.js';
 import { getApplication } from '../framework/globals.js';
-import { isBasisAvailable } from '../resources/basis.js';
 
 // auto incrementing number for asset ids
 var assetIdCounter = -1;
@@ -202,10 +201,9 @@ class Asset extends EventHandler {
                     // if the device supports the variant
                     if (! device[VARIANT_SUPPORT[variant]]) continue;
 
-                    var variantFile = this.file.variants[variant];
                     // if the variant exists in the asset then just return it
-                    if (variantFile && (path.getExtension(variantFile.url) !== '.basis' || isBasisAvailable())) {
-                        return variantFile;
+                    if (this.file.variants[variant]) {
+                        return this.file.variants[variant];
                     }
 
                     // if the variant does not exist but the asset is in a bundle

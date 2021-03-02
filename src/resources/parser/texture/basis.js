@@ -42,7 +42,11 @@ class BasisParser {
                         // remove the swizzled flag from the asset
                         asset.file.variants.basis.opt &= ~8;
                     }
-                    basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
+                    var basisModuleFound = basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
+
+                    if (!basisModuleFound) {
+                        callback('WARNING: Basis module not found. ' + asset.name + ' texture will not be loaded');
+                    }
                 }
             }
         );

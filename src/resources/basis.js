@@ -456,6 +456,7 @@ function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
 }
 
 // search for wasm module in the global config and initialize basis
+// returns true if it can find the module
 function basisDownloadFromConfig(callback) {
     if (downloadConfig) {
         // config was user-specified
@@ -475,10 +476,13 @@ function basisDownloadFromConfig(callback) {
                           urlBase + wasmModule.wasmUrl,
                           urlBase + wasmModule.fallbackUrl,
                           callback);
+
+            return true;
         } else {
             // #ifdef DEBUG
             console.warn("WARNING: unable to load basis wasm module - no config was specified");
             // #endif
+            return false;
         }
     }
 }
@@ -488,31 +492,20 @@ function basisDownloadFromConfig(callback) {
 //   unswizzleGGGR - convert the two-component GGGR normal data to RGB
 //                   and pack into 565 format. this is used to overcome
 //                   quality issues on apple devices.
+// returns true if a transcode module is found
 function basisTranscode(url, data, callback, options) {
     if (!worker) {
         // store transcode job if no worker exists
         transcodeQueue.push({ url: url, data: data, callback: callback, options: options });
         // if the basis module download has not yet been initiated, do so now
         if (!downloadInitiated) {
-            basisDownloadFromConfig();
+            return basisDownloadFromConfig();
         }
     } else {
         transcode(url, data, callback, options);
     }
-}
 
-function isBasisAvailable() {
-    if (downloadConfig) {
-        return true;
-    } else {
-        // get config from global PC config structure
-        var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-        var wasmModule = modules.find(function (m) {
-            return m.moduleName === 'BASIS';
-        });
-
-        return !!wasmModule;
-    }
+    return true;
 }
 
 export {
@@ -521,6 +514,5 @@ export {
     basisDownloadFromConfig,
     basisInitialize,
     basisTargetFormat,
-    basisTranscode,
-    isBasisAvailable
+    basisTranscode
 };
