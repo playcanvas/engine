@@ -478,12 +478,13 @@ function basisDownloadFromConfig(callback) {
                           callback);
 
             return true;
-        } else {
-            // #ifdef DEBUG
-            console.warn("WARNING: unable to load basis wasm module - no config was specified");
-            // #endif
-            return false;
         }
+
+        // #ifdef DEBUG
+        console.warn("WARNING: unable to load basis wasm module - no config was specified");
+        // #endif
+
+        return false;
     }
 }
 
