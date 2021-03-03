@@ -1225,7 +1225,7 @@ class Mat4 {
         sy = scale.y;
         sz = scale.z;
 
-        if (sx === 0 || sy === 0)
+        if (sx === 0 || sy === 0 || sz === 0)
             return eulers.set(0, 0, 0);
 
         m = this.data;
