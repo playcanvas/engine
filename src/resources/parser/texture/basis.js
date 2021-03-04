@@ -45,7 +45,7 @@ class BasisParser {
                     var basisModuleFound = basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
 
                     if (!basisModuleFound) {
-                        callback('WARNING: Basis module not found. ' + asset.name + ' texture will not be loaded');
+                        callback('Basis module not found. Asset "' + asset.name + '" basis texture variant will not be loaded.');
                     }
                 }
             }
