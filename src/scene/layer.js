@@ -259,7 +259,7 @@ class Layer {
 
         this._renderTime = 0;
         this._forwardDrawCalls = 0;
-        this._shadowDrawCalls = 0;
+        this._shadowDrawCalls = 0;  // deprecated, not useful on a layer anymore, could be moved to camera
         // #endif
 
         this._shaderVersion = -1;
