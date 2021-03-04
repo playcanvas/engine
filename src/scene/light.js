@@ -130,6 +130,7 @@ class Light {
 
     destroy() {
         this._destroyShadowMap();
+        this._renderData = null;
     }
 
     // returns LightRenderData with matching camera and face
