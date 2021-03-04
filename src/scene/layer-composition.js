@@ -33,7 +33,7 @@ class LayerComposition extends EventHandler {
         this.name = name;
 
         // enable logging
-        this.logRenderActions = true;
+        this.logRenderActions = false;
 
         // all layers added into the composition
         this.layerList = [];
