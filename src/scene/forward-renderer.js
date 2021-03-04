@@ -2636,7 +2636,7 @@ class ForwardRenderer {
 
             this.updateCameraFrustum(shadowCam);
 
-            // render data are shared between cameras for locl lights, so pass null for camera
+            // render data are shared between cameras for local lights, so pass null for camera
             const lightRenderData = light.getRenderData(null, pass);
             const visibleCasters = lightRenderData.visibleCasters;
             let count = 0;
