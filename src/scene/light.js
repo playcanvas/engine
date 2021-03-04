@@ -655,4 +655,4 @@ class Light {
     }
 }
 
-export { Light, LightRenderData };
+export { Light };
