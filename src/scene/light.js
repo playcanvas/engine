@@ -22,6 +22,14 @@ var tmpVec = new Vec3();
 
 var chanId = { r: 0, g: 1, b: 2, a: 3 };
 
+// viewport in shadows map for cascades for directional light
+const directionalCascades = [
+    [new Vec4(0, 0, 1, 1)],
+    [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5)],
+    [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5)],
+    [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
+];
+
 // Class storing rendering related private information
 class LightRenderData {
     constructor(camera, face, lightType) {
@@ -89,6 +97,9 @@ class Light {
         // Spot properties
         this._innerConeAngle = 40;
         this._outerConeAngle = 45;
+
+        // Directional properties
+        this.numCascades = 1;
 
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
@@ -182,6 +193,9 @@ class Light {
         clone.innerConeAngle = this._innerConeAngle;
         clone.outerConeAngle = this._outerConeAngle;
 
+        // Directional properties
+        clone.numCascades = this.numCascades;
+
         // shape properties
         clone.shape = this._shape;
 
@@ -200,6 +214,14 @@ class Light {
         // clone.cookieOffset = this._cookieOffset;
 
         return clone;
+    }
+
+    get numCascades() {
+        return this.cascades.length;
+    }
+
+    set numCascades(value) {
+        this.cascades = directionalCascades[value - 1];
     }
 
     getColor() {

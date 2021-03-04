@@ -1549,13 +1549,7 @@ class ForwardRenderer {
                 passes = 1;
 
                 if (type === LIGHTTYPE_DIRECTIONAL) {
-
-                    // TODO: cascaded shadow maps here
-                    const shadowCascade = 0;
-                    const lightRenderData = light.getRenderData(camera, shadowCascade);
-                    shadowCamNode.setPosition(lightRenderData.position);
-                    shadowCam.orthoHeight = lightRenderData.orthoHeight;
-                    shadowCam.farClip = lightRenderData.farClip;
+                    passes = light.numCascades;
                 } else if (type === LIGHTTYPE_SPOT) {
                     cameraPos = shadowCamNode.getPosition();
                     this.viewPos[0] = cameraPos.x;
@@ -1572,7 +1566,6 @@ class ForwardRenderer {
                     this.viewPosId.setValue(this.viewPos);
                     this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
                     passes = 6;
-
                 }
 
                 // #ifdef DEBUG
@@ -1629,17 +1622,26 @@ class ForwardRenderer {
                     }
                     // #endif
 
-                    if (type === LIGHTTYPE_OMNI) {
-                        shadowCamNode.setRotation(pointLightRotations[pass]);
-                        shadowCam.renderTarget = light._shadowCubeMap[pass];
-                    }
-
-                    this.setCamera(shadowCam, shadowCam.renderTarget, true, type !== LIGHTTYPE_OMNI);
-
                     // directional shadows are per camera, so get appropriate render data
                     const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, pass);
                     const visibleCasters = lightRenderData.visibleCasters;
                     const visibleLength = visibleCasters.length;
+
+                    if (type === LIGHTTYPE_OMNI) {
+                        shadowCamNode.setRotation(pointLightRotations[pass]);
+                        shadowCam.renderTarget = light._shadowCubeMap[pass];
+                    } else if (type === LIGHTTYPE_DIRECTIONAL) {
+                        shadowCamNode.setPosition(lightRenderData.position);
+                        shadowCam.orthoHeight = lightRenderData.orthoHeight;
+                        shadowCam.farClip = lightRenderData.farClip;
+
+                        // cascade viewport
+                        const rect = light.cascades[pass];
+                        shadowCam.rect = rect;
+                        shadowCam.scissorRect = rect;
+                    }
+
+                    this.setCamera(shadowCam, shadowCam.renderTarget, true, passes === 1);
 
                     // Sort shadow casters
                     shadowType = light._shadowType;
@@ -2678,118 +2680,118 @@ class ForwardRenderer {
         shadowCamNode.setRotation(lightNode.getRotation());
         shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
 
-        // Positioning directional light frustum I
-        // Construct light's orthographic frustum around camera frustum
-        // Use very large near/far planes this time
+        for (let cascade = 0; cascade < light.numCascades; cascade++) {
+            // Positioning directional light frustum I
+            // Construct light's orthographic frustum around camera frustum
+            // Use very large near/far planes this time
 
-        // 1. Get the frustum of the camera
-        _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
+            // 1. Get the frustum of the camera
+            _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
 
-        // 2. Figure out the maximum diagonal of the frustum in light's projected space.
-        frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
-        frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
+            // 2. Figure out the maximum diagonal of the frustum in light's projected space.
+            frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
+            frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
 
-        // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
-        shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
-        c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
-        for (i = 0; i < 8; i++) {
-            c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
-        }
-
-        // 4. Come up with a bounding box (in light-space) by calculating the min
-        // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-        minx = miny = minz = 1000000;
-        maxx = maxy = maxz = -1000000;
-        for (i = 0; i < 8; i++) {
-            p = frustumPoints[i];
-            if (p.x < minx) minx = p.x;
-            if (p.x > maxx) maxx = p.x;
-            if (p.y < miny) miny = p.y;
-            if (p.y > maxy) maxy = p.y;
-            if (p.z < minz) minz = p.z;
-            if (p.z > maxz) maxz = p.z;
-        }
-
-        // 5. Enlarge the light's frustum so that the frustum will be the same size
-        // no matter how the view frustum moves.
-        // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
-        unitPerTexel = frustumSize / light._shadowResolution;
-        delta = (frustumSize - (maxx - minx)) * 0.5;
-        minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
-        delta = (frustumSize - (maxy - miny)) * 0.5;
-        miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
-        maxx = minx + frustumSize;
-        maxy = miny + frustumSize;
-
-        // 6. Use your min and max values to create an off-center orthographic projection.
-        centerx = (maxx + minx) * 0.5;
-        centery = (maxy + miny) * 0.5;
-        shadowCamNode.translateLocal(centerx, centery, 100000);
-
-        shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
-        shadowCam.nearClip = 0;
-        shadowCam.farClip = 200000;
-        shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
-        shadowCam.orthoHeight = frustumSize * 0.5;
-
-        this.updateCameraFrustum(shadowCam);
-
-        // Cull shadow casters and find their AABB
-        emptyAabb = true;
-
-        // TODO: cascaded shadow maps here
-        const shadowCascade = 0;
-        const lightRenderData = light.getRenderData(camera, shadowCascade);
-        const visibleCasters = lightRenderData.visibleCasters;
-        let count = 0;
-
-        for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
-            meshInstance = drawCalls[i];
-            visible = true;
-            if (meshInstance.cull) {
-                visible = meshInstance._isVisible(shadowCam);
+            // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
+            shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
+            c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
+            for (i = 0; i < 8; i++) {
+                c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
-            if (visible) {
-                meshInstance.visibleThisFrame = true;
-                visibleCasters[count] = meshInstance;
-                count++;
 
-                // update bounds
-                drawCallAabb = meshInstance.aabb;
-                if (emptyAabb) {
-                    visibleSceneAabb.copy(drawCallAabb);
-                    emptyAabb = false;
-                } else {
-                    visibleSceneAabb.add(drawCallAabb);
+            // 4. Come up with a bounding box (in light-space) by calculating the min
+            // and max X, Y, and Z values from your 8 light-space frustum coordinates.
+            minx = miny = minz = 1000000;
+            maxx = maxy = maxz = -1000000;
+            for (i = 0; i < 8; i++) {
+                p = frustumPoints[i];
+                if (p.x < minx) minx = p.x;
+                if (p.x > maxx) maxx = p.x;
+                if (p.y < miny) miny = p.y;
+                if (p.y > maxy) maxy = p.y;
+                if (p.z < minz) minz = p.z;
+                if (p.z > maxz) maxz = p.z;
+            }
+
+            // 5. Enlarge the light's frustum so that the frustum will be the same size
+            // no matter how the view frustum moves.
+            // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
+            unitPerTexel = frustumSize / light._shadowResolution;
+            delta = (frustumSize - (maxx - minx)) * 0.5;
+            minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
+            delta = (frustumSize - (maxy - miny)) * 0.5;
+            miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
+            maxx = minx + frustumSize;
+            maxy = miny + frustumSize;
+
+            // 6. Use your min and max values to create an off-center orthographic projection.
+            centerx = (maxx + minx) * 0.5;
+            centery = (maxy + miny) * 0.5;
+            shadowCamNode.translateLocal(centerx, centery, 100000);
+
+            shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
+            shadowCam.nearClip = 0;
+            shadowCam.farClip = 200000;
+            shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
+            shadowCam.orthoHeight = frustumSize * 0.5;
+
+            this.updateCameraFrustum(shadowCam);
+
+            // Cull shadow casters and find their AABB
+            emptyAabb = true;
+
+            const lightRenderData = light.getRenderData(camera, cascade);
+            const visibleCasters = lightRenderData.visibleCasters;
+            let count = 0;
+
+            for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
+                meshInstance = drawCalls[i];
+                visible = true;
+                if (meshInstance.cull) {
+                    visible = meshInstance._isVisible(shadowCam);
+                }
+                if (visible) {
+                    meshInstance.visibleThisFrame = true;
+                    visibleCasters[count] = meshInstance;
+                    count++;
+
+                    // update bounds
+                    drawCallAabb = meshInstance.aabb;
+                    if (emptyAabb) {
+                        visibleSceneAabb.copy(drawCallAabb);
+                        emptyAabb = false;
+                    } else {
+                        visibleSceneAabb.add(drawCallAabb);
+                    }
                 }
             }
+
+            visibleCasters.length = count;
+
+            // TODO: we should probably sort shadow meshes by shader and not depth
+            visibleCasters.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+
+            // Positioning directional light frustum II
+            // Fit clipping planes tightly around visible shadow casters
+
+            // 1. Calculate minz/maxz based on casters' AABB
+            var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+
+            // Always use the scene's aabb's Z value
+            // Otherwise object between the light and the frustum won't cast shadow.
+            maxz = z.max;
+            if (z.min > minz) minz = z.min;
+
+            // 2. Fix projection
+            shadowCamNode.setPosition(lightNode.getPosition());
+            shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
+            shadowCam.farClip = maxz - minz;
+
+            // Save projection variables to use in rendering later
+            lightRenderData.position.copy(shadowCamNode.getPosition());
+            lightRenderData.orthoHeight = shadowCam.orthoHeight;
+            lightRenderData.farClip = shadowCam.farClip;
         }
-
-        visibleCasters.length = count;
-
-        // TODO: we should probably sort shadow meshes by shader and not depth
-        visibleCasters.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
-
-        // Positioning directional light frustum II
-        // Fit clipping planes tightly around visible shadow casters
-
-        // 1. Calculate minz/maxz based on casters' AABB
-        var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
-
-        // Always use the scene's aabb's Z value
-        // Otherwise object between the light and the frustum won't cast shadow.
-        maxz = z.max;
-        if (z.min > minz) minz = z.min;
-
-        // 2. Fix projection
-        shadowCamNode.setPosition(lightNode.getPosition());
-        shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
-        shadowCam.farClip = maxz - minz;
-
-        // Save projection variables to use in rendering later
-        lightRenderData.position.copy(shadowCamNode.getPosition());
-        lightRenderData.orthoHeight = shadowCam.orthoHeight;
-        lightRenderData.farClip = shadowCam.farClip;
     }
 
     gpuUpdate(drawCalls) {
