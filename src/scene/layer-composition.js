@@ -88,7 +88,7 @@ class LayerComposition extends EventHandler {
     }
 
     _update() {
-        var i, j, k, l;
+        var i, j;
         var layer;
         var len = this.layerList.length;
         var result = 0;

@@ -1527,7 +1527,7 @@ class ForwardRenderer {
         var shadowMapStartTime = now();
         // #endif
 
-        var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
+        var i, j, light, shadowShader, type, shadowCam, shadowCamNode, passes, shadowType, smode;
         var meshInstance, mesh, material;
         var style;
         var passFlag = 1 << SHADER_SHADOW;
