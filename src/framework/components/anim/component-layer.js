@@ -91,8 +91,9 @@ class AnimComponentLayer {
      * @param {string} nodeName - The name of the node that should have its animation tracks removed.
      */
     removeNodeAnimations(nodeName) {
-        this._controller.removeNodeAnimations(nodeName);
-        this._component.playing = false;
+        if (this._controller.removeNodeAnimations(nodeName)) {
+            this._component.playing = false;
+        }
     }
 
     /**

@@ -119,7 +119,7 @@ var path = {
      * @param {string} pathname - The path to process.
      * @returns {string} The basename.
      * @example
-     * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
+     * pc.path.getBasename("/path/to/file.txt"); // returns "file.txt"
      * pc.path.getBasename("/path/to/dir"); // returns "dir"
      */
     getBasename: function (pathname) {

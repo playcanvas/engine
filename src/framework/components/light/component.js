@@ -432,6 +432,7 @@ function _defineProps() {
         } else {
             this.light.mask &= ~MASK_DYNAMIC;
         }
+        this.light.layersDirty();
     });
     _defineProperty("affectLightmapped", false, function (newValue, oldValue) {
         if (newValue) {

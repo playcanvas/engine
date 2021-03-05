@@ -1,4 +1,4 @@
-import { ASPECT_AUTO } from '../../../scene/constants.js';
+import { ASPECT_AUTO, LAYERID_UI } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 
 import { Component } from '../component.js';
@@ -107,6 +107,9 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * camera should belong. Don't push/pop/splice or modify this array, if you want to
  * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
  * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
+ * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of the camera stops being applied to.
+ * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
+ * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
  */
 class CameraComponent extends Component {
     constructor(system, entity) {
@@ -117,6 +120,13 @@ class CameraComponent extends Component {
 
         this._priority = 0;
 
+        // event called when postprocessing should execute
+        this.onPostprocessing = null;
+
+        // layer id at which the postprocessing stops for the camera
+        this._disablePostEffectsLayer = LAYERID_UI;
+
+        // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
     }
 
@@ -141,6 +151,25 @@ class CameraComponent extends Component {
 
     get camera() {
         return this._camera;
+    }
+
+    dirtyLayerCompositionCameras() {
+        // layer composition needs to update order
+        let layerComp = this.system.app.scene.layers;
+        layerComp._dirtyCameras = true;
+    }
+
+    get disablePostEffectsLayer() {
+        return this._disablePostEffectsLayer;
+    }
+
+    set disablePostEffectsLayer(layer) {
+        this._disablePostEffectsLayer = layer;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get postEffectsEnabled() {
+        return this._postEffects.enabled;
     }
 
     get layers() {
@@ -177,10 +206,44 @@ class CameraComponent extends Component {
 
     set priority(newValue) {
         this._priority = newValue;
+        this.dirtyLayerCompositionCameras();
+    }
 
-        // layer composition needs to update order
-        let layerComp = this.system.app.scene.layers;
-        layerComp._dirtyCameras = true;
+
+    get clearColorBuffer() {
+        return this._camera.clearColorBuffer;
+    }
+
+    set clearColorBuffer(value) {
+        this._camera.clearColorBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearDepthBuffer() {
+        return this._camera.clearDepthBuffer;
+    }
+
+    set clearDepthBuffer(value) {
+        this._camera.clearDepthBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearStencilBuffer() {
+        return this._camera.clearStencilBuffer;
+    }
+
+    set clearStencilBuffer(value) {
+        this._camera.clearStencilBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get renderTarget() {
+        return this._camera.renderTarget;
+    }
+
+    set renderTarget(value) {
+        this._camera.renderTarget = value;
+        this.dirtyLayerCompositionCameras();
     }
 
     /**
@@ -225,7 +288,8 @@ class CameraComponent extends Component {
         return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
     }
 
-    onPrerender() {
+    // called before application renders the scene
+    onAppPrerender() {
         this._camera._viewMatDirty = true;
         this._camera._viewProjMatDirty = true;
     }
@@ -541,15 +605,13 @@ class CameraComponent extends Component {
     }
 }
 
+// for common properties, create getters and setters which use this._camera as a storage for their values
 [
     { name: 'aspectRatio', readonly: false },
     { name: 'aspectRatioMode', readonly: false },
     { name: 'calculateProjection', readonly: false },
     { name: 'calculateTransform', readonly: false },
     { name: 'clearColor', readonly: false },
-    { name: 'clearColorBuffer', readonly: false },
-    { name: 'clearDepthBuffer', readonly: false },
-    { name: 'clearStencilBuffer', readonly: false },
     { name: 'cullFaces', readonly: false },
     { name: 'farClip', readonly: false },
     { name: 'flipFaces', readonly: false },
@@ -562,7 +624,6 @@ class CameraComponent extends Component {
     { name: 'projection', readonly: false },
     { name: 'projectionMatrix', readonly: true },
     { name: 'rect', readonly: false },
-    { name: 'renderTarget', readonly: false },
     { name: 'scissorRect', readonly: false },
     { name: 'viewMatrix', readonly: true },
     { name: 'vrDisplay', readonly: false }
@@ -570,10 +631,12 @@ class CameraComponent extends Component {
     var name = property.name;
     var options = {};
 
+    // getter
     options.get = function () {
         return this._camera[name];
     };
 
+    // setter
     if (!property.readonly) {
         options.set = function (newValue) {
             this._camera[name] = newValue;

@@ -254,14 +254,14 @@ class Picker {
             var layer;
             var layerCamId, transparent;
             for (i = 0; i < layers.length; i++) {
-                if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
+                if (layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
             }
             for (i = 0; i < layers.length; i++) {
                 layer = layers[i];
                 if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
                 layerCamId = layer.cameras.indexOf(camera);
                 if (layerCamId < 0) continue;
-                if (layer.overrideClear && layer._clearDepthBuffer && !layer._pickerCleared) {
+                if (layer._clearDepthBuffer && !layer._pickerCleared) {
                     this.meshInstances.push(this.clearDepthCommand);
                     layer._pickerCleared = true;
                 }

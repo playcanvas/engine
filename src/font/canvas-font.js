@@ -394,8 +394,7 @@ class CanvasFont extends EventHandler {
         var div = document.createElement('div');
         div.appendChild(textSpan);
         div.appendChild(block);
-        div.style.font = this.fontName;
-        div.style.fontSize = this.fontSize + 'px';
+        div.style.font = this.fontSize + 'px ' + this.fontName;
 
         var body = document.body;
         body.appendChild(div);

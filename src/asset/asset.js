@@ -7,6 +7,7 @@ import { findAvailableLocale } from '../i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetVariants } from './asset-variants.js';
+import { getApplication } from '../framework/globals.js';
 
 // auto incrementing number for asset ids
 var assetIdCounter = -1;
@@ -192,29 +193,30 @@ class Asset extends EventHandler {
             return null;
 
         if (this.type === 'texture' || this.type === 'textureatlas' || this.type === 'bundle') {
-            var app = this.registry._loader._app;
-            var device = app.graphicsDevice;
+            var app = this.registry?._loader?._app || getApplication();
+            var device = app?.graphicsDevice;
+            if (device) {
+                for (var i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
+                    var variant = VARIANT_DEFAULT_PRIORITY[i];
+                    // if the device supports the variant
+                    if (! device[VARIANT_SUPPORT[variant]]) continue;
 
-            for (var i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
-                var variant = VARIANT_DEFAULT_PRIORITY[i];
-                // if the device supports the variant
-                if (! device[VARIANT_SUPPORT[variant]]) continue;
+                    // if the variant exists in the asset then just return it
+                    if (this.file.variants[variant]) {
+                        return this.file.variants[variant];
+                    }
 
-                // if the variant exists in the asset then just return it
-                if (this.file.variants[variant]) {
-                    return this.file.variants[variant];
-                }
+                    // if the variant does not exist but the asset is in a bundle
+                    // and the bundle contain assets with this variant then return the default
+                    // file for the asset
+                    if (app.enableBundles) {
+                        var bundles = app.bundles.listBundlesForAsset(this);
+                        if (! bundles) continue;
 
-                // if the variant does not exist but the asset is in a bundle
-                // and the bundle contain assets with this variant then return the default
-                // file for the asset
-                if (app.enableBundles) {
-                    var bundles = app.bundles.listBundlesForAsset(this);
-                    if (! bundles) continue;
-
-                    for (var j = 0, len2 = bundles.length; j < len2; j++) {
-                        if (bundles[j].file && bundles[j].file.variants && bundles[j].file.variants[variant]) {
-                            return this.file;
+                        for (var j = 0, len2 = bundles.length; j < len2; j++) {
+                            if (bundles[j].file && bundles[j].file.variants && bundles[j].file.variants[variant]) {
+                                return this.file;
+                            }
                         }
                     }
                 }
@@ -227,7 +229,7 @@ class Asset extends EventHandler {
     /**
      * @private
      * @function
-     * @name pcAsset#getAbsoluteUrl
+     * @name Asset#getAbsoluteUrl
      * @description Construct an asset URL from this asset's location and a relative path
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url
      * @returns {string} Resulting URL of the asset

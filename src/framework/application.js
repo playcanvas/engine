@@ -481,7 +481,8 @@ class Application extends EventHandler {
                     var depthBuffer = new Texture(self.graphicsDevice, {
                         format: PIXELFORMAT_DEPTHSTENCIL,
                         width: self.graphicsDevice.width,
-                        height: self.graphicsDevice.height
+                        height: self.graphicsDevice.height,
+                        mipmaps: false
                     });
                     depthBuffer.name = 'rt-depth2';
                     depthBuffer.minFilter = FILTER_NEAREST;
@@ -552,7 +553,8 @@ class Application extends EventHandler {
                     var colorBuffer = new Texture(self.graphicsDevice, {
                         format: PIXELFORMAT_R8_G8_B8_A8,
                         width: self.graphicsDevice.width,
-                        height: self.graphicsDevice.height
+                        height: self.graphicsDevice.height,
+                        mipmaps: false
                     });
                     colorBuffer.name = 'rt-depth1';
                     colorBuffer.minFilter = FILTER_NEAREST;

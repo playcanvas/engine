@@ -34,7 +34,7 @@ class CameraComponentSystem extends ComponentSystem {
         this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.app.on("prerender", this.onPrerender, this);
+        this.app.on("prerender", this.onAppPrerender, this);
 
         ComponentSystem.bind('update', this.onUpdate, this);
     }
@@ -153,9 +153,9 @@ class CameraComponentSystem extends ComponentSystem {
         }
     }
 
-    onPrerender() {
+    onAppPrerender() {
         for (var i = 0, len = this.cameras.length; i < len; i++) {
-            this.cameras[i].onPrerender();
+            this.cameras[i].onAppPrerender();
         }
     }
 
