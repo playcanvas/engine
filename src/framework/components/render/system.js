@@ -28,7 +28,6 @@ const _properties = [
 ];
 
 /**
- * @private
  * @class
  * @name RenderComponentSystem
  * @augments ComponentSystem

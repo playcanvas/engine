@@ -260,6 +260,7 @@ var _deprecationWarning = false;
  * * model ({@link ModelComponentSystem})
  * * particlesystem ({@link ParticleSystemComponentSystem})
  * * rigidbody ({@link RigidBodyComponentSystem})
+ * * render ({@link RenderComponentSystem})
  * * screen ({@link ScreenComponentSystem})
  * * script ({@link ScriptComponentSystem})
  * * scrollbar ({@link ScrollbarComponentSystem})
