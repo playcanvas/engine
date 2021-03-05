@@ -234,8 +234,14 @@
 
             app.start();
 
-            var modelEntity = model.resource.instantiateRenderEntity({
-                    castShadows: true
+            var modelEntity = new pc.Entity();
+            modelEntity.name = 'modelEntity';
+
+            modelEntity.addComponent("model", {
+                enabled: true,
+                type: "asset",
+                asset: model.resource.model,
+                castShadows: true
             });
 
             modelEntity.addComponent('anim', {
