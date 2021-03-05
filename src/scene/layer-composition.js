@@ -461,7 +461,7 @@ class LayerComposition extends EventHandler {
                 // handle camera stacking if this render action has postprocessing enabled
                 if (camera.renderTarget && camera.postEffectsEnabled) {
                     // process previous render actions starting with previous camera
-                    this.propagateRenderTarget(cameraFirstRenderActionIndex - 1, camera.renderTarget);
+                    this.propagateRenderTarget(cameraFirstRenderActionIndex - 1, camera);
                 }
             }
 
@@ -495,7 +495,8 @@ class LayerComposition extends EventHandler {
 
     // executes when post-processing camera's render actions were created to propage rendering to
     // render targets to previous camera as needed
-    propagateRenderTarget(startIndex, renderTarget) {
+    propagateRenderTarget(startIndex, fromCamera) {
+
         for (let a = startIndex; a >= 0; a--) {
 
             let ra = this._renderActions[a];
@@ -512,8 +513,16 @@ class LayerComposition extends EventHandler {
                 continue;
             }
 
+            // camera stack ends when viewport or scissor of the camera changes
+            const thisCamera = ra?.camera.camera;
+            if (thisCamera) {
+                if (!fromCamera.camera.rect.equals(thisCamera.rect) || !fromCamera.camera.scissorRect.equals(thisCamera.scissorRect)) {
+                    break;
+                }
+            }
+
             // render it to render target
-            ra.renderTarget = renderTarget;
+            ra.renderTarget = fromCamera.renderTarget;
         }
     }
 
