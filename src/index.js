@@ -249,6 +249,8 @@ export { ParticleSystemComponent } from './framework/components/particle-system/
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 export * from './framework/components/rigid-body/constants.js';
+export { RenderComponent } from './framework/components/render/component.js';
+export { RenderComponentSystem } from './framework/components/render/system.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry } from './framework/scene-registry.js';
