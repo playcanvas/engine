@@ -200,21 +200,15 @@ class SceneRegistry {
      * @name SceneRegistry#unloadSceneData
      * @description Unloads scene data that has been loaded previously using {@link SceneRegistry#loadSceneData}.
      * @param {SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
-     * @param {callbacks.UnloadSceneData} callback - The function to call after loading,
      */
-    unloadSceneData(sceneItem, callback) {
-        var url = sceneItem;
-
-        if (sceneItem instanceof SceneRegistryItem) {
-            url = sceneItem.url;
-        } else {
-            sceneItem = this.findByUrl(url);
-            if (!sceneItem) {
-                sceneItem = new SceneRegistryItem('Untitled', url);
-            }
+    unloadSceneData(sceneItem) {
+        if (sceneItem instanceof String) {
+            sceneItem = this.findByUrl(sceneItem);
         }
 
-        sceneItem.data = null;
+        if (sceneItem) {
+            sceneItem.data = null;
+        }
     }
 
     /**
