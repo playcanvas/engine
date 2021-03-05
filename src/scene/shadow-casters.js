@@ -12,6 +12,13 @@ class ShadowCasters {
         this.set.clear();
         this.list.length = 0;
     }
+
+    add(item) {
+        if (!this.set.has(item)) {
+            this.set.add(item);
+            this.list.push(item);
+        }
+    }
 }
 
 export { ShadowCasters };

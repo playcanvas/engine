@@ -356,18 +356,11 @@ class LayerComposition extends EventHandler {
                     // find its index in global light list, and get shadow casters for it
                     const lightIndex = this._lightsMap.get(lights[j]);
                     const casters = this._lightShadowCasters[lightIndex];
-                    const castersSet = casters.set;
-                    const castersList = casters.list;
 
                     // add unique meshes from the layer to casters
                     const meshInstances = layer.shadowCasters;
                     for (let k = 0; k < meshInstances.length; k++) {
-                        const meshInstance = meshInstances[k];
-
-                        if (!castersSet.has(meshInstance)) {
-                            castersSet.add(meshInstance);
-                            castersList.push(meshInstance);
-                        }
+                        casters.add(meshInstances[k]);
                     }
                 }
             }
