@@ -387,7 +387,7 @@ class Light {
         }
 
         if (key !== this.key && this._scene !== null) {
-            // TODO: most of changes to the key should not invalidate composition,
+// TODO: most of the changes to the key should not invalidate the composition,
             // probably only _type and _castShadows
             this.layersDirty();
         }
