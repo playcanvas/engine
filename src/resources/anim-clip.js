@@ -5,7 +5,6 @@ import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
 /**
- * @private
  * @class
  * @name AnimClipHandler
  * @implements {ResourceHandler}

@@ -12,7 +12,6 @@ const _schema = [
 ];
 
 /**
- * @private
  * @class
  * @name AnimComponentSystem
  * @augments ComponentSystem
