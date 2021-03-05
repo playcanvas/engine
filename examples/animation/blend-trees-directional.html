@@ -143,13 +143,8 @@
         app.assets.loadFromUrl("../assets/animations/bitmoji/run.glb", "container", function (err, asset) {
             jogAnim = asset;
 
-            var modelEntity = new pc.Entity();
-
-            modelEntity.addComponent("model", {
-                enabled: true,
-                type: "asset",
-                asset: model.resource.model,
-                castShadows: true
+            var modelEntity = model.resource.instantiateRenderEntity({
+                    castShadows: true
             });
 
             modelEntity.addComponent('anim', {

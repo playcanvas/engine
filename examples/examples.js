@@ -4,12 +4,12 @@ var categories = [
         name: "animation",
         examples: [
             "blend",
-            "tweening",
-            "component-properties",
             "blend-trees-1D",
             "blend-trees-2D-cartesian",
             "blend-trees-directional",
-            "locomotion"
+            "component-properties",
+            "locomotion",
+            "tweening"
         ]
     }, {
         name: "camera",
