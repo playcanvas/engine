@@ -42,13 +42,13 @@
 
             // create primitive
             var primitive = new pc.Entity();
-            primitive.addComponent('model', {
+            primitive.addComponent('render', {
                 type: primitiveType,
                 layers: layer,
+                material: material,
                 castShadows: false,
                 receiveShadows: false
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
