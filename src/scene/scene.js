@@ -18,57 +18,57 @@ import { Mat4 } from '../math/mat4.js';
 
 /**
  * @class
- * @name pc.Scene
- * @augments pc.EventHandler
+ * @name Scene
+ * @augments EventHandler
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
  * @description Creates a new Scene.
- * @property {pc.Color} ambientLight The color of the scene's ambient light. Defaults
+ * @property {Color} ambientLight The color of the scene's ambient light. Defaults
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
  *
- * * {@link pc.FOG_NONE}
- * * {@link pc.FOG_LINEAR}
- * * {@link pc.FOG_EXP}
- * * {@link pc.FOG_EXP2}
+ * * {@link FOG_NONE}
+ * * {@link FOG_LINEAR}
+ * * {@link FOG_EXP}
+ * * {@link FOG_EXP2}
  *
- * Defaults to pc.FOG_NONE.
- * @property {pc.Color} fogColor The color of the fog (if enabled). Defaults to black
+ * Defaults to {@link FOG_NONE}.
+ * @property {Color} fogColor The color of the fog (if enabled). Defaults to black
  * (0, 0, 0).
  * @property {number} fogDensity The density of the fog (if enabled). This property
- * is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2. Defaults to 0.
+ * is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
  * @property {number} fogEnd The distance from the viewpoint where linear fog reaches
- * its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+ * its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
  * Defaults to 1000.
  * @property {number} fogStart The distance from the viewpoint where linear fog begins.
- * This property is only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1.
+ * This property is only valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1.
  * @property {number} gammaCorrection The gamma correction to apply when rendering the
  * scene. Can be:
  *
- * * {@link pc.GAMMA_NONE}
- * * {@link pc.GAMMA_SRGB}
+ * * {@link GAMMA_NONE}
+ * * {@link GAMMA_SRGB}
  *
- * Defaults to pc.GAMMA_NONE.
+ * Defaults to {@link GAMMA_NONE}.
  * @property {number} toneMapping The tonemapping transform to apply when writing
  * fragments to the frame buffer. Can be:
  *
- * * {@link pc.TONEMAP_LINEAR}
- * * {@link pc.TONEMAP_FILMIC}
- * * {@link pc.TONEMAP_HEJL}
- * * {@link pc.TONEMAP_ACES}
+ * * {@link TONEMAP_LINEAR}
+ * * {@link TONEMAP_FILMIC}
+ * * {@link TONEMAP_HEJL}
+ * * {@link TONEMAP_ACES}
  *
- * Defaults to pc.TONEMAP_LINEAR.
+ * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} exposure The exposure value tweaks the overall brightness of
  * the scene. Defaults to 1.
- * @property {pc.Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the scene's skybox, if mip level 3. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the scene's skybox, if mip level 4. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
+ * @property {Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
+ * @property {Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
+ * @property {Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
+ * @property {Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the scene's skybox, if mip level 3. Defaults to null.
+ * @property {Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the scene's skybox, if mip level 4. Defaults to null.
+ * @property {Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
+ * @property {Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
- * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link pc.Quat.IDENTITY}.
+ * @property {Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
  * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
  * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
  * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
@@ -77,17 +77,17 @@ import { Mat4 } from '../math/mat4.js';
  * 2048.
  * @property {number} lightmapMode The lightmap baking mode. Can be:
  *
- * * {@link pc.BAKE_COLOR}: single color lightmap
- * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
+ * * {@link BAKE_COLOR}: single color lightmap
+ * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
  * bump/specular). Only lights with bakeDir=true will be used for generating the dominant
  * light direction.
  *
- * Defaults to pc.BAKE_COLORDIR.
- * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines
+ * Defaults to {@link BAKE_COLORDIR}.
+ * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
- * @property {pc.StandardMaterial} defaultMaterial The default material used in case no
+ * @property {StandardMaterial} defaultMaterial The default material used in case no
  * other material is available.
- * @property {pc.Entity} root The root entity of the scene, which is usually the only
+ * @property {Entity} root The root entity of the scene, which is usually the only
  * child to the Application root entity.
  */
 class Scene extends EventHandler {
@@ -160,6 +160,7 @@ class Scene extends EventHandler {
     }
 
     destroy() {
+        this._resetSkyboxModel();
         this.root = null;
         this.defaultMaterial.destroy();
         this.defaultMaterial = null;
@@ -420,7 +421,7 @@ class Scene extends EventHandler {
             if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
                 if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
                 if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
-                this._skyboxRotationMat4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
+                this._skyboxRotationMat4.setTRS(Vec3.ZERO, this._skyboxRotation, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
                 material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
             }
@@ -432,7 +433,7 @@ class Scene extends EventHandler {
             if (skyLayer) {
                 var node = new GraphNode();
                 var mesh = createBox(device);
-                var meshInstance = new MeshInstance(node, mesh, material);
+                var meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
 
@@ -466,9 +467,9 @@ class Scene extends EventHandler {
 
     /**
      * @function
-     * @name pc.Scene#setSkybox
+     * @name Scene#setSkybox
      * @description Sets the cubemap for the scene skybox.
-     * @param {pc.Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
+     * @param {Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
      * Cubemap array should be of size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0) with original resolution.
      * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
      */
@@ -501,10 +502,6 @@ class Scene extends EventHandler {
             this._skyboxPrefiltered[i] = cubemaps[i + 1];
 
         this.skybox = cubemaps[0];
-    }
-
-    destroy = function () {
-        this.skybox = null;
     }
 
     // Backwards compatibility
@@ -548,17 +545,17 @@ class Scene extends EventHandler {
 
     /**
      * @event
-     * @name pc.Scene#set:skybox
+     * @name Scene#set:skybox
      * @description Fired when the skybox is set.
-     * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+     * @param {Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
      */
 
     /**
      * @event
-     * @name pc.Scene#set:layers
+     * @name Scene#set:layers
      * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
-     * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
-     * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.
+     * @param {LayerComposition} oldComp - Previously used {@link LayerComposition}.
+     * @param {LayerComposition} newComp - Newly set {@link LayerComposition}.
      * @example
      * this.app.scene.on('set:layers', function (oldComp, newComp) {
      *     var list = newComp.layerList;

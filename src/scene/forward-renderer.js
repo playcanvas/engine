@@ -396,10 +396,10 @@ function getDepthKey(meshInstance) {
 
 /**
  * @class
- * @name pc.ForwardRenderer
+ * @name ForwardRenderer
  * @classdesc The forward renderer render scene objects.
  * @description Creates a new forward renderer object.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
  */
 class ForwardRenderer {
     constructor(graphicsDevice) {
@@ -567,13 +567,12 @@ class ForwardRenderer {
 
     getShadowCamera(device, light) {
         var shadowCam = light._shadowCamera;
-        var shadowBuffer;
 
         if (shadowCam === null) {
             shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type);
             createShadowBuffer(device, light);
         } else {
-            shadowBuffer = shadowCam.renderTarget;
+            var shadowBuffer = shadowCam.renderTarget;
             if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
                 createShadowBuffer(device, light);
             }
@@ -2408,7 +2407,7 @@ class ForwardRenderer {
                         mesh2.primitive[0].indexed = true;
                         mesh2.aabb = chunkAabb;
 
-                        var instance = new MeshInstance(drawCall.node, mesh2, drawCall.material);
+                        var instance = new MeshInstance(mesh2, drawCall.material, drawCall.node);
                         instance.isStatic = drawCall.isStatic;
                         instance.visible = drawCall.visible;
                         instance.layer = drawCall.layer;
@@ -2892,11 +2891,8 @@ class ForwardRenderer {
     renderComposition(comp) {
         var device = this.device;
         var camera;
-        var renderedRt = comp._renderedRt;
-        var renderedByCam = comp._renderedByCam;
-        var renderedLayer = comp._renderedLayer;
         var renderAction, renderActions = comp._renderActions;
-        var i, layer, layerIndex, transparent, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
+        var i, layer, layerIndex, transparent;
 
         // update the skybox, since this might change _meshInstances
         if (this.scene.updateSkybox) {
@@ -2928,7 +2924,6 @@ class ForwardRenderer {
 
         // Camera culling (once for each camera + layer)
         // Also applies meshInstance.visible and camera.cullingMask
-        var renderedLength = 0;
         var cameraPass;
         var objects, drawCalls, visible;
 
@@ -2947,37 +2942,15 @@ class ForwardRenderer {
             if (!camera) continue;
             camera.frameBegin(renderAction.renderTarget);
 
-            // find out if this is first time the camera is used, and first time camera-layer combination is used
-            processedThisCamera = false;
-            processedThisCameraAndLayer = false;
-            for (k = 0; k < renderedLength; k++) {
-                if (renderedByCam[k] === camera) {
-                    processedThisCamera = true;
-                    if (renderedLayer[k] === layer) {
-                        processedThisCameraAndLayer = true;
-                        break;
-                    }
-                }
-            }
-
             // update camera frustum once
-            if (!processedThisCamera) {
+            if (renderAction.firstCameraUse) {
                 this.updateCameraFrustum(camera.camera);
                 this._camerasRendered++;
             }
 
             // cull each layer's non-directional lights once with each camera
             // lights aren't collected anywhere, but marked as visible
-            if (!processedThisCameraAndLayer) {
-                this.cullLights(camera.camera, layer._lights);
-            }
-
-            // record camera / layer used
-            if (!processedThisCamera || !processedThisCameraAndLayer) {
-                renderedByCam[renderedLength] = camera;
-                renderedLayer[renderedLength] = layer;
-                renderedLength++;
-            }
+            this.cullLights(camera.camera, layer._lights);
 
             // cull mesh instances
             objects = layer.instances;
@@ -3052,7 +3025,6 @@ class ForwardRenderer {
         this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
 
         // Rendering
-        renderedLength = 0;
         var sortTime, draws, drawTime;
         for (i = 0; i < renderActions.length; i++) {
             renderAction = renderActions[i];
@@ -3067,8 +3039,8 @@ class ForwardRenderer {
             camera = layer.cameras[cameraPass];
 
             // #ifdef DEBUG
-            this.device.pushMarker(layer.name);
             this.device.pushMarker(camera ? camera.entity.name : "noname");
+            this.device.pushMarker(layer.name);
             // #endif
 
             // #ifdef PROFILER
@@ -3086,34 +3058,32 @@ class ForwardRenderer {
 
             // Called for the first sublayer and for every camera
             if (!(layer._preRenderCalledForCameras & (1 << cameraPass))) {
-                if (layer.onPreRender) layer.onPreRender(cameraPass);
-                layer._preRenderCalledForCameras |= 1 << cameraPass;
-                if (layer.overrideClear) {
-                    this.clearView(camera.camera, renderAction.renderTarget, true, true, layer._clearOptions);
+                if (layer.onPreRender) {
+                    layer.onPreRender(cameraPass);
                 }
+                layer._preRenderCalledForCameras |= 1 << cameraPass;
             }
 
             if (camera) {
-                // Each camera must only clear each render target once
-                rt = renderAction.renderTarget;
-                processedThisCameraAndRt = false;
-                for (k = 0; k < renderedLength; k++) {
-                    if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                        processedThisCameraAndRt = true;
-                        break;
-                    }
-                }
 
-                if (!processedThisCameraAndRt) {
-                    // clear once per camera + RT
-                    if (!layer.overrideClear) {
-                        this.clearView(camera.camera, renderAction.renderTarget, true, true);
-                    }
-                    renderedRt[renderedLength] = rt;
-                    renderedByCam[renderedLength] = camera;
-                    renderedLength++;
-                }
+                // clear buffers
+                if (renderAction.clearColor || renderAction.clearDepth || renderAction.clearStencil) {
 
+                    // TODO: refactor clearView to accept flags from renderAction directly as well
+                    const backupColor = camera.camera._clearColorBuffer;
+                    const backupDepth = camera.camera._clearDepthBuffer;
+                    const backupStencil = camera.camera._clearStencilBuffer;
+
+                    camera.camera._clearColorBuffer = renderAction.clearColor;
+                    camera.camera._clearDepthBuffer = renderAction.clearDepth;
+                    camera.camera._clearStencilBuffer = renderAction.clearStencil;
+
+                    this.clearView(camera.camera, renderAction.renderTarget, true, true);
+
+                    camera.camera._clearColorBuffer = backupColor;
+                    camera.camera._clearDepthBuffer = backupDepth;
+                    camera.camera._clearStencilBuffer = backupStencil;
+                }
 
                 // #ifdef PROFILER
                 draws = this._shadowDrawCalls;
@@ -3167,6 +3137,11 @@ class ForwardRenderer {
                 device.setDepthBias(false);
 
                 camera.frameEnd();
+
+                // trigger postprocessing for camera
+                if (renderAction.triggerPostprocess && camera.onPostprocessing) {
+                    camera.onPostprocessing(camera);
+                }
             }
 
             // Call postrender callback if there's one

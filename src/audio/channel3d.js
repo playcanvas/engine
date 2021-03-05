@@ -81,7 +81,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.Channel3d#_createSource
+         * @name Channel3d#_createSource
          * @description Create the buffer source and connect it up to the correct audio nodes.
          */
         _createSource: function () {

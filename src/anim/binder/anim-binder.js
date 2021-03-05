@@ -1,9 +1,9 @@
 /**
  * @private
  * @class
- * @name pc.AnimBinder
- * @classdesc This interface is used by {@link pc.AnimEvaluator} to resolve unique animation target path strings
- * into instances of {@link pc.AnimTarget}.
+ * @name AnimBinder
+ * @classdesc This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
+ * into instances of {@link AnimTarget}.
  */
 class AnimBinder {
     constructor() {}
@@ -51,51 +51,32 @@ class AnimBinder {
      * @private
      * @static
      * @function
-     * @name pc.AnimPropertyLocator#encode
+     * @name AnimBinder#encode
      * @description Converts a locator array into its string version
-     * @param {Array} locator - The property location in the scene defined as an array
+     * @param {string|Array} entityPath - The entity location in the scene defined as an array or string path
+     * @param {string} component - The component of the entity the property is located under
+     * @param {string|Array} propertyPath - The property location in the entity defined as an array or string path
      * @returns {string} The locator encoded as a string
      * @example
      * // returns 'spotLight/light/color.r'
-     * encode({ entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] });
+     * encode(['spotLight'], 'light', ['color', 'r']);
      */
-    static encode(locator) {
-        return AnimBinder.joinPath([
-            AnimBinder.joinPath(Array.isArray(locator.entityPath) ? locator.entityPath : [locator.entityPath]),
-            locator.component,
-            AnimBinder.joinPath(Array.isArray(locator.propertyPath) ? locator.propertyPath : [locator.propertyPath])
-        ], '/');
-    }
-
-    /**
-     * @private
-     * @static
-     * @function
-     * @name pc.AnimPropertyLocator#decode
-     * @description Converts a locator string into its array version
-     * @param {Array} locator - The property location in the scene defined as a string
-     * @returns {Array} - The locator decoded into an array
-     * @example
-     * // returns { entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] }
-     * decode('spotLight/light/color.r');
-     */
-    static decode(locator) {
-        var locatorSections = AnimBinder.splitPath(locator, '/');
-        return {
-            entityPath: AnimBinder.splitPath(locatorSections[0]),
-            component: locatorSections[1],
-            propertyPath: AnimBinder.splitPath(locatorSections[2])
-        };
+    static encode(entityPath, component, propertyPath) {
+        return `${
+            Array.isArray(entityPath) ? entityPath.join('/') : entityPath
+        }/${component}/${
+            Array.isArray(propertyPath) ? propertyPath.join('/') : propertyPath
+        }`;
     }
 
     /**
      * @private
      * @function
-     * @name pc.AnimBinder#resolve
-     * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
+     * @name AnimBinder#resolve
+     * @description Resolve the provided target path and return an instance of {@link AnimTarget} which
      * will handle setting the value, or return null if no such target exists.
      * @param {string} path - the animation curve path to resolve.
-     * @returns {pc.AnimTarget|null} - returns the target instance on success and null otherwise.
+     * @returns {AnimTarget|null} - returns the target instance on success and null otherwise.
      */
     resolve(path) {
         return null;
@@ -104,7 +85,7 @@ class AnimBinder {
     /**
      * @private
      * @function
-     * @name pc.AnimBinder#unresolve
+     * @name AnimBinder#unresolve
      * @description Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
      * @param {string} path - the animation curve path which is no longer driven.
      */
@@ -115,8 +96,8 @@ class AnimBinder {
     /**
      * @private
      * @function
-     * @name pc.AnimBinder#update
-     * @description Called by {@link pc.AnimEvaluator} once a frame after animation updates are done.
+     * @name AnimBinder#update
+     * @description Called by {@link AnimEvaluator} once a frame after animation updates are done.
      * @param {number} deltaTime - amount of time that passed in the current update.
      */
     update(deltaTime) {

@@ -6,10 +6,10 @@ import {
 /**
  * @private
  * @class
- * @name pc.AnimTransition
+ * @name AnimTransition
  * @classdesc AnimTransitions represent connections in the controllers state graph between AnimStates. During each frame, the controller tests to see if any of the AnimTransitions have the current AnimState as their source (from) state. If so and the AnimTransitions parameter based conditions are met, the controller will transition to the destination state.
  * @description Create a new AnimTransition.
- * @param {pc.AnimController} controller - The controller this AnimTransition is associated with.
+ * @param {AnimController} controller - The controller this AnimTransition is associated with.
  * @param {string} from - The state that this transition will exit from.
  * @param {string} to - The state that this transition will transition to.
  * @param {number} time - The duration of the transition in seconds.
@@ -17,7 +17,7 @@ import {
  * @param {object[]} conditions - A list of conditions which must pass for this transition to be used.
  * @param {number} exitTime - If provided, this transition will only be active for the exact frame during which the source states progress passes the time specified. Given as a normalised value of the source states duration. Values less than 1 will be checked every animation loop.
  * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.
- * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of pc.ANIM_INTERRUPTION_*.
+ * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of ANIM_INTERRUPTION_*.
  */
 class AnimTransition {
     constructor(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource = ANIM_INTERRUPTION_NONE) {

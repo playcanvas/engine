@@ -35,7 +35,7 @@ class CssHandler {
 
 /**
  * @function
- * @name pc.createStyle
+ * @name createStyle
  * @description Creates a &lt;style&gt; DOM element from a string that contains CSS.
  * @param {string} cssString - A string that contains valid CSS.
  * @example

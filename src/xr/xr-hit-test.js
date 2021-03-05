@@ -5,13 +5,13 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
 
 /**
  * @class
- * @name pc.XrHitTest
- * @augments pc.EventHandler
+ * @name XrHitTest
+ * @augments EventHandler
  * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
  * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if AR Hit Test is supported.
- * @property {pc.XrHitTestSource[]} sources list of active {@link pc.XrHitTestSource}.
+ * @property {XrHitTestSource[]} sources list of active {@link XrHitTestSource}.
  */
 class XrHitTest extends EventHandler {
     constructor(manager) {
@@ -32,9 +32,9 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#add
-     * @description Fired when new {@link pc.XrHitTestSource} is added to the list.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @name XrHitTest#add
+     * @description Fired when new {@link XrHitTestSource} is added to the list.
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * app.xr.hitTest.on('add', function (hitTestSource) {
      *     // new hit test source is added
@@ -43,9 +43,9 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#remove
-     * @description Fired when {@link pc.XrHitTestSource} is removed to the list.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @name XrHitTest#remove
+     * @description Fired when {@link XrHitTestSource} is removed to the list.
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * app.xr.hitTest.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -54,12 +54,12 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#result
+     * @name XrHitTest#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {pc.Vec3} position - Position of hit test
-     * @param {pc.Quat} rotation - Rotation of hit test
-     * @param {pc.XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
+     * @param {Vec3} position - Position of hit test
+     * @param {Quat} rotation - Rotation of hit test
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -69,7 +69,7 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#error
+     * @name XrHitTest#error
      * @param {Error} error - Error object related to failure of creating hit test source.
      * @description Fired when failed create hit test source.
      */
@@ -116,26 +116,26 @@ class XrHitTest extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrHitTest#start
+     * @name XrHitTest#start
      * @description Attempts to start hit test with provided reference space.
      * @param {object} [options] - Optional object for passing arguments.
-     * @param {string} [options.spaceType] - Reference space type. Defaults to {@link pc.XRSPACE_VIEWER}. Can be one of the following:
+     * @param {string} [options.spaceType] - Reference space type. Defaults to {@link XRSPACE_VIEWER}. Can be one of the following:
      *
-     * * {@link pc.XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
-     * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
-     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
-     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * * {@link XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
+     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
+     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
+     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
-     * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {@link pc.XrInputSource} should be provided.
-     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
+     * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {@link XrInputSource} should be provided.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any combination of the following:
      *
-     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
+     * * {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
+     * * {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
+     * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
+     * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,

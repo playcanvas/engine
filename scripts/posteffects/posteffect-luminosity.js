@@ -4,8 +4,8 @@
  * @name LuminosityEffect
  * @classdesc Outputs the luminosity of the input render target.
  * @description Creates new instance of the post effect.
- * @augments pc.PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @augments PostEffect
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
 function LuminosityEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);

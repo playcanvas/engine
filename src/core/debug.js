@@ -1,5 +1,5 @@
 /**
- * @name pc.debug
+ * @name debug
  * @private
  * @namespace
  */
@@ -13,7 +13,7 @@ var debug = (function () {
         /**
          * @private
          * @function
-         * @name pc.debug.display
+         * @name debug.display
          * @description Display an object and its data in a table on the page.
          * @param {object} data - The object to display.
          */

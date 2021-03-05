@@ -169,7 +169,6 @@ class CollisionSystemImpl {
     remove(entity, data) {
         var app = this.system.app;
         if (entity.rigidbody && entity.rigidbody.body) {
-            app.systems.rigidbody.removeBody(entity.rigidbody.body);
             entity.rigidbody.disableSimulation();
         }
 
@@ -565,11 +564,11 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 
 /**
  * @class
- * @name pc.CollisionComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Manages creation of {@link pc.CollisionComponent}s.
+ * @name CollisionComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Manages creation of {@link CollisionComponent}s.
  * @description Creates a new CollisionComponentSystem.
- * @param {pc.Application} app - The running {pc.Application}.
+ * @param {Application} app - The running {@link Application}.
  */
 class CollisionComponentSystem extends ComponentSystem {
     constructor(app) {

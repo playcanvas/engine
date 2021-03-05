@@ -1,11 +1,11 @@
 /**
  * @private
  * @class
- * @name pc.AnimEvaluator
+ * @name AnimEvaluator
  * @classdesc AnimEvaluator blends multiple sets of animation clips together.
  * @description Create a new animation evaluator.
- * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
- * @property {pc.AnimClip[]} clips - the list of animation clips
+ * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
+ * @property {AnimClip[]} clips - the list of animation clips
  */
 class AnimEvaluator {
     constructor(binder) {
@@ -104,8 +104,8 @@ class AnimEvaluator {
 
     /**
      * @private
-     * @name pc.AnimEvaluator
-     * @type {number}
+     * @name AnimEvaluator#clips
+     * @type {AnimClip[]}
      * @description The number of clips.
      */
     get clips() {
@@ -115,9 +115,9 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#addClip
+     * @name AnimEvaluator#addClip
      * @description Add a clip to the evaluator.
-     * @param {pc.AnimClip} clip - the clip to add to the evaluator.
+     * @param {AnimClip} clip - the clip to add to the evaluator.
      */
     addClip(clip) {
         var targets = this._targets;
@@ -132,25 +132,23 @@ class AnimEvaluator {
             var paths = curve.paths;
             for (var j = 0; j < paths.length; ++j) {
                 var path = paths[j];
-                var target = targets[path];
+                var resolved = this._binder.resolve(path);
+                var target = targets[resolved && resolved.targetPath || null];
 
                 // create new target if it doesn't exist yet
-                if (!target) {
-                    var resolved = this._binder.resolve(path);
-                    if (resolved) {
-                        target = {
-                            target: resolved,           // resolved target instance
-                            value: [],                  // storage for calculated value
-                            curves: 0,                  // number of curves driving this target
-                            blendCounter: 0             // per-frame number of blends (used to identify first blend)
-                        };
+                if (!target && resolved) {
+                    target = {
+                        target: resolved,           // resolved target instance
+                        value: [],                  // storage for calculated value
+                        curves: 0,                  // number of curves driving this target
+                        blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                    };
 
-                        for (var k = 0; k < target.target.components; ++k) {
-                            target.value.push(0);
-                        }
-
-                        targets[path] = target;
+                    for (var k = 0; k < target.target.components; ++k) {
+                        target.value.push(0);
                     }
+
+                    targets[resolved.targetPath] = target;
                 }
 
                 // binding may have failed
@@ -173,7 +171,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#removeClip
+     * @name AnimEvaluator#removeClip
      * @description Remove a clip from the evaluator.
      * @param {number} index - index of the clip to remove.
      */
@@ -190,13 +188,13 @@ class AnimEvaluator {
             for (var j = 0; j < paths.length; ++j) {
                 var path = paths[j];
 
-                var target = targets[path];
+                var target = this._binder.resolve(path);
 
                 if (target) {
                     target.curves--;
                     if (target.curves === 0) {
                         this._binder.unresolve(path);
-                        delete targets[path];
+                        delete targets[target.targetPath];
                     }
                 }
             }
@@ -210,7 +208,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#removeClips
+     * @name AnimEvaluator#removeClips
      * @description Remove all clips from the evaluator.
      */
     removeClips() {
@@ -222,10 +220,10 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#findClip
+     * @name AnimEvaluator#findClip
      * @description Returns the first clip which matches the given name, or null if no such clip was found.
      * @param {string} name - name of the clip to find.
-     * @returns {pc.AnimClip|null} - the clip with the given name or null if no such clip was found.
+     * @returns {AnimClip|null} - the clip with the given name or null if no such clip was found.
      */
     findClip(name) {
         var clips = this._clips;
@@ -238,12 +236,22 @@ class AnimEvaluator {
         return null;
     }
 
+    rebind() {
+        this._binder.rebind();
+        this._targets = {};
+        var clips = [...this.clips];
+        this.removeClips();
+        clips.forEach(clip => {
+            this.addClip(clip);
+        });
+    }
+
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#update
-     * @description Evaluator frame update function. All the attached {@link pc.AnimClip}s are evaluated,
-     * blended and the results set on the {@link pc.AnimTarget}.
+     * @name AnimEvaluator#update
+     * @description Evaluator frame update function. All the attached {@link AnimClip}s are evaluated,
+     * blended and the results set on the {@link AnimTarget}.
      * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
      */
     update(deltaTime) {

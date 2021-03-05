@@ -50,7 +50,7 @@ const particleVerts = [
     [-1, 1]
 ];
 
-var _createTexture = function (device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
+function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     var mipFilter = FILTER_NEAREST;
     if (filter && format === PIXELFORMAT_R8_G8_B8_A8)
@@ -84,7 +84,7 @@ var _createTexture = function (device, width, height, pixelData, format = PIXELF
     texture.unlock();
 
     return texture;
-};
+}
 
 function saturate(x) {
     return Math.max(Math.min(x, 1), 0);
@@ -702,7 +702,7 @@ class ParticleEmitter {
         this.resetMaterial();
 
         var wasVisible = this.meshInstance ? this.meshInstance.visible : true;
-        this.meshInstance = new MeshInstance(this.node, mesh, this.material);
+        this.meshInstance = new MeshInstance(mesh, this.material, this.node);
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
         this.meshInstance.cull = true;

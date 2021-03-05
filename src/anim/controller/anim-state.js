@@ -1,20 +1,27 @@
-import { AnimBlendTree } from './anim-blend-tree.js';
+import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
+import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
+import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js';
+import { AnimBlendTreeDirect } from './anim-blend-tree-direct.js';
 import { AnimNode } from './anim-node.js';
 import {
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_CONTROL_STATES
+} from './constants.js';
+
+import {
+    ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
 } from './constants.js';
 
 /**
  * @private
  * @class
- * @name pc.AnimState
+ * @name AnimState
  * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with it's conditions met that has that AnimState as it's source state.
  * @description Create a new AnimState.
- * @param {pc.AnimController} controller - The controller this AnimState is associated with.
+ * @param {AnimController} controller - The controller this AnimState is associated with.
  * @param {string} name - The name of the state. Used to find this state when the controller transitions between states and links animations.
- * @param {number} speed - The speed animations in the state should play at. Individual pc.AnimNodes can override this value.
+ * @param {number} speed - The speed animations in the state should play at. Individual {@link AnimNodes} can override this value.
  * @param {boolean} loop - Determines whether animations in this state should loop.
- * @param {object|null} blendTree - If supplied, the AnimState will recursively build a pc.AnimBlendTree hierarchy, used to store, blend and play multiple animations.
+ * @param {object|null} blendTree - If supplied, the AnimState will recursively build a {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
  */
 class AnimState {
     constructor(controller, name, speed, loop, blendTree) {
@@ -26,9 +33,33 @@ class AnimState {
         this._loop = loop === undefined ? true : loop;
         var findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
-            this._blendTree = new AnimBlendTree(this, null, name, 1.0, blendTree.type, blendTree.parameter ? [blendTree.parameter] : blendTree.parameters, blendTree.children, findParameter);
+            this._blendTree = this._createTree(
+                blendTree.type,
+                this,
+                null,
+                name,
+                1.0,
+                blendTree.parameter ? [blendTree.parameter] : blendTree.parameters,
+                blendTree.children,
+                blendTree.syncAnimations,
+                this._createTree,
+                findParameter
+            );
         } else {
             this._blendTree = new AnimNode(this, null, name, 1.0, speed);
+        }
+    }
+
+    _createTree(type, state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter) {
+        switch (type) {
+            case ANIM_BLEND_1D:
+                return new AnimBlendTree1D(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+            case ANIM_BLEND_2D_CARTESIAN:
+                return new AnimBlendTreeCartesian2D(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+            case ANIM_BLEND_2D_DIRECTIONAL:
+                return new AnimBlendTreeDirectional2D(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+            case ANIM_BLEND_DIRECT:
+                return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
         }
     }
 
@@ -41,8 +72,9 @@ class AnimState {
     }
 
     addAnimation(path, animTrack) {
+        var pathString = path.join('.');
         var indexOfAnimation = this._animationList.findIndex(function (animation) {
-            return animation.path === path;
+            return animation.path === pathString;
         });
         if (indexOfAnimation >= 0) {
             this._animationList[indexOfAnimation].animTrack = animTrack;
@@ -74,12 +106,12 @@ class AnimState {
     }
 
     get nodeCount() {
-        if (!this._blendTree || !(this._blendTree.constructor === AnimBlendTree)) return 1;
+        if (!this._blendTree || (this._blendTree.constructor === AnimNode)) return 1;
         return this._blendTree.getNodeCount();
     }
 
     get playable() {
-        return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.name === ANIM_STATE_ANY || this.animations.length === this.nodeCount);
+        return (ANIM_CONTROL_STATES.indexOf(this.name) !== -1 || this.animations.length === this.nodeCount);
     }
 
     get looping() {

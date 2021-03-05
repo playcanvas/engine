@@ -17,27 +17,27 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 /**
  * @component
  * @class
- * @name pc.RigidBodyComponent
- * @augments pc.Component
- * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
+ * @name RigidBodyComponent
+ * @augments Component
+ * @classdesc The rigidbody component, when combined with a {@link CollisionComponent}, allows your
  * entities to be simulated using realistic physics.
  * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
  * can apply forces and impulses to rigid bodies.
  * @description Create a new RigidBodyComponent.
- * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component.
- * @param {pc.Entity} entity - The entity this component is attached to.
- * @property {number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
+ * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+ * @param {Entity} entity - The entity this component is attached to.
+ * @property {number} mass The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC}
  * bodies, other types have infinite mass. Defaults to 1.
- * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
- * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
+ * @property {Vec3} linearVelocity Defines the speed of the body in a given direction.
+ * @property {Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
  * @property {number} linearDamping Controls the rate at which a body loses linear velocity over time.
  * Defaults to 0.
  * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
  * Defaults to 0.
- * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
- * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
- * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
- * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
+ * @property {Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
+ * @property {Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
  * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults
@@ -52,12 +52,12 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * of 16 bits, the first 8 bits are reserved for engine use. Defaults to 65535.
  * @property {string} type The rigid body type determines how the body is simulated. Can be:
  *
- * * {@link pc.BODYTYPE_STATIC}: infinite mass and cannot move.
- * * {@link pc.BODYTYPE_DYNAMIC}: simulated according to applied forces.
- * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
+ * * {@link BODYTYPE_STATIC}: infinite mass and cannot move.
+ * * {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
+ * * {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
  * by setting their velocity or position.
  *
- * Defaults to pc.BODYTYPE_STATIC.
+ * Defaults to {@link BODYTYPE_STATIC}.
  */
 class RigidBodyComponent extends Component {
     constructor(system, entity) {
@@ -93,37 +93,37 @@ class RigidBodyComponent extends Component {
     // Events Documentation
     /**
      * @event
-     * @name pc.RigidBodyComponent#contact
+     * @name RigidBodyComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
-     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
-     * @name pc.RigidBodyComponent#collisionstart
+     * @name RigidBodyComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
-     * @name pc.RigidBodyComponent#collisionend
+     * @name RigidBodyComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this rigid body.
+     * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
      */
 
     /**
      * @event
-     * @name pc.RigidBodyComponent#triggerenter
+     * @name RigidBodyComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
      */
 
     /**
      * @event
-     * @name pc.RigidBodyComponent#triggerleave
+     * @name RigidBodyComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
      */
 
     get linearVelocity() {
@@ -171,7 +171,7 @@ class RigidBodyComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponent#createBody
+     * @name RigidBodyComponent#createBody
      * @description If the Entity has a Collision shape attached then create a rigid body using this shape. This method destroys the existing body.
      */
     createBody() {
@@ -229,7 +229,7 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#isActive
+     * @name RigidBodyComponent#isActive
      * @description Returns true if the rigid body is currently actively being simulated. I.e. Not 'sleeping'.
      * @returns {boolean} True if the body is active.
      */
@@ -240,9 +240,9 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#activate
+     * @name RigidBodyComponent#activate
      * @description Forcibly activate the rigid body simulation. Only affects rigid bodies of
-     * type pc.BODYTYPE_DYNAMIC.
+     * type {@link BODYTYPE_DYNAMIC}.
      */
     activate() {
         var body = this.body;
@@ -316,14 +316,14 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#applyForce
+     * @name RigidBodyComponent#applyForce
      * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset this point by specifying a world space vector from
      * the body's origin to the point of application. This function has two valid signatures. You can either
      * specify the force (and optional relative point) via 3D-vector or numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the force in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the force in world-space or
      * the x-component of the force in world-space.
-     * @param {pc.Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
+     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
      * which to apply the impulse in world-space or the y-component of the force in world-space.
      * @param {number} [z] - The z-component of the force in world-space.
      * @param {number} [px] - The x-component of a world-space offset from the body's position where the force is applied.
@@ -402,10 +402,10 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#applyTorque
+     * @name RigidBodyComponent#applyTorque
      * @description Apply torque (rotational force) to the body. This function has two valid signatures.
      * You can either specify the torque force with a 3D-vector or with 3 numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the torque force in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world-space or
      * the x-component of the torque force in world-space.
      * @param {number} [y] - The y-component of the torque force in world-space.
      * @param {number} [z] - The z-component of the torque force in world-space.
@@ -446,13 +446,13 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#applyImpulse
+     * @name RigidBodyComponent#applyImpulse
      * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
      * This function has two valid signatures. You can either specify the impulse (and optional relative
      * point) via 3D-vector or numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
      * the x-component of the impulse in world-space.
-     * @param {pc.Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
+     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
      * which to apply the impulse in the local-space of the entity or the y-component of the impulse to
      * apply in world-space.
      * @param {number} [z] - The z-component of the impulse to apply in world-space.
@@ -528,11 +528,11 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#applyTorqueImpulse
+     * @name RigidBodyComponent#applyTorqueImpulse
      * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
      * This function has two valid signatures. You can either specify the torque force with a 3D-vector
      * or with 3 numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the torque impulse in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in world-space or
      * the x-component of the torque impulse in world-space.
      * @param {number} [y] - The y-component of the torque impulse in world-space.
      * @param {number} [z] - The z-component of the torque impulse in world-space.
@@ -573,8 +573,8 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#isStatic
-     * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}.
+     * @name RigidBodyComponent#isStatic
+     * @description Returns true if the rigid body is of type {@link BODYTYPE_STATIC}.
      * @returns {boolean} True if static.
      */
     isStatic() {
@@ -583,8 +583,8 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#isStaticOrKinematic
-     * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}.
+     * @name RigidBodyComponent#isStaticOrKinematic
+     * @description Returns true if the rigid body is of type {@link BODYTYPE_STATIC} or {@link BODYTYPE_KINEMATIC}.
      * @returns {boolean} True if static or kinematic.
      */
     isStaticOrKinematic() {
@@ -593,8 +593,8 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#isKinematic
-     * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}.
+     * @name RigidBodyComponent#isKinematic
+     * @description Returns true if the rigid body is of type {@link BODYTYPE_KINEMATIC}.
      * @returns {boolean} True if kinematic.
      */
     isKinematic() {
@@ -604,7 +604,7 @@ class RigidBodyComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponent#_getEntityTransform
+     * @name RigidBodyComponent#_getEntityTransform
      * @description Writes an entity transform into an Ammo.btTransform but ignoring scale.
      * @param {object} transform - The ammo transform to write the entity transform to.
      */
@@ -622,9 +622,9 @@ class RigidBodyComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponent#syncEntityToBody
+     * @name RigidBodyComponent#syncEntityToBody
      * @description Set the rigid body transform to be the same as the Entity transform.
-     * This must be called after any Entity transformation functions (e.g. {@link pc.Entity#setPosition}) are called
+     * This must be called after any Entity transformation functions (e.g. {@link Entity#setPosition}) are called
      * in order to update the rigid body to match the Entity.
      */
     syncEntityToBody() {
@@ -647,7 +647,7 @@ class RigidBodyComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponent#_updateDynamic
+     * @name RigidBodyComponent#_updateDynamic
      * @description Sets an entity's transform to match that of the world transformation
      * matrix of a dynamic rigid body's motion state.
      */
@@ -674,7 +674,7 @@ class RigidBodyComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponent#_updateKinematic
+     * @name RigidBodyComponent#_updateKinematic
      * @description Writes the entity's world transformation matrix into the motion state
      * of a kinematic body.
      */
@@ -689,14 +689,14 @@ class RigidBodyComponent extends Component {
 
     /**
      * @function
-     * @name pc.RigidBodyComponent#teleport
+     * @name RigidBodyComponent#teleport
      * @description Teleport an entity to a new world-space position, optionally setting orientation. This function
      * should only be called for rigid bodies that are dynamic. This function has three valid signatures.
      * The first takes a 3-dimensional vector for the position and an optional 3-dimensional vector for Euler rotation.
      * The second takes a 3-dimensional vector for the position and an optional quaternion for rotation.
      * The third takes 3 numbers for the position and an optional 3 numbers for Euler rotation.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
-     * @param {pc.Vec3|pc.Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
+     * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
+     * @param {Vec3|Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
      * position y-coordinate.
      * @param {number} [z] - The new position z-coordinate.
      * @param {number} [rx] - The new Euler x-angle value.

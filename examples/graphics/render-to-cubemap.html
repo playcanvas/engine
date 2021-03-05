@@ -76,7 +76,7 @@
 
             // Create the mesh instance
             var node = new pc.GraphNode();
-            this.meshInstance = new pc.MeshInstance(node, mesh, material);
+            this.meshInstance = new pc.MeshInstance(mesh, material, node);
 
             // Create a model and add the mesh instance to it
             var model = new pc.Model();
@@ -135,6 +135,7 @@
         // get world and skybox layers
         var worldLayer = app.scene.layers.getLayerByName("World");
         var skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+        var immediateLayer = app.scene.layers.getLayerByName("Immediate");
 
         // add camera component to shiny ball - this defines camera properties for cubemap rendering 
         shinyBall.addComponent('camera', {
@@ -190,7 +191,7 @@
         var camera = new pc.Entity("MainCamera");
         camera.addComponent("camera", {
             fov: 60,
-            layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id]
+            layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id]
         });
         app.root.addChild(camera);
 
@@ -208,8 +209,30 @@
         });
         app.root.addChild(light);
 
+        // helper function to create a texture that can be used to project cubemap to
+        function createReprojectionTexture(projection, size) {
+            return new pc.Texture(this.app.graphicsDevice, {
+                width: size,
+                height: size,
+                format: pc.PIXELFORMAT_R8_G8_B8,
+                mipmaps: false,
+                minFilter: pc.FILTER_LINEAR,
+                magFilter: pc.FILTER_LINEAR,
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                projection: projection
+            });
+        }
+
+        // create 2 uqirect and 2 octahedral textures
+        var textureEqui = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT, 256);
+        var textureEqui2 = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT, 256);
+        var textureOcta = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 64);
+        var textureOcta2 = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 32);
+
         // update things each frame
         var time = 0;
+        var device = this.app.graphicsDevice;
         app.on("update", function (dt) {
             time += dt;
 
@@ -224,6 +247,27 @@
             // slowly orbit camera around
             camera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
             camera.lookAt(pc.Vec3.ZERO);
+
+            // project textures, and display them on the screen
+            var srcCube = shinyBall.script.cubemapRenderer.cubeMap;
+
+            // cube -> equi1
+            pc.reprojectTexture(device, srcCube, textureEqui, undefined, 1);
+            app.renderTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
+
+            // cube -> octa1
+            pc.reprojectTexture(device, srcCube, textureOcta, undefined, 1);
+            app.renderTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
+
+            // equi1 -> octa2
+            pc.reprojectTexture(device, textureEqui, textureOcta2, 32, 1024);
+            app.renderTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
+
+            // octa1 -> equi2
+            pc.reprojectTexture(device, textureOcta, textureEqui2, 16, 512);
+            app.renderTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
+
+
         });
     </script>
 </body>

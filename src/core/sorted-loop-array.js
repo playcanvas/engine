@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.SortedLoopArray
+ * @name SortedLoopArray
  * @classdesc Helper class used to hold an array of items in a specific order. This array is safe to modify
  * while we loop through it. The class assumes that it holds objects that need to be sorted based on
  * one of their fields.
@@ -33,7 +33,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#_binarySearch
+     * @name SortedLoopArray#_binarySearch
      * @description Searches for the right spot to insert the specified item.
      * @param {object} item - The item.
      * @returns {number} The index where to insert the item.
@@ -66,7 +66,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#insert
+     * @name SortedLoopArray#insert
      * @description Inserts the specified item into the array at the right
      * index based on the 'sortBy' field passed into the constructor. This
      * also adjusts the loopIndex accordingly.
@@ -84,7 +84,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#append
+     * @name SortedLoopArray#append
      * @description Appends the specified item to the end of the array. Faster than insert()
      * as it does not binary search for the right index. This also adjusts
      * the loopIndex accordingly.
@@ -98,7 +98,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#remove
+     * @name SortedLoopArray#remove
      * @description Removes the specified item from the array.
      * @param {object} item - The item to remove.
      */
@@ -116,7 +116,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#sort
+     * @name SortedLoopArray#sort
      * @description Sorts elements in the array based on the 'sortBy' field
      * passed into the constructor. This also updates the loopIndex
      * if we are currently looping.
