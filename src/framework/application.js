@@ -746,7 +746,6 @@ class Application extends EventHandler {
         this.loader.addHandler("css", new CssHandler());
         this.loader.addHandler("shader", new ShaderHandler());
         this.loader.addHandler("hierarchy", new HierarchyHandler(this));
-        this.loader.addHandler("scenesettings", new SceneSettingsHandler(this));
         this.loader.addHandler("folder", new FolderHandler());
         this.loader.addHandler("font", new FontHandler(this.loader));
         this.loader.addHandler("binary", new BinaryHandler());

@@ -1,4 +1,15 @@
 describe("pc.SceneRegistry", function () {
+    var app;
+
+    beforeEach(function () {
+        app = new pc.Application(document.createElement("canvas"));
+        app.systems.add(new pc.DummyComponentSystem(app));
+    });
+
+    afterEach(function () {
+        app.destroy();
+    });
+
     it("new registry is empty", function () {
         var registry = new pc.SceneRegistry();
 
@@ -88,5 +99,39 @@ describe("pc.SceneRegistry", function () {
         expect(registry.findByUrl("/test2.json")).to.equal(null);
         expect(registry.findByUrl("/test3.json").name).to.equal("New Scene 3");
     });
-});
 
+    it("load and cache, check data is valid, unload data, check data is removed with SceneItem", function () {
+        var registry = new pc.SceneRegistry(app);
+        registry.add("New Scene 1", "/test1.json");
+
+        var sceneItem = registry.find("New Scene 1");
+        registry.loadSceneData(sceneItem, function (err, sceneItem) {
+            expect(err).to.null;
+            expect(sceneItem.data).to.exist;
+            expect(sceneItem._loading).to.equal(false);
+
+            registry.unloadSceneData(sceneItem);
+            expect(sceneItem.data).to.null;
+            expect(sceneItem._loading).to.equal(false);
+
+            done();
+        });
+    });
+
+    it("load and cache, check data is valid, unload data, check data is removed with Urls", function () {
+        var registry = new pc.SceneRegistry(app);
+        registry.add("New Scene 1", "/test1.json");
+
+        registry.loadSceneData("test1.json", function (err, sceneItem) {
+            expect(err).to.null;
+            expect(sceneItem.data).to.exist;
+            expect(sceneItem._loading).to.equal(false);
+
+            registry.unloadSceneData("test1.json");
+            expect(sceneItem.data).to.null;
+            expect(sceneItem._loading).to.equal(false);
+
+            done();
+        });
+    });
+});

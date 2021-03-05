@@ -150,7 +150,7 @@ To build the source map to allow for easier engine debugging, you can add `-- -m
 
 This will output to `build/output/playcanvas.js.map`
 
-Note: The preprocessor is ignored when when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
+Note: The preprocessor is ignored when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
 
 ## How to run tests
 
