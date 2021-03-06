@@ -73,7 +73,7 @@ class Vec3 {
      *
      * a.add(b);
      *
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
     add(rhs) {
@@ -97,7 +97,7 @@ class Vec3 {
      * var r = new pc.Vec3();
      *
      * r.add2(a, b);
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      *
      * console.log("The result of the addition is: " + r.toString());
      */
@@ -120,7 +120,7 @@ class Vec3 {
      *
      * vec.addScalar(2);
      *
-     * // Should output [5, 6, 7]
+     * // Outputs [5, 6, 7]
      * console.log("The result of the addition is: " + a.toString());
      */
     addScalar(scalar) {
@@ -227,7 +227,7 @@ class Vec3 {
      *
      * a.div(b);
      *
-     * // Should output [2, 3, 4]
+     * // Outputs [2, 3, 4]
      * console.log("The result of the division is: " + a.toString());
      */
     div(rhs) {
@@ -252,7 +252,7 @@ class Vec3 {
      * var r = new pc.Vec3();
      *
      * r.add2(a, b);
-     * // Should output [2, 3, 4]
+     * // Outputs [2, 3, 4]
      *
      * console.log("The result of the division is: " + r.toString());
      */
@@ -275,7 +275,7 @@ class Vec3 {
      *
      * vec.divScalar(3);
      *
-     * // Should output [1, 2, 3]
+     * // Outputs [1, 2, 3]
      * console.log("The result of the division is: " + a.toString());
      */
     divScalar(scalar) {
@@ -325,7 +325,7 @@ class Vec3 {
      * @example
      * var vec = new pc.Vec3(3, 4, 0);
      * var len = vec.length();
-     * // Should output 5
+     * // Outputs 5
      * console.log("The length of the vector is: " + len);
      */
     length() {
@@ -340,7 +340,7 @@ class Vec3 {
      * @example
      * var vec = new pc.Vec3(3, 4, 0);
      * var len = vec.lengthSq();
-     * // Should output 25
+     * // Outputs 25
      * console.log("The length squared of the vector is: " + len);
      */
     lengthSq() {
@@ -386,7 +386,7 @@ class Vec3 {
      *
      * a.mul(b);
      *
-     * // Should output 8, 15, 24
+     * // Outputs 8, 15, 24
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mul(rhs) {
@@ -411,7 +411,7 @@ class Vec3 {
      *
      * r.mul2(a, b);
      *
-     * // Should output 8, 15, 24
+     * // Outputs 8, 15, 24
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
@@ -433,7 +433,7 @@ class Vec3 {
      *
      * vec.divScalar(3);
      *
-     * // Should output [9, 18, 27]
+     * // Outputs [9, 18, 27]
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mulScalar(scalar) {
@@ -455,7 +455,7 @@ class Vec3 {
      *
      * v.normalize();
      *
-     * // Should output 1, 0, 0
+     * // Outputs 1, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
@@ -482,7 +482,7 @@ class Vec3 {
      *
      * v.project(normal);
      *
-     * // Should output 5, 0, 0
+     * // Outputs 5, 0, 0
      * console.log("The result of the vector projection is: " + v.toString());
      */
     project(rhs) {
@@ -507,7 +507,7 @@ class Vec3 {
      * var v = new pc.Vec3();
      * v.set(5, 10, 20);
      *
-     * // Should output 5, 10, 20
+     * // Outputs 5, 10, 20
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z) {
@@ -530,7 +530,7 @@ class Vec3 {
      *
      * a.sub(b);
      *
-     * // Should output [-10, -10, -10]
+     * // Outputs [-10, -10, -10]
      * console.log("The result of the subtraction is: " + a.toString());
      */
     sub(rhs) {
@@ -555,7 +555,7 @@ class Vec3 {
      *
      * r.sub2(a, b);
      *
-     * // Should output [-10, -10, -10]
+     * // Outputs [-10, -10, -10]
      * console.log("The result of the subtraction is: " + r.toString());
      */
     sub2(lhs, rhs) {
@@ -577,7 +577,7 @@ class Vec3 {
      *
      * vec.subScalar(2);
      *
-     * // Should output [1, 2, 3]
+     * // Outputs [1, 2, 3]
      * console.log("The result of the subtraction is: " + a.toString());
      */
     subScalar(scalar) {
@@ -595,7 +595,7 @@ class Vec3 {
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec3(20, 10, 5);
-     * // Should output '[20, 10, 5]'
+     * // Outputs '[20, 10, 5]'
      * console.log(v.toString());
      */
     toString() {

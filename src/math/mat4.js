@@ -1255,7 +1255,7 @@ class Mat4 {
      * @returns {string} The matrix in string form.
      * @example
      * var m = new pc.Mat4();
-     * // Should output '[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]'
+     * // Outputs '[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]'
      * console.log(m.toString());
      */
     toString() {

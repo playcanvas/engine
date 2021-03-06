@@ -93,7 +93,7 @@ class Vec4 {
      *
      * a.add(b);
      *
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
     add(rhs) {
@@ -118,7 +118,7 @@ class Vec4 {
      * var r = new pc.Vec4();
      *
      * r.add2(a, b);
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      *
      * console.log("The result of the addition is: " + r.toString());
      */
@@ -142,7 +142,7 @@ class Vec4 {
      *
      * vec.addScalar(2);
      *
-     * // Should output [5, 6, 7, 8]
+     * // Outputs [5, 6, 7, 8]
      * console.log("The result of the addition is: " + a.toString());
      */
     addScalar(scalar) {
@@ -203,7 +203,7 @@ class Vec4 {
      *
      * a.div(b);
      *
-     * // Should output [2, 3, 4, 5]
+     * // Outputs [2, 3, 4, 5]
      * console.log("The result of the division is: " + a.toString());
      */
     div(rhs) {
@@ -229,7 +229,7 @@ class Vec4 {
      * var r = new pc.Vec4();
      *
      * r.add2(a, b);
-     * // Should output [2, 3, 4, 5]
+     * // Outputs [2, 3, 4, 5]
      *
      * console.log("The result of the division is: " + r.toString());
      */
@@ -253,7 +253,7 @@ class Vec4 {
      *
      * vec.divScalar(3);
      *
-     * // Should output [1, 2, 3, 4]
+     * // Outputs [1, 2, 3, 4]
      * console.log("The result of the division is: " + a.toString());
      */
     divScalar(scalar) {
@@ -304,7 +304,7 @@ class Vec4 {
      * @example
      * var vec = new pc.Vec4(3, 4, 0, 0);
      * var len = vec.length();
-     * // Should output 5
+     * // Outputs 5
      * console.log("The length of the vector is: " + len);
      */
     length() {
@@ -319,7 +319,7 @@ class Vec4 {
      * @example
      * var vec = new pc.Vec4(3, 4, 0);
      * var len = vec.lengthSq();
-     * // Should output 25
+     * // Outputs 25
      * console.log("The length squared of the vector is: " + len);
      */
     lengthSq() {
@@ -366,7 +366,7 @@ class Vec4 {
      *
      * a.mul(b);
      *
-     * // Should output 8, 15, 24, 35
+     * // Outputs 8, 15, 24, 35
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mul(rhs) {
@@ -392,7 +392,7 @@ class Vec4 {
      *
      * r.mul2(a, b);
      *
-     * // Should output 8, 15, 24, 35
+     * // Outputs 8, 15, 24, 35
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
@@ -415,7 +415,7 @@ class Vec4 {
      *
      * vec.divScalar(3);
      *
-     * // Should output [9, 18, 27, 36]
+     * // Outputs [9, 18, 27, 36]
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mulScalar(scalar) {
@@ -438,7 +438,7 @@ class Vec4 {
      *
      * v.normalize();
      *
-     * // Should output 1, 0, 0, 0
+     * // Outputs 1, 0, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
@@ -467,7 +467,7 @@ class Vec4 {
      * var v = new pc.Vec4();
      * v.set(5, 10, 20, 40);
      *
-     * // Should output 5, 10, 20, 40
+     * // Outputs 5, 10, 20, 40
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z, w) {
@@ -491,7 +491,7 @@ class Vec4 {
      *
      * a.sub(b);
      *
-     * // Should output [-10, -10, -10, -10]
+     * // Outputs [-10, -10, -10, -10]
      * console.log("The result of the subtraction is: " + a.toString());
      */
     sub(rhs) {
@@ -517,7 +517,7 @@ class Vec4 {
      *
      * r.sub2(a, b);
      *
-     * // Should output [-10, -10, -10, -10]
+     * // Outputs [-10, -10, -10, -10]
      * console.log("The result of the subtraction is: " + r.toString());
      */
     sub2(lhs, rhs) {
@@ -540,7 +540,7 @@ class Vec4 {
      *
      * vec.subScalar(2);
      *
-     * // Should output [1, 2, 3, 4]
+     * // Outputs [1, 2, 3, 4]
      * console.log("The result of the subtraction is: " + a.toString());
      */
     subScalar(scalar) {
@@ -559,7 +559,7 @@ class Vec4 {
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec4(20, 10, 5, 0);
-     * // Should output '[20, 10, 5, 0]'
+     * // Outputs '[20, 10, 5, 0]'
      * console.log(v.toString());
      */
     toString() {
