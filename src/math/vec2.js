@@ -95,6 +95,27 @@ class Vec2 {
 
     /**
      * @function
+     * @name Vec2#addScalar
+     * @description Adds a number to each element of a vector.
+     * @param {number} scalar - The number to add.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * var vec = new pc.Vec2(3, 4);
+     *
+     * vec.addScalar(2);
+     *
+     * // Should output [5, 6]
+     * console.log("The result of the addition is: " + a.toString());
+     */
+    addScalar(scalar) {
+        this.x += scalar;
+        this.y += scalar;
+
+        return this;
+    }
+
+    /**
+     * @function
      * @name Vec2#clone
      * @description Returns an identical copy of the specified 2-dimensional vector.
      * @returns {Vec2} A 2-dimensional vector containing the result of the cloning.
@@ -162,6 +183,74 @@ class Vec2 {
         var x = this.x - rhs.x;
         var y = this.y - rhs.y;
         return Math.sqrt(x * x + y * y);
+    }
+
+    /**
+     * @function
+     * @name Vec2#div
+     * @description Divides a 2-dimensional vector by another in place.
+     * @param {Vec2} rhs - The vector to divide the specified vector by.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * var a = new pc.Vec2(4, 9);
+     * var b = new pc.Vec2(2, 3);
+     *
+     * a.div(b);
+     *
+     * // Should output [2, 3]
+     * console.log("The result of the division is: " + a.toString());
+     */
+    div(rhs) {
+        this.x /= rhs.x;
+        this.y /= rhs.y;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#div2
+     * @description Divides one 2-dimensional vector by another and writes the result to
+     * the specified vector.
+     * @param {Vec2} lhs - The dividend vector (the vector being divided).
+     * @param {Vec2} rhs - The divisor vector (the vector dividing the dividend).
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * var a = new pc.Vec2(4, 9);
+     * var b = new pc.Vec2(2, 3);
+     * var r = new pc.Vec2();
+     *
+     * r.add2(a, b);
+     * // Should output [2, 3]
+     *
+     * console.log("The result of the division is: " + r.toString());
+     */
+    div2(lhs, rhs) {
+        this.x = lhs.x / rhs.x;
+        this.y = lhs.y / rhs.y;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#divScalar
+     * @description Divides each element of a vector by a number.
+     * @param {number} scalar - The number to divide by.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * var vec = new pc.Vec2(3, 6);
+     *
+     * vec.divScalar(3);
+     *
+     * // Should output [1, 2]
+     * console.log("The result of the division is: " + a.toString());
+     */
+    divScalar(scalar) {
+        this.x /= scalar;
+        this.y /= scalar;
+
+        return this;
     }
 
     /**
@@ -299,6 +388,27 @@ class Vec2 {
 
     /**
      * @function
+     * @name Vec2#mulScalar
+     * @description Multiplies each element of a vector by a number.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * var vec = new pc.Vec2(3, 6);
+     *
+     * vec.divScalar(3);
+     *
+     * // Should output [9, 18]
+     * console.log("The result of the multiplication is: " + a.toString());
+     */
+    mulScalar(scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+
+        return this;
+    }
+
+    /**
+     * @function
      * @name Vec2#normalize
      * @description Returns this 2-dimensional vector converted to a unit vector in place.
      * If the vector has a length of zero, the vector's elements will be set to zero.
@@ -318,32 +428,6 @@ class Vec2 {
             this.x *= invLength;
             this.y *= invLength;
         }
-
-        return this;
-    }
-
-    /**
-     * @function
-     * @name Vec2#scale
-     * @description Scales each component of the specified 2-dimensional vector by the supplied
-     * scalar value.
-     * @param {number} scalar - The value by which each vector component is multiplied.
-     * @returns {Vec2} Self for chaining.
-     * @example
-     * var v = new pc.Vec2(2, 4);
-     *
-     * // Multiply by 2
-     * v.scale(2);
-     *
-     * // Negate
-     * v.scale(-1);
-     *
-     * // Divide by 2
-     * v.scale(0.5);
-     */
-    scale(scalar) {
-        this.x *= scalar;
-        this.y *= scalar;
 
         return this;
     }
@@ -411,6 +495,27 @@ class Vec2 {
     sub2(lhs, rhs) {
         this.x = lhs.x - rhs.x;
         this.y = lhs.y - rhs.y;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#subScalar
+     * @description Subtracts a number from each element of a vector.
+     * @param {number} scalar - The number to subtract.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * var vec = new pc.Vec2(3, 4);
+     *
+     * vec.subScalar(2);
+     *
+     * // Should output [1, 2]
+     * console.log("The result of the subtraction is: " + a.toString());
+     */
+    subScalar(scalar) {
+        this.x -= scalar;
+        this.y -= scalar;
 
         return this;
     }
