@@ -133,12 +133,12 @@ class Vec4 {
 
     /**
      * @function
-     * @name Vec3#addScalar
+     * @name Vec4#addScalar
      * @description Adds a number to each element of a vector.
      * @param {number} scalar - The number to add.
      * @returns {Vec4} Self for chaining.
      * @example
-     * var vec = new pc.Vec3(3, 4, 5, 6);
+     * var vec = new pc.Vec4(3, 4, 5, 6);
      *
      * vec.addScalar(2);
      *
@@ -193,7 +193,7 @@ class Vec4 {
 
     /**
      * @function
-     * @name Vec3#div
+     * @name Vec4#div
      * @description Divides a 4-dimensional vector by another in place.
      * @param {Vec4} rhs - The vector to divide the specified vector by.
      * @returns {Vec4} Self for chaining.
@@ -224,9 +224,9 @@ class Vec4 {
      * @param {Vec4} rhs - The divisor vector (the vector dividing the dividend).
      * @returns {Vec4} Self for chaining.
      * @example
-     * var a = new pc.Vec3(4, 9, 16, 25);
-     * var b = new pc.Vec3(2, 3, 4, 5);
-     * var r = new pc.Vec3();
+     * var a = new pc.Vec4(4, 9, 16, 25);
+     * var b = new pc.Vec4(2, 3, 4, 5);
+     * var r = new pc.Vec4();
      *
      * r.add2(a, b);
      * // Should output [2, 3, 4, 5]
@@ -411,7 +411,7 @@ class Vec4 {
      * @param {number} scalar - The number to multiply by.
      * @returns {Vec4} Self for chaining.
      * @example
-     * var vec = new pc.Vec3(3, 6, 9, 12);
+     * var vec = new pc.Vec4(3, 6, 9, 12);
      *
      * vec.divScalar(3);
      *
