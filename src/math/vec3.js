@@ -431,7 +431,7 @@ class Vec3 {
      * @example
      * var vec = new pc.Vec3(3, 6, 9);
      *
-     * vec.divScalar(3);
+     * vec.mulScalar(3);
      *
      * // Outputs [9, 18, 27]
      * console.log("The result of the multiplication is: " + vec.toString());

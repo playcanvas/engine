@@ -228,7 +228,7 @@ class Vec4 {
      * var b = new pc.Vec4(2, 3, 4, 5);
      * var r = new pc.Vec4();
      *
-     * r.add2(a, b);
+     * r.div2(a, b);
      * // Outputs [2, 3, 4, 5]
      *
      * console.log("The result of the division is: " + r.toString());
