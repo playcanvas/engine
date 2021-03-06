@@ -595,7 +595,7 @@ class Vec3 {
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec3(20, 10, 5);
-     * // Outputs '[20, 10, 5]'
+     * // Outputs [20, 10, 5]
      * console.log(v.toString());
      */
     toString() {

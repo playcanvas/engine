@@ -527,7 +527,7 @@ class Vec2 {
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec2(20, 10);
-     * // Outputs '[20, 10]'
+     * // Outputs [20, 10]
      * console.log(v.toString());
      */
     toString() {

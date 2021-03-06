@@ -690,7 +690,7 @@ class Quat {
      * @returns {string} The quaternion in string form.
      * @example
      * var v = new pc.Quat(0, 0, 0, 1);
-     * // Outputs '[0, 0, 0, 1]'
+     * // Outputs [0, 0, 0, 1]
      * console.log(v.toString());
      */
     toString() {

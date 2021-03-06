@@ -559,7 +559,7 @@ class Vec4 {
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec4(20, 10, 5, 0);
-     * // Outputs '[20, 10, 5, 0]'
+     * // Outputs [20, 10, 5, 0]
      * console.log(v.toString());
      */
     toString() {
