@@ -220,7 +220,7 @@ class Vec2 {
      * var b = new pc.Vec2(2, 3);
      * var r = new pc.Vec2();
      *
-     * r.add2(a, b);
+     * r.div2(a, b);
      * // Outputs [2, 3]
      *
      * console.log("The result of the division is: " + r.toString());
