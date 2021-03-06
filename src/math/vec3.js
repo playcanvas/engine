@@ -251,7 +251,7 @@ class Vec3 {
      * var b = new pc.Vec3(2, 3, 4);
      * var r = new pc.Vec3();
      *
-     * r.add2(a, b);
+     * r.div2(a, b);
      * // Outputs [2, 3, 4]
      *
      * console.log("The result of the division is: " + r.toString());
