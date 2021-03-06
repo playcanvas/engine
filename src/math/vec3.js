@@ -121,7 +121,7 @@ class Vec3 {
      * vec.addScalar(2);
      *
      * // Outputs [5, 6, 7]
-     * console.log("The result of the addition is: " + a.toString());
+     * console.log("The result of the addition is: " + vec.toString());
      */
     addScalar(scalar) {
         this.x += scalar;
@@ -177,7 +177,7 @@ class Vec3 {
      * @example
      * var back = new pc.Vec3().cross(pc.Vec3.RIGHT, pc.Vec3.UP);
      *
-     * // Should print the Z axis (i.e. [0, 0, 1])
+     * // Prints the Z axis (i.e. [0, 0, 1])
      * console.log("The result of the cross product is: " + back.toString());
      */
     cross(lhs, rhs) {
@@ -276,7 +276,7 @@ class Vec3 {
      * vec.divScalar(3);
      *
      * // Outputs [1, 2, 3]
-     * console.log("The result of the division is: " + a.toString());
+     * console.log("The result of the division is: " + vec.toString());
      */
     divScalar(scalar) {
         this.x /= scalar;
@@ -434,7 +434,7 @@ class Vec3 {
      * vec.divScalar(3);
      *
      * // Outputs [9, 18, 27]
-     * console.log("The result of the multiplication is: " + a.toString());
+     * console.log("The result of the multiplication is: " + vec.toString());
      */
     mulScalar(scalar) {
         this.x *= scalar;
@@ -578,7 +578,7 @@ class Vec3 {
      * vec.subScalar(2);
      *
      * // Outputs [1, 2, 3]
-     * console.log("The result of the subtraction is: " + a.toString());
+     * console.log("The result of the subtraction is: " + vec.toString());
      */
     subScalar(scalar) {
         this.x -= scalar;

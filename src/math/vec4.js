@@ -143,7 +143,7 @@ class Vec4 {
      * vec.addScalar(2);
      *
      * // Outputs [5, 6, 7, 8]
-     * console.log("The result of the addition is: " + a.toString());
+     * console.log("The result of the addition is: " + vec.toString());
      */
     addScalar(scalar) {
         this.x += scalar;
@@ -254,7 +254,7 @@ class Vec4 {
      * vec.divScalar(3);
      *
      * // Outputs [1, 2, 3, 4]
-     * console.log("The result of the division is: " + a.toString());
+     * console.log("The result of the division is: " + vec.toString());
      */
     divScalar(scalar) {
         this.x /= scalar;
@@ -416,7 +416,7 @@ class Vec4 {
      * vec.divScalar(3);
      *
      * // Outputs [9, 18, 27, 36]
-     * console.log("The result of the multiplication is: " + a.toString());
+     * console.log("The result of the multiplication is: " + vec.toString());
      */
     mulScalar(scalar) {
         this.x *= scalar;
@@ -541,7 +541,7 @@ class Vec4 {
      * vec.subScalar(2);
      *
      * // Outputs [1, 2, 3, 4]
-     * console.log("The result of the subtraction is: " + a.toString());
+     * console.log("The result of the subtraction is: " + vec.toString());
      */
     subScalar(scalar) {
         this.x -= scalar;

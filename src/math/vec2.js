@@ -105,7 +105,7 @@ class Vec2 {
      * vec.addScalar(2);
      *
      * // Outputs [5, 6]
-     * console.log("The result of the addition is: " + a.toString());
+     * console.log("The result of the addition is: " + vec.toString());
      */
     addScalar(scalar) {
         this.x += scalar;
@@ -160,7 +160,7 @@ class Vec2 {
      * var up = new pc.Vec2(0, 1);
      * var crossProduct = right.cross(up);
      *
-     * // Should print 1
+     * // Prints 1
      * console.log("The result of the cross product is: " + crossProduct);
      */
     cross(rhs) {
@@ -244,7 +244,7 @@ class Vec2 {
      * vec.divScalar(3);
      *
      * // Outputs [1, 2]
-     * console.log("The result of the division is: " + a.toString());
+     * console.log("The result of the division is: " + vec.toString());
      */
     divScalar(scalar) {
         this.x /= scalar;
@@ -398,7 +398,7 @@ class Vec2 {
      * vec.divScalar(3);
      *
      * // Outputs [9, 18]
-     * console.log("The result of the multiplication is: " + a.toString());
+     * console.log("The result of the multiplication is: " + vec.toString());
      */
     mulScalar(scalar) {
         this.x *= scalar;
@@ -511,7 +511,7 @@ class Vec2 {
      * vec.subScalar(2);
      *
      * // Outputs [1, 2]
-     * console.log("The result of the subtraction is: " + a.toString());
+     * console.log("The result of the subtraction is: " + vec.toString());
      */
     subScalar(scalar) {
         this.x -= scalar;
