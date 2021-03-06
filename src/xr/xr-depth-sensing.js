@@ -2,6 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { Mat4 } from '../math/mat4.js';
 import { Texture } from '../graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../graphics/constants.js';
+import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
 /* eslint-disable jsdoc/check-examples */
 /**
@@ -61,14 +62,21 @@ class XrDepthSensing extends EventHandler {
         super();
 
         this._manager = manager;
-        this._depthInfo = null;
         this._available = false;
+
+        this._depthInfoCpu = null;
+        this._depthInfoGpu = null;
+
+        this._usage = null;
+        this._dataFormat = null;
 
         this._matrixDirty = false;
         this._matrix = new Mat4();
         this._emptyBuffer = new Uint8Array(32);
         this._depthBuffer = null;
 
+        // TODO
+        // data format can be different
         this._texture = new Texture(this._manager.app.graphicsDevice, {
             format: PIXELFORMAT_L8_A8,
             mipmaps: false,
@@ -78,7 +86,10 @@ class XrDepthSensing extends EventHandler {
             magFilter: FILTER_LINEAR
         });
 
-        this._manager.on('end', this._onSessionEnd, this);
+        if (this.supported) {
+            this._manager.on('start', this._onSessionStart, this);
+            this._manager.on('end', this._onSessionEnd, this);
+        }
     }
 
     /**
@@ -105,8 +116,27 @@ class XrDepthSensing extends EventHandler {
      * });
      */
 
+    _onSessionStart() {
+        const session = this._manager.session;
+
+        try {
+            this._usage = session.depthUsage;
+            this._dataFormat = session.depthDataFormat;
+        } catch(ex) {
+            this._usage = null;
+            this._dataFormat = null;
+            this._available = false;
+
+            this.fire('error', ex);
+        }
+    }
+
     _onSessionEnd() {
-        this._depthInfo = null;
+        this._depthInfoCpu = null;
+        this._depthInfoGpu = null;
+
+        this._usage = null;
+        this._dataFormat = null;
 
         if (this._available) {
             this._available = false;
@@ -121,24 +151,30 @@ class XrDepthSensing extends EventHandler {
     }
 
     _updateTexture() {
-        if (this._depthInfo) {
+        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
+
+        if (depthInfo) {
             var resized = false;
 
             // changed resolution
-            if (this._depthInfo.width !== this._texture.width || this._depthInfo.height !== this._texture.height) {
-                this._texture._width = this._depthInfo.width;
-                this._texture._height = this._depthInfo.height;
+            if (depthInfo.width !== this._texture.width || depthInfo.height !== this._texture.height) {
+                this._texture._width = depthInfo.width;
+                this._texture._height = depthInfo.height;
                 this._matrixDirty = true;
                 resized = true;
             }
 
-            var dataBuffer = this._depthInfo.data;
-            this._depthBuffer = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
-            this._texture._levels[0] = this._depthBuffer;
-            this._texture.upload();
+            if (this._depthInfoCpu) {
+                var dataBuffer = this._depthInfoCpu.data;
+                this._depthBuffer = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
+                this._texture._levels[0] = this._depthBuffer;
+                this._texture.upload();
+            } else if (this._depthInfoGpu) {
+                // TODO
+                // GPU usage
+            }
 
-            if (resized) this.fire('resize', this._depthInfo.width, this._depthInfo.height);
-
+            if (resized) this.fire('resize', depthInfo.width, depthInfo.height);
         } else if (this._depthBuffer) {
             // depth info not available anymore
             this._depthBuffer = null;
@@ -150,30 +186,42 @@ class XrDepthSensing extends EventHandler {
     }
 
     update(frame, view) {
-        if (view) {
-            if (! this._depthInfo) this._matrixDirty = true;
-            this._depthInfo = frame.getDepthInformation(view);
+        if (! this._usage)
+            return;
+
+        let depthInfoCpu = null;
+        if (this._usage === XRDEPTHSENSINGUSAGE_CPU && view) {
+            depthInfoCpu = frame.getDepthInformation(view);
         } else {
-            if (this._depthInfo) this._matrixDirty = true;
-            this._depthInfo = null;
+            depthInfoCpu = null;
         }
+
+        if ((this._depthInfoCpu && ! depthInfoCpu) || (! this._depthInfoCpu && depthInfoCpu)) {
+            this._matrixDirty = true;
+        }
+        this._depthInfoCpu = depthInfoCpu;
+
+        // TODO
+        // GPU usage
 
         this._updateTexture();
 
         if (this._matrixDirty) {
             this._matrixDirty = false;
 
-            if (this._depthInfo) {
-                this._matrix.data.set(this._depthInfo.normTextureFromNormView.matrix);
+            let depthInfo = this._depthInfoCpu || this._depthInfoGpu;
+
+            if (depthInfo) {
+                this._matrix.data.set(depthInfo.normDepthBufferFromNormView.matrix);
             } else {
                 this._matrix.setIdentity();
             }
         }
 
-        if (this._depthInfo && ! this._available) {
+        if ((this._depthInfoCpu || this._depthInfoGpu) && ! this._available) {
             this._available = true;
             this.fire('available');
-        } else if (! this._depthInfo && this._available) {
+        } else if (! this._depthInfoCpu && ! this._depthInfoGpu && this._available) {
             this._available = false;
             this.fire('unavailable');
         }
@@ -190,13 +238,16 @@ class XrDepthSensing extends EventHandler {
      * if (depth !== null) {
      *     // depth in meters
      * }
-     * @returns {number|null} Depth in meters or null if depth information is not available.
+     * @returns {number|null} Depth in meters or null if depth information is currently not available.
      */
     getDepth(x, y) {
-        if (! this._depthInfo)
+        // TODO
+        // GPU usage
+
+        if (! this._depthInfoCpu)
             return null;
 
-        return this._depthInfo.getDepth(x, y);
+        return this._depthInfoCpu.getDepthInMeters(x, y);
     }
 
     get supported() {
@@ -214,6 +265,14 @@ class XrDepthSensing extends EventHandler {
      */
     get available() {
         return this._available;
+    }
+
+    get usage() {
+        return this._usage;
+    }
+
+    get dataFormat() {
+        return this._dataFormat;
     }
 
     get width() {
@@ -269,6 +328,12 @@ class XrDepthSensing extends EventHandler {
      */
     get uvMatrix() {
         return this._matrix;
+    }
+
+    get rawValueToMeters() {
+        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
+        if (! depthInfo) return null;
+        return depthInfo.rawValueToMeters;
     }
 }
 

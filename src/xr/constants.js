@@ -149,3 +149,35 @@ export const XRTRACKABLE_PLANE = 'plane';
  * @description Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
  */
 export const XRTRACKABLE_MESH = 'mesh';
+
+/**
+ * @constant
+ * @type string
+ * @name XRDEPTHSENSINGUSAGE_CPU
+ * @description CPU - indicates that depth sensing preferred usage is CPU. This usage path is guaranteed to be supported.
+ */
+export const XRDEPTHSENSINGUSAGE_CPU = 'cpu-optimized';
+
+/**
+ * @constant
+ * @type string
+ * @name XRDEPTHSENSINGUSAGE_GPU
+ * @description GPU - indicates that depth sensing preferred usage is GPU.
+ */
+export const XRDEPTHSENSINGUSAGE_GPU = 'gpu-optimized';
+
+/**
+ * @constant
+ * @type string
+ * @name XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA
+ * @description Luminance Alpha - indicates that depth sensing preferred raw data format is Luminance Alpha. This format is guaranteed to be supported.
+ */
+export const XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA = 'luminance-alpha';
+
+/**
+ * @constant
+ * @type string
+ * @name XRDEPTHSENSINGDATAFORMAT_FLOAT32
+ * @description Float 32 - indicates that depth sensing preferred raw data format is Float 32.
+ */
+export const XRDEPTHSENSINGDATAFORMAT_FLOAT32 = 'float32';

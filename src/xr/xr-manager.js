@@ -6,7 +6,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
-import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
@@ -219,7 +219,6 @@ class XrManager extends EventHandler {
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
-            opts.optionalFeatures.push('depth-sensing');
 
             if (options && options.imageTracking) {
                 opts.optionalFeatures.push('image-tracking');
@@ -228,6 +227,28 @@ class XrManager extends EventHandler {
             if (this.domOverlay.root) {
                 opts.optionalFeatures.push('dom-overlay');
                 opts.domOverlay = { root: this.domOverlay.root };
+            }
+
+            if (this.depthSensing.supported) {
+                opts.optionalFeatures.push('depth-sensing');
+
+                let usagePreference = [ XRDEPTHSENSINGUSAGE_CPU ];
+                let dataFormatPreference = [ XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA ];
+
+                if (options && options.depthSensing) {
+                    if (options.depthSensing.usagePreference && usagePreference[0] !== options.depthSensing.usagePreference)
+                        usagePreference.unshift(options.depthSensing.usagePreference);
+
+                    if (options.depthSensing.dataFormatPreference && dataFormatPreference[0] !== options.depthSensing.dataFormatPreference)
+                        dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                }
+
+                opts.depthSensing = {
+                    usagePreference: usagePreference,
+                    dataFormatPreference : dataFormatPreference
+                };
+
+                console.log(opts.depthSensing);
             }
         } else if (type === XRTYPE_VR) {
             opts.optionalFeatures.push('hand-tracking');
