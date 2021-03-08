@@ -242,7 +242,7 @@ describe("pc.Vec2", function () {
     });
 
     it("subScalar", function() {
-        var v = new pc.Vec2(2, 4, 6);
+        var v = new pc.Vec2(2, 4);
 
         v.subScalar(2);
 
@@ -259,4 +259,3 @@ describe("pc.Vec2", function () {
     });
 
 });
-
