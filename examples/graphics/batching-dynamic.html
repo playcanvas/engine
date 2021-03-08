@@ -61,16 +61,15 @@
 
             var entity = new pc.Entity();
 
-            // randomly create render or model component
-            var componentType = Math.random() < 0.5 ? "render" : "model";
-            var component = entity.addComponent(componentType, {
+            // create render component
+            var component = entity.addComponent("render", {
                 type: shapeName,
-                material: Math.random() < 0.5 ? material1 : material2
-            });
+                material: Math.random() < 0.5 ? material1 : material2,
 
-            // add the entity to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls
-            // there will be at least 2 draw calls, one for each material
-            component.batchGroupId = batchGroup.id;
+                // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
+                // there will be at least 2 draw calls, one for each material
+                batchGroupId: batchGroup.id
+            });
 
             // add entity for rendering
             app.root.addChild(entity);

@@ -24,7 +24,6 @@ var categories = [
             "layers",
             "lights",
             "lights-baked",
-            "lights-baked-render",
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",

@@ -40,8 +40,8 @@
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
-            // create an instance using render component
-            var entity = asset.resource.instantiateRenderEntity({
+            // create instance using model component
+            var entity = asset.resource.instantiateModelEntity({
                 castShadows: true
             });
             app.root.addChild(entity);
