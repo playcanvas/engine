@@ -82,14 +82,14 @@ class RenderComponentSystem extends ComponentSystem {
         delete data.meshInstances;
 
         // clone component
-        var component = this.addComponent(clone, data);
+        const component = this.addComponent(clone, data);
 
         // clone mesh instances
-        const meshes = entity.render.meshInstances.map(mi => mi.mesh);
+        const srcMeshInstances = entity.render.meshInstances;
+        const meshes = srcMeshInstances.map(mi => mi.mesh);
         component._onSetMeshes(meshes);
 
         // assign materials
-        const srcMeshInstances = entity.render.meshInstances;
         for (let m = 0; m < srcMeshInstances.length; m++) {
             component.meshInstances[m].material = srcMeshInstances[m].material;
         }
