@@ -413,7 +413,7 @@ class Vec4 {
      * @example
      * var vec = new pc.Vec4(3, 6, 9, 12);
      *
-     * vec.divScalar(3);
+     * vec.mulScalar(3);
      *
      * // Outputs [9, 18, 27, 36]
      * console.log("The result of the multiplication is: " + vec.toString());
