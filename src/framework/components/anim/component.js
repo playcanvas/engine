@@ -365,8 +365,15 @@ class AnimComponent extends Component {
         return this.data.rootBone;
     }
 
-    set rootBone(entity) {
-        this.data.rootBone = entity;
+    set rootBone(value) {
+        if (typeof value === 'string') {
+            const entity = this.entity.root.findByGuid(value);
+            if (entity) this.data.rootBone = entity;
+        } else if (value?.constructor.name === 'Entity') {
+            this.data.rootBone = value;
+        } else {
+            this.data.rootBone = null;
+        }
         this.rebind();
     }
 

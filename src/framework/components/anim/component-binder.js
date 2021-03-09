@@ -266,6 +266,8 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
         if (this.animComponent.rootBone) {
             this.graph = this.animComponent.rootBone;
+        } else {
+            this.graph = this.animComponent.entity;
         }
 
         var nodes = { };
