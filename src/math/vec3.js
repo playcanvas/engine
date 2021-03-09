@@ -73,7 +73,7 @@ class Vec3 {
      *
      * a.add(b);
      *
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
     add(rhs) {
@@ -97,7 +97,7 @@ class Vec3 {
      * var r = new pc.Vec3();
      *
      * r.add2(a, b);
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      *
      * console.log("The result of the addition is: " + r.toString());
      */
@@ -105,6 +105,28 @@ class Vec3 {
         this.x = lhs.x + rhs.x;
         this.y = lhs.y + rhs.y;
         this.z = lhs.z + rhs.z;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#addScalar
+     * @description Adds a number to each element of a vector.
+     * @param {number} scalar - The number to add.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var vec = new pc.Vec3(3, 4, 5);
+     *
+     * vec.addScalar(2);
+     *
+     * // Outputs [5, 6, 7]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScalar(scalar) {
+        this.x += scalar;
+        this.y += scalar;
+        this.z += scalar;
 
         return this;
     }
@@ -155,7 +177,7 @@ class Vec3 {
      * @example
      * var back = new pc.Vec3().cross(pc.Vec3.RIGHT, pc.Vec3.UP);
      *
-     * // Should print the Z axis (i.e. [0, 0, 1])
+     * // Prints the Z axis (i.e. [0, 0, 1])
      * console.log("The result of the cross product is: " + back.toString());
      */
     cross(lhs, rhs) {
@@ -191,6 +213,77 @@ class Vec3 {
         var y = this.y - rhs.y;
         var z = this.z - rhs.z;
         return Math.sqrt(x * x + y * y + z * z);
+    }
+
+    /**
+     * @function
+     * @name Vec3#div
+     * @description Divides a 3-dimensional vector by another in place.
+     * @param {Vec3} rhs - The vector to divide the specified vector by.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var a = new pc.Vec3(4, 9, 16);
+     * var b = new pc.Vec3(2, 3, 4);
+     *
+     * a.div(b);
+     *
+     * // Outputs [2, 3, 4]
+     * console.log("The result of the division is: " + a.toString());
+     */
+    div(rhs) {
+        this.x /= rhs.x;
+        this.y /= rhs.y;
+        this.z /= rhs.z;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#div2
+     * @description Divides one 3-dimensional vector by another and writes the result to
+     * the specified vector.
+     * @param {Vec3} lhs - The dividend vector (the vector being divided).
+     * @param {Vec3} rhs - The divisor vector (the vector dividing the dividend).
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var a = new pc.Vec3(4, 9, 16);
+     * var b = new pc.Vec3(2, 3, 4);
+     * var r = new pc.Vec3();
+     *
+     * r.div2(a, b);
+     * // Outputs [2, 3, 4]
+     *
+     * console.log("The result of the division is: " + r.toString());
+     */
+    div2(lhs, rhs) {
+        this.x = lhs.x / rhs.x;
+        this.y = lhs.y / rhs.y;
+        this.z = lhs.z / rhs.z;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#divScalar
+     * @description Divides each element of a vector by a number.
+     * @param {number} scalar - The number to divide by.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var vec = new pc.Vec3(3, 6, 9);
+     *
+     * vec.divScalar(3);
+     *
+     * // Outputs [1, 2, 3]
+     * console.log("The result of the division is: " + vec.toString());
+     */
+    divScalar(scalar) {
+        this.x /= scalar;
+        this.y /= scalar;
+        this.z /= scalar;
+
+        return this;
     }
 
     /**
@@ -232,7 +325,7 @@ class Vec3 {
      * @example
      * var vec = new pc.Vec3(3, 4, 0);
      * var len = vec.length();
-     * // Should output 5
+     * // Outputs 5
      * console.log("The length of the vector is: " + len);
      */
     length() {
@@ -247,7 +340,7 @@ class Vec3 {
      * @example
      * var vec = new pc.Vec3(3, 4, 0);
      * var len = vec.lengthSq();
-     * // Should output 25
+     * // Outputs 25
      * console.log("The length squared of the vector is: " + len);
      */
     lengthSq() {
@@ -293,7 +386,7 @@ class Vec3 {
      *
      * a.mul(b);
      *
-     * // Should output 8, 15, 24
+     * // Outputs 8, 15, 24
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mul(rhs) {
@@ -318,13 +411,35 @@ class Vec3 {
      *
      * r.mul2(a, b);
      *
-     * // Should output 8, 15, 24
+     * // Outputs 8, 15, 24
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
         this.x = lhs.x * rhs.x;
         this.y = lhs.y * rhs.y;
         this.z = lhs.z * rhs.z;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#mulScalar
+     * @description Multiplies each element of a vector by a number.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var vec = new pc.Vec3(3, 6, 9);
+     *
+     * vec.mulScalar(3);
+     *
+     * // Outputs [9, 18, 27]
+     * console.log("The result of the multiplication is: " + vec.toString());
+     */
+    mulScalar(scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
 
         return this;
     }
@@ -340,7 +455,7 @@ class Vec3 {
      *
      * v.normalize();
      *
-     * // Should output 1, 0, 0
+     * // Outputs 1, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
@@ -367,7 +482,7 @@ class Vec3 {
      *
      * v.project(normal);
      *
-     * // Should output 5, 0, 0
+     * // Outputs 5, 0, 0
      * console.log("The result of the vector projection is: " + v.toString());
      */
     project(rhs) {
@@ -377,33 +492,6 @@ class Vec3 {
         this.x = rhs.x * s;
         this.y = rhs.y * s;
         this.z = rhs.z * s;
-        return this;
-    }
-
-    /**
-     * @function
-     * @name Vec3#scale
-     * @description Scales each dimension of the specified 3-dimensional vector by the supplied
-     * scalar value.
-     * @param {number} scalar - The value by which each vector component is multiplied.
-     * @returns {Vec3} Self for chaining.
-     * @example
-     * var v = new pc.Vec3(2, 4, 8);
-     *
-     * // Multiply by 2
-     * v.scale(2);
-     *
-     * // Negate
-     * v.scale(-1);
-     *
-     * // Divide by 2
-     * v.scale(0.5);
-     */
-    scale(scalar) {
-        this.x *= scalar;
-        this.y *= scalar;
-        this.z *= scalar;
-
         return this;
     }
 
@@ -419,7 +507,7 @@ class Vec3 {
      * var v = new pc.Vec3();
      * v.set(5, 10, 20);
      *
-     * // Should output 5, 10, 20
+     * // Outputs 5, 10, 20
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z) {
@@ -442,7 +530,7 @@ class Vec3 {
      *
      * a.sub(b);
      *
-     * // Should output [-10, -10, -10]
+     * // Outputs [-10, -10, -10]
      * console.log("The result of the subtraction is: " + a.toString());
      */
     sub(rhs) {
@@ -467,7 +555,7 @@ class Vec3 {
      *
      * r.sub2(a, b);
      *
-     * // Should output [-10, -10, -10]
+     * // Outputs [-10, -10, -10]
      * console.log("The result of the subtraction is: " + r.toString());
      */
     sub2(lhs, rhs) {
@@ -480,12 +568,34 @@ class Vec3 {
 
     /**
      * @function
+     * @name Vec3#subScalar
+     * @description Subtracts a number from each element of a vector.
+     * @param {number} scalar - The number to subtract.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var vec = new pc.Vec3(3, 4, 5);
+     *
+     * vec.subScalar(2);
+     *
+     * // Outputs [1, 2, 3]
+     * console.log("The result of the subtraction is: " + vec.toString());
+     */
+    subScalar(scalar) {
+        this.x -= scalar;
+        this.y -= scalar;
+        this.z -= scalar;
+
+        return this;
+    }
+
+    /**
+     * @function
      * @name Vec3#toString
      * @description Converts the vector to string form.
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec3(20, 10, 5);
-     * // Should output '[20, 10, 5]'
+     * // Outputs [20, 10, 5]
      * console.log(v.toString());
      */
     toString() {
