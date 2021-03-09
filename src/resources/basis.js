@@ -482,8 +482,8 @@ function basisDownloadFromConfig(callback) {
             // #endif
             return false;
         }
-        return true;
     }
+    return true;
 }
 
 // render thread worker manager
