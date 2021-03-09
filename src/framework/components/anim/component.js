@@ -11,6 +11,7 @@ import {
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
+import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
  * @component
@@ -51,10 +52,9 @@ class AnimComponent extends Component {
         data.layers = [];
 
         var graph;
-        if (this.entity.model?.model?.graph) {
-            graph = this.entity.model?.model?.graph;
+        if (this.rootBone) {
+            graph = this.rootBone;
         } else {
-            // animating hierarchy without model
             graph = this.entity;
         }
 
@@ -354,6 +354,20 @@ class AnimComponent extends Component {
      */
     resetTrigger(name) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, false);
+    }
+
+    /**
+     * @name AnimComponent#rootBone
+     * @type {Entity}
+     * @description The entity that this anim component should use as the root of the animation hierarchy
+     */
+    get rootBone() {
+        return this.data.rootBone;
+    }
+
+    set rootBone(entity) {
+        this.data.rootBone = entity;
+        this.rebind();
     }
 
     /**

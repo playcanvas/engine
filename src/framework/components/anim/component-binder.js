@@ -264,8 +264,8 @@ class AnimComponentBinder extends DefaultAnimBinder {
         this.visitedFallbackGraphPaths = {};
         // #endif
 
-        if (this.animComponent.entity.model?.model?.graph) {
-            this.graph = this.animComponent.entity.model?.model?.graph;
+        if (this.animComponent.rootBone) {
+            this.graph = this.animComponent.rootBone;
         }
 
         var nodes = { };

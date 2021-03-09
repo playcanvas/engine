@@ -248,6 +248,7 @@ var _deprecationWarning = false;
  * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
+ * * anim ({@link AnimComponentSystem})
  * * animation ({@link AnimationComponentSystem})
  * * audiolistener ({@link AudioListenerComponentSystem})
  * * button ({@link ButtonComponentSystem})

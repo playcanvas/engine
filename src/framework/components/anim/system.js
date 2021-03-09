@@ -43,6 +43,9 @@ class AnimComponentSystem extends ComponentSystem {
         if (data.animationAssets) {
             component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
         }
+        if (data.rootBone) {
+            component.rootBone = data.rootBone;
+        }
     }
 
     onAnimationUpdate(dt) {

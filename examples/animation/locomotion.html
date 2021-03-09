@@ -234,28 +234,26 @@
 
             app.start();
 
-            var modelEntity = new pc.Entity();
-            modelEntity.name = 'modelEntity';
+            var characterEntity = new pc.Entity();
 
-            modelEntity.addComponent("model", {
-                enabled: true,
-                type: "asset",
-                asset: model.resource.model,
+            var renderEntity = model.resource.instantiateRenderEntity({
                 castShadows: true
             });
 
-            modelEntity.addComponent('anim', {
-                activate: true,
+            characterEntity.addChild(renderEntity);
+
+            characterEntity.addComponent('anim', {
+                activate: true
             });
 
-            modelEntity.anim.loadStateGraph(stateGraph);
-            var locomotionLayer = modelEntity.anim.baseLayer;
+            characterEntity.anim.loadStateGraph(stateGraph);
+            var locomotionLayer = characterEntity.anim.baseLayer;
             locomotionLayer.assignAnimation('Idle', idleAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Walk', walkAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Jog', jogAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Jump', jumpAnim.resource.animations[0].resource);
 
-            app.root.addChild(modelEntity);
+            app.root.addChild(characterEntity);
 
             var planeEntity = new pc.Entity();
             planeEntity.name = 'Plane';
@@ -298,10 +296,10 @@
             });
             jumpButton.dom.setAttribute('style', 'width: 100%;')
             jumpButton.on('click', function() {
-                var isJumping = modelEntity.anim.baseLayer.activeState === 'Jump';
+                var isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
                 if (!isJumping) {
                     this.jumpTime = 0;
-                    modelEntity.anim.setTrigger('jump');
+                    characterEntity.anim.setTrigger('jump');
                 }
             });
             controlPanel.append(jumpButton);
@@ -314,9 +312,9 @@
             });
             jogToggle.on('change', function(value) {
                 if (value) {
-                    modelEntity.anim.setInteger('speed', 2);
+                    characterEntity.anim.setInteger('speed', 2);
                 } else {
-                    modelEntity.anim.setInteger('speed', 1);
+                    characterEntity.anim.setInteger('speed', 1);
                 }
             });
             controlPanel.append(jogToggle);
@@ -331,7 +329,7 @@
             var Locomotion = pc.createScript('Locomotion');
 
             var characterDirection = new pc.Vec3(1, 0, 0);
-            var targetPosition = new pc.Vec3(2,0,1.5);;
+            var targetPosition = new pc.Vec3(2, 0, 2);
 
             // initialize code called once per entity
             Locomotion.prototype.initialize = function() {
@@ -349,7 +347,7 @@
                 var result = app.systems.rigidbody.raycastFirst(far, near);
                 if (result) {
                     targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
-                    modelEntity.anim.setInteger('speed', jogToggle.value ? 2 : 1);
+                    characterEntity.anim.setInteger('speed', jogToggle.value ? 2 : 1);
                 }
             };
 
@@ -366,58 +364,60 @@
                 }
             }
 
+            var currentPosition = new pc.Vec3(0,0,0);
+
             // update code called every frame
             Locomotion.prototype.postUpdate = function(dt) {
                 
                 // Check for jumping event
                 if(keyboard.wasPressed(pc.KEY_SPACE)) {
-                    var isJumping = modelEntity.anim.baseLayer.activeState === 'Jump';
+                    var isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
                     if (!isJumping) {
                         this.jumpTime = 0;
-                        modelEntity.anim.setTrigger('jump');
+                        characterEntity.anim.setTrigger('jump');
                     }
                 }
                 
                 // Check for jogging event    
                 if (keyboard.wasPressed(pc.KEY_X)) {
-                    if (modelEntity.anim.baseLayer.activeState === 'Walk') {
-                        modelEntity.anim.setInteger('speed', 2);
+                    if (characterEntity.anim.baseLayer.activeState === 'Walk') {
+                        characterEntity.anim.setInteger('speed', 2);
                     }
                 }
                 else if (keyboard.wasReleased(pc.KEY_X)) {
-                    if (modelEntity.anim.baseLayer.activeState === 'Jog') {
-                        modelEntity.anim.setInteger('speed', 1);
+                    if (characterEntity.anim.baseLayer.activeState === 'Jog') {
+                        characterEntity.anim.setInteger('speed', 1);
                     }
                 }
 
-                this.isMoving = !modelEntity.position.equals(targetPosition);
-                if (this.isMoving) {
+                if (characterEntity.anim.getInteger('speed')) {
                     // Update position if target position is not the same as entity position. Base the movement speed on the current state
                     // Move the character along X & Z axis based on click target position & make character face click direction
-                    var moveSpeed = speedForState(modelEntity.anim.baseLayer.activeState);
-                    if (modelEntity.anim.baseLayer.transitioning) {
-                        var prevMoveSpeed = speedForState(modelEntity.anim.baseLayer.previousState);
-                        var progress = modelEntity.anim.baseLayer.transitionProgress;
+                    var moveSpeed = speedForState(characterEntity.anim.baseLayer.activeState);
+                    if (characterEntity.anim.baseLayer.transitioning) {
+                        var prevMoveSpeed = speedForState(characterEntity.anim.baseLayer.previousState);
+                        var progress = characterEntity.anim.baseLayer.transitionProgress;
                         moveSpeed = (prevMoveSpeed * (1.0 - progress)) + (moveSpeed * progress);
                     }
-                    var distance = targetPosition.clone().sub(modelEntity.position);
+                    var distance = targetPosition.clone().sub(currentPosition);
                     var direction = distance.clone().normalize();
                     characterDirection = new pc.Vec3().sub(direction);
                     var movement = direction.clone().scale(dt * moveSpeed);
                     if (movement.length() < distance.length()) {
-                        modelEntity.setPosition(modelEntity.position.clone().add(movement));
+                        currentPosition.add(movement);
+                        characterEntity.setPosition(currentPosition);
+                        characterEntity.lookAt(characterEntity.position.clone().add(characterDirection));
                     } else {
-                        modelEntity.position = targetPosition;
+                        currentPosition.set(targetPosition.x, targetPosition.y, targetPosition.z);
+                        characterEntity.setPosition(currentPosition);
+                        characterEntity.anim.setInteger('speed', 0);
                     }
-                } else {
-                    modelEntity.anim.setInteger('speed', 0);
                 }
-                modelEntity.lookAt(modelEntity.position.clone().add(characterDirection));
 
             };
 
-            modelEntity.addComponent("script");
-            modelEntity.script.create('Locomotion', {});
+            characterEntity.addComponent("script");
+            characterEntity.script.create('Locomotion', {});
 
             });
             });
