@@ -576,7 +576,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
+var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) {
     var i, j, bindMatrix;
     var joints = gltfSkin.joints;
     var numJoints = joints.length;
@@ -606,14 +606,14 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
         boneNames[i] = nodes[joints[i]].name;
     }
 
-    var skeleton = gltfSkin.skeleton;
+    // create a cache key from bone names and see if we have matching skin
+    const key = boneNames.join("#");
+    let skin = glbSkins.get(key);
+    if (!skin) {
 
-    var skin = new Skin(device, ibp, boneNames);
-    skin.skeleton = nodes[skeleton];
-
-    skin.bones = [];
-    for (i = 0; i < joints.length; i++) {
-        skin.bones[i] = nodes[joints[i]];
+        // create the skin and add it to the cache
+        skin = new Skin(device, ibp, boneNames);
+        glbSkins.set(key, skin);
     }
 
     return skin;
@@ -1364,8 +1364,12 @@ var createSkins = function (device, gltf, nodes, bufferViews) {
     if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
         return [];
     }
+
+    // cache for skins to filter out duplicates
+    var glbSkins = new Map();
+
     return gltf.skins.map(function (gltfSkin) {
-        return createSkin(device, gltfSkin, gltf.accessors, bufferViews, nodes);
+        return createSkin(device, gltfSkin, gltf.accessors, bufferViews, nodes, glbSkins);
     });
 };
 

@@ -1,3 +1,5 @@
+import { RefCountedObject } from '../../../core/ref-counted-object.js';
+
 import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -12,6 +14,15 @@ import { AssetReference } from '../../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
+
+// Class used as an entry in the ref-counted skin instance cache
+class SkinInstanceCachedObject extends RefCountedObject {
+    constructor(skin, skinInstance) {
+        super();
+        this.skin = skin;
+        this.skinInstance = skinInstance;
+    }
+}
 
 /**
  * @private
@@ -103,6 +114,106 @@ class RenderComponent extends Component {
         entity.on('insert', this.onInsertChild, this);
     }
 
+    // map of SkinInstances allowing those to be shared between render components
+    // (specifically a single glb with multiple render components)
+    // maps rootBone to an array of SkinInstanceCachedObject
+    // this allows to find if a skin instance already exists for a rootbone, and a specific skin
+    static _skinInstanceCache = new Map();
+
+    // #ifdef DEBUG
+    // function that logs out the state of the skin instances cache
+    static logCachedSkinInstances() {
+        console.log("CachedSkinInstances");
+        RenderComponent._skinInstanceCache.forEach(function (array, rootBone) {
+            console.log(rootBone.name + ': Array(' + array.length + ")");
+            for (let i = 0; i < array.length; i++) {
+                console.log("  " + i + ": RefCount " + array[i].getRefCount());
+            }
+        });
+    }
+    // #endif
+
+    // returns already created skin instance from skin, for use on the rootBone
+    // ref count of existing skinInstance is increased
+    static getCachedSkinInstance(skin, rootBone) {
+
+        let skinInstance = null;
+
+        // get an array of cached object for the rootBone
+        let cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
+        if (cachedObjArray) {
+
+            // find matching skin
+            let cachedObj = cachedObjArray.find(element => element.skin === skin);
+            if (cachedObj) {
+                cachedObj.incRefCount();
+                skinInstance = cachedObj.skinInstance;
+            }
+        }
+
+        return skinInstance;
+    }
+
+    // adds skin instance to the cache, and increases ref count on it
+    static addCachedSkinInstance(skin, rootBone, skinInstance) {
+
+        // get an array for the rootBone
+        let cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
+        if (!cachedObjArray) {
+            cachedObjArray = [];
+            RenderComponent._skinInstanceCache.set(rootBone, cachedObjArray);
+        }
+
+        // find entry for the skin
+        let cachedObj = cachedObjArray.find(element => element.skin === skin);
+        if (!cachedObj) {
+            cachedObj = new SkinInstanceCachedObject(skin, skinInstance);
+            cachedObjArray.push(cachedObj);
+        }
+
+        cachedObj.incRefCount();
+    }
+
+    // removes skin instance from the cache. This decreases ref count, and when that reaches 0 it gets destroyed
+    static removeCachedSkinInstance(skinInstance) {
+
+        if (skinInstance) {
+            const rootBone = skinInstance.rootBone;
+            if (rootBone) {
+
+                // an array for boot bone
+                let cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
+                if (cachedObjArray) {
+
+                    // actual skin instance
+                    let cachedObjIndex = cachedObjArray.findIndex(element => element.skinInstance === skinInstance);
+                    if (cachedObjIndex >= 0) {
+
+                        // dec ref on the object
+                        let cachedObj = cachedObjArray[cachedObjIndex];
+                        cachedObj.decRefCount();
+
+                        // last reference, needs to be destroyed
+                        if (cachedObj.getRefCount() === 0) {
+                            cachedObjArray.splice(cachedObjIndex, 1);
+
+                            // if the array is empty
+                            if (!cachedObjArray.length) {
+                                RenderComponent._skinInstanceCache.delete(rootBone);
+                            }
+
+                            // destroy the skin instance
+                            if (skinInstance) {
+                                skinInstance.destroy();
+                                cachedObj.skinInstance = null;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     _onSetRootBone(entity) {
         if (entity) {
             this._onRootBoneChanged();
@@ -120,6 +231,9 @@ class RenderComponent extends Component {
         var meshInstances = this._meshInstances;
         if (meshInstances) {
             this.removeFromLayers();
+
+            // destroy mesh instances separately to allow them to be removed from the cache
+            this._clearSkinInstances();
 
             for (var i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].destroy();
@@ -304,7 +418,11 @@ class RenderComponent extends Component {
     _clearSkinInstances() {
 
         for (var i = 0; i < this._meshInstances.length; i++) {
-            this._meshInstances[i].skinInstance = null;
+            let meshInstance = this._meshInstances[i];
+
+            // remove it from the cache
+            RenderComponent.removeCachedSkinInstance(meshInstance.skinInstance);
+            meshInstance.skinInstance = null;
         }
     }
 
@@ -314,9 +432,6 @@ class RenderComponent extends Component {
 
             var j, skin, skinInst;
 
-            // maps each unique original skin to cloned skin instance
-            var skins = new Map();
-
             for (var i = 0; i < this._meshInstances.length; i++) {
                 var meshInstance = this._meshInstances[i];
                 var mesh = meshInstance.mesh;
@@ -325,13 +440,19 @@ class RenderComponent extends Component {
                 if (mesh.skin && !mesh.skinInstance) {
 
                     skin = mesh.skin;
-                    skinInst = skins.get(skin);
+                    const rootBone = this._rootBone.entity;
+
+                    // try and get skin instance from the cache
+                    skinInst = RenderComponent.getCachedSkinInstance(skin, rootBone);
 
                     // don't have skin instance for this skin
                     if (!skinInst) {
 
                         skinInst = new SkinInstance(skin);
-                        skins.set(skin, skinInst);
+                        skinInst.rootBone = rootBone;
+
+                        // add it to the cache
+                        RenderComponent.addCachedSkinInstance(skin, rootBone, skinInst);
 
                         // Resolve bone IDs to actual graph nodes
                         var bones = [];
