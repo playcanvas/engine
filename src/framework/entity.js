@@ -30,6 +30,7 @@ import { Application } from './application.js';
  * @property {LightComponent} [light] Gets the {@link LightComponent} attached to this entity. [read only]
  * @property {ModelComponent} [model] Gets the {@link ModelComponent} attached to this entity. [read only]
  * @property {ParticleSystemComponent} [particlesystem] Gets the {@link ParticleSystemComponent} attached to this entity. [read only]
+ * @property {RenderComponent} [render] Gets the {@link RenderComponent} attached to this entity. [read only]
  * @property {RigidBodyComponent} [rigidbody] Gets the {@link RigidBodyComponent} attached to this entity. [read only]
  * @property {ScreenComponent} [screen] Gets the {@link ScreenComponent} attached to this entity. [read only]
  * @property {ScriptComponent} [script] Gets the {@link ScriptComponent} attached to this entity. [read only]
@@ -107,6 +108,7 @@ class Entity extends GraphNode {
      * * "light" - see {@link LightComponent}
      * * "model" - see {@link ModelComponent}
      * * "particlesystem" - see {@link ParticleSystemComponent}
+     * * "render" - see {@link RenderComponent}
      * * "rigidbody" - see {@link RigidBodyComponent}
      * * "screen" - see {@link ScreenComponent}
      * * "script" - see {@link ScriptComponent}
