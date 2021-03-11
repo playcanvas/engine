@@ -58,7 +58,6 @@ import { ModelHandler } from '../resources/model.js';
 import { RenderHandler } from '../resources/render.js';
 import { ResourceLoader } from '../resources/loader.js';
 import { SceneHandler } from '../resources/scene.js';
-import { SceneSettingsHandler } from '../resources/scene-settings.js';
 import { ScriptHandler } from '../resources/script.js';
 import { ShaderHandler } from '../resources/shader.js';
 import { SpriteHandler } from '../resources/sprite.js';
@@ -2025,15 +2024,7 @@ class Application extends EventHandler {
         var i;
 
         this._initImmediate();
-
-        // Init cube data once
-        if (!this._immediateData.cubeLocalPos) {
-            var x = 0.5;
-            this._immediateData.cubeLocalPos = [new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
-                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)];
-            this._immediateData.cubeWorldPos = [new Vec3(), new Vec3(), new Vec3(), new Vec3(),
-                new Vec3(), new Vec3(), new Vec3(), new Vec3()];
-        }
+        this._immediateData.initCubeData();
 
         var cubeLocalPos = this._immediateData.cubeLocalPos;
         var cubeWorldPos = this._immediateData.cubeWorldPos;
