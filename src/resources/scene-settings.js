@@ -1,4 +1,3 @@
-import { http } from '../net/http.js';
 import { SceneUtils } from "./scene-utils";
 
 class SceneSettingsHandler {
