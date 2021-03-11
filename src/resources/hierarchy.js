@@ -1,5 +1,3 @@
-import { http } from '../net/http.js';
-
 import { SceneParser } from './parser/scene.js';
 import { SceneUtils } from "./scene-utils";
 
