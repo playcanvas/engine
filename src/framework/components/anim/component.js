@@ -24,6 +24,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
+ * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
     constructor(system, entity) {

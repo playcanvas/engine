@@ -19,6 +19,7 @@ import { Application } from './application.js';
  * ComponentSystems allow access to all Entities and Components and are attached to the {@link Application}.
  * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
  * @param {Application} [app] - The application the entity belongs to, default is the current application.
+ * @property {AnimComponent} [anim] Gets the {@link AnimComponent} attached to this entity. [read only]
  * @property {AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
  * @property {AudioListenerComponent} [audiolistener] Gets the {@link AudioListenerComponent} attached to this entity. [read only]
  * @property {ButtonComponent} [button] Gets the {@link ButtonComponent} attached to this entity. [read only]
