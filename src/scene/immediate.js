@@ -1,3 +1,4 @@
+import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
 import {
@@ -124,6 +125,16 @@ class ImmediateData {
 
         this.usedGraphNodes = [];
         this.freeGraphNodes = [];
+    }
+
+    initCubeData() {
+        if (!this.cubeLocalPos) {
+            var x = 0.5;
+            this.cubeLocalPos = [new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
+                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)];
+            this.cubeWorldPos = [new Vec3(), new Vec3(), new Vec3(), new Vec3(),
+                new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+        }
     }
 
     // shader used to display texture
