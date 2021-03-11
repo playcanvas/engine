@@ -56,7 +56,7 @@ class HdrParser {
         this.maxRetries = 0;
     }
 
-    load(url, callback, asset){
+    load(url, callback, asset) {
         var options = {
             cache: true,
             responseType: "arraybuffer",
@@ -151,14 +151,13 @@ class HdrParser {
     }
 
     _readPixels(reader, width, height, flipY) {
-        console.log(width, height);
+
         // out of bounds
         if (width < 8 || width > 0x7fff) {
             return this._readPixelsFlat(reader, width, height);
         }
 
         var rgbe = [0, 0, 0, 0];
-        console.log(rgbe);
 
         // check first scanline width to determine whether the file is RLE
         reader.peekUint8s(rgbe);
