@@ -218,12 +218,12 @@ class ImmediateData {
                 cubeWorldPos[1], cubeWorldPos[2],
                 cubeWorldPos[2], cubeWorldPos[3],
                 cubeWorldPos[3], cubeWorldPos[0],
-    
+
                 cubeWorldPos[4], cubeWorldPos[5],
                 cubeWorldPos[5], cubeWorldPos[6],
                 cubeWorldPos[6], cubeWorldPos[7],
                 cubeWorldPos[7], cubeWorldPos[4],
-    
+
                 cubeWorldPos[0], cubeWorldPos[4],
                 cubeWorldPos[1], cubeWorldPos[5],
                 cubeWorldPos[2], cubeWorldPos[6],
@@ -257,7 +257,7 @@ class ImmediateData {
         const points = this.spherePoints;
         const step = 2 * Math.PI / numSegments;
         let angle = 0;
-    
+
         for (let i = 0; i < numSegments; i++) {
             let sin0 = Math.sin(angle);
             let cos0 = Math.cos(angle);

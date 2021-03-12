@@ -2036,7 +2036,7 @@ class Application extends EventHandler {
         this._initImmediate();
         this._immediateData.renderWireSphere(center, radius, color, options);
     }
-    
+
     // Draw meshInstance at this frame
     renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
