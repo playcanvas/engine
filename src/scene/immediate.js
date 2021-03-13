@@ -208,10 +208,14 @@ class ImmediateData {
 
         if (!this.cubeLocalPos) {
             const x = 0.5;
-            this.cubeLocalPos = [new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
-                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)];
-            this.cubeWorldPos = [new Vec3(), new Vec3(), new Vec3(), new Vec3(),
-                new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+            this.cubeLocalPos = [
+                new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
+                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)
+            ];
+            this.cubeWorldPos = [
+                new Vec3(), new Vec3(), new Vec3(), new Vec3(),
+                new Vec3(), new Vec3(), new Vec3(), new Vec3()
+            ];
             const cubeWorldPos = this.cubeWorldPos;
             this.cubePositions = [
                 cubeWorldPos[0], cubeWorldPos[1],
