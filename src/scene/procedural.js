@@ -1,19 +1,10 @@
 import { Vec2 } from '../math/vec2.js';
 import { Vec3 } from '../math/vec3.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-
 import {
-    INDEXFORMAT_UINT16,
-    PRIMITIVE_TRIANGLES,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES, SEMANTIC_COLOR,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    TYPE_FLOAT32, TYPE_UINT8
+    SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
+    TYPE_UINT8
 } from '../graphics/constants.js';
-import { IndexBuffer } from '../graphics/index-buffer.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
-import { VertexIterator } from '../graphics/vertex-iterator.js';
 
 import { Mesh } from './mesh.js';
 
