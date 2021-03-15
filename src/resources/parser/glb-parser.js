@@ -336,6 +336,10 @@ var cloneTextureAsset = function (src) {
 
 var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
+    if (!positionDesc) {
+        // ignore meshes without positions
+        return null;
+    }
     var numVertices = positionDesc.count;
 
     // generate vertexDesc elements
@@ -576,7 +580,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
+var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) {
     var i, j, bindMatrix;
     var joints = gltfSkin.joints;
     var numJoints = joints.length;
@@ -606,14 +610,14 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
         boneNames[i] = nodes[joints[i]].name;
     }
 
-    var skeleton = gltfSkin.skeleton;
+    // create a cache key from bone names and see if we have matching skin
+    const key = boneNames.join("#");
+    let skin = glbSkins.get(key);
+    if (!skin) {
 
-    var skin = new Skin(device, ibp, boneNames);
-    skin.skeleton = nodes[skeleton];
-
-    skin.bones = [];
-    for (i = 0; i < joints.length; i++) {
-        skin.bones[i] = nodes[joints[i]];
+        // create the skin and add it to the cache
+        skin = new Skin(device, ibp, boneNames);
+        glbSkins.set(key, skin);
     }
 
     return skin;
@@ -629,7 +633,6 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
 
         var primitiveType, vertexBuffer, numIndices;
         var indices = null;
-        var mesh = new Mesh(device);
         var canUseMorph = true;
 
         // try and get draco compressed data first
@@ -717,94 +720,98 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
             primitiveType = getPrimitiveType(primitive);
         }
 
-        // build the mesh
-        mesh.vertexBuffer = vertexBuffer;
-        mesh.primitive[0].type = primitiveType;
-        mesh.primitive[0].base = 0;
-        mesh.primitive[0].indexed = (indices !== null);
+        var mesh = null;
+        if (vertexBuffer) {
+            // build the mesh
+            mesh = new Mesh(device);
+            mesh.vertexBuffer = vertexBuffer;
+            mesh.primitive[0].type = primitiveType;
+            mesh.primitive[0].base = 0;
+            mesh.primitive[0].indexed = (indices !== null);
 
-        // index buffer
-        if (indices !== null) {
-            var indexFormat;
-            if (indices instanceof Uint8Array) {
-                indexFormat = INDEXFORMAT_UINT8;
-            } else if (indices instanceof Uint16Array) {
-                indexFormat = INDEXFORMAT_UINT16;
-            } else {
-                indexFormat = INDEXFORMAT_UINT32;
-            }
-
-            // 32bit index buffer is used but not supported
-            if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
-
-                // #ifdef DEBUG
-                if (vertexBuffer.numVertices > 0xFFFF) {
-                    console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
-                }
-                // #endif
-
-                // convert to 16bit
-                indexFormat = INDEXFORMAT_UINT16;
-                indices = new Uint16Array(indices);
-            }
-
-            var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
-            mesh.indexBuffer[0] = indexBuffer;
-            mesh.primitive[0].count = indices.length;
-        } else {
-            mesh.primitive[0].count = vertexBuffer.numVertices;
-        }
-
-        mesh.materialIndex = primitive.material;
-
-        var accessor = accessors[primitive.attributes.POSITION];
-        var min = accessor.min;
-        var max = accessor.max;
-        var aabb = new BoundingBox(
-            new Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
-            new Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
-        );
-        mesh.aabb = aabb;
-
-        // morph targets
-        if (canUseMorph && primitive.hasOwnProperty('targets')) {
-            var targets = [];
-
-            primitive.targets.forEach(function (target, index) {
-                var options = {};
-
-                if (target.hasOwnProperty('POSITION')) {
-                    accessor = accessors[target.POSITION];
-                    options.deltaPositions = getAccessorData(accessor, bufferViews);
-                    options.deltaPositionsType = getComponentType(accessor.componentType);
-                    if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
-                        options.aabb = new BoundingBox();
-                        options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
-                    }
-                }
-
-                if (target.hasOwnProperty('NORMAL')) {
-                    accessor = accessors[target.NORMAL];
-                    options.deltaNormals = getAccessorData(accessor, bufferViews);
-                    options.deltaNormalsType = getComponentType(accessor.componentType);
-                }
-
-                if (gltfMesh.hasOwnProperty('extras') &&
-                    gltfMesh.extras.hasOwnProperty('targetNames')) {
-                    options.name = gltfMesh.extras.targetNames[index];
+            // index buffer
+            if (indices !== null) {
+                var indexFormat;
+                if (indices instanceof Uint8Array) {
+                    indexFormat = INDEXFORMAT_UINT8;
+                } else if (indices instanceof Uint16Array) {
+                    indexFormat = INDEXFORMAT_UINT16;
                 } else {
-                    options.name = targets.length.toString(10);
+                    indexFormat = INDEXFORMAT_UINT32;
                 }
 
-                targets.push(new MorphTarget(options));
-            });
+                // 32bit index buffer is used but not supported
+                if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
 
-            mesh.morph = new Morph(targets, device);
+                    // #ifdef DEBUG
+                    if (vertexBuffer.numVertices > 0xFFFF) {
+                        console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
+                    }
+                    // #endif
 
-            // set default morph target weights if they're specified
-            if (gltfMesh.hasOwnProperty('weights')) {
-                for (var i = 0; i < gltfMesh.weights.length; ++i) {
-                    targets[i].defaultWeight = gltfMesh.weights[i];
+                    // convert to 16bit
+                    indexFormat = INDEXFORMAT_UINT16;
+                    indices = new Uint16Array(indices);
+                }
+
+                var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
+                mesh.indexBuffer[0] = indexBuffer;
+                mesh.primitive[0].count = indices.length;
+            } else {
+                mesh.primitive[0].count = vertexBuffer.numVertices;
+            }
+
+            mesh.materialIndex = primitive.material;
+
+            var accessor = accessors[primitive.attributes.POSITION];
+            var min = accessor.min;
+            var max = accessor.max;
+            var aabb = new BoundingBox(
+                new Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
+                new Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
+            );
+            mesh.aabb = aabb;
+
+            // morph targets
+            if (canUseMorph && primitive.hasOwnProperty('targets')) {
+                var targets = [];
+
+                primitive.targets.forEach(function (target, index) {
+                    var options = {};
+
+                    if (target.hasOwnProperty('POSITION')) {
+                        accessor = accessors[target.POSITION];
+                        options.deltaPositions = getAccessorData(accessor, bufferViews);
+                        options.deltaPositionsType = getComponentType(accessor.componentType);
+                        if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
+                            options.aabb = new BoundingBox();
+                            options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
+                        }
+                    }
+
+                    if (target.hasOwnProperty('NORMAL')) {
+                        accessor = accessors[target.NORMAL];
+                        options.deltaNormals = getAccessorData(accessor, bufferViews);
+                        options.deltaNormalsType = getComponentType(accessor.componentType);
+                    }
+
+                    if (gltfMesh.hasOwnProperty('extras') &&
+                        gltfMesh.extras.hasOwnProperty('targetNames')) {
+                        options.name = gltfMesh.extras.targetNames[index];
+                    } else {
+                        options.name = targets.length.toString(10);
+                    }
+
+                    targets.push(new MorphTarget(options));
+                });
+
+                mesh.morph = new Morph(targets, device);
+
+                // set default morph target weights if they're specified
+                if (gltfMesh.hasOwnProperty('weights')) {
+                    for (var i = 0; i < gltfMesh.weights.length; ++i) {
+                        targets[i].defaultWeight = gltfMesh.weights[i];
+                    }
                 }
             }
         }
@@ -1364,8 +1371,12 @@ var createSkins = function (device, gltf, nodes, bufferViews) {
     if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
         return [];
     }
+
+    // cache for skins to filter out duplicates
+    var glbSkins = new Map();
+
     return gltf.skins.map(function (gltfSkin) {
-        return createSkin(device, gltfSkin, gltf.accessors, bufferViews, nodes);
+        return createSkin(device, gltfSkin, gltf.accessors, bufferViews, nodes, glbSkins);
     });
 };
 
@@ -2100,7 +2111,10 @@ class GlbParser {
                 if (gltfNode.hasOwnProperty('mesh')) {
                     var meshGroup = glb.meshes[gltfNode.mesh];
                     for (var mi = 0; mi < meshGroup.length; mi++) {
-                        createMeshInstance(model, meshGroup[mi], glb.skins, skinInstances, glb.materials, node, gltfNode);
+                        const mesh = meshGroup[mi];
+                        if (mesh) {
+                            createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);
+                        }
                     }
                 }
             }

@@ -167,6 +167,7 @@ export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';
 export { SceneHandler } from './resources/scene.js';
 export { SceneSettingsHandler } from './resources/scene-settings.js';
+export { SceneUtils } from './resources/scene-utils';
 export { ShaderHandler } from './resources/shader.js';
 export { SpriteHandler } from './resources/sprite.js';
 export { TemplateHandler } from './resources/template.js';
@@ -249,6 +250,8 @@ export { ParticleSystemComponent } from './framework/components/particle-system/
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 export * from './framework/components/rigid-body/constants.js';
+export { RenderComponent } from './framework/components/render/component.js';
+export { RenderComponentSystem } from './framework/components/render/system.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry } from './framework/scene-registry.js';
@@ -278,7 +281,6 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
 export { Template } from './templates/template.js';
-export { TemplateUtils } from './templates/template-utils.js';
 
 // VR
 export { VrDisplay } from './vr/vr-display.js';

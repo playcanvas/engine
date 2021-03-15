@@ -1,3 +1,4 @@
+import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
 import {
@@ -200,6 +201,84 @@ class ImmediateData {
 
         this.meshInstanceArray[0] = meshInstance;
         options.layer.addMeshInstances(this.meshInstanceArray, true);
+    }
+
+    // Draw lines forming a transformed unit-sized cube at this frame
+    renderWireCube(matrix, color, options) {
+
+        if (!this.cubeLocalPos) {
+            const x = 0.5;
+            this.cubeLocalPos = [
+                new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
+                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)
+            ];
+            this.cubeWorldPos = [
+                new Vec3(), new Vec3(), new Vec3(), new Vec3(),
+                new Vec3(), new Vec3(), new Vec3(), new Vec3()
+            ];
+            const cubeWorldPos = this.cubeWorldPos;
+            this.cubePositions = [
+                cubeWorldPos[0], cubeWorldPos[1],
+                cubeWorldPos[1], cubeWorldPos[2],
+                cubeWorldPos[2], cubeWorldPos[3],
+                cubeWorldPos[3], cubeWorldPos[0],
+
+                cubeWorldPos[4], cubeWorldPos[5],
+                cubeWorldPos[5], cubeWorldPos[6],
+                cubeWorldPos[6], cubeWorldPos[7],
+                cubeWorldPos[7], cubeWorldPos[4],
+
+                cubeWorldPos[0], cubeWorldPos[4],
+                cubeWorldPos[1], cubeWorldPos[5],
+                cubeWorldPos[2], cubeWorldPos[6],
+                cubeWorldPos[3], cubeWorldPos[7]
+            ];
+        }
+
+        // Transform to world space
+        const cubeLocalPos = this.cubeLocalPos;
+        const cubeWorldPos = this.cubeWorldPos;
+        for (let i = 0; i < 8; i++) {
+            matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
+        }
+
+        const lineBatch = this.prepareLineBatch(options.layer, options.depthTest, undefined, this.cubePositions.length);
+        lineBatch.addLines(this.cubePositions, color);
+    }
+
+    renderWireSphere(center, radius, color, options) {
+
+        const numSegments = 20;
+
+        // preallocate array of positions
+        if (!this.spherePoints) {
+            this.spherePoints = [];
+            for (let i = 0; i < numSegments * 6; i++) {
+                this.spherePoints.push(new Vec3());
+            }
+        }
+
+        const points = this.spherePoints;
+        const step = 2 * Math.PI / numSegments;
+        let angle = 0;
+
+        for (let i = 0; i < numSegments; i++) {
+            let sin0 = Math.sin(angle);
+            let cos0 = Math.cos(angle);
+            angle += step;
+            let sin1 = Math.sin(angle);
+            let cos1 = Math.cos(angle);
+
+            points[i * 6].set(center.x + radius * sin0, center.y, center.z + radius * cos0);
+            points[i * 6 + 1].set(center.x + radius * sin1, center.y, center.z + radius * cos1);
+            points[i * 6 + 2].set(center.x + radius * sin0, center.y + radius * cos0, center.z);
+            points[i * 6 + 3].set(center.x + radius * sin1, center.y + radius * cos1, center.z);
+            points[i * 6 + 4].set(center.x, center.y + radius * sin0, center.z + radius * cos0);
+            points[i * 6 + 5].set(center.x, center.y + radius * sin1, center.z + radius * cos1);
+        }
+
+        const lineBatch = this.prepareLineBatch(options.layer, options.depthTest, undefined, points.length);
+        lineBatch.addLines(points, color);
     }
 
     getGraphNode(matrix) {

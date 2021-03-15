@@ -1,4 +1,4 @@
-import { http } from '../net/http.js';
+import { SceneUtils } from "./scene-utils";
 
 class SceneSettingsHandler {
     constructor(app) {
@@ -7,33 +7,7 @@ class SceneSettingsHandler {
     }
 
     load(url, callback) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        http.get(url.load, {
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        }, function (err, response) {
-            if (!err) {
-                callback(null, response);
-            } else {
-                var errMsg = 'Error while loading scene settings ' + url.original;
-                if (err.message) {
-                    errMsg += ': ' + err.message;
-                    if (err.stack) {
-                        errMsg += '\n' + err.stack;
-                    }
-                } else {
-                    errMsg += ': ' + err;
-                }
-
-                callback(errMsg);
-            }
-        });
+        SceneUtils.load(url, callback);
     }
 
     open(url, data) {

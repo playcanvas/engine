@@ -1,8 +1,5 @@
-import { http } from '../net/http.js';
-
 import { SceneParser } from './parser/scene.js';
-
-import { TemplateUtils } from '../templates/template-utils.js';
+import { SceneUtils } from "./scene-utils";
 
 class HierarchyHandler {
     constructor(app) {
@@ -11,38 +8,7 @@ class HierarchyHandler {
     }
 
     load(url, callback) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        var assets = this._app.assets;
-
-        http.get(url.load, {
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        }, function (err, response) {
-            if (!err) {
-                TemplateUtils.waitForTemplatesInScene(
-                    response,
-                    assets,
-                    callback);
-            } else {
-                var errMsg = 'Error while loading scene ' + url.original;
-                if (err.message) {
-                    errMsg += ': ' + err.message;
-                    if (err.stack) {
-                        errMsg += '\n' + err.stack;
-                    }
-                } else {
-                    errMsg += ': ' + err;
-                }
-
-                callback(errMsg);
-            }
-        });
+        SceneUtils.load(url, callback);
     }
 
     open(url, data) {

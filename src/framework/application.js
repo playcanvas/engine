@@ -58,7 +58,6 @@ import { ModelHandler } from '../resources/model.js';
 import { RenderHandler } from '../resources/render.js';
 import { ResourceLoader } from '../resources/loader.js';
 import { SceneHandler } from '../resources/scene.js';
-import { SceneSettingsHandler } from '../resources/scene-settings.js';
 import { ScriptHandler } from '../resources/script.js';
 import { ShaderHandler } from '../resources/shader.js';
 import { SpriteHandler } from '../resources/sprite.js';
@@ -260,6 +259,7 @@ var _deprecationWarning = false;
  * * model ({@link ModelComponentSystem})
  * * particlesystem ({@link ParticleSystemComponentSystem})
  * * rigidbody ({@link RigidBodyComponentSystem})
+ * * render ({@link RenderComponentSystem})
  * * screen ({@link ScreenComponentSystem})
  * * script ({@link ScriptComponentSystem})
  * * scrollbar ({@link ScrollbarComponentSystem})
@@ -746,7 +746,6 @@ class Application extends EventHandler {
         this.loader.addHandler("css", new CssHandler());
         this.loader.addHandler("shader", new ShaderHandler());
         this.loader.addHandler("hierarchy", new HierarchyHandler(this));
-        this.loader.addHandler("scenesettings", new SceneSettingsHandler(this));
         this.loader.addHandler("folder", new FolderHandler());
         this.loader.addHandler("font", new FontHandler(this.loader));
         this.loader.addHandler("binary", new BinaryHandler());
@@ -2020,61 +2019,33 @@ class Application extends EventHandler {
         this._addLines(position, color, options);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    // lineType is optional
-    renderWireCube(matrix, color, options) {
-        var i;
-
-        this._initImmediate();
-
-        // Init cube data once
-        if (!this._immediateData.cubeLocalPos) {
-            var x = 0.5;
-            this._immediateData.cubeLocalPos = [new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
-                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)];
-            this._immediateData.cubeWorldPos = [new Vec3(), new Vec3(), new Vec3(), new Vec3(),
-                new Vec3(), new Vec3(), new Vec3(), new Vec3()];
-        }
-
-        var cubeLocalPos = this._immediateData.cubeLocalPos;
-        var cubeWorldPos = this._immediateData.cubeWorldPos;
-
-        // Transform and append lines
-        for (i = 0; i < 8; i++) {
-            matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
-        }
-        this.renderLines([
-            cubeWorldPos[0], cubeWorldPos[1],
-            cubeWorldPos[1], cubeWorldPos[2],
-            cubeWorldPos[2], cubeWorldPos[3],
-            cubeWorldPos[3], cubeWorldPos[0],
-
-            cubeWorldPos[4], cubeWorldPos[5],
-            cubeWorldPos[5], cubeWorldPos[6],
-            cubeWorldPos[6], cubeWorldPos[7],
-            cubeWorldPos[7], cubeWorldPos[4],
-
-            cubeWorldPos[0], cubeWorldPos[4],
-            cubeWorldPos[1], cubeWorldPos[5],
-            cubeWorldPos[2], cubeWorldPos[6],
-            cubeWorldPos[3], cubeWorldPos[7]
-        ], color, options);
-    }
-
-    _getDefaultImmediateOptions() {
+    _getDefaultImmediateOptions(depthTest = false) {
         return {
-            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE)
+            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+            depthTest: depthTest
         };
     }
 
+    // Draw lines forming a transformed unit-sized cube at this frame
+    renderWireCube(matrix, color, options = this._getDefaultImmediateOptions(true)) {
+        this._initImmediate();
+        this._immediateData.renderWireCube(matrix, color, options);
+    }
+
+    // // Draw lines forming sphere at this frame
+    renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
+        this._initImmediate();
+        this._immediateData.renderWireSphere(center, radius, color, options);
+    }
+
     // Draw meshInstance at this frame
-    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions()) {
+    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderMesh(null, null, null, meshInstance, options);
     }
 
     // Draw mesh at this frame
-    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions()) {
+    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderMesh(material, matrix, mesh, null, options);
     }
