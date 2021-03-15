@@ -52,7 +52,7 @@
         cameraEntity.lookAt(0, 0, 0);
 
         var boxEntity = new pc.Entity();
-        boxEntity.addComponent("model", {
+        boxEntity.addComponent("render", {
             type: 'box'
         });
         boxEntity.name = 'model';
@@ -66,12 +66,12 @@
                 var material = new pc.StandardMaterial();
                 material.diffuseMap = asset.resource;
                 material.update();
-                boxEntity.model.meshInstances[0].material = material;
+                boxEntity.render.meshInstances[0].material = material;
             }
         );
 
         var planeEntity = new pc.Entity();
-        planeEntity.addComponent("model", {
+        planeEntity.addComponent("render", {
             type: "plane"
         });
         planeEntity.setLocalScale(15,1,15);
