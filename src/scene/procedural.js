@@ -248,99 +248,45 @@ function calculateTangents(positions, normals, uvs, indices) {
  * });
  */
 function createMesh(device, positions, opts) {
-    // Check the supplied options and provide defaults for unspecified ones
-    var normals      = opts && opts.normals !== undefined ? opts.normals : null;
-    var tangents     = opts && opts.tangents !== undefined ? opts.tangents : null;
-    var colors       = opts && opts.colors !== undefined ? opts.colors : null;
-    var uvs          = opts && opts.uvs !== undefined ? opts.uvs : null;
-    var uvs1         = opts && opts.uvs1 !== undefined ? opts.uvs1 : null;
-    var indices      = opts && opts.indices !== undefined ? opts.indices : null;
-    var blendIndices = opts && opts.blendIndices !== undefined ? opts.blendIndices : null;
-    var blendWeights = opts && opts.blendWeights !== undefined ? opts.blendWeights : null;
 
-    var vertexDesc = [
-        { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
-    ];
-    if (normals !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 });
-    }
-    if (tangents !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_TANGENT, components: 4, type: TYPE_FLOAT32 });
-    }
-    if (colors !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_COLOR, components: 4, type: TYPE_UINT8, normalize: true });
-    }
-    if (uvs !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 });
-    }
-    if (uvs1 !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_TEXCOORD1, components: 2, type: TYPE_FLOAT32 });
-    }
-    if (blendIndices !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_BLENDINDICES, components: 2, type: TYPE_UINT8 });
-    }
-    if (blendWeights !== null) {
-        vertexDesc.push({ semantic: SEMANTIC_BLENDWEIGHT, components: 2, type: TYPE_FLOAT32 });
-    }
+    const mesh = new Mesh(device);
+    mesh.setPositions(positions);
 
-    var vertexFormat = new VertexFormat(device, vertexDesc);
-
-    // Create the vertex buffer
-    var numVertices  = positions.length / 3;
-    var vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices);
-
-    // Write the vertex data into the vertex buffer
-    var iterator = new VertexIterator(vertexBuffer);
-    for (var i = 0; i < numVertices; i++) {
-        iterator.element[SEMANTIC_POSITION].set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
-        if (normals !== null) {
-            iterator.element[SEMANTIC_NORMAL].set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
+    if (opts) {
+        if (opts.normals) {
+            mesh.setNormals(opts.normals);
         }
-        if (tangents !== null) {
-            iterator.element[SEMANTIC_TANGENT].set(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
-        }
-        if (colors !== null) {
-            iterator.element[SEMANTIC_COLOR].set(colors[i * 4], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3]);
-        }
-        if (uvs !== null) {
-            iterator.element[SEMANTIC_TEXCOORD0].set(uvs[i * 2], uvs[i * 2 + 1]);
-        }
-        if (uvs1 !== null) {
-            iterator.element[SEMANTIC_TEXCOORD1].set(uvs1[i * 2], uvs1[i * 2 + 1]);
-        }
-        if (blendIndices !== null) {
-            iterator.element[SEMANTIC_BLENDINDICES].set(blendIndices[i * 2], blendIndices[i * 2 + 1]);
-        }
-        if (blendWeights !== null) {
-            iterator.element[SEMANTIC_BLENDWEIGHT].set(blendWeights[i * 2], blendWeights[i * 2 + 1]);
-        }
-        iterator.next();
-    }
-    iterator.end();
 
-    // Create the index buffer
-    var indexBuffer = null;
-    var indexed = (indices !== null);
-    if (indexed) {
-        indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, indices.length);
+        if (opts.tangents) {
+            mesh.setVertexStream(SEMANTIC_TANGENT, opts.tangents, 4);
+        }
 
-        // Read the indicies into the index buffer
-        var dst = new Uint16Array(indexBuffer.lock());
-        dst.set(indices);
-        indexBuffer.unlock();
+        if (opts.colors) {
+            mesh.setColors32(opts.colors);
+        }
+
+        if (opts.uvs) {
+            mesh.setUvs(0, opts.uvs);
+        }
+
+        if (opts.uvs1) {
+            mesh.setUvs(1, opts.uvs1);
+        }
+
+        if (opts.blendIndices) {
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, TYPE_UINT8);
+        }
+
+        if (opts.blendWeights) {
+            mesh.setVertexStream(SEMANTIC_BLENDWEIGHT, opts.blendWeights, 4);
+        }
+
+        if (opts.indices) {
+            mesh.setIndices(opts.indices);
+        }
     }
 
-    var aabb = new BoundingBox();
-    aabb.compute(positions);
-
-    var mesh = new Mesh(device);
-    mesh.vertexBuffer = vertexBuffer;
-    mesh.indexBuffer[0] = indexBuffer;
-    mesh.primitive[0].type = PRIMITIVE_TRIANGLES;
-    mesh.primitive[0].base = 0;
-    mesh.primitive[0].count = indexed ? indices.length : numVertices;
-    mesh.primitive[0].indexed = indexed;
-    mesh.aabb = aabb;
+    mesh.update();
     return mesh;
 }
 
