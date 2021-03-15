@@ -53,7 +53,7 @@ class ContainerResource {
     /**
      * @function
      * @name ContainerResource#instantiateRenderEntity
-     * @description Instantiates an entity with a render components.
+     * @description Instantiates an entity with a render component.
      * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
      * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
      * @example
