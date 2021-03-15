@@ -16,10 +16,10 @@ class AssetListLoader extends EventHandler {
         super();
 
         this._assets = [];
+        this._loadingAssets = new Set();
         this._registry = assetRegistry;
         this._loaded = false;
         this._count = 0; // running count of successfully loaded assets
-        this._total = 0; // total assets loader is expecting to load
         this._failed = []; // list of assets that failed to load
 
         this._waitingAssets = [];
@@ -35,7 +35,6 @@ class AssetListLoader extends EventHandler {
                     this._assets.push(asset);
                 } else {
                     this._waitForAsset(assetList[i]);
-                    this._total++;
                 }
 
             }
@@ -71,7 +70,6 @@ class AssetListLoader extends EventHandler {
         var l = this._assets.length;
         var asset;
 
-        // this._total = l;
         this._count = 0;
         this._failed = [];
         this._callback = done;
@@ -86,7 +84,7 @@ class AssetListLoader extends EventHandler {
             // Track assets that are not loaded or are currently loading
             // as some assets may be loading by this call
             if (!asset.loaded) {
-                this._total++;
+                this._loadingAssets.add(asset);
                 this._registry.load(asset);
             }
         }
@@ -135,12 +133,12 @@ class AssetListLoader extends EventHandler {
         var self = this;
 
         // check this is an asset we care about
-        if (this._assets.indexOf(asset) >= 0) {
+        if (this._loadingAssets.has(asset)) {
             this._count++;
             this.fire("progress", asset);
         }
 
-        if (this._count === this._total) {
+        if (this._count === this._loadingAssets.size) {
             // call next tick because we want
             // this to be fired after any other
             // asset load events
@@ -155,12 +153,12 @@ class AssetListLoader extends EventHandler {
         var self = this;
 
         // check this is an asset we care about
-        if (this._assets.indexOf(asset) >= 0) {
+        if (this._loadingAssets.has(asset)) {
             this._count++;
             this._failed.push(asset);
         }
 
-        if (this._count === this._total) {
+        if (this._count === this._loadingAssets.size) {
             // call next tick because we want
             // this to be fired after any other
             // asset load events
@@ -183,8 +181,8 @@ class AssetListLoader extends EventHandler {
         var l = this._assets.length;
         for (i = 0; i < l; i++) {
             asset = this._assets[i];
-
-            if (!asset.loading && !asset.loaded) {
+            if (!asset.loaded) {
+                this._loadingAssets.add(asset);
                 this._registry.load(asset);
             }
         }
