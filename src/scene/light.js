@@ -99,8 +99,8 @@ class Light {
         this._outerConeAngle = 45;
 
         // Directional properties
-        this.numCascades = 1;
         this.cascades = null;   // an array of Vec4 viewports per cascade
+        this.numCascades = 1;
 
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
