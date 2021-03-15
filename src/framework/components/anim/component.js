@@ -11,7 +11,6 @@ import {
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
-import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
  * @component
