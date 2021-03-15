@@ -83,9 +83,11 @@ class AssetListLoader extends EventHandler {
         for (i = 0; i < l; i++) {
             asset = this._assets[i];
 
-            if (!asset.loading && !asset.loaded) {
-                this._registry.load(asset);
+            // Track assets that are not loaded or are currently loading
+            // as some assets may be loading by this call
+            if (!asset.loaded) {
                 this._total++;
+                this._registry.load(asset);
             }
         }
     }
