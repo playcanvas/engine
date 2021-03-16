@@ -12,7 +12,7 @@ import { BasisParser } from './parser/texture/basis.js';
 import { ImgParser } from './parser/texture/img.js';
 import { KtxParser } from './parser/texture/ktx.js';
 import { LegacyDdsParser } from './parser/texture/legacy-dds.js';
-import { HdrParser } from './parser/texture/hdr-parser.js';
+import { HdrParser } from './parser/texture/hdr.js';
 
 var JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
