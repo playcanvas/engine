@@ -117,12 +117,12 @@ float getShadowSpotPCF3x3(sampler2D shadowMap, vec4 shadowParams) {
 
 float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 
-    MEDP vec3 tc = normalize(dir);
-    MEDP vec3 tcAbs = abs(tc);
+    SMEDP vec3 tc = normalize(dir);
+    SMEDP vec3 tcAbs = abs(tc);
 
-    MEDP vec4 dirX = vec4(1,0,0, tc.x);
-    MEDP vec4 dirY = vec4(0,1,0, tc.y);
-    MEDP float majorAxisLength = tc.z;
+    SMEDP vec4 dirX = vec4(1,0,0, tc.x);
+    SMEDP vec4 dirY = vec4(0,1,0, tc.y);
+    SMEDP float majorAxisLength = tc.z;
     if ((tcAbs.x > tcAbs.y) && (tcAbs.x > tcAbs.z)) {
         dirX = vec4(0,0,1, tc.z);
         dirY = vec4(0,1,0, tc.y);
@@ -133,17 +133,17 @@ float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
         majorAxisLength = tc.y;
     }
 
-    MEDP float shadowParamsInFaceSpace = ((1.0/shadowParams.x) * 2.0) * abs(majorAxisLength);
+    SMEDP float shadowParamsInFaceSpace = ((1.0/shadowParams.x) * 2.0) * abs(majorAxisLength);
 
-    MEDP vec3 xoffset = (dirX.xyz * shadowParamsInFaceSpace);
-    MEDP vec3 yoffset = (dirY.xyz * shadowParamsInFaceSpace);
-    MEDP vec3 dx0 = -xoffset;
-    MEDP vec3 dy0 = -yoffset;
-    MEDP vec3 dx1 = xoffset;
-    MEDP vec3 dy1 = yoffset;
+    SMEDP vec3 xoffset = (dirX.xyz * shadowParamsInFaceSpace);
+    SMEDP vec3 yoffset = (dirY.xyz * shadowParamsInFaceSpace);
+    SMEDP vec3 dx0 = -xoffset;
+    SMEDP vec3 dy0 = -yoffset;
+    SMEDP vec3 dx1 = xoffset;
+    SMEDP vec3 dy1 = yoffset;
 
-    MEDP mat3 shadowKernel;
-    MEDP mat3 depthKernel;
+    SMEDP mat3 shadowKernel;
+    SMEDP mat3 depthKernel;
 
     depthKernel[0][0] = unpackFloat(textureCube(shadowMap, tc + dx0 + dy0));
     depthKernel[0][1] = unpackFloat(textureCube(shadowMap, tc + dx0));
@@ -155,20 +155,20 @@ float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
     depthKernel[2][1] = unpackFloat(textureCube(shadowMap, tc + dx1));
     depthKernel[2][2] = unpackFloat(textureCube(shadowMap, tc + dx1 + dy1));
 
-    MEDP vec3 shadowZ = vec3(length(dir) * shadowParams.w + shadowParams.z);
+    SMEDP vec3 shadowZ = vec3(length(dir) * shadowParams.w + shadowParams.z);
 
     shadowKernel[0] = vec3(lessThan2(depthKernel[0], shadowZ));
     shadowKernel[1] = vec3(lessThan2(depthKernel[1], shadowZ));
     shadowKernel[2] = vec3(lessThan2(depthKernel[2], shadowZ));
 
-    MEDP vec2 uv = (vec2(dirX.w, dirY.w) / abs(majorAxisLength)) * 0.5;
+    SMEDP vec2 uv = (vec2(dirX.w, dirY.w) / abs(majorAxisLength)) * 0.5;
 
-    MEDP vec2 fractionalCoord = fract( uv * shadowParams.x );
+    SMEDP vec2 fractionalCoord = fract( uv * shadowParams.x );
 
     shadowKernel[0] = mix(shadowKernel[0], shadowKernel[1], fractionalCoord.x);
     shadowKernel[1] = mix(shadowKernel[1], shadowKernel[2], fractionalCoord.x);
 
-    MEDP vec4 shadowValues;
+    SMEDP vec4 shadowValues;
     shadowValues.x = mix(shadowKernel[0][0], shadowKernel[0][1], fractionalCoord.y);
     shadowValues.y = mix(shadowKernel[0][1], shadowKernel[0][2], fractionalCoord.y);
     shadowValues.z = mix(shadowKernel[1][0], shadowKernel[1][1], fractionalCoord.y);

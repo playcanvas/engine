@@ -1,7 +1,7 @@
-uniform MEDP vec3 ambientSH[9];
+uniform RMEDP vec3 ambientSH[9];
 
 void addAmbient() {
-    MEDP vec3 n = cubeMapRotate(dNormalW);
+    RMEDP vec3 n = cubeMapRotate(dNormalW);
 
     vec3 color =
         ambientSH[0] +

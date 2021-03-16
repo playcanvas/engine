@@ -1,4 +1,4 @@
-MEDP float exponent = VSM_EXPONENT;
+SMEDP float exponent = VSM_EXPONENT;
 
 depth = 2.0 * depth - 1.0;
 depth =  exp(exponent * depth);

@@ -1,13 +1,13 @@
 void _getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos) {
-    MEDP vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
+    SMEDP vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
     projPos.xyz /= projPos.w;
     dShadowCoord = projPos.xyz;
     // depth bias is already applied on render
 }
 
 void getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams) {
-    MEDP float distScale = abs(dot(vPositionW - dLightPosW, dLightDirNormW)); // fov?
-    MEDP vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y * clamp(1.0 - dot(dVertexNormalW, -dLightDirNormW), 0.0, 1.0) * distScale;
+    SMEDP float distScale = abs(dot(vPositionW - dLightPosW, dLightDirNormW)); // fov?
+    SMEDP vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y * clamp(1.0 - dot(dVertexNormalW, -dLightDirNormW), 0.0, 1.0) * distScale;
     _getShadowCoordPerspZbuffer(shadowMatrix, shadowParams, wPos);
 }
 

@@ -1,5 +1,5 @@
 #ifdef MAPFLOAT
-uniform MEDP float material_clearCoat;
+uniform MMEDP float material_clearCoat;
 #endif
 
 #ifdef MAPTEXTURE

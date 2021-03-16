@@ -1,7 +1,7 @@
 varying vec2 vUv0;
 
 uniform samplerCube source;
-uniform MEDP vec4 params;
+uniform vec4 params;
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
@@ -20,10 +20,10 @@ vec4 encodeRGBM(vec4 color) { // modified RGBM
 
 void main(void) {
 
-    MEDP vec2 st = vUv0 * 2.0 - 1.0;
-    MEDP float face = params.x;
+    vec2 st = vUv0 * 2.0 - 1.0;
+    float face = params.x;
 
-    MEDP vec3 vec;
+    vec3 vec;
     if (face==0.0) {
         vec = vec3(1, -st.y, -st.x);
     } else if (face==1.0) {

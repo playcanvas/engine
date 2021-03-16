@@ -3,7 +3,7 @@ uniform sampler2D texture_lightMap;
 #endif
 
 void addLightMap() {
-    MEDP vec3 lm = vec3(1.0);
+    LMEDP vec3 lm = vec3(1.0);
 
     #ifdef MAPTEXTURE
     lm *= $texture2DSAMPLE(texture_lightMap, $UV).$CH;

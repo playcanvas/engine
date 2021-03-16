@@ -1,34 +1,34 @@
 // Anisotropic GGX
 float calcLightSpecular(float tGlossiness, vec3 tNormalW) {
-    MEDP float PI = 3.141592653589793;
-    MEDP float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
-    MEDP float anisotropy = material_anisotropy * roughness;
+    LMEDP float PI = 3.141592653589793;
+    LMEDP float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
+    LMEDP float anisotropy = material_anisotropy * roughness;
  
-    MEDP float at = max((roughness + anisotropy), roughness / 4.0);
-    MEDP float ab = max((roughness - anisotropy), roughness / 4.0);
+    LMEDP float at = max((roughness + anisotropy), roughness / 4.0);
+    LMEDP float ab = max((roughness - anisotropy), roughness / 4.0);
 
-    MEDP vec3 h = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
+    LMEDP vec3 h = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
 
-    MEDP float NoH = dot(tNormalW, h);
-    MEDP float ToH = dot(dTBN[0], h);
-    MEDP float BoH = dot(dTBN[1], h);
+    LMEDP float NoH = dot(tNormalW, h);
+    LMEDP float ToH = dot(dTBN[0], h);
+    LMEDP float BoH = dot(dTBN[1], h);
 
-    MEDP float a2 = at * ab;
-    MEDP vec3 v = vec3(ab * ToH, at * BoH, a2 * NoH);
-    MEDP float v2 = dot(v, v);
-    MEDP float w2 = a2 / v2;
-    MEDP float D = a2 * w2 * w2 * (1.0 / PI);
+    LMEDP float a2 = at * ab;
+    LMEDP vec3 v = vec3(ab * ToH, at * BoH, a2 * NoH);
+    LMEDP float v2 = dot(v, v);
+    LMEDP float w2 = a2 / v2;
+    LMEDP float D = a2 * w2 * w2 * (1.0 / PI);
 
-    MEDP float ToV = dot(dTBN[0], dViewDirW);
-    MEDP float BoV = dot(dTBN[1], dViewDirW);
-    MEDP float ToL = dot(dTBN[0], -dLightDirNormW);
-    MEDP float BoL = dot(dTBN[1], -dLightDirNormW);
-    MEDP float NoV = dot(tNormalW, dViewDirW);
-    MEDP float NoL = dot(tNormalW, -dLightDirNormW);
+    LMEDP float ToV = dot(dTBN[0], dViewDirW);
+    LMEDP float BoV = dot(dTBN[1], dViewDirW);
+    LMEDP float ToL = dot(dTBN[0], -dLightDirNormW);
+    LMEDP float BoL = dot(dTBN[1], -dLightDirNormW);
+    LMEDP float NoV = dot(tNormalW, dViewDirW);
+    LMEDP float NoL = dot(tNormalW, -dLightDirNormW);
 
-    MEDP float lambdaV = NoL * length(vec3(at * ToV, ab * BoV, NoV));
-    MEDP float lambdaL = NoV * length(vec3(at * ToL, ab * BoL, NoL));
-    MEDP float G = 0.5 / (lambdaV + lambdaL);
+    LMEDP float lambdaV = NoL * length(vec3(at * ToV, ab * BoV, NoV));
+    LMEDP float lambdaL = NoV * length(vec3(at * ToL, ab * BoL, NoL));
+    LMEDP float G = 0.5 / (lambdaV + lambdaL);
 
     return D * G;
 }

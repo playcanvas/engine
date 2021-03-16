@@ -1,8 +1,8 @@
 uniform samplerCube texture_cubeMap;
-uniform MEDP float material_reflectivity;
+uniform RMEDP float material_reflectivity;
 
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
-    MEDP vec3 lookupVec = fixSeams(cubeMapProject(tReflDirW));
+    RMEDP vec3 lookupVec = fixSeams(cubeMapProject(tReflDirW));
 #ifndef RIGHT_HANDED_CUBEMAP
     lookupVec.x *= -1.0;
 #endif

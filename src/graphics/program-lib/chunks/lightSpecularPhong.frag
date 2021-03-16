@@ -1,5 +1,5 @@
 float calcLightSpecular(float tGlossiness, vec3 tReflDirW) {
-    MEDP float specPow = tGlossiness;
+    LMEDP float specPow = tGlossiness;
 
     specPow = antiAliasGlossiness(specPow);
 

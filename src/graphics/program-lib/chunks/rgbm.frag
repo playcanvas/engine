@@ -1,5 +1,5 @@
 vec3 decodeRGBM(vec4 rgbm) {
-    MEDP vec3 color = (8.0 * rgbm.a) * rgbm.rgb;
+    MMEDP vec3 color = (8.0 * rgbm.a) * rgbm.rgb;
     return color * color;
 }
 

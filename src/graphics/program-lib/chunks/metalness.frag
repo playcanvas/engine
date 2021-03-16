@@ -1,11 +1,11 @@
 void processMetalness(float metalness) {
-    const MEDP float dielectricF0 = 0.04;
+    const MMEDP float dielectricF0 = 0.04;
     dSpecularity = mix(vec3(dielectricF0), dAlbedo, metalness);
     dAlbedo *= 1.0 - metalness;
 }
 
 #ifdef MAPFLOAT
-uniform MEDP float material_metalness;
+uniform MMEDP float material_metalness;
 #endif
 
 #ifdef MAPTEXTURE
@@ -13,7 +13,7 @@ uniform sampler2D texture_metalnessMap;
 #endif
 
 void getSpecularity() {
-    MEDP float metalness = 1.0;
+    MMEDP float metalness = 1.0;
 
     #ifdef MAPFLOAT
     metalness *= material_metalness;

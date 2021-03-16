@@ -1,7 +1,7 @@
 float calculateVSM8(vec3 moments, float Z, float vsmBias) {
-    MEDP float VSMBias = vsmBias;//0.01 * 0.25;
-    MEDP float depthScale = VSMBias * Z;
-    MEDP float minVariance1 = depthScale * depthScale;
+    SMEDP float VSMBias = vsmBias;//0.01 * 0.25;
+    SMEDP float depthScale = VSMBias * Z;
+    SMEDP float minVariance1 = depthScale * depthScale;
     return chebyshevUpperBound(moments.xy, Z, minVariance1, 0.1);
 }
 
@@ -10,8 +10,8 @@ float decodeFloatRG(vec2 rg) {
 }
 
 float VSM8(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmBias, float exponent) {
-    MEDP vec4 c = texture2D(tex, texCoords);
-    MEDP vec3 moments = vec3(decodeFloatRG(c.xy), decodeFloatRG(c.zw), 0.0);
+    SMEDP vec4 c = texture2D(tex, texCoords);
+    SMEDP vec3 moments = vec3(decodeFloatRG(c.xy), decodeFloatRG(c.zw), 0.0);
     return calculateVSM8(moments, Z, vsmBias);
 }
 

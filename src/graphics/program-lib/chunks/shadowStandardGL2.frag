@@ -1,33 +1,33 @@
 float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
     // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 
-    MEDP float z = dShadowCoord.z;
-    MEDP vec2 uv = dShadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
-    MEDP float shadowMapSizeInv = 1.0 / shadowParams.x;
-    MEDP vec2 base_uv = floor(uv + 0.5);
-    MEDP float s = (uv.x + 0.5 - base_uv.x);
-    MEDP float t = (uv.y + 0.5 - base_uv.y);
+    SMEDP float z = dShadowCoord.z;
+    SMEDP vec2 uv = dShadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
+    SMEDP float shadowMapSizeInv = 1.0 / shadowParams.x;
+    SMEDP vec2 base_uv = floor(uv + 0.5);
+    SMEDP float s = (uv.x + 0.5 - base_uv.x);
+    SMEDP float t = (uv.y + 0.5 - base_uv.y);
     base_uv -= vec2(0.5);
     base_uv *= shadowMapSizeInv;
 
 
-    MEDP float uw0 = (4.0 - 3.0 * s);
-    MEDP float uw1 = 7.0;
-    MEDP float uw2 = (1.0 + 3.0 * s);
+    SMEDP float uw0 = (4.0 - 3.0 * s);
+    SMEDP float uw1 = 7.0;
+    SMEDP float uw2 = (1.0 + 3.0 * s);
 
-    MEDP float u0 = (3.0 - 2.0 * s) / uw0 - 2.0;
-    MEDP float u1 = (3.0 + s) / uw1;
-    MEDP float u2 = s / uw2 + 2.0;
+    SMEDP float u0 = (3.0 - 2.0 * s) / uw0 - 2.0;
+    SMEDP float u1 = (3.0 + s) / uw1;
+    SMEDP float u2 = s / uw2 + 2.0;
 
-    MEDP float vw0 = (4.0 - 3.0 * t);
-    MEDP float vw1 = 7.0;
-    MEDP float vw2 = (1.0 + 3.0 * t);
+    SMEDP float vw0 = (4.0 - 3.0 * t);
+    SMEDP float vw1 = 7.0;
+    SMEDP float vw2 = (1.0 + 3.0 * t);
 
-    MEDP float v0 = (3.0 - 2.0 * t) / vw0 - 2.0;
-    MEDP float v1 = (3.0 + t) / vw1;
-    MEDP float v2 = t / vw2 + 2.0;
+    SMEDP float v0 = (3.0 - 2.0 * t) / vw0 - 2.0;
+    SMEDP float v1 = (3.0 + t) / vw1;
+    SMEDP float v2 = t / vw2 + 2.0;
 
-    MEDP float sum = 0.0;
+    SMEDP float sum = 0.0;
 
     u0 = u0 * shadowMapSizeInv + base_uv.x;
     v0 = v0 * shadowMapSizeInv + base_uv.y;
