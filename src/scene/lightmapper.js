@@ -94,12 +94,16 @@ class LightInfo {
         this.mask = this.light.mask;
         this.shadowUpdateMode = this.light.shadowUpdateMode;
         this.enabled = this.light.enabled;
+        this.intensity = this.light.intensity;
+        this.rotation = this.light._node.getLocalRotation().clone();
     }
 
     restore() {
         this.light.mask = this.mask;
         this.light.shadowUpdateMode = this.shadowUpdateMode;
         this.light.enabled = this.enabled;
+        this.light.intensity = this.intensity;
+        this.light._node.setLocalRotation(this.rotation);
     }
 }
 
@@ -921,96 +925,135 @@ class Lightmapper {
         for (i = 0; i < bakeLights.length; i++) {
             let bakeLight = bakeLights[i];
 
-            bakeLight.light.enabled = true; // enable next light
-            bakeLight.light._cacheShadowMap = true;
-            let shadowMapRendered = false;
+            // directional light can be baked using many virtual lights to create soft effect
+            const numVirtualLights = bakeLight.light.type === LIGHTTYPE_DIRECTIONAL ? 100 : 1;
+            for (let s = 0; s < numVirtualLights; s++) {
 
-            const shadowCam = this.lightCameraPrepare(device, bakeLight);
+                // prepare virtual light
+                if (numVirtualLights > 1) {
 
-            for (node = 0; node < bakeNodes.length; node++) {
+                    // bake type factor (0..1)
+                    // - more skylight: smaller value
+                    // - more directional: larger values
+                    const directionalFactor = 0.6;
+                    if (s < numVirtualLights * directionalFactor) {
 
-                let bakeNode = bakeNodes[node];
-                rcv = bakeNode.meshInstances;
+                        // soft directional
+                        // TODO: diferent distribution? Perhaps 2d loop in the plane of light direction to get more uniform and predictable pattern
+                        const directionalSpreadAngle = 20;
+                        const angle1 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
+                        const angle2 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
 
-                const lightAffectsNode = this.lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam, casterBounds);
-                if (!lightAffectsNode) {
-                    continue;
+                        // set to original rotation and add adjustement
+                        bakeLight.light._node.setLocalRotation(bakeLight.rotation);
+                        bakeLight.light._node.rotateLocal(angle1, 0, angle2);
+
+                    } else {
+
+                        // skylight - random direction from hemisphere
+                        // TODO: better distribution, perhaps Halton sequence, cosine weighted
+                        const angle = 90;
+                        bakeLight.light._node.setLocalEulerAngles(Math.random() * angle - (angle * 0.5), 10, Math.random() * angle - (angle * 0.5));
+                    }
+
+                    // update transform
+                    bakeLight.light._node.getWorldTransform();
+
+                    // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
+                    bakeLight.light.intensity = bakeLight.intensity / numVirtualLights;
                 }
 
-                this.setupLightArray(lightArray, bakeLight.light);
+                bakeLight.light.enabled = true; // enable next light
+                bakeLight.light._cacheShadowMap = true;
+                let shadowMapRendered = false;
 
-                // render light shadow map needs to be rendered
-                shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
+                const shadowCam = this.lightCameraPrepare(device, bakeLight);
 
-                // Store original materials
-                this.backupMaterials(rcv);
+                for (node = 0; node < bakeNodes.length; node++) {
 
-                for (pass = 0; pass < passCount; pass++) {
+                    let bakeNode = bakeNodes[node];
+                    rcv = bakeNode.meshInstances;
 
-                    // lightmap size
-                    let nodeRT = bakeNode.renderTargets[pass];
-                    let lightmapSize = bakeNode.renderTargets[pass].colorBuffer.width;
-
-                    // get matching temp render target to render to
-                    let tempRT = this.renderTargets.get(lightmapSize);
-                    let tempTex = tempRT.colorBuffer;
-
-                    if (pass === 0) {
-                        shadersUpdatedOn1stPass = scene.updateShaders;
-                    } else if (shadersUpdatedOn1stPass) {
-                        scene.updateShaders = true;
+                    const lightAffectsNode = this.lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam, casterBounds);
+                    if (!lightAffectsNode) {
+                        continue;
                     }
 
-                    // set up material for baking a pass
-                    for (j = 0; j < rcv.length; j++) {
-                        rcv[j].material = this.passMaterials[pass];
+                    this.setupLightArray(lightArray, bakeLight.light);
+
+                    // render light shadow map needs to be rendered
+                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
+
+                    // Store original materials
+                    this.backupMaterials(rcv);
+
+                    for (pass = 0; pass < passCount; pass++) {
+
+                        // lightmap size
+                        let nodeRT = bakeNode.renderTargets[pass];
+                        let lightmapSize = bakeNode.renderTargets[pass].colorBuffer.width;
+
+                        // get matching temp render target to render to
+                        let tempRT = this.renderTargets.get(lightmapSize);
+                        let tempTex = tempRT.colorBuffer;
+
+                        if (pass === 0) {
+                            shadersUpdatedOn1stPass = scene.updateShaders;
+                        } else if (shadersUpdatedOn1stPass) {
+                            scene.updateShaders = true;
+                        }
+
+                        // set up material for baking a pass
+                        for (j = 0; j < rcv.length; j++) {
+                            rcv[j].material = this.passMaterials[pass];
+                        }
+
+                        // update shader
+                        this.renderer.updateShaders(rcv);
+
+                        // ping-ponging output
+                        this.renderer.setCamera(this.camera, tempRT, true);
+
+                        if (pass === PASS_DIR) {
+                            this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
+                        }
+
+                        this.renderer._forwardTime = 0;
+                        this.renderer._shadowMapTime = 0;
+
+                        this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+
+                        // #ifdef PROFILER
+                        this.stats.shadowMapTime += this.renderer._shadowMapTime;
+                        this.stats.forwardTime += this.renderer._forwardTime;
+                        this.stats.renderPasses++;
+                        // #endif
+
+                        // temp render target now has lightmap, store it for the node
+                        bakeNode.renderTargets[pass] = tempRT;
+
+                        // and release previous lightmap into temp render target pool
+                        this.renderTargets.set(lightmapSize, nodeRT);
+
+                        for (j = 0; j < rcv.length; j++) {
+                            m = rcv[j];
+                            m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
+                            m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
+                        }
                     }
 
-                    // update shader
-                    this.renderer.updateShaders(rcv);
-
-                    // ping-ponging output
-                    this.renderer.setCamera(this.camera, tempRT, true);
-
-                    if (pass === PASS_DIR) {
-                        this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
-                    }
-
-                    this.renderer._forwardTime = 0;
-                    this.renderer._shadowMapTime = 0;
-
-                    this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
-
-                    // #ifdef PROFILER
-                    this.stats.shadowMapTime += this.renderer._shadowMapTime;
-                    this.stats.forwardTime += this.renderer._forwardTime;
-                    this.stats.renderPasses++;
-                    // #endif
-
-                    // temp render target now has lightmap, store it for the node
-                    bakeNode.renderTargets[pass] = tempRT;
-
-                    // and release previous lightmap into temp render target pool
-                    this.renderTargets.set(lightmapSize, nodeRT);
-
-                    for (j = 0; j < rcv.length; j++) {
-                        m = rcv[j];
-                        m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
-                        m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
-                    }
+                    // Revert to original materials
+                    this.restoreMaterials(rcv);
                 }
 
-                // Revert to original materials
-                this.restoreMaterials(rcv);
-            }
+                // disable the light
+                bakeLight.light.enabled = false;
 
-            // disable the light
-            bakeLight.light.enabled = false;
-
-            // release light shadowmap
-            bakeLight.light._cacheShadowMap = false;
-            if (bakeLight.light._isCachedShadowMap) {
-                bakeLight.light._destroyShadowMap();
+                // release light shadowmap
+                bakeLight.light._cacheShadowMap = false;
+                if (bakeLight.light._isCachedShadowMap) {
+                    bakeLight.light._destroyShadowMap();
+                }
             }
         }
 

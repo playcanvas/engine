@@ -95,36 +95,24 @@
             entity.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
         };
 
-        // simulate skydome lighting by using many directional lights with random hemisphere directions
-        var lights = [];
-        var count = 50;
-        for (var l = 0; l < count; l++) {
-            var light = new pc.Entity("Directional");
-            light.addComponent("light", {
-                affectDynamic: true,
-                affectLightmapped: false,
-                bake: true,
-                castShadows: true,
-                normalOffsetBias: 0.05,
-                shadowBias: 0.2,
-                shadowDistance: 50,
-                shadowResolution: 2048,
-                shadowType: pc.SHADOW_PCF3,
-                color: pc.Color.WHITE,
-                intensity: 0.8 / count,
-                type: "directional"
-            });
-            app.root.addChild(light);
-            lights.push(light);
-
-            // adjust to control skydome bake, value between 0 and 1.
-            // 0 is directional light, 1 is ambient occlusion bake .. pick appropriate ratio
-            var directionality = 0.9;
-
-            // random angle based on directionality, within 10 or 90 degrees from straight down
-            var p = l > (count * directionality) ? 10 : 90;
-            light.setLocalEulerAngles(Math.random() * p - (p * 0.5), 10, Math.random() * p - (p * 0.5));
-        }
+        // directional light
+        var light = new pc.Entity("Directional");
+        light.addComponent("light", {
+            type: "directional",
+            affectDynamic: true,
+            affectLightmapped: false,
+            bake: true,
+            castShadows: true,
+            normalOffsetBias: 0.05,
+            shadowBias: 0.2,
+            shadowDistance: 50,
+            shadowResolution: 2048,
+            shadowType: pc.SHADOW_PCF3,
+            color: pc.Color.WHITE,
+            intensity: 0.8
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(0, 10, 0);
 
         // Create an entity with a point light component that is configured as a baked light
         var lightPoint = new pc.Entity("Point");
@@ -185,11 +173,6 @@
 
         // bake lightmaps
         app.lightmapper.bake(null, bakeType);
-
-        // destroy temporary directional lights as they are costly to keep around
-        for (var l = 0; l < lights.length; l++) {
-            lights[l].destroy();
-        }
 
         // Set an update function on the app's update event
         var time = 0;
