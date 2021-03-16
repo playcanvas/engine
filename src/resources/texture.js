@@ -172,7 +172,7 @@ class TextureHandler {
             dds: new LegacyDdsParser(assets),
             ktx: new KtxParser(assets),
             basis: new BasisParser(assets),
-            hdr: new HdrParser(assets),
+            hdr: new HdrParser(assets)
         };
     }
 

@@ -1,10 +1,20 @@
-function Reader(data) {
-    this.view = new DataView(data);
-    this.offset = 0;
-}
+import { http } from '../../../net/http.js';
+import {
+    TEXHINT_ASSET,
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
+    FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST,
+    PIXELFORMAT_R8_G8_B8_A8,
+    TEXTURETYPE_RGBE
+} from '../../../graphics/constants.js';
+import { Texture } from '../../../graphics/texture.js';
 
-Object.assign(Reader.prototype, {
-    readLine: function () {
+class Reader {
+    constructor(data) {
+        this.view = new DataView(data);
+        this.offset = 0;
+    }
+
+    readLine() {
         var view = this.view;
         var result = "";
         while (true) {
@@ -19,26 +29,26 @@ Object.assign(Reader.prototype, {
             result += c;
         }
         return result;
-    },
+    }
 
-    readUint8: function () {
+    readUint8() {
         return this.view.getUint8(this.offset++);
-    },
+    }
 
-    readUint8s: function (result) {
+    readUint8s(result) {
         var view = this.view;
         for (var i = 0; i < result.length; ++i) {
             result[i] = view.getUint8(this.offset++);
         }
-    },
+    }
 
-    peekUint8s: function (result) {
+    peekUint8s(result) {
         var view = this.view;
         for (var i = 0; i < result.length; ++i) {
             result[i] = view.getUint8(this.offset + i);
         }
     }
-});
+}
 
 /**
  * @class
@@ -46,51 +56,53 @@ Object.assign(Reader.prototype, {
  * @implements {TextureParser}
  * @classdesc Texture parser for hdr files.
  */
-function HdrParser(registry) {
-    this.maxRetries = 0;
-}
+class HdrParser {
+    constructor(registry) {
+        this.maxRetries = 0;
+    }
 
-Object.assign(HdrParser.prototype, {
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         var options = {
             cache: true,
             responseType: "arraybuffer",
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
-        pc.http.get(url.load, options, callback);
-    },
+        http.get(url.load, options, callback);
+    }
 
-    open: function (url, data, device) {
+    open(url, data, device) {
         var textureData = this.parse(data);
 
         if (!textureData) {
             return null;
         }
 
-        var texture = new pc.Texture(device, {
+        var texture = new Texture(device, {
             name: url,
             // #ifdef PROFILER
-            profilerHint: pc.TEXHINT_ASSET,
+            profilerHint: TEXHINT_ASSET,
             // #endif
-            addressU: pc.ADDRESS_REPEAT,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-            minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
-            magFilter: pc.FILTER_NEAREST,
+            addressU: ADDRESS_REPEAT,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            minFilter: FILTER_NEAREST_MIPMAP_NEAREST,
+            magFilter: FILTER_NEAREST,
             width: textureData.width,
             height: textureData.height,
             levels: textureData.levels,
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            type: pc.TEXTURETYPE_RGBE
+            format: PIXELFORMAT_R8_G8_B8_A8,
+            type: TEXTURETYPE_RGBE,
+            // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
+            mipmaps: false
         });
 
         texture.upload();
 
         return texture;
-    },
+    }
 
     // https://floyd.lbl.gov/radiance/refer/filefmts.pdf with help from http://www.graphics.cornell.edu/~bjw/rgbe/rgbe.c
-    parse: function (data) {
+    parse(data) {
         var reader = new Reader(data);
 
         // require magic
@@ -142,9 +154,9 @@ Object.assign(HdrParser.prototype, {
             height: height,
             levels: [pixels]
         };
-    },
+    }
 
-    _readPixels: function (reader, width, height, flipY) {
+    _readPixels(reader, width, height, flipY) {
         // out of bounds
         if (width < 8 || width > 0x7fff) {
             return this._readPixelsFlat(reader, width, height);
@@ -170,7 +182,7 @@ Object.assign(HdrParser.prototype, {
             reader.readUint8s(rgbe);
 
             // sanity check it
-            if (rgbe[2] << 8 + rgbe[3] != width) {
+            if ((rgbe[2] << 8) + rgbe[3] != width) {
                 this._error("radiance has invalid scanline width");
                 return null;
             }
@@ -208,16 +220,18 @@ Object.assign(HdrParser.prototype, {
         }
 
         return view;
-    },
+    }
 
-    _readPixelsFlat: function (reader, width, height) {
+    _readPixelsFlat(reader, width, height) {
         var filePixelBytes = reader.view.buffer.byteLength - reader.offset;
         return filePixelBytes === width * height * 4 ? new Uint8Array(reader.view.buffer, reader.offset) : null;
-    },
+    }
 
-    _error: function (message) {
+    _error(message) {
         // #ifdef DEBUG
         console.error(message);
         // #endif
     }
-});
+}
+
+export { HdrParser };
