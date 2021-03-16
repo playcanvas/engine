@@ -159,7 +159,7 @@ export { JsonHandler } from './resources/json.js';
 export { JsonStandardMaterialParser } from './resources/parser/material/json-standard-material.js';
 export { KtxParser } from './resources/parser/texture/ktx.js';
 export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
-export { HdrParser } from './resources/parser/texture/hdr-parser.js';
+export { HdrParser } from './resources/parser/texture/hdr.js';
 export { MaterialHandler } from './resources/material.js';
 export { ModelHandler } from './resources/model.js';
 export { RenderHandler } from './resources/render.js';
