@@ -11,19 +11,19 @@ vec4 gammaCorrectInput(vec4 color) {
 }
 
 vec4 texture2DSRGB(sampler2D tex, vec2 uv) {
-    vec4 rgba = texture2D(tex, uv);
+    MEDP vec4 rgba = texture2D(tex, uv);
     rgba.rgb = gammaCorrectInput(rgba.rgb);
     return rgba;
 }
 
 vec4 texture2DSRGB(sampler2D tex, vec2 uv, float bias) {
-    vec4 rgba = texture2D(tex, uv, bias);
+    MEDP vec4 rgba = texture2D(tex, uv, bias);
     rgba.rgb = gammaCorrectInput(rgba.rgb);
     return rgba;
 }
 
 vec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {
-    vec4 rgba = textureCube(tex, uvw);
+    MEDP vec4 rgba = textureCube(tex, uvw);
     rgba.rgb = gammaCorrectInput(rgba.rgb);
     return rgba;
 }

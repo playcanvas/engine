@@ -1,5 +1,5 @@
 #ifdef MAPFLOAT
-uniform float material_opacity;
+uniform MEDP float material_opacity;
 #endif
 
 #ifdef MAPTEXTURE

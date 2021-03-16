@@ -1,4 +1,4 @@
-    vec4 dirLm = texture2D(texture_dirLightMap, vUv1);
+    MEDP vec4 dirLm = texture2D(texture_dirLightMap, vUv1);
 
     if (bakeDir > 0.5) {
         if (dAtten > 0.00001) {

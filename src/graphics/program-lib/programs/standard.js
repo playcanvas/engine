@@ -992,6 +992,16 @@ var standard = {
         // code += chunks.basePS;
         code = this._fsAddBaseCode(code, device, chunks, options);
 
+        if (true)//platform.mobile && !options.useHighP) 
+        {
+            code += '#define USE_MEDP\n'; // used for code path changes (clamps or offsets)
+            code += '#define MEDP mediump\n';
+            code += '#define HIGHP highp\n';
+        } else {
+            code += '#define MEDP ';
+            code += '#define HIGHP ';
+        }
+
         if (options.detailModes) {
             code += chunks.detailModesPS;
         }
@@ -999,12 +1009,14 @@ var standard = {
         var codeBegin = code;
         code = "";
 
+
+
         if (options.clearCoat > 0) {
             code += '#define CLEARCOAT\n';
         }
 
         if (options.opacityFadesSpecular === false) {
-            code += 'uniform float material_alphaFade;\n';
+            code += 'uniform MEDP float material_alphaFade;\n';
         }
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
@@ -1044,31 +1056,31 @@ var standard = {
                 lightShape = LIGHTSHAPE_PUNCTUAL;
             }
 
-            code += "uniform vec3 light" + i + "_color;\n";
+            code += "uniform MEDP vec3 light" + i + "_color;\n";
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                code += "uniform vec3 light" + i + "_direction;\n";
+                code += "uniform MEDP vec3 light" + i + "_direction;\n";
             } else {
-                code += "uniform vec3 light" + i + "_position;\n";
-                code += "uniform float light" + i + "_radius;\n";
+                code += "uniform MEDP vec3 light" + i + "_position;\n";
+                code += "uniform MEDP float light" + i + "_radius;\n";
                 if (lightType === LIGHTTYPE_SPOT) {
-                    code += "uniform vec3 light" + i + "_direction;\n";
-                    code += "uniform float light" + i + "_innerConeAngle;\n";
-                    code += "uniform float light" + i + "_outerConeAngle;\n";
+                    code += "uniform MEDP vec3 light" + i + "_direction;\n";
+                    code += "uniform MEDP float light" + i + "_innerConeAngle;\n";
+                    code += "uniform MEDP float light" + i + "_outerConeAngle;\n";
                 }
             }
             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                    code += "uniform vec3 light" + i + "_position;\n";
+                    code += "uniform MEDP vec3 light" + i + "_position;\n";
                 }
-                code += "uniform vec3 light" + i + "_halfWidth;\n";
-                code += "uniform vec3 light" + i + "_halfHeight;\n";
+                code += "uniform MEDP vec3 light" + i + "_halfWidth;\n";
+                code += "uniform MEDP vec3 light" + i + "_halfHeight;\n";
             }
             if (light.castShadows && !options.noShadow) {
-                code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                code += "uniform MEDP mat4 light" + i + "_shadowMatrix;\n";
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-                    code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
+                    code += "uniform MEDP vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
                 } else {
-                    code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
+                    code += "uniform MEDP vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
                 if (lightType === LIGHTTYPE_OMNI) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
@@ -1088,17 +1100,17 @@ var standard = {
                 if (light._cookie._cubemap) {
                     if (lightType === LIGHTTYPE_OMNI) {
                         code += "uniform samplerCube light" + i + "_cookie;\n";
-                        code += "uniform float light" + i + "_cookieIntensity;\n";
+                        code += "uniform MEDP float light" + i + "_cookieIntensity;\n";
                         if (!light.castShadows || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                     }
                 } else {
                     if (lightType === LIGHTTYPE_SPOT) {
                         code += "uniform sampler2D light" + i + "_cookie;\n";
-                        code += "uniform float light" + i + "_cookieIntensity;\n";
+                        code += "uniform MEDP float light" + i + "_cookieIntensity;\n";
                         if (!light.castShadows || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                         if (light._cookieTransform) {
-                            code += "uniform vec4 light" + i + "_cookieMatrix;\n";
-                            code += "uniform vec2 light" + i + "_cookieOffset;\n";
+                            code += "uniform MEDP vec4 light" + i + "_cookieMatrix;\n";
+                            code += "uniform MEDP vec2 light" + i + "_cookieOffset;\n";
                         }
                     }
                 }
@@ -1374,7 +1386,7 @@ var standard = {
         }
 
         if (options.ambientTint && !useOldAmbient) {
-            code += "uniform vec3 material_ambient;\n";
+            code += "uniform MEDP vec3 material_ambient;\n";
         }
 
         if (options.alphaTest) {
@@ -1398,7 +1410,7 @@ var standard = {
         var usesCookie = false;
         var usesCookieNow;
 
-        if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
+        if (options.twoSidedLighting) code += "uniform MEDP float twoSidedLightingNegScaleFactor;\n";
 
         // FRAGMENT SHADER BODY
 
@@ -1724,7 +1736,7 @@ var standard = {
 
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
-                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
+                code += "MEDP float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
                 code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
                 code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
             }
@@ -1763,40 +1775,40 @@ var standard = {
             code = chunks.cookiePS + code;
         }
         var structCode = "";
-        if (code.includes("dReflection")) structCode += "vec4 dReflection;\n";
-        if (code.includes("dTBN")) structCode += "mat3 dTBN;\n";
-        if (code.includes("dAlbedo")) structCode += "vec3 dAlbedo;\n";
-        if (code.includes("dEmission")) structCode += "vec3 dEmission;\n";
-        if (code.includes("dNormalW")) structCode += "vec3 dNormalW;\n";
-        if (code.includes("dVertexNormalW")) structCode += "vec3 dVertexNormalW;\n";
-        if (code.includes("dTangentW")) structCode += "vec3 dTangentW;\n";
-        if (code.includes("dBinormalW")) structCode += "vec3 dBinormalW;\n";
-        if (code.includes("dViewDirW")) structCode += "vec3 dViewDirW;\n";
-        if (code.includes("dReflDirW")) structCode += "vec3 dReflDirW;\n";
-        if (code.includes("dDiffuseLight")) structCode += "vec3 dDiffuseLight;\n";
-        if (code.includes("dSpecularLight")) structCode += "vec3 dSpecularLight;\n";
-        if (code.includes("dLightDirNormW")) structCode += "vec3 dLightDirNormW;\n";
-        if (code.includes("dLightDirW")) structCode += "vec3 dLightDirW;\n";
-        if (code.includes("dLightPosW")) structCode += "vec3 dLightPosW;\n";
-        if (code.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
-        if (code.includes("dNormalMap")) structCode += "vec3 dNormalMap;\n";
-        if (code.includes("dSpecularity")) structCode += "vec3 dSpecularity;\n";
-        if (code.includes("dSpecularityNoFres")) structCode += "vec3 dSpecularityNoFres;\n";
-        if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
-        if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
-        if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
-        if (code.includes("dAtten")) structCode += "float dAtten;\n";
-        if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
-        if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
-        if (code.includes("dAo")) structCode += "float dAo;\n";
-        if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
-        if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
-        if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
-        if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
-        if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
-        if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
-        if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
-        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
+        if (code.includes("dReflection")) structCode += "MEDP vec4 dReflection;\n";
+        if (code.includes("dTBN")) structCode += "MEDP mat3 dTBN;\n";
+        if (code.includes("dAlbedo")) structCode += "MEDP vec3 dAlbedo;\n";
+        if (code.includes("dEmission")) structCode += "MEDP vec3 dEmission;\n";
+        if (code.includes("dNormalW")) structCode += "MEDP vec3 dNormalW;\n";
+        if (code.includes("dVertexNormalW")) structCode += "MEDP vec3 dVertexNormalW;\n";
+        if (code.includes("dTangentW")) structCode += "MEDP vec3 dTangentW;\n";
+        if (code.includes("dBinormalW")) structCode += "MEDP vec3 dBinormalW;\n";
+        if (code.includes("dViewDirW")) structCode += "MEDP vec3 dViewDirW;\n";
+        if (code.includes("dReflDirW")) structCode += "MEDP vec3 dReflDirW;\n";
+        if (code.includes("dDiffuseLight")) structCode += "MEDP vec3 dDiffuseLight;\n";
+        if (code.includes("dSpecularLight")) structCode += "MEDP vec3 dSpecularLight;\n";
+        if (code.includes("dLightDirNormW")) structCode += "MEDP vec3 dLightDirNormW;\n";
+        if (code.includes("dLightDirW")) structCode += "MEDP vec3 dLightDirW;\n";
+        if (code.includes("dLightPosW")) structCode += "MEDP vec3 dLightPosW;\n";
+        if (code.includes("dShadowCoord")) structCode += "MEDP vec3 dShadowCoord;\n";
+        if (code.includes("dNormalMap")) structCode += "MEDP vec3 dNormalMap;\n";
+        if (code.includes("dSpecularity")) structCode += "MEDP vec3 dSpecularity;\n";
+        if (code.includes("dSpecularityNoFres")) structCode += "MEDP vec3 dSpecularityNoFres;\n";
+        if (code.includes("dUvOffset")) structCode += "MEDP vec2 dUvOffset;\n";
+        if (code.includes("dGlossiness")) structCode += "MEDP float dGlossiness;\n";
+        if (code.includes("dAlpha")) structCode += "MEDP float dAlpha;\n";
+        if (code.includes("dAtten")) structCode += "MEDP float dAtten;\n";
+        if (code.includes("dAttenD")) structCode += "MEDP float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
+        if (code.includes("dAtten3")) structCode += "MEDP vec3 dAtten3;\n";
+        if (code.includes("dAo")) structCode += "MEDP float dAo;\n";
+        if (code.includes("dMsdf")) structCode += "MEDP vec4 dMsdf;\n";
+        if (code.includes("ccReflection")) structCode += "MEDP vec4 ccReflection;\n";
+        if (code.includes("ccNormalW")) structCode += "MEDP vec3 ccNormalW;\n";
+        if (code.includes("ccReflDirW")) structCode += "MEDP vec3 ccReflDirW;\n";
+        if (code.includes("ccSpecularLight")) structCode += "MEDP vec3 ccSpecularLight;\n";
+        if (code.includes("ccSpecularity")) structCode += "MEDP float ccSpecularity;\n";
+        if (code.includes("ccSpecularityNoFres")) structCode += "MEDP float ccSpecularityNoFres;\n";
+        if (code.includes("ccGlossiness")) structCode += "MEDP float ccGlossiness;\n";
 
         code = codeBegin + structCode + code;
 

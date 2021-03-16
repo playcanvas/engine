@@ -5,7 +5,7 @@ uniform samplerCube texture_prefilteredCubeMap128;
 #endif
 
 void addAmbient() {
-    vec3 fixedReflDir = fixSeamsStatic(cubeMapRotate(dNormalW), 1.0 - 1.0 / 4.0);
+    MEDP vec3 fixedReflDir = fixSeamsStatic(cubeMapRotate(dNormalW), 1.0 - 1.0 / 4.0);
 #ifndef RIGHT_HANDED_CUBEMAP
     fixedReflDir.x *= -1.0;
 #endif

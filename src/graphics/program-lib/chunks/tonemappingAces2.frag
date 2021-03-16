@@ -1,4 +1,4 @@
-uniform float exposure;
+uniform MEDP float exposure;
 
 // ACES approximation by Stephen Hill
 
@@ -17,8 +17,8 @@ const mat3 ACESOutputMat = mat3(
 );
 
 vec3 RRTAndODTFit(vec3 v) {
-    vec3 a = v * (v + 0.0245786) - 0.000090537;
-    vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
+    MEDP vec3 a = v * (v + 0.0245786) - 0.000090537;
+    MEDP vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
     return a / b;
 }
 

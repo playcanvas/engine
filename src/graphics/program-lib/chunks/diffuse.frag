@@ -1,5 +1,5 @@
 #ifdef MAPCOLOR
-uniform vec3 material_diffuse;
+uniform MEDP vec3 material_diffuse;
 #endif
 
 #ifdef MAPTEXTURE

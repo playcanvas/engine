@@ -1,5 +1,5 @@
 void occludeSpecular() {
-    float specOcc = dAo;
+    MEDP float specOcc = dAo;
     dSpecularLight *= specOcc;
     dReflection *= specOcc;
 }

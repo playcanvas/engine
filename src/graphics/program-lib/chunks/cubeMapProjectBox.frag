@@ -1,19 +1,19 @@
-uniform vec3 envBoxMin, envBoxMax;
+uniform MEDP vec3 envBoxMin, envBoxMax;
 
 vec3 cubeMapProject(vec3 nrdir) {
     nrdir = cubeMapRotate(nrdir);
 
-    vec3 rbmax = (envBoxMax - vPositionW) / nrdir;
-    vec3 rbmin = (envBoxMin - vPositionW) / nrdir;
+    MEDP vec3 rbmax = (envBoxMax - vPositionW) / nrdir;
+    MEDP vec3 rbmin = (envBoxMin - vPositionW) / nrdir;
 
-    vec3 rbminmax;
+    MEDP vec3 rbminmax;
     rbminmax.x = nrdir.x>0.0? rbmax.x : rbmin.x;
     rbminmax.y = nrdir.y>0.0? rbmax.y : rbmin.y;
     rbminmax.z = nrdir.z>0.0? rbmax.z : rbmin.z;
 
-    float fa = min(min(rbminmax.x, rbminmax.y), rbminmax.z);
+    MEDP float fa = min(min(rbminmax.x, rbminmax.y), rbminmax.z);
 
-    vec3 posonbox = vPositionW + nrdir * fa;
-    vec3 envBoxPos = (envBoxMin + envBoxMax) * 0.5;
+    MEDP vec3 posonbox = vPositionW + nrdir * fa;
+    MEDP vec3 envBoxPos = (envBoxMin + envBoxMax) * 0.5;
     return posonbox - envBoxPos;
 }

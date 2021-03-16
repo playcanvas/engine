@@ -3,7 +3,7 @@
 // code: https://github.com/selfshadow/ltc_code/
 
 mat3 transposeMat3( const in mat3 m ) {
-	mat3 tmp;
+	MEDP mat3 tmp;
 	tmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );
 	tmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );
 	tmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );
@@ -11,12 +11,12 @@ mat3 transposeMat3( const in mat3 m ) {
 }
 
 vec2 LTC_Uv( const in vec3 N, const in vec3 V, const in float roughness ) {
-	const float LUT_SIZE = 64.0;
-	const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;
-	const float LUT_BIAS = 0.5 / LUT_SIZE;
-	float dotNV = saturate( dot( N, V ) );
+	const MEDP float LUT_SIZE = 64.0;
+	const MEDP float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;
+	const MEDP float LUT_BIAS = 0.5 / LUT_SIZE;
+	MEDP float dotNV = saturate( dot( N, V ) );
 	// texture parameterized by sqrt( GGX alpha ) and sqrt( 1 - cos( theta ) )
-	vec2 uv = vec2( roughness, sqrt( 1.0 - dotNV ) );
+	MEDP vec2 uv = vec2( roughness, sqrt( 1.0 - dotNV ) );
 	uv = uv * LUT_SCALE + LUT_BIAS;
 	return uv;
 }
@@ -24,46 +24,46 @@ vec2 LTC_Uv( const in vec3 N, const in vec3 V, const in float roughness ) {
 float LTC_ClippedSphereFormFactor( const in vec3 f ) {
 	// Real-Time Area Lighting: a Journey from Research to Production (p.102)
 	// An approximation of the form factor of a horizon-clipped rectangle.
-	float l = length( f );
+	MEDP float l = length( f );
 	return max( ( l * l + f.z ) / ( l + 1.0 ), 0.0 );
 }
 
 vec3 LTC_EdgeVectorFormFactor( const in vec3 v1, const in vec3 v2 ) {
-	float x = dot( v1, v2 );
-	float y = abs( x );
+	MEDP float x = dot( v1, v2 );
+	MEDP float y = abs( x );
 	// rational polynomial approximation to theta / sin( theta ) / 2PI
-	float a = 0.8543985 + ( 0.4965155 + 0.0145206 * y ) * y;
-	float b = 3.4175940 + ( 4.1616724 + y ) * y;
-	float v = a / b;
-	float theta_sintheta = ( x > 0.0 ) ? v : 0.5 * inversesqrt( max( 1.0 - x * x, 1e-7 ) ) - v;
+	MEDP float a = 0.8543985 + ( 0.4965155 + 0.0145206 * y ) * y;
+	MEDP float b = 3.4175940 + ( 4.1616724 + y ) * y;
+	MEDP float v = a / b;
+	MEDP float theta_sintheta = ( x > 0.0 ) ? v : 0.5 * inversesqrt( max( 1.0 - x * x, 1e-7 ) ) - v;
 	return cross( v1, v2 ) * theta_sintheta;
 }
 
 struct Coords {
-	vec3 coord0;
-	vec3 coord1;
-	vec3 coord2;
-	vec3 coord3;
+	MEDP vec3 coord0;
+	MEDP vec3 coord1;
+	MEDP vec3 coord2;
+	MEDP vec3 coord3;
 };
 
 float LTC_EvaluateRect( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in Coords rectCoords) {
 	// bail if point is on back side of plane of light
 	// assumes ccw winding order of light vertices
-	vec3 v1 = rectCoords.coord1 - rectCoords.coord0;
-	vec3 v2 = rectCoords.coord3 - rectCoords.coord0;
+	MEDP vec3 v1 = rectCoords.coord1 - rectCoords.coord0;
+	MEDP vec3 v2 = rectCoords.coord3 - rectCoords.coord0;
 	
-	vec3 lightNormal = cross( v1, v2 );
+	MEDP vec3 lightNormal = cross( v1, v2 );
 	// if( dot( lightNormal, P - rectCoords.coord0 ) < 0.0 ) return 0.0;	
-	float factor = sign(-dot( lightNormal, P - rectCoords.coord0 ));
+	MEDP float factor = sign(-dot( lightNormal, P - rectCoords.coord0 ));
 
 	// construct orthonormal basis around N
-	vec3 T1, T2;
+	MEDP vec3 T1, T2;
 	T1 = normalize( V - N * dot( V, N ) );
 	T2 =  factor * cross( N, T1 ); // negated from paper; possibly due to a different handedness of world coordinate system
 	// compute transform
-	mat3 mat = mInv * transposeMat3( mat3( T1, T2, N ) );
+	MEDP mat3 mat = mInv * transposeMat3( mat3( T1, T2, N ) );
 	// transform rect
-	vec3 coords[ 4 ];
+	MEDP vec3 coords[ 4 ];
 	coords[ 0 ] = mat * ( rectCoords.coord0 - P );
 	coords[ 1 ] = mat * ( rectCoords.coord1 - P );
 	coords[ 2 ] = mat * ( rectCoords.coord2 - P );
@@ -74,13 +74,13 @@ float LTC_EvaluateRect( const in vec3 N, const in vec3 V, const in vec3 P, const
 	coords[ 2 ] = normalize( coords[ 2 ] );
 	coords[ 3 ] = normalize( coords[ 3 ] );
 	// calculate vector form factor
-	vec3 vectorFormFactor = vec3( 0.0 );
+	MEDP vec3 vectorFormFactor = vec3( 0.0 );
 	vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 0 ], coords[ 1 ] );
 	vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 1 ], coords[ 2 ] );
 	vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 2 ], coords[ 3 ] );
 	vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 3 ], coords[ 0 ] );
 	// adjust for horizon clipping
-	float result = LTC_ClippedSphereFormFactor( vectorFormFactor );
+	MEDP float result = LTC_ClippedSphereFormFactor( vectorFormFactor );
 
 	return result;
 }
@@ -98,13 +98,13 @@ Coords getLTCLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 float dSphereRadius;
 Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	Coords coords;
-	float radius = max(length(halfWidth), length(halfWidth));
+	MEDP float radius = max(length(halfWidth), length(halfWidth));
 
 	dSphereRadius = radius;
 
-	vec3 f = normalize(lightPos-view_position);
-	vec3 w = normalize(cross(f, halfHeight));
-	vec3 h = normalize(cross(f, w));
+	MEDP vec3 f = normalize(lightPos-view_position);
+	MEDP vec3 w = normalize(cross(f, halfHeight));
+	MEDP vec3 h = normalize(cross(f, w));
 
 	coords.coord0 = lightPos + w * radius - h * radius;
 	coords.coord1 = lightPos - w * radius - h * radius;
@@ -121,18 +121,18 @@ vec2 ccLTCUV;
 #endif
 vec2 getLTCLightUV(float tGlossiness, vec3 tNormalW)
 {
-	float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
+	MEDP float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
 	return LTC_Uv( tNormalW, dViewDirW, roughness );
 }
 
 //used for energy conservation and to modulate specular
-vec3 dLTCSpecFres;
+MEDP vec3 dLTCSpecFres;
 #ifdef CLEARCOAT
-vec3 ccLTCSpecFres;
+MEDP vec3 ccLTCSpecFres;
 #endif
 vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
 {
-	vec4 t2 = texture2D( areaLightsLutTex2, uv );
+	MEDP vec4 t2 = texture2D( areaLightsLutTex2, uv );
 
 	#ifdef AREA_R8_G8_B8_A8_LUTS
 	t2 *= vec4(0.693103,1,1,1);
@@ -173,13 +173,13 @@ void calcSphereLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 // http://momentsingraphics.de/?p=105
 vec3 SolveCubic(vec4 Coefficient)
 {
-	float pi = 3.14159;
+	MEDP float pi = 3.14159;
     // Normalize the polynomial
     Coefficient.xyz /= Coefficient.w;
     // Divide middle coefficients by three
     Coefficient.yz /= 3.0;
 
-    float A = Coefficient.w;
+    MEDP float A = Coefficient.w;
     float B = Coefficient.z;
     float C = Coefficient.y;
     float D = Coefficient.x;
@@ -359,20 +359,20 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     avgDir = rotate * avgDir;
     avgDir = normalize(avgDir);
 
-    float L1 = sqrt(-e2 / e3);
-    float L2 = sqrt(-e2 / e1);
+    MEDP float L1 = sqrt(-e2 / e3);
+    MEDP float L2 = sqrt(-e2 / e1);
 
-    float formFactor = L1 * L2 * inversesqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
+    MEDP float formFactor = L1 * L2 * inversesqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
 	
-	const float LUT_SIZE = 64.0;
-	const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;
-	const float LUT_BIAS = 0.5 / LUT_SIZE;
+	const MEDP float LUT_SIZE = 64.0;
+	const MEDP float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;
+	const MEDP float LUT_BIAS = 0.5 / LUT_SIZE;
 
     // use tabulated horizon-clipped sphere
-    vec2 uv = vec2(avgDir.z * 0.5 + 0.5, formFactor);
+    MEDP vec2 uv = vec2(avgDir.z * 0.5 + 0.5, formFactor);
     uv = uv*LUT_SCALE + LUT_BIAS;
 
-	float scale = texture2D( areaLightsLutTex2, uv ).w;
+	MEDP float scale = texture2D( areaLightsLutTex2, uv ).w;
 
     return formFactor*scale;
 }
@@ -387,13 +387,13 @@ float getDiskLightDiffuse() {
 
 float getSphereLightDiffuse() {
 	// NB: this could be improved further with distance based wrap lighting
-	float falloff = dSphereRadius / (dot(dLightDirW, dLightDirW) + dSphereRadius);
+	MEDP float falloff = dSphereRadius / (dot(dLightDirW, dLightDirW) + dSphereRadius);
 	return getLightDiffuse()*falloff;
 }
 
 mat3 getLTCLightInvMat(vec2 uv)
 {
-	vec4 t1 = texture2D( areaLightsLutTex1, uv );
+	MEDP vec4 t1 = texture2D( areaLightsLutTex1, uv );
 
 	#ifdef AREA_R8_G8_B8_A8_LUTS
 	t1 *= vec4(1.001, 0.3239, 0.60437568, 1.0);
@@ -408,7 +408,7 @@ mat3 getLTCLightInvMat(vec2 uv)
 }
 
 float calcRectLightSpecular(vec3 tNormalW, vec2 uv) {
-	mat3 mInv = getLTCLightInvMat(uv);
+	MEDP mat3 mInv = getLTCLightInvMat(uv);
 	return LTC_EvaluateRect( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
@@ -423,7 +423,7 @@ float getRectLightSpecularCC() {
 #endif
 
 float calcDiskLightSpecular(vec3 tNormalW, vec2 uv) {
-	mat3 mInv = getLTCLightInvMat(uv);
+	MEDP mat3 mInv = getLTCLightInvMat(uv);
 	return LTC_EvaluateDisk( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
