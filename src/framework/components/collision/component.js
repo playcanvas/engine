@@ -48,6 +48,8 @@ import { Component } from '../component.js';
  * volume from tip to tip. Defaults to 2.
  * @property {Asset|number} asset The asset for the model of the mesh collision volume - can also be
  * an asset id. Defaults to null.
+ * @property {Asset|number} renderAsset The render asset of the mesh collision volume - can also be
+ * an asset id. Defaults to null. If not set then the asset property will be checked instead.
  * @property {Model} model The model that is added to the scene graph for the mesh collision
  * volume.
  */
@@ -65,7 +67,9 @@ class CollisionComponent extends Component {
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
         this.on("set_asset", this.onSetAsset, this);
+        this.on("set_renderAsset", this.onSetRenderAsset, this);
         this.on("set_model", this.onSetModel, this);
+        this.on("set_render", this.onSetRender, this);
     }
 
     // Events Documentation
@@ -175,6 +179,41 @@ class CollisionComponent extends Component {
         }
     }
 
+    onSetRenderAsset(name, oldValue, newValue) {
+        var asset;
+        var assets = this.system.app.assets;
+
+        if (oldValue) {
+            // Remove old listeners
+            asset = assets.get(oldValue);
+            if (asset) {
+                asset.off('remove', this.onRenderAssetRemoved, this);
+            }
+        }
+
+        if (newValue) {
+            if (newValue instanceof Asset) {
+                this.data.renderAsset = newValue.id;
+            }
+
+            asset = assets.get(this.data.renderAsset);
+            if (asset) {
+                // make sure we don't subscribe twice
+                asset.off('remove', this.onRenderAssetRemoved, this);
+                asset.on('remove', this.onRenderAssetRemoved, this);
+            }
+        }
+
+        if (this.data.initialized && this.data.type === 'mesh') {
+            if (!newValue) {
+                // if render asset is null set render to null
+                // so that it's going to be removed from the simulation
+                this.data.render = null;
+            }
+            this.system.recreatePhysicalShapes(this);
+        }
+    }
+
     onSetModel(name, oldValue, newValue) {
         if (this.data.initialized && this.data.type === 'mesh') {
             // recreate physical shapes skipping loading the model
@@ -184,10 +223,21 @@ class CollisionComponent extends Component {
         }
     }
 
+    onSetRender(name, oldValue, newValue) {
+        this.onSetModel(name, oldValue, newValue);
+    }
+
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
         if (this.data.asset === asset.id) {
             this.asset = null;
+        }
+    }
+
+    onRenderAssetRemoved(asset) {
+        asset.off('remove', this.onRenderAssetRemoved, this);
+        if (this.data.renderAsset === asset.id) {
+            this.renderAsset = null;
         }
     }
 
