@@ -1642,7 +1642,7 @@ class ForwardRenderer {
                         shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
                         light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
                     }
-    
+
                     this.setCamera(shadowCam, shadowCam.renderTarget, true, passes === 1);
 
                     // Sort shadow casters
