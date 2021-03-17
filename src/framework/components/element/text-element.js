@@ -286,7 +286,7 @@ class TextElement {
         if (text === undefined) text = this._text;
 
         // get the list of symbols
-        this._symbols = string.getSymbols(text);
+        this._symbols = string.getSymbols(text.normalize('NFC'));
 
         // handle null string
         if (this._symbols.length === 0) {
