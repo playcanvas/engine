@@ -219,8 +219,8 @@ class AnimController {
     _findTransition(from, to) {
         var transitions = [];
 
-        // If from and to is supplied, find transitions that include the required source and destination states
         if (from && to) {
+            // If from and to is supplied, find transitions that include the required source and destination states
             transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
             // If no transition is active, look for transitions from the active & any states.
@@ -281,7 +281,13 @@ class AnimController {
 
         // return the highest priority transition to use
         if (transitions.length > 0) {
-            return transitions[0];
+            var transition = transitions[0];
+            if (transition.to === ANIM_STATE_END) {
+                var startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
+                transition.to = startTransition.to;
+                console.log(transition);
+            }
+            return transition;
         }
         return null;
     }
