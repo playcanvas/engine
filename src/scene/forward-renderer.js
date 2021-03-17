@@ -1572,12 +1572,6 @@ class ForwardRenderer {
                 this.device.pushMarker("SHADOW " + light._node.name);
                 // #endif
 
-                if (type !== LIGHTTYPE_OMNI) {
-                    shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                    shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
-                    light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
-                }
-
                 if (device.webgl2) {
                     if (type === LIGHTTYPE_OMNI) {
                         device.setDepthBias(false);
@@ -1597,7 +1591,9 @@ class ForwardRenderer {
                     }
                 }
 
-                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                    light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                }
 
                 this._shadowMapUpdates += passes;
 
@@ -1641,6 +1637,12 @@ class ForwardRenderer {
                         shadowCam.scissorRect = rect;
                     }
 
+                    if (type !== LIGHTTYPE_OMNI) {
+                        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
+                        shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+                        light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                    }
+    
                     this.setCamera(shadowCam, shadowCam.renderTarget, true, passes === 1);
 
                     // Sort shadow casters
