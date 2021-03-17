@@ -6,6 +6,7 @@ import { Texture } from '../../../graphics/texture.js';
 import { basisTargetFormat, basisTranscode } from '../../basis.js';
 
 /**
+ * @private
  * @class
  * @name BasisParser
  * @implements {TextureParser}

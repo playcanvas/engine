@@ -51,6 +51,7 @@ class Reader {
 }
 
 /**
+ * @private
  * @class
  * @name HdrParser
  * @implements {TextureParser}
