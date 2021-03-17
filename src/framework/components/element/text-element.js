@@ -46,7 +46,7 @@ class MeshInfo {
 const LINE_BREAK_CHAR = /^[\r\n]$/;
 const WHITESPACE_CHAR = /^[ \t]$/;
 const WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
-const CJK_CHAR = /^[\u4E00-\u9FFF]*$/;
+const CJK_CHAR = /^[\u4E00-\u9FFF]$/;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 const CONTROL_CHARS = [
