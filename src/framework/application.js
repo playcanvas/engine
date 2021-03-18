@@ -1674,10 +1674,9 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @private
      * @name Application#setAreaLightLuts
      * @description Sets the area light LUT asset for this app.
-     * @param {Asset} asset - Asset of type `binary` to be set.
+     * @param {Asset} asset - LUT asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
         if (asset) {

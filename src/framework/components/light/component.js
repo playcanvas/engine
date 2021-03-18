@@ -50,7 +50,6 @@ var _lightPropsDefault = [];
  * @property {string} type The type of light. Can be:
  * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
  * * "omni": A omni-directional light that illuminates in all directions from the light source.
- * * "point": A omni-directional light but light source shape is {@link pc.LIGHTSHAPE_PUNCTUAL}.
  * * "spot": A omni-directional light but is bounded by a cone.
  * Defaults to "directional".
  * @property {Color} color The Color of the light. The alpha component of the color is
@@ -61,7 +60,7 @@ var _lightPropsDefault = [];
  * * {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
  * * {@link pc.LIGHTSHAPE_DISK}: Disk shape.
  * * {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
- * Affects spot lights only. Defaults to pc.LIGHTSHAPE_PUNCTUAL.
+ * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows
  * are no longer rendered. Affects directional lights only. Defaults to 40.
