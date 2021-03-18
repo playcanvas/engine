@@ -339,7 +339,6 @@
             lightsEntity.anim.assignAnimation('Flash', assetManifest['animClipFlashingLight'].asset.resource);
 
             // create a control panel using PCUI https://playcanvas.github.io/pcui/getting-started/
-            var width = 201;
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
                 collapsible: true,
@@ -355,7 +354,7 @@
             });
             controlPanel.append(toggleButton);
 
-            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; z-index: 9999;`);
+            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${201}px; z-index: 9999;`);
 
             document.body.appendChild(controlPanel.dom);
         }

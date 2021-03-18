@@ -175,14 +175,14 @@
             app.start();
 
             // create a control panel using PCUI https://playcanvas.github.io/pcui/getting-started/
-            var width = 201;
-            var height = 201;
-
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
                 collapsible: true,
                 collapsed: false
             });
+
+            var width = 201;
+            var height = 201;
 
             controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; height: ${height+32}px; z-index: 9999;`);
 
