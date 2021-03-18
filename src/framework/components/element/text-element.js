@@ -733,6 +733,17 @@ class TextElement {
                                 break;
                             }
                         }
+
+                        // #ifdef DEBUG
+                        if (!json.missingChars) {
+                            json.missingChars = new Set();
+                        }
+
+                        if (!json.missingChars.has(char)) {
+                            console.warn("Character '" + char + "' is missing from the font " + json.info.face);
+                            json.missingChars.add(char);
+                        }
+                        // #endif
                     }
                 }
 
