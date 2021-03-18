@@ -29,12 +29,42 @@ class ContainerResource {
         this.registry = null;
     }
 
+    /**
+     * @function
+     * @name ContainerResource#instantiateModelEntity
+     * @description Instantiates an entity with a model component.
+     * @param {object} [options] - The initialization data for the model component type {@link ModelComponent}.
+     * @returns {Entity} A single entity with a model component. Model component internally contains a hierarchy based on {@link GraphNode}.
+     * @example
+     * // load a glb file and instantiate an entity with a model component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateModelEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     * });
+     */
     instantiateModelEntity(options) {
         var entity = new Entity();
         entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
         return entity;
     }
 
+    /**
+     * @function
+     * @name ContainerResource#instantiateRenderEntity
+     * @description Instantiates an entity with a render component.
+     * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
+     * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
+     * @example
+     * // load a glb file and instantiate an entity with a model component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateRenderEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     * });
+     */
     instantiateRenderEntity(options) {
         // helper function to recursively clone a hierarchy while converting ModelComponent to RenderComponents
         var cloneToEntity = function (skinInstances, model, node) {

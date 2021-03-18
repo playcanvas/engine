@@ -58,7 +58,8 @@ var categories = [
             "shader-toon",
             "shader-wobble",
             "texture-basis",
-            "transform-feedback"
+            "transform-feedback",
+            "video-texture"
         ]
     }, {
         name: "loaders",

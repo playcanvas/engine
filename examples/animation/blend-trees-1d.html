@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <script src="http://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
     <style>
         body { 
@@ -25,7 +26,41 @@
 
     <!-- The script -->
     <script>
-        var animStateGraph = {
+
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.Entity(app);
+        cameraEntity.addComponent("camera", {
+            clearColor: new pc.Color(0.1, 0.15, 0.2)
+        });
+        cameraEntity.translateLocal(0.0, 0.75, 5.0);
+        app.root.addChild(cameraEntity);
+
+        // Create an entity with a light component
+        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+        });
+        light.setLocalEulerAngles(45, 30, 0);
+        app.root.addChild(light);
+
+        // create an anim state graph
+        var animStateGraphData = {
             "layers": [
                 {
                     "name": "locomotion",
@@ -71,83 +106,58 @@
             }
         };
 
-        var canvas = document.getElementById("application-canvas");
+        // Load state graph, model and animation assets
+        var assetManifest = {
+            'animStateGraph': {
+                type: 'animstategraph',
+                data: animStateGraphData
+            },
+            'model': {
+                type: 'container',
+                url: '../assets/models/bitmoji.glb'
+            },
+            'idleAnim': {
+                type: 'container',
+                url: '../assets/animations/bitmoji/idle.glb'
+            },
+            'danceAnim': {
+                type: 'container',
+                url: '../assets/animations/bitmoji/dance.glb'
+            }
+        };
+        loadManifestAssets(app, assetManifest, run);
 
-        // Create the application and start the update loop
-        var app = new pc.Application(canvas);
-
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
-        });
-
-        var miniStats = new pcx.MiniStats(app);
-
-        var entity;
-
-        // Create an Entity with a camera component
-        var cameraEntity = new pc.Entity(app);
-        cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0.1, 0.15, 0.2)
-        });
-        cameraEntity.translateLocal(0.0, 0.75, 5.0);
-        app.root.addChild(cameraEntity);
-
-        // Create an entity with a light component
-        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
-        var light = new pc.Entity();
-        light.addComponent("light", {
-            type: "directional",
-        });
-        light.setLocalEulerAngles(45, 30, 0);
-        app.root.addChild(light);
-
-        // Load model and animation assets
-        var model = null;
-        var idleAnim = null;
-        var danceAnim = null;
-
-        var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
-        stateGraphAsset.once('load', function (asset) {
-            var stateGraph = asset.resource;
-        app.assets.loadFromUrl("../assets/models/bitmoji.glb", "container", function (err, asset) {
-            model = asset;
-        app.assets.loadFromUrl("../assets/animations/bitmoji/idle.glb", "container", function (err, asset) {
-            idleAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/bitmoji/dance.glb", "container", function (err, asset) {
-            danceAnim = asset;
-
-            var modelEntity = model.resource.instantiateRenderEntity({
-                    castShadows: true
+        function run () {
+            // create an entity from the loaded model using the render component
+            var modelEntity = assetManifest['model'].asset.resource.instantiateRenderEntity({
+                castShadows: true
             });
 
+            // add an anim component to the entity
             modelEntity.addComponent('anim', {
                 activate: true,
             });
 
-            modelEntity.anim.loadStateGraph(stateGraph);
+            // load the state graph into the anim component
+            modelEntity.anim.loadStateGraph(assetManifest['animStateGraph'].asset.resource);
+
+            // load the state graph asset resource into the anim component
             var locomotionLayer = modelEntity.anim.baseLayer;
-            locomotionLayer.assignAnimation('Movement.Idle', idleAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Movement.Dance', danceAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Movement.Idle', assetManifest['idleAnim'].asset.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Movement.Dance', assetManifest['danceAnim'].asset.resource.animations[0].resource);
 
             app.root.addChild(modelEntity);
 
             app.start();
 
-            // controls
-
-            var width = 201;
-
+            // create a control panel using PCUI https://playcanvas.github.io/pcui/getting-started/
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
-                collapsible: true
+                collapsible: true,
+                collapsed: false
             });
-            controlPanel.collapsed = false;
 
-            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; z-index: 9999;`);
+            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${201}px; z-index: 9999;`);
 
             document.body.appendChild(controlPanel.dom);
 
@@ -162,13 +172,7 @@
                 modelEntity.anim.setFloat('speed', value);
             });
             controlPanel.content.append(speedSlider);
-
-            });
-            });
-            });
-        }.bind(this));
-        pc.app.assets.add(stateGraphAsset);
-        pc.app.assets.load(stateGraphAsset);
+        }
     </script>
 </body>
 </html>

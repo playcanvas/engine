@@ -263,6 +263,8 @@ Object.defineProperty(Vec2.prototype, "data", {
     }
 });
 
+Vec2.prototype.scale = Vec2.prototype.mulScalar;
+
 Object.defineProperty(Vec3.prototype, "data", {
     get: function () {
         // #ifdef DEBUG
@@ -277,6 +279,8 @@ Object.defineProperty(Vec3.prototype, "data", {
         return this._data;
     }
 });
+
+Vec3.prototype.scale = Vec3.prototype.mulScalar;
 
 Object.defineProperty(Vec4.prototype, "data", {
     get: function () {
@@ -293,6 +297,8 @@ Object.defineProperty(Vec4.prototype, "data", {
         return this._data;
     }
 });
+
+Vec4.prototype.scale = Vec4.prototype.mulScalar;
 
 // SHAPE
 

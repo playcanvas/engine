@@ -144,7 +144,6 @@ export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
 export { AudioHandler } from './resources/audio.js';
-export { BasisParser } from './resources/parser/texture/basis.js';
 export { BinaryHandler } from './resources/binary.js';
 export { BundleHandler } from './resources/bundle.js';
 export { ContainerHandler, ContainerResource } from './resources/container.js';
@@ -154,11 +153,8 @@ export { FolderHandler } from './resources/folder.js';
 export { FontHandler } from './resources/font.js';
 export { HierarchyHandler } from './resources/hierarchy.js';
 export { HtmlHandler } from './resources/html.js';
-export { ImgParser } from './resources/parser/texture/img.js';
 export { JsonHandler } from './resources/json.js';
 export { JsonStandardMaterialParser } from './resources/parser/material/json-standard-material.js';
-export { KtxParser } from './resources/parser/texture/ktx.js';
-export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 export { MaterialHandler } from './resources/material.js';
 export { ModelHandler } from './resources/model.js';
 export { RenderHandler } from './resources/render.js';
@@ -167,6 +163,7 @@ export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';
 export { SceneHandler } from './resources/scene.js';
 export { SceneSettingsHandler } from './resources/scene-settings.js';
+export { SceneUtils } from './resources/scene-utils';
 export { ShaderHandler } from './resources/shader.js';
 export { SpriteHandler } from './resources/sprite.js';
 export { TemplateHandler } from './resources/template.js';
@@ -249,6 +246,8 @@ export { ParticleSystemComponent } from './framework/components/particle-system/
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 export * from './framework/components/rigid-body/constants.js';
+export { RenderComponent } from './framework/components/render/component.js';
+export { RenderComponentSystem } from './framework/components/render/system.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry } from './framework/scene-registry.js';
@@ -278,7 +277,6 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
 export { Template } from './templates/template.js';
-export { TemplateUtils } from './templates/template-utils.js';
 
 // VR
 export { VrDisplay } from './vr/vr-display.js';

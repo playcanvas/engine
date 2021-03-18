@@ -1,6 +1,5 @@
 import { Entity } from '../../framework/entity.js';
 
-import { TemplateUtils } from '../../templates/template-utils.js';
 import { CompressUtils } from '../../compress/compress-utils';
 import { Decompress } from '../../compress/decompress';
 
@@ -19,10 +18,6 @@ class SceneParser {
         var compressed = data.compressedFormat;
         if (compressed) {
             data.entities = new Decompress(data.entities, compressed).run();
-        }
-
-        if (data.collapsedInstances) {
-            this._addCollapsedToEntities(this._app, data);
         }
 
         // instantiate entities
@@ -123,15 +118,6 @@ class SceneParser {
         }
 
         return entity;
-    }
-
-    _addCollapsedToEntities(app, data) {
-        data.collapsedInstances.forEach(function (h) {
-            var expanded = TemplateUtils.expandTemplateEntities(
-                app, h.instanceEntities);
-
-            Object.assign(data.entities, expanded);
-        });
     }
 }
 

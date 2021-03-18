@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <script src="../wasm-loader.js"></script>
     <script src="http://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
     <style>
@@ -26,15 +27,23 @@
 
     <!-- The script -->
     <script>
-        if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
-        } else {
-            loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
-        }
+        var canvas = document.getElementById("application-canvas");
 
-        function demo() {
-            
-        var animStateGraph = {
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        // create an anim state graph
+        var animStateGraphData = {
             "layers": [
                 {
                     "name": "locomotion",
@@ -77,7 +86,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "GREATER_THAN",
+                                    "predicate": pc.ANIM_GREATER_THAN,
                                     "value": 0
                                 }
                             ]
@@ -90,7 +99,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "jump",
-                                    "predicate": "EQUAL_TO",
+                                    "predicate": pc.ANIM_EQUAL_TO,
                                     "value": true
                                 }
                             ]
@@ -117,7 +126,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "LESS_THAN_EQUAL_TO",
+                                    "predicate": pc.ANIM_LESS_THAN_EQUAL_TO,
                                     "value": 0
                                 }
                             ]
@@ -130,7 +139,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "GREATER_THAN",
+                                    "predicate": pc.ANIM_GREATER_THAN,
                                     "value": 1
                                 }
                             ]
@@ -143,7 +152,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "LESS_THAN",
+                                    "predicate": pc.ANIM_LESS_THAN,
                                     "value": 2
                                 }
                             ]
@@ -165,97 +174,109 @@
             }
         };
 
-        var canvas = document.getElementById("application-canvas");
+        // Load state graph, model, texture and animation assets
+        var assetManifest = {
+            'animStateGraph': {
+                type: 'animstategraph',
+                data: animStateGraphData
 
-        // Create the application and start the update loop
-        var app = new pc.Application(canvas);
+            },
+            'model': {
+                type: 'container',
+                url: '../assets/models/bitmoji.glb'
+            },
+            'idleAnim': {
+                type: 'container',
+                url: '../assets/animations/bitmoji/idle.glb'
+            },
+            'jumpAnim': {
+                type: 'container',
+                url: '../assets/animations/bitmoji/jump-flip.glb'
+            },
+            'walkAnim': {
+                type: 'container',
+                url: '../assets/animations/bitmoji/walk.glb'
+            },
+            'jogAnim': {
+                type: 'container',
+                url: '../assets/animations/bitmoji/run.glb'
+            },
+            'playcanvasGreyTexture': {
+                type: 'texture',
+                url: '../assets/textures/playcanvas-grey.png'
+            }
+        };
+        loadManifestAssets(app, assetManifest, loadWasm);
 
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        function loadWasm() {
+            if (wasmSupported()) {
+                loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', run);
+            } else {
+                loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', run);
+            }
+        }
 
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
-        });
+        function run() {
+            
+            // Create an Entity with a camera component
+            var cameraEntity = new pc.Entity(app);
+            cameraEntity.name = "Camera";
+            cameraEntity.addComponent("camera", {
+                clearColor: new pc.Color(0.1, 0.15, 0.2)
+            });
+            cameraEntity.translateLocal(0, 5, 15);
+            cameraEntity.rotateLocal(-20, 0, 0);
+            app.root.addChild(cameraEntity);
 
-        var miniStats = new pcx.MiniStats(app);
-
-        var entity;
-
-        // Create an Entity with a camera component
-        var cameraEntity = new pc.Entity(app);
-        cameraEntity.name = "Camera";
-        cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0.1, 0.15, 0.2)
-        });
-        cameraEntity.translateLocal(0, 5, 15);
-        cameraEntity.rotateLocal(-20, 0, 0);
-        app.root.addChild(cameraEntity);
-
-        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
-        // Create an entity with a light component
-        var light = new pc.Entity();
-        light.addComponent("light", {
-            type: "directional",
-            color: new pc.Color(1, 1, 1),
-            castShadows: true,
-            intensity: 1,
-            shadowBias: 0.2,
-            shadowDistance: 5,
-            normalOffsetBias: 0.05,
-            shadowResolution: 2048
-        });
-        light.setLocalEulerAngles(45, 30, 0);
-        app.root.addChild(light);
-
-        // Load model and animation assets
-        var model = null;
-        var idleAnim = null;
-        var walkAnim = null;
-        var strafeLeftAnim = null;
-        var strafeRightAnim = null;
-        var jogAnim = null;
-
-        var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
-        stateGraphAsset.once('load', function (asset) {
-            var stateGraph = asset.resource;
-        app.assets.loadFromUrl("../assets/models/bitmoji.glb", "container", function (err, asset) {
-            model = asset;
-        app.assets.loadFromUrl("../assets/animations/bitmoji/idle.glb", "container", function (err, asset) {
-            idleAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/bitmoji/walk.glb", "container", function (err, asset) {
-            walkAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/bitmoji/run.glb", "container", function (err, asset) {
-            jogAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/bitmoji/jump-flip.glb", "container", function (err, asset) {
-            jumpAnim = asset;
+            app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
+            // Create an entity with a light component
+            var light = new pc.Entity();
+            light.addComponent("light", {
+                type: "directional",
+                color: new pc.Color(1, 1, 1),
+                castShadows: true,
+                intensity: 1,
+                shadowBias: 0.2,
+                shadowDistance: 5,
+                normalOffsetBias: 0.05,
+                shadowResolution: 2048
+            });
+            light.setLocalEulerAngles(45, 30, 0);
+            app.root.addChild(light);
 
             app.start();
 
             var characterEntity = new pc.Entity();
 
-            var renderEntity = model.resource.instantiateRenderEntity({
+            // create an entity from the loaded model using the render component
+            var renderEntity = assetManifest['model'].asset.resource.instantiateRenderEntity({
                 castShadows: true
             });
 
+            // assign the renderEntity as the child of character entity. All transforms of the renderEntity and it's children are driven by the anim component.
+            // The charaterEntity transform will be controlled by the Locomotion script.
             characterEntity.addChild(renderEntity);
 
+            // add an anim component to the entity
             characterEntity.addComponent('anim', {
                 activate: true
             });
 
-            characterEntity.anim.loadStateGraph(stateGraph);
+            // load the state graph into the anim component
+            characterEntity.anim.loadStateGraph(assetManifest['animStateGraph'].asset.resource);
+
+            // assign the loaded animation assets to each of the states present in the state graph
             var locomotionLayer = characterEntity.anim.baseLayer;
-            locomotionLayer.assignAnimation('Idle', idleAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Walk', walkAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Jog', jogAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Jump', jumpAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Idle', assetManifest['idleAnim'].asset.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Walk', assetManifest['walkAnim'].asset.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Jog', assetManifest['jogAnim'].asset.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Jump', assetManifest['jumpAnim'].asset.resource.animations[0].resource);
 
             app.root.addChild(characterEntity);
 
             var planeEntity = new pc.Entity();
             planeEntity.name = 'Plane';
-            planeEntity.addComponent("model", {
+            planeEntity.addComponent("render", {
                 type: "plane"
             });
             planeEntity.addComponent("collision", {
@@ -267,28 +288,20 @@
             });
             planeEntity.setLocalScale(15,1,15);
             planeEntity.setPosition(0, 0, 0);
+            var material = new pc.StandardMaterial();
+            material.diffuseMap = assetManifest['playcanvasGreyTexture'].asset.resource;
+            material.update();
+            planeEntity.render.meshInstances[0].material = material;
             app.root.addChild(planeEntity);
 
-            app.assets.loadFromUrl(
-                "../assets/textures/playcanvas-grey.png",
-                "texture",
-                function (err, asset) {
-                    var material = new pc.StandardMaterial();
-                    material.diffuseMap = asset.resource;
-                    material.update();
-                    planeEntity.model.meshInstances[0].material = material;
-                }
-            );
-
-            // controls
-
-            var width = 201;
+            // create a control panel using PCUI https://playcanvas.github.io/pcui/getting-started/
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
-                collapsible: true
+                collapsible: true,
+                collapsed: false
             });
+            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${201}px; z-index: 9999;`);
             controlPanel.content.dom.setAttribute('style', 'display: flex; align-items: center; flex-wrap: wrap;')
-            controlPanel.collapsed = false;
             var jumpButton = new pcui.Button({
                 text: 'Jump'
             });
@@ -296,7 +309,6 @@
             jumpButton.on('click', function() {
                 var isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
                 if (!isJumping) {
-                    this.jumpTime = 0;
                     characterEntity.anim.setTrigger('jump');
                 }
             });
@@ -317,22 +329,18 @@
             });
             controlPanel.append(jogToggle);
 
-            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; z-index: 9999;`);
-
             document.body.appendChild(controlPanel.dom);
 
-
-            var keyboard = new pc.Keyboard(window);
-
+            // create a Locomotion script and inilialise some variables
             var Locomotion = pc.createScript('Locomotion');
 
-            var characterDirection = new pc.Vec3(1, 0, 0);
-            var targetPosition = new pc.Vec3(2, 0, 2);
+            var characterDirection;
+            var targetPosition;
 
             // initialize code called once per entity
             Locomotion.prototype.initialize = function() {
-                // app.mouse.disableContextMenu();
-                // app.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
+                characterDirection = new pc.Vec3(1, 0, 0);
+                targetPosition = new pc.Vec3(2, 0, 2);
                 document.addEventListener("mousedown", this.onMouseDown);
             };
 
@@ -340,8 +348,8 @@
                 if (event.button !== 0) return;
                 // Set the character target position to a position on the plane that the user has clicked
                 var cameraEntity = app.root.findByName('Camera');
-                var near = cameraEntity.camera.screenToWorld(event.x, event.y, 0.1);
-                var far = cameraEntity.camera.screenToWorld(event.x, event.y, 1000.0);
+                var near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
+                var far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
                 var result = app.systems.rigidbody.raycastFirst(far, near);
                 if (result) {
                     targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
@@ -349,6 +357,7 @@
                 }
             };
 
+            // defines how many units the character should move per second given it's current animation state
             function speedForState(state) {
                 switch (state) {
                     case 'Walk':
@@ -365,29 +374,7 @@
             var currentPosition = new pc.Vec3(0,0,0);
 
             // update code called every frame
-            Locomotion.prototype.postUpdate = function(dt) {
-                
-                // Check for jumping event
-                if(keyboard.wasPressed(pc.KEY_SPACE)) {
-                    var isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
-                    if (!isJumping) {
-                        this.jumpTime = 0;
-                        characterEntity.anim.setTrigger('jump');
-                    }
-                }
-                
-                // Check for jogging event    
-                if (keyboard.wasPressed(pc.KEY_X)) {
-                    if (characterEntity.anim.baseLayer.activeState === 'Walk') {
-                        characterEntity.anim.setInteger('speed', 2);
-                    }
-                }
-                else if (keyboard.wasReleased(pc.KEY_X)) {
-                    if (characterEntity.anim.baseLayer.activeState === 'Jog') {
-                        characterEntity.anim.setInteger('speed', 1);
-                    }
-                }
-
+            Locomotion.prototype.update = function(dt) {
                 if (characterEntity.anim.getInteger('speed')) {
                     // Update position if target position is not the same as entity position. Base the movement speed on the current state
                     // Move the character along X & Z axis based on click target position & make character face click direction
@@ -406,7 +393,7 @@
                         characterEntity.setPosition(currentPosition);
                         characterEntity.lookAt(characterEntity.position.clone().add(characterDirection));
                     } else {
-                        currentPosition.set(targetPosition.x, targetPosition.y, targetPosition.z);
+                        currentPosition.copy(targetPosition);
                         characterEntity.setPosition(currentPosition);
                         characterEntity.anim.setInteger('speed', 0);
                     }
@@ -416,16 +403,7 @@
 
             characterEntity.addComponent("script");
             characterEntity.script.create('Locomotion', {});
-
-            });
-            });
-            });
-            });
-            });
-        }.bind(this));
-        pc.app.assets.add(stateGraphAsset);
-        pc.app.assets.load(stateGraphAsset);
-    };
+        }
     </script>
 </body>
 </html>
