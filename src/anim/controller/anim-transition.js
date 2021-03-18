@@ -36,10 +36,6 @@ class AnimTransition {
         return this._from;
     }
 
-    set from(value) {
-        this._from = value;
-    }
-
     get to() {
         return this._to;
     }
