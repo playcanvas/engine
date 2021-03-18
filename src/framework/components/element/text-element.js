@@ -46,6 +46,7 @@ class MeshInfo {
 const LINE_BREAK_CHAR = /^[\r\n]$/;
 const WHITESPACE_CHAR = /^[ \t]$/;
 const WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
+const CJK_CHAR = /^[\u4E00-\u9FFF]$/;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 const CONTROL_CHARS = [
@@ -286,7 +287,7 @@ class TextElement {
         if (text === undefined) text = this._text;
 
         // get the list of symbols
-        this._symbols = string.getSymbols(text);
+        this._symbols = string.getSymbols(text.normalize('NFC'));
 
         // handle null string
         if (this._symbols.length === 0) {
@@ -885,7 +886,8 @@ class TextElement {
                 }
 
                 var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
-                if (isWordBoundary) { // char is space, tab, or dash
+                var isCJK = CJK_CHAR.test(char);
+                if (isWordBoundary || isCJK) { // char is space, tab, or dash OR CJK
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;

@@ -156,9 +156,9 @@ class Quat {
      * q.setFromAxisAngle(new pc.Vec3(0, 1, 0), 90);
      * var v = new pc.Vec3();
      * var angle = q.getAxisAngle(v);
-     * // Should output 90
+     * // Outputs 90
      * console.log(angle);
-     * // Should output [0, 1, 0]
+     * // Outputs [0, 1, 0]
      * console.log(v.toString());
      */
     getAxisAngle(axis) {
@@ -242,7 +242,7 @@ class Quat {
      * @example
      * var q = new pc.Quat(0, 0, 0, 5);
      * var len = q.length();
-     * // Should output 5
+     * // Outputs 5
      * console.log("The length of the quaternion is: " + len);
      */
     length() {
@@ -257,7 +257,7 @@ class Quat {
      * @example
      * var q = new pc.Quat(3, 4, 0);
      * var lenSq = q.lengthSq();
-     * // Should output 25
+     * // Outputs 25
      * console.log("The length squared of the quaternion is: " + lenSq);
      */
     lengthSq() {
@@ -350,7 +350,7 @@ class Quat {
      *
      * v.normalize();
      *
-     * // Should output 0, 0, 0, 1
+     * // Outputs 0, 0, 0, 1
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
@@ -382,7 +382,7 @@ class Quat {
      * var q = new pc.Quat();
      * q.set(1, 0, 0, 0);
      *
-     * // Should output 1, 0, 0, 0
+     * // Outputs 1, 0, 0, 0
      * console.log("The result of the vector set is: " + q.toString());
      */
     set(x, y, z, w) {
@@ -690,7 +690,7 @@ class Quat {
      * @returns {string} The quaternion in string form.
      * @example
      * var v = new pc.Quat(0, 0, 0, 1);
-     * // Should output '[0, 0, 0, 1]'
+     * // Outputs [0, 0, 0, 1]
      * console.log(v.toString());
      */
     toString() {

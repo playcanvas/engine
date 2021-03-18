@@ -125,8 +125,9 @@ class LightComponent extends Component {
         var layer;
         for (var i = 0; i < this.layers.length; i++) {
             layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.addLight(this);
+            if (layer) {
+                layer.addLight(this);
+            }
         }
     }
 
@@ -134,8 +135,9 @@ class LightComponent extends Component {
         var layer;
         for (var i = 0; i < this.layers.length; i++) {
             layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.removeLight(this);
+            if (layer) {
+                layer.removeLight(this);
+            }
         }
     }
 
@@ -151,16 +153,16 @@ class LightComponent extends Component {
 
     onLayerAdded(layer) {
         var index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        if (this.enabled && this.entity.enabled) {
+        if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
         }
     }
 
     onLayerRemoved(layer) {
         var index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        layer.removeLight(this);
+        if (index >= 0) {
+            layer.removeLight(this);
+        }
     }
 
     refreshProperties() {

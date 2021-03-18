@@ -93,7 +93,7 @@ class Vec4 {
      *
      * a.add(b);
      *
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
     add(rhs) {
@@ -118,7 +118,7 @@ class Vec4 {
      * var r = new pc.Vec4();
      *
      * r.add2(a, b);
-     * // Should output [30, 30, 30]
+     * // Outputs [30, 30, 30]
      *
      * console.log("The result of the addition is: " + r.toString());
      */
@@ -127,6 +127,29 @@ class Vec4 {
         this.y = lhs.y + rhs.y;
         this.z = lhs.z + rhs.z;
         this.w = lhs.w + rhs.w;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#addScalar
+     * @description Adds a number to each element of a vector.
+     * @param {number} scalar - The number to add.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * var vec = new pc.Vec4(3, 4, 5, 6);
+     *
+     * vec.addScalar(2);
+     *
+     * // Outputs [5, 6, 7, 8]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScalar(scalar) {
+        this.x += scalar;
+        this.y += scalar;
+        this.z += scalar;
+        this.w += scalar;
 
         return this;
     }
@@ -170,6 +193,80 @@ class Vec4 {
 
     /**
      * @function
+     * @name Vec4#div
+     * @description Divides a 4-dimensional vector by another in place.
+     * @param {Vec4} rhs - The vector to divide the specified vector by.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * var a = new pc.Vec4(4, 9, 16, 25);
+     * var b = new pc.Vec4(2, 3, 4, 5);
+     *
+     * a.div(b);
+     *
+     * // Outputs [2, 3, 4, 5]
+     * console.log("The result of the division is: " + a.toString());
+     */
+    div(rhs) {
+        this.x /= rhs.x;
+        this.y /= rhs.y;
+        this.z /= rhs.z;
+        this.w /= rhs.w;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#div2
+     * @description Divides one 4-dimensional vector by another and writes the result to
+     * the specified vector.
+     * @param {Vec4} lhs - The dividend vector (the vector being divided).
+     * @param {Vec4} rhs - The divisor vector (the vector dividing the dividend).
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * var a = new pc.Vec4(4, 9, 16, 25);
+     * var b = new pc.Vec4(2, 3, 4, 5);
+     * var r = new pc.Vec4();
+     *
+     * r.div2(a, b);
+     * // Outputs [2, 3, 4, 5]
+     *
+     * console.log("The result of the division is: " + r.toString());
+     */
+    div2(lhs, rhs) {
+        this.x = lhs.x / rhs.x;
+        this.y = lhs.y / rhs.y;
+        this.z = lhs.z / rhs.z;
+        this.w = lhs.w / rhs.w;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#divScalar
+     * @description Divides each element of a vector by a number.
+     * @param {number} scalar - The number to divide by.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * var vec = new pc.Vec4(3, 6, 9, 12);
+     *
+     * vec.divScalar(3);
+     *
+     * // Outputs [1, 2, 3, 4]
+     * console.log("The result of the division is: " + vec.toString());
+     */
+    divScalar(scalar) {
+        this.x /= scalar;
+        this.y /= scalar;
+        this.z /= scalar;
+        this.w /= scalar;
+
+        return this;
+    }
+
+    /**
+     * @function
      * @name Vec4#dot
      * @description Returns the result of a dot product operation performed on the two specified 4-dimensional vectors.
      * @param {Vec4} rhs - The second 4-dimensional vector operand of the dot product.
@@ -207,7 +304,7 @@ class Vec4 {
      * @example
      * var vec = new pc.Vec4(3, 4, 0, 0);
      * var len = vec.length();
-     * // Should output 5
+     * // Outputs 5
      * console.log("The length of the vector is: " + len);
      */
     length() {
@@ -222,7 +319,7 @@ class Vec4 {
      * @example
      * var vec = new pc.Vec4(3, 4, 0);
      * var len = vec.lengthSq();
-     * // Should output 25
+     * // Outputs 25
      * console.log("The length squared of the vector is: " + len);
      */
     lengthSq() {
@@ -269,7 +366,7 @@ class Vec4 {
      *
      * a.mul(b);
      *
-     * // Should output 8, 15, 24, 35
+     * // Outputs 8, 15, 24, 35
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mul(rhs) {
@@ -295,7 +392,7 @@ class Vec4 {
      *
      * r.mul2(a, b);
      *
-     * // Should output 8, 15, 24, 35
+     * // Outputs 8, 15, 24, 35
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
@@ -303,6 +400,29 @@ class Vec4 {
         this.y = lhs.y * rhs.y;
         this.z = lhs.z * rhs.z;
         this.w = lhs.w * rhs.w;
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#mulScalar
+     * @description Multiplies each element of a vector by a number.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * var vec = new pc.Vec4(3, 6, 9, 12);
+     *
+     * vec.mulScalar(3);
+     *
+     * // Outputs [9, 18, 27, 36]
+     * console.log("The result of the multiplication is: " + vec.toString());
+     */
+    mulScalar(scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+        this.w *= scalar;
 
         return this;
     }
@@ -318,7 +438,7 @@ class Vec4 {
      *
      * v.normalize();
      *
-     * // Should output 1, 0, 0, 0
+     * // Outputs 1, 0, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
@@ -336,34 +456,6 @@ class Vec4 {
 
     /**
      * @function
-     * @name Vec4#scale
-     * @description Scales each dimension of the specified 4-dimensional vector by the supplied
-     * scalar value.
-     * @param {number} scalar - The value by which each vector component is multiplied.
-     * @returns {Vec4} Self for chaining.
-     * @example
-     * var v = new pc.Vec4(2, 4, 8, 16);
-     *
-     * // Multiply by 2
-     * v.scale(2);
-     *
-     * // Negate
-     * v.scale(-1);
-     *
-     * // Divide by 2
-     * v.scale(0.5);
-     */
-    scale(scalar) {
-        this.x *= scalar;
-        this.y *= scalar;
-        this.z *= scalar;
-        this.w *= scalar;
-
-        return this;
-    }
-
-    /**
-     * @function
      * @name Vec4#set
      * @description Sets the specified 4-dimensional vector to the supplied numerical values.
      * @param {number} x - The value to set on the first component of the vector.
@@ -375,7 +467,7 @@ class Vec4 {
      * var v = new pc.Vec4();
      * v.set(5, 10, 20, 40);
      *
-     * // Should output 5, 10, 20, 40
+     * // Outputs 5, 10, 20, 40
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z, w) {
@@ -399,7 +491,7 @@ class Vec4 {
      *
      * a.sub(b);
      *
-     * // Should output [-10, -10, -10, -10]
+     * // Outputs [-10, -10, -10, -10]
      * console.log("The result of the subtraction is: " + a.toString());
      */
     sub(rhs) {
@@ -425,7 +517,7 @@ class Vec4 {
      *
      * r.sub2(a, b);
      *
-     * // Should output [-10, -10, -10, -10]
+     * // Outputs [-10, -10, -10, -10]
      * console.log("The result of the subtraction is: " + r.toString());
      */
     sub2(lhs, rhs) {
@@ -439,12 +531,35 @@ class Vec4 {
 
     /**
      * @function
+     * @name Vec4#subScalar
+     * @description Subtracts a number from each element of a vector.
+     * @param {number} scalar - The number to subtract.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * var vec = new pc.Vec4(3, 4, 5, 6);
+     *
+     * vec.subScalar(2);
+     *
+     * // Outputs [1, 2, 3, 4]
+     * console.log("The result of the subtraction is: " + vec.toString());
+     */
+    subScalar(scalar) {
+        this.x -= scalar;
+        this.y -= scalar;
+        this.z -= scalar;
+        this.w -= scalar;
+
+        return this;
+    }
+
+    /**
+     * @function
      * @name Vec4#toString
      * @description Converts the vector to string form.
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec4(20, 10, 5, 0);
-     * // Should output '[20, 10, 5, 0]'
+     * // Outputs [20, 10, 5, 0]
      * console.log(v.toString());
      */
     toString() {
