@@ -1262,7 +1262,7 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
         var curve = curves[channel.sampler];
 
         var node = nodes[target.node];
-        var entityPath = node.path.length > 0 ? AnimBinder.splitPath(node.path, '/') : [node.name];
+        var entityPath = [nodes[0].name, ...AnimBinder.splitPath(node.path, '/')];
         curve._paths.push({
             entityPath: entityPath,
             component: 'graph',

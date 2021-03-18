@@ -13,7 +13,6 @@ import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 
 /**
- * @private
  * @component
  * @class
  * @name AnimComponent
@@ -24,6 +23,7 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
+ * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
     constructor(system, entity) {
@@ -31,7 +31,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#loadStateGraph
      * @description Initialises component animation controllers using the provided state graph.
@@ -53,10 +52,9 @@ class AnimComponent extends Component {
         data.layers = [];
 
         var graph;
-        if (this.entity.model?.model?.graph) {
-            graph = this.entity.model?.model?.graph;
+        if (this.rootBone) {
+            graph = this.rootBone;
         } else {
-            // animating hierarchy without model
             graph = this.entity;
         }
 
@@ -131,7 +129,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#removeStateGraph
      * @description Removes all layers from the anim component.
@@ -156,7 +153,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#reset
      * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing
@@ -171,7 +167,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#rebind
      * @description Rebind all of the components layers
@@ -183,7 +178,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#findAnimationLayer
      * @description Finds a {@link AnimComponentLayer} in this component.
@@ -196,7 +190,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#assignAnimation
      * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
@@ -222,7 +215,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#removeNodeAnimations
      * @description Removes animations from a node in the loaded state graph.
@@ -262,7 +254,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#getFloat
      * @description Returns a float parameter value by name.
@@ -274,7 +265,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#setFloat
      * @description Sets the value of a float parameter that was defined in the animation components state graph.
@@ -286,7 +276,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#getInteger
      * @description Returns an integer parameter value by name.
@@ -298,7 +287,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#setInteger
      * @description Sets the value of an integer parameter that was defined in the animation components state graph.
@@ -316,7 +304,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#getBoolean
      * @description Returns a boolean parameter value by name.
@@ -328,7 +315,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#setBoolean
      * @description Sets the value of a boolean parameter that was defined in the animation components state graph.
@@ -340,7 +326,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#getTrigger
      * @description Returns a trigger parameter value by name.
@@ -352,7 +337,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#setTrigger
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
@@ -363,7 +347,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponent#resetTrigger
      * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
@@ -374,7 +357,32 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
+     * @name AnimComponent#rootBone
+     * @type {Entity}
+     * @description The entity that this anim component should use as the root of the animation hierarchy
+     */
+    get rootBone() {
+        return this.data.rootBone;
+    }
+
+    set rootBone(value) {
+        if (typeof value === 'string') {
+            const entity = this.entity.root.findByGuid(value);
+            this.data.rootBone = entity;
+            // #ifdef DEBUG
+            if (!entity) {
+                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
+            }
+            // #endif
+        } else if (value?.constructor.name === 'Entity') {
+            this.data.rootBone = value;
+        } else {
+            this.data.rootBone = null;
+        }
+        this.rebind();
+    }
+
+    /**
      * @name AnimComponent#stateGraphAsset
      * @type {number}
      * @description The state graph asset this component should use to generate it's animation state graph
@@ -444,7 +452,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @name AnimComponent#playable
      * @type {boolean}
      * @readonly
@@ -460,7 +467,6 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @name AnimComponent#baseLayer
      * @type {AnimComponentLayer}
      * @readonly
