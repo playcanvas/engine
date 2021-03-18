@@ -368,10 +368,12 @@ class AnimComponent extends Component {
     set rootBone(value) {
         if (typeof value === 'string') {
             const entity = this.entity.root.findByGuid(value);
-            if (entity) this.data.rootBone = entity;
-            // #ifdef DEBUG
-            else console.warning(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
-            // #endif
+            this.data.rootBone = entity;
+            if (!entity) {
+                // #ifdef DEBUG
+                else console.warning(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
+                // #endif
+            }
         } else if (value?.constructor.name === 'Entity') {
             this.data.rootBone = value;
         } else {
