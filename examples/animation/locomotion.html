@@ -77,7 +77,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "GREATER_THAN",
+                                    "predicate": pc.ANIM_GREATER_THAN,
                                     "value": 0
                                 }
                             ]
@@ -90,7 +90,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "jump",
-                                    "predicate": "EQUAL_TO",
+                                    "predicate": pc.ANIM_EQUAL_TO,
                                     "value": true
                                 }
                             ]
@@ -117,7 +117,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "LESS_THAN_EQUAL_TO",
+                                    "predicate": pc.ANIM_LESS_THAN_EQUAL_TO,
                                     "value": 0
                                 }
                             ]
@@ -130,7 +130,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "GREATER_THAN",
+                                    "predicate": pc.ANIM_GREATER_THAN,
                                     "value": 1
                                 }
                             ]
@@ -143,7 +143,7 @@
                             "conditions": [
                                 {
                                     "parameterName": "speed",
-                                    "predicate": "LESS_THAN",
+                                    "predicate": pc.ANIM_LESS_THAN,
                                     "value": 2
                                 }
                             ]
@@ -179,8 +179,6 @@
         });
 
         var miniStats = new pcx.MiniStats(app);
-
-        var entity;
 
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity(app);
@@ -234,17 +232,22 @@
 
             var characterEntity = new pc.Entity();
 
+            // create an entity from the loaded model using the render component
             var renderEntity = model.resource.instantiateRenderEntity({
                 castShadows: true
             });
 
             characterEntity.addChild(renderEntity);
 
+            // add an anim component to the entity
             characterEntity.addComponent('anim', {
                 activate: true
             });
 
+            // load the state graph asset resource into the anim component
             characterEntity.anim.loadStateGraph(stateGraph);
+
+            // assign the loaded animation assets to each of the states present in the state graph
             var locomotionLayer = characterEntity.anim.baseLayer;
             locomotionLayer.assignAnimation('Idle', idleAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Walk', walkAnim.resource.animations[0].resource);
@@ -285,10 +288,10 @@
             var width = 201;
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
-                collapsible: true
+                collapsible: true,
+                collapsed: false
             });
             controlPanel.content.dom.setAttribute('style', 'display: flex; align-items: center; flex-wrap: wrap;')
-            controlPanel.collapsed = false;
             var jumpButton = new pcui.Button({
                 text: 'Jump'
             });
@@ -321,9 +324,6 @@
 
             document.body.appendChild(controlPanel.dom);
 
-
-            var keyboard = new pc.Keyboard(window);
-
             var Locomotion = pc.createScript('Locomotion');
 
             var characterDirection = new pc.Vec3(1, 0, 0);
@@ -349,6 +349,7 @@
                 }
             };
 
+            // defines how many units the character should move per second given it's current animation state
             function speedForState(state) {
                 switch (state) {
                     case 'Walk':
@@ -365,29 +366,8 @@
             var currentPosition = new pc.Vec3(0,0,0);
 
             // update code called every frame
-            Locomotion.prototype.postUpdate = function(dt) {
+            Locomotion.prototype.update = function(dt) {
                 
-                // Check for jumping event
-                if(keyboard.wasPressed(pc.KEY_SPACE)) {
-                    var isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
-                    if (!isJumping) {
-                        this.jumpTime = 0;
-                        characterEntity.anim.setTrigger('jump');
-                    }
-                }
-                
-                // Check for jogging event    
-                if (keyboard.wasPressed(pc.KEY_X)) {
-                    if (characterEntity.anim.baseLayer.activeState === 'Walk') {
-                        characterEntity.anim.setInteger('speed', 2);
-                    }
-                }
-                else if (keyboard.wasReleased(pc.KEY_X)) {
-                    if (characterEntity.anim.baseLayer.activeState === 'Jog') {
-                        characterEntity.anim.setInteger('speed', 1);
-                    }
-                }
-
                 if (characterEntity.anim.getInteger('speed')) {
                     // Update position if target position is not the same as entity position. Base the movement speed on the current state
                     // Move the character along X & Z axis based on click target position & make character face click direction
@@ -406,7 +386,7 @@
                         characterEntity.setPosition(currentPosition);
                         characterEntity.lookAt(characterEntity.position.clone().add(characterDirection));
                     } else {
-                        currentPosition.set(targetPosition.x, targetPosition.y, targetPosition.z);
+                        currentPosition.copy(targetPosition);
                         characterEntity.setPosition(currentPosition);
                         characterEntity.anim.setInteger('speed', 0);
                     }

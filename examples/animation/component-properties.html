@@ -317,13 +317,16 @@
         loadAssetFromData('animClipStaticLight', 'animclip', animClipStaticLightData, function (animClipStaticLightAsset) {
         loadAssetFromData('animClipFlashingLight', 'animclip', animClipFlashingLightData, function (animClipFlashingLightAsset) {
         loadAssetFromData('stateGraph', 'animstategraph', stateGraphData, function (stateGraphAsset) {
+
             // add the anim component to the lights entity
             lightsEntity.addComponent("anim", {
                 speed: 1.0,
                 activate: true 
             });
+
             // load the state graph asset resource
             lightsEntity.anim.loadStateGraph(stateGraphAsset.resource);
+
             // assign animation clip asset resources to the appropriate states
             lightsEntity.anim.assignAnimation('Static', animClipStaticLightAsset.resource);
             lightsEntity.anim.assignAnimation('Flash', animClipFlashingLightAsset.resource);
@@ -333,9 +336,9 @@
             var width = 201;
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
-                collapsible: true
+                collapsible: true,
+                collapsed: false 
             });
-            controlPanel.collapsed = false;
             var toggleButton = new pcui.Button({
                 text: 'Flash'
             });

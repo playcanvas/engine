@@ -94,8 +94,6 @@
 
         var miniStats = new pcx.MiniStats(app);
 
-        var entity;
-
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity(app);
         cameraEntity.addComponent("camera", {
@@ -133,16 +131,21 @@
         app.assets.loadFromUrl("../assets/animations/bitmoji/walk.glb", "container", function (err, asset) {
             walkAnim = asset;
 
+            // create an entity from the loaded model using the render component
             var modelEntity = model.resource.instantiateRenderEntity({
                     castShadows: true
             });
 
+            // add an anim component to the entity
             modelEntity.addComponent('anim', {
                 activate: true,
             });
 
+            // load the state graph asset resource into the anim component
             modelEntity.anim.loadStateGraph(stateGraph);
             var locomotionLayer = modelEntity.anim.baseLayer;
+
+            // assign the loaded animation assets to each of the states present in the state graph
             locomotionLayer.assignAnimation('Emote.Idle', idleAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Emote.Walk', walkAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Emote.Dance', danceAnim.resource.animations[0].resource);
@@ -158,9 +161,9 @@
 
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
-                collapsible: true
+                collapsible: true,
+                collapsed: false
             });
-            controlPanel.collapsed = false;
 
             controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; height: ${height+32}px; z-index: 9999;`);
 
@@ -176,7 +179,7 @@
             
             var ctx = canvas.getContext('2d');  
             var position = new pc.Vec2(0);
-            var drawPosition = (ctx) => {
+            var drawPosition = function (ctx) {
                 ctx.clearRect(0,0,width,height);
                 ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
                 ctx.fillRect(0, 0, width, height);
@@ -184,7 +187,7 @@
                 ctx.fillRect(halfWidth, 0, 1, height);
                 ctx.fillRect(0, halfHeight, width, 1);
                 ctx.fillStyle = '#232e30';
-                modelEntity.anim.baseLayer._controller.activeState.animations.forEach(animNode => {
+                modelEntity.anim.baseLayer._controller.activeState.animations.forEach(function(animNode) {
                     if (animNode.point) {
                         ctx.fillRect((animNode.point.x + 1) * halfWidth - 2, (animNode.point.y * -1 + 1) * halfHeight - 2, 5, 5);
                     }
@@ -197,10 +200,10 @@
             
             drawPosition(ctx);
             
-            var mouseEvent = (e) => {
+            var mouseEvent = function (e) {
                 if (e.buttons) {
                     position = new pc.Vec2(e.offsetX, e.offsetY).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
-                    position.y = position.y * -1.0;
+                    position.y *= -1.0;
                     modelEntity.anim.setFloat('posX', position.x);
                     modelEntity.anim.setFloat('posY', position.y);
                     drawPosition(ctx);

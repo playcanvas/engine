@@ -86,8 +86,6 @@
 
         var miniStats = new pcx.MiniStats(app);
 
-        var entity;
-
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity(app);
         cameraEntity.addComponent("camera", {
@@ -120,15 +118,20 @@
         app.assets.loadFromUrl("../assets/animations/bitmoji/dance.glb", "container", function (err, asset) {
             danceAnim = asset;
 
+            // create an entity from the loaded model using the render component
             var modelEntity = model.resource.instantiateRenderEntity({
                     castShadows: true
             });
 
+            // add an anim component to the entity
             modelEntity.addComponent('anim', {
                 activate: true,
             });
 
+            // load the state graph asset resource into the anim component
             modelEntity.anim.loadStateGraph(stateGraph);
+
+            // load the state graph asset resource into the anim component
             var locomotionLayer = modelEntity.anim.baseLayer;
             locomotionLayer.assignAnimation('Movement.Idle', idleAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Movement.Dance', danceAnim.resource.animations[0].resource);
@@ -143,9 +146,9 @@
 
             var controlPanel = new pcui.Panel({
                 headerText: 'Controls',
-                collapsible: true
+                collapsible: true,
+                collapsed: false
             });
-            controlPanel.collapsed = false;
 
             controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; z-index: 9999;`);
 
