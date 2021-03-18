@@ -37,7 +37,7 @@ var _lightPropsDefault = [];
  * // Add a pc.LightComponent to an entity
  * var entity = new pc.Entity();
  * entity.addComponent('light', {
- *     type: "point",
+ *     type: "omni",
  *     color: new pc.Color(1, 0, 0),
  *     range: 10
  * });
