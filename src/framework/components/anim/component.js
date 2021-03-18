@@ -371,7 +371,7 @@ class AnimComponent extends Component {
             this.data.rootBone = entity;
             if (!entity) {
                 // #ifdef DEBUG
-                console.warning(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
+                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
                 // #endif
             }
         } else if (value?.constructor.name === 'Entity') {
