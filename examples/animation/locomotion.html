@@ -340,8 +340,9 @@
                 if (event.button !== 0) return;
                 // Set the character target position to a position on the plane that the user has clicked
                 var cameraEntity = app.root.findByName('Camera');
-                var near = cameraEntity.camera.screenToWorld(event.x, event.y, 0.1);
-                var far = cameraEntity.camera.screenToWorld(event.x, event.y, 1000.0);
+                debugger;
+                var near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
+                var far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
                 var result = app.systems.rigidbody.raycastFirst(far, near);
                 if (result) {
                     targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
