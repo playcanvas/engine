@@ -54,10 +54,10 @@
             camera.translate(0, 0, 4);
             app.root.addChild(camera);
 
-            // Create an entity with a directional light component
+            // Create an entity with a omni light component
             var light = new pc.Entity();
             light.addComponent("light", {
-                type: "point"
+                type: "omni"
             });
             light.setLocalPosition(1, 1, 5);
             app.root.addChild(light);
