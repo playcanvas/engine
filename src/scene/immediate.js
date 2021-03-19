@@ -172,6 +172,7 @@ class ImmediateData {
 
         if (!this.depthTextureShader) {
 
+            const gl2 = this.device.webgl2 ? "#define GL2" : "";
             const shaderDefinition = {
                 attributes: {
                     aPosition: SEMANTIC_POSITION
@@ -179,6 +180,7 @@ class ImmediateData {
                 vshader: ImmediateData.getTextureVS(),
                 fshader: `
                     precision ${this.device.precision} float;
+                    ${gl2}
                     ${shaderChunks.screenDepthPS}
                     varying vec2 uv0;
                     void main() {
