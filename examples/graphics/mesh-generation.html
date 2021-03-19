@@ -147,8 +147,6 @@
         var material = new pc.StandardMaterial();
         var meshInstance = new pc.MeshInstance(this.mesh, material);
 
-
-
         // Create the entity with render component using meshInstances
         this.entity.addComponent("render", {
             meshInstances: [ meshInstance ]

@@ -91,10 +91,7 @@
                 emissive: new pc.Color(0, 0, 1)
             });
 
-            var entity = new pc.Entity();
-            entity.addComponent("model", {
-                type: "asset",
-                asset: assetManifest["statue"].asset.resource.model,
+            entity = assetManifest["statue"].asset.resource.instantiateRenderEntity({
                 castShadows: true
             });
             app.root.addChild(entity);
