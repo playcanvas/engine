@@ -1,76 +1,91 @@
 /**
- * @typedef {object} AnimStateGraph_DataState
- * @property {string} name
- * @property {number} [speed]
- * @property {boolean} [loop]
- * @property {boolean} [defaultState]
+ * @typedef {AnimStateGraph_DataFromObject | AnimStateGraph_DataFromArray} AnimStateGraph_Data Two formats to pass data in, choose one
  */
 
-/**
- * @typedef {object} AnimStateGraph_DataTransitionCondition
- * @property {string} parameterName
- * @property {string} predicate
- */
-
-/**
- * @typedef {object} AnimStateGraph_DataTransition
- * @property {string} from
- * @property {string} to
- * @property {number} [time]
- * @property {number} [priority]
- * @property {AnimStateGraph_DataTransitionCondition[]} [conditions]
- * @property {number} [exitTime]
- * @property {number} [transitionOffset]
- * @property {string} [interruptionSource]
- */
-
-/**
- * @typedef {object} AnimStateGraph_DataParameter
- * @property {string} name
- * @property {string} type One of pc.ANIM_*
- * @property {any} value
- */
-
-/**
- * @typedef {Object<string, AnimStateGraph_DataParameter>} AnimStateGraph_DataParameters
- */
-
-// FROM OBJECT
+// FROM OBJECT:
 
 /**
  * @typedef {object} AnimStateGraph_DataFromObjectLayer
- * @property {string} name
- * @property {number[] | AnimStateGraph_DataState[]} states
- * @property {number[] | AnimStateGraph_DataTransition} transitions
+ * @property {string} name Name of this layer
+ * @property {number[] | AnimStateGraph_DataState[]} states States of this layer
+ * @property {number[] | AnimStateGraph_DataTransition} transitions Transitions of this layer
  */
 
 /**
  * @typedef {object} AnimStateGraph_DataFromObject
- * @property {AnimStateGraph_DataFromObjectLayer[]} layers
- * @property {AnimStateGraph_DataState[]} states
- * @property {AnimStateGraph_DataTransition[]} transitions
- * @property {AnimStateGraph_DataParameters} parameters
+ * @property {AnimStateGraph_DataFromObjectLayer[]} layers Layers of this data object
+ * @property {AnimStateGraph_DataState[]} states States of this data object
+ * @property {AnimStateGraph_DataTransition[]} transitions Transitions of this data object
+ * @property {AnimStateGraph_DataParameters} parameters Parameters of this data object
  */
 
 // FROM ARRAY:
 
 /**
  * @typedef {object} AnimStateGraph_DataFromArrayLayer
- * @property {string} name
- * @property {AnimStateGraph_DataState[]} states
- * @property {AnimStateGraph_DataTransition[]} transitions
+ * @property {string} name Name of this layer
+ * @property {AnimStateGraph_DataState[]} states States of this layer
+ * @property {AnimStateGraph_DataTransition[]} transitions Transitions of this layer
  */
 
 /**
  * @typedef {object} AnimStateGraph_DataFromArray
- * @property {AnimStateGraph_DataFromArrayLayer[]} layers
- * @property {AnimStateGraph_DataParameters} parameters
+ * @property {AnimStateGraph_DataFromArrayLayer[]} layers Layers of this data object
+ * @property {AnimStateGraph_DataParameters} parameters Parameters of this data object
  */
 
-// GENERIC
+// GENERIC:
 
 /**
- * @typedef {AnimStateGraph_DataFromObject | AnimStateGraph_DataFromArray} AnimStateGraph_Data
+ * @typedef {object} AnimStateGraph_DataState
+ * @property {string} name Name of state, e.g. "START"
+ * @property {number} [speed] Optional speed, e.g. 1
+ * @property {boolean} [loop] Optional, should the state loop?
+ * @property {boolean} [defaultState] Set to true for e.g. one state
+ * @property {AnimStateGraph_BlendTree} [blendTree] Optional blendTree
+ */
+
+/**
+ * @typedef {object} AnimStateGraph_BlendTree
+ * @property {string} type One of pc.ANIM_BLEND_*
+ * @property {string[]} parameters E.g. posX or posY
+ * @property {AnimStateGraph_BlendTreeChild[]} children Children
+ */
+
+/**
+ * @typedef {object} AnimStateGraph_BlendTreeChild
+ * @property {string} name E.g. Idle/Walk/Dance
+ * @property {number[]} point E.g. [0.0, 0.5]
+ */
+
+/**
+ * @typedef {object} AnimStateGraph_DataTransition
+ * @property {string} from E.g. "START"
+ * @property {string} to E.g. "Emote"
+ * @property {number} [time] Optional time, e.g. 0.0
+ * @property {number} [exitTime] Optional exitTime
+ * @property {number} [priority] Optional priority
+ * @property {AnimStateGraph_DataTransitionCondition[]} [conditions] Optional conditions for the transition
+ * @property {number} [transitionOffset] Optional transitionOffset
+ * @property {string} [interruptionSource] Optional interruptionSource
+ */
+
+/**
+ * @typedef {object} AnimStateGraph_DataTransitionCondition
+ * @property {string} parameterName Name of parameter, e.g. "loop" or "posX"
+ * @property {string} predicate E.g. pc.ANIM_EQUAL_TO
+ * @property {any} value E.g. false or 0
+ */
+
+/**
+ * @typedef {object} AnimStateGraph_DataParameter
+ * @property {string} name Name of parameter, e.g. "loop"
+ * @property {string} type E.g. pc.ANIM_PARAMETER_BOOLEAN
+ * @property {any} value Value of parameter, e.g. false
+ */
+
+/**
+ * @typedef {object<string, AnimStateGraph_DataParameter>} AnimStateGraph_DataParameters
  */
 
 /**
@@ -78,8 +93,8 @@
  * @name AnimStateGraph
  * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
  * @param {AnimStateGraph_Data} data
- * @property {any} parameters
- * @property {any} layers
+ * @property {any} parameters parameters
+ * @property {any} layers layers
  */
 class AnimStateGraph {
     constructor(data) {
