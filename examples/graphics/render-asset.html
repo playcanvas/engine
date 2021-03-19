@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <style>
         body {
             margin: 0;
@@ -35,14 +36,38 @@
         });
 
         var miniStats = new pcx.MiniStats(app);
-        app.start();
 
-        // load cube glb file
+        // A list of assets that need to be loaded
+        var assetManifest = {
+            statue: {
+                type: "container",
+                url: "../assets/models/statue.glb"
+            },
+            cube: {
+                type: "container",
+                url: "../assets/models/playcanvas-cube.glb"
+            },
+            'helipad.dds': {
+                type: "cubemap",
+                url: { url: "../assets/cubemaps/helipad.dds" },
+                data: { type: pc.TEXTURETYPE_RGBM }
+            }
+        };
+
+        // Load all assets and then run the example
+        loadManifestAssets(app, assetManifest, function () {
+            run();
+        });
+
         var cubeEntities = [];
-        app.assets.loadFromUrl("../assets/models/playcanvas-cube.glb", "container", function (err, asset) {
+        var statueEntity = null;
 
-            // get the instance of it set up with render component and add it to scene
-            cubeEntities[0] = asset.resource.instantiateRenderEntity();
+        function run() {
+
+            app.start();
+
+            // get the instance of the cube it set up with render component and add it to scene
+            cubeEntities[0] = assetManifest["cube"].asset.resource.instantiateRenderEntity();
             cubeEntities[0].setLocalPosition(7, 12, 0);
             cubeEntities[0].setLocalScale(3, 3, 3);
             app.root.addChild(cubeEntities[0]);
@@ -52,46 +77,26 @@
             cubeEntities[1].setLocalPosition(-7, 12, 0);
             cubeEntities[1].setLocalScale(3, 3, 3);
             app.root.addChild(cubeEntities[1]);
-        });
 
-
-        // load statue glb file
-        var statueEntity = null;
-        app.assets.loadFromUrl("../assets/models/statue.glb", "container", function (err, asset) {
-
-            // get the instance of it set up with render component
-            statueEntity = asset.resource.instantiateRenderEntity(); 
-
-            // add it to the scene
+            // get the instance of the statue and set up with render component
+            statueEntity = assetManifest["statue"].asset.resource.instantiateRenderEntity(); 
             app.root.addChild(statueEntity);
-        });
 
-        // Create an Entity with a camera component
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.1, 0.1),
-            farClip: 100
-        });
-        camera.translate(-20, 15, 20);
-        camera.lookAt(0, 7, 0);
-        app.root.addChild(camera);
+            // Create an Entity with a camera component
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.2, 0.1, 0.1),
+                farClip: 100
+            });
+            camera.translate(-20, 15, 20);
+            camera.lookAt(0, 7, 0);
+            app.root.addChild(camera);
 
-        // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
-        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
-            url: "../assets/cubemaps/helipad.dds"
-        }, {
-            type: pc.TEXTURETYPE_RGBM
-        });
-        app.assets.add(cubemapAsset);
-        app.assets.load(cubemapAsset);
-        cubemapAsset.ready(function () {
-
-            // set it up as a skybox
-            app.scene.setSkybox(cubemapAsset.resources);
-    
+            // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+            app.scene.setSkybox(assetManifest["helipad.dds"].asset.resources);
             app.scene.gammaCorrection = pc.GAMMA_SRGB;
             app.scene.toneMapping = pc.TONEMAP_ACES;
-        });
+        }
 
         // spin the meshes
         app.on("update", function (dt) {
