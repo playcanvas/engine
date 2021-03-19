@@ -40,13 +40,13 @@
 
         var entity, light, camera;
 
-        // Load a model file and create a Entity with a model component
+        // Load a model file and create a Entity with render component
         var url = "../assets/models/statue.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
-            // create an entity with model assets
-            var entity = asset.resource.instantiateModelEntity({
+            // create an entity with render assets
+            var entity = asset.resource.instantiateRenderEntity({
                 castShadows: true
             }); 
 
