@@ -401,24 +401,35 @@ class LayerComposition extends EventHandler {
     addRenderAction(renderActions, renderActionIndex, layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
 
         // try and reuse object, otherwise allocate new
-        var renderAction = renderActions[renderActionIndex];
+        let renderAction = renderActions[renderActionIndex];
         if (!renderAction) {
             renderAction = renderActions[renderActionIndex] = new RenderAction();
         }
 
         // render target from the camera takes precedence over the render target from the layer
-        var rt = layer.renderTarget;
-        var camera = layer.cameras[cameraIndex];
+        let rt = layer.renderTarget;
+        const camera = layer.cameras[cameraIndex];
         if (camera && camera.renderTarget) {
             if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
                 rt = camera.renderTarget;
             }
         }
 
-        // clear flags - use camera clear flags in the first render action for each camera, other render actions don't clear
-        let clearColor = cameraFirstRenderAction ? camera.clearColorBuffer : false;
-        let clearDepth = cameraFirstRenderAction ? camera.clearDepthBuffer : false;
-        let clearStencil = cameraFirstRenderAction ? camera.clearStencilBuffer : false;
+        // was camera and render target combo used already
+        let used = false;
+        for (let i = renderActionIndex - 1; i >= 0; i--) {
+            if (renderActions[i].camera === camera && renderActions[i].renderTarget === rt) {
+                used = true;
+                break;
+            }
+        }
+
+        // clear flags - use camera clear flags in the first render action for each camera,
+        // or when render target (from layer) was not yet cleared by this camera
+        let needsClear = cameraFirstRenderAction || !used;
+        let clearColor = needsClear ? camera.clearColorBuffer : false;
+        let clearDepth = needsClear ? camera.clearDepthBuffer : false;
+        let clearStencil = needsClear ? camera.clearStencilBuffer : false;
 
         // clear buffers if requested by the layer
         clearColor |= layer.clearColorBuffer;
