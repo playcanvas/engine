@@ -1,7 +1,86 @@
 /**
+ * @typedef {Object} AnimStateGraph_DataState
+ * @property {string} name
+ * @property {number} [speed]
+ * @property {boolean} [loop]
+ * @property {boolean} [defaultState]
+ */
+
+/**
+ * @typedef {Object} AnimStateGraph_DataTransitionCondition
+ * @property {string} parameterName
+ * @property {string} predicate
+ */
+
+/**
+ * @typedef {Object} AnimStateGraph_DataTransition
+ * @property {string} from
+ * @property {string} to
+ * @property {number} [time]
+ * @property {number} [priority]
+ * @property {AnimStateGraph_DataTransitionCondition[]} conditions
+ * @property {number} [exitTime]
+ * @property {number} [transitionOffset]
+ * @property {string} [interruptionSource]
+ */
+
+/**
+ * @typedef {Object} AnimStateGraph_DataParameter
+ * @property {string} name
+ * @property {string} type One of pc.ANIM_*
+ * @property {any} value
+ * 
+ */
+
+/**
+ * @typedef {Object<string, AnimStateGraph_DataParameter>} AnimStateGraph_DataParameters
+ */
+    
+// FROM OBJECT
+
+/**
+ * @typedef {Object} AnimStateGraph_DataFromObjectLayer
+ * @property {string} name
+ * @property {number[]} states
+ * @property {number[]} transitions
+ */
+
+/**
+ * @typedef {Object} AnimStateGraph_DataFromObject
+ * @property {AnimStateGraph_DataFromObjectLayer[]} layers
+ * @property {AnimStateGraph_DataState[]} states
+ * @property {AnimStateGraph_DataTransition[]} transitions
+ * @property {AnimStateGraph_DataParameters} parameters
+ */
+
+// FROM ARRAY:
+
+/**
+ * @typedef {Object} AnimStateGraph_DataFromArrayLayer
+ * @property {string} name
+ * @property {AnimStateGraph_DataState[]} states
+ * @property {AnimStateGraph_DataTransition[]} transitions
+ */
+    
+/**
+ * @typedef {Object} AnimStateGraph_DataFromArray
+ * @property {AnimStateGraph_DataFromArrayLayer[]} layers
+ * @property {AnimStateGraph_DataParameters} parameters
+ */
+
+// GENERIC
+
+/**
+ * @typedef {AnimStateGraph_DataFromObject | AnimStateGraph_DataFromArray} AnimStateGraph_Data
+ */
+
+/**
  * @class
  * @name AnimStateGraph
  * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
+ * @param {AnimStateGraph_Data} data
+ * @property {any} parameters
+ * @property {any} layers
  */
 class AnimStateGraph {
     constructor(data) {
