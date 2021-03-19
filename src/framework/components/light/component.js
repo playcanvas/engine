@@ -49,8 +49,8 @@ var _lightPropsDefault = [];
  * entity.light.range = 20;
  * @property {string} type The type of light. Can be:
  * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
- * * "omni": A omni-directional light that illuminates in all directions from the light source.
- * * "spot": A omni-directional light but is bounded by a cone.
+ * * "omni": An omni-directional light that illuminates in all directions from the light source.
+ * * "spot": An omni-directional light but is bounded by a cone.
  * Defaults to "directional".
  * @property {Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).
