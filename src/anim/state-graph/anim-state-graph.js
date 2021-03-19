@@ -18,7 +18,7 @@
  * @property {string} to
  * @property {number} [time]
  * @property {number} [priority]
- * @property {AnimStateGraph_DataTransitionCondition[]} conditions
+ * @property {AnimStateGraph_DataTransitionCondition[]} [conditions]
  * @property {number} [exitTime]
  * @property {number} [transitionOffset]
  * @property {string} [interruptionSource]
@@ -40,8 +40,8 @@
 /**
  * @typedef {object} AnimStateGraph_DataFromObjectLayer
  * @property {string} name
- * @property {number[]} states
- * @property {number[]} transitions
+ * @property {number[] | AnimStateGraph_DataState[]} states
+ * @property {number[] | AnimStateGraph_DataTransition} transitions
  */
 
 /**
