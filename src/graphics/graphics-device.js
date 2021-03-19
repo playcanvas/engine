@@ -652,11 +652,9 @@ class GraphicsDevice extends EventHandler {
         }
 
         // two extensions allow us to render to half float buffers
-        this.textureHalfFloatRenderable = false;
         if (this.extColorBufferHalfFloat) {
             this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
-        }
-        if (!this.textureHalfFloatRenderable && this.extTextureHalfFloat) {
+        } else if (this.extTextureHalfFloat) {
             if (this.webgl2) {
                 // EXT_color_buffer_float should affect both float and halffloat formats
                 this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
@@ -664,6 +662,8 @@ class GraphicsDevice extends EventHandler {
                 // Manual render check for half float
                 this.textureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
             }
+        } else {
+            this.textureHalfFloatRenderable = false;
         }
 
         this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
