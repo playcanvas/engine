@@ -25,6 +25,7 @@ const KNOWN_FORMATS = {
 };
 
 /**
+ * @private
  * @class
  * @name KtxParser
  * @implements {TextureParser}
