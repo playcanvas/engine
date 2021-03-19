@@ -23,6 +23,7 @@ var categories = [
         examples: [
             "area-picker",
             "batching-dynamic",
+            "clustered-lighting",
             "grab-pass",
             "hardware-instancing",
             "hierarchy",

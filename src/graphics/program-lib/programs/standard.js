@@ -452,6 +452,30 @@ var standard = {
         return code;
     },
 
+    _addLightCodeClustered: function(component) {
+        return `
+
+        // not valid light
+        if (indices.${component} <= 0.0)
+            break;
+
+        {
+            // read point light properties
+            float lightV = (indices.${component} + 0.5) * lightsTextureInvSize.y;
+            vec4 lightPosRange = texture2D(lightsTextureFloat, vec2(0.5 * lightsTextureInvSize.x, lightV));
+            vec3 lightColor =    texture2D(lightsTextureFloat, vec2(1.5 * lightsTextureInvSize.x, lightV)).rgb;
+
+            // evaluate point light
+            getLightDirPoint(lightPosRange.xyz);
+            dAtten = getFalloffLinear(lightPosRange.w);
+            if (dAtten > 0.00001) {
+                dAtten *= getLightDiffuse();
+                dDiffuseLight += dAtten * lightColor;
+            }
+        }
+        `;
+    },
+
     createShaderDefinition: function (device, options) {
         var i, p;
         var lighting = options.lights.length > 0;
@@ -1026,6 +1050,26 @@ var standard = {
             code += "#define AREA_LUTS_PRECISION highp\n";
         }
 
+
+        var useCluster = true;
+
+        if (useCluster) {
+            code += `
+            uniform sampler2D clusterWorldTexture;
+            uniform sampler2D lightsTexture8;
+            uniform highp sampler2D lightsTextureFloat;
+
+            uniform float clusterPixelsPerCell;
+            uniform vec3 clusterCellsCountByBoundsSize;
+            uniform vec4 lightsTextureInvSize;
+            uniform vec3 clusterTextureSize;
+            uniform vec3 clusterBoundsMin;
+            uniform vec3 clusterCellsDot;
+            `;
+        }
+
+
+
         if (hasAreaLights) {
             code += "#define AREA_LIGHTS\n";
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex1;\n";
@@ -1530,7 +1574,55 @@ var standard = {
             // light source shape support
             var shapeString = '';
 
+            if (useCluster) {
+
+                usesLinearFalloff = true;
+                hasPointLights = true;
+
+                code += `
+
+                // world space position to 3d integer cell cordinates in the cluster structure
+                vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
+
+                // cell index (mapping from 3d cell coordinates to linear memory)
+                float cellIndex = dot(clusterCellsDot, cellCoords);
+
+                // convert cell index to uv coordinates
+                float clusterV = floor(cellIndex * clusterTextureSize.y);
+                float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+                clusterV = (clusterV + 0.5) * clusterTextureSize.z;
+                `;
+
+                code += `
+                // loop over maximum possible number of supported light cells
+                float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+                for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+
+                    vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
+                    vec4 indices = lightIndices * 255.0;
+                `;
+
+                // evaluate 4 referenced lights
+                code += this._addLightCodeClustered("x");
+                code += this._addLightCodeClustered("y");
+                code += this._addLightCodeClustered("z");
+                code += this._addLightCodeClustered("w");
+
+                code += `
+                    // end of the cell array
+                    if (lightCellIndex > clusterPixelsPerCell)
+                        break;
+                }
+                `;
+            }
+
             for (i = 0; i < options.lights.length; i++) {
+
+                // if clustered lights are used, skip normal lights
+                if (useCluster) {
+                    break;
+                }
+
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (omni shadows will use drastically different genShadowCoord)

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Baked Lights - Clustered Lighting</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.dbg.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        var ground = new pc.Entity();
+        ground.addComponent('render', {
+            type: "plane"
+        });
+        app.root.addChild(ground);
+        ground.setLocalScale(128, 128, 128);
+
+        // high polycount cylinder
+        var material = new pc.StandardMaterial();
+        var cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
+        var meshInstance = new pc.MeshInstance(cylinderMesh, material);
+        var cylinder = new pc.Entity();
+        cylinder.addComponent('render', {
+            material: material,
+            meshInstances: [meshInstance]
+        });
+        app.root.addChild(cylinder);
+        cylinder.setLocalPosition(0, 50, 0);
+        cylinder.setLocalScale(50, 100, 50);
+
+
+        // cluster structure
+        var worldLayer = app.scene.layers.getLayerByName("World");
+        var bounds = new pc.BoundingBox(new pc.Vec3(0, 50, 0), new pc.Vec3(60, 60, 60));
+        var cells = new pc.Vec3(60, 60, 60);
+        worldLayer.clusters = new pc.WorldClusters(app.graphicsDevice, bounds, cells, 28);
+
+
+        // lights
+        var count = 254;
+        var intensity = 2;
+        var lightList = [];
+        for (i = 0; i < count; i++) {
+            var lightPoint = new pc.Entity();
+            var color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+            lightPoint.addComponent("light", {
+                castShadows: false,
+                color: color,
+                range: 12,
+                type: "point",
+                intensity: 1,
+                layers: [worldLayer.id]   // !!!!!!!!!!!!!!!!
+            });
+
+            var material = new pc.StandardMaterial();
+            material.emissive = color.clone();
+            material.update();
+
+            lightPoint.addComponent('render', {
+                type: "sphere",
+                material: material
+            });
+            lightPoint.setLocalScale(5, 5, 5);
+
+            app.root.addChild(lightPoint);
+            lightList.push(lightPoint);
+        }
+
+        // Create an entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.2, 0.2, 0.2),
+            farClip: 500,
+            nearClip: 0.05
+        });
+        app.root.addChild(camera);
+
+
+        // Set an update function on the app's update event
+        var time = 4;
+        app.on("update", function (dt) {
+            time += dt;
+
+            camera.setLocalPosition(120, 120, 120);
+            camera.lookAt(new pc.Vec3(0, 40, 0));
+
+            // debug textures
+            app.renderTexture(0.7, -0.3, 0.5, 0.5, worldLayer.clusters.texture);
+            app.renderTexture(0.8, 0.7, 0.1, 0.5, worldLayer.clusters.lightsTextureFloat);
+            app.renderTexture(0.93, 0.7, 0.05, 0.5, worldLayer.clusters.lightsTexture8);
+
+            // move lights
+            lightList.forEach(function(light, i) {
+
+                var angle = i / count * Math.PI * 2;
+                var y = Math.sin(time * 0.3 + 10 * angle) * 55 + 50;
+                light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
+            });
+        });
+
+    </script>
+</body>
+</html>

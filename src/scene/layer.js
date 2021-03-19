@@ -301,6 +301,13 @@ class Layer {
         this._clearColor.copy(val);
     }
 
+    _updateClusters = function () {
+
+        if (this.clusters) {
+            this.clusters.update(this._lights);
+        }
+    }
+
     get clearColorBuffer() {
         return this._clearColorBuffer;
     }

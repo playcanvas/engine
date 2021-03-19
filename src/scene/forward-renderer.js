@@ -8,6 +8,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingSphere } from '../shape/bounding-sphere.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -103,7 +104,7 @@ var worldMatY = new Vec3();
 var worldMatZ = new Vec3();
 
 var frustumDiagonal = new Vec3();
-var tempSphere = { center: null, radius: 0 };
+var tempSphere = new BoundingSphere();
 var visibleSceneAabb = new BoundingBox();
 var boneTextureSize = [0, 0, 0, 0];
 var boneTexture, instancingData, modelMatrix, normalMatrix;
@@ -3084,6 +3085,12 @@ class ForwardRenderer {
                 // #ifdef PROFILER
                 sortTime = now();
                 // #endif
+
+
+
+                layer._updateClusters();
+
+
 
                 layer._sortVisible(transparent, camera.camera.node, cameraPass);
 
