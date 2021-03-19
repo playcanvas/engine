@@ -1,5 +1,5 @@
 /**
- * @typedef {Object} AnimStateGraph_DataState
+ * @typedef {object} AnimStateGraph_DataState
  * @property {string} name
  * @property {number} [speed]
  * @property {boolean} [loop]
@@ -7,13 +7,13 @@
  */
 
 /**
- * @typedef {Object} AnimStateGraph_DataTransitionCondition
+ * @typedef {object} AnimStateGraph_DataTransitionCondition
  * @property {string} parameterName
  * @property {string} predicate
  */
 
 /**
- * @typedef {Object} AnimStateGraph_DataTransition
+ * @typedef {object} AnimStateGraph_DataTransition
  * @property {string} from
  * @property {string} to
  * @property {number} [time]
@@ -25,28 +25,27 @@
  */
 
 /**
- * @typedef {Object} AnimStateGraph_DataParameter
+ * @typedef {object} AnimStateGraph_DataParameter
  * @property {string} name
  * @property {string} type One of pc.ANIM_*
  * @property {any} value
- * 
  */
 
 /**
  * @typedef {Object<string, AnimStateGraph_DataParameter>} AnimStateGraph_DataParameters
  */
-    
+
 // FROM OBJECT
 
 /**
- * @typedef {Object} AnimStateGraph_DataFromObjectLayer
+ * @typedef {object} AnimStateGraph_DataFromObjectLayer
  * @property {string} name
  * @property {number[]} states
  * @property {number[]} transitions
  */
 
 /**
- * @typedef {Object} AnimStateGraph_DataFromObject
+ * @typedef {object} AnimStateGraph_DataFromObject
  * @property {AnimStateGraph_DataFromObjectLayer[]} layers
  * @property {AnimStateGraph_DataState[]} states
  * @property {AnimStateGraph_DataTransition[]} transitions
@@ -56,14 +55,14 @@
 // FROM ARRAY:
 
 /**
- * @typedef {Object} AnimStateGraph_DataFromArrayLayer
+ * @typedef {object} AnimStateGraph_DataFromArrayLayer
  * @property {string} name
  * @property {AnimStateGraph_DataState[]} states
  * @property {AnimStateGraph_DataTransition[]} transitions
  */
-    
+
 /**
- * @typedef {Object} AnimStateGraph_DataFromArray
+ * @typedef {object} AnimStateGraph_DataFromArray
  * @property {AnimStateGraph_DataFromArrayLayer[]} layers
  * @property {AnimStateGraph_DataParameters} parameters
  */
