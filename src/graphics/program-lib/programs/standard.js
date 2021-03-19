@@ -452,7 +452,7 @@ var standard = {
         return code;
     },
 
-    _addLightCodeClustered: function(component) {
+    _addLightCodeClustered: function (component) {
         return `
 
         // not valid light
@@ -1067,7 +1067,6 @@ var standard = {
             uniform vec3 clusterCellsDot;
             `;
         }
-
 
 
         if (hasAreaLights) {

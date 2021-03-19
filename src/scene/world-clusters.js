@@ -4,7 +4,7 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { BoundingSphere } from '../shape/bounding-sphere.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
-import { LIGHTTYPE_DIRECTIONAL } from './constants.js'
+import { LIGHTTYPE_DIRECTIONAL } from './constants.js';
 
 let boundsSize = new Vec3();
 let boundsMin = new Vec3();

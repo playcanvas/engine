@@ -3087,9 +3087,7 @@ class ForwardRenderer {
                 // #endif
 
 
-
                 layer._updateClusters();
-
 
 
                 layer._sortVisible(transparent, camera.camera.node, cameraPass);
