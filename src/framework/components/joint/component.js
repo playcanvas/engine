@@ -70,9 +70,9 @@ class JointComponent extends Component {
     }
 
     set enableCollision(enableCollision) {
-        this._destroyJoint();
+        this._destroyConstraint();
         this._enableCollision = enableCollision;
-        this._createJoint();
+        this._createConstraint();
     }
 
     get enableCollision() {
@@ -80,7 +80,7 @@ class JointComponent extends Component {
     }
 
     set angularLimitsX(limits) {
-        if (!this._anularLimitsX.equals(limits)) {
+        if (!this._angularLimitsX.equals(limits)) {
             this._angularLimitsX.copy(limits);
             this._updateAngularLimits();
         }
