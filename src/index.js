@@ -232,6 +232,8 @@ export { ElementDragHelper } from './framework/components/element/element-drag-h
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
 export { ImageElement } from './framework/components/element/image-element.js';
+export { JointComponent } from './framework/components/joint/component.js';
+export { JointComponentSystem } from './framework/components/joint/system.js';
 export { LayoutCalculator } from './framework/components/layout-group/layout-calculator.js';
 export { LayoutChildComponent } from './framework/components/layout-child/component.js';
 export { LayoutChildComponentSystem } from './framework/components/layout-child/system.js';

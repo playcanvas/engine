@@ -90,6 +90,7 @@ import { CollisionComponentSystem } from './components/collision/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
 import { ComponentSystem } from './components/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
+import { JointComponentSystem } from './components/joint/system.js';
 import { LayoutChildComponentSystem } from './components/layout-child/system.js';
 import { LayoutGroupComponentSystem } from './components/layout-group/system.js';
 import { LightComponentSystem } from './components/light/system.js';
@@ -760,6 +761,7 @@ class Application extends EventHandler {
         this.systems = new ComponentSystemRegistry();
         this.systems.add(new RigidBodyComponentSystem(this));
         this.systems.add(new CollisionComponentSystem(this));
+        this.systems.add(new JointComponentSystem(this));
         this.systems.add(new AnimationComponentSystem(this));
         this.systems.add(new AnimComponentSystem(this));
         this.systems.add(new ModelComponentSystem(this));

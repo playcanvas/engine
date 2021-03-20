@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var JointComponentData = function () {
+class JointComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        JointComponentData: JointComponentData
-    };
-}());
+export { JointComponentData };
