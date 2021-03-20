@@ -2,4 +2,3 @@ float getSpotEffect(vec3 lightSpotDirW, float lightInnerConeAngle, float lightOu
     float cosAngle = dot(dLightDirNormW, lightSpotDirW);
     return smoothstep(lightOuterConeAngle, lightInnerConeAngle, cosAngle);
 }
-

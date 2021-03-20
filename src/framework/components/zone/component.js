@@ -1,32 +1,34 @@
-Object.assign(pc, function () {
-    /**
-     * @private
-     * @component
-     * @class
-     * @name pc.ZoneComponent
-     * @augments pc.Component
-     * @classdesc The ZoneComponent allows you to define an area in world space of certain size.
-     * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
-     * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
-     * And many other possible options. Zones are building blocks and meant to be used in many different ways.
-     * @param {pc.ZoneComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {pc.Vec3} size - The Size of Box of a Zone.
-     */
+import { Vec3 } from '../../../math/vec3.js';
 
-    var ZoneComponent = function ZoneComponent(system, entity) {
-        pc.Component.call(this, system, entity);
+import { Component } from '../component.js';
+
+/**
+ * @private
+ * @component
+ * @class
+ * @name ZoneComponent
+ * @augments Component
+ * @classdesc The ZoneComponent allows you to define an area in world space of certain size.
+ * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
+ * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
+ * And many other possible options. Zones are building blocks and meant to be used in many different ways.
+ * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Vec3} size - The Size of Box of a Zone.
+ */
+
+class ZoneComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
         this._oldState = true;
-        this._size = new pc.Vec3();
+        this._size = new Vec3();
         this.on('set_enabled', this._onSetEnabled, this);
-    };
-    ZoneComponent.prototype = Object.create(pc.Component.prototype);
-    ZoneComponent.prototype.constructor = ZoneComponent;
+    }
 
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#enable
+     * @name ZoneComponent#enable
      * @description Fired when Component becomes enabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
@@ -38,7 +40,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#disable
+     * @name ZoneComponent#disable
      * @description Fired when Component becomes disabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
@@ -50,7 +52,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#state
+     * @name ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @param {boolean} enabled - True if now enabled, False if disabled.
@@ -63,7 +65,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#remove
+     * @name ZoneComponent#remove
      * @description Fired when a zone is removed from an entity.
      * @example
      * entity.zone.on('remove', function () {
@@ -71,49 +73,44 @@ Object.assign(pc, function () {
      * });
      */
 
-    Object.assign(ZoneComponent.prototype, {
-        onEnable: function () {
-            this._checkState();
-        },
+    onEnable() {
+        this._checkState();
+    }
 
-        onDisable: function () {
-            this._checkState();
-        },
+    onDisable() {
+        this._checkState();
+    }
 
-        _onSetEnabled: function (prop, old, value) {
-            this._checkState();
-        },
+    _onSetEnabled(prop, old, value) {
+        this._checkState();
+    }
 
-        _checkState: function () {
-            var state = this.enabled && this.entity.enabled;
-            if (state === this._oldState)
-                return;
+    _checkState() {
+        var state = this.enabled && this.entity.enabled;
+        if (state === this._oldState)
+            return;
 
-            this._oldState = state;
+        this._oldState = state;
 
-            this.fire('enable');
-            this.fire('state', this.enabled);
-        },
+        this.fire('enable');
+        this.fire('state', this.enabled);
+    }
 
-        _onBeforeRemove: function () {
-            this.fire('remove');
+    _onBeforeRemove() {
+        this.fire('remove');
+    }
+
+    set size(data) {
+        if (data instanceof Vec3) {
+            this._size.copy(data);
+        } else if (data instanceof Array && data.length >= 3) {
+            this.size.set(data[0], data[1], data[2]);
         }
-    });
+    }
 
-    Object.defineProperty(ZoneComponent.prototype, 'size', {
-        set: function (data) {
-            if (data instanceof pc.Vec3) {
-                this._size.copy(data);
-            } else if (data instanceof Array && data.length >= 3) {
-                this.size.set(data[0], data[1], data[2]);
-            }
-        },
-        get: function () {
-            return this._size;
-        }
-    });
+    get size() {
+        return this._size;
+    }
+}
 
-    return {
-        ZoneComponent: ZoneComponent
-    };
-}());
+export { ZoneComponent };

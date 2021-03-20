@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -40,21 +40,21 @@
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.start();
 
         // ***********    Helper functions    *******************
 
-        function createMaterial (color) {
+        function createMaterial(color) {
             var material = new pc.StandardMaterial();
             material.diffuse = color;
             // we need to call material.update when we change its properties
-            material.update()
+            material.update();
             return material;
         }
 
-        function createBox (position, size, material) {
+        function createBox(position, size, material) {
             // create an entity and add a model component of type 'box'
             var box = new pc.Entity();
             box.addComponent("model", {
@@ -75,13 +75,13 @@
         // ***********    Create Boxes    *******************
 
         // create a few materials for our boxes
-        var red = createMaterial(new pc.Color(1,0,0));
-        var white = createMaterial(new pc.Color(1,1,1));
+        var red = createMaterial(new pc.Color(1, 0, 0));
+        var white = createMaterial(new pc.Color(1, 1, 1));
 
         // create a few boxes in our scene
-        for (var i=0; i<3; i++) {
-            for (var j=0; j<2; j++) {
-                createBox(new pc.Vec3(i*2, 0, j*4), pc.Vec3.ONE, red);
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 2; j++) {
+                createBox(new pc.Vec3(i * 2, 0, j * 4), pc.Vec3.ONE, red);
             }
         }
 
@@ -93,7 +93,7 @@
         // make our scene prettier by adding a directional light
         var light = new pc.Entity();
         light.addComponent("light", {
-            type: "point",
+            type: "omni",
             color: new pc.Color(1, 1, 1),
             range: 100
         });
@@ -113,7 +113,7 @@
         });
 
         // add the fly camera script to the camera
-        app.assets.loadFromUrl('../assets/scripts/camera/fly-camera.js', 'script', function (err, asset) {
+        app.assets.loadFromUrl('../../scripts/camera/fly-camera.js', 'script', function (err, asset) {
             camera.addComponent("script");
             camera.script.create("flyCamera");
         });

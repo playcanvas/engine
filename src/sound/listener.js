@@ -1,60 +1,63 @@
-Object.assign(pc, function () {
-    'use strict';
+import { Vec3 } from '../math/vec3.js';
+import { Mat4 } from '../math/mat4.js';
 
-    /**
-     * @private
-     * @class
-     * @name pc.Listener
-     * @classdesc Represents an audio listener - used internally.
-     * @param {pc.SoundManager} manager - The sound manager.
-     */
-    var Listener = function (manager) {
-        this.position = new pc.Vec3();
-        this.velocity = new pc.Vec3();
-        this.orientation = new pc.Mat4();
+/**
+ * @private
+ * @class
+ * @name Listener
+ * @classdesc Represents an audio listener - used internally.
+ * @param {SoundManager} manager - The sound manager.
+ */
+class Listener {
+    constructor(manager) {
+        this._manager = manager;
 
-        if (pc.SoundManager.hasAudioContext()) {
-            this.listener = manager.context.listener;
+        this.position = new Vec3();
+        this.velocity = new Vec3();
+        this.orientation = new Mat4();
+    }
+
+    getPosition() {
+        return this.position;
+    }
+
+    setPosition(position) {
+        this.position.copy(position);
+        const listener = this.listener;
+        if (listener) {
+            listener.setPosition(position.x, position.y, position.z);
         }
-    };
+    }
 
-    Object.assign(Listener.prototype, {
-        getPosition: function () {
-            return this.position;
-        },
+    getVelocity() {
+        return this.velocity;
+    }
 
-        setPosition: function (position) {
-            this.position.copy(position);
-            if (this.listener) {
-                this.listener.setPosition(position.x, position.y, position.z);
-            }
-        },
-
-        getVelocity: function () {
-            return this.velocity;
-        },
-
-        setVelocity: function (velocity) {
-            this.velocity.copy(velocity);
-            if (this.listener) {
-                this.listener.setPosition(velocity.x, velocity.y, velocity.z);
-            }
-        },
-
-        setOrientation: function (orientation) {
-            this.orientation.copy(orientation);
-            if (this.listener) {
-                this.listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10],
-                                             orientation.data[4], orientation.data[5], orientation.data[6]);
-            }
-        },
-
-        getOrientation: function () {
-            return this.orientation;
+    setVelocity(velocity) {
+        this.velocity.copy(velocity);
+        const listener = this.listener;
+        if (listener) {
+            listener.setPosition(velocity.x, velocity.y, velocity.z);
         }
-    });
+    }
 
-    return {
-        Listener: Listener
-    };
-}());
+    setOrientation(orientation) {
+        this.orientation.copy(orientation);
+        const listener = this.listener;
+        if (listener) {
+            listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10],
+                                    orientation.data[4], orientation.data[5], orientation.data[6]);
+        }
+    }
+
+    getOrientation() {
+        return this.orientation;
+    }
+
+    get listener() {
+        const context = this._manager.context;
+        return context ? context.listener : null;
+    }
+}
+
+export { Listener };

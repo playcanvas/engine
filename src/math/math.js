@@ -1,13 +1,13 @@
 /**
- * @name pc.math
+ * @name math
  * @namespace
  * @description Math API.
  */
-pc.math = {
+var math = {
     /**
      * @constant
      * @type {number}
-     * @name pc.math.DEG_TO_RAD
+     * @name math.DEG_TO_RAD
      * @description Conversion factor between degrees and radians.
      * @example
      * // Convert 180 degrees to pi radians
@@ -18,7 +18,7 @@ pc.math = {
     /**
      * @constant
      * @type {number}
-     * @name pc.math.RAD_TO_DEG
+     * @name math.RAD_TO_DEG
      * @description Conversion factor between degrees and radians.
      * @example
      * // Convert pi radians to 180 degrees
@@ -28,7 +28,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.clamp
+     * @name math.clamp
      * @description Clamp a number between min and max inclusive.
      * @param {number} value - Number to clamp.
      * @param {number} min - Min value.
@@ -43,7 +43,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.intToBytes24
+     * @name math.intToBytes24
      * @description Convert an 24 bit integer into an array of 3 bytes.
      * @param {number} i - Number holding an integer value.
      * @returns {number[]} An array of 3 bytes.
@@ -63,7 +63,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.intToBytes32
+     * @name math.intToBytes32
      * @description Convert an 32 bit integer into an array of 4 bytes.
      * @returns {number[]} An array of 4 bytes.
      * @param {number} i - Number holding an integer value.
@@ -84,7 +84,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.bytesToInt24
+     * @name math.bytesToInt24
      * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number.
      * @example
      * // Set result1 to 0x112233 from an array of 3 values
@@ -108,7 +108,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.bytesToInt32
+     * @name math.bytesToInt32
      * @description Convert 4 1-byte Numbers into a single unsigned 32bit Number.
      * @returns {number} A single unsigned 32bit Number.
      * @example
@@ -138,7 +138,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.lerp
+     * @name math.lerp
      * @returns {number} The linear interpolation of two numbers.
      * @description Calculates the linear interpolation of two numbers.
      * @param {number} a - Number to linearly interpolate from.
@@ -148,12 +148,12 @@ pc.math = {
      * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerp: function (a, b, alpha) {
-        return a + (b - a) * pc.math.clamp(alpha, 0, 1);
+        return a + (b - a) * math.clamp(alpha, 0, 1);
     },
 
     /**
      * @function
-     * @name pc.math.lerpAngle
+     * @name math.lerpAngle
      * @description Calculates the linear interpolation of two angles ensuring that interpolation
      * is correctly performed across the 360 to 0 degree boundary. Angles are supplied in degrees.
      * @returns {number} The linear interpolation of two angles.
@@ -170,12 +170,12 @@ pc.math = {
         if (b - a < -180 ) {
             b += 360;
         }
-        return pc.math.lerp(a, b, pc.math.clamp(alpha, 0, 1));
+        return math.lerp(a, b, math.clamp(alpha, 0, 1));
     },
 
     /**
      * @function
-     * @name pc.math.powerOfTwo
+     * @name math.powerOfTwo
      * @description Returns true if argument is a power-of-two and false otherwise.
      * @param {number} x - Number to check for power-of-two property.
      * @returns {boolean} True if power-of-two and false otherwise.
@@ -186,7 +186,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.nextPowerOfTwo
+     * @name math.nextPowerOfTwo
      * @description Returns the next power of 2 for the specified value.
      * @param {number} val - The value for which to calculate the next power of 2.
      * @returns {number} The next power of 2.
@@ -204,7 +204,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.random
+     * @name math.random
      * @description Return a pseudo-random number between min and max.
      * The number generated is in the range [min, max), that is inclusive of the minimum but exclusive of the maximum.
      * @param {number} min - Lower bound for range.
@@ -218,7 +218,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.smoothstep
+     * @name math.smoothstep
      * @description The function interpolates smoothly between two input values based on
      * a third one that should be between the first two. The returned value is clamped
      * between 0 and 1.
@@ -242,8 +242,8 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.smootherstep
-     * @description An improved version of the pc.math.smoothstep function which has zero
+     * @name math.smootherstep
+     * @description An improved version of the {@link math.smoothstep} function which has zero
      * 1st and 2nd order derivatives at t=0 and t=1.
      * <br/>See http://en.wikipedia.org/wiki/Smoothstep for more details.
      * @param {number} min - The lower bound of the interpolation range.
@@ -262,7 +262,7 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.roundUp
+     * @name math.roundUp
      * @description Rounds a number up to nearest multiple.
      * @param {number} numToRound - The number to round up.
      * @param {number} multiple - The multiple to round up to.
@@ -272,5 +272,82 @@ pc.math = {
         if (multiple === 0)
             return numToRound;
         return Math.ceil(numToRound / multiple) * multiple;
+    },
+
+    /**
+     * @function
+     * @name math.float2Half
+     * @description Converts float number to half float representation.
+     * @param {number} val - The float number.
+     * @returns {number} A 16 bit number representing half float representation as used by GPU.
+     */
+    float2Half: (function () {
+
+        // based on based on https://esdiscuss.org/topic/float16array
+        var floatView = new Float32Array(1);
+        var int32View = new Int32Array(floatView.buffer);
+
+        // This method is faster than the OpenEXR implementation (very often
+        // used, eg. in Ogre), with the additional benefit of rounding, inspired
+        // by James Tursa?s half-precision code.
+        return function (val) {
+
+            floatView[0] = val;
+            var x = int32View[0];
+
+            var bits = (x >> 16) & 0x8000; // Get the sign
+            var m = (x >> 12) & 0x07ff; // Keep one extra bit for rounding
+            var e = (x >> 23) & 0xff; // Using int is faster here
+
+            // If zero, or denormal, or exponent underflows too much for a denormal half, return signed zero.
+            if (e < 103) {
+                return bits;
+            }
+
+            // If NaN, return NaN. If Inf or exponent overflow, return Inf.
+            if (e > 142) {
+                bits |= 0x7c00;
+
+                // If exponent was 0xff and one mantissa bit was set, it means NaN,
+                // not Inf, so make sure we set one mantissa bit too.
+                bits |= ((e == 255) ? 0 : 1) && (x & 0x007fffff);
+                return bits;
+            }
+
+            // If exponent underflows but not too much, return a denormal
+            if (e < 113) {
+                m |= 0x0800;
+
+                // Extra rounding may overflow and set mantissa to 0 and exponent to 1, which is OK.
+                bits |= (m >> (114 - e)) + ((m >> (113 - e)) & 1);
+                return bits;
+            }
+
+            bits |= ((e - 112) << 10) | (m >> 1);
+
+            // Extra rounding. An overflow will set mantissa to 0 and increment the exponent, which is OK.
+            bits += m & 1;
+            return bits;
+        };
+    }()),
+
+
+    /**
+     * @function
+     * @private
+     * @name math.between
+     * @description Checks whether a given number resides between two other given numbers.
+     * @returns {boolean} true if between or false otherwise.
+     * @param {number} num - The number to check the position of.
+     * @param {number} a - The first upper or lower threshold to check between.
+     * @param {number} b - The second upper or lower threshold to check between.
+     * @param {boolean} inclusive - If true, a num param which is equal to a or b will return true.
+     */
+    between: function (num, a, b, inclusive) {
+        var min = Math.min(a, b),
+            max = Math.max(a, b);
+        return inclusive ? num >= min && num <= max : num > min && num < max;
     }
 };
+
+export { math };

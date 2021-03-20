@@ -1,14 +1,11 @@
-Object.assign(pc, function () {
-    /**
-     * @private
-     * @class
-     * @name pc.ComponentData
-     * @classdesc Base class for Component data storage.
-     */
-    var ComponentData = function () {
-    };
+/**
+ * @private
+ * @class
+ * @name ComponentData
+ * @classdesc Base class for Component data storage.
+ */
+class ComponentData {
+    constructor() {}
+}
 
-    return {
-        ComponentData: ComponentData
-    };
-}());
+export { ComponentData };

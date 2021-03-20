@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -51,7 +51,7 @@
             intensity = smoothstep(0.9, 1.0, intensity);
 
             // point size depends on intensity
-            gl_PointSize = 12.0 * intensity;
+            gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
 
             // color mixes red and yellow based on intensity
             outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
@@ -71,7 +71,7 @@
 
     <!-- The script -->
     <script>
-        var entity, light, camera;
+        var entity, camera;
         var shader, material, diffuseMap;
         var canvas = document.getElementById("application-canvas");
 
@@ -86,7 +86,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         // Create an Entity with a camera component
         camera = new pc.Entity();
@@ -98,18 +98,12 @@
         // Add entity into scene hierarchy
         app.root.addChild(camera);
 
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
             // Create a new Entity
-            entity = new pc.Entity();
-
-            // Add a model component, with the new asset
-            var modelComponent = entity.addComponent("model", {
-                type: "asset",
-                asset: asset
-            });
+            entity = asset.resource.instantiateRenderEntity();
             app.root.addChild(entity);
 
             // Create the shader definition and shader from the vertex and fragment shaders
@@ -126,17 +120,20 @@
             material = new pc.Material();
             material.shader = shader;
 
-            // For all meshes in the model
-            var model = modelComponent.model;
-            model.meshInstances.forEach(function (meshInstance) {
-                // Set the new material
-                meshInstance.material = material;
+            // find all render components
+            var renderComponents = entity.findComponents('render');
 
-                // Set all primitives of the mesh to render as points
-                meshInstance.mesh.primitive.forEach(function (primitive) {
-                    primitive.type = pc.PRIMITIVE_POINTS;
-                })
-            })
+            // for all render components
+            renderComponents.forEach(function(render){
+
+                // For all meshes in the render component, assign new material
+                render.meshInstances.forEach(function (meshInstance) {
+                    meshInstance.material = material;
+                });
+
+                // set it to render as points
+                render.renderStyle = pc.RENDERSTYLE_POINTS;
+            });
 
             currentTime = 0;
             app.on("update", function (dt) {
@@ -148,7 +145,6 @@
                 // Rotate the model
                 entity.rotate(0, 15 * dt, 0);
             });
-
         });
     </script>
 </body>

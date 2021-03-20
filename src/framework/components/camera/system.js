@@ -1,50 +1,32 @@
-Object.assign(pc, function () {
-    var _schema = [
-        'enabled',
-        'clearColorBuffer',
-        'clearColor',
-        'clearDepthBuffer',
-        'clearStencilBuffer',
-        'frustumCulling',
-        'projection',
-        'fov',
-        'orthoHeight',
-        'nearClip',
-        'farClip',
-        'priority',
-        'rect',
-        'scissorRect',
-        'camera',
-        'aspectRatio',
-        'aspectRatioMode',
-        'horizontalFov',
-        'model',
-        'renderTarget',
-        'calculateTransform',
-        'calculateProjection',
-        'cullFaces',
-        'flipFaces',
-        'layers'
-    ];
+import { Color } from '../../../math/color.js';
+import { Vec4 } from '../../../math/vec4.js';
 
-    /**
-     * @class
-     * @name pc.CameraComponentSystem
-     * @augments pc.ComponentSystem
-     * @classdesc Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
-     * array of all active cameras.
-     * @description Create a new CameraComponentSystem.
-     * @param {pc.Application} app - The Application.
-     * @property {pc.CameraComponent[]} cameras Holds all the active camera components.
-     */
-    var CameraComponentSystem = function (app) {
-        pc.ComponentSystem.call(this, app);
+import { Component } from '../component.js';
+import { ComponentSystem } from '../system.js';
+
+import { CameraComponent } from './component.js';
+import { CameraComponentData } from './data.js';
+
+const _schema = ['enabled'];
+
+/**
+ * @class
+ * @name CameraComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Used to add and remove {@link CameraComponent}s from Entities. It also holds an
+ * array of all active cameras.
+ * @description Create a new CameraComponentSystem.
+ * @param {Application} app - The Application.
+ * @property {CameraComponent[]} cameras Holds all the active camera components.
+ */
+class CameraComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
         this.id = 'camera';
-        this.description = "Renders the scene from the location of the Entity.";
 
-        this.ComponentType = pc.CameraComponent;
-        this.DataType = pc.CameraComponentData;
+        this.ComponentType = CameraComponent;
+        this.DataType = CameraComponentData;
 
         this.schema = _schema;
 
@@ -52,162 +34,151 @@ Object.assign(pc, function () {
         this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('remove', this.onRemove, this);
-        this.app.on("prerender", this.onPrerender, this);
+        this.app.on("prerender", this.onAppPrerender, this);
 
-        pc.ComponentSystem.bind('update', this.onUpdate, this);
-    };
-    CameraComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
-    CameraComponentSystem.prototype.constructor = CameraComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-    pc.Component._buildAccessors(pc.CameraComponent.prototype, _schema);
+    initializeComponentData(component, data, properties) {
+        properties = [
+            'aspectRatio',
+            'aspectRatioMode',
+            'calculateProjection',
+            'calculateTransform',
+            'clearColor',
+            'clearColorBuffer',
+            'clearDepthBuffer',
+            'clearStencilBuffer',
+            'cullFaces',
+            'farClip',
+            'flipFaces',
+            'fov',
+            'frustumCulling',
+            'horizontalFov',
+            'layers',
+            'renderTarget',
+            'nearClip',
+            'orthoHeight',
+            'projection',
+            'priority',
+            'rect',
+            'scissorRect'
+        ];
 
-    Object.assign(CameraComponentSystem.prototype, {
-        initializeComponentData: function (component, _data, properties) {
-            properties = [
-                'postEffects',
-                'enabled',
-                'model',
-                'camera',
-                'aspectRatio',
-                'aspectRatioMode',
-                'horizontalFov',
-                'renderTarget',
-                'clearColor',
-                'fov',
-                'orthoHeight',
-                'nearClip',
-                'farClip',
-                'projection',
-                'priority',
-                'clearColorBuffer',
-                'clearDepthBuffer',
-                'clearStencilBuffer',
-                'frustumCulling',
-                'rect',
-                'scissorRect',
-                'calculateTransform',
-                'calculateProjection',
-                'cullFaces',
-                'flipFaces',
-                'layers'
-            ];
-
-            // duplicate data because we're modifying the data
-            var data = {};
-            for (var i = 0, len = properties.length; i < len; i++) {
-                var property = properties[i];
-                data[property] = _data[property];
+        for (var i = 0; i < properties.length; i++) {
+            var property = properties[i];
+            if (data.hasOwnProperty(property)) {
+                var value = data[property];
+                switch (property) {
+                    case 'rect':
+                    case 'scissorRect':
+                        if (Array.isArray(value)) {
+                            component[property] = new Vec4(value[0], value[1], value[2], value[3]);
+                        } else {
+                            component[property] = value;
+                        }
+                        break;
+                    case 'clearColor':
+                        if (Array.isArray(value)) {
+                            component[property] = new Color(value[0], value[1], value[2], value[3]);
+                        } else {
+                            component[property] = value;
+                        }
+                        break;
+                    default:
+                        component[property] = value;
+                        break;
+                }
             }
+        }
 
-            if (data.layers && pc.type(data.layers) === 'array') {
-                data.layers = data.layers.slice(0);
-            }
+        super.initializeComponentData(component, data, ['enabled']);
+    }
 
-            if (data.clearColor && pc.type(data.clearColor) === 'array') {
-                var c = data.clearColor;
-                data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
-            }
+    cloneComponent(entity, clone) {
+        var c = entity.camera;
+        this.addComponent(clone, {
+            aspectRatio: c.aspectRatio,
+            aspectRatioMode: c.aspectRatioMode,
+            calculateProjection: c.calculateProjection,
+            calculateTransform: c.calculateTransform,
+            clearColor: c.clearColor,
+            clearColorBuffer: c.clearColorBuffer,
+            clearDepthBuffer: c.clearDepthBuffer,
+            clearStencilBuffer: c.clearStencilBuffer,
+            cullFaces: c.cullFaces,
+            farClip: c.farClip,
+            flipFaces: c.flipFaces,
+            fov: c.fov,
+            frustumCulling: c.frustumCulling,
+            horizontalFov: c.horizontalFov,
+            layers: c.layers,
+            renderTarget: c.renderTarget,
+            nearClip: c.nearClip,
+            orthoHeight: c.orthoHeight,
+            projection: c.projection,
+            priority: c.priority,
+            rect: c.rect,
+            scissorRect: c.scissorRect
+        });
+    }
 
-            if (data.rect && pc.type(data.rect) === 'array') {
-                var rect = data.rect;
-                data.rect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
-            }
+    onBeforeRemove(entity, component) {
+        this.removeCamera(component);
+    }
 
-            if (data.scissorRect && pc.type(data.scissorRect) === 'array') {
-                var scissorRect = data.scissorRect;
-                data.scissorRect = new pc.Vec4(scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
-            }
-
-            if (data.activate) {
-                console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
-                data.enabled = data.activate;
-            }
-
-            data.camera = new pc.Camera();
-            data._node = component.entity;
-            data.camera._component = component;
-
-            var self = component;
-            data.camera.calculateTransform = function (mat, mode) {
-                if (!self._calculateTransform)
-                    return null;
-
-                return self._calculateTransform(mat, mode);
-            };
-            data.camera.calculateProjection = function (mat, mode) {
-                if (!self._calculateProjection)
-                    return null;
-
-                return self._calculateProjection(mat, mode);
-            };
-
-            data.postEffects = new pc.PostEffectQueue(this.app, component);
-
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-        },
-
-        onBeforeRemove: function (entity, component) {
-            this.removeCamera(component);
-            component.onRemove();
-        },
-
-        onRemove: function (entity, data) {
-            data.camera = null;
-        },
-
-        onUpdate: function (dt) {
+    onUpdate(dt) {
+        if (this.app.vr) {
             var components = this.store;
-            var component, componentData, cam, vrDisplay;
 
-            if (this.app.vr) {
-                for (var id in components) {
-                    component = components[id];
-                    componentData = component.data;
-                    cam = componentData.camera;
-                    vrDisplay = cam.vrDisplay;
-                    if (componentData.enabled && component.entity.enabled && vrDisplay) {
+            for (var id in components) {
+                var component = components[id];
+
+                if (component.data.enabled && component.entity.enabled) {
+                    var cameraComponent = component.entity.camera;
+                    var vrDisplay = cameraComponent.vrDisplay;
+                    if (vrDisplay) {
                         // Change WebVR near/far planes based on the stereo camera
-                        vrDisplay.setClipPlanes(cam._nearClip, cam._farClip);
+                        vrDisplay.setClipPlanes(cameraComponent.nearClip, cameraComponent.farClip);
 
                         // update camera node transform from VrDisplay
-                        if (cam._node) {
-                            cam._node.localTransform.copy(vrDisplay.combinedViewInv);
-                            cam._node._dirtyLocal = false;
-                            cam._node._dirtifyWorld();
+                        if (component.entity) {
+                            component.entity.localTransform.copy(vrDisplay.combinedViewInv);
+                            component.entity._dirtyLocal = false;
+                            component.entity._dirtifyWorld();
                         }
                     }
                 }
             }
-        },
-
-        onPrerender: function () {
-            for (var i = 0, len = this.cameras.length; i < len; i++) {
-                this.cameras[i].onPrerender();
-            }
-        },
-
-        addCamera: function (camera) {
-            this.cameras.push(camera);
-            this.sortCamerasByPriority();
-        },
-
-        removeCamera: function (camera) {
-            var index = this.cameras.indexOf(camera);
-            if (index >= 0) {
-                this.cameras.splice(index, 1);
-                this.sortCamerasByPriority();
-            }
-        },
-
-        sortCamerasByPriority: function () {
-            this.cameras.sort(function (a, b) {
-                return a.priority - b.priority;
-            });
         }
-    });
+    }
 
-    return {
-        CameraComponentSystem: CameraComponentSystem
-    };
-}());
+    onAppPrerender() {
+        for (var i = 0, len = this.cameras.length; i < len; i++) {
+            this.cameras[i].onAppPrerender();
+        }
+    }
+
+    addCamera(camera) {
+        this.cameras.push(camera);
+        this.sortCamerasByPriority();
+    }
+
+    removeCamera(camera) {
+        var index = this.cameras.indexOf(camera);
+        if (index >= 0) {
+            this.cameras.splice(index, 1);
+            this.sortCamerasByPriority();
+        }
+    }
+
+    sortCamerasByPriority() {
+        this.cameras.sort(function (a, b) {
+            return a.priority - b.priority;
+        });
+    }
+}
+
+Component._buildAccessors(CameraComponent.prototype, _schema);
+
+export { CameraComponentSystem };

@@ -1,24 +1,20 @@
-Object.assign(pc, function () {
-    var spawnMatrix3 = new pc.Mat3();
-    var emitterMatrix3 = new pc.Mat3();
-    var emitterMatrix3Inv = new pc.Mat3();
+import { math } from '../../math/math.js';
+import { Mat3 } from '../../math/mat3.js';
+import { Mat4 } from '../../math/mat4.js';
+import { Vec3 } from '../../math/vec3.js';
 
-    function mat4ToMat3(mat4, mat3) {
-        mat3.data[0] = mat4.data[0];
-        mat3.data[1] = mat4.data[1];
-        mat3.data[2] = mat4.data[2];
+import { CULLFACE_NONE } from '../../graphics/constants.js';
+import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 
-        mat3.data[3] = mat4.data[4];
-        mat3.data[4] = mat4.data[5];
-        mat3.data[5] = mat4.data[6];
+import { EMITTERSHAPE_BOX } from '../../scene/constants.js';
 
-        mat3.data[6] = mat4.data[8];
-        mat3.data[7] = mat4.data[9];
-        mat3.data[8] = mat4.data[10];
-    }
+var spawnMatrix3 = new Mat3();
+var emitterMatrix3 = new Mat3();
+var emitterMatrix3Inv = new Mat3();
 
-    // Wraps GPU particles render state and setup from ParticleEmitter
-    var ParticleGPUUpdater = function (emitter, gd) {
+// Wraps GPU particles render state and setup from ParticleEmitter
+class ParticleGPUUpdater {
+    constructor(emitter, gd) {
         this._emitter = emitter;
 
         this.frameRandomUniform = new Float32Array(3);
@@ -66,9 +62,9 @@ Object.assign(pc, function () {
         this.constantMaxVel = gd.scope.resolve("maxVel");
         this.constantFaceTangent = gd.scope.resolve("faceTangent");
         this.constantFaceBinorm = gd.scope.resolve("faceBinorm");
-    };
+    }
 
-    ParticleGPUUpdater.prototype._setInputBounds = function () {
+    _setInputBounds() {
         this.inBoundsSizeUniform[0] = this._emitter.prevWorldBoundsSize.x;
         this.inBoundsSizeUniform[1] = this._emitter.prevWorldBoundsSize.y;
         this.inBoundsSizeUniform[2] = this._emitter.prevWorldBoundsSize.z;
@@ -77,16 +73,16 @@ Object.assign(pc, function () {
         this.inBoundsCenterUniform[1] = this._emitter.prevWorldBoundsCenter.y;
         this.inBoundsCenterUniform[2] = this._emitter.prevWorldBoundsCenter.z;
         this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
-    };
+    }
 
-    ParticleGPUUpdater.prototype.randomize = function () {
+    randomize() {
         this.frameRandomUniform[0] = Math.random();
         this.frameRandomUniform[1] = Math.random();
         this.frameRandomUniform[2] = Math.random();
-    };
+    }
 
     // This shouldn't change emitter state, only read from it
-    ParticleGPUUpdater.prototype.update = function (device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
+    update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
 
         // #ifdef DEBUG
         device.pushMarker("ParticleGPU");
@@ -96,7 +92,7 @@ Object.assign(pc, function () {
 
         device.setBlending(false);
         device.setColorWrite(true, true, true, true);
-        device.setCullMode(pc.CULLFACE_NONE);
+        device.setCullMode(CULLFACE_NONE);
         device.setDepthTest(false);
         device.setDepthWrite(false);
 
@@ -112,7 +108,7 @@ Object.assign(pc, function () {
         this.constantInternalTex3.setValue(emitter.internalTex3);
 
         var node = emitter.meshInstance.node;
-        var emitterScale = node === null ? pc.Vec3.ONE : node.localScale;
+        var emitterScale = node === null ? Vec3.ONE : node.localScale;
 
         if (emitter.pack8) {
             this.worldBoundsMulUniform[0] = emitter.worldBoundsMul.x;
@@ -131,10 +127,10 @@ Object.assign(pc, function () {
             this.constantMaxVel.setValue(maxVel);
         }
 
-        var emitterPos = (node === null || emitter.localSpace) ? pc.Vec3.ZERO : node.getPosition();
-        var emitterMatrix = node === null ? pc.Mat4.IDENTITY : node.getWorldTransform();
-        if (emitter.emitterShape === pc.EMITTERSHAPE_BOX) {
-            mat4ToMat3(spawnMatrix, spawnMatrix3);
+        var emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
+        var emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
+        if (emitter.emitterShape === EMITTERSHAPE_BOX) {
+            spawnMatrix3.setFromMat4(spawnMatrix);
             this.constantSpawnBounds.setValue(spawnMatrix3.data);
             this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
         } else {
@@ -143,7 +139,7 @@ Object.assign(pc, function () {
         }
         this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
-        mat4ToMat3(emitterMatrix, emitterMatrix3);
+        emitterMatrix3.setFromMat4(emitterMatrix);
         emitterMatrix.invertTo3x3(emitterMatrix3Inv);
         this.emitterPosUniform[0] = emitterPos.x;
         this.emitterPosUniform[1] = emitterPos.y;
@@ -153,8 +149,8 @@ Object.assign(pc, function () {
         this.constantDelta.setValue(delta);
         this.constantRate.setValue(emitter.rate);
         this.constantRateDiv.setValue(emitter.rate2 - emitter.rate);
-        this.constantStartAngle.setValue(emitter.startAngle * pc.math.DEG_TO_RAD);
-        this.constantStartAngle2.setValue(emitter.startAngle2 * pc.math.DEG_TO_RAD);
+        this.constantStartAngle.setValue(emitter.startAngle * math.DEG_TO_RAD);
+        this.constantStartAngle2.setValue(emitter.startAngle2 * math.DEG_TO_RAD);
 
         this.constantSeed.setValue(emitter.seed);
         this.constantLifetime.setValue(emitter.lifetime);
@@ -173,7 +169,7 @@ Object.assign(pc, function () {
         texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
         var texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
-        pc.drawQuadWithShader(
+        drawQuadWithShader(
             device,
             emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
             !isOnStop ?
@@ -199,9 +195,7 @@ Object.assign(pc, function () {
         // #ifdef DEBUG
         device.popMarker("");
         // #endif
-    };
+    }
+}
 
-    return {
-        ParticleGPUUpdater: ParticleGPUUpdater
-    };
-}());
+export { ParticleGPUUpdater };

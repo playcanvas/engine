@@ -1,141 +1,181 @@
-Object.assign(pc, function () {
-    var components = ['x', 'y', 'z', 'w'];
+import { Color } from '../math/color.js';
+import { Curve } from '../math/curve.js';
+import { CurveSet } from '../math/curve-set.js';
+import { Vec2 } from '../math/vec2.js';
+import { Vec3 } from '../math/vec3.js';
+import { Vec4 } from '../math/vec4.js';
 
-    var rawToValue = function (app, args, value, old) {
-        var i;
+import { GraphNode } from '../scene/graph-node.js';
 
-        switch (args.type) {
-            case 'boolean':
-                return !!value;
-            case 'number':
-                if (typeof value === 'number') {
-                    return value;
-                } else if (typeof value === 'string') {
-                    var v = parseInt(value, 10);
-                    if (isNaN(v)) return null;
-                    return v;
-                } else if (typeof value === 'boolean') {
-                    return 0 + value;
+import { Asset } from '../asset/asset.js';
+
+const components = ['x', 'y', 'z', 'w'];
+const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
+
+function rawToValue(app, args, value, old) {
+    var i;
+    var j;
+
+    switch (args.type) {
+        case 'boolean':
+            return !!value;
+        case 'number':
+            if (typeof value === 'number') {
+                return value;
+            } else if (typeof value === 'string') {
+                var v = parseInt(value, 10);
+                if (isNaN(v)) return null;
+                return v;
+            } else if (typeof value === 'boolean') {
+                return 0 + value;
+            }
+            return null;
+        case 'json':
+            var result = {};
+
+            if (Array.isArray(args.schema)) {
+                if (!value || typeof value !== 'object') {
+                    value = {};
                 }
-                return null;
-            case 'json':
-                if (typeof value === 'object') {
-                    return value;
-                }
-                try {
-                    return JSON.parse(value);
-                } catch (ex) {
-                    return null;
-                }
-            case 'asset':
-                if (value instanceof pc.Asset) {
-                    return value;
-                } else if (typeof value === 'number') {
-                    return app.assets.get(value) || null;
-                } else if (typeof value === 'string') {
-                    return app.assets.get(parseInt(value, 10)) || null;
-                }
-                return null;
-            case 'entity':
-                if (value instanceof pc.GraphNode) {
-                    return value;
-                } else if (typeof value === 'string') {
-                    return app.getEntityFromIndex(value);
-                }
-                return null;
-            case 'rgb':
-            case 'rgba':
-                if (value instanceof pc.Color) {
-                    if (old instanceof pc.Color) {
-                        old.copy(value);
-                        return old;
-                    }
-                    return value.clone();
-                } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
-                    for (i = 0; i < value.length; i++) {
-                        if (typeof value[i] !== 'number')
-                            return null;
-                    }
-                    if (!old) old = new pc.Color();
 
-                    old.r = value[0];
-                    old.g = value[1];
-                    old.b = value[2];
-                    old.a = (value.length === 3) ? 1 : value[3];
+                for (i = 0; i < args.schema.length; i++) {
+                    var field = args.schema[i];
+                    if (!field.name) continue;
 
-                    return old;
-                } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
-                    if (!old)
-                        old = new pc.Color();
+                    if (field.array) {
+                        result[field.name] = [];
 
-                    old.fromString(value);
-                    return old;
-                }
-                return null;
-            case 'vec2':
-            case 'vec3':
-            case 'vec4':
-                var len = parseInt(args.type.slice(3), 10);
+                        var arr = Array.isArray(value[field.name]) ? value[field.name] : [];
 
-                if (value instanceof pc['Vec' + len]) {
-                    if (old instanceof pc['Vec' + len]) {
-                        old.copy(value);
-                        return old;
-                    }
-                    return value.clone();
-                } else if (value instanceof Array && value.length === len) {
-                    for (i = 0; i < value.length; i++) {
-                        if (typeof value[i] !== 'number')
-                            return null;
-                    }
-                    if (!old) old = new pc['Vec' + len]();
-
-                    for (i = 0; i < len; i++)
-                        old[components[i]] = value[i];
-
-                    return old;
-                }
-                return null;
-            case 'curve':
-                if (value) {
-                    var curve;
-                    if (value instanceof pc.Curve || value instanceof pc.CurveSet) {
-                        curve = value.clone();
+                        for (j = 0; j < arr.length; j++) {
+                            result[field.name].push(rawToValue(app, field, arr[j]));
+                        }
                     } else {
-                        var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
-                        curve = new CurveType(value.keys);
-                        curve.type = value.type;
+                        // use the value of the field as it's passed into rawToValue otherwise
+                        // use the default field value
+                        var val = value.hasOwnProperty(field.name) ? value[field.name] : field.default;
+                        result[field.name] = rawToValue(app, field, val);
                     }
-                    return curve;
                 }
-                break;
-        }
+            }
 
-        return value;
-    };
+            return result;
+        case 'asset':
+            if (value instanceof Asset) {
+                return value;
+            } else if (typeof value === 'number') {
+                return app.assets.get(value) || null;
+            } else if (typeof value === 'string') {
+                return app.assets.get(parseInt(value, 10)) || null;
+            }
+            return null;
+        case 'entity':
+            if (value instanceof GraphNode) {
+                return value;
+            } else if (typeof value === 'string') {
+                return app.getEntityFromIndex(value);
+            }
+            return null;
+        case 'rgb':
+        case 'rgba':
+            if (value instanceof Color) {
+                if (old instanceof Color) {
+                    old.copy(value);
+                    return old;
+                }
+                return value.clone();
+            } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
+                for (i = 0; i < value.length; i++) {
+                    if (typeof value[i] !== 'number')
+                        return null;
+                }
+                if (!old) old = new Color();
 
+                old.r = value[0];
+                old.g = value[1];
+                old.b = value[2];
+                old.a = (value.length === 3) ? 1 : value[3];
 
-    /* eslint-disable jsdoc/no-undefined-types */
-    /**
-     * @class
-     * @name pc.ScriptAttributes
-     * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
-     * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
-     * @param {Class<pc.ScriptType>} scriptType - Script Type that attributes relate to.
-     */
-    /* eslint-enable jsdoc/no-undefined-types */
-    var ScriptAttributes = function (scriptType) {
+                return old;
+            } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
+                if (!old)
+                    old = new Color();
+
+                old.fromString(value);
+                return old;
+            }
+            return null;
+        case 'vec2':
+        case 'vec3':
+        case 'vec4':
+            var len = parseInt(args.type.slice(3), 10);
+            var vecType = vecLookup[len];
+
+            if (value instanceof vecType) {
+                if (old instanceof vecType) {
+                    old.copy(value);
+                    return old;
+                }
+                return value.clone();
+            } else if (value instanceof Array && value.length === len) {
+                for (i = 0; i < value.length; i++) {
+                    if (typeof value[i] !== 'number')
+                        return null;
+                }
+                if (!old) old = new vecType();
+
+                for (i = 0; i < len; i++)
+                    old[components[i]] = value[i];
+
+                return old;
+            }
+            return null;
+        case 'curve':
+            if (value) {
+                var curve;
+                if (value instanceof Curve || value instanceof CurveSet) {
+                    curve = value.clone();
+                } else {
+                    var CurveType = value.keys[0] instanceof Array ? CurveSet : Curve;
+                    curve = new CurveType(value.keys);
+                    curve.type = value.type;
+                }
+                return curve;
+            }
+            break;
+    }
+
+    return value;
+}
+
+/* eslint-disable jsdoc/no-undefined-types */
+/**
+ * @class
+ * @name ScriptAttributes
+ * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link ScriptType}.
+ * Note: An instance of ScriptAttributes is created automatically by each {@link ScriptType}.
+ * @param {Class<ScriptType>} scriptType - Script Type that attributes relate to.
+ */
+/* eslint-enable jsdoc/no-undefined-types */
+class ScriptAttributes {
+    constructor(scriptType) {
         this.scriptType = scriptType;
-        this.index = { };
-    };
+        this.index = {};
+    }
+
+    static reservedNames = new Set([
+        'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
+        '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
+        '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+    ]);
 
     /**
      * @function
-     * @name pc.ScriptAttributes#add
+     * @name ScriptAttributes#add
      * @description Add Attribute.
      * @param {string} name - Name of an attribute.
      * @param {object} args - Object with Arguments for an attribute.
-     * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type - Type of an attribute value.
+     * @param {string} args.type - Type of an attribute value. Can be one of "boolean", "number", "string", "json", "asset", "entity", "rgb", "rgba", "vec2", "vec3", "vec4" or "curve".
      * @param {*} [args.default] - Default attribute value.
      * @param {string} [args.title] - Title for Editor's for field UI.
      * @param {string} [args.description] - Description for Editor's for field UI.
@@ -152,6 +192,8 @@ Object.assign(pc, function () {
      * @param {string} [args.color] - String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
      * Defining this property will render Gradient in Editor's field UI.
      * @param {object[]} [args.enum] - List of fixed choices for field, defined as array of objects, where key in object is a title of an option.
+     * @param {object[]} [args.schema] - List of attributes for type 'json'. Each attribute description is an object with the same properties as regular script attributes
+     * but with an added 'name' field to specify the name of each attribute in the JSON.
      * @example
      * PlayerController.attributes.add('fullName', {
      *     type: 'string'
@@ -173,14 +215,34 @@ Object.assign(pc, function () {
      *         { '128x128': 128 }
      *     ]
      * });
+     * @example
+     * PlayerController.attributes.add('config', {
+     *     type: 'json',
+     *     schema: [{
+     *         name: 'speed',
+     *         type: 'number',
+     *         title: 'Speed',
+     *         placeholder: 'km/h',
+     *         default: 22.2
+     *     }, {
+     *         name: 'resolution',
+     *         type: 'number',
+     *         default: 32,
+     *         enum: [
+     *             { '32x32': 32 },
+     *             { '64x64': 64 },
+     *             { '128x128': 128 }
+     *         ]
+     *     }]
+     * });
      */
-    ScriptAttributes.prototype.add = function (name, args) {
+    add(name, args) {
         if (this.index[name]) {
             // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
             // #endif
             return;
-        } else if (pc.createScript.reservedAttributes[name]) {
+        } else if (ScriptAttributes.reservedNames.has(name)) {
             // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
             // #endif
@@ -194,7 +256,21 @@ Object.assign(pc, function () {
                 return this.__attributes[name];
             },
             set: function (raw) {
+                var evt = 'attr';
+                var evtName = 'attr:' + name;
+
                 var old = this.__attributes[name];
+                // keep copy of old for the event below
+                var oldCopy = old;
+                // json types might have a 'clone' field in their
+                // schema so make sure it's not that
+                if (old && args.type !== 'json' && old.clone) {
+                    // check if an event handler is there
+                    // before cloning for performance
+                    if (this._callbacks[evt] || this._callbacks[evtName]) {
+                        oldCopy = old.clone();
+                    }
+                }
 
                 // convert to appropriate type
                 if (args.array) {
@@ -210,33 +286,33 @@ Object.assign(pc, function () {
                     this.__attributes[name] = rawToValue(this.app, args, raw, old);
                 }
 
-                this.fire('attr', name, this.__attributes[name], old);
-                this.fire('attr:' + name, this.__attributes[name], old);
+                this.fire(evt, name, this.__attributes[name], oldCopy);
+                this.fire(evtName, this.__attributes[name], oldCopy);
             }
         });
-    };
+    }
 
     /**
      * @function
-     * @name pc.ScriptAttributes#remove
+     * @name ScriptAttributes#remove
      * @description Remove Attribute.
      * @param {string} name - Name of an attribute.
      * @returns {boolean} True if removed or false if not defined.
      * @example
      * PlayerController.attributes.remove('fullName');
      */
-    ScriptAttributes.prototype.remove = function (name) {
+    remove(name) {
         if (!this.index[name])
             return false;
 
         delete this.index[name];
         delete this.scriptType.prototype[name];
         return true;
-    };
+    }
 
     /**
      * @function
-     * @name pc.ScriptAttributes#has
+     * @name ScriptAttributes#has
      * @description Detect if Attribute is added.
      * @param {string} name - Name of an attribute.
      * @returns {boolean} True if Attribute is defined.
@@ -245,13 +321,13 @@ Object.assign(pc, function () {
      *     // attribute fullName is defined
      * }
      */
-    ScriptAttributes.prototype.has = function (name) {
+    has(name) {
         return !!this.index[name];
-    };
+    }
 
     /**
      * @function
-     * @name pc.ScriptAttributes#get
+     * @name ScriptAttributes#get
      * @description Get object with attribute arguments.
      * Note: Changing argument properties will not affect existing Script Instances.
      * @param {string} name - Name of an attribute.
@@ -261,11 +337,9 @@ Object.assign(pc, function () {
      * var attr = PlayerController.attributes.get('fullName');
      * if (attr) attr.default = 'Unknown';
      */
-    ScriptAttributes.prototype.get = function (name) {
+    get(name) {
         return this.index[name] || null;
-    };
+    }
+}
 
-    return {
-        ScriptAttributes: ScriptAttributes
-    };
-}());
+export { ScriptAttributes };

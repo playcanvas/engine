@@ -6,8 +6,4 @@ void getReflDir() {
     vec3 anisotropicNormal = cross(anisotropicTangent, anisotropicDirection);
     vec3 bentNormal = normalize(mix(normalize(dNormalW), normalize(anisotropicNormal), anisotropy));
     dReflDirW = reflect(-dViewDirW, bentNormal);
-    #ifdef CLEARCOAT
-        ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));
-    #endif    
 }
-

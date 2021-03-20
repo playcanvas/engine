@@ -6,4 +6,3 @@ float getShadowVSM$VS(sampler2D shadowMap, vec3 shadowParams, float exponent) {
 
     return $VSM(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z, shadowParams.y, exponent);
 }
-

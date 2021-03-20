@@ -1,65 +1,71 @@
-Object.assign(pc, function () {
-    var nonUniformScale;
-    var uniformScale = 1;
-    var particleTexChannels = 4; // there is a duplicate in particle-emitter
-    var rotMat = new pc.Mat4();
-    var rotMatInv = new pc.Mat4();
-    var randomPosTformed = new pc.Vec3();
-    var randomPos = new pc.Vec3();
-    var rndFactor3Vec = new pc.Vec3();
-    var particlePosPrev = new pc.Vec3();
-    var velocityVec = new pc.Vec3();
-    var localVelocityVec = new pc.Vec3();
-    var velocityVec2 = new pc.Vec3();
-    var localVelocityVec2 = new pc.Vec3();
-    var radialVelocityVec = new pc.Vec3();
-    var particlePos = new pc.Vec3();
-    var particleFinalPos = new pc.Vec3();
-    var moveDirVec = new pc.Vec3();
-    var tmpVec3 = new pc.Vec3();
+import { math } from '../../math/math.js';
+import { Mat4 } from '../../math/mat4.js';
+import { Vec3 } from '../../math/vec3.js';
 
-    function frac(f) {
-        return f - Math.floor(f);
-    }
+import { EMITTERSHAPE_BOX, EMITTERSHAPE_SPHERE, PARTICLESORT_NONE } from '../../scene/constants.js';
 
-    function saturate(x) {
-        return Math.max(Math.min(x, 1), 0);
-    }
+var nonUniformScale;
+var uniformScale = 1;
+var particleTexChannels = 4; // there is a duplicate in particle-emitter
+var rotMat = new Mat4();
+var rotMatInv = new Mat4();
+var randomPosTformed = new Vec3();
+var randomPos = new Vec3();
+var rndFactor3Vec = new Vec3();
+var particlePosPrev = new Vec3();
+var velocityVec = new Vec3();
+var localVelocityVec = new Vec3();
+var velocityVec2 = new Vec3();
+var localVelocityVec2 = new Vec3();
+var radialVelocityVec = new Vec3();
+var particlePos = new Vec3();
+var particleFinalPos = new Vec3();
+var moveDirVec = new Vec3();
+var tmpVec3 = new Vec3();
 
-    function glMod(x, y) {
-        return x - y * Math.floor(x / y);
-    }
+function frac(f) {
+    return f - Math.floor(f);
+}
 
-    function encodeFloatRGBA( v ) {
-        var encX = frac(v);
-        var encY = frac(255.0 * v);
-        var encZ = frac(65025.0 * v);
-        var encW = frac(160581375.0 * v);
+function saturate(x) {
+    return Math.max(Math.min(x, 1), 0);
+}
 
-        encX -= encY / 255.0;
-        encY -= encZ / 255.0;
-        encZ -= encW / 255.0;
-        encW -= encW / 255.0;
+function glMod(x, y) {
+    return x - y * Math.floor(x / y);
+}
 
-        return [encX, encY, encZ, encW];
-    }
+function encodeFloatRGBA( v ) {
+    var encX = frac(v);
+    var encY = frac(255.0 * v);
+    var encZ = frac(65025.0 * v);
+    var encW = frac(160581375.0 * v);
 
-    function encodeFloatRG( v ) {
-        var encX = frac(v);
-        var encY = frac(255.0 * v);
+    encX -= encY / 255.0;
+    encY -= encZ / 255.0;
+    encZ -= encW / 255.0;
+    encW -= encW / 255.0;
 
-        encX -= encY / 255.0;
-        encY -= encY / 255.0;
+    return [encX, encY, encZ, encW];
+}
 
-        return [encX, encY];
-    }
+function encodeFloatRG( v ) {
+    var encX = frac(v);
+    var encY = frac(255.0 * v);
 
-    // Wraps CPU update computations from ParticleEmitter
-    var ParticleCPUUpdater = function (emitter) {
+    encX -= encY / 255.0;
+    encY -= encY / 255.0;
+
+    return [encX, encY];
+}
+
+// Wraps CPU update computations from ParticleEmitter
+class ParticleCPUUpdater {
+    constructor(emitter) {
         this._emitter = emitter;
-    };
+    }
 
-    ParticleCPUUpdater.prototype.calcSpawnPosition = function (particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, i) {
+    calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, i) {
         var emitter = this._emitter;
 
         var rX = Math.random();
@@ -77,10 +83,10 @@ Object.assign(pc, function () {
         randomPos.y = rY - 0.5;
         randomPos.z = rZ - 0.5;
 
-        if (emitter.emitterShape === pc.EMITTERSHAPE_BOX) {
+        if (emitter.emitterShape === EMITTERSHAPE_BOX) {
             var max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
 
-            // let's find a contour sourface level coresponding to max random component
+            // let's find a contour surface level corresponding to max random component
             // and translate 2 other random components to that surface
             // edge = (1.0 - extentsInnerRatioUniform) * max + 0.5 * extentsInnerRatioUniform;
             var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
@@ -105,14 +111,14 @@ Object.assign(pc, function () {
         }
 
         var particleRate, startSpawnTime;
-        particleRate = pc.math.lerp(emitter.rate, emitter.rate2, rX);
+        particleRate = math.lerp(emitter.rate, emitter.rate2, rX);
         startSpawnTime = -particleRate * i;
         if (emitter.pack8) {
             var packX = (randomPosTformed.x - emitter.worldBounds.center.x) / emitter.worldBoundsSize.x + 0.5;
             var packY = (randomPosTformed.y - emitter.worldBounds.center.y) / emitter.worldBoundsSize.y + 0.5;
             var packZ = (randomPosTformed.z - emitter.worldBounds.center.z) / emitter.worldBoundsSize.z + 0.5;
 
-            var packA = pc.math.lerp(emitter.startAngle * pc.math.DEG_TO_RAD, emitter.startAngle2 * pc.math.DEG_TO_RAD, rX);
+            var packA = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
             packA = (packA % (Math.PI * 2)) / (Math.PI * 2);
 
             var rg0 = encodeFloatRG(packX);
@@ -147,14 +153,14 @@ Object.assign(pc, function () {
             particleTex[i * particleTexChannels] =     randomPosTformed.x;
             particleTex[i * particleTexChannels + 1] = randomPosTformed.y;
             particleTex[i * particleTexChannels + 2] = randomPosTformed.z;
-            particleTex[i * particleTexChannels + 3] = pc.math.lerp(emitter.startAngle * pc.math.DEG_TO_RAD, emitter.startAngle2 * pc.math.DEG_TO_RAD, rX);
+            particleTex[i * particleTexChannels + 3] = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
 
             particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = startSpawnTime;
         }
-    };
+    }
 
     // This should only change emitter state via in-params like data, vbToSort, etc.
-    ParticleCPUUpdater.prototype.update = function (data, vbToSort, particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, delta, isOnStop) {
+    update(data, vbToSort, particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, delta, isOnStop) {
         var a, b, c, i, j;
         var emitter = this._emitter;
 
@@ -170,8 +176,8 @@ Object.assign(pc, function () {
         }
 
         // Particle updater emulation
-        emitterPos = (emitter.meshInstance.node === null || emitter.localSpace) ? pc.Vec3.ZERO : emitter.meshInstance.node.getPosition();
-        var posCam = emitter.camera ? emitter.camera._node.getPosition() : pc.Vec3.ZERO;
+        emitterPos = (emitter.meshInstance.node === null || emitter.localSpace) ? Vec3.ZERO : emitter.meshInstance.node.getPosition();
+        var posCam = emitter.camera ? emitter.camera._node.getPosition() : Vec3.ZERO;
 
         var vertSize = !emitter.useMesh ? 15 : 17;
         var cf, cc;
@@ -311,11 +317,11 @@ Object.assign(pc, function () {
                 localVelocityVec.z += (localVelocityVec2.z - localVelocityVec.z) * rndFactor3Vec.z;
 
                 if (emitter.initialVelocity > 0) {
-                    if (emitter.emitterShape === pc.EMITTERSHAPE_SPHERE) {
-                        randomPos.copy(rndFactor3Vec).scale(2).sub(pc.Vec3.ONE).normalize();
+                    if (emitter.emitterShape === EMITTERSHAPE_SPHERE) {
+                        randomPos.copy(rndFactor3Vec).scale(2).sub(Vec3.ONE).normalize();
                         localVelocityVec.add(randomPos.scale(emitter.initialVelocity));
                     } else {
-                        localVelocityVec.add(pc.Vec3.FORWARD.scale(emitter.initialVelocity));
+                        localVelocityVec.add(Vec3.FORWARD.scale(emitter.initialVelocity));
                     }
                 }
 
@@ -434,7 +440,7 @@ Object.assign(pc, function () {
         }
 
         // Particle sorting
-        if (emitter.sort > pc.PARTICLESORT_NONE && emitter.camera) {
+        if (emitter.sort > PARTICLESORT_NONE && emitter.camera) {
             var vbStride = emitter.useMesh ? 6 : 4;
             var particleDistance = emitter.particleDistance;
             for (i = 0; i < emitter.numParticles; i++) {
@@ -456,9 +462,7 @@ Object.assign(pc, function () {
                 }
             }
         }
-    };
+    }
+}
 
-    return {
-        ParticleCPUUpdater: ParticleCPUUpdater
-    };
-}());
+export { ParticleCPUUpdater };

@@ -1,8 +1,13 @@
-Object.assign(pc, function () {
-    'use strict';
+import { version, revision } from '../core/core.js';
 
-    // Public interface
-    var ProgramLibrary = function (device) {
+import { Shader } from './shader.js';
+
+import { SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
+import { StandardMaterial } from '../scene/materials/standard-material.js';
+
+// Public interface
+class ProgramLibrary {
+    constructor(device) {
         this._device = device;
         this._cache = {};
         this._generators = {};
@@ -13,31 +18,31 @@ Object.assign(pc, function () {
         this._programsCollection = [];
         this._defaultStdMatOption = {};
         this._defaultStdMatOptionMin = {};
-        var m = new pc.StandardMaterial();
+        var m = new StandardMaterial();
         m.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, device, {}, m, null, [], pc.SHADER_FORWARD, null, null);
+            this._defaultStdMatOption, device, {}, m, null, [], SHADER_FORWARD, null, null);
         m.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, device, {}, m, null, [], pc.SHADER_SHADOW, null, null);
-    };
+            this._defaultStdMatOptionMin, device, {}, m, null, [], SHADER_SHADOW, null, null);
+    }
 
-    ProgramLibrary.prototype.register = function (name, generator) {
+    register(name, generator) {
         if (!this.isRegistered(name)) {
             this._generators[name] = generator;
         }
-    };
+    }
 
-    ProgramLibrary.prototype.unregister = function (name) {
+    unregister(name) {
         if (this.isRegistered(name)) {
             delete this._generators[name];
         }
-    };
+    }
 
-    ProgramLibrary.prototype.isRegistered = function (name) {
+    isRegistered(name) {
         var generator = this._generators[name];
         return (generator !== undefined);
-    };
+    }
 
-    ProgramLibrary.prototype.getProgram = function (name, options) {
+    getProgram(name, options) {
         var generator = this._generators[name];
         if (generator === undefined) {
             // #ifdef DEBUG
@@ -68,12 +73,12 @@ Object.assign(pc, function () {
                 console.warn("ProgramLibrary#getProgram: Cache miss for shader", name, "key", key, "after shaders precaching");
 
             var shaderDefinition = generator.createShaderDefinition(gd, options);
-            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
+            shader = this._cache[key] = new Shader(gd, shaderDefinition);
         }
         return shader;
-    };
+    }
 
-    ProgramLibrary.prototype.storeNewProgram = function (name, options) {
+    storeNewProgram(name, options) {
         var opt = {};
         if (name === "standard") {
             // For standard material saving all default values is overkill, so we store only diff
@@ -89,10 +94,10 @@ Object.assign(pc, function () {
         }
 
         this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
-    };
+    }
 
     // run pc.app.graphicsDevice.programLib.dumpPrograms(); from browser console to build shader options script
-    ProgramLibrary.prototype.dumpPrograms = function () {
+    dumpPrograms() {
         var text = 'var device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'var shaders = [';
         if (this._programsCollection[0])
@@ -102,7 +107,7 @@ Object.assign(pc, function () {
         }
         text += '\n];\n';
         text += 'device.programLib.precompile(shaders);\n';
-        text += 'if (pc.version != \"' + pc.version + '\" || pc.revision != \"' + pc.revision + '\")\n';
+        text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
         var element = document.createElement('a');
@@ -112,9 +117,9 @@ Object.assign(pc, function () {
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
-    };
+    }
 
-    ProgramLibrary.prototype.clearCache = function () {
+    clearCache() {
         var cache = this._cache;
         this._isClearingCache = true;
         for (var key in cache) {
@@ -124,9 +129,9 @@ Object.assign(pc, function () {
         }
         this._cache = {};
         this._isClearingCache = false;
-    };
+    }
 
-    ProgramLibrary.prototype.removeFromCache = function (shader) {
+    removeFromCache(shader) {
         if (this._isClearingCache) return; // don't delete by one when clearing whole cache
         var cache = this._cache;
         for (var key in cache) {
@@ -137,15 +142,14 @@ Object.assign(pc, function () {
                 }
             }
         }
-    };
+    }
 
-    ProgramLibrary.prototype._getDefaultStdMatOptions = function (pass) {
-        return (pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK) ?
+    _getDefaultStdMatOptions(pass) {
+        return (pass > SHADER_FORWARDHDR && pass <= SHADER_PICK) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
-    };
+    }
 
-    ProgramLibrary.prototype.precompile = function (cache) {
-
+    precompile(cache) {
         if (cache) {
             var shaders = new Array(cache.length);
             for (var i = 0; i < cache.length; i++) {
@@ -171,9 +175,7 @@ Object.assign(pc, function () {
             // pc.Application.getApplication().on("preload:end", forceLink);
         }
         this._precached = true;
-    };
+    }
+}
 
-    return {
-        ProgramLibrary: ProgramLibrary
-    };
-}());
+export { ProgramLibrary };

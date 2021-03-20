@@ -1,7 +1,9 @@
-Object.assign(pc, function () {
-    var LightComponentData = function () {
-        var _props = pc._lightProps;
-        var _propsDefault = pc._lightPropsDefault;
+import { _lightProps, _lightPropsDefault } from './component.js';
+
+class LightComponentData {
+    constructor() {
+        var _props = _lightProps;
+        var _propsDefault = _lightPropsDefault;
         var value;
         for (var i = 0; i < _props.length; i++) {
             value = _propsDefault[i];
@@ -11,9 +13,7 @@ Object.assign(pc, function () {
                 this[_props[i]] = value;
             }
         }
-    };
+    }
+}
 
-    return {
-        LightComponentData: LightComponentData
-    };
-}());
+export { LightComponentData };

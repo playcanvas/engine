@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var ZoneComponentData = function () {
+class ZoneComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        ZoneComponentData: ZoneComponentData
-    };
-}());
+export { ZoneComponentData };

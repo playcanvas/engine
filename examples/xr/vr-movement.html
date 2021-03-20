@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-        <script src="../../build/output/playcanvas.js"></script>
+        <script src="../../build/playcanvas.js"></script>
         <style>
             body {
                 margin: 0;
@@ -35,7 +35,7 @@
             var message = function (msg) {
                 var el = document.querySelector('.message');
                 el.textContent = msg;
-            }
+            };
 
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
@@ -62,7 +62,7 @@
             // create camera
             var c = new pc.Entity();
             c.addComponent('camera', {
-                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
                 farClip: 10000
             });
             cameraParent.addChild(c);
@@ -72,23 +72,23 @@
                 type: "spot",
                 range: 30
             });
-            l.translate(0,10,0);
+            l.translate(0, 10, 0);
             app.root.addChild(l);
 
-            var createCube = function(x,y,z) {
+            var createCube = function (x, y, z) {
                 var cube = new pc.Entity();
                 cube.addComponent("model", {
                     type: "box",
                     material: new pc.StandardMaterial()
                 });
-                cube.setLocalScale(1,1,1);
+                cube.setLocalScale(1, 1, 1);
                 cube.translate(x, y, z);
                 app.root.addChild(cube);
             };
 
-            var controllers = [ ];
+            var controllers = [];
             // create controller box
-            var createController = function(inputSource) {
+            var createController = function (inputSource) {
                 var entity = new pc.Entity();
                 entity.addComponent('model', {
                     type: 'box'
@@ -100,7 +100,7 @@
 
                 // destroy input source related entity
                 // when input source is removed
-                inputSource.on('remove', function() {
+                inputSource.on('remove', function () {
                     controllers.splice(controllers.indexOf(entity), 1);
                     entity.destroy();
                 });
@@ -110,15 +110,17 @@
             var SIZE = 4;
             for (var x = 0; x <= SIZE; x++) {
                 for (var y = 0; y <= SIZE; y++) {
-                    createCube(2*x - SIZE, -1.5, 2*y - SIZE);
+                    createCube(2 * x - SIZE, -1.5, 2 * y - SIZE);
                 }
             }
 
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                        c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
-                            if (err) message("Immersive VR failed to start: " + err.message);
+                        c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+                            callback: function (err) {
+                                if (err) message("Immersive VR failed to start: " + err.message);
+                            }
                         });
                     } else {
                         message("Immersive VR is not available");
@@ -153,7 +155,7 @@
                 });
 
                 // when new input source added
-                app.xr.input.on('add', function(inputSource) {
+                app.xr.input.on('add', function (inputSource) {
                     createController(inputSource);
                 });
 
@@ -163,7 +165,6 @@
                 var rotateSpeed = 45;
                 var rotateThreshold = 0.5;
                 var rotateResetThreshold = 0.25;
-                var lastRotateTime = 0;
                 var lastRotateValue = 0;
 
                 var tmpVec2A = new pc.Vec2();
@@ -172,13 +173,13 @@
                 var tmpVec3B = new pc.Vec3();
                 var lineColor = new pc.Color(1, 1, 1);
 
-                var keyboard = new pc.Keyboard(document.body);
-
                 // update position and rotation for each controller
-                app.on('update', function(dt) {
-                    // fist we update movement
-                    for(var i = 0; i < controllers.length; i++) {
-                        var inputSource = controllers[i].inputSource;
+                app.on('update', function (dt) {
+                    var i, inputSource;
+
+                    // first we update movement
+                    for (i = 0; i < controllers.length; i++) {
+                        inputSource = controllers[i].inputSource;
 
                         // should have gamepad
                         if (! inputSource.gamepad)
@@ -240,8 +241,8 @@
 
                     // after movement and rotation is done
                     // we update/render controllers
-                    for(var i = 0; i < controllers.length; i++) {
-                        var inputSource = controllers[i].inputSource;
+                    for (i = 0; i < controllers.length; i++) {
+                        inputSource = controllers[i].inputSource;
 
                         // render controller ray
                         tmpVec3A.copy(inputSource.getOrigin());

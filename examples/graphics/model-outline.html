@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
     <style>
         body {
             margin: 0;
@@ -26,7 +26,7 @@
     </script>
 
     <!-- Include some post effects -->
-    <script src="../assets/scripts/posteffects/posteffect-outline.js"></script>
+    <script src="../../scripts/posteffects/posteffect-outline.js"></script>
 
     <!-- The script -->
     <script>
@@ -105,17 +105,17 @@
         });
         app.root.addChild(outlineCamera);
 
-        var outline = new pc.OutlineEffect(app.graphicsDevice, 3);
+        var outline = new OutlineEffect(app.graphicsDevice, 3);
         outline.color = new pc.Color(0, 0.5, 1, 1);
         outline.texture = texture;
         camera.camera.postEffects.addEffect(outline);
 
         app.root.addChild(camera);
 
-        // Create an Entity with a point light component and add it to both layers
+        // Create an Entity with a omni light component and add it to both layers
         var light = new pc.Entity();
         light.addComponent("light", {
-            type: "point",
+            type: "omni",
             color: new pc.Color(1, 1, 1),
             range: 200,
             castShadows: true,
@@ -124,7 +124,7 @@
         light.translate(0, 2, 5);
         app.root.addChild(light);
 
-        //handle canvas resize
+        // handle canvas resize
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
 

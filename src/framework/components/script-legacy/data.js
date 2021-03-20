@@ -1,5 +1,5 @@
-Object.assign(pc, function () {
-    var ScriptLegacyComponentData = function () {
+class ScriptLegacyComponentData {
+    constructor() {
         // serialized
         this.scripts = [];
         this.enabled = true;
@@ -12,9 +12,7 @@ Object.assign(pc, function () {
         this.initialized = false;
         this.postInitialized = false;
         this.areScriptsLoaded = false;
-    };
+    }
+}
 
-    return {
-        ScriptLegacyComponentData: ScriptLegacyComponentData
-    };
-}());
+export { ScriptLegacyComponentData };

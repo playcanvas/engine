@@ -25,12 +25,12 @@ describe("pc.Entity", function () {
         a_a.addChild(a_a_b);
 
         // Add some components for testing clone behaviour
-        a.addComponent('animation', { speed: 1, loop: true });
+        a.addComponent('animation', { speed: 0.9, loop: true });
         a.addComponent('camera', { nearClip: 2, farClip: 3 });
-        a_a.addComponent('collision', { radius: 4, height: 5 });
-        a_a.addComponent('light', { attenuationStart: 6, attenuationEnd: 7 });
-        a_a_b.addComponent('rigidbody', { point: new pc.Vec3(1, 2, 3), normal: new pc.Vec3(4, 5, 6) });
-        a_a_b.addComponent('sound', { volume: 8, pitch: 9 });
+        a_a.addComponent('rigidbody', { type: 'static' });
+        a_a.addComponent('collision', { type: 'sphere', radius: 4 });
+        a_a_b.addComponent('light', { type: 'point', color: pc.Color.YELLOW, intensity: 0.5 });
+        a_a_b.addComponent('sound', { volume: 0.5, pitch: 0.75 });
 
         return {
             a: a,
@@ -62,32 +62,34 @@ describe("pc.Entity", function () {
         var subtree2 = cloneSubtree(subtree1);
 
         // Ensure structures are identical at every level
-        strictEqual(subtree1.a.name, subtree2.a.name);
-        strictEqual(subtree1.a.animation.speed, subtree2.a.animation.speed);
-        strictEqual(subtree1.a.animation.loop, subtree2.a.animation.loop);
-        strictEqual(subtree1.a.camera.nearClip, subtree2.a.camera.nearClip);
-        strictEqual(subtree1.a.camera.farClip, subtree2.a.camera.farClip);
+        strictEqual(subtree2.a.name, 'a');
+        strictEqual(subtree2.a.animation.speed, 0.9);
+        strictEqual(subtree2.a.animation.loop, true);
+        strictEqual(subtree2.a.camera.nearClip, 2);
+        strictEqual(subtree2.a.camera.farClip, 3);
 
-        strictEqual(subtree1.a_a.name, subtree2.a_a.name);
-        strictEqual(subtree1.a_a.collision.radius, subtree2.a_a.collision.radius);
-        strictEqual(subtree1.a_a.collision.height, subtree2.a_a.collision.height);
-        strictEqual(subtree1.a_a.light.attenuationStart, subtree2.a_a.light.attenuationStart);
-        strictEqual(subtree1.a_a.light.attenuationEnd, subtree2.a_a.light.attenuationEnd);
+        strictEqual(subtree2.a_a.name, 'a_a');
+        strictEqual(subtree2.a_a.collision.radius, 4);
+        strictEqual(subtree2.a_a.collision.type, 'sphere');
+        strictEqual(subtree2.a_a.rigidbody.type, 'static');
 
-        strictEqual(subtree1.a_b.name, subtree2.a_b.name);
-        strictEqual(subtree1.a_a_a.name, subtree2.a_a_a.name);
-        strictEqual(subtree1.a_a_b.name, subtree2.a_a_b.name);
-        deepEqual(subtree1.a_a_b.rigidbody.point, subtree2.a_a_b.rigidbody.point);
-        deepEqual(subtree1.a_a_b.rigidbody.normal, subtree2.a_a_b.rigidbody.normal);
-        strictEqual(subtree1.a_a_b.sound.volume, subtree2.a_a_b.sound.volume);
-        strictEqual(subtree1.a_a_b.sound.pitch, subtree2.a_a_b.sound.pitch);
+        strictEqual(subtree2.a_a_b.name, 'a_a_b');
+        strictEqual(subtree2.a_a_b.light.intensity, 0.5);
+        strictEqual(subtree2.a_a_b.light.type, 'point');
+        deepEqual(subtree2.a_a_b.light.color, pc.Color.YELLOW);
+        strictEqual(subtree2.a_a_b.sound.pitch, 0.75);
+        strictEqual(subtree2.a_a_b.sound.volume, 0.5);
+
+        strictEqual(subtree2.a_b.name, 'a_b');
+
+        strictEqual(subtree2.a_a_a.name, 'a_a_a');
 
         // Ensure we only have the exact number of children that were expected
-        strictEqual(subtree1.a.children.length, subtree2.a.children.length);
-        strictEqual(subtree1.a_a.children.length, subtree2.a_a.children.length);
-        strictEqual(subtree1.a_b.children.length, subtree2.a_b.children.length);
-        strictEqual(subtree1.a_a_a.children.length, subtree2.a_a_a.children.length);
-        strictEqual(subtree1.a_a_b.children.length, subtree2.a_a_b.children.length);
+        strictEqual(subtree2.a.children.length, 2);
+        strictEqual(subtree2.a_a.children.length, 2);
+        strictEqual(subtree2.a_b.children.length, 0);
+        strictEqual(subtree2.a_a_a.children.length, 0);
+        strictEqual(subtree2.a_a_b.children.length, 0);
 
         // Ensure copies were created, not references
         notEqual(subtree1.a, subtree2.a);
@@ -95,11 +97,11 @@ describe("pc.Entity", function () {
         notEqual(subtree1.a.camera, subtree2.a.camera);
         notEqual(subtree1.a_a, subtree2.a_a);
         notEqual(subtree1.a_a.collision, subtree2.a_a.collision);
-        notEqual(subtree1.a_a.light, subtree2.a_a.light);
+        notEqual(subtree1.a_a.rigidbody, subtree2.a_a.rigidbody);
         notEqual(subtree1.a_b, subtree2.a_b);
         notEqual(subtree1.a_a_a, subtree2.a_a_a);
         notEqual(subtree1.a_a_b, subtree2.a_a_b);
-        notEqual(subtree1.a_a_b.rigidbody, subtree2.a_a_b.rigidbody);
+        notEqual(subtree1.a_a_b.light, subtree2.a_a_b.light);
         notEqual(subtree1.a_a_b.sound, subtree2.a_a_b.sound);
 
         // Ensure new guids were created

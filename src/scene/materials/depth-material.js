@@ -1,43 +1,38 @@
-Object.assign(pc, function () {
+import { Material } from './material.js';
+
+/**
+ * @private
+ * @class
+ * @name DepthMaterial
+ * @classdesc A Depth material is for rendering linear depth values to a render target.
+ */
+class DepthMaterial extends Material {
+    constructor() {
+        super();
+    }
 
     /**
      * @private
-     * @class
-     * @name pc.DepthMaterial
-     * @classdesc A Depth material is for rendering linear depth values to a render target.
+     * @function
+     * @name DepthMaterial#clone
+     * @description Duplicates a Depth material.
+     * @returns {DepthMaterial} A cloned Depth material.
      */
-    var DepthMaterial = function () {
-        pc.Material.call(this);
-    };
-    DepthMaterial.prototype = Object.create(pc.Material.prototype);
-    DepthMaterial.prototype.constructor = DepthMaterial;
+    clone() {
+        var clone = new DepthMaterial();
 
-    Object.assign(DepthMaterial.prototype, {
-        /**
-         * @private
-         * @function
-         * @name pc.DepthMaterial#clone
-         * @description Duplicates a Depth material.
-         * @returns {pc.DepthMaterial} A cloned Depth material.
-         */
-        clone: function () {
-            var clone = new pc.DepthMaterial();
+        Material.prototype._cloneInternal.call(this, clone);
 
-            pc.Material.prototype._cloneInternal.call(this, clone);
+        return clone;
+    }
 
-            return clone;
-        },
+    updateShader(device) {
+        var options = {
+            skin: !!this.meshInstances[0].skinInstance
+        };
+        var library = device.getProgramLibrary();
+        this.shader = library.getProgram('depth', options);
+    }
+}
 
-        updateShader: function (device) {
-            var options = {
-                skin: !!this.meshInstances[0].skinInstance
-            };
-            var library = device.getProgramLibrary();
-            this.shader = library.getProgram('depth', options);
-        }
-    });
-
-    return {
-        DepthMaterial: DepthMaterial
-    };
-}());
+export { DepthMaterial };

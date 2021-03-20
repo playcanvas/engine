@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -34,7 +34,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -46,10 +46,10 @@
         camera.translate(0, 7, 24);
         app.root.addChild(camera);
 
-        // Create an Entity with a point light component
+        // Create an Entity with a omni light component
         var light = new pc.Entity();
         light.addComponent("light", {
-            type: "point",
+            type: "omni",
             color: new pc.Color(1, 1, 1),
             range: 100,
             castShadows: true
@@ -61,12 +61,12 @@
         this.allMeshes = [];
 
         // Load a model file and create a Entity with a model component
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
             this.entity = new pc.Entity();
             this.entity.addComponent("model", {
                 type: "asset",
-                asset: asset,
+                asset: asset.resource.model,
                 castShadows: true
             });
             app.root.addChild(this.entity);

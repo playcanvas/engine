@@ -1,43 +1,21 @@
-Object.assign(pc, function () {
-    var hitTestTrackableTypes = {
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRTRACKABLE_POINT
-         * @description Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-         */
-        XRTRACKABLE_POINT: 'point',
+import { EventHandler } from '../core/event-handler.js';
 
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRTRACKABLE_PLANE
-         * @description Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-         */
-        XRTRACKABLE_PLANE: 'plane',
+import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
+import { XrHitTestSource } from './xr-hit-test-source.js';
 
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRTRACKABLE_MESH
-         * @description Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
-         */
-        XRTRACKABLE_MESH: 'mesh'
-    };
-
-
-    /**
-     * @class
-     * @name pc.XrHitTest
-     * @augments pc.EventHandler
-     * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
-     * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
-     * @param {pc.XrManager} manager - WebXR Manager.
-     * @property {boolean} supported True if AR Hit Test is supported.
-     * @property {pc.XrHitTestSource[]} sources list of active {@link pc.XrHitTestSource}.
-     */
-    var XrHitTest = function (manager) {
-        pc.EventHandler.call(this);
+/**
+ * @class
+ * @name XrHitTest
+ * @augments EventHandler
+ * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
+ * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
+ * @param {XrManager} manager - WebXR Manager.
+ * @property {boolean} supported True if AR Hit Test is supported.
+ * @property {XrHitTestSource[]} sources list of active {@link XrHitTestSource}.
+ */
+class XrHitTest extends EventHandler {
+    constructor(manager) {
+        super();
 
         this.manager = manager;
         this._supported = !! (window.XRSession && window.XRSession.prototype.requestHitTestSource);
@@ -50,15 +28,13 @@ Object.assign(pc, function () {
             this.manager.on('start', this._onSessionStart, this);
             this.manager.on('end', this._onSessionEnd, this);
         }
-    };
-    XrHitTest.prototype = Object.create(pc.EventHandler.prototype);
-    XrHitTest.prototype.constructor = XrHitTest;
+    }
 
     /**
      * @event
-     * @name pc.XrHitTest#add
-     * @description Fired when new {@link pc.XrHitTestSource} is added to the list.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @name XrHitTest#add
+     * @description Fired when new {@link XrHitTestSource} is added to the list.
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * app.xr.hitTest.on('add', function (hitTestSource) {
      *     // new hit test source is added
@@ -67,9 +43,9 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrHitTest#remove
-     * @description Fired when {@link pc.XrHitTestSource} is removed to the list.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @name XrHitTest#remove
+     * @description Fired when {@link XrHitTestSource} is removed to the list.
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * app.xr.hitTest.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -78,12 +54,12 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrHitTest#result
+     * @name XrHitTest#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {pc.Vec3} position - Position of hit test
-     * @param {pc.Quat} rotation - Rotation of hit test
-     * @param {pc.XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
+     * @param {Vec3} position - Position of hit test
+     * @param {Quat} rotation - Rotation of hit test
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -93,19 +69,19 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrHitTest#error
+     * @name XrHitTest#error
      * @param {Error} error - Error object related to failure of creating hit test source.
      * @description Fired when failed create hit test source.
      */
 
-    XrHitTest.prototype._onSessionStart = function () {
-        if (this.manager.type !== pc.XRTYPE_AR)
+    _onSessionStart() {
+        if (this.manager.type !== XRTYPE_AR)
             return;
 
         this._session = this.manager.session;
-    };
+    }
 
-    XrHitTest.prototype._onSessionEnd = function () {
+    _onSessionEnd() {
         if (! this._session)
             return;
 
@@ -115,9 +91,9 @@ Object.assign(pc, function () {
             this.sources[i].onStop();
         }
         this.sources = [];
-    };
+    }
 
-    XrHitTest.prototype.isAvailable = function (callback, fireError) {
+    isAvailable(callback, fireError) {
         var err;
 
         if (! this._supported)
@@ -126,7 +102,7 @@ Object.assign(pc, function () {
         if (! this._session)
             err = new Error('XR Session is not started (1)');
 
-        if (this.manager.type !== pc.XRTYPE_AR)
+        if (this.manager.type !== XRTYPE_AR)
             err = new Error('XR HitTest is available only for AR');
 
         if (err) {
@@ -136,30 +112,30 @@ Object.assign(pc, function () {
         }
 
         return true;
-    };
+    }
 
     /**
      * @function
-     * @name pc.XrHitTest#start
+     * @name XrHitTest#start
      * @description Attempts to start hit test with provided reference space.
      * @param {object} [options] - Optional object for passing arguments.
-     * @param {string} [options.spaceType] - Reference space type. Defaults to {@link pc.XRSPACE_VIEWER}. Can be one of the following:
+     * @param {string} [options.spaceType] - Reference space type. Defaults to {@link XRSPACE_VIEWER}. Can be one of the following:
      *
-     * * {@link pc.XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
-     * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
-     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
-     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * * {@link XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
+     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
+     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
+     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
-     * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {@link pc.XrInputSource} should be provided.
-     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
+     * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {@link XrInputSource} should be provided.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any combination of the following:
      *
-     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
+     * * {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
+     * * {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
+     * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
+     * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,
@@ -193,7 +169,7 @@ Object.assign(pc, function () {
      *     }
      * });
      */
-    XrHitTest.prototype.start = function (options) {
+    start(options) {
         var self = this;
 
         options = options || { };
@@ -202,7 +178,7 @@ Object.assign(pc, function () {
             return;
 
         if (! options.profile && ! options.spaceType)
-            options.spaceType = pc.XRSPACE_VIEWER;
+            options.spaceType = XRSPACE_VIEWER;
 
         var xrRay;
         var offsetRay = options.offsetRay;
@@ -245,9 +221,9 @@ Object.assign(pc, function () {
                 self.fire('error', ex);
             });
         }
-    };
+    }
 
-    XrHitTest.prototype._onHitTestSource = function (xrHitTestSource, transient, callback) {
+    _onHitTestSource(xrHitTestSource, transient, callback) {
         if (! this._session) {
             xrHitTestSource.cancel();
             var err = new Error('XR Session is not started (3)');
@@ -256,32 +232,22 @@ Object.assign(pc, function () {
             return;
         }
 
-        var hitTestSource = new pc.XrHitTestSource(this.manager, xrHitTestSource, transient);
+        var hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient);
         this.sources.push(hitTestSource);
 
         if (callback) callback(null, hitTestSource);
         this.fire('add', hitTestSource);
-    };
+    }
 
-    XrHitTest.prototype.update = function (frame) {
+    update(frame) {
         for (var i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);
         }
-    };
+    }
 
+    get supported() {
+        return this._supported;
+    }
+}
 
-    Object.defineProperty(XrHitTest.prototype, 'supported', {
-        get: function () {
-            return this._supported;
-        }
-    });
-
-
-    var obj = {
-        XrHitTest: XrHitTest
-    };
-    Object.assign(obj, hitTestTrackableTypes);
-
-
-    return obj;
-}());
+export { XrHitTest };

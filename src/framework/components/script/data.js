@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var ScriptComponentData = function () {
+class ScriptComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        ScriptComponentData: ScriptComponentData
-    };
-}());
+export { ScriptComponentData };

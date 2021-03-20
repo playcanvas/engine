@@ -1,6 +1,10 @@
-Object.assign(pc, function (){
-    var LocalizedAsset = function (app) {
-        pc.EventHandler.call(this);
+import { EventHandler } from '../core/event-handler.js';
+
+import { Asset } from './asset.js';
+
+class LocalizedAsset extends EventHandler {
+    constructor(app) {
+        super();
 
         this._app = app;
         app.i18n.on('set:locale', this._onSetLocale, this);
@@ -10,20 +14,18 @@ Object.assign(pc, function (){
 
         this._defaultAsset = null;
         this._localizedAsset = null;
-    };
-    LocalizedAsset.prototype = Object.create(pc.EventHandler.prototype);
-    LocalizedAsset.prototype.constructor = LocalizedAsset;
+    }
 
-    LocalizedAsset.prototype._bindDefaultAsset = function () {
+    _bindDefaultAsset() {
         var asset = this._app.assets.get(this._defaultAsset);
         if (!asset) {
             this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
         } else {
             this._onDefaultAssetAdd(asset);
         }
-    };
+    }
 
-    LocalizedAsset.prototype._unbindDefaultAsset = function () {
+    _unbindDefaultAsset() {
         if (!this._defaultAsset) return;
 
         this._app.assets.off('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
@@ -34,24 +36,24 @@ Object.assign(pc, function (){
         asset.off('add:localized', this._onLocaleAdd, this);
         asset.off('remove:localized', this._onLocaleRemove, this);
         asset.off('remove', this._onDefaultAssetRemove, this);
-    };
+    }
 
-    LocalizedAsset.prototype._onDefaultAssetAdd = function (asset) {
+    _onDefaultAssetAdd(asset) {
         if (this._defaultAsset !== asset.id) return;
 
         asset.on('add:localized', this._onLocaleAdd, this);
         asset.on('remove:localized', this._onLocaleRemove, this);
         asset.once('remove', this._onDefaultAssetRemove, this);
-    };
+    }
 
-    LocalizedAsset.prototype._onDefaultAssetRemove = function (asset) {
+    _onDefaultAssetRemove(asset) {
         if (this._defaultAsset !== asset.id) return;
         asset.off('add:localized', this._onLocaleAdd, this);
         asset.off('remove:localized', this._onLocaleAdd, this);
         this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
-    };
+    }
 
-    LocalizedAsset.prototype._bindLocalizedAsset = function () {
+    _bindLocalizedAsset() {
         if (!this._autoLoad) return;
 
         var asset = this._app.assets.get(this._localizedAsset);
@@ -66,53 +68,53 @@ Object.assign(pc, function (){
         } else {
             this._app.assets.load(asset);
         }
-    };
+    }
 
-    LocalizedAsset.prototype._unbindLocalizedAsset = function () {
+    _unbindLocalizedAsset() {
         var asset = this._app.assets.get(this._localizedAsset);
         if (!asset) return;
 
         asset.off("load", this._onLocalizedAssetLoad, this);
         asset.off("change", this._onLocalizedAssetChange, this);
         asset.off("remove", this._onLocalizedAssetRemove, this);
-    };
+    }
 
-    LocalizedAsset.prototype._onLocalizedAssetAdd = function (asset) {
+    _onLocalizedAssetAdd(asset) {
         if (this._localizedAsset !== asset.id) return;
 
         this._bindLocalizedAsset();
-    };
+    }
 
-    LocalizedAsset.prototype._onLocalizedAssetLoad = function (asset) {
+    _onLocalizedAssetLoad(asset) {
         this.fire('load', asset);
-    };
+    }
 
-    LocalizedAsset.prototype._onLocalizedAssetChange = function (asset, name, newValue, oldValue) {
+    _onLocalizedAssetChange(asset, name, newValue, oldValue) {
         this.fire('change', asset, name, newValue, oldValue);
-    };
+    }
 
-    LocalizedAsset.prototype._onLocalizedAssetRemove = function (asset) {
+    _onLocalizedAssetRemove(asset) {
         if (this._localizedAsset === asset.id) {
             this.localizedAsset = this._defaultAsset;
         }
         this.fire('remove', asset);
-    };
+    }
 
-    LocalizedAsset.prototype._onLocaleAdd = function (locale, assetId) {
+    _onLocaleAdd(locale, assetId) {
         if (this._app.i18n.locale !== locale) return;
 
         // reset localized asset
         this._onSetLocale(locale);
-    };
+    }
 
-    LocalizedAsset.prototype._onLocaleRemove = function (locale, assetId) {
+    _onLocaleRemove(locale, assetId) {
         if (this._app.i18n.locale !== locale) return;
 
         // reset localized asset
         this._onSetLocale(locale);
-    };
+    }
 
-    LocalizedAsset.prototype._onSetLocale = function (locale) {
+    _onSetLocale(locale) {
         if (!this._defaultAsset) {
             this.localizedAsset = null;
             return;
@@ -131,98 +133,92 @@ Object.assign(pc, function (){
         }
 
         this.localizedAsset = localizedAssetId;
-    };
+    }
 
-    LocalizedAsset.prototype.destroy = function () {
+    destroy() {
         this.defaultAsset = null;
         this._app.i18n.off('set:locale', this._onSetLocale, this);
         this.off();
-    };
+    }
 
-    Object.defineProperty(LocalizedAsset.prototype, 'defaultAsset', {
-        get: function () {
-            return this._defaultAsset;
-        },
-        set: function (value) {
-            var id = value instanceof pc.Asset ? value.id : value;
+    get defaultAsset() {
+        return this._defaultAsset;
+    }
 
-            if (this._defaultAsset === id) return;
+    set defaultAsset(value) {
+        var id = value instanceof Asset ? value.id : value;
 
-            if (this._defaultAsset) {
-                this._unbindDefaultAsset();
-            }
+        if (this._defaultAsset === id) return;
 
-            this._defaultAsset = id;
-
-            if (this._defaultAsset) {
-                this._bindDefaultAsset();
-            }
-
-            // reset localized asset
-            this._onSetLocale(this._app.i18n.locale);
+        if (this._defaultAsset) {
+            this._unbindDefaultAsset();
         }
-    });
 
-    Object.defineProperty(LocalizedAsset.prototype, 'localizedAsset', {
-        get: function () {
-            return this._localizedAsset;
-        },
-        set: function (value) {
-            var id = value instanceof pc.Asset ? value.id : value;
-            if (this._localizedAsset === id) {
-                return;
-            }
+        this._defaultAsset = id;
 
-            if (this._localizedAsset) {
-                this._app.assets.off('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
-                this._unbindLocalizedAsset();
-                this._localizedAsset = null;
-            }
-
-            this._localizedAsset = id;
-
-            if (this._localizedAsset) {
-                var asset = this._app.assets.get(this._localizedAsset);
-                if (!asset) {
-                    this._app.assets.once('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
-                } else {
-                    this._bindLocalizedAsset();
-                }
-            }
+        if (this._defaultAsset) {
+            this._bindDefaultAsset();
         }
-    });
 
-    Object.defineProperty(LocalizedAsset.prototype, 'autoLoad', {
-        get: function () {
-            return this._autoLoad;
-        },
-        set: function (value) {
-            if (this._autoLoad === value) return;
+        // reset localized asset
+        this._onSetLocale(this._app.i18n.locale);
+    }
 
-            this._autoLoad = value;
+    get localizedAsset() {
+        return this._localizedAsset;
+    }
 
-            if (this._autoLoad && this._localizedAsset) {
-                this._unbindLocalizedAsset();
+    set localizedAsset(value) {
+        var id = value instanceof Asset ? value.id : value;
+        if (this._localizedAsset === id) {
+            return;
+        }
+
+        if (this._localizedAsset) {
+            this._app.assets.off('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
+            this._unbindLocalizedAsset();
+            this._localizedAsset = null;
+        }
+
+        this._localizedAsset = id;
+
+        if (this._localizedAsset) {
+            var asset = this._app.assets.get(this._localizedAsset);
+            if (!asset) {
+                this._app.assets.once('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
+            } else {
                 this._bindLocalizedAsset();
             }
         }
-    });
+    }
 
-    Object.defineProperty(LocalizedAsset.prototype, 'disableLocalization', {
-        get: function () {
-            return this._disableLocalization;
-        },
-        set: function (value) {
-            if (this._disableLocalization === value) return;
+    get autoLoad() {
+        return this._autoLoad;
+    }
 
-            this._disableLocalization = value;
+    set autoLoad(value) {
+        if (this._autoLoad === value) return;
 
-            // reset localized asset
-            this._onSetLocale(this._app.i18n.locale);
+        this._autoLoad = value;
+
+        if (this._autoLoad && this._localizedAsset) {
+            this._unbindLocalizedAsset();
+            this._bindLocalizedAsset();
         }
-    });
+    }
 
-    return {
-        LocalizedAsset: LocalizedAsset
-    };
-}());
+    get disableLocalization() {
+        return this._disableLocalization;
+    }
+
+    set disableLocalization(value) {
+        if (this._disableLocalization === value) return;
+
+        this._disableLocalization = value;
+
+        // reset localized asset
+        this._onSetLocale(this._app.i18n.locale);
+    }
+}
+
+export { LocalizedAsset };

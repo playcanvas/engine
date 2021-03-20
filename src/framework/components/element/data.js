@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var ElementComponentData = function () {
+class ElementComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        ElementComponentData: ElementComponentData
-    };
-}());
+export { ElementComponentData };

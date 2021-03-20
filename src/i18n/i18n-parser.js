@@ -1,8 +1,7 @@
-Object.assign(pc, function () {
-    var I18nParser = function () {
-    };
+class I18nParser {
+    constructor() {}
 
-    I18nParser.prototype._validate = function (data) {
+    _validate(data) {
         if (!data.header) {
             throw new Error('pc.I18n#addData: Missing "header" field');
         }
@@ -36,17 +35,15 @@ Object.assign(pc, function () {
                 throw new Error('pc.I18n#addData: missing "data[' + i + '].messages" field');
             }
         }
-    };
+    }
 
-    I18nParser.prototype.parse = function (data) {
+    parse(data) {
         // #ifdef DEBUG
         this._validate(data);
         // #endif
 
         return data.data;
-    };
+    }
+}
 
-    return {
-        I18nParser: I18nParser
-    };
-}());
+export { I18nParser };

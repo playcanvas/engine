@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,7 +35,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         // create two material
         var material1 = new pc.StandardMaterial();
@@ -51,23 +51,25 @@
 
         // create various primitive instances using one of the two materials
         var numInstances = 500;
-        var shapes = [ "box", "cone", "cylinder", "sphere", "capsule" ];
+        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
         var entities = [];
         var i;
         for (i = 0; i < numInstances; i++) {
+
+            // random shape
             var shapeName = shapes[Math.floor(Math.random() * shapes.length)];
 
             var entity = new pc.Entity();
-            entity.addComponent("model", {
-                type: shapeName
+
+            // create render component
+            var component = entity.addComponent("render", {
+                type: shapeName,
+                material: Math.random() < 0.5 ? material1 : material2,
+
+                // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
+                // there will be at least 2 draw calls, one for each material
+                batchGroupId: batchGroup.id
             });
-
-            // randomly assign a material
-            entity.model.material = Math.random() < 0.5 ? material1 : material2;
-
-            // add the entity to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls
-            // there will be at least 2 draw calls, one for each material
-            entity.model.batchGroupId = batchGroup.id;
 
             // add entity for rendering
             app.root.addChild(entity);
@@ -108,7 +110,6 @@
             camera.setLocalPosition(100 * Math.sin(time), 0, 100 * Math.cos(time));
             camera.lookAt(pc.Vec3.ZERO);
         });
-
     </script>
 </body>
 </html>

@@ -1,8 +1,10 @@
-Object.assign(pc, function () {
-    var CollisionComponentData = function () {
+import { Vec3 } from '../../../math/vec3.js';
+
+class CollisionComponentData {
+    constructor() {
         this.enabled = true;
         this.type = 'box';
-        this.halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
+        this.halfExtents = new Vec3(0.5, 0.5, 0.5);
         this.radius = 0.5;
         this.axis = 1;
         this.height = 2;
@@ -12,9 +14,7 @@ Object.assign(pc, function () {
         this.shape = null;
         this.model = null;
         this.initialized = false;
-    };
+    }
+}
 
-    return {
-        CollisionComponentData: CollisionComponentData
-    };
-}());
+export { CollisionComponentData };

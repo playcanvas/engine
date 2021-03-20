@@ -18,4 +18,3 @@ void getTBN() {
     float invmax = 1.0 / sqrt( max( dot(T,T), dot(B,B) ) );
     dTBN = mat3( T * invmax, B * invmax, dVertexNormalW );
 }
-

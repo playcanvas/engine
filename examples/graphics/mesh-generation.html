@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -34,20 +34,20 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
         // helper function to create a light
         function createLight(color, scale) {
 
-            // Create an Entity with a point light component, which is casting shadows (using rendering to cubemap)
+            // Create an Entity with a omni light component, which is casting shadows (using rendering to cubemap)
             var light = new pc.Entity();
             light.addComponent("light", {
-                type: "point",
+                type: "omni",
                 color: color,
                 radius: 10,
-                castShadows : false
+                castShadows: false
             });
 
             // create material of specified color
@@ -56,7 +56,7 @@
             material.update();
 
             // add sphere at the position of light
-            light.addComponent("model", {
+            light.addComponent("render", {
                 type: "sphere",
                 material: material
             });
@@ -98,7 +98,7 @@
         this.positions = new Float32Array(3 * this.resolution * this.resolution);
         this.uvs =  new Float32Array(2 * this.resolution * this.resolution);
         var index = 0;
-        for (var x = 0 ; x < this.resolution; x++) {
+        for (var x = 0; x < this.resolution; x++) {
             for (var z = 0; z < this.resolution; z++) {
                 this.positions[3 * index] = scale * (x - this.resolution * 0.5);
                 this.positions[3 * index + 1] = 0;  // no elevation, flat grid
@@ -114,7 +114,7 @@
         for (x = 0; x < this.resolution - 1; x++) {
             for (y = 0; y < this.resolution - 1; y++) {
                 this.indexArray.push(x * this.resolution + y + 1, (x + 1) * this.resolution + y, x * this.resolution + y,
-                                (x + 1) * this.resolution + y, x * this.resolution + y + 1, (x + 1) * this.resolution + y + 1);
+                                     (x + 1) * this.resolution + y, x * this.resolution + y + 1, (x + 1) * this.resolution + y + 1);
             }
         }
 
@@ -132,7 +132,7 @@
             }
 
             // Let mesh update Vertex and Index buffer as needed
-            self.mesh.update(pc.PRIMITIVE_TRIANGLES);
+            mesh.update(pc.PRIMITIVE_TRIANGLES);
         }
 
         // Create a mesh with dynamic vertex buffer and static index buffer
@@ -140,25 +140,18 @@
         this.mesh.clear(true, false);
         updateMesh(this.mesh, true);
 
-        // Create the mesh instance
-        var node = new pc.GraphNode();
-        var material = new pc.StandardMaterial();
-        var meshInstance = new pc.MeshInstance(node, this.mesh, material);
-
-        // Create a model and add the mesh instance to it
-        var model = new pc.Model();
-        model.graph = node;
-        model.meshInstances = [ meshInstance ];
-
         // Create Entity and add it to the scene
         this.entity = new pc.Entity();
-        app.root.addChild(this.entity);
 
-        // Add a model compoonent
-        app.systems.model.addComponent(this.entity, {
-            type: 'asset'
+        // Create the mesh instance
+        var material = new pc.StandardMaterial();
+        var meshInstance = new pc.MeshInstance(this.mesh, material);
+
+        // Create the entity with render component using meshInstances
+        this.entity.addComponent("render", {
+            meshInstances: [ meshInstance ]
         });
-        this.entity.model.model = model;
+        app.root.addChild(this.entity);
 
         // load a texture, create material and apply it to our MeshInstance
         app.assets.loadFromUrl("../assets/textures/playcanvas-grey.png", "texture", function (err, asset) {
@@ -166,7 +159,7 @@
             material.diffuseMap = asset.resource;
             material.update();
 
-            self.entity.model.model.meshInstances[0].material = material;
+            self.entity.render.meshInstances[0].material = material;
 
             // start application update loop when texture is loaded
             app.start();
@@ -181,17 +174,18 @@
 
             // Move the lights along circles, also keep separate list of their position for faster update in next block of code
             var lightPositions = [];
-            lights.forEach(element => {
+            for (var l = 0; l < lights.length; l++) {
+                var element = lights[l];
                 var lightPos = new pc.Vec2(element.radius * Math.sin(time * element.speed), element.radius * Math.cos(time * element.speed));
                 lightPositions.push(lightPos);
                 element.light.setLocalPosition(lightPos.x, 3, lightPos.y);
-            });
+            }
 
             // animate .y coordinate of grid vertices by moving them up when lights are close
             var index = 0;
-            for (var x = 0 ; x < self.resolution; x++) {
+            for (var x = 0; x < self.resolution; x++) {
                 for (var z = 0; z < self.resolution; z++) {
-                  
+        
                     var elevation = 0;
 
                     // Evaluate distance of grid vertex to each light position, and increase elevation if light is within the range
@@ -213,7 +207,6 @@
             // update the mesh
             updateMesh(self.mesh);
         });
-
     </script>
 </body>
 </html>

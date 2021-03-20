@@ -8,7 +8,6 @@ vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
 }
 
 void addRefraction() {
-
     // use same reflection code with refraction vector
     vec3 tmp = dReflDirW;
     vec4 tmp2 = dReflection;
@@ -21,4 +20,3 @@ void addRefraction() {
     dReflDirW = tmp;
     dReflection = tmp2;
 }
-

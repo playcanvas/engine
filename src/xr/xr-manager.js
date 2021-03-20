@@ -1,108 +1,40 @@
-Object.assign(pc, function () {
-    var sessionTypes = {
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRTYPE_INLINE
-         * @description Inline - always available type of session. It has limited features availability and is rendered
-         * into HTML element.
-         */
-        XRTYPE_INLINE: 'inline',
+import { EventHandler } from '../core/event-handler.js';
 
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRTYPE_VR
-         * @description Immersive VR - session that provides exclusive access to VR device with best available tracking
-         * features.
-         */
-        XRTYPE_VR: 'immersive-vr',
+import { Mat3 } from '../math/mat3.js';
+import { Mat4 } from '../math/mat4.js';
+import { Quat } from '../math/quat.js';
+import { Vec3 } from '../math/vec3.js';
+import { Vec4 } from '../math/vec4.js';
 
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRTYPE_AR
-         * @description Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended
-         * with real-world environment.
-         */
-        XRTYPE_AR: 'immersive-ar'
-    };
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
+import { XrHitTest } from './xr-hit-test.js';
+import { XrInput } from './xr-input.js';
+import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrImageTracking } from './xr-image-tracking.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
 
-    var spaceTypes = {
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRSPACE_VIEWER
-         * @description Viewer - always supported space with some basic tracking capabilities.
-         */
-        XRSPACE_VIEWER: 'viewer',
-
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRSPACE_LOCAL
-         * @description Local - represents a tracking space with a native origin near the viewer at the time of creation.
-         * The exact position and orientation will be initialized based on the conventions of the underlying platform.
-         * When using this reference space the user is not expected to move beyond their initial position much, if at all,
-         * and tracking is optimized for that purpose. For devices with 6DoF tracking, local reference spaces should
-         * emphasize keeping the origin stable relative to the user’s environment.
-         */
-        XRSPACE_LOCAL: 'local',
-
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRSPACE_LOCALFLOOR
-         * @description Local Floor - represents a tracking space with a native origin at the floor in a safe position for
-         * the user to stand. The y axis equals 0 at floor level, with the x and z position and orientation initialized
-         * based on the conventions of the underlying platform. Floor level value might be estimated by the underlying
-         * platform. When using this reference space, the user is not expected to move beyond their initial position much,
-         * if at all, and tracking is optimized for that purpose. For devices with 6DoF tracking, local-floor reference
-         * spaces should emphasize keeping the origin stable relative to the user’s environment.
-         */
-        XRSPACE_LOCALFLOOR: 'local-floor',
-
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRSPACE_BOUNDEDFLOOR
-         * @description Bounded Floor - represents a tracking space with its native origin at the floor, where the user
-         * is expected to move within a pre-established boundary. Tracking in a bounded-floor reference space is optimized
-         * for keeping the native origin and bounds geometry stable relative to the user’s environment.
-         */
-        XRSPACE_BOUNDEDFLOOR: 'bounded-floor',
-
-        /**
-         * @constant
-         * @type string
-         * @name pc.XRSPACE_UNBOUNDED
-         * @description Unbounded - represents a tracking space where the user is expected to move freely around their
-         * environment, potentially even long distances from their starting point. Tracking in an unbounded reference space
-         * is optimized for stability around the user’s current position, and as such the native origin may drift over time.
-         */
-        XRSPACE_UNBOUNDED: 'unbounded'
-    };
-
-
-    /**
-     * @class
-     * @name pc.XrManager
-     * @augments pc.EventHandler
-     * @classdesc Manage and update XR session and its states.
-     * @description Manage and update XR session and its states.
-     * @param {pc.Application} app - The main application.
-     * @property {boolean} supported True if XR is supported.
-     * @property {boolean} active True if XR session is running.
-     * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
-     * any of pc.XRTYPE_*.
-     * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
-     * is running. Can be any of pc.XRSPACE_*.
-     * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
-     * @property {pc.XrInput} input provides access to Input Sources.
-     * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
-     */
-    var XrManager = function (app) {
-        pc.EventHandler.call(this);
+/**
+ * @class
+ * @name XrManager
+ * @augments EventHandler
+ * @classdesc Manage and update XR session and its states.
+ * @description Manage and update XR session and its states.
+ * @param {Application} app - The main application.
+ * @property {boolean} supported True if XR is supported.
+ * @property {boolean} active True if XR session is running.
+ * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
+ * any of XRTYPE_*.
+ * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
+ * is running. Can be any of XRSPACE_*.
+ * @property {Entity|null} camera Active camera for which XR session is running or null.
+ * @property {XrInput} input provides access to Input Sources.
+ * @property {XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
+ * @property {object|null} session provides access to XRSession of WebXR
+ */
+class XrManager extends EventHandler {
+    constructor(app) {
+        super();
 
         var self = this;
 
@@ -111,9 +43,11 @@ Object.assign(pc, function () {
         this._supported = !! navigator.xr;
 
         this._available = { };
-        for (var key in sessionTypes) {
-            this._available[sessionTypes[key]] = false;
-        }
+
+        // Add all the supported session types
+        this._available[XRTYPE_INLINE] = false;
+        this._available[XRTYPE_VR] = false;
+        this._available[XRTYPE_AR] = false;
 
         this._type = null;
         this._spaceType = null;
@@ -121,15 +55,18 @@ Object.assign(pc, function () {
         this._baseLayer = null;
         this._referenceSpace = null;
 
-        this.input = new pc.XrInput(this);
-        this.hitTest = new pc.XrHitTest(this);
-        this.lightEstimation = new pc.XrLightEstimation(this);
+        this.depthSensing = new XrDepthSensing(this);
+        this.domOverlay = new XrDomOverlay(this);
+        this.hitTest = new XrHitTest(this);
+        this.imageTracking = new XrImageTracking(this);
+        this.input = new XrInput(this);
+        this.lightEstimation = new XrLightEstimation(this);
 
         this._camera = null;
         this.views = [];
         this.viewsPool = [];
-        this._localPosition = new pc.Vec3();
-        this._localRotation = new pc.Quat();
+        this._localPosition = new Vec3();
+        this._localRotation = new Quat();
 
         this._depthNear = 0.1;
         this._depthFar = 1000;
@@ -148,13 +85,11 @@ Object.assign(pc, function () {
             });
             this._deviceAvailabilityCheck();
         }
-    };
-    XrManager.prototype = Object.create(pc.EventHandler.prototype);
-    XrManager.prototype.constructor = XrManager;
+    }
 
     /**
      * @event
-     * @name pc.XrManager#available
+     * @name XrManager#available
      * @description Fired when availability of specific XR type is changed.
      * @param {string} type - The session type that has changed availability.
      * @param {boolean} available - True if specified session type is now available.
@@ -166,7 +101,7 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrManager#available:[type]
+     * @name XrManager#available:[type]
      * @description Fired when availability of specific XR type is changed.
      * @param {boolean} available - True if specified session type is now available.
      * @example
@@ -177,7 +112,7 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrManager#start
+     * @name XrManager#start
      * @description Fired when XR session is started
      * @example
      * app.xr.on('start', function () {
@@ -187,7 +122,7 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrManager#end
+     * @name XrManager#end
      * @description Fired when XR session is ended
      * @example
      * app.xr.on('end', function () {
@@ -195,43 +130,62 @@ Object.assign(pc, function () {
      * });
      */
 
-     /**
-      * @event
-      * @name pc.XrManager#error
-      * @param {Error} error - Error object related to failure of session start or check of session type support.
-      * @description Fired when XR session is failed to start or failed to check for session type support.
-      * @example
-      * app.xr.on('error', function (ex) {
-      *     // XR session has failed to start, or failed to check for session type support
-      * });
-      */
+    /**
+     * @event
+     * @name XrManager#update
+     * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
+     * @description Fired when XR session is updated, providing relevant XRFrame object.
+     * @example
+     * app.xr.on('update', function (frame) {
+     *
+     * });
+     */
+
+    /**
+     * @event
+     * @name XrManager#error
+     * @param {Error} error - Error object related to failure of session start or check of session type support.
+     * @description Fired when XR session is failed to start or failed to check for session type support.
+     * @example
+     * app.xr.on('error', function (ex) {
+     *     // XR session has failed to start, or failed to check for session type support
+     * });
+     */
 
     /**
      * @function
-     * @name pc.XrManager#start
-     * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
-     * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
+     * @name XrManager#start
+     * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create.
+     * @param {CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @param {string} spaceType - reference space type. Can be one of the following:
      *
-     * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
-     * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
+     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
+     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
      * @example
      * button.on('click', function () {
      *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
      * });
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {object} [options] - object with additional options for XR session initialization.
+     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
-    XrManager.prototype.start = function (camera, type, spaceType, callback) {
+    start(camera, type, spaceType, options) {
+        var self = this;
+        var callback = options;
+
+        if (typeof(options) === 'object')
+            callback = options.callback;
+
         if (! this._available[type]) {
             if (callback) callback(new Error('XR is not available'));
             return;
@@ -241,8 +195,6 @@ Object.assign(pc, function () {
             if (callback) callback(new Error('XR session is already started'));
             return;
         }
-
-        var self = this;
 
         this._camera = camera;
         this._camera.camera.xr = this;
@@ -259,15 +211,53 @@ Object.assign(pc, function () {
         // 3. probably immersive-vr will fail to be created
         // 4. call makeXRCompatible, very likely will lead to context loss
 
-        var optionalFeatures = [];
-
-        if (type === pc.XRTYPE_AR)
-            optionalFeatures.push('light-estimation');
-
-        navigator.xr.requestSession(type, {
+        var opts = {
             requiredFeatures: [spaceType],
-            optionalFeatures: optionalFeatures
-        }).then(function (session) {
+            optionalFeatures: []
+        };
+
+        if (type === XRTYPE_AR) {
+            opts.optionalFeatures.push('light-estimation');
+            opts.optionalFeatures.push('hit-test');
+            opts.optionalFeatures.push('depth-sensing');
+
+            if (options && options.imageTracking) {
+                opts.optionalFeatures.push('image-tracking');
+            }
+
+            if (this.domOverlay.root) {
+                opts.optionalFeatures.push('dom-overlay');
+                opts.domOverlay = { root: this.domOverlay.root };
+            }
+        } else if (type === XRTYPE_VR) {
+            opts.optionalFeatures.push('hand-tracking');
+        }
+
+        if (options && options.optionalFeatures)
+            opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
+
+        if (this.imageTracking.images.length) {
+            this.imageTracking.prepareImages(function (err, trackedImages) {
+                if (err) {
+                    if (callback) callback(err);
+                    self.fire('error', err);
+                    return;
+                }
+
+                if (trackedImages !== null)
+                    opts.trackedImages = trackedImages;
+
+                self._onStartOptionsReady(type, spaceType, opts, callback);
+            });
+        } else {
+            self._onStartOptionsReady(type, spaceType, opts, callback);
+        }
+    }
+
+    _onStartOptionsReady(type, spaceType, options, callback) {
+        var self = this;
+
+        navigator.xr.requestSession(type, options).then(function (session) {
             self._onSessionStart(session, spaceType, callback);
         }).catch(function (ex) {
             self._camera.camera.xr = null;
@@ -278,11 +268,11 @@ Object.assign(pc, function () {
             if (callback) callback(ex);
             self.fire('error', ex);
         });
-    };
+    }
 
     /**
      * @function
-     * @name pc.XrManager#end
+     * @name XrManager#end
      * @description Attempts to end XR session and optionally fires callback when session is ended or failed to end.
      * @example
      * app.keyboard.on('keydown', function (evt) {
@@ -290,9 +280,9 @@ Object.assign(pc, function () {
      *         app.xr.end();
      *     }
      * });
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
-    XrManager.prototype.end = function (callback) {
+    end(callback) {
         if (! this._session) {
             if (callback) callback(new Error('XR Session is not initialized'));
             return;
@@ -301,17 +291,17 @@ Object.assign(pc, function () {
         if (callback) this.once('end', callback);
 
         this._session.end();
-    };
+    }
 
     /**
      * @function
-     * @name pc.XrManager#isAvailable
+     * @name XrManager#isAvailable
      * @description Check if specific type of session is available
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @example
      * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
@@ -319,17 +309,17 @@ Object.assign(pc, function () {
      * }
      * @returns {boolean} True if specified session type is available.
      */
-    XrManager.prototype.isAvailable = function (type) {
+    isAvailable(type) {
         return this._available[type];
-    };
+    }
 
-    XrManager.prototype._deviceAvailabilityCheck = function () {
+    _deviceAvailabilityCheck() {
         for (var key in this._available) {
             this._sessionSupportCheck(key);
         }
-    };
+    }
 
-    XrManager.prototype._sessionSupportCheck = function (type) {
+    _sessionSupportCheck(type) {
         var self = this;
 
         navigator.xr.isSessionSupported(type).then(function (available) {
@@ -342,9 +332,9 @@ Object.assign(pc, function () {
         }).catch(function (ex) {
             self.fire('error', ex);
         });
-    };
+    }
 
-    XrManager.prototype._onSessionStart = function (session, spaceType, callback) {
+    _onSessionStart(session, spaceType, callback) {
         var self = this;
         var failed = false;
 
@@ -416,9 +406,9 @@ Object.assign(pc, function () {
             if (callback) callback(ex);
             self.fire('error', ex);
         });
-    };
+    }
 
-    XrManager.prototype._setClipPlanes = function (near, far) {
+    _setClipPlanes(near, far) {
         if (this._depthNear === near && this._depthFar === far)
             return;
 
@@ -434,9 +424,9 @@ Object.assign(pc, function () {
             depthNear: this._depthNear,
             depthFar: this._depthFar
         });
-    };
+    }
 
-    XrManager.prototype.update = function (frame) {
+    update(frame) {
         if (! this._session) return;
 
         var i, view, viewRaw, layer, viewport;
@@ -460,16 +450,16 @@ Object.assign(pc, function () {
                 view = this.viewsPool.pop();
                 if (! view) {
                     view = {
-                        viewport: new pc.Vec4(),
-                        projMat: new pc.Mat4(),
-                        viewMat: new pc.Mat4(),
-                        viewOffMat: new pc.Mat4(),
-                        viewInvMat: new pc.Mat4(),
-                        viewInvOffMat: new pc.Mat4(),
-                        projViewOffMat: new pc.Mat4(),
-                        viewMat3: new pc.Mat3(),
+                        viewport: new Vec4(),
+                        projMat: new Mat4(),
+                        viewMat: new Mat4(),
+                        viewOffMat: new Mat4(),
+                        viewInvMat: new Mat4(),
+                        viewInvOffMat: new Mat4(),
+                        projViewOffMat: new Mat4(),
+                        viewMat3: new Mat3(),
                         position: new Float32Array(3),
-                        rotation: new pc.Quat()
+                        rotation: new Quat()
                     };
                 }
 
@@ -514,70 +504,53 @@ Object.assign(pc, function () {
 
         this.input.update(frame);
 
-        if (this._type === pc.XRTYPE_AR) {
-            if (this.hitTest.supported) {
+        if (this._type === XRTYPE_AR) {
+            if (this.hitTest.supported)
                 this.hitTest.update(frame);
-            }
-            if (this.lightEstimation.supported) {
+
+            if (this.lightEstimation.supported)
                 this.lightEstimation.update(frame);
-            }
+
+            if (this.depthSensing.supported)
+                this.depthSensing.update(frame, pose && pose.views[0]);
+
+            if (this.imageTracking.supported)
+                this.imageTracking.update(frame);
         }
 
-        this.fire('update');
-    };
+        this.fire('update', frame);
+    }
 
-    Object.defineProperty(XrManager.prototype, 'supported', {
-        get: function () {
-            return this._supported;
-        }
-    });
+    get supported() {
+        return this._supported;
+    }
 
-    Object.defineProperty(XrManager.prototype, 'active', {
-        get: function () {
-            return !! this._session;
-        }
-    });
+    get active() {
+        return !! this._session;
+    }
 
-    Object.defineProperty(XrManager.prototype, 'type', {
-        get: function () {
-            return this._type;
-        }
-    });
+    get type() {
+        return this._type;
+    }
 
-    Object.defineProperty(XrManager.prototype, 'spaceType', {
-        get: function () {
-            return this._spaceType;
-        }
-    });
+    get spaceType() {
+        return this._spaceType;
+    }
 
-    Object.defineProperty(XrManager.prototype, 'session', {
-        get: function () {
-            return this._session;
-        }
-    });
+    get session() {
+        return this._session;
+    }
 
-    Object.defineProperty(XrManager.prototype, 'visibilityState', {
-        get: function () {
-            if (! this._session)
-                return null;
+    get visibilityState() {
+        if (! this._session)
+            return null;
 
-            return this._session.visibilityState;
-        }
-    });
+        return this._session.visibilityState;
+    }
 
-    Object.defineProperty(XrManager.prototype, 'camera', {
-        get: function () {
-            return this._camera ? this._camera.entity : null;
-        }
-    });
+    get camera() {
+        return this._camera ? this._camera.entity : null;
+    }
+}
 
-
-    var obj = {
-        XrManager: XrManager
-    };
-    Object.assign(obj, sessionTypes);
-    Object.assign(obj, spaceTypes);
-
-
-    return obj;
-}());
+export { XrManager };

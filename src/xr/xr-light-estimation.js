@@ -1,26 +1,35 @@
-Object.assign(pc, function () {
-    var vec3A = new pc.Vec3();
-    var vec3B = new pc.Vec3();
-    var mat4A = new pc.Mat4();
-    var mat4B = new pc.Mat4();
+import { EventHandler } from '../core/event-handler.js';
 
-    /**
-     * @class
-     * @name pc.XrLightEstimation
-     * @augments pc.EventHandler
-     * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
-     * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
-     * A more simplified approximation of light is provided by L2 Spherical Harmonics data.
-     * And the most simple level of light estimation is the most prominent directional light, its rotation, intensity and color.
-     * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link pc.XrManager}.
-     * @param {pc.XrManager} manager - WebXR Manager.
-     * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
-     * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
-     * @property {pc.Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
-     * @property {pc.Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
-     */
-    var XrLightEstimation = function (manager) {
-        pc.EventHandler.call(this);
+import { Color } from '../math/color.js';
+import { Mat4 } from '../math/mat4.js';
+import { Quat } from '../math/quat.js';
+import { Vec3 } from '../math/vec3.js';
+
+import { XRTYPE_AR } from './constants.js';
+
+var vec3A = new Vec3();
+var vec3B = new Vec3();
+var mat4A = new Mat4();
+var mat4B = new Mat4();
+
+/**
+ * @class
+ * @name XrLightEstimation
+ * @augments EventHandler
+ * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
+ * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
+ * A more simplified approximation of light is provided by L2 Spherical Harmonics data.
+ * And the most simple level of light estimation is the most prominent directional light, its rotation, intensity and color.
+ * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link XrManager}.
+ * @param {XrManager} manager - WebXR Manager.
+ * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
+ * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
+ * @property {Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
+ * @property {Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
+ */
+class XrLightEstimation extends EventHandler {
+    constructor(manager) {
+        super();
 
         this._manager = manager;
 
@@ -31,26 +40,24 @@ Object.assign(pc, function () {
         this._lightProbe = null;
 
         this._intensity = 0;
-        this._rotation = new pc.Quat();
-        this._color = new pc.Color();
+        this._rotation = new Quat();
+        this._color = new Color();
 
         this._sphericalHarmonics = new Float32Array(27);
 
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
-    };
-    XrLightEstimation.prototype = Object.create(pc.EventHandler.prototype);
-    XrLightEstimation.prototype.constructor = XrLightEstimation;
+    }
 
     /**
      * @event
-     * @name pc.XrLightEstimation#available
+     * @name XrLightEstimation#available
      * @description Fired when light estimation data becomes available.
      */
 
     /**
      * @event
-     * @name pc.XrLightEstimation#error
+     * @name XrLightEstimation#error
      * @param {Error} error - Error object related to failure of light estimation start.
      * @description Fired when light estimation has failed to start.
      * @example
@@ -59,23 +66,23 @@ Object.assign(pc, function () {
      * });
      */
 
-    XrLightEstimation.prototype._onSessionStart = function () {
+    _onSessionStart() {
         var supported = !! this._manager.session.requestLightProbe;
         if (! supported) return;
         this._supported = true;
-    };
+    }
 
-    XrLightEstimation.prototype._onSessionEnd = function () {
+    _onSessionEnd() {
         this._supported = false;
         this._available = false;
 
         this._lightProbeRequested = false;
         this._lightProbe = null;
-    };
+    }
 
     /**
      * @function
-     * @name pc.XrLightEstimation#start
+     * @name XrLightEstimation#start
      * @description Start estimation of illimunation data.
      * Availability of such data will come later and an `available` event will be fired.
      * If it failed to start estimation, an `error` event will be fired.
@@ -86,13 +93,13 @@ Object.assign(pc, function () {
      *     }
      * });
      */
-    XrLightEstimation.prototype.start = function () {
+    start() {
         var err;
 
         if (! this._manager.session)
             err = new Error('XR session is not running');
 
-        if (! err && this._manager.type !== pc.XRTYPE_AR)
+        if (! err && this._manager.type !== XRTYPE_AR)
             err = new Error('XR session type is not AR');
 
         if (! err && ! this._supported)
@@ -125,20 +132,20 @@ Object.assign(pc, function () {
             self._lightProbeRequested = false;
             self.fire('error', ex);
         });
-    };
+    }
 
     /**
      * @function
-     * @name pc.XrLightEstimation#end
+     * @name XrLightEstimation#end
      * @description End estimation of illumination data.
      */
-    XrLightEstimation.prototype.end = function () {
+    end() {
         this._lightProbeRequested = false;
         this._lightProbe = null;
         this._available = false;
-    };
+    }
 
-    XrLightEstimation.prototype.update = function (frame) {
+    update(frame) {
         if (! this._lightProbe) return;
 
         var lightEstimate = frame.getLightEstimate(this._lightProbe);
@@ -160,23 +167,21 @@ Object.assign(pc, function () {
         // rotation
         vec3A.set(0, 0, 0);
         vec3B.copy(lightEstimate.primaryLightDirection);
-        mat4A.setLookAt(vec3B, vec3A, pc.Vec3.UP);
-        mat4B.setFromAxisAngle(pc.Vec3.RIGHT, 90); // direcitonal light is looking down
+        mat4A.setLookAt(vec3B, vec3A, Vec3.UP);
+        mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // direcitonal light is looking down
         mat4A.mul(mat4B);
         this._rotation.setFromMat4(mat4A);
 
         // spherical harmonics
         this._sphericalHarmonics.set(lightEstimate.sphericalHarmonicsCoefficients);
-    };
+    }
 
-    Object.defineProperty(XrLightEstimation.prototype, 'supported', {
-        get: function () {
-            return this._supported;
-        }
-    });
+    get supported() {
+        return this._supported;
+    }
 
     /**
-     * @name pc.XrLightEstimation#available
+     * @name XrLightEstimation#available
      * @type {boolean}
      * @description True if estimated light information is available.
      * @example
@@ -184,37 +189,25 @@ Object.assign(pc, function () {
      *     entity.light.intensity = app.xr.lightEstimation.intensity;
      * }
      */
-    Object.defineProperty(XrLightEstimation.prototype, 'available', {
-        get: function () {
-            return !! this._available;
-        }
-    });
+    get available() {
+        return this._available;
+    }
 
-    Object.defineProperty(XrLightEstimation.prototype, 'intensity', {
-        get: function () {
-            return this._available ? this._intensity : null;
-        }
-    });
+    get intensity() {
+        return this._available ? this._intensity : null;
+    }
 
-    Object.defineProperty(XrLightEstimation.prototype, 'color', {
-        get: function () {
-            return this._available ? this._color : null;
-        }
-    });
+    get color() {
+        return this._available ? this._color : null;
+    }
 
-    Object.defineProperty(XrLightEstimation.prototype, 'rotation', {
-        get: function () {
-            return this._available ? this._rotation : null;
-        }
-    });
+    get rotation() {
+        return this._available ? this._rotation : null;
+    }
 
-    Object.defineProperty(XrLightEstimation.prototype, 'sphericalHarmonics', {
-        get: function () {
-            return this._available ? this._sphericalHarmonics : null;
-        }
-    });
+    get sphericalHarmonics() {
+        return this._available ? this._sphericalHarmonics : null;
+    }
+}
 
-    return {
-        XrLightEstimation: XrLightEstimation
-    };
-}());
+export { XrLightEstimation };

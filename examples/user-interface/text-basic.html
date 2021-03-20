@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,47 +35,46 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
-
-        // Create a camera
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
-        });
-        app.root.addChild(camera);
-
-        // Create a 2D screen
-        var screen = new pc.Entity();
-        screen.addComponent("screen", {
-            referenceResolution: new pc.Vec2(1280, 720),
-            scaleBlend: 0.5,
-            scaleMode: pc.SCALEMODE_BLEND,
-            screenSpace: true
-        });
-        app.root.addChild(screen);
-
-        // Create a basic text element
-        var text = new pc.Entity();
-        text.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
-            autoWidth: false,
-            fontSize: 128,
-            pivot: [ 0.5, 0.5 ],
-            text: "Basic Text",
-            type: pc.ELEMENTTYPE_TEXT,
-            width: 640
-        });
-        screen.addChild(text);
+        var miniStats = new pcx.MiniStats(app);
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
-        fontAsset.on('load', function () {
-            // Apply the font to the text element
-            text.element.fontAsset = fontAsset;
+        var fontAsset = new pc.Asset('arial.json', "font", {
+            url: "../assets/fonts/arial.json"
         });
-
+        fontAsset.on('load', run);
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);
+
+        function run() {
+            // Create a camera
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0, 0, 0)
+            });
+            app.root.addChild(camera);
+
+            // Create a 2D screen
+            var screen = new pc.Entity();
+            screen.addComponent("screen", {
+                referenceResolution: new pc.Vec2(1280, 720),
+                scaleBlend: 0.5,
+                scaleMode: pc.SCALEMODE_BLEND,
+                screenSpace: true
+            });
+            app.root.addChild(screen);
+
+            // Create a basic text element
+            var text = new pc.Entity();
+            text.addComponent("element", {
+                anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                fontAsset: fontAsset,
+                fontSize: 128,
+                pivot: new pc.Vec2(0.5, 0.5),
+                text: "Basic Text",
+                type: pc.ELEMENTTYPE_TEXT
+            });
+            screen.addChild(text);
+        }
     </script>
 </body>
 </html>

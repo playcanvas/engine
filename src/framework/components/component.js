@@ -1,19 +1,21 @@
-Object.assign(pc, function () {
-    /**
-     * @class
-     * @name pc.Component
-     * @augments pc.EventHandler
-     * @classdesc Components are used to attach functionality on a {@link pc.Entity}. Components
-     * can receive update events each frame, and expose properties to the PlayCanvas Editor.
-     * @description Base constructor for a Component.
-     * @param {pc.ComponentSystem} system - The ComponentSystem used to create this Component.
-     * @param {pc.Entity} entity - The Entity that this Component is attached to.
-     * @property {pc.ComponentSystem} system The ComponentSystem used to create this Component.
-     * @property {pc.Entity} entity The Entity that this Component is attached to.
-     * @property {boolean} enabled Enables or disables the component.
-     */
-    var Component = function (system, entity) {
-        pc.EventHandler.call(this);
+import { EventHandler } from '../../core/event-handler.js';
+
+/**
+ * @class
+ * @name Component
+ * @augments EventHandler
+ * @classdesc Components are used to attach functionality on a {@link Entity}. Components
+ * can receive update events each frame, and expose properties to the PlayCanvas Editor.
+ * @description Base constructor for a Component.
+ * @param {ComponentSystem} system - The ComponentSystem used to create this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
+ * @property {ComponentSystem} system The ComponentSystem used to create this Component.
+ * @property {Entity} entity The Entity that this Component is attached to.
+ * @property {boolean} enabled Enables or disables the component.
+ */
+class Component extends EventHandler {
+    constructor(system, entity) {
+        super();
 
         this.system = system;
         this.entity = entity;
@@ -27,11 +29,9 @@ Object.assign(pc, function () {
         });
 
         this.on('set_enabled', this.onSetEnabled, this);
-    };
-    Component.prototype = Object.create(pc.EventHandler.prototype);
-    Component.prototype.constructor = Component;
+    }
 
-    Component._buildAccessors = function (obj, schema) {
+    static _buildAccessors(obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach(function (descriptor) {
             // If the property descriptor is an object, it should have a `name`
@@ -53,46 +53,45 @@ Object.assign(pc, function () {
         });
 
         obj._accessorsBuilt = true;
-    };
+    }
 
-    Object.assign(Component.prototype, {
-        buildAccessors: function (schema) {
-            Component._buildAccessors(this, schema);
-        },
+    buildAccessors(schema) {
+        Component._buildAccessors(this, schema);
+    }
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (this.entity.enabled) {
-                    if (newValue) {
-                        this.onEnable();
-                    } else {
-                        this.onDisable();
-                    }
+    onSetEnabled(name, oldValue, newValue) {
+        if (oldValue !== newValue) {
+            if (this.entity.enabled) {
+                if (newValue) {
+                    this.onEnable();
+                } else {
+                    this.onDisable();
                 }
             }
-        },
+        }
+    }
 
-        onEnable: function () { },
+    onEnable() {
+    }
 
-        onDisable: function () { },
+    onDisable() {
+    }
 
-        onPostStateChange: function () { }
-    });
+    onPostStateChange() {
+    }
 
     /**
      * @private
-     * @property {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
+     * @name Component#data
+     * @type {ComponentData}
+     * @description Access the {@link ComponentData} directly.
      * Usually you should access the data properties via the individual properties as
      * modifying this data directly will not fire 'set' events.
      */
-    Object.defineProperty(Component.prototype, "data", {
-        get: function () {
-            var record = this.system.store[this.entity.getGuid()];
-            return record ? record.data : null;
-        }
-    });
+    get data() {
+        var record = this.system.store[this.entity.getGuid()];
+        return record ? record.data : null;
+    }
+}
 
-    return {
-        Component: Component
-    };
-}());
+export { Component };

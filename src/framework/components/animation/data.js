@@ -1,5 +1,5 @@
-Object.assign(pc, function () {
-    var AnimationComponentData = function () {
+class AnimationComponentData {
+    constructor() {
         // Serialized
         this.assets = [];
         this.speed = 1.0;
@@ -23,10 +23,8 @@ Object.assign(pc, function () {
         this.toSkel = null;
 
         // glb animation controller
-        this.animController = null;
-    };
+        this.animEvaluator = null;
+    }
+}
 
-    return {
-        AnimationComponentData: AnimationComponentData
-    };
-}());
+export { AnimationComponentData };

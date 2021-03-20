@@ -1,23 +1,25 @@
-Object.assign(pc, function () {
-    /**
-     * @component
-     * @class
-     * @name pc.LayoutChildComponent
-     * @augments pc.Component
-     * @description Create a new LayoutChildComponent.
-     * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.
-     * @param {pc.LayoutChildComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {pc.Entity} entity - The Entity that this Component is attached to.
-     * @property {number} minWidth The minimum width the element should be rendered at.
-     * @property {number} minHeight The minimum height the element should be rendered at.
-     * @property {number} maxWidth The maximum width the element should be rendered at.
-     * @property {number} maxHeight The maximum height the element should be rendered at.
-     * @property {number} fitWidthProportion The amount of additional horizontal space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
-     * @property {number} fitHeightProportion The amount of additional vertical space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
-     * @property {number} excludeFromLayout If set to true, the child will be excluded from all layout calculations.
-     */
-    var LayoutChildComponent = function LayoutChildComponent(system, entity) {
-        pc.Component.call(this, system, entity);
+import { Component } from '../component.js';
+
+/**
+ * @component
+ * @class
+ * @name LayoutChildComponent
+ * @augments Component
+ * @description Create a new LayoutChildComponent.
+ * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link LayoutGroupComponent}.
+ * @param {LayoutChildComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
+ * @property {number} minWidth The minimum width the element should be rendered at.
+ * @property {number} minHeight The minimum height the element should be rendered at.
+ * @property {number} maxWidth The maximum width the element should be rendered at.
+ * @property {number} maxHeight The maximum height the element should be rendered at.
+ * @property {number} fitWidthProportion The amount of additional horizontal space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
+ * @property {number} fitHeightProportion The amount of additional vertical space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
+ * @property {number} excludeFromLayout If set to true, the child will be excluded from all layout calculations.
+ */
+class LayoutChildComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
         this._minWidth = 0;
         this._minHeight = 0;
@@ -26,36 +28,32 @@ Object.assign(pc, function () {
         this._fitWidthProportion = 0;
         this._fitHeightProportion = 0;
         this._excludeFromLayout = false;
-    };
-    LayoutChildComponent.prototype = Object.create(pc.Component.prototype);
-    LayoutChildComponent.prototype.constructor = LayoutChildComponent;
-
-    function defineResizeProperty(name) {
-        var _name = '_' + name;
-
-        Object.defineProperty(LayoutChildComponent.prototype, name, {
-            get: function () {
-                return this[_name];
-            },
-
-            set: function (value) {
-                if (this[_name] !== value) {
-                    this[_name] = value;
-                    this.fire('resize');
-                }
-            }
-        });
     }
+}
 
-    defineResizeProperty('minWidth');
-    defineResizeProperty('minHeight');
-    defineResizeProperty('maxWidth');
-    defineResizeProperty('maxHeight');
-    defineResizeProperty('fitWidthProportion');
-    defineResizeProperty('fitHeightProportion');
-    defineResizeProperty('excludeFromLayout');
+function defineResizeProperty(name) {
+    var _name = '_' + name;
 
-    return {
-        LayoutChildComponent: LayoutChildComponent
-    };
-}());
+    Object.defineProperty(LayoutChildComponent.prototype, name, {
+        get: function () {
+            return this[_name];
+        },
+
+        set: function (value) {
+            if (this[_name] !== value) {
+                this[_name] = value;
+                this.fire('resize');
+            }
+        }
+    });
+}
+
+defineResizeProperty('minWidth');
+defineResizeProperty('minHeight');
+defineResizeProperty('maxWidth');
+defineResizeProperty('maxHeight');
+defineResizeProperty('fitWidthProportion');
+defineResizeProperty('fitHeightProportion');
+defineResizeProperty('excludeFromLayout');
+
+export { LayoutChildComponent };

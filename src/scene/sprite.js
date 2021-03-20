@@ -1,87 +1,63 @@
-Object.assign(pc, function () {
-    'use strict';
+import { EventHandler } from '../core/event-handler.js';
 
-    /**
-     * @constant
-     * @type {number}
-     * @name pc.SPRITE_RENDERMODE_SIMPLE
-     * @description This mode renders a sprite as a simple quad.
-     */
-    pc.SPRITE_RENDERMODE_SIMPLE = 0;
+import { Vec2 } from '../math/vec2.js';
 
-    /**
-     * @constant
-     * @type {number}
-     * @name pc.SPRITE_RENDERMODE_SLICED
-     * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
-     * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
-     * both horizontally and vertically.
-     */
-    pc.SPRITE_RENDERMODE_SLICED = 1;
+import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
+import { createMesh } from './procedural.js';
 
-    /**
-     * @constant
-     * @type {number}
-     * @name pc.SPRITE_RENDERMODE_TILED
-     * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
-     * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
-     * both horizontally and vertically.
-     */
-    pc.SPRITE_RENDERMODE_TILED = 2;
+// normals are the same for every mesh
+const spriteNormals = [
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1
+];
 
-    // normals are the same for every mesh
-    var spriteNormals = [
-        0, 0, 1,
-        0, 0, 1,
-        0, 0, 1,
-        0, 0, 1
-    ];
+// indices are the same for every mesh
+const spriteIndices = [
+    0, 1, 3,
+    2, 3, 1
+];
 
-    // indices are the same for every mesh
-    var spriteIndices = [
-        0, 1, 3,
-        2, 3, 1
-    ];
-
-
-    /**
-     * @class
-     * @name pc.Sprite
-     * @augments pc.EventHandler
-     * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}.
-     * It can be used by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a
-     * single frame or a sprite animation.
-     * @param {pc.GraphicsDevice} device - The graphics device of the application.
-     * @param {object} [options] - Options for creating the pc.Sprite.
-     * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas unit.
-     * Defaults to 1.
-     * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
-     *
-     * * {@link pc.SPRITE_RENDERMODE_SIMPLE}
-     * * {@link pc.SPRITE_RENDERMODE_SLICED}
-     * * {@link pc.SPRITE_RENDERMODE_TILED}
-     *
-     * Defaults to pc.SPRITE_RENDERMODE_SIMPLE.
-     * @param {pc.TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
-     * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
-     * using. Defaults to null.
-     * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
-     * @property {pc.TextureAtlas} atlas The texture atlas.
-     * @property {number} renderMode The rendering mode of the sprite. Can be:
-     *
-     * * {@link pc.SPRITE_RENDERMODE_SIMPLE}
-     * * {@link pc.SPRITE_RENDERMODE_SLICED}
-     * * {@link pc.SPRITE_RENDERMODE_TILED}
-     *
-     * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
-     * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
-     */
-    var Sprite = function (device, options) {
-        pc.EventHandler.call(this);
+/**
+ * @class
+ * @name Sprite
+ * @augments EventHandler
+ * @classdesc A Sprite is contains references to one or more frames of a {@link TextureAtlas}.
+ * It can be used by the {@link SpriteComponent} or the {@link ElementComponent} to render a
+ * single frame or a sprite animation.
+ * @param {GraphicsDevice} device - The graphics device of the application.
+ * @param {object} [options] - Options for creating the Sprite.
+ * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas unit.
+ * Defaults to 1.
+ * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
+ *
+ * * {@link SPRITE_RENDERMODE_SIMPLE}
+ * * {@link SPRITE_RENDERMODE_SLICED}
+ * * {@link SPRITE_RENDERMODE_TILED}
+ *
+ * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
+ * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
+ * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
+ * using. Defaults to null.
+ * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
+ * @property {TextureAtlas} atlas The texture atlas.
+ * @property {number} renderMode The rendering mode of the sprite. Can be:
+ *
+ * * {@link SPRITE_RENDERMODE_SIMPLE}
+ * * {@link SPRITE_RENDERMODE_SLICED}
+ * * {@link SPRITE_RENDERMODE_TILED}
+ *
+ * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
+ * @property {Mesh[]} meshes An array that contains a mesh for each frame.
+ */
+class Sprite extends EventHandler {
+    constructor(device, options) {
+        super();
 
         this._device = device;
         this._pixelsPerUnit = options && options.pixelsPerUnit !== undefined ? options.pixelsPerUnit : 1;
-        this._renderMode = options && options.renderMode !== undefined ? options.renderMode : pc.SPRITE_RENDERMODE_SIMPLE;
+        this._renderMode = options && options.renderMode !== undefined ? options.renderMode : SPRITE_RENDERMODE_SIMPLE;
         this._atlas = options && options.atlas !== undefined ? options.atlas : null;
         this._frameKeys = options && options.frameKeys !== undefined ? options.frameKeys : null;
         this._meshes = [];
@@ -95,21 +71,16 @@ Object.assign(pc, function () {
         if (this._atlas && this._frameKeys) {
             this._createMeshes();
         }
-    };
-    Sprite.prototype = Object.create(pc.EventHandler.prototype);
-    Sprite.prototype.constructor = Sprite;
+    }
 
-    Sprite.prototype._createMeshes = function () {
+    _createMeshes() {
         var i, len;
 
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
-            if (!mesh) continue;
-
-            mesh.vertexBuffer.destroy();
-            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
-                mesh.indexBuffer[j].destroy();
+            if (mesh) {
+                mesh.destroy();
             }
         }
 
@@ -118,7 +89,7 @@ Object.assign(pc, function () {
         this._meshes = new Array(count);
 
         // get function to create meshes
-        var createMeshFunc = (this.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._renderMode === pc.SPRITE_RENDERMODE_TILED ? this._create9SliceMesh : this._createSimpleMesh);
+        var createMeshFunc = (this.renderMode === SPRITE_RENDERMODE_SLICED || this._renderMode === SPRITE_RENDERMODE_TILED ? this._create9SliceMesh : this._createSimpleMesh);
 
         // create a mesh for each frame in the sprite
         for (i = 0; i < count; i++) {
@@ -127,9 +98,9 @@ Object.assign(pc, function () {
         }
 
         this.fire('set:meshes');
-    };
+    }
 
-    Sprite.prototype._createSimpleMesh = function (frame) {
+    _createSimpleMesh(frame) {
         var rect = frame.rect;
         var texWidth = this._atlas.texture.width;
         var texHeight = this._atlas.texture.height;
@@ -161,18 +132,18 @@ Object.assign(pc, function () {
             lu, tv
         ];
 
-        var mesh = pc.createMesh(this._device, positions, {
+        var mesh = createMesh(this._device, positions, {
             uvs: uvs,
             normals: spriteNormals,
             indices: spriteIndices
         });
 
         return mesh;
-    };
+    }
 
-    Sprite.prototype._create9SliceMesh = function () {
+    _create9SliceMesh() {
         // Check the supplied options and provide defaults for unspecified ones
-        var he = pc.Vec2.ONE;
+        var he = Vec2.ONE;
         var ws = 3;
         var ls = 3;
 
@@ -224,25 +195,25 @@ Object.assign(pc, function () {
             indices: indices
         };
 
-        return pc.createMesh(this._device, positions, options);
-    };
+        return createMesh(this._device, positions, options);
+    }
 
-    Sprite.prototype._onSetFrames = function (frames) {
+    _onSetFrames(frames) {
         if (this._updatingProperties) {
             this._meshesDirty = true;
         } else {
             this._createMeshes();
         }
-    };
+    }
 
-    Sprite.prototype._onFrameChanged = function (frameKey, frame) {
+    _onFrameChanged(frameKey, frame) {
         var idx = this._frameKeys.indexOf(frameKey);
         if (idx < 0) return;
 
         if (frame) {
             // only re-create frame for simple render mode, since
             // 9-sliced meshes don't need frame info to create their mesh
-            if (this.renderMode === pc.SPRITE_RENDERMODE_SIMPLE) {
+            if (this.renderMode === SPRITE_RENDERMODE_SIMPLE) {
                 this._meshes[idx] = this._createSimpleMesh(frame);
             }
         } else {
@@ -250,59 +221,125 @@ Object.assign(pc, function () {
         }
 
         this.fire('set:meshes');
-    };
+    }
 
-    Sprite.prototype._onFrameRemoved = function (frameKey) {
+    _onFrameRemoved(frameKey) {
         var idx = this._frameKeys.indexOf(frameKey);
         if (idx < 0) return;
 
         this._meshes[idx] = null;
         this.fire('set:meshes');
-    };
+    }
 
-    Sprite.prototype.startUpdate = function () {
+    startUpdate() {
         this._updatingProperties = true;
         this._meshesDirty = false;
-    };
+    }
 
-    Sprite.prototype.endUpdate = function () {
+    endUpdate() {
         this._updatingProperties = false;
         if (this._meshesDirty && this._atlas && this._frameKeys) {
             this._createMeshes();
 
         }
         this._meshesDirty = false;
-    };
+    }
 
     /**
      * @function
-     * @name pc.Sprite#destroy
+     * @name Sprite#destroy
      * @description Free up the meshes created by the sprite.
      */
-    Sprite.prototype.destroy = function () {
-        var i;
-        var len;
+    destroy() {
 
-        // destroy old meshes
-        for (i = 0, len = this._meshes.length; i < len; i++) {
-            var mesh = this._meshes[i];
-            if (!mesh) continue;
-
-            mesh.vertexBuffer.destroy();
-            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
-                mesh.indexBuffer[j].destroy();
-            }
+        for (const mesh of this._meshes) {
+            if (mesh)
+                mesh.destroy();
         }
         this._meshes.length = 0;
-    };
+    }
 
-    Object.defineProperty(Sprite.prototype, 'frameKeys', {
-        get: function () {
-            return this._frameKeys;
-        },
-        set: function (value) {
-            this._frameKeys = value;
+    get frameKeys() {
+        return this._frameKeys;
+    }
 
+    set frameKeys(value) {
+        this._frameKeys = value;
+
+        if (this._atlas && this._frameKeys) {
+            if (this._updatingProperties) {
+                this._meshesDirty = true;
+            } else {
+                this._createMeshes();
+            }
+        }
+
+        this.fire('set:frameKeys', value);
+    }
+
+    get atlas() {
+        return this._atlas;
+    }
+
+    set atlas(value) {
+        if (value === this._atlas) return;
+
+        if (this._atlas) {
+            this._atlas.off('set:frames', this._onSetFrames, this);
+            this._atlas.off('set:frame', this._onFrameChanged, this);
+            this._atlas.off('remove:frame', this._onFrameRemoved, this);
+        }
+
+        this._atlas = value;
+        if (this._atlas && this._frameKeys) {
+            this._atlas.on('set:frames', this._onSetFrames, this);
+            this._atlas.on('set:frame', this._onFrameChanged, this);
+            this._atlas.on('remove:frame', this._onFrameRemoved, this);
+
+            if (this._updatingProperties) {
+                this._meshesDirty = true;
+            } else {
+                this._createMeshes();
+            }
+        }
+
+        this.fire('set:atlas', value);
+    }
+
+    get pixelsPerUnit() {
+        return this._pixelsPerUnit;
+    }
+
+    set pixelsPerUnit(value) {
+        if (this._pixelsPerUnit === value) return;
+
+        this._pixelsPerUnit = value;
+        this.fire('set:pixelsPerUnit', value);
+
+        // simple mode uses pixelsPerUnit to create the mesh so re-create those meshes
+        if (this._atlas && this._frameKeys && this.renderMode === SPRITE_RENDERMODE_SIMPLE) {
+            if (this._updatingProperties) {
+                this._meshesDirty = true;
+            } else {
+                this._createMeshes();
+            }
+        }
+    }
+
+    get renderMode() {
+        return this._renderMode;
+    }
+
+    set renderMode(value) {
+        if (this._renderMode === value)
+            return;
+
+        var prev = this._renderMode;
+        this._renderMode = value;
+        this.fire('set:renderMode', value);
+
+        // re-create the meshes if we're going from simple to 9-sliced or vice versa
+        if (prev === SPRITE_RENDERMODE_SIMPLE || value === SPRITE_RENDERMODE_SIMPLE) {
             if (this._atlas && this._frameKeys) {
                 if (this._updatingProperties) {
                     this._meshesDirty = true;
@@ -310,95 +347,12 @@ Object.assign(pc, function () {
                     this._createMeshes();
                 }
             }
-
-            this.fire('set:frameKeys', value);
         }
-    });
+    }
 
-    Object.defineProperty(Sprite.prototype, 'atlas', {
-        get: function () {
-            return this._atlas;
-        },
-        set: function (value) {
-            if (value === this._atlas) return;
+    get meshes() {
+        return this._meshes;
+    }
+}
 
-            if (this._atlas) {
-                this._atlas.off('set:frames', this._onSetFrames, this);
-                this._atlas.off('set:frame', this._onFrameChanged, this);
-                this._atlas.off('remove:frame', this._onFrameRemoved, this);
-            }
-
-            this._atlas = value;
-            if (this._atlas && this._frameKeys) {
-                this._atlas.on('set:frames', this._onSetFrames, this);
-                this._atlas.on('set:frame', this._onFrameChanged, this);
-                this._atlas.on('remove:frame', this._onFrameRemoved, this);
-
-                if (this._updatingProperties) {
-                    this._meshesDirty = true;
-                } else {
-                    this._createMeshes();
-                }
-            }
-
-            this.fire('set:atlas', value);
-        }
-    });
-
-    Object.defineProperty(Sprite.prototype, 'pixelsPerUnit', {
-        get: function () {
-            return this._pixelsPerUnit;
-        },
-        set: function (value) {
-            if (this._pixelsPerUnit === value) return;
-
-            this._pixelsPerUnit = value;
-            this.fire('set:pixelsPerUnit', value);
-
-            // simple mode uses pixelsPerUnit to create the mesh so re-create those meshes
-            if (this._atlas && this._frameKeys && this.renderMode === pc.SPRITE_RENDERMODE_SIMPLE) {
-                if (this._updatingProperties) {
-                    this._meshesDirty = true;
-                } else {
-                    this._createMeshes();
-                }
-            }
-
-        }
-    });
-
-    Object.defineProperty(Sprite.prototype, 'renderMode', {
-        get: function () {
-            return this._renderMode;
-        },
-        set: function (value) {
-            if (this._renderMode === value)
-                return;
-
-            var prev = this._renderMode;
-            this._renderMode = value;
-            this.fire('set:renderMode', value);
-
-            // re-create the meshes if we're going from simple to 9-sliced or vice versa
-            if (prev === pc.SPRITE_RENDERMODE_SIMPLE || value === pc.SPRITE_RENDERMODE_SIMPLE) {
-                if (this._atlas && this._frameKeys) {
-                    if (this._updatingProperties) {
-                        this._meshesDirty = true;
-                    } else {
-                        this._createMeshes();
-                    }
-                }
-            }
-        }
-    });
-
-    Object.defineProperty(Sprite.prototype, 'meshes', {
-        get: function () {
-            return this._meshes;
-        }
-    });
-
-    return {
-        Sprite: Sprite
-    };
-}());
+export { Sprite };

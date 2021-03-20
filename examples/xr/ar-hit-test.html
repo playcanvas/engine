@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-        <script src="../../build/output/playcanvas.js"></script>
+        <script src="../../build/playcanvas.js"></script>
         <style>
             body {
                 margin: 0;
@@ -35,13 +35,14 @@
             var message = function (msg) {
                 var el = document.querySelector('.message');
                 el.textContent = msg;
-            }
+            };
 
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(canvas),
                 touch: new pc.TouchDevice(canvas),
-                keyboard: new pc.Keyboard(window)
+                keyboard: new pc.Keyboard(window),
+                graphicsDeviceOptions: { alpha: true }
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -68,21 +69,23 @@
                 type: "spot",
                 range: 30
             });
-            l.translate(0,10,0);
+            l.translate(0, 10, 0);
             app.root.addChild(l);
 
             var target = new pc.Entity();
             target.addComponent("model", {
-                type: "cylinder",
+                type: "cylinder"
             });
-            target.setLocalScale(.5, .01, .5);
+            target.setLocalScale(0.5, 0.01, 0.5);
             app.root.addChild(target);
 
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                        c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, function (err) {
-                            if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                        c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+                            callback: function (err) {
+                                if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                            }
                         });
                     } else {
                         message("Immersive AR is not available");
@@ -123,8 +126,8 @@
                         return;
 
                     app.xr.hitTest.start({
-                        entityTypes: [ pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE ],
-                        callback: function(err, hitTestSource) {
+                        entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
+                        callback: function (err, hitTestSource) {
                             if (err) {
                                 message("Failed to start AR hit test");
                                 return;

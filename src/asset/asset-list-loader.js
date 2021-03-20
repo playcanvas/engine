@@ -1,15 +1,19 @@
-Object.assign(pc, function () {
-    /**
-     * @private
-     * @class
-     * @name pc.AssetListLoader
-     * @augments pc.EventHandler
-     * @classdesc Used to load a group of assets and fires a callback when all assets are loaded.
-     * @param {pc.Asset[]|number[]} assetList - An array of pc.Asset objects to load or an array of Asset IDs to load.
-     * @param {pc.AssetRegistry} assetRegistry - The application's asset registry.
-     */
-    var AssetListLoader = function (assetList, assetRegistry) {
-        pc.EventHandler.call(this);
+import { EventHandler } from '../core/event-handler.js';
+
+import { Asset } from './asset.js';
+
+/**
+ * @private
+ * @class
+ * @name AssetListLoader
+ * @augments EventHandler
+ * @classdesc Used to load a group of assets and fires a callback when all assets are loaded.
+ * @param {Asset[]|number[]} assetList - An array of {@link Asset} objects to load or an array of Asset IDs to load.
+ * @param {AssetRegistry} assetRegistry - The application's asset registry.
+ */
+class AssetListLoader extends EventHandler {
+    constructor(assetList, assetRegistry) {
+        super();
 
         this._assets = [];
         this._registry = assetRegistry;
@@ -20,7 +24,7 @@ Object.assign(pc, function () {
 
         this._waitingAssets = [];
 
-        if (assetList.length && assetList[0] instanceof pc.Asset) {
+        if (assetList.length && assetList[0] instanceof Asset) {
             // list of pc.Asset
             this._assets = assetList;
         } else {
@@ -36,13 +40,10 @@ Object.assign(pc, function () {
 
             }
         }
-    };
-    AssetListLoader.prototype = Object.create(pc.EventHandler.prototype);
-    AssetListLoader.prototype.constructor = AssetListLoader;
+    }
 
-    AssetListLoader.prototype.destroy = function () {
+    destroy() {
         // remove any outstanding listeners
-
         var self = this;
 
         this._registry.off("load", this._onLoad);
@@ -54,18 +55,18 @@ Object.assign(pc, function () {
 
         this.off("progress");
         this.off("load");
-    };
+    }
 
     /**
      * @private
      * @function
-     * @name pc.AssetListLoader#load
+     * @name AssetListLoader#load
      * @description Start loading asset list, call done() when all assets have loaded or failed to load.
      * @param {Function} done - Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load.
      * @param {object} [scope] - Scope to use when calling callback.
      *
      */
-    AssetListLoader.prototype.load = function (done, scope) {
+    load(done, scope) {
         var i = 0;
         var l = this._assets.length;
         var asset;
@@ -87,16 +88,16 @@ Object.assign(pc, function () {
                 this._total++;
             }
         }
-    };
+    }
 
     /**
      * @private
      * @function
-     * @name pc.AssetListLoader#ready
+     * @name AssetListLoader#ready
      * @param {Function} done - Callback called when all assets in the list are loaded.
      * @param {object} [scope] - Scope to use when calling callback.
      */
-    AssetListLoader.prototype.ready = function (done, scope) {
+    ready(done, scope) {
         scope = scope || this;
 
         if (this._loaded) {
@@ -106,10 +107,10 @@ Object.assign(pc, function () {
                 done.call(scope, assets);
             });
         }
-    };
+    }
 
     // called when all assets are loaded
-    AssetListLoader.prototype._loadingComplete = function () {
+    _loadingComplete() {
         this._loaded = true;
         this._registry.off("load", this._onLoad, this);
         this._registry.off("error", this._onError, this);
@@ -125,10 +126,10 @@ Object.assign(pc, function () {
             }
             this.fire("load", this._assets);
         }
-    };
+    }
 
     // called when an (any) asset is loaded
-    AssetListLoader.prototype._onLoad = function (asset) {
+    _onLoad(asset) {
         var self = this;
 
         // check this is an asset we care about
@@ -145,10 +146,10 @@ Object.assign(pc, function () {
                 self._loadingComplete(self._failed);
             }, 0);
         }
-    };
+    }
 
     // called when an asset fails to load
-    AssetListLoader.prototype._onError = function (err, asset) {
+    _onError(err, asset) {
         var self = this;
 
         // check this is an asset we care about
@@ -165,10 +166,10 @@ Object.assign(pc, function () {
                 self._loadingComplete(self._failed);
             }, 0);
         }
-    };
+    }
 
     // called when a expected asset is added to the asset registry
-    AssetListLoader.prototype._onAddAsset = function (asset) {
+    _onAddAsset(asset) {
         // remove from waiting list
         var index = this._waitingAssets.indexOf(asset);
         if (index >= 0) {
@@ -185,14 +186,12 @@ Object.assign(pc, function () {
                 this._registry.load(asset);
             }
         }
-    };
+    }
 
-    AssetListLoader.prototype._waitForAsset = function (assetId) {
+    _waitForAsset(assetId) {
         this._waitingAssets.push(assetId);
         this._registry.once('add:' + assetId, this._onAddAsset, this);
-    };
+    }
+}
 
-    return {
-        AssetListLoader: AssetListLoader
-    };
-}());
+export { AssetListLoader };

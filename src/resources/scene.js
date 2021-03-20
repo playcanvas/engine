@@ -1,77 +1,44 @@
-Object.assign(pc, function () {
-    'use strict';
+import { SceneParser } from './parser/scene.js';
+import { SceneUtils } from "./scene-utils";
 
-    /**
-     * @class
-     * @name pc.SceneHandler
-     * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Scene} resources.
-     * @param {pc.Application} app - The running {@link pc.Application}.
-     */
-    var SceneHandler = function (app) {
+/**
+ * @class
+ * @name SceneHandler
+ * @implements {ResourceHandler}
+ * @classdesc Resource handler used for loading {@link Scene} resources.
+ * @param {Application} app - The running {@link Application}.
+ */
+class SceneHandler {
+    constructor(app) {
         this._app = app;
-        this.retryRequests = false;
-    };
+        this.maxRetries = 0;
+    }
 
-    Object.assign(SceneHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
+    load(url, callback) {
+        SceneUtils.load(url, callback);
+    }
 
-            var assets = this._app.assets;
+    open(url, data) {
+        // prevent script initialization until entire scene is open
+        this._app.systems.script.preloading = true;
 
-            pc.http.get(url.load, {
-                retry: this.retryRequests
-            }, function (err, response) {
-                if (!err) {
-                    pc.TemplateUtils.waitForTemplatesInScene(
-                        response,
-                        assets,
-                        callback);
-                } else {
-                    var errMsg = 'Error while loading scene ' + url.original;
-                    if (err.message) {
-                        errMsg += ': ' + err.message;
-                        if (err.stack) {
-                            errMsg += '\n' + err.stack;
-                        }
-                    } else {
-                        errMsg += ': ' + err;
-                    }
+        var parser = new SceneParser(this._app, false);
+        var parent = parser.parse(data);
 
-                    callback(errMsg);
-                }
-            });
-        },
+        // set scene root
+        var scene = this._app.scene;
+        scene.root = parent;
 
-        open: function (url, data) {
-            // prevent script initialization until entire scene is open
-            this._app.systems.script.preloading = true;
+        this._app.applySceneSettings(data.settings);
 
-            var parser = new pc.SceneParser(this._app, false);
-            var parent = parser.parse(data);
+        // re-enable script initialization
+        this._app.systems.script.preloading = false;
 
-            // set scene root
-            var scene = this._app.scene;
-            scene.root = parent;
+        return scene;
+    }
 
-            this._app.applySceneSettings(data.settings);
+    patch(asset, assets) {
+    }
+}
 
-            // re-enable script initialization
-            this._app.systems.script.preloading = false;
-
-            return scene;
-        },
-
-        patch: function (asset, assets) {
-        }
-    });
-
-    return {
-        SceneHandler: SceneHandler
-    };
-}());
+export { SceneHandler };

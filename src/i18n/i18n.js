@@ -1,259 +1,63 @@
-Object.assign(pc, (function () {
-    // Maps locale to function that returns the plural index
-    // based on the CLDR rules. See here for reference
-    // https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html
-    // and http://unicode.org/reports/tr35/tr35-numbers.html#Operands .
-    // An initial set of locales is supported and we can keep adding more as we go.
-    var PLURALS = {};
+import { EventHandler } from '../core/event-handler.js';
 
-    // Helper function to define the plural function for an array of locales
-    var definePluralFn = function (locales, fn) {
-        for (var i = 0, len = locales.length; i < len; i++) {
-            PLURALS[locales[i]] = fn;
-        }
-    };
+import { Asset } from '../asset/asset.js';
 
-    // Gets the language portion form a locale
-    var getLang = function (locale) {
-        var idx = locale.indexOf('-');
-        if (idx !== -1) {
-            return locale.substring(0, idx);
-        }
+import { I18nParser } from './i18n-parser.js';
 
-        return locale;
-    };
+import {
+    DEFAULT_LOCALE,
+    DEFAULT_LOCALE_FALLBACKS
+} from './constants.js';
 
-    // Replaces the language in the specified locale and returns the result
-    var replaceLang = function (locale, desiredLang) {
-        var idx = locale.indexOf('-');
-        if (idx !== -1) {
-            return desiredLang + locale.substring(idx);
-        }
+import {
+    replaceLang,
+    getLang,
+    getPluralFn,
+    findAvailableLocale
+} from './utils.js';
 
-        return desiredLang;
-    };
-
-    var DEFAULT_LOCALE = 'en-US';
-
-    // default locale fallbacks if a specific locale
-    // was not found. E.g. if the desired locale is en-AS but we
-    // have en-US and en-GB then pick en-US. If a fallback does not exist either
-    // then pick the first that satisfies the language.
-    var DEFAULT_LOCALE_FALLBACKS = {
-        'en': 'en-US',
-        'es': 'en-ES',
-        'zh': 'zh-CN',
-        'zh-HK': 'zh-TW',
-        'zh-TW': 'zh-HK',
-        'fr': 'fr-FR',
-        'de': 'de-DE',
-        'it': 'it-IT',
-        'ru': 'ru-RU',
-        'ja': 'ja-JP'
-    };
-
-    // Only OTHER
-    definePluralFn([
-        'ja',
-        'ko',
-        'th',
-        'vi',
-        'zh',
-        'id'
-    ], function (n) {
-        return 0;
-    });
-
-    // ONE, OTHER
-    definePluralFn([
-        'fa',
-        'hi'
-    ], function (n) {
-        if (n >= 0 && n <= 1) {
-            return 0; // one
-        }
-
-        return 1; // other
-    });
-
-    // from Unicode rules: i = 0..1
-    definePluralFn([
-        'fr',
-        'pt'
-    ], function (n) {
-        if (n >= 0 && n < 2) {
-            return 0; // one
-        }
-
-        return 1; // other
-    });
-
-    // danish
-    definePluralFn([
-        'da'
-    ], function (n) {
-        if (n === 1 || !Number.isInteger(n) && n >= 0 && n <= 1) {
-            return 0; // one
-        }
-
-        return 1; // other
-    });
-
-    definePluralFn([
-        'de',
-        'en',
-        'it',
-        'el',
-        'es',
-        'tr',
-        'fi',
-        'sv',
-        'nb',
-        'no',
-        'ur'
-    ], function (n) {
-        if (n === 1)  {
-            return 0; // one
-        }
-
-        return 1; // other
-    });
-
-    // ONE, FEW, MANY, OTHER
-    definePluralFn([
-        'ru',
-        'uk'
-    ], function (n) {
-        if (Number.isInteger(n)) {
-            var mod10 = n % 10;
-            var mod100 = n % 100;
-
-            if (mod10 === 1 && mod100 !== 11) {
-                return 0; // one
-            } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-                return 1; // few
-            } else if (mod10 === 0 || mod10 >= 5 && mod10 <= 9 || mod100 >= 11 && mod100 <= 14) {
-                return 2; // many
-            }
-        }
-
-        return 3; // other
-    });
-
-    // polish
-    definePluralFn([
-        'pl'
-    ], function (n) {
-        if (Number.isInteger(n)) {
-            if (n === 1) {
-                return 0; // one
-            }
-            var mod10 = n % 10;
-            var mod100 = n % 100;
-
-            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-                return 1; // few
-            } else if (mod10 >= 0 && mod10 <= 1 || mod10 >= 5 && mod10 <= 9 || mod100 >= 12 && mod100 <= 14) {
-                return 2; // many
-            }
-        }
-
-        return 3; // other
-    });
-
-    // ZERO, ONE, TWO, FEW, MANY, OTHER
-    definePluralFn([
-        'ar'
-    ], function (n) {
-        if (n === 0)  {
-            return 0; // zero
-        } else if (n === 1) {
-            return 1; // one
-        } else if (n === 2) {
-            return 2; // two
-        }
-
-        if (Number.isInteger(n)) {
-            var mod100 = n % 100;
-            if (mod100 >= 3 && mod100 <= 10) {
-                return 3; // few
-            } else if (mod100 >= 11 && mod100 <= 99) {
-                return 4; // many
-            }
-        }
-
-        return 5; // other
-    });
-
-    var DEFAULT_PLURAL_FN = PLURALS[getLang(DEFAULT_LOCALE)];
-
-    // Gets the function that converts to plural for a language
-    var getPluralFn = function (lang) {
-        return PLURALS[lang] || DEFAULT_PLURAL_FN;
-    };
-
-    /**
-     * @class
-     * @name pc.I18n
-     * @augments pc.EventHandler
-     * @classdesc Handles localization. Responsible for loading localization assets
-     * and returning translations for a certain key. Can also handle plural forms. To override
-     * its default behaviour define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.
-     * @param {pc.Application} app - The application.
-     * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
-     * change language to the new locale.
-     * @property {number[]|pc.Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
-     * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
-     */
-    var I18n = function (app) {
-        pc.EventHandler.call(this);
+/**
+ * @class
+ * @name I18n
+ * @augments EventHandler
+ * @classdesc Handles localization. Responsible for loading localization assets
+ * and returning translations for a certain key. Can also handle plural forms. To override
+ * its default behavior define a different implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
+ * @param {Application} app - The application.
+ * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
+ * change language to the new locale.
+ * @property {number[]|Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
+ * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
+ */
+class I18n extends EventHandler {
+    constructor(app) {
+        super();
 
         this.locale = DEFAULT_LOCALE;
         this._translations = {};
         this._availableLangs = {};
         this._app = app;
         this._assets = [];
-        this._parser = new pc.I18nParser();
-    };
-    I18n.prototype = Object.create(pc.EventHandler.prototype);
-    I18n.prototype.constructor = I18n;
+        this._parser = new I18nParser();
+    }
 
     /**
+     * @static
      * @function
-     * @name pc.I18n#findAvailableLocale
+     * @name I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
      * @param {string} desiredLocale - The desired locale e.g. En-US.
      * @param {object} availableLocales - A dictionary where each key is an available locale.
      * @returns {string} The locale found or if no locale is available returns the default en-US locale.
      */
-    I18n.findAvailableLocale = function (desiredLocale, availableLocales) {
-        if (availableLocales[desiredLocale]) {
-            return desiredLocale;
-        }
-
-        var fallback = DEFAULT_LOCALE_FALLBACKS[desiredLocale];
-        if (fallback && availableLocales[fallback]) {
-            return fallback;
-        }
-
-        var lang = getLang(desiredLocale);
-
-        fallback = DEFAULT_LOCALE_FALLBACKS[lang];
-        if (availableLocales[fallback]) {
-            return fallback;
-        }
-
-        if (availableLocales[lang]) {
-            return lang;
-        }
-
-        return DEFAULT_LOCALE;
-    };
+    static findAvailableLocale(desiredLocale, availableLocales) {
+        return findAvailableLocale(desiredLocale, availableLocales);
+    }
 
     /**
      * @function
-     * @name pc.I18n#getText
+     * @name I18n#getText
      * @description Returns the translation for the specified key and locale. If the locale is not specified
      * it will use the current locale.
      * @param {string} key - The localization key.
@@ -264,7 +68,7 @@ Object.assign(pc, (function () {
      * var localized = this.app.i18n.getText('localization-key');
      * var localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
      */
-    I18n.prototype.getText = function (key, locale) {
+    getText(key, locale) {
         // default translation is the key
         var result = key;
 
@@ -299,11 +103,11 @@ Object.assign(pc, (function () {
         }
 
         return result;
-    };
+    }
 
     /**
      * @function
-     * @name pc.I18n#getPluralText
+     * @name I18n#getPluralText
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
      * it will use the current locale.
      * @param {string} key - The localization key.
@@ -315,7 +119,7 @@ Object.assign(pc, (function () {
      * // manually replace {number} in the resulting translation with our number
      * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
      */
-    I18n.prototype.getPluralText = function (key, n, locale) {
+    getPluralText(key, n, locale) {
         // default translation is the key
         var result = key;
 
@@ -350,11 +154,11 @@ Object.assign(pc, (function () {
         }
 
         return result;
-    };
+    }
 
     /**
      * @function
-     * @name pc.I18n#addData
+     * @name I18n#addData
      * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
      * @param {object} data - The localization data. See example for the expected format of the data.
      * @example
@@ -381,7 +185,7 @@ Object.assign(pc, (function () {
      *     }]
      * });
      */
-    I18n.prototype.addData = function (data) {
+    addData(data) {
         var parsed;
         try {
             parsed = this._parser.parse(data);
@@ -409,15 +213,15 @@ Object.assign(pc, (function () {
 
             this.fire('data:add', locale, messages);
         }
-    };
+    }
 
     /**
      * @function
-     * @name pc.I18n#removeData
+     * @name I18n#removeData
      * @description Removes localization data.
-     * @param {object} data - The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
+     * @param {object} data - The localization data. The data is expected to be in the same format as {@link I18n#addData}.
      */
-    I18n.prototype.removeData = function (data) {
+    removeData(data) {
         var parsed;
         var key;
         try {
@@ -453,106 +257,104 @@ Object.assign(pc, (function () {
 
             this.fire('data:remove', locale, messages);
         }
-    };
+    }
 
     /**
      * @function
-     * @name pc.I18n#destroy
+     * @name I18n#destroy
      * @description Frees up memory.
      */
-    I18n.prototype.destroy = function () {
+    destroy() {
         this._translations = null;
         this._availableLangs = null;
         this._assets = null;
         this._parser = null;
         this.off();
-    };
+    }
 
-    Object.defineProperty(I18n.prototype, 'locale', {
-        get: function () {
-            return this._locale;
-        },
-        set: function (value) {
+    get locale() {
+        return this._locale;
+    }
+
+    set locale(value) {
+        if (this._locale === value) {
+            return;
+        }
+
+        // replace 'in' language with 'id'
+        // for Indonesian because both codes are valid
+        // so that users only need to use the 'id' code
+        var lang = getLang(value);
+        if (lang === 'in') {
+            lang = 'id';
+            value = replaceLang(value, lang);
             if (this._locale === value) {
                 return;
             }
-
-            // replace 'in' language with 'id'
-            // for Indonesian because both codes are valid
-            // so that users only need to use the 'id' code
-            var lang = getLang(value);
-            if (lang === 'in') {
-                lang = 'id';
-                value = replaceLang(value, lang);
-                if (this._locale === value) {
-                    return;
-                }
-            }
-
-            var old = this._locale;
-            // cache locale, lang and plural function
-            this._locale = value;
-            this._lang = lang;
-            this._pluralFn = getPluralFn(this._lang);
-
-            // raise event
-            this.fire('set:locale', value, old);
         }
-    });
 
-    Object.defineProperty(I18n.prototype, 'assets', {
-        get: function () {
-            return this._assets;
-        },
-        set: function (value) {
-            var i;
-            var len;
-            var id;
-            var asset;
+        var old = this._locale;
+        // cache locale, lang and plural function
+        this._locale = value;
+        this._lang = lang;
+        this._pluralFn = getPluralFn(this._lang);
 
-            var index = {};
+        // raise event
+        this.fire('set:locale', value, old);
+    }
 
-            // convert array to dict
-            for (i = 0, len = value.length; i < len; i++) {
-                id = value[i] instanceof pc.Asset ? value[i].id : value[i];
-                index[id] = true;
-            }
+    get assets() {
+        return this._assets;
+    }
 
-            // remove assets not in value
-            i = this._assets.length;
-            while (i--) {
-                id = this._assets[i];
-                if (!index[id]) {
-                    this._app.assets.off('add:' + id, this._onAssetAdd, this);
-                    asset = this._app.assets.get(id);
-                    if (asset) {
-                        this._onAssetRemove(asset);
-                    }
-                    this._assets.splice(i, 1);
-                }
-            }
+    set assets(value) {
+        var i;
+        var len;
+        var id;
+        var asset;
 
-            // add assets in value that do not already exist here
-            for (id in index) {
-                id = parseInt(id, 10);
-                if (this._assets.indexOf(id) !== -1) continue;
+        var index = {};
 
-                this._assets.push(id);
+        // convert array to dict
+        for (i = 0, len = value.length; i < len; i++) {
+            id = value[i] instanceof Asset ? value[i].id : value[i];
+            index[id] = true;
+        }
+
+        // remove assets not in value
+        i = this._assets.length;
+        while (i--) {
+            id = this._assets[i];
+            if (!index[id]) {
+                this._app.assets.off('add:' + id, this._onAssetAdd, this);
                 asset = this._app.assets.get(id);
-                if (!asset) {
-                    this._app.assets.once('add:' + id, this._onAssetAdd, this);
-                } else {
-                    this._onAssetAdd(asset);
+                if (asset) {
+                    this._onAssetRemove(asset);
                 }
+                this._assets.splice(i, 1);
             }
         }
-    });
+
+        // add assets in value that do not already exist here
+        for (id in index) {
+            id = parseInt(id, 10);
+            if (this._assets.indexOf(id) !== -1) continue;
+
+            this._assets.push(id);
+            asset = this._app.assets.get(id);
+            if (!asset) {
+                this._app.assets.once('add:' + id, this._onAssetAdd, this);
+            } else {
+                this._onAssetAdd(asset);
+            }
+        }
+    }
 
     // Finds a fallback locale for the specified locale and language.
     // 1) First tries DEFAULT_LOCALE_FALLBACKS
     // 2) If no translation exists for that locale return the first locale available for that language.
     // 3) If no translation exists for that either then return the DEFAULT_LOCALE
-    I18n.prototype._findFallbackLocale = function (locale, lang) {
+    _findFallbackLocale(locale, lang) {
         var result = DEFAULT_LOCALE_FALLBACKS[locale];
         if (result && this._translations[result]) {
             return result;
@@ -569,9 +371,9 @@ Object.assign(pc, (function () {
         }
 
         return DEFAULT_LOCALE;
-    };
+    }
 
-    I18n.prototype._onAssetAdd = function (asset) {
+    _onAssetAdd(asset) {
         asset.on('load', this._onAssetLoad, this);
         asset.on('change', this._onAssetChange, this);
         asset.on('remove', this._onAssetRemove, this);
@@ -580,19 +382,19 @@ Object.assign(pc, (function () {
         if (asset.resource) {
             this._onAssetLoad(asset);
         }
-    };
+    }
 
-    I18n.prototype._onAssetLoad = function (asset) {
+    _onAssetLoad(asset) {
         this.addData(asset.resource);
-    };
+    }
 
-    I18n.prototype._onAssetChange = function (asset) {
+    _onAssetChange(asset) {
         if (asset.resource) {
             this.addData(asset.resource);
         }
-    };
+    }
 
-    I18n.prototype._onAssetRemove = function (asset) {
+    _onAssetRemove(asset) {
         asset.off('load', this._onAssetLoad, this);
         asset.off('change', this._onAssetChange, this);
         asset.off('remove', this._onAssetRemove, this);
@@ -603,15 +405,13 @@ Object.assign(pc, (function () {
         }
 
         this._app.assets.once('add:' + asset.id, this._onAssetAdd, this);
-    };
+    }
 
-    I18n.prototype._onAssetUnload = function (asset) {
+    _onAssetUnload(asset) {
         if (asset.resource) {
             this.removeData(asset.resource);
         }
-    };
+    }
+}
 
-    return {
-        I18n: I18n
-    };
-}()));
+export { I18n };

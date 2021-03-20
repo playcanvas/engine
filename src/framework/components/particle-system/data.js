@@ -1,20 +1,24 @@
-Object.assign(pc, function () {
-    var ParticleSystemComponentData = function () {
+import { Vec3 } from '../../../math/vec3.js';
 
+import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_WORLD, PARTICLEMODE_GPU, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
+
+class ParticleSystemComponentData {
+    constructor() {
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
         this.rate2 = null;
         this.startAngle = 0;
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
-        this.emitterExtents = new pc.Vec3();       // Spawn point divergence
-        this.emitterExtentsInner = new pc.Vec3();
+        this.emitterExtents = new Vec3();       // Spawn point divergence
+        this.emitterExtentsInner = new Vec3();
         this.emitterRadius = 0;
         this.emitterRadiusInner = 0;
-        this.emitterShape = pc.EMITTERSHAPE_BOX;
+        this.emitterShape = EMITTERSHAPE_BOX;
         this.initialVelocity = 0;
-        this.wrapBounds = new pc.Vec3();
+        this.wrapBounds = new Vec3();
         this.localSpace = false;
+        this.screenSpace = false;
         this.colorMap = null;
         this.colorMapAsset = null;
         this.normalMap = null;
@@ -22,7 +26,7 @@ Object.assign(pc, function () {
         this.loop = true;
         this.preWarm = false;
         this.sort = 0;                          // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;   Forces CPU mode if not 0
-        this.mode = pc.PARTICLEMODE_GPU;
+        this.mode = PARTICLEMODE_GPU;
         this.scene = null;
         this.lighting = false;
         this.halfLambert = false;            // Uses half-lambert lighting instead of Lambert
@@ -36,8 +40,8 @@ Object.assign(pc, function () {
         this.depthWrite = false;
         this.noFog = false;
 
-        this.orientation = pc.PARTICLEORIENTATION_SCREEN;
-        this.particleNormal = new pc.Vec3(0, 1, 0);
+        this.orientation = PARTICLEORIENTATION_SCREEN;
+        this.particleNormal = new Vec3(0, 1, 0);
 
         this.animTilesX = 1;
         this.animTilesY = 1;
@@ -71,7 +75,7 @@ Object.assign(pc, function () {
         this.radialSpeedGraph = null;
         this.radialSpeedGraph2 = null;
 
-        this.blendType = pc.BLEND_NORMAL;
+        this.blendType = BLEND_NORMAL;
 
         this.model = null;
 
@@ -81,10 +85,8 @@ Object.assign(pc, function () {
 
         this.autoPlay = true;
 
-        this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
-    };
+        this.layers = [LAYERID_WORLD]; // assign to the default world layer
+    }
+}
 
-    return {
-        ParticleSystemComponentData: ParticleSystemComponentData
-    };
-}());
+export { ParticleSystemComponentData };

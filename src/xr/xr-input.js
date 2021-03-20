@@ -1,15 +1,19 @@
-Object.assign(pc, function () {
-    /**
-     * @class
-     * @name pc.XrInput
-     * @augments pc.EventHandler
-     * @classdesc Provides access to input sources for WebXR.
-     * @description Provides access to input sources for WebXR.
-     * @param {pc.XrManager} manager - WebXR Manager.
-     * @property {pc.XrInputSource[]} inputSources List of active {@link pc.XrInputSource}.
-     */
-    var XrInput = function (manager) {
-        pc.EventHandler.call(this);
+import { EventHandler } from '../core/event-handler.js';
+
+import { XrInputSource } from './xr-input-source.js';
+
+/**
+ * @class
+ * @name XrInput
+ * @augments EventHandler
+ * @classdesc Provides access to input sources for WebXR.
+ * @description Provides access to input sources for WebXR.
+ * @param {XrManager} manager - WebXR Manager.
+ * @property {XrInputSource[]} inputSources List of active {@link XrInputSource}.
+ */
+class XrInput extends EventHandler {
+    constructor(manager) {
+        super();
 
         var self = this;
 
@@ -23,15 +27,13 @@ Object.assign(pc, function () {
 
         this.manager.on('start', this._onSessionStart, this);
         this.manager.on('end', this._onSessionEnd, this);
-    };
-    XrInput.prototype = Object.create(pc.EventHandler.prototype);
-    XrInput.prototype.constructor = XrInput;
+    }
 
     /**
      * @event
-     * @name pc.XrInput#add
-     * @description Fired when new {@link pc.XrInputSource} is added to the list.
-     * @param {pc.XrInputSource} inputSource - Input source that has been added
+     * @name XrInput#add
+     * @description Fired when new {@link XrInputSource} is added to the list.
+     * @param {XrInputSource} inputSource - Input source that has been added
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     // new input source is added
@@ -40,9 +42,9 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrInput#remove
-     * @description Fired when {@link pc.XrInputSource} is removed to the list.
-     * @param {pc.XrInputSource} inputSource - Input source that has been removed
+     * @name XrInput#remove
+     * @description Fired when {@link XrInputSource} is removed to the list.
+     * @param {XrInputSource} inputSource - Input source that has been removed
      * @example
      * app.xr.input.on('remove', function (inputSource) {
      *     // input source is removed
@@ -51,9 +53,9 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrInput#select
-     * @description Fired when {@link pc.XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered select event
+     * @name XrInput#select
+     * @description Fired when {@link XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
+     * @param {XrInputSource} inputSource - Input source that triggered select event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
      * var ray = new pc.Ray();
@@ -67,21 +69,51 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrInput#selectstart
-     * @description Fired when {pc.XrInputSource} has started to trigger primary action.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered selectstart event
+     * @name XrInput#selectstart
+     * @description Fired when {@link XrInputSource} has started to trigger primary action.
+     * @param {XrInputSource} inputSource - Input source that triggered selectstart event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
      * @event
-     * @name pc.XrInput#selectend
-     * @description Fired when {pc.XrInputSource} has ended triggerring primary action.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered selectend event
+     * @name XrInput#selectend
+     * @description Fired when {@link XrInputSource} has ended triggerring primary action.
+     * @param {XrInputSource} inputSource - Input source that triggered selectend event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
-    XrInput.prototype._onSessionStart = function () {
+    /**
+     * @event
+     * @name XrInput#squeeze
+     * @description Fired when {@link XrInputSource} has triggered squeeze action. This is associated with "grabbing" action on the controllers.
+     * @param {XrInputSource} inputSource - Input source that triggered squeeze event
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     */
+
+    /**
+     * @event
+     * @name XrInput#squeezestart
+     * @description Fired when {@link XrInputSource} has started to trigger sqeeze action.
+     * @param {XrInputSource} inputSource - Input source that triggered squeezestart event
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @example
+     * app.xr.input.on('squeezestart', function (inputSource, evt) {
+     *     if (obj.containsPoint(inputSource.getPosition())) {
+     *         // grabbed an object
+     *     }
+     * });
+     */
+
+    /**
+     * @event
+     * @name XrInput#squeezeend
+     * @description Fired when {@link XrInputSource} has ended triggerring sqeeze action.
+     * @param {XrInputSource} inputSource - Input source that triggered squeezeend event
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     */
+
+    _onSessionStart() {
         this._session = this.manager.session;
         this._session.addEventListener('inputsourceschange', this._onInputSourcesChangeEvt);
 
@@ -108,14 +140,35 @@ Object.assign(pc, function () {
             self.fire('selectend', inputSource, evt);
         });
 
+        this._session.addEventListener('squeeze', function (evt) {
+            var inputSource = self._getByInputSource(evt.inputSource);
+            inputSource.update(evt.frame);
+            inputSource.fire('squeeze', evt);
+            self.fire('squeeze', inputSource, evt);
+        });
+        this._session.addEventListener('squeezestart', function (evt) {
+            var inputSource = self._getByInputSource(evt.inputSource);
+            inputSource.update(evt.frame);
+            inputSource._squeezing = true;
+            inputSource.fire('squeezestart', evt);
+            self.fire('squeezestart', inputSource, evt);
+        });
+        this._session.addEventListener('squeezeend', function (evt) {
+            var inputSource = self._getByInputSource(evt.inputSource);
+            inputSource.update(evt.frame);
+            inputSource._squeezing = false;
+            inputSource.fire('squeezeend', evt);
+            self.fire('squeezeend', inputSource, evt);
+        });
+
         // add input sources
         var inputSources = this._session.inputSources;
         for (var i = 0; i < inputSources.length; i++) {
             this._addInputSource(inputSources[i]);
         }
-    };
+    }
 
-    XrInput.prototype._onSessionEnd = function () {
+    _onSessionEnd() {
         var i = this._inputSources.length;
         while (i--) {
             var inputSource = this._inputSources[i];
@@ -126,9 +179,9 @@ Object.assign(pc, function () {
 
         this._session.removeEventListener('inputsourceschange', this._onInputSourcesChangeEvt);
         this._session = null;
-    };
+    }
 
-    XrInput.prototype._onInputSourcesChange = function (evt) {
+    _onInputSourcesChange(evt) {
         var i;
 
         // remove
@@ -140,9 +193,9 @@ Object.assign(pc, function () {
         for (i = 0; i < evt.added.length; i++) {
             this._addInputSource(evt.added[i]);
         }
-    };
+    }
 
-    XrInput.prototype._getByInputSource = function (xrInputSource) {
+    _getByInputSource(xrInputSource) {
         for (var i = 0; i < this._inputSources.length; i++) {
             if (this._inputSources[i].inputSource === xrInputSource) {
                 return this._inputSources[i];
@@ -150,18 +203,18 @@ Object.assign(pc, function () {
         }
 
         return null;
-    };
+    }
 
-    XrInput.prototype._addInputSource = function (xrInputSource) {
+    _addInputSource(xrInputSource) {
         if (this._getByInputSource(xrInputSource))
             return;
 
-        var inputSource = new pc.XrInputSource(this.manager, xrInputSource);
+        var inputSource = new XrInputSource(this.manager, xrInputSource);
         this._inputSources.push(inputSource);
         this.fire('add', inputSource);
-    };
+    }
 
-    XrInput.prototype._removeInputSource = function (xrInputSource) {
+    _removeInputSource(xrInputSource) {
         for (var i = 0; i < this._inputSources.length; i++) {
             if (this._inputSources[i].inputSource !== xrInputSource)
                 continue;
@@ -178,21 +231,17 @@ Object.assign(pc, function () {
             this.fire('remove', inputSource);
             return;
         }
-    };
+    }
 
-    XrInput.prototype.update = function (frame) {
+    update(frame) {
         for (var i = 0; i < this._inputSources.length; i++) {
             this._inputSources[i].update(frame);
         }
-    };
+    }
 
-    Object.defineProperty(XrInput.prototype, 'inputSources', {
-        get: function () {
-            return this._inputSources;
-        }
-    });
+    get inputSources() {
+        return this._inputSources;
+    }
+}
 
-    return {
-        XrInput: XrInput
-    };
-}());
+export { XrInput };

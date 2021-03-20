@@ -1,47 +1,18 @@
-Object.assign(pc, function () {
-    'use strict';
+import { SceneUtils } from "./scene-utils";
 
-    var SceneSettingsHandler = function (app) {
+class SceneSettingsHandler {
+    constructor(app) {
         this._app = app;
-        this.retryRequests = false;
-    };
+        this.maxRetries = 0;
+    }
 
-    Object.assign(SceneSettingsHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
+    load(url, callback) {
+        SceneUtils.load(url, callback);
+    }
 
-            pc.http.get(url.load, {
-                retry: this.retryRequests
-            }, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    var errMsg = 'Error while loading scene settings ' + url.original;
-                    if (err.message) {
-                        errMsg += ': ' + err.message;
-                        if (err.stack) {
-                            errMsg += '\n' + err.stack;
-                        }
-                    } else {
-                        errMsg += ': ' + err;
-                    }
+    open(url, data) {
+        return data.settings;
+    }
+}
 
-                    callback(errMsg);
-                }
-            });
-        },
-
-        open: function (url, data) {
-            return data.settings;
-        }
-    });
-
-    return {
-        SceneSettingsHandler: SceneSettingsHandler
-    };
-}());
+export { SceneSettingsHandler };
