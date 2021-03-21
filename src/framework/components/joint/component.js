@@ -246,7 +246,7 @@ class JointComponent extends Component {
     get linearLimitsX() {
         return this._linearLimitsX;
     }
-    
+
     set linearSpringX(value) {
         if (this._linearSpringX !== value) {
             this._linearSpringX = value;
@@ -334,7 +334,7 @@ class JointComponent extends Component {
     get linearLimitsZ() {
         return this._linearLimitsZ;
     }
-    
+
     set linearSpringZ(value) {
         if (this._linearSpringZ !== value) {
             this._linearSpringZ = value;
