@@ -96,13 +96,12 @@ class ModelComponent extends Component {
     }
 
     addModelToLayers() {
-        var layer;
-        var layers = this.system.app.scene.layers;
-
+        const layers = this.system.app.scene.layers;
         for (var i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
-            if (!layer) continue;
-            layer.addMeshInstances(this.meshInstances);
+            const layer = layers.getLayerById(this._layers[i]);
+            if (layer) {
+                layer.addMeshInstances(this.meshInstances);
+            }
         }
     }
 

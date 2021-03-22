@@ -242,9 +242,9 @@ class RenderComponent extends Component {
     }
 
     addToLayers() {
-        var layer, layers = this.system.app.scene.layers;
+        const layers = this.system.app.scene.layers;
         for (var i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
+            const layer = layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addMeshInstances(this._meshInstances);
             }
