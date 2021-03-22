@@ -4,6 +4,20 @@ import { Vec2 } from '../../../math/vec2.js';
 
 import { Component } from '../component.js';
 
+const properties = [
+    'angularDampingX', 'angularDampingY', 'angularDampingZ',
+    'angularEquilibriumX', 'angularEquilibriumY', 'angularEquilibriumZ',
+    'angularLimitsX', 'angularLimitsY', 'angularLimitsZ',
+    'angularSpringX', 'angularSpringY', 'angularSpringZ',
+    'angularStiffnessX', 'angularStiffnessY', 'angularStiffnessZ',
+    'breakForce', 'enableCollision', 'enabled', 'entityA', 'entityB',
+    'linearDampingX', 'linearDampingY', 'linearDampingZ',
+    'linearEquilibriumX', 'linearEquilibriumY', 'linearEquilibriumZ',
+    'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',
+    'linearSpringX', 'linearSpringY', 'linearSpringZ',
+    'linearStiffnessX', 'linearStiffnessY', 'linearStiffnessZ'
+];
+
 /**
  * @private
  * @component
@@ -293,21 +307,7 @@ class JointComponent extends Component {
     }
 
     initFromData(data) {
-        const props = [
-            'angularDampingX', 'angularDampingY', 'angularDampingZ',
-            'angularEquilibriumX', 'angularEquilibriumY', 'angularEquilibriumZ',
-            'angularLimitsX', 'angularLimitsY', 'angularLimitsZ',
-            'angularSpringX', 'angularSpringY', 'angularSpringZ',
-            'angularStiffnessX', 'angularStiffnessY', 'angularStiffnessZ',
-            'breakForce', 'enableCollision', 'enabled', 'entityA', 'entityB',
-            'linearDampingX', 'linearDampingY', 'linearDampingZ',
-            'linearEquilibriumX', 'linearEquilibriumY', 'linearEquilibriumZ',
-            'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',
-            'linearSpringX', 'linearSpringY', 'linearSpringZ',
-            'linearStiffnessX', 'linearStiffnessY', 'linearStiffnessZ'
-        ];
-
-        for (const prop of props) {
+        for (const prop of properties) {
             if (data.hasOwnProperty(prop)) {
                 if (data[prop] instanceof Vec2) {
                     this['_' + prop].copy(data[prop]);
@@ -343,6 +343,7 @@ const functionMap = {
     Stiffness: 'setStiffness'
 };
 
+// Define additional properties for each degree of freedom
 ['linear', 'angular'].forEach(type => {
     ['Damping', 'Equilibrium', 'Spring', 'Stiffness'].forEach(name => {
         ['X', 'Y', 'Z'].forEach(axis => {
