@@ -494,6 +494,32 @@ class JointComponent extends Component {
         }
     }
 
+    initFromData(data) {
+        const props = [
+            'angularEquilibriumX', 'angularEquilibriumY', 'angularEquilibriumZ',
+            'angularLimitsX', 'angularLimitsY', 'angularLimitsZ',
+            'angularSpringX', 'angularSpringY', 'angularSpringZ',
+            'angularStiffnessX', 'angularStiffnessY', 'angularStiffnessZ',
+            'breakForce', 'enableCollision', 'enabled', 'entityA', 'entityB',
+            'linearEquilibriumX', 'linearEquilibriumY', 'linearEquilibriumZ',
+            'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',
+            'linearSpringX', 'linearSpringY', 'linearSpringZ',
+            'linearStiffnessX', 'linearStiffnessY', 'linearStiffnessZ'
+        ];
+
+        for (const prop of props) {
+            if (data.hasOwnProperty(prop)) {
+                if (data[prop] instanceof Vec2) {
+                    this['_' + prop].copy(data[prop]);
+                } else {
+                    this['_' + prop] = data[prop];
+                }
+            }
+        }
+
+        this._createConstraint();
+    }
+
     onEnable() {
         this._createConstraint();
     }
