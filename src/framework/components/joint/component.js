@@ -12,6 +12,7 @@ import { Component } from '../component.js';
  * @augments Component
  * @classdesc The JointComponent adds a physics joint constraint linking two rigid bodies.
  * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  */
 class JointComponent extends Component {
     constructor(system, entity) {
@@ -262,11 +263,11 @@ class JointComponent extends Component {
             const axis = ['X', 'Y', 'Z', 'X', 'Y', 'Z'];
 
             for (let i = 0; i < 6; i++) {
-                const type = i < 3 ? 'linear' : 'angular';
-                this._constraint.enableSpring(i, this['_' + type + 'Spring' + axis[i]]);
-                this._constraint.setDamping(i, this['_' + type + 'Damping' + axis[i]]);
-                this._constraint.setEquilibriumPoint(i, this['_' + type + 'Equilibrium' + axis[i]]);
-                this._constraint.setStiffness(i, this['_' + type + 'Stiffness' + axis[i]]);
+                const type = i < 3 ? '_linear' : '_angular';
+                this._constraint.enableSpring(i, this[type + 'Spring' + axis[i]]);
+                this._constraint.setDamping(i, this[type + 'Damping' + axis[i]]);
+                this._constraint.setEquilibriumPoint(i, this[type + 'Equilibrium' + axis[i]]);
+                this._constraint.setStiffness(i, this[type + 'Stiffness' + axis[i]]);
             }
 
             this._constraint.setBreakingImpulseThreshold(this._breakForce);
