@@ -12,7 +12,6 @@ const _schema = [
 ];
 
 /**
- * @private
  * @class
  * @name AnimComponentSystem
  * @augments ComponentSystem
@@ -43,6 +42,9 @@ class AnimComponentSystem extends ComponentSystem {
         }
         if (data.animationAssets) {
             component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
+        }
+        if (data.rootBone) {
+            component.rootBone = data.rootBone;
         }
     }
 

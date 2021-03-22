@@ -4,6 +4,11 @@ var categories = [
         name: "animation",
         examples: [
             "blend",
+            "blend-trees-1D",
+            "blend-trees-2D-cartesian",
+            "blend-trees-directional",
+            "component-properties",
+            "locomotion",
             "tweening"
         ]
     }, {
@@ -16,6 +21,7 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "area-lights",
             "area-picker",
             "batching-dynamic",
             "grab-pass",
@@ -47,6 +53,7 @@ var categories = [
             "point-cloud-simulation",
             "portal",
             "post-effects",
+            "render-asset",
             "render-to-cubemap",
             "render-to-texture",
             "shader-burn",

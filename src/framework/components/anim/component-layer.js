@@ -1,7 +1,6 @@
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 
 /**
- * @private
  * @class
  * @name AnimComponentLayer
  * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -18,7 +17,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponentLayer#play
      * @description Start playing the animation in the current state.
@@ -29,7 +27,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponentLayer#pause
      * @description Start playing the animation in the current state.
@@ -39,7 +36,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponentLayer#reset
      * @description Reset the animation component to it's initial state, including all parameters. The system will be paused.
@@ -49,7 +45,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponentLayer#rebind
      * @description Rebind any animations in the layer to the currently present components and model of the anim components entity.
@@ -63,7 +58,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponentLayer#assignAnimation
      * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
@@ -84,7 +78,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @function
      * @name AnimComponentLayer#removeNodeAnimations
      * @description Removes animations from a node in the loaded state graph.
@@ -97,7 +90,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#name
      * @type {string}
@@ -108,7 +100,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @name AnimComponentLayer#playing
      * @type {string}
      * @description Whether this layer is currently playing
@@ -122,7 +113,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#playable
      * @type {string}
@@ -133,7 +123,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#activeState
      * @type {string}
@@ -144,7 +133,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#previousState
      * @type {string}
@@ -155,7 +143,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#activeStateProgress
      * @type {number}
@@ -166,7 +153,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#activeStateDuration
      * @type {number}
@@ -177,8 +163,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
-     * @readonly
      * @name AnimComponentLayer#activeStateCurrentTime
      * @type {number}
      * @description The active states time in seconds
@@ -192,7 +176,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#transitioning
      * @type {boolean}
@@ -203,7 +186,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#transitionProgress
      * @type {number}
@@ -217,7 +199,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @private
      * @readonly
      * @name AnimComponentLayer#states
      * @type {string[]}

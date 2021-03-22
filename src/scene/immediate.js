@@ -9,6 +9,8 @@ import {
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 import { VertexIterator } from '../graphics/vertex-iterator.js';
+import { Shader } from '../graphics/shader.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 
 import { BLEND_NORMAL } from '../scene/constants.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
@@ -119,6 +121,7 @@ class ImmediateData {
         this.layerToBatch = {};
         this.quadMesh = null;
         this.textureShader = null;
+        this.depthTextureShader = null;
         this.cubeLocalPos = null;
         this.cubeWorldPos = null;
         this.meshInstanceArray = [];
@@ -127,23 +130,28 @@ class ImmediateData {
         this.freeGraphNodes = [];
     }
 
+    // shared vertex shader for texture quad rendering
+    static getTextureVS() {
+        return `
+            attribute vec2 aPosition;
+            uniform mat4 matrix_model;
+            varying vec2 uv0;
+            void main(void) {
+                gl_Position = matrix_model * vec4(aPosition, 0, 1);
+                uv0 = aPosition.xy + 0.5;
+            }
+        `;
+    }
+
     // shader used to display texture
     getTextureShader() {
 
         if (!this.textureShader) {
             const shaderDefinition = {
                 attributes: {
-                    aPosition: pc.SEMANTIC_POSITION
+                    aPosition: SEMANTIC_POSITION
                 },
-                vshader: `
-                    attribute vec2 aPosition;
-                    uniform mat4 matrix_model;
-                    varying vec2 uv0;
-                    void main(void) {
-                        gl_Position = matrix_model * vec4(aPosition, 0, 1);
-                        uv0 = aPosition.xy + 0.5;
-                    }
-                `,
+                vshader: ImmediateData.getTextureVS(),
                 fshader: `
                     precision lowp float;
                     varying vec2 uv0;
@@ -153,16 +161,44 @@ class ImmediateData {
                     }
                 `
             };
-            this.textureShader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+            this.textureShader = new Shader(this.device, shaderDefinition);
         }
 
         return this.textureShader;
     }
 
+    // shader used to display depth texture
+    getDepthTextureShader() {
+
+        if (!this.depthTextureShader) {
+
+            const gl2 = this.device.webgl2 ? "#define GL2" : "";
+            const shaderDefinition = {
+                attributes: {
+                    aPosition: SEMANTIC_POSITION
+                },
+                vshader: ImmediateData.getTextureVS(),
+                fshader: `
+                    precision ${this.device.precision} float;
+                    ${gl2}
+                    ${shaderChunks.screenDepthPS}
+                    varying vec2 uv0;
+                    void main() {
+                        float depth = getLinearScreenDepth(uv0) * camera_params.x;
+                        gl_FragColor = vec4(vec3(depth), 1.0);
+                    }
+                    `
+            };
+            this.depthTextureShader = new Shader(this.device, shaderDefinition);
+        }
+
+        return this.depthTextureShader;
+    }
+
     getQuadMesh() {
         if (!this.quadMesh) {
             // Init quad data once
-            var format = new VertexFormat(this.graphicsDevice, [
+            var format = new VertexFormat(this.device, [
                 { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
             ]);
             var quadVb = new VertexBuffer(this.device, format, 4);
@@ -175,7 +211,7 @@ class ImmediateData {
             iterator.next();
             iterator.element[SEMANTIC_POSITION].set(0.5, 0.5, 0);
             iterator.end();
-            this.quadMesh = new Mesh(this.graphicsDevice);
+            this.quadMesh = new Mesh(this.device);
             this.quadMesh.vertexBuffer = quadVb;
             this.quadMesh.primitive[0].type = PRIMITIVE_TRISTRIP;
             this.quadMesh.primitive[0].base = 0;

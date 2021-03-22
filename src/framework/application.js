@@ -7,6 +7,7 @@ import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
+import { Quat } from '../math/quat.js';
 
 import { http } from '../net/http.js';
 
@@ -36,6 +37,7 @@ import { LayerComposition } from '../scene/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
+import { Material } from '../scene/materials/material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -247,6 +249,7 @@ var _deprecationWarning = false;
  * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
+ * * anim ({@link AnimComponentSystem})
  * * animation ({@link AnimationComponentSystem})
  * * audiolistener ({@link AudioListenerComponentSystem})
  * * button ({@link ButtonComponentSystem})
@@ -1674,10 +1677,9 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @private
      * @name Application#setAreaLightLuts
      * @description Sets the area light LUT asset for this app.
-     * @param {Asset} asset - Asset of type `binary` to be set.
+     * @param {Asset} asset - LUT asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
         if (asset) {
@@ -2058,19 +2060,33 @@ class Application extends EventHandler {
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    renderTexture(x, y, width, height, texture, options) {
+    renderTexture(x, y, width, height, texture, material, options) {
         this._initImmediate();
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         let matrix = new Mat4();
-        matrix.setTRS(new Vec3(x, y, 0.0), pc.Quat.IDENTITY, new Vec3(width, height, 0.0));
+        matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, height, 0.0));
 
-        let material = new pc.Material();
-        material.setParameter("colorMap", texture);
-        material.shader = this._immediateData.getTextureShader();
-        material.update();
+        if (!material) {
+            material = new Material();
+            material.setParameter("colorMap", texture);
+            material.shader = this._immediateData.getTextureShader();
+            material.update();
+        }
 
         this.renderQuad(matrix, material, options);
+    }
+
+    // draws a depth texture on [x,y] position on screen, with size [width, height].
+    // Coordinates / sizes are in projected space (-1 .. 1)
+    renderDepthTexture(x, y, width, height, options) {
+        this._initImmediate();
+
+        let material = new Material();
+        material.shader = this._immediateData.getDepthTextureShader();
+        material.update();
+
+        this.renderTexture(x, y, width, height, null, material, options);
     }
 
     /**

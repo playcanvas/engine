@@ -40,6 +40,10 @@ class AnimTransition {
         return this._to;
     }
 
+    set to(value) {
+        this._to = value;
+    }
+
     get time() {
         return this._time;
     }

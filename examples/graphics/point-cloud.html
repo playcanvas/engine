@@ -103,13 +103,7 @@
             app.start();
 
             // Create a new Entity
-            entity = new pc.Entity();
-
-            // Add a model component, with the new asset
-            var modelComponent = entity.addComponent("model", {
-                type: "asset",
-                asset: asset.resource.model
-            });
+            entity = asset.resource.instantiateRenderEntity();
             app.root.addChild(entity);
 
             // Create the shader definition and shader from the vertex and fragment shaders
@@ -126,16 +120,19 @@
             material = new pc.Material();
             material.shader = shader;
 
-            // For all meshes in the model
-            var model = modelComponent.model;
-            model.meshInstances.forEach(function (meshInstance) {
-                // Set the new material
-                meshInstance.material = material;
+            // find all render components
+            var renderComponents = entity.findComponents('render');
 
-                // Set all primitives of the mesh to render as points
-                meshInstance.mesh.primitive.forEach(function (primitive) {
-                    primitive.type = pc.PRIMITIVE_POINTS;
+            // for all render components
+            renderComponents.forEach(function(render){
+
+                // For all meshes in the render component, assign new material
+                render.meshInstances.forEach(function (meshInstance) {
+                    meshInstance.material = material;
                 });
+
+                // set it to render as points
+                render.renderStyle = pc.RENDERSTYLE_POINTS;
             });
 
             currentTime = 0;
