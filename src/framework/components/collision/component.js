@@ -224,6 +224,8 @@ class CollisionComponent extends Component {
     }
 
     onSetRender(name, oldValue, newValue) {
+        console.log("onSetRender");
+
         this.onSetModel(name, oldValue, newValue);
     }
 
@@ -308,8 +310,14 @@ class CollisionComponent extends Component {
     }
 
     onEnable() {
-        if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
-            var asset = this.system.app.assets.get(this.data.asset);
+
+        console.log("collision.onEnable " + this.data.type);
+        if (this.data.type === "mesh") {
+            console.log("here");
+        }
+
+        if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
+            var asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
             // recreate the collision shape if the model asset is not loaded
             // or the shape does not exist
             if (asset && (!asset.resource || !this.data.shape)) {
@@ -356,6 +364,9 @@ class CollisionComponent extends Component {
     onBeforeRemove() {
         if (this.asset) {
             this.asset = null;
+        }
+        if (this.renderAsset) {
+            this.renderAsset = null;
         }
 
         this.entity.off('insert', this._onInsert, this);

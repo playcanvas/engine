@@ -4,7 +4,6 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { SEMANTIC_POSITION } from '../../../graphics/constants.js';
 
-import { RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
 
@@ -49,6 +48,12 @@ class CollisionSystemImpl {
 
     // Called after the call to system.super.initializeComponentData is made
     afterInitialize(component, data) {
+
+        console.log("afterInitialize " + data.type);
+        if (data.type === "mesh") {
+            console.log("NOW");
+        }
+
         this.recreatePhysicalShapes(component);
         component.data.initialized = true;
     }
@@ -350,7 +355,6 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         if (this.system._triMeshCache[mesh.id]) {
             triMesh = this.system._triMeshCache[mesh.id];
         } else {
-            var ib = mesh.indexBuffer[RENDERSTYLE_SOLID];
             var vb = mesh.vertexBuffer;
 
             var format = vb.getFormat();
@@ -360,11 +364,15 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                 var element = format.elements[i];
                 if (element.name === SEMANTIC_POSITION) {
                     positions = new Float32Array(vb.lock(), element.offset);
+                    break;
                 }
             }
 
-            var indices = new Uint16Array(ib.lock());
+            var indices;
+            mesh.getIndices(indices);
             var numTriangles = mesh.primitive[0].count / 3;
+
+            console.log("create ammo mesh, triangles: " + numtriangles);
 
             var v1 = new Ammo.btVector3();
             var v2 = new Ammo.btVector3();
@@ -405,29 +413,20 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
         if (typeof Ammo === 'undefined') return;
 
-        if (data.model) {
-            var meshInstances = data.model.meshInstances;
+        if (data.model || data.render) {
+
             var shape = new Ammo.btCompoundShape();
 
-            var i;
-            for (i = 0; i < meshInstances.length; i++) {
-                this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
-            }
-
-            var entityTransform = entity.getWorldTransform();
-            var scale = entityTransform.getScale();
-            var vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
-            shape.setLocalScaling(vec);
-            Ammo.destroy(vec);
-
-            return shape;
-        } else if (data.render) {
-            var meshes = data.render.meshes;
-            var shape = new Ammo.btCompoundShape();
-
-            var i;
-            for (i = 0; i < meshes.length; i++) {
-                this.createAmmoMesh(meshes[i], new GraphNode(), shape);
+            if (data.model) {
+                var meshInstances = data.model.meshInstances;
+                for (let i = 0; i < meshInstances.length; i++) {
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
+                }
+            } else if (data.render) {
+                var meshes = data.render;
+                for (let i = 0; i < meshes.length; i++) {
+                    this.createAmmoMesh(meshes[i], new GraphNode(), shape);
+                }
             }
 
             var entityTransform = entity.getWorldTransform();
@@ -619,11 +618,6 @@ class CollisionComponentSystem extends ComponentSystem {
         this.on('remove', this.onRemove, this);
     }
 
-    /*
-    const _schema = [
-];
-    */
-
     initializeComponentData(component, _data, properties) {
         properties = [
             'type',
@@ -652,6 +646,10 @@ class CollisionComponentSystem extends ComponentSystem {
         var idx;
         if (_data.hasOwnProperty('asset')) {
             idx = properties.indexOf('model');
+            if (idx !== -1) {
+                properties.splice(idx, 1);
+            }
+            idx = properties.indexOf('render');
             if (idx !== -1) {
                 properties.splice(idx, 1);
             }
@@ -772,6 +770,9 @@ class CollisionComponentSystem extends ComponentSystem {
 
     // Recreates rigid bodies or triggers for the specified component
     recreatePhysicalShapes(component) {
+
+        console.log("recreatePhysicalShapes " + component.data.type);
+
         this.implementations[component.data.type].recreatePhysicalShapes(component);
     }
 
@@ -788,6 +789,7 @@ class CollisionComponentSystem extends ComponentSystem {
     _getNodeScaling(node) {
         var wtm = node.getWorldTransform();
         var scl = wtm.getScale();
+        console.log("node scale: ", scl);
         return new Ammo.btVector3(scl.x, scl.y, scl.z);
     }
 
