@@ -1,10 +1,11 @@
+import { math } from '../../../math/math.js';
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec2 } from '../../../math/vec2.js';
 
 import { Component } from '../component.js';
 
-import { MOTION_FREE, MOTION_LOCKED } from './constants.js';
+import { MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED } from './constants.js';
 
 const properties = [
     'angularDampingX', 'angularDampingY', 'angularDampingZ',
@@ -291,35 +292,41 @@ class JointComponent extends Component {
     _updateAngularLimits() {
         const constraint = this._constraint;
         if (constraint) {
-            let lx, ly, lz;
+            let lx, ly, lz, ux, uy, uz;
 
-            if (this._angularMotionX === MOTION_LOCKED) {
-                lx = Vec2.ZERO;
+            if (this._angularMotionX === MOTION_LIMITED) {
+                lx = this._angularLimitsX.x * math.DEG_TO_RAD;
+                ux = this._angularLimitsX.y * math.DEG_TO_RAD;
             } else if (this._angularMotionX === MOTION_FREE) {
-                lx = Vec2.RIGHT; // In ammo.js, if lower limit is greater than upper limit, DoF is free
-            } else { // MOTION_LIMITED
-                lx = this._angularLimitsX;
+                lx = 1;
+                ux = 0;
+            } else { // MOTION_LOCKED
+                lx = ux = 0;
             }
 
-            if (this._angularMotionY === MOTION_LOCKED) {
-                ly = Vec2.ZERO;
+            if (this._angularMotionY === MOTION_LIMITED) {
+                ly = this._angularLimitsY.x * math.DEG_TO_RAD;
+                uy = this._angularLimitsY.y * math.DEG_TO_RAD;
             } else if (this._angularMotionY === MOTION_FREE) {
-                ly = Vec2.RIGHT;
-            } else { // MOTION_LIMITED
-                ly = this._angularLimitsY;
+                ly = 1;
+                uy = 0;
+            } else { // MOTION_LOCKED
+                ly = uy = 0;
             }
 
-            if (this._angularMotionZ === MOTION_LOCKED) {
-                lz = Vec2.ZERO;
+            if (this._angularMotionZ === MOTION_LIMITED) {
+                lz = this._angularLimitsZ.x * math.DEG_TO_RAD;
+                uz = this._angularLimitsZ.y * math.DEG_TO_RAD;
             } else if (this._angularMotionZ === MOTION_FREE) {
-                lz = Vec2.RIGHT;
-            } else { // MOTION_LIMITED
-                lz = this._angularLimitsZ;
+                lz = 1;
+                uz = 0;
+            } else { // MOTION_LOCKED
+                lz = uz = 0;
             }
 
-            const limits = new Ammo.btVector3(lx.x, ly.x, lz.x);
+            const limits = new Ammo.btVector3(lx, ly, lz);
             constraint.setAngularLowerLimit(limits);
-            limits.setValue(lx.y, ly.y, lz.y);
+            limits.setValue(ux, uy, uz);
             constraint.setAngularUpperLimit(limits);
             Ammo.destroy(limits);
         }
@@ -328,35 +335,41 @@ class JointComponent extends Component {
     _updateLinearLimits() {
         const constraint = this._constraint;
         if (constraint) {
-            let lx, ly, lz;
+            let lx, ly, lz, ux, uy, uz;
 
-            if (this._linearMotionX === MOTION_LOCKED) {
-                lx = Vec2.ZERO;
+            if (this._linearMotionX === MOTION_LIMITED) {
+                lx = this._linearLimitsX.x;
+                ux = this._linearLimitsX.y;
             } else if (this._linearMotionX === MOTION_FREE) {
-                lx = Vec2.RIGHT; // In ammo.js, if lower limit is greater than upper limit, DoF is free
-            } else { // MOTION_LIMITED
-                lx = this._linearLimitsX;
+                lx = 1;
+                ux = 0;
+            } else { // MOTION_LOCKED
+                lx = ux = 0;
             }
 
-            if (this._linearMotionY === MOTION_LOCKED) {
-                ly = Vec2.ZERO;
+            if (this._linearMotionY === MOTION_LIMITED) {
+                ly = this._linearLimitsY.x;
+                uy = this._linearLimitsY.y;
             } else if (this._linearMotionY === MOTION_FREE) {
-                ly = Vec2.RIGHT;
-            } else { // MOTION_LIMITED
-                ly = this._linearLimitsY;
+                ly = 1;
+                uy = 0;
+            } else { // MOTION_LOCKED
+                ly = uy = 0;
             }
 
-            if (this._linearMotionZ === MOTION_LOCKED) {
-                lz = Vec2.ZERO;
+            if (this._linearMotionZ === MOTION_LIMITED) {
+                lz = this._linearLimitsZ.x;
+                uz = this._linearLimitsZ.y;
             } else if (this._linearMotionZ === MOTION_FREE) {
-                lz = Vec2.RIGHT;
-            } else { // MOTION_LIMITED
-                lz = this._linearLimitsZ;
+                lz = 1;
+                uz = 0;
+            } else { // MOTION_LOCKED
+                lz = uz = 0;
             }
 
-            const limits = new Ammo.btVector3(lx.x, ly.x, lz.x);
+            const limits = new Ammo.btVector3(lx, ly, lz);
             constraint.setLinearLowerLimit(limits);
-            limits.setValue(lx.y, ly.y, lz.y);
+            limits.setValue(ux, uy, uz);
             constraint.setLinearUpperLimit(limits);
             Ammo.destroy(limits);
         }
