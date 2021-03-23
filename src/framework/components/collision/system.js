@@ -368,11 +368,9 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                 }
             }
 
-            var indices;
+            var indices = [];
             mesh.getIndices(indices);
             var numTriangles = mesh.primitive[0].count / 3;
-
-            console.log("create ammo mesh, triangles: " + numtriangles);
 
             var v1 = new Ammo.btVector3();
             var v2 = new Ammo.btVector3();
@@ -423,7 +421,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                     this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
                 }
             } else if (data.render) {
-                var meshes = data.render;
+                var meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
                     this.createAmmoMesh(meshes[i], new GraphNode(), shape);
                 }

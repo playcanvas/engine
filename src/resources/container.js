@@ -17,6 +17,7 @@ import { SkinInstance } from '../scene/skin-instance.js';
  * @property {Asset[]} animations - Array of assets of animations in the GLB container.
  * @property {Asset[]} textures - Array of assets of textures in the GLB container.
  * @property {Asset[]} materials - Array of assets of materials in the GLB container.
+ * @property {Asset[]} renders - Array of assets of renders in the GLB container.
  */
 class ContainerResource {
     constructor(data) {
@@ -313,8 +314,8 @@ class ContainerHandler {
 
             // render assets
             var renders = [];
-            for (i = 0; i < data.meshes.length; ++i) {
-                renders.push(createAsset('render', data.meshes[i], i));
+            for (i = 0; i < data.renders.length; ++i) {
+                renders.push(createAsset('render', data.renders[i], i));
             }
 
             // create material assets
