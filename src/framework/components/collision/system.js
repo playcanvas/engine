@@ -17,6 +17,7 @@ import { Trigger } from './trigger.js';
 var mat4 = new Mat4();
 var vec3 = new Vec3();
 var quat = new Quat();
+var tempGraphNode = new GraphNode();
 
 const _schema = [
     'enabled',
@@ -48,12 +49,6 @@ class CollisionSystemImpl {
 
     // Called after the call to system.super.initializeComponentData is made
     afterInitialize(component, data) {
-
-        console.log("afterInitialize " + data.type);
-        if (data.type === "mesh") {
-            console.log("NOW");
-        }
-
         this.recreatePhysicalShapes(component);
         component.data.initialized = true;
     }
@@ -423,7 +418,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             } else if (data.render) {
                 var meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
-                    this.createAmmoMesh(meshes[i], new GraphNode(), shape);
+                    this.createAmmoMesh(meshes[i], tempGraphNode, shape);
                 }
             }
 
@@ -768,9 +763,6 @@ class CollisionComponentSystem extends ComponentSystem {
 
     // Recreates rigid bodies or triggers for the specified component
     recreatePhysicalShapes(component) {
-
-        console.log("recreatePhysicalShapes " + component.data.type);
-
         this.implementations[component.data.type].recreatePhysicalShapes(component);
     }
 
@@ -787,7 +779,6 @@ class CollisionComponentSystem extends ComponentSystem {
     _getNodeScaling(node) {
         var wtm = node.getWorldTransform();
         var scl = wtm.getScale();
-        console.log("node scale: ", scl);
         return new Ammo.btVector3(scl.x, scl.y, scl.z);
     }
 

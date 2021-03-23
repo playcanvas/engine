@@ -224,8 +224,6 @@ class CollisionComponent extends Component {
     }
 
     onSetRender(name, oldValue, newValue) {
-        console.log("onSetRender");
-
         this.onSetModel(name, oldValue, newValue);
     }
 
@@ -310,12 +308,6 @@ class CollisionComponent extends Component {
     }
 
     onEnable() {
-
-        console.log("collision.onEnable " + this.data.type);
-        if (this.data.type === "mesh") {
-            console.log("here");
-        }
-
         if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
             var asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
             // recreate the collision shape if the model asset is not loaded
