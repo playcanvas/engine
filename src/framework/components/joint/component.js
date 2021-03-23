@@ -52,7 +52,7 @@ class JointComponent extends Component {
 
         // Linear X degree of freedom
         this._linearMotionX = MOTION_LOCKED;
-        this._linearLimitsX = new Vec2(0, 0);
+        this._linearLimitsX = new Vec2();
         this._linearSpringX = false;
         this._linearStiffnessX = 0;
         this._linearDampingX = 1;
@@ -60,7 +60,7 @@ class JointComponent extends Component {
 
         // Linear Y degree of freedom
         this._linearMotionY = MOTION_LOCKED;
-        this._linearLimitsY = new Vec2(0, 0);
+        this._linearLimitsY = new Vec2();
         this._linearSpringY = false;
         this._linearStiffnessY = 0;
         this._linearDampingY = 1;
@@ -68,7 +68,7 @@ class JointComponent extends Component {
 
         // Linear Z degree of freedom
         this._linearMotionZ = MOTION_LOCKED;
-        this._linearLimitsZ = new Vec2(0, 0);
+        this._linearLimitsZ = new Vec2();
         this._linearSpringZ = false;
         this._linearStiffnessZ = 0;
         this._linearDampingZ = 1;
@@ -76,7 +76,7 @@ class JointComponent extends Component {
 
         // Angular X degree of freedom
         this._angularMotionX = MOTION_LOCKED;
-        this._angularLimitsX = new Vec2(0, 0);
+        this._angularLimitsX = new Vec2();
         this._angularSpringX = false;
         this._angularStiffnessX = 0;
         this._angularDampingX = 1;
@@ -84,7 +84,7 @@ class JointComponent extends Component {
 
         // Angular Y degree of freedom
         this._angularMotionY = MOTION_LOCKED;
-        this._angularLimitsY = new Vec2(0, 0);
+        this._angularLimitsY = new Vec2();
         this._angularSpringY = false;
         this._angularStiffnessY = 0;
         this._angularDampingY = 1;
@@ -92,7 +92,7 @@ class JointComponent extends Component {
 
         // Angular Z degree of freedom
         this._angularMotionZ = MOTION_LOCKED;
-        this._angularLimitsZ = new Vec2(0, 0);
+        this._angularLimitsZ = new Vec2();
         this._angularSpringZ = false;
         this._angularEquilibriumZ = 0;
         this._angularDampingZ = 1;
@@ -501,7 +501,11 @@ const functionMap = {
                 set: function (value) {
                     if (this[propInternal] !== value) {
                         this[propInternal] = value;
-                        this._constraint[functionMap[name]](index, value);
+                        if (type === 'angular' && name === 'Equilibrium') {
+                            this._constraint[functionMap[name]](index, value * math.DEG_TO_RAD);
+                        } else {
+                            this._constraint[functionMap[name]](index, value);
+                        }
                     }
                 }
             });
