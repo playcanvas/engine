@@ -9,7 +9,7 @@ function onContainerAssetLoaded(containerAsset) {
 
     var render = containerResource.renders && containerResource.renders[renderAsset.data.renderIndex];
     if (render) {
-        renderAsset.resource.meshes = render.resource;
+        renderAsset.resource.meshes = render.resource.meshes;
     }
 }
 
