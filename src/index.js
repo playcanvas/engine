@@ -232,6 +232,7 @@ export { ElementDragHelper } from './framework/components/element/element-drag-h
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
 export { ImageElement } from './framework/components/element/image-element.js';
+export * from './framework/components/joint/constants.js';
 export { JointComponent } from './framework/components/joint/component.js';
 export { JointComponentSystem } from './framework/components/joint/system.js';
 export { LayoutCalculator } from './framework/components/layout-group/layout-calculator.js';
@@ -247,9 +248,9 @@ export { ModelComponentSystem } from './framework/components/model/system.js';
 export { ParticleSystemComponent } from './framework/components/particle-system/component.js';
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
-export * from './framework/components/rigid-body/constants.js';
 export { RenderComponent } from './framework/components/render/component.js';
 export { RenderComponentSystem } from './framework/components/render/system.js';
+export * from './framework/components/rigid-body/constants.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry } from './framework/scene-registry.js';

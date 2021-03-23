@@ -4,16 +4,20 @@ import { Vec2 } from '../../../math/vec2.js';
 
 import { Component } from '../component.js';
 
+import { MOTION_FREE, MOTION_LOCKED } from './constants.js';
+
 const properties = [
     'angularDampingX', 'angularDampingY', 'angularDampingZ',
     'angularEquilibriumX', 'angularEquilibriumY', 'angularEquilibriumZ',
     'angularLimitsX', 'angularLimitsY', 'angularLimitsZ',
+    'angularMotionX', 'angularMotionY', 'angularMotionZ',
     'angularSpringX', 'angularSpringY', 'angularSpringZ',
     'angularStiffnessX', 'angularStiffnessY', 'angularStiffnessZ',
     'breakForce', 'enableCollision', 'enabled', 'entityA', 'entityB',
     'linearDampingX', 'linearDampingY', 'linearDampingZ',
     'linearEquilibriumX', 'linearEquilibriumY', 'linearEquilibriumZ',
     'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',
+    'linearMotionX', 'linearMotionY', 'linearMotionZ',
     'linearSpringX', 'linearSpringY', 'linearSpringZ',
     'linearStiffnessX', 'linearStiffnessY', 'linearStiffnessZ'
 ];
@@ -45,40 +49,52 @@ class JointComponent extends Component {
         this._breakForce = 3.4e+38;
         this._enableCollision = true;
 
-        this._linearDampingX = 1;
-        this._linearEquilibriumX = 0;
+        // Linear X degree of freedom
+        this._linearMotionX = MOTION_LOCKED;
         this._linearLimitsX = new Vec2(0, 0);
         this._linearSpringX = false;
         this._linearStiffnessX = 0;
+        this._linearDampingX = 1;
+        this._linearEquilibriumX = 0;
 
-        this._linearDampingY = 1;
-        this._linearEquilibriumY = 0;
+        // Linear Y degree of freedom
+        this._linearMotionY = MOTION_LOCKED;
         this._linearLimitsY = new Vec2(0, 0);
         this._linearSpringY = false;
         this._linearStiffnessY = 0;
+        this._linearDampingY = 1;
+        this._linearEquilibriumY = 0;
 
-        this._linearDampingZ = 1;
-        this._linearEquilibriumZ = 0;
+        // Linear Z degree of freedom
+        this._linearMotionZ = MOTION_LOCKED;
         this._linearLimitsZ = new Vec2(0, 0);
         this._linearSpringZ = false;
         this._linearStiffnessZ = 0;
+        this._linearDampingZ = 1;
+        this._linearEquilibriumZ = 0;
 
-        this._angularDampingX = 1;
-        this._angularEquilibriumX = 0;
+        // Angular X degree of freedom
+        this._angularMotionX = MOTION_LOCKED;
         this._angularLimitsX = new Vec2(0, 0);
         this._angularSpringX = false;
         this._angularStiffnessX = 0;
+        this._angularDampingX = 1;
+        this._angularEquilibriumX = 0;
 
-        this._angularDampingY = 1;
-        this._angularEquilibriumY = 0;
+        // Angular Y degree of freedom
+        this._angularMotionY = MOTION_LOCKED;
         this._angularLimitsY = new Vec2(0, 0);
         this._angularSpringY = false;
         this._angularStiffnessY = 0;
+        this._angularDampingY = 1;
+        this._angularEquilibriumY = 0;
 
-        this._angularDampingZ = 1;
-        this._angularEquilibriumZ = 0;
+        // Angular Z degree of freedom
+        this._angularMotionZ = MOTION_LOCKED;
         this._angularLimitsZ = new Vec2(0, 0);
         this._angularSpringZ = false;
+        this._angularEquilibriumZ = 0;
+        this._angularDampingZ = 1;
         this._angularStiffnessZ = 0;
 
         this.on('set_enabled', this._onSetEnabled, this);
@@ -136,6 +152,17 @@ class JointComponent extends Component {
         return this._angularLimitsX;
     }
 
+    set angularMotionX(value) {
+        if (this._angularMotionX !== value) {
+            this._angularMotionX = value;
+            this._updateAngularLimits();
+        }
+    }
+
+    get angularMotionX() {
+        return this._angularMotionX;
+    }
+
     set angularLimitsY(limits) {
         if (!this._angularLimitsY.equals(limits)) {
             this._angularLimitsY.copy(limits);
@@ -145,6 +172,17 @@ class JointComponent extends Component {
 
     get angularLimitsY() {
         return this._angularLimitsY;
+    }
+
+    set angularMotionY(value) {
+        if (this._angularMotionY !== value) {
+            this._angularMotionY = value;
+            this._updateAngularLimits();
+        }
+    }
+
+    get angularMotionY() {
+        return this._angularMotionY;
     }
 
     set angularLimitsZ(limits) {
@@ -158,6 +196,17 @@ class JointComponent extends Component {
         return this._angularLimitsZ;
     }
 
+    set angularMotionZ(value) {
+        if (this._angularMotionZ !== value) {
+            this._angularMotionZ = value;
+            this._updateAngularLimits();
+        }
+    }
+
+    get angularMotionZ() {
+        return this._angularMotionZ;
+    }
+
     set linearLimitsX(limits) {
         if (!this._linearLimitsX.equals(limits)) {
             this._linearLimitsX.copy(limits);
@@ -167,6 +216,17 @@ class JointComponent extends Component {
 
     get linearLimitsX() {
         return this._linearLimitsX;
+    }
+
+    set linearMotionX(value) {
+        if (this._linearMotionX !== value) {
+            this._linearMotionX = value;
+            this._updateLinearLimits();
+        }
+    }
+
+    get linearMotionX() {
+        return this._linearMotionX;
     }
 
     set linearLimitsY(limits) {
@@ -180,6 +240,17 @@ class JointComponent extends Component {
         return this._linearLimitsY;
     }
 
+    set linearMotionY(value) {
+        if (this._linearMotionY !== value) {
+            this._linearMotionY = value;
+            this._updateLinearLimits();
+        }
+    }
+
+    get linearMotionY() {
+        return this._linearMotionY;
+    }
+
     set linearLimitsZ(limits) {
         if (!this._linearLimitsZ.equals(limits)) {
             this._linearLimitsZ.copy(limits);
@@ -189,6 +260,17 @@ class JointComponent extends Component {
 
     get linearLimitsZ() {
         return this._linearLimitsZ;
+    }
+
+    set linearMotionZ(value) {
+        if (this._linearMotionZ !== value) {
+            this._linearMotionZ = value;
+            this._updateLinearLimits();
+        }
+    }
+
+    get linearMotionZ() {
+        return this._linearMotionZ;
     }
 
     _convertTransform(pcTransform, ammoTransform) {
@@ -209,13 +291,35 @@ class JointComponent extends Component {
     _updateAngularLimits() {
         const constraint = this._constraint;
         if (constraint) {
-            const alx = this._angularLimitsX;
-            const aly = this._angularLimitsY;
-            const alz = this._angularLimitsZ;
+            let lx, ly, lz;
 
-            const limits = new Ammo.btVector3(alx.x, aly.x, alz.x);
+            if (this._angularMotionX === MOTION_LOCKED) {
+                lx = Vec2.ZERO;
+            } else if (this._angularMotionX === MOTION_FREE) {
+                lx = Vec2.RIGHT; // In ammo.js, if lower limit is greater than upper limit, DoF is free
+            } else { // MOTION_LIMITED
+                lx = this._angularLimitsX;
+            }
+
+            if (this._angularMotionY === MOTION_LOCKED) {
+                ly = Vec2.ZERO;
+            } else if (this._angularMotionY === MOTION_FREE) {
+                ly = Vec2.RIGHT;
+            } else { // MOTION_LIMITED
+                ly = this._angularLimitsY;
+            }
+
+            if (this._angularMotionZ === MOTION_LOCKED) {
+                lz = Vec2.ZERO;
+            } else if (this._angularMotionZ === MOTION_FREE) {
+                lz = Vec2.RIGHT;
+            } else { // MOTION_LIMITED
+                lz = this._angularLimitsZ;
+            }
+
+            const limits = new Ammo.btVector3(lx.x, ly.x, lz.x);
             constraint.setAngularLowerLimit(limits);
-            limits.setValue(alx.y, aly.y, alz.y);
+            limits.setValue(lx.y, ly.y, lz.y);
             constraint.setAngularUpperLimit(limits);
             Ammo.destroy(limits);
         }
@@ -224,13 +328,35 @@ class JointComponent extends Component {
     _updateLinearLimits() {
         const constraint = this._constraint;
         if (constraint) {
-            const llx = this._linearLimitsX;
-            const lly = this._linearLimitsY;
-            const llz = this._linearLimitsZ;
+            let lx, ly, lz;
 
-            const limits = new Ammo.btVector3(llx.x, lly.x, llz.x);
+            if (this._linearMotionX === MOTION_LOCKED) {
+                lx = Vec2.ZERO;
+            } else if (this._linearMotionX === MOTION_FREE) {
+                lx = Vec2.RIGHT; // In ammo.js, if lower limit is greater than upper limit, DoF is free
+            } else { // MOTION_LIMITED
+                lx = this._linearLimitsX;
+            }
+
+            if (this._linearMotionY === MOTION_LOCKED) {
+                ly = Vec2.ZERO;
+            } else if (this._linearMotionY === MOTION_FREE) {
+                ly = Vec2.RIGHT;
+            } else { // MOTION_LIMITED
+                ly = this._linearLimitsY;
+            }
+
+            if (this._linearMotionZ === MOTION_LOCKED) {
+                lz = Vec2.ZERO;
+            } else if (this._linearMotionZ === MOTION_FREE) {
+                lz = Vec2.RIGHT;
+            } else { // MOTION_LIMITED
+                lz = this._linearLimitsZ;
+            }
+
+            const limits = new Ammo.btVector3(lx.x, ly.x, lz.x);
             constraint.setLinearLowerLimit(limits);
-            limits.setValue(llx.y, lly.y, llz.y);
+            limits.setValue(lx.y, ly.y, lz.y);
             constraint.setLinearUpperLimit(limits);
             Ammo.destroy(limits);
         }
