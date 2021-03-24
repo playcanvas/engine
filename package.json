@@ -32,7 +32,9 @@
     "parser": "babel-eslint"
   },
   "eslintIgnore": [
-    "examples/lib/*",
+    "examples/lib/*", 
+    "scripts/textmesh/earcut.min.js", 
+    "scripts/textmesh/opentype.min.js", 
     "src/polyfill/*"
   ],
   "files": [
@@ -75,20 +77,20 @@
     "typescript": "4.2.3"
   },
   "scripts": {
-    "build": "rollup -c",
-    "build:es5": "rollup -c --environment target:es5",
-    "build:es5min": "rollup -c --environment target:es5min",
-    "build:es6": "rollup -c --environment target:es6",
-    "build:debug": "rollup -c --environment target:debug",
-    "build:profiler": "rollup -c --environment target:profiler",
-    "docs": "jsdoc -c conf-api.json",
-    "lint": "eslint --ext .js examples extras src rollup.config.js",
-    "serve": "http-server build -a localhost -p 51000",
-    "test": "karma start tests/karma.conf.js -- --single-run --release",
-    "test:watch": "karma start tests/karma.conf.js",
-    "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
-    "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
-    "tsd": "jsdoc -c conf-tsd.json && node tsd.js",
+    "build": "rollup -c", 
+    "build:es5": "rollup -c --environment target:es5", 
+    "build:es5min": "rollup -c --environment target:es5min", 
+    "build:es6": "rollup -c --environment target:es6", 
+    "build:debug": "rollup -c --environment target:debug", 
+    "build:profiler": "rollup -c --environment target:profiler", 
+    "docs": "jsdoc -c conf-api.json", 
+    "lint": "eslint --ext .js examples extras scripts src rollup.config.js", 
+    "serve": "http-server build -a localhost -p 51000", 
+    "test": "karma start tests/karma.conf.js -- --single-run --release", 
+    "test:watch": "karma start tests/karma.conf.js", 
+    "test:debug": "karma start tests/karma.conf.js -- --single-run=false", 
+    "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts", 
+    "tsd": "jsdoc -c conf-tsd.json && node tsd.js", 
     "unzipbundle": "gzip -x tests/assets/bundle.gz"
   }
 }
