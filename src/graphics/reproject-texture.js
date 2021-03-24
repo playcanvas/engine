@@ -76,6 +76,7 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
         "#define NUM_SAMPLES " + numSamples + "\n\n" +
+        "#define NUM_SAMPLES_SQRT " + Math.sqrt(numSamples).toFixed(1) + "\n\n" +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
