@@ -3,6 +3,7 @@ import './polyfill/array-find.js';
 import './polyfill/array-find-index.js';
 import './polyfill/math-log2.js';
 import './polyfill/math-sign.js';
+import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
