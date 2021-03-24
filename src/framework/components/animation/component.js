@@ -181,7 +181,7 @@ class AnimationComponent extends Component {
             data.skeleton.looping = data.loop;
             data.skeleton.setGraph(graph);
         } else if (hasGlb) {
-            data.animEvaluator = new AnimEvaluator(new DefaultAnimBinder(graph));
+            data.animEvaluator = new AnimEvaluator(new DefaultAnimBinder(this.entity));
         }
     }
 

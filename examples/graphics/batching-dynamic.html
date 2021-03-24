@@ -55,19 +55,21 @@
         var entities = [];
         var i;
         for (i = 0; i < numInstances; i++) {
+
+            // random shape
             var shapeName = shapes[Math.floor(Math.random() * shapes.length)];
 
             var entity = new pc.Entity();
-            entity.addComponent("model", {
-                type: shapeName
+
+            // create render component
+            var component = entity.addComponent("render", {
+                type: shapeName,
+                material: Math.random() < 0.5 ? material1 : material2,
+
+                // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
+                // there will be at least 2 draw calls, one for each material
+                batchGroupId: batchGroup.id
             });
-
-            // randomly assign a material
-            entity.model.material = Math.random() < 0.5 ? material1 : material2;
-
-            // add the entity to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls
-            // there will be at least 2 draw calls, one for each material
-            entity.model.batchGroupId = batchGroup.id;
 
             // add entity for rendering
             app.root.addChild(entity);

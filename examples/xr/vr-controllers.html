@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
         <script src="../../build/playcanvas.js"></script>
+        <script src="../assets/scripts/asset-loader.js"></script>
         <style>
             body {
                 margin: 0;
@@ -54,26 +55,17 @@
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
             // A list of assets that need to be loaded
-            var assetManifest = [
-                {
+            var assetManifest = {
+                glb: {
                     type: "container",
                     url: "../assets/models/vr-controller.glb"
                 }
-            ];
+            };
 
             // Load all assets and then run the example
-            var assetsToLoad = assetManifest.length;
-            assetManifest.forEach(function (entry) {
-                app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
-                    if (!err && asset) {
-                        assetsToLoad--;
-                        entry.asset = asset;
-                        if (assetsToLoad === 0) {
-                            run();
-                        }
-                    }
-                });
-            });
+            loadManifestAssets(app, assetManifest, function () {
+            run();
+        });
 
             function run() {
                 app.start();
@@ -112,7 +104,7 @@
                     var entity = new pc.Entity();
                     entity.addComponent('model', {
                         type: 'asset',
-                        asset: assetManifest[0].asset.resource.model,
+                        asset: assetManifest["glb"].asset.resource.model,
                         castShadows: true
                     });
                     app.root.addChild(entity);

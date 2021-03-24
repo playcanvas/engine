@@ -650,7 +650,11 @@ class GraphicsDevice extends EventHandler {
         } else {
             this.textureFloatRenderable = false;
         }
-        if (this.extTextureHalfFloat) {
+
+        // two extensions allow us to render to half float buffers
+        if (this.extColorBufferHalfFloat) {
+            this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
+        } else if (this.extTextureHalfFloat) {
             if (this.webgl2) {
                 // EXT_color_buffer_float should affect both float and halffloat formats
                 this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
@@ -828,6 +832,9 @@ class GraphicsDevice extends EventHandler {
         this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
         this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+
+        // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
+        this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
 
         this.supportsInstancing = !!this.extInstancing;
     }

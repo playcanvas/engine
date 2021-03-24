@@ -1,3 +1,4 @@
+import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
 import {
@@ -8,6 +9,8 @@ import {
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 import { VertexIterator } from '../graphics/vertex-iterator.js';
+import { Shader } from '../graphics/shader.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 
 import { BLEND_NORMAL } from '../scene/constants.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
@@ -118,6 +121,7 @@ class ImmediateData {
         this.layerToBatch = {};
         this.quadMesh = null;
         this.textureShader = null;
+        this.depthTextureShader = null;
         this.cubeLocalPos = null;
         this.cubeWorldPos = null;
         this.meshInstanceArray = [];
@@ -126,23 +130,28 @@ class ImmediateData {
         this.freeGraphNodes = [];
     }
 
+    // shared vertex shader for texture quad rendering
+    static getTextureVS() {
+        return `
+            attribute vec2 aPosition;
+            uniform mat4 matrix_model;
+            varying vec2 uv0;
+            void main(void) {
+                gl_Position = matrix_model * vec4(aPosition, 0, 1);
+                uv0 = aPosition.xy + 0.5;
+            }
+        `;
+    }
+
     // shader used to display texture
     getTextureShader() {
 
         if (!this.textureShader) {
             const shaderDefinition = {
                 attributes: {
-                    aPosition: pc.SEMANTIC_POSITION
+                    aPosition: SEMANTIC_POSITION
                 },
-                vshader: `
-                    attribute vec2 aPosition;
-                    uniform mat4 matrix_model;
-                    varying vec2 uv0;
-                    void main(void) {
-                        gl_Position = matrix_model * vec4(aPosition, 0, 1);
-                        uv0 = aPosition.xy + 0.5;
-                    }
-                `,
+                vshader: ImmediateData.getTextureVS(),
                 fshader: `
                     precision lowp float;
                     varying vec2 uv0;
@@ -152,16 +161,44 @@ class ImmediateData {
                     }
                 `
             };
-            this.textureShader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+            this.textureShader = new Shader(this.device, shaderDefinition);
         }
 
         return this.textureShader;
     }
 
+    // shader used to display depth texture
+    getDepthTextureShader() {
+
+        if (!this.depthTextureShader) {
+
+            const gl2 = this.device.webgl2 ? "#define GL2" : "";
+            const shaderDefinition = {
+                attributes: {
+                    aPosition: SEMANTIC_POSITION
+                },
+                vshader: ImmediateData.getTextureVS(),
+                fshader: `
+                    precision ${this.device.precision} float;
+                    ${gl2}
+                    ${shaderChunks.screenDepthPS}
+                    varying vec2 uv0;
+                    void main() {
+                        float depth = getLinearScreenDepth(uv0) * camera_params.x;
+                        gl_FragColor = vec4(vec3(depth), 1.0);
+                    }
+                    `
+            };
+            this.depthTextureShader = new Shader(this.device, shaderDefinition);
+        }
+
+        return this.depthTextureShader;
+    }
+
     getQuadMesh() {
         if (!this.quadMesh) {
             // Init quad data once
-            var format = new VertexFormat(this.graphicsDevice, [
+            var format = new VertexFormat(this.device, [
                 { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
             ]);
             var quadVb = new VertexBuffer(this.device, format, 4);
@@ -174,7 +211,7 @@ class ImmediateData {
             iterator.next();
             iterator.element[SEMANTIC_POSITION].set(0.5, 0.5, 0);
             iterator.end();
-            this.quadMesh = new Mesh(this.graphicsDevice);
+            this.quadMesh = new Mesh(this.device);
             this.quadMesh.vertexBuffer = quadVb;
             this.quadMesh.primitive[0].type = PRIMITIVE_TRISTRIP;
             this.quadMesh.primitive[0].base = 0;
@@ -200,6 +237,84 @@ class ImmediateData {
 
         this.meshInstanceArray[0] = meshInstance;
         options.layer.addMeshInstances(this.meshInstanceArray, true);
+    }
+
+    // Draw lines forming a transformed unit-sized cube at this frame
+    renderWireCube(matrix, color, options) {
+
+        if (!this.cubeLocalPos) {
+            const x = 0.5;
+            this.cubeLocalPos = [
+                new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
+                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)
+            ];
+            this.cubeWorldPos = [
+                new Vec3(), new Vec3(), new Vec3(), new Vec3(),
+                new Vec3(), new Vec3(), new Vec3(), new Vec3()
+            ];
+            const cubeWorldPos = this.cubeWorldPos;
+            this.cubePositions = [
+                cubeWorldPos[0], cubeWorldPos[1],
+                cubeWorldPos[1], cubeWorldPos[2],
+                cubeWorldPos[2], cubeWorldPos[3],
+                cubeWorldPos[3], cubeWorldPos[0],
+
+                cubeWorldPos[4], cubeWorldPos[5],
+                cubeWorldPos[5], cubeWorldPos[6],
+                cubeWorldPos[6], cubeWorldPos[7],
+                cubeWorldPos[7], cubeWorldPos[4],
+
+                cubeWorldPos[0], cubeWorldPos[4],
+                cubeWorldPos[1], cubeWorldPos[5],
+                cubeWorldPos[2], cubeWorldPos[6],
+                cubeWorldPos[3], cubeWorldPos[7]
+            ];
+        }
+
+        // Transform to world space
+        const cubeLocalPos = this.cubeLocalPos;
+        const cubeWorldPos = this.cubeWorldPos;
+        for (let i = 0; i < 8; i++) {
+            matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
+        }
+
+        const lineBatch = this.prepareLineBatch(options.layer, options.depthTest, undefined, this.cubePositions.length);
+        lineBatch.addLines(this.cubePositions, color);
+    }
+
+    renderWireSphere(center, radius, color, options) {
+
+        const numSegments = 20;
+
+        // preallocate array of positions
+        if (!this.spherePoints) {
+            this.spherePoints = [];
+            for (let i = 0; i < numSegments * 6; i++) {
+                this.spherePoints.push(new Vec3());
+            }
+        }
+
+        const points = this.spherePoints;
+        const step = 2 * Math.PI / numSegments;
+        let angle = 0;
+
+        for (let i = 0; i < numSegments; i++) {
+            let sin0 = Math.sin(angle);
+            let cos0 = Math.cos(angle);
+            angle += step;
+            let sin1 = Math.sin(angle);
+            let cos1 = Math.cos(angle);
+
+            points[i * 6].set(center.x + radius * sin0, center.y, center.z + radius * cos0);
+            points[i * 6 + 1].set(center.x + radius * sin1, center.y, center.z + radius * cos1);
+            points[i * 6 + 2].set(center.x + radius * sin0, center.y + radius * cos0, center.z);
+            points[i * 6 + 3].set(center.x + radius * sin1, center.y + radius * cos1, center.z);
+            points[i * 6 + 4].set(center.x, center.y + radius * sin0, center.z + radius * cos0);
+            points[i * 6 + 5].set(center.x, center.y + radius * sin1, center.z + radius * cos1);
+        }
+
+        const lineBatch = this.prepareLineBatch(options.layer, options.depthTest, undefined, points.length);
+        lineBatch.addLines(points, color);
     }
 
     getGraphNode(matrix) {

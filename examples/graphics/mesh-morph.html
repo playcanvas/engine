@@ -117,30 +117,23 @@
             mesh.morph = new pc.Morph(targets, app.graphicsDevice);
 
             // Create the mesh instance
-            var node = new pc.GraphNode();
             var material = new pc.StandardMaterial();
-            var meshInstance = new pc.MeshInstance(mesh, material, node);
-
-            // Create a model and add the mesh instance to it
-            var model = new pc.Model();
-            model.graph = node;
-            model.meshInstances = [meshInstance];
+            var meshInstance = new pc.MeshInstance(mesh, material);
 
             // add morph instance - this is where currently set weights are stored
             var morphInstance = new pc.MorphInstance(mesh.morph);
             meshInstance.morphInstance = morphInstance;
-            model.morphInstances.push(morphInstance);
 
             // Create Entity and add it to the scene
             var entity = new pc.Entity();
             entity.setLocalPosition(x, y, z);
             app.root.addChild(entity);
 
-            // Add a model compoonent
-            app.systems.model.addComponent(entity, {
-                type: 'asset'
+            // Add a render compoonent with meshInstance
+            entity.addComponent('render', {
+                material: material,
+                meshInstances: [meshInstance]
             });
-            entity.model.model = model;
 
             return morphInstance;
         }

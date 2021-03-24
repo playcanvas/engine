@@ -158,7 +158,7 @@ class Color {
      * @returns {string} The color in string form.
      * @example
      * var c = new pc.Color(1, 1, 1);
-     * // Should output '#ffffffff'
+     * // Outputs #ffffffff
      * console.log(c.toString());
      */
     toString(alpha) {

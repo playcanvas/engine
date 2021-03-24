@@ -169,7 +169,6 @@ class CollisionSystemImpl {
     remove(entity, data) {
         var app = this.system.app;
         if (entity.rigidbody && entity.rigidbody.body) {
-            app.systems.rigidbody.removeBody(entity.rigidbody.body);
             entity.rigidbody.disableSimulation();
         }
 

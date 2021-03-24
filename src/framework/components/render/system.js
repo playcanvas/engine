@@ -28,7 +28,6 @@ const _properties = [
 ];
 
 /**
- * @private
  * @class
  * @name RenderComponentSystem
  * @augments ComponentSystem
@@ -71,28 +70,27 @@ class RenderComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var i;
-        var data = {};
 
-        for (i = 0; i < _properties.length; i++) {
+        // copy properties
+        const data = {};
+        for (let i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
 
-        // we cannot copy mesh instances, delete them and component recreates them properly
+        // mesh instances cannot be used this way, remove them and manually clone them later
         delete data.meshInstances;
 
-        var component = this.addComponent(clone, data);
+        // clone component
+        const component = this.addComponent(clone, data);
 
-        // TODO: we should copy all relevant meshinstance properties here
-        if (entity.render) {
-            var meshInstances = entity.render.meshInstances;
-            var meshInstancesClone = component.meshInstances;
-            for (i = 0; i < meshInstances.length && i < meshInstancesClone.length; i++) {
-                meshInstancesClone[i].mask = meshInstances[i].mask;
-                meshInstancesClone[i].material = meshInstances[i].material;
-                meshInstancesClone[i].layer = meshInstances[i].layer;
-                meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
-            }
+        // clone mesh instances
+        const srcMeshInstances = entity.render.meshInstances;
+        const meshes = srcMeshInstances.map(mi => mi.mesh);
+        component._onSetMeshes(meshes);
+
+        // assign materials
+        for (let m = 0; m < srcMeshInstances.length; m++) {
+            component.meshInstances[m].material = srcMeshInstances[m].material;
         }
     }
 

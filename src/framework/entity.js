@@ -19,6 +19,7 @@ import { Application } from './application.js';
  * ComponentSystems allow access to all Entities and Components and are attached to the {@link Application}.
  * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
  * @param {Application} [app] - The application the entity belongs to, default is the current application.
+ * @property {AnimComponent} [anim] Gets the {@link AnimComponent} attached to this entity. [read only]
  * @property {AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
  * @property {AudioListenerComponent} [audiolistener] Gets the {@link AudioListenerComponent} attached to this entity. [read only]
  * @property {ButtonComponent} [button] Gets the {@link ButtonComponent} attached to this entity. [read only]
@@ -30,6 +31,7 @@ import { Application } from './application.js';
  * @property {LightComponent} [light] Gets the {@link LightComponent} attached to this entity. [read only]
  * @property {ModelComponent} [model] Gets the {@link ModelComponent} attached to this entity. [read only]
  * @property {ParticleSystemComponent} [particlesystem] Gets the {@link ParticleSystemComponent} attached to this entity. [read only]
+ * @property {RenderComponent} [render] Gets the {@link RenderComponent} attached to this entity. [read only]
  * @property {RigidBodyComponent} [rigidbody] Gets the {@link RigidBodyComponent} attached to this entity. [read only]
  * @property {ScreenComponent} [screen] Gets the {@link ScreenComponent} attached to this entity. [read only]
  * @property {ScriptComponent} [script] Gets the {@link ScriptComponent} attached to this entity. [read only]
@@ -107,6 +109,7 @@ class Entity extends GraphNode {
      * * "light" - see {@link LightComponent}
      * * "model" - see {@link ModelComponent}
      * * "particlesystem" - see {@link ParticleSystemComponent}
+     * * "render" - see {@link RenderComponent}
      * * "rigidbody" - see {@link RigidBodyComponent}
      * * "screen" - see {@link ScreenComponent}
      * * "script" - see {@link ScriptComponent}

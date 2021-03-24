@@ -37,7 +37,7 @@ var _lightPropsDefault = [];
  * // Add a pc.LightComponent to an entity
  * var entity = new pc.Entity();
  * entity.addComponent('light', {
- *     type: "point",
+ *     type: "omni",
  *     color: new pc.Color(1, 0, 0),
  *     range: 10
  * });
@@ -49,12 +49,18 @@ var _lightPropsDefault = [];
  * entity.light.range = 20;
  * @property {string} type The type of light. Can be:
  * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
- * * "point": A light that illuminates in all directions from a point.
- * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
+ * * "omni": An omni-directional light that illuminates in all directions from the light source.
+ * * "spot": An omni-directional light but is bounded by a cone.
  * Defaults to "directional".
  * @property {Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
+ * @property {number} shape The light source shape. Can be:
+ * * {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
+ * * {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
+ * * {@link pc.LIGHTSHAPE_DISK}: Disk shape.
+ * * {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
+ * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows
  * are no longer rendered. Affects directional lights only. Defaults to 40.
@@ -125,8 +131,9 @@ class LightComponent extends Component {
         var layer;
         for (var i = 0; i < this.layers.length; i++) {
             layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.addLight(this);
+            if (layer) {
+                layer.addLight(this);
+            }
         }
     }
 
@@ -134,8 +141,9 @@ class LightComponent extends Component {
         var layer;
         for (var i = 0; i < this.layers.length; i++) {
             layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.removeLight(this);
+            if (layer) {
+                layer.removeLight(this);
+            }
         }
     }
 
@@ -151,16 +159,16 @@ class LightComponent extends Component {
 
     onLayerAdded(layer) {
         var index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        if (this.enabled && this.entity.enabled) {
+        if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
         }
     }
 
     onLayerRemoved(layer) {
         var index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        layer.removeLight(this);
+        if (index >= 0) {
+            layer.removeLight(this);
+        }
     }
 
     refreshProperties() {
