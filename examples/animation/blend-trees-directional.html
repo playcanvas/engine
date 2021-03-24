@@ -184,7 +184,7 @@
             var width = 201;
             var height = 201;
 
-            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; height: ${height+32}px; z-index: 9999;`);
+            controlPanel.dom.setAttribute('style', 'position: fixed; right: 24px; top: 24px; width: ' + width + 'px; height: ' + (height + 32) + 'px; z-index: 9999;');
 
             document.body.appendChild(controlPanel.dom);
 
@@ -192,7 +192,7 @@
             var halfWidth = Math.floor(width / 2);
             var halfHeight = Math.floor(height / 2);
             controlPanel.content.dom.appendChild(canvas);
-            canvas.setAttribute('style', `width: ${width}px; height: ${height}px;`);
+            canvas.setAttribute('style', 'width: ' + width + 'px; height: ${height}px;');
             canvas.setAttribute('width', width);
             canvas.setAttribute('height', height);
             
