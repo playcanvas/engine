@@ -287,7 +287,13 @@ class TextElement {
         if (text === undefined) text = this._text;
 
         // get the list of symbols
-        this._symbols = string.getSymbols(text.normalize('NFC'));
+        if (text.normalize) {
+            // NOTE: we must normalize text here in order to be consistent with the number of
+            // symbols returned from the bidi algorithm. If we don't, then it's possible bidi
+            // will return a different number of RTL codes to what we expect.
+            // NOTE: IE doesn't support string.normalize(), so we must check for its existence.
+            this._symbols = string.getSymbols(text.normalize ? text.normalize('NFC') : text);
+        }
 
         // handle null string
         if (this._symbols.length === 0) {
