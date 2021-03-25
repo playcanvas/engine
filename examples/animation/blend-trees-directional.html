@@ -8,7 +8,7 @@
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../assets/scripts/asset-loader.js"></script>
-    <script src="http://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
+    <script src="https://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
     <style>
         body { 
             margin: 0;
@@ -184,7 +184,7 @@
             var width = 201;
             var height = 201;
 
-            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; height: ${height+32}px; z-index: 9999;`);
+            controlPanel.dom.setAttribute('style', 'position: fixed; right: 24px; top: 24px; width: ' + width + 'px; height: ' + (height + 32) + 'px; z-index: 9999;');
 
             document.body.appendChild(controlPanel.dom);
 
@@ -192,7 +192,7 @@
             var halfWidth = Math.floor(width / 2);
             var halfHeight = Math.floor(height / 2);
             controlPanel.content.dom.appendChild(canvas);
-            canvas.setAttribute('style', `width: ${width}px; height: ${height}px;`);
+            canvas.setAttribute('style', 'width: ' + width + 'px; height: ${height}px;');
             canvas.setAttribute('width', width);
             canvas.setAttribute('height', height);
             

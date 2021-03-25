@@ -8,6 +8,7 @@
 //
 // When filtering:
 // NUM_SAMPLES - number of samples
+// NUM_SAMPLES_SQRT - sqrt of number of samples
 
 varying vec2 vUv0;
 
@@ -240,16 +241,15 @@ vec4 reproject() {
         vec2 sphu = dFdx(sph);
         vec2 sphv = dFdy(sph);
 
-        const float num = sqrt(float(NUM_SAMPLES));
         vec3 result = vec3(0.0);
-        for (float u=0.0; u<num; ++u) {
-            for (float v=0.0; v<num; ++v) {
+        for (float u = 0.0; u < NUM_SAMPLES_SQRT; ++u) {
+            for (float v = 0.0; v < NUM_SAMPLES_SQRT; ++v) {
                 result += DECODE_FUNC(SOURCE_FUNC(sph +
-                                                  sphu * (u / num - 0.5) +
-                                                  sphv * (v / num - 0.5)));
+                                                  sphu * (u / NUM_SAMPLES_SQRT - 0.5) +
+                                                  sphv * (v / NUM_SAMPLES_SQRT - 0.5)));
             }
         }
-        return ENCODE_FUNC(result / (num * num));
+        return ENCODE_FUNC(result / (NUM_SAMPLES_SQRT * NUM_SAMPLES_SQRT));
     }
 }
 
