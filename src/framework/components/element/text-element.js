@@ -896,7 +896,7 @@ class TextElement {
                 // we need to keep track of the width of the line without any trailing whitespace
                 // characters. This applies to both single whitespaces and also multiple sequential
                 // whitespaces.
-                if (!isWhitespace && !isLineBreak) {
+                if (!isWhitespace) {
                     _xMinusTrailingWhitespace = _x;
                 }
 
