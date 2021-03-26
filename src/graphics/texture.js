@@ -113,6 +113,9 @@ var _blockSizeTable = null;
  * @property {string} name The name of the texture. Defaults to null.
  */
 class Texture {
+
+    static defaultAnisotropy = 1;
+
     constructor(graphicsDevice, options) {
         this.device = graphicsDevice;
 
@@ -137,7 +140,7 @@ class Texture {
 
         this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = FILTER_LINEAR;
-        this._anisotropy = 1;
+        this._anisotropy = Texture.defaultAnisotropy;
         this._addressU = ADDRESS_REPEAT;
         this._addressV = ADDRESS_REPEAT;
         this._addressW = ADDRESS_REPEAT;
