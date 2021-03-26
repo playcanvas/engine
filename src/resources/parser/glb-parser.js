@@ -1542,7 +1542,7 @@ var createResources = function (device, gltf, bufferViews, textureAssets, option
 };
 
 var applySampler = function (texture, gltfSampler) {
-    var defaultSampler = {
+    var sampler = {
         magFilter: 9729,
         minFilter: 9987,
         wrapS: 10497,
@@ -1571,11 +1571,11 @@ var applySampler = function (texture, gltfSampler) {
     };
 
     if (texture) {
-        gltfSampler = gltfSampler || defaultSampler;
-        texture.minFilter = getFilter(gltfSampler.minFilter);
-        texture.magFilter = getFilter(gltfSampler.magFilter);
-        texture.addressU = getWrap(gltfSampler.wrapS);
-        texture.addressV = getWrap(gltfSampler.wrapT);
+        Object.assign(sampler, gltfSampler || { });
+        texture.minFilter = getFilter(sampler.minFilter);
+        texture.magFilter = getFilter(sampler.magFilter);
+        texture.addressU = getWrap(sampler.wrapS);
+        texture.addressV = getWrap(sampler.wrapT);
     }
 };
 
