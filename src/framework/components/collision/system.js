@@ -363,7 +363,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                         var element = format.elements[j];
                         if (element.name === SEMANTIC_POSITION) {
                             positions = new Float32Array(vb.lock(), element.offset);
-                            stride = element.stride;
+                            stride = element.stride / 4;
                             break;
                         }
                     }
