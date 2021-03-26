@@ -94,13 +94,13 @@
 
         // helper function to generate elevation of a point with [x, y] coordinates
         function groundElevation(time, x, z) {
-            return Math.sin(time + 0.3 * x) * 2 + Math.cos(time * 0.5 + 0.4 * z + 0.2 * x);
+            return Math.sin(time + 0.2 * x) * 2 + Math.cos(time * 0.2 + 0.5 * z + 0.2 * x);
         }
 
         // helper function to generate a color for 3d point by lerping between green and red color
         // based on its y coordinate
         function groundColor(point) {
-            return new pc.Color().lerp(pc.Color.GREEN, pc.Color.RED, point.y * 0.4);
+            return new pc.Color().lerp(pc.Color.GREEN, pc.Color.RED, (point.y + 3) * 0.2);
         }
 
         // access two layers, used to render lines to them
