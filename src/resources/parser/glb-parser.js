@@ -1569,7 +1569,6 @@ var applySampler = function (texture, gltfSampler) {
         texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
         texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
         texture.addressV = getWrap(gltfSampler.wrapT, ADDRESS_REPEAT);
-        texture.anisotropy = 2;
     }
 };
 
