@@ -163,7 +163,7 @@ PlayCanvas uses of Karma for unit testing. There are two ways of running the tes
 
 ## How to get models?
 
-To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/engine/) in the developer documentation.
+To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/user-manual/assets/models/) in the developer documentation.
 
 ## Useful Links
 

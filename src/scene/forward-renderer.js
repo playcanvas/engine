@@ -3021,7 +3021,6 @@ class ForwardRenderer {
             // layer
             layerIndex = renderAction.layerIndex;
             layer = comp.layerList[layerIndex];
-            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
             transparent = comp.subLayerList[layerIndex];
 
             let cameraPass = renderAction.cameraIndex;
@@ -3030,6 +3029,10 @@ class ForwardRenderer {
             // render directional shadow maps for this camera - these get re-rendered for each camera
             if (renderAction.directionalLights.length > 0) {
                 this.renderShadows(renderAction.directionalLights, camera.camera);
+            }
+
+            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) {
+                continue;
             }
 
             // #ifdef DEBUG

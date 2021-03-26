@@ -195,7 +195,7 @@ class AnimComponent extends Component {
      * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-     * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     assignAnimation(nodeName, animTrack, layerName) {
         if (!this.data.stateGraph) {
@@ -219,7 +219,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#removeNodeAnimations
      * @description Removes animations from a node in the loaded state graph.
      * @param {string} nodeName - The name of the node that should have its animation tracks removed.
-     * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;

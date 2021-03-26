@@ -353,12 +353,13 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             var vb = mesh.vertexBuffer;
 
             var format = vb.getFormat();
-            var stride = format.size / 4;
+            var stride;
             var positions;
             for (i = 0; i < format.elements.length; i++) {
                 var element = format.elements[i];
                 if (element.name === SEMANTIC_POSITION) {
                     positions = new Float32Array(vb.lock(), element.offset);
+                    stride = element.stride / 4;
                     break;
                 }
             }
