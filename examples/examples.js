@@ -30,6 +30,7 @@ var categories = [
             "layers",
             "lights",
             "lights-baked",
+            "lines",
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",

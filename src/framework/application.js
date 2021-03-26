@@ -31,7 +31,7 @@ import {
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/forward-renderer.js';
-import { ImmediateData } from '../scene/immediate.js';
+import { Immediate } from '../scene/immediate/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
@@ -807,8 +807,10 @@ class Application extends EventHandler {
             }
         }
 
-        // bind tick function to current scope
+        // immediate rendering
+        this._immediate = new Immediate(this.graphicsDevice, this);
 
+        // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
@@ -1354,11 +1356,11 @@ class Application extends EventHandler {
         this.stats.frame.renderStart = now();
         // #endif
 
-        this.fire("prerender");
+        this.fire('prerender');
         this.root.syncHierarchy();
         this.batcher.updateAll();
         this.renderer.renderComposition(this.scene.layers);
-        this.fire("postrender");
+        this.fire('postrender');
 
         // #ifdef PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
@@ -1806,35 +1808,12 @@ class Application extends EventHandler {
         return timestamp;
     }
 
-    // IMMEDIATE MODE API
-    _preRenderImmediate() {
-        this._immediateData.finalize();
-    }
-
-    _postRenderImmediate() {
-        this._immediateData.clear();
-    }
-
-    _initImmediate() {
-        // Init global line drawing data once
-        if (!this._immediateData) {
-            this._immediateData = new ImmediateData(this.graphicsDevice);
-
-            this.on('prerender', this._preRenderImmediate, this);
-            this.on('postrender', this._postRenderImmediate, this);
-        }
-    }
-
-    _addLines(position, color, options) {
+    _addLines(positions, colors, options) {
         var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
         var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
-        var mask = (options && options.mask) ? options.mask : undefined;
 
-        this._initImmediate();
-        let lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
-
-        // Append
-        lineBatch.addLines(position, color);
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLines(positions, colors);
     }
 
     /**
@@ -2032,38 +2011,32 @@ class Application extends EventHandler {
 
     // Draw lines forming a transformed unit-sized cube at this frame
     renderWireCube(matrix, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireCube(matrix, color, options);
+        this._immediate.renderWireCube(matrix, color, options);
     }
 
     // // Draw lines forming sphere at this frame
     renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireSphere(center, radius, color, options);
+        this._immediate.renderWireSphere(center, radius, color, options);
     }
 
     // Draw meshInstance at this frame
     renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderMesh(null, null, null, meshInstance, options);
+        this._immediate.renderMesh(null, null, null, meshInstance, options);
     }
 
     // Draw mesh at this frame
     renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderMesh(material, matrix, mesh, null, options);
+        this._immediate.renderMesh(material, matrix, mesh, null, options);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
     renderQuad(matrix, material, options = this._getDefaultImmediateOptions()) {
-        this._initImmediate();
-        this._immediateData.renderMesh(material, matrix, this._immediateData.getQuadMesh(), null, options);
+        this._immediate.renderMesh(material, matrix, this._immediate.getQuadMesh(), null, options);
     }
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
     renderTexture(x, y, width, height, texture, material, options) {
-        this._initImmediate();
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         let matrix = new Mat4();
@@ -2072,7 +2045,7 @@ class Application extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this._immediateData.getTextureShader();
+            material.shader = this._immediate.getTextureShader();
             material.update();
         }
 
@@ -2082,10 +2055,8 @@ class Application extends EventHandler {
     // draws a depth texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
     renderDepthTexture(x, y, width, height, options) {
-        this._initImmediate();
-
         let material = new Material();
-        material.shader = this._immediateData.getDepthTextureShader();
+        material.shader = this._immediate.getDepthTextureShader();
         material.update();
 
         this.renderTexture(x, y, width, height, null, material, options);

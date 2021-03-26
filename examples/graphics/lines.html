@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Lines</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.dbg.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <script>
+        function createMaterial(colors) {
+            var material = new pc.StandardMaterial();
+            for (var param in colors) {
+                material[param] = colors[param];
+            }
+            material.update();
+            return material;
+        }
+    </script>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.1, 0.1, 0.1)
+        });
+        camera.setLocalPosition(80, 40, 80);
+        camera.lookAt(new pc.Vec3(0, -35, 0));
+        app.root.addChild(camera);
+
+        // create a circle of sphere meshes
+        var spheres = [];
+        var numInstances = 10;
+        var i;
+        for (i = 0; i < numInstances; i++) {
+            var entity = new pc.Entity();
+            entity.setLocalScale(4, 4, 4);
+
+            // use material with random color
+            var material = new pc.StandardMaterial();
+            material.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
+            material.update();
+
+            // create render component
+            var component = entity.addComponent("render", {
+                type: "sphere",
+                material: material
+            });
+
+            // add entity for rendering
+            app.root.addChild(entity);
+            spheres.push(entity);
+        }
+
+        // helper function to generate elevation of a point with [x, y] coordinates
+        function groundElevation(time, x, z) {
+            return Math.sin(time + 0.3 * x) * 2 + Math.cos(time * 0.5 + 0.4 * z + 0.2 * x);
+        }
+
+        // helper function to generate a color for 3d point by lerping between green and red color
+        // based on its y coordinate
+        function groundColor(point) {
+            return new pc.Color().lerp(pc.Color.GREEN, pc.Color.RED, point.y * 0.4);
+        }
+
+        // access two layers, used to render lines to them
+        var worldLayer = app.scene.layers.getLayerByName("World");
+        var immediateLayer = app.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
+
+        // update loop executes each frame
+        var time = 0;
+        app.on("update", function (dt) {
+            time += dt;
+
+            // generate grid of lines
+            var x, y;
+            var positions = [];
+            var colors = [];
+            for (x = 1; x < 60; x++) {
+                for (z = 1; z < 60; z++) {
+
+                    // generate 3 points: one start point, one along x and one along z axis
+                    var pt1 = new pc.Vec3(x, groundElevation(time, x, z), z);
+                    var pt2 = new pc.Vec3(x - 1, groundElevation(time, x - 1, z), z);
+                    var pt3 = new pc.Vec3(x, groundElevation(time, x, z - 1), z - 1);
+
+                    // add line connecting points along z axis
+                    if (x > 1) {
+                        positions.push(pt1, pt2);
+                        colors.push(groundColor(pt1), groundColor(pt2));
+                    }
+
+                    // add line connecting points along x axis
+                    if (z > 1) {
+                        positions.push(pt1, pt3);
+                        colors.push(groundColor(pt1), groundColor(pt3));
+                    }
+                }
+            }
+
+            // submit the generated array of lines for rendering
+            app.renderLines(positions, colors);
+
+            // handle the array of sphere meshes
+            for (i = 0; i < numInstances; i++) {
+
+                // move them equally spaced out around in the circle
+                var offset = i * Math.PI * 2 / numInstances;
+                entity = spheres[i];
+                entity.setLocalPosition(30 + 20 * Math.sin(time * 0.2 + offset), 5, 30 + 20 * Math.cos(time * 0.2 + offset));
+
+                var options = {
+
+                    // half of them are rendered in immediate layer, the other half in world layer
+                    layer: i < 0.5 * numInstances ? immediateLayer : worldLayer,
+
+                    // half of them uses depth testing, the other does not, and so lines show through the sphere
+                    depthTest: i < 0.5 * numInstances
+                }
+
+                // render either wiframe sphere or cube around the sphere objects
+                if (i % 2) {
+                    app.renderWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, options);
+                } else {
+                    app.renderWireCube(entity.getWorldTransform(), pc.Color.CYAN, options);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
