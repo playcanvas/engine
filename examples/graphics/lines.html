@@ -57,6 +57,17 @@
         camera.lookAt(new pc.Vec3(0, -35, 0));
         app.root.addChild(camera);
 
+        // Create a directional light
+        var directionallight = new pc.Entity();
+        directionallight.addComponent("light", {
+            type: "directional",
+            color: pc.Color.WHITE,
+            castShadows: false,
+            intensity: 1
+        });
+        app.root.addChild(directionallight);
+
+
         // create a circle of sphere meshes
         var spheres = [];
         var numInstances = 10;
@@ -67,7 +78,7 @@
 
             // use material with random color
             var material = new pc.StandardMaterial();
-            material.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
+            material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
             material.update();
 
             // create render component
