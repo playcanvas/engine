@@ -40,7 +40,7 @@ class Curve {
         this._eval = new CurveEvaluator(this);
 
         if (data) {
-            for (var i = 0; i < data.length - 1; i += 2) {
+            for (let i = 0; i < data.length - 1; i += 2) {
                 this.keys.push([data[i], data[i + 1]]);
             }
         }
@@ -57,9 +57,9 @@ class Curve {
      * @returns {number[]} [time, value] pair.
      */
     add(time, value) {
-        var keys = this.keys;
-        var len = keys.length;
-        var i = 0;
+        const keys = this.keys;
+        const len = keys.length;
+        let i = 0;
 
         for (; i < len; i++) {
             if (keys[i][0] > time) {
@@ -67,7 +67,7 @@ class Curve {
             }
         }
 
-        var key = [time, value];
+        const key = [time, value];
         this.keys.splice(i, 0, key);
         return key;
     }
@@ -108,13 +108,13 @@ class Curve {
     }
 
     closest(time) {
-        var keys = this.keys;
-        var length = keys.length;
-        var min = 2;
-        var result = null;
+        const keys = this.keys;
+        const length = keys.length;
+        let min = 2;
+        let result = null;
 
-        for (var i = 0; i < length; i++) {
-            var diff = Math.abs(time - keys[i][0]);
+        for (let i = 0; i < length; i++) {
+            const diff = Math.abs(time - keys[i][0]);
             if (min >= diff) {
                 min = diff;
                 result = keys[i];
@@ -133,7 +133,7 @@ class Curve {
      * @returns {Curve} A clone of the specified curve.
      */
     clone() {
-        var result = new Curve();
+        const result = new Curve();
         result.keys = extend(result.keys, this.keys);
         result.type = this.type;
         result.tension = this.tension;
@@ -151,12 +151,12 @@ class Curve {
     quantize(precision) {
         precision = Math.max(precision, 2);
 
-        var values = new Float32Array(precision);
-        var step = 1.0 / (precision - 1);
+        const values = new Float32Array(precision);
+        const step = 1.0 / (precision - 1);
 
         // quantize graph to table of interpolated values
         values[0] = this._eval.evaluate(0, true);
-        for (var i = 1; i < precision; i++) {
+        for (let i = 1; i < precision; i++) {
             values[i] = this._eval.evaluate(step * i);
         }
 
@@ -175,8 +175,8 @@ class Curve {
      * @returns {Float32Array} The set of quantized values.
      */
     quantizeClamped(precision, min, max) {
-        var result = this.quantize(precision);
-        for (var i = 0; i < result.length; ++i) {
+        const result = this.quantize(precision);
+        for (let i = 0; i < result.length; ++i) {
             result[i] = Math.min(max, Math.max(min, result[i]));
         }
         return result;

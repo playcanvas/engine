@@ -3,11 +3,11 @@ import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
-var _halfSize = new Vec2();
-var x = new Vec3();
-var y = new Vec3();
-var z = new Vec3();
-var scale = new Vec3();
+const _halfSize = new Vec2();
+const x = new Vec3();
+const y = new Vec3();
+const z = new Vec3();
+const scale = new Vec3();
 
 
 /**
@@ -19,9 +19,9 @@ var scale = new Vec3();
  */
 class Mat4 {
     constructor() {
-        var data = new Float32Array(16);
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.
+        const data = new Float32Array(16);
         data[0] = data[5] = data[10] = data[15] = 1;
         this.data = data;
     }
@@ -53,7 +53,7 @@ class Mat4 {
      * console.log("The result of the addition is: " + m.toString());
      */
     add2(lhs, rhs) {
-        var a = lhs.data,
+        const a = lhs.data,
             b = rhs.data,
             r = this.data;
 
@@ -121,7 +121,7 @@ class Mat4 {
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     copy(rhs) {
-        var src = rhs.data,
+        const src = rhs.data,
             dst = this.data;
 
         dst[0] = src[0];
@@ -156,7 +156,7 @@ class Mat4 {
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
-        var l = this.data,
+        const l = this.data,
             r = rhs.data;
 
         return ((l[0] === r[0]) &&
@@ -187,7 +187,7 @@ class Mat4 {
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
     isIdentity() {
-        var m = this.data;
+        const m = this.data;
 
         return ((m[0] === 1) &&
                 (m[1] === 0) &&
@@ -226,31 +226,28 @@ class Mat4 {
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
-        var a00, a01, a02, a03,
-            a10, a11, a12, a13,
-            a20, a21, a22, a23,
-            a30, a31, a32, a33,
-            b0, b1, b2, b3,
-            a = lhs.data,
-            b = rhs.data,
-            r = this.data;
+        const a = lhs.data;
+        const b = rhs.data;
+        const r = this.data;
 
-        a00 = a[0];
-        a01 = a[1];
-        a02 = a[2];
-        a03 = a[3];
-        a10 = a[4];
-        a11 = a[5];
-        a12 = a[6];
-        a13 = a[7];
-        a20 = a[8];
-        a21 = a[9];
-        a22 = a[10];
-        a23 = a[11];
-        a30 = a[12];
-        a31 = a[13];
-        a32 = a[14];
-        a33 = a[15];
+        const a00 = a[0];
+        const a01 = a[1];
+        const a02 = a[2];
+        const a03 = a[3];
+        const a10 = a[4];
+        const a11 = a[5];
+        const a12 = a[6];
+        const a13 = a[7];
+        const a20 = a[8];
+        const a21 = a[9];
+        const a22 = a[10];
+        const a23 = a[11];
+        const a30 = a[12];
+        const a31 = a[13];
+        const a32 = a[14];
+        const a33 = a[15];
+
+        let b0, b1, b2, b3;
 
         b0 = b[0];
         b1 = b[1];
@@ -303,27 +300,24 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      */
     mulAffine2(lhs, rhs) {
-        var a00, a01, a02,
-            a10, a11, a12,
-            a20, a21, a22,
-            a30, a31, a32,
-            b0, b1, b2,
-            a = lhs.data,
-            b = rhs.data,
-            r = this.data;
+        const a = lhs.data;
+        const b = rhs.data;
+        const r = this.data;
 
-        a00 = a[0];
-        a01 = a[1];
-        a02 = a[2];
-        a10 = a[4];
-        a11 = a[5];
-        a12 = a[6];
-        a20 = a[8];
-        a21 = a[9];
-        a22 = a[10];
-        a30 = a[12];
-        a31 = a[13];
-        a32 = a[14];
+        const a00 = a[0];
+        const a01 = a[1];
+        const a02 = a[2];
+        const a10 = a[4];
+        const a11 = a[5];
+        const a12 = a[6];
+        const a20 = a[8];
+        const a21 = a[9];
+        const a22 = a[10];
+        const a30 = a[12];
+        const a31 = a[13];
+        const a32 = a[14];
+
+        let b0, b1, b2;
 
         b0 = b[0];
         b1 = b[1];
@@ -396,13 +390,11 @@ class Mat4 {
      * var tv = m.transformPoint(v);
      */
     transformPoint(vec, res = new Vec3()) {
-        var x, y, z, m;
+        const m = this.data;
 
-        m = this.data;
-
-        x = vec.x;
-        y = vec.y;
-        z = vec.z;
+        const x = vec.x;
+        const y = vec.y;
+        const z = vec.z;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + m[13];
@@ -428,13 +420,11 @@ class Mat4 {
      * var tv = m.transformVector(v);
      */
     transformVector(vec, res = new Vec3()) {
-        var x, y, z, m;
+        const m = this.data;
 
-        m = this.data;
-
-        x = vec.x;
-        y = vec.y;
-        z = vec.z;
+        const x = vec.x;
+        const y = vec.y;
+        const z = vec.z;
 
         res.x = x * m[0] + y * m[4] + z * m[8];
         res.y = x * m[1] + y * m[5] + z * m[9];
@@ -463,14 +453,12 @@ class Mat4 {
      * m.transformVec4(v, result);
      */
     transformVec4(vec, res = new Vec4()) {
-        var x, y, z, w, m;
+        const m = this.data;
 
-        m = this.data;
-
-        x = vec.x;
-        y = vec.y;
-        z = vec.z;
-        w = vec.w;
+        const x = vec.x;
+        const y = vec.y;
+        const z = vec.z;
+        const w = vec.w;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + w * m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + w * m[13];
@@ -505,7 +493,7 @@ class Mat4 {
         x.cross(y, z).normalize();
         y.cross(z, x);
 
-        var r = this.data;
+        const r = this.data;
 
         r[0]  = x.x;
         r[1]  = x.y;
@@ -545,14 +533,12 @@ class Mat4 {
      * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
      */
     setFrustum(left, right, bottom, top, znear, zfar) {
-        var temp1, temp2, temp3, temp4, r;
+        const temp1 = 2 * znear;
+        const temp2 = right - left;
+        const temp3 = top - bottom;
+        const temp4 = zfar - znear;
 
-        temp1 = 2 * znear;
-        temp2 = right - left;
-        temp3 = top - bottom;
-        temp4 = zfar - znear;
-
-        r = this.data;
+        const r = this.data;
         r[0] = temp1 / temp2;
         r[1] = 0;
         r[2] = 0;
@@ -613,7 +599,7 @@ class Mat4 {
      * var ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
      */
     setOrtho(left, right, bottom, top, near, far) {
-        var r = this.data;
+        const r = this.data;
 
         r[0] = 2 / (right - left);
         r[1] = 0;
@@ -648,19 +634,17 @@ class Mat4 {
      * var rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
      */
     setFromAxisAngle(axis, angle) {
-        var x, y, z, c, s, t, tx, ty, m;
-
         angle *= math.DEG_TO_RAD;
 
-        x = axis.x;
-        y = axis.y;
-        z = axis.z;
-        c = Math.cos(angle);
-        s = Math.sin(angle);
-        t = 1 - c;
-        tx = t * x;
-        ty = t * y;
-        m = this.data;
+        const x = axis.x;
+        const y = axis.y;
+        const z = axis.z;
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        const t = 1 - c;
+        const tx = t * x;
+        const ty = t * y;
+        const m = this.data;
 
         m[0] = tx * x + c;
         m[1] = tx * y + s * z;
@@ -696,7 +680,7 @@ class Mat4 {
      * var tm = new pc.Mat4().setTranslate(10, 10, 10);
      */
     setTranslate(x, y, z) {
-        var m = this.data;
+        const m = this.data;
 
         m[0] = 1;
         m[1] = 0;
@@ -732,7 +716,7 @@ class Mat4 {
      * var sm = new pc.Mat4().setScale(10, 10, 10);
      */
     setScale(x, y, z) {
-        var m = this.data;
+        const m = this.data;
 
         m[0] = x;
         m[1] = 0;
@@ -767,51 +751,43 @@ class Mat4 {
      * rot.invert();
      */
     invert() {
-        var a00, a01, a02, a03,
-            a10, a11, a12, a13,
-            a20, a21, a22, a23,
-            a30, a31, a32, a33,
-            b00, b01, b02, b03,
-            b04, b05, b06, b07,
-            b08, b09, b10, b11,
-            det, invDet, m;
+        const m = this.data;
 
-        m = this.data;
-        a00 = m[0];
-        a01 = m[1];
-        a02 = m[2];
-        a03 = m[3];
-        a10 = m[4];
-        a11 = m[5];
-        a12 = m[6];
-        a13 = m[7];
-        a20 = m[8];
-        a21 = m[9];
-        a22 = m[10];
-        a23 = m[11];
-        a30 = m[12];
-        a31 = m[13];
-        a32 = m[14];
-        a33 = m[15];
+        const a00 = m[0];
+        const a01 = m[1];
+        const a02 = m[2];
+        const a03 = m[3];
+        const a10 = m[4];
+        const a11 = m[5];
+        const a12 = m[6];
+        const a13 = m[7];
+        const a20 = m[8];
+        const a21 = m[9];
+        const a22 = m[10];
+        const a23 = m[11];
+        const a30 = m[12];
+        const a31 = m[13];
+        const a32 = m[14];
+        const a33 = m[15];
 
-        b00 = a00 * a11 - a01 * a10;
-        b01 = a00 * a12 - a02 * a10;
-        b02 = a00 * a13 - a03 * a10;
-        b03 = a01 * a12 - a02 * a11;
-        b04 = a01 * a13 - a03 * a11;
-        b05 = a02 * a13 - a03 * a12;
-        b06 = a20 * a31 - a21 * a30;
-        b07 = a20 * a32 - a22 * a30;
-        b08 = a20 * a33 - a23 * a30;
-        b09 = a21 * a32 - a22 * a31;
-        b10 = a21 * a33 - a23 * a31;
-        b11 = a22 * a33 - a23 * a32;
+        const b00 = a00 * a11 - a01 * a10;
+        const b01 = a00 * a12 - a02 * a10;
+        const b02 = a00 * a13 - a03 * a10;
+        const b03 = a01 * a12 - a02 * a11;
+        const b04 = a01 * a13 - a03 * a11;
+        const b05 = a02 * a13 - a03 * a12;
+        const b06 = a20 * a31 - a21 * a30;
+        const b07 = a20 * a32 - a22 * a30;
+        const b08 = a20 * a33 - a23 * a30;
+        const b09 = a21 * a32 - a22 * a31;
+        const b10 = a21 * a33 - a23 * a31;
+        const b11 = a22 * a33 - a23 * a32;
 
-        det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+        const det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
         if (det === 0) {
             this.setIdentity();
         } else {
-            invDet = 1 / det;
+            const invDet = 1 / det;
 
             m[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
             m[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
@@ -831,7 +807,6 @@ class Mat4 {
             m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
         }
 
-
         return this;
     }
 
@@ -843,7 +818,8 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      */
     set(src) {
-        var dst = this.data;
+        const dst = this.data;
+
         dst[0] = src[0];
         dst[1] = src[1];
         dst[2] = src[2];
@@ -874,7 +850,8 @@ class Mat4 {
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
     setIdentity() {
-        var m = this.data;
+        const m = this.data;
+
         m[0] = 1;
         m[1] = 0;
         m[2] = 0;
@@ -913,32 +890,29 @@ class Mat4 {
      * m.setTRS(t, r, s);
      */
     setTRS(t, r, s) {
-        var qx, qy, qz, qw, sx, sy, sz,
-            x2, y2, z2, xx, xy, xz, yy, yz, zz, wx, wy, wz, m;
+        const qx = r.x;
+        const qy = r.y;
+        const qz = r.z;
+        const qw = r.w;
 
-        qx = r.x;
-        qy = r.y;
-        qz = r.z;
-        qw = r.w;
+        const sx = s.x;
+        const sy = s.y;
+        const sz = s.z;
 
-        sx = s.x;
-        sy = s.y;
-        sz = s.z;
+        const x2 = qx + qx;
+        const y2 = qy + qy;
+        const z2 = qz + qz;
+        const xx = qx * x2;
+        const xy = qx * y2;
+        const xz = qx * z2;
+        const yy = qy * y2;
+        const yz = qy * z2;
+        const zz = qz * z2;
+        const wx = qw * x2;
+        const wy = qw * y2;
+        const wz = qw * z2;
 
-        x2 = qx + qx;
-        y2 = qy + qy;
-        z2 = qz + qz;
-        xx = qx * x2;
-        xy = qx * y2;
-        xz = qx * z2;
-        yy = qy * y2;
-        yz = qy * z2;
-        zz = qz * z2;
-        wx = qw * x2;
-        wy = qw * y2;
-        wz = qw * z2;
-
-        m = this.data;
+        const m = this.data;
 
         m[0] = (1 - (yy + zz)) * sx;
         m[1] = (xy + wz) * sx;
@@ -975,7 +949,8 @@ class Mat4 {
      * m.transpose();
      */
     transpose() {
-        var tmp, m = this.data;
+        let tmp;
+        const m = this.data;
 
         tmp = m[1];
         m[1] = m[4];
@@ -1005,40 +980,37 @@ class Mat4 {
     }
 
     invertTo3x3(res) {
-        var a11, a21, a31, a12, a22, a32, a13, a23, a33,
-            m, r, det, idet;
+        const m = this.data;
+        const r = res.data;
 
-        m = this.data;
-        r = res.data;
+        const m0 = m[0];
+        const m1 = m[1];
+        const m2 = m[2];
 
-        var m0 = m[0];
-        var m1 = m[1];
-        var m2 = m[2];
+        const m4 = m[4];
+        const m5 = m[5];
+        const m6 = m[6];
 
-        var m4 = m[4];
-        var m5 = m[5];
-        var m6 = m[6];
+        const m8 = m[8];
+        const m9 = m[9];
+        const m10 = m[10];
 
-        var m8 = m[8];
-        var m9 = m[9];
-        var m10 = m[10];
+        const a11 =  m10 * m5 - m6 * m9;
+        const a21 = -m10 * m1 + m2 * m9;
+        const a31 =  m6  * m1 - m2 * m5;
+        const a12 = -m10 * m4 + m6 * m8;
+        const a22 =  m10 * m0 - m2 * m8;
+        const a32 = -m6  * m0 + m2 * m4;
+        const a13 =  m9  * m4 - m5 * m8;
+        const a23 = -m9  * m0 + m1 * m8;
+        const a33 =  m5  * m0 - m1 * m4;
 
-        a11 =  m10 * m5 - m6 * m9;
-        a21 = -m10 * m1 + m2 * m9;
-        a31 =  m6  * m1 - m2 * m5;
-        a12 = -m10 * m4 + m6 * m8;
-        a22 =  m10 * m0 - m2 * m8;
-        a32 = -m6  * m0 + m2 * m4;
-        a13 =  m9  * m4 - m5 * m8;
-        a23 = -m9  * m0 + m1 * m8;
-        a33 =  m5  * m0 - m1 * m4;
-
-        det =  m0 * a11 + m1 * a12 + m2 * a13;
+        const det =  m0 * a11 + m1 * a12 + m2 * a13;
         if (det === 0) { // no inverse
             return this;
         }
 
-        idet = 1 / det;
+        const idet = 1 / det;
 
         r[0] = idet * a11;
         r[1] = idet * a21;
@@ -1164,21 +1136,19 @@ class Mat4 {
     // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
     // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
     setFromEulerAngles(ex, ey, ez) {
-        var s1, c1, s2, c2, s3, c3, m;
-
         ex *= math.DEG_TO_RAD;
         ey *= math.DEG_TO_RAD;
         ez *= math.DEG_TO_RAD;
 
         // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-        s1 = Math.sin(-ex);
-        c1 = Math.cos(-ex);
-        s2 = Math.sin(-ey);
-        c2 = Math.cos(-ey);
-        s3 = Math.sin(-ez);
-        c3 = Math.cos(-ez);
+        const s1 = Math.sin(-ex);
+        const c1 = Math.cos(-ex);
+        const s2 = Math.sin(-ey);
+        const c2 = Math.cos(-ey);
+        const s3 = Math.sin(-ez);
+        const c3 = Math.cos(-ez);
 
-        m = this.data;
+        const m = this.data;
 
         // Set rotation elements
         m[0] = c2 * c3;
@@ -1218,20 +1188,20 @@ class Mat4 {
      * var eulers = m.getEulerAngles();
      */
     getEulerAngles(eulers = new Vec3()) {
-        var x, y, z, sx, sy, sz, m, halfPi;
-
         this.getScale(scale);
-        sx = scale.x;
-        sy = scale.y;
-        sz = scale.z;
+        const sx = scale.x;
+        const sy = scale.y;
+        const sz = scale.z;
 
         if (sx === 0 || sy === 0 || sz === 0)
             return eulers.set(0, 0, 0);
 
-        m = this.data;
+        const m = this.data;
 
-        y = Math.asin(-m[2] / sx);
-        halfPi = Math.PI * 0.5;
+        const y = Math.asin(-m[2] / sx);
+        const halfPi = Math.PI * 0.5;
+
+        let x, z;
 
         if (y < halfPi) {
             if (y > -halfPi) {
@@ -1248,7 +1218,7 @@ class Mat4 {
             x = Math.atan2(m[4] / sy, m[5] / sy);
         }
 
-        return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
+        return eulers.set(x, y, z).mulScalar(math.RAD_TO_DEG);
     }
 
     /**
@@ -1262,10 +1232,8 @@ class Mat4 {
      * console.log(m.toString());
      */
     toString() {
-        var i, t;
-
-        t = '[';
-        for (i = 0; i < 16; i += 1) {
+        let t = '[';
+        for (let i = 0; i < 16; i += 1) {
             t += this.data[i];
             t += (i !== 15) ? ', ' : '';
         }

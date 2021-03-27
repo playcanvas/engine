@@ -27,26 +27,24 @@ import { CurveEvaluator } from './curve-evaluator.js';
  */
 class CurveSet {
     constructor() {
-        var i;
-
         this.curves = [];
         this._type = CURVE_SMOOTHSTEP;
 
         if (arguments.length > 1) {
-            for (i = 0; i < arguments.length; i++) {
+            for (let i = 0; i < arguments.length; i++) {
                 this.curves.push(new Curve(arguments[i]));
             }
         } else {
             if (arguments.length === 0) {
                 this.curves.push(new Curve());
             } else {
-                var arg = arguments[0];
+                const arg = arguments[0];
                 if (typeof arg === 'number') {
-                    for (i = 0; i < arg; i++) {
+                    for (let i = 0; i < arg; i++) {
                         this.curves.push(new Curve());
                     }
                 } else {
-                    for (i = 0; i < arg.length; i++) {
+                    for (let i = 0; i < arg.length; i++) {
                         this.curves.push(new Curve(arg[i]));
                     }
                 }
@@ -77,10 +75,10 @@ class CurveSet {
      * @returns {number[]} The interpolated curve values at the specified time.
      */
     value(time, result = []) {
-        var length = this.curves.length;
+        const length = this.curves.length;
         result.length = length;
 
-        for (var i = 0; i < length; i++) {
+        for (let i = 0; i < length; i++) {
             result[i] = this.curves[i].value(time);
         }
 
@@ -94,10 +92,10 @@ class CurveSet {
      * @returns {CurveSet} A clone of the specified curve set.
      */
     clone() {
-        var result = new CurveSet();
+        const result = new CurveSet();
 
         result.curves = [];
-        for (var i = 0; i < this.curves.length; i++) {
+        for (let i = 0; i < this.curves.length; i++) {
             result.curves.push(this.curves[i].clone());
         }
 
@@ -109,13 +107,13 @@ class CurveSet {
     quantize(precision) {
         precision = Math.max(precision, 2);
 
-        var numCurves = this.curves.length;
-        var values = new Float32Array(precision * numCurves);
-        var step = 1.0 / (precision - 1);
+        const numCurves = this.curves.length;
+        const values = new Float32Array(precision * numCurves);
+        const step = 1.0 / (precision - 1);
 
-        for (var c = 0; c < numCurves; c++) {
-            var ev = new CurveEvaluator(this.curves[c]);
-            for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
+        for (let c = 0; c < numCurves; c++) {
+            const ev = new CurveEvaluator(this.curves[c]);
+            for (let i = 0; i < precision; i++) { // quantize graph to table of interpolated values
                 values[i * numCurves + c] = ev.evaluate(step * i);
             }
         }
@@ -135,8 +133,8 @@ class CurveSet {
      * @returns {Float32Array} The set of quantized values.
      */
     quantizeClamped(precision, min, max) {
-        var result = this.quantize(precision);
-        for (var i = 0; i < result.length; ++i) {
+        const result = this.quantize(precision);
+        for (let i = 0; i < result.length; ++i) {
             result[i] = Math.min(max, Math.max(min, result[i]));
         }
         return result;
@@ -170,7 +168,7 @@ class CurveSet {
 
     set type(value) {
         this._type = value;
-        for (var i = 0; i < this.curves.length; i++) {
+        for (let i = 0; i < this.curves.length; i++) {
             this.curves[i].type = value;
         }
     }

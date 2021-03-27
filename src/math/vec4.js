@@ -442,9 +442,9 @@ class Vec4 {
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
-        var lengthSq = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+        const lengthSq = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         if (lengthSq > 0) {
-            var invLength = 1 / Math.sqrt(lengthSq);
+            const invLength = 1 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
             this.z *= invLength;

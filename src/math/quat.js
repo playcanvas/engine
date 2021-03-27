@@ -162,8 +162,8 @@ class Quat {
      * console.log(v.toString());
      */
     getAxisAngle(axis) {
-        var rad = Math.acos(this.w) * 2;
-        var s = Math.sin(rad / 2);
+        let rad = Math.acos(this.w) * 2;
+        const s = Math.sin(rad / 2);
         if (s !== 0) {
             axis.x = this.x / s;
             axis.y = this.y / s;
@@ -193,14 +193,15 @@ class Quat {
      * correspond to the supplied quaternion.
      */
     getEulerAngles(eulers = new Vec3()) {
-        var x, y, z, qx, qy, qz, qw, a2;
+        let x, y, z;
 
-        qx = this.x;
-        qy = this.y;
-        qz = this.z;
-        qw = this.w;
+        const qx = this.x;
+        const qy = this.y;
+        const qz = this.z;
+        const qw = this.w;
 
-        a2 = 2 * (qw * qy - qx * qz);
+        const a2 = 2 * (qw * qy - qx * qz);
+
         if (a2 <= -0.99999) {
             x = 2 * Math.atan2(qx, qw);
             y = -Math.PI / 2;
@@ -281,17 +282,15 @@ class Quat {
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mul(rhs) {
-        var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
+        const q1x = this.x;
+        const q1y = this.y;
+        const q1z = this.z;
+        const q1w = this.w;
 
-        q1x = this.x;
-        q1y = this.y;
-        q1z = this.z;
-        q1w = this.w;
-
-        q2x = rhs.x;
-        q2y = rhs.y;
-        q2z = rhs.z;
-        q2w = rhs.w;
+        const q2x = rhs.x;
+        const q2y = rhs.y;
+        const q2z = rhs.z;
+        const q2w = rhs.w;
 
         this.x = q1w * q2x + q1x * q2w + q1y * q2z - q1z * q2y;
         this.y = q1w * q2y + q1y * q2w + q1z * q2x - q1x * q2z;
@@ -320,17 +319,15 @@ class Quat {
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
-        var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
+        const q1x = lhs.x;
+        const q1y = lhs.y;
+        const q1z = lhs.z;
+        const q1w = lhs.w;
 
-        q1x = lhs.x;
-        q1y = lhs.y;
-        q1z = lhs.z;
-        q1w = lhs.w;
-
-        q2x = rhs.x;
-        q2y = rhs.y;
-        q2z = rhs.z;
-        q2w = rhs.w;
+        const q2x = rhs.x;
+        const q2y = rhs.y;
+        const q2z = rhs.z;
+        const q2w = rhs.w;
 
         this.x = q1w * q2x + q1x * q2w + q1y * q2z - q1z * q2y;
         this.y = q1w * q2y + q1y * q2w + q1z * q2x - q1x * q2z;
@@ -354,7 +351,7 @@ class Quat {
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
-        var len = this.length();
+        let len = this.length();
         if (len === 0) {
             this.x = this.y = this.z = 0;
             this.w = 1;
@@ -406,12 +403,10 @@ class Quat {
      * q.setFromAxisAngle(pc.Vec3.UP, 90);
      */
     setFromAxisAngle(axis, angle) {
-        var sa, ca;
-
         angle *= 0.5 * math.DEG_TO_RAD;
 
-        sa = Math.sin(angle);
-        ca = Math.cos(angle);
+        const sa = Math.sin(angle);
+        const ca = Math.cos(angle);
 
         this.x = sa * axis.x;
         this.y = sa * axis.y;
@@ -434,19 +429,17 @@ class Quat {
      * q.setFromEulerAngles(45, 90, 180);
      */
     setFromEulerAngles(ex, ey, ez) {
-        var sx, cx, sy, cy, sz, cz, halfToRad;
-
-        halfToRad = 0.5 * math.DEG_TO_RAD;
+        const halfToRad = 0.5 * math.DEG_TO_RAD;
         ex *= halfToRad;
         ey *= halfToRad;
         ez *= halfToRad;
 
-        sx = Math.sin(ex);
-        cx = Math.cos(ex);
-        sy = Math.sin(ey);
-        cy = Math.cos(ey);
-        sz = Math.sin(ez);
-        cz = Math.cos(ez);
+        const sx = Math.sin(ex);
+        const cx = Math.cos(ex);
+        const sy = Math.sin(ey);
+        const cy = Math.cos(ey);
+        const sz = Math.sin(ez);
+        const cz = Math.cos(ez);
 
         this.x = sx * cy * cz - cx * sy * sz;
         this.y = cx * sy * cz + sx * cy * sz;
@@ -472,8 +465,8 @@ class Quat {
      * var q = new pc.Quat().setFromMat4(rot);
      */
     setFromMat4(m) {
-        var m00, m01, m02, m10, m11, m12, m20, m21, m22,
-            tr, s, rs, lx, ly, lz;
+        let m00, m01, m02, m10, m11, m12, m20, m21, m22,
+            s, rs, lx, ly, lz;
 
         m = m.data;
 
@@ -514,7 +507,7 @@ class Quat {
 
         // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
 
-        tr = m00 + m11 + m22;
+        const tr = m00 + m11 + m22;
         if (tr >= 0) {
             s = Math.sqrt(tr + 1);
             this.w = s * 0.5;
@@ -594,18 +587,17 @@ class Quat {
     slerp(lhs, rhs, alpha) {
         // Algorithm sourced from:
         // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
-        var lx, ly, lz, lw, rx, ry, rz, rw;
-        lx = lhs.x;
-        ly = lhs.y;
-        lz = lhs.z;
-        lw = lhs.w;
-        rx = rhs.x;
-        ry = rhs.y;
-        rz = rhs.z;
-        rw = rhs.w;
+        const lx = lhs.x;
+        const ly = lhs.y;
+        const lz = lhs.z;
+        const lw = lhs.w;
+        let rx = rhs.x;
+        let ry = rhs.y;
+        let rz = rhs.z;
+        let rw = rhs.w;
 
         // Calculate angle between them.
-        var cosHalfTheta = lw * rw + lx * rx + ly * ry + lz * rz;
+        let cosHalfTheta = lw * rw + lx * rx + ly * ry + lz * rz;
 
         if (cosHalfTheta < 0) {
             rw = -rw;
@@ -625,8 +617,8 @@ class Quat {
         }
 
         // Calculate temporary values.
-        var halfTheta = Math.acos(cosHalfTheta);
-        var sinHalfTheta = Math.sqrt(1 - cosHalfTheta * cosHalfTheta);
+        const halfTheta = Math.acos(cosHalfTheta);
+        const sinHalfTheta = Math.sqrt(1 - cosHalfTheta * cosHalfTheta);
 
         // If theta = 180 degrees then result is not fully defined
         // we could rotate around any axis normal to qa or qb
@@ -638,8 +630,8 @@ class Quat {
             return this;
         }
 
-        var ratioA = Math.sin((1 - alpha) * halfTheta) / sinHalfTheta;
-        var ratioB = Math.sin(alpha * halfTheta) / sinHalfTheta;
+        const ratioA = Math.sin((1 - alpha) * halfTheta) / sinHalfTheta;
+        const ratioB = Math.sin(alpha * halfTheta) / sinHalfTheta;
 
         // Calculate Quaternion.
         this.w = (lw * ratioA + rw * ratioB);
@@ -666,14 +658,14 @@ class Quat {
      * var tv = q.transformVector(v);
      */
     transformVector(vec, res = new Vec3()) {
-        var x = vec.x, y = vec.y, z = vec.z;
-        var qx = this.x, qy = this.y, qz = this.z, qw = this.w;
+        const x = vec.x, y = vec.y, z = vec.z;
+        const qx = this.x, qy = this.y, qz = this.z, qw = this.w;
 
         // calculate quat * vec
-        var ix = qw * x + qy * z - qz * y;
-        var iy = qw * y + qz * x - qx * z;
-        var iz = qw * z + qx * y - qy * x;
-        var iw = -qx * x - qy * y - qz * z;
+        const ix = qw * x + qy * z - qz * y;
+        const iy = qw * y + qz * x - qx * z;
+        const iz = qw * z + qx * y - qy * x;
+        const iw = -qx * x - qy * y - qz * z;
 
         // calculate result * inverse quat
         res.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
