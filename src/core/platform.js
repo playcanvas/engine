@@ -7,7 +7,7 @@
  *     // touch is supported
  * }
  */
-var platform = {
+const platform = {
     /**
      * @static
      * @readonly
@@ -102,7 +102,7 @@ var platform = {
 };
 
 if (typeof navigator !== 'undefined') {
-    var ua = navigator.userAgent;
+    const ua = navigator.userAgent;
 
     if (/(windows|mac os|linux|cros)/i.test(ua))
         platform.desktop = true;
@@ -133,7 +133,7 @@ if (typeof navigator !== 'undefined') {
     platform.workers = (typeof(Worker) !== 'undefined');
 
     try {
-        var opts = Object.defineProperty({}, 'passive', {
+        const opts = Object.defineProperty({}, 'passive', {
             get: function () {
                 platform.passiveEvents = true;
                 return false;
