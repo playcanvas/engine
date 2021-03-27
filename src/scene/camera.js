@@ -415,7 +415,7 @@ class Camera {
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
         var range = this._farClip - this._nearClip;
         _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
-        _deviceCoord.scale(2);
+        _deviceCoord.mulScalar(2);
         _deviceCoord.sub(Vec3.ONE);
 
         if (this._projection === PROJECTION_PERSPECTIVE) {
@@ -436,7 +436,7 @@ class Camera {
             var cameraPos = this._node.getPosition();
             worldCoord.sub2(_point, cameraPos);
             worldCoord.normalize();
-            worldCoord.scale(z);
+            worldCoord.mulScalar(z);
             worldCoord.add(cameraPos);
 
         } else {

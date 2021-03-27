@@ -215,7 +215,7 @@ class Quat {
             z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
         }
 
-        return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
+        return eulers.set(x, y, z).mulScalar(math.RAD_TO_DEG);
     }
 
     /**

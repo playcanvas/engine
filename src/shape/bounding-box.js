@@ -152,7 +152,7 @@ class BoundingBox {
         var intersects = minMax >= maxMin && maxMin >= 0;
 
         if (intersects)
-            point.copy(ray.direction).scale(maxMin).add(ray.origin);
+            point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
 
         return intersects;
     }
@@ -220,8 +220,8 @@ class BoundingBox {
      * @param {Vec3} max - The maximum corner of the AABB.
      */
     setMinMax(min, max) {
-        this.center.add2(max, min).scale(0.5);
-        this.halfExtents.sub2(max, min).scale(0.5);
+        this.center.add2(max, min).mulScalar(0.5);
+        this.halfExtents.sub2(max, min).mulScalar(0.5);
     }
 
     /**

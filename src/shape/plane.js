@@ -55,7 +55,7 @@ class Plane {
         var intersects = t >= 0;
 
         if (intersects && point)
-            point.copy(ray.direction).scale(t).add(ray.origin);
+            point.copy(ray.direction).mulScalar(t).add(ray.origin);
 
         return intersects;
     }

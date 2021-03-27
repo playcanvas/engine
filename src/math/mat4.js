@@ -1132,9 +1132,6 @@ class Mat4 {
      * @param {Vec3} [scale] - Vector to receive the scale.
      * @returns {Vec3} The scale in X, Y and Z of the specified 4x4 matrix.
      * @example
-     * // Create a 4x4 scale matrix
-     * var m = new pc.Mat4().scale(2, 3, 4);
-     *
      * // Query the scale component
      * var scale = m.getScale();
      */
@@ -1248,7 +1245,7 @@ class Mat4 {
             x = Math.atan2(m[4] / sy, m[5] / sy);
         }
 
-        return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
+        return eulers.set(x, y, z).mulScalar(math.RAD_TO_DEG);
     }
 
     /**

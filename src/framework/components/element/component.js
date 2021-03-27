@@ -1350,7 +1350,7 @@ Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         for (var i = 0; i < 4; i++) {
             this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
             if (screenSpace)
-                this._screenCorners[i].scale(this.screen.screen.scale);
+                this._screenCorners[i].mulScalar(this.screen.screen.scale);
 
             if (parentBottomLeft) {
                 this._screenCorners[i].add(parentBottomLeft);

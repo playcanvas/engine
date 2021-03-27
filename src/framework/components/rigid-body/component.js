@@ -338,14 +338,14 @@ class RigidBodyComponent extends Component {
      * @example
      * // Apply a force at the body's center
      * // Calculate a force vector pointing in the world space direction of the entity
-     * var force = this.entity.forward.clone().scale(100);
+     * var force = this.entity.forward.clone().mulScalar(100);
      *
      * // Apply the force
      * this.entity.rigidbody.applyForce(force);
      * @example
      * // Apply a force at some relative offset from the body's center
      * // Calculate a force vector pointing in the world space direction of the entity
-     * var force = this.entity.forward.clone().scale(100);
+     * var force = this.entity.forward.clone().mulScalar(100);
      *
      * // Calculate the world space relative offset
      * var relativePos = new pc.Vec3();

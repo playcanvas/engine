@@ -161,7 +161,7 @@ class XrLightEstimation extends EventHandler {
         this._intensity = Math.max(1.0, Math.max(pli.x, Math.max(pli.y, pli.z)));
 
         // color
-        vec3A.copy(pli).scale(1 / this._intensity);
+        vec3A.copy(pli).mulScalar(1 / this._intensity);
         this._color.set(vec3A.x, vec3A.y, vec3A.z);
 
         // rotation
