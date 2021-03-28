@@ -1,6 +1,6 @@
 import { EventHandler } from './event-handler.js';
 
-var events = {
+const events = {
     /**
      * @private
      * @function
@@ -14,7 +14,7 @@ var events = {
      * pc.events.attach(obj);
      */
     attach: function (target) {
-        var ev = events;
+        const ev = events;
         target._addCallback = ev._addCallback;
         target.on = ev.on;
         target.off = ev.off;

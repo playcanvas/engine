@@ -180,8 +180,8 @@ class Vec2 {
      * console.log("The between v1 and v2 is: " + d);
      */
     distance(rhs) {
-        var x = this.x - rhs.x;
-        var y = this.y - rhs.y;
+        const x = this.x - rhs.x;
+        const y = this.y - rhs.y;
         return Math.sqrt(x * x + y * y);
     }
 
@@ -422,9 +422,9 @@ class Vec2 {
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
-        var lengthSq = this.x * this.x + this.y * this.y;
+        const lengthSq = this.x * this.x + this.y * this.y;
         if (lengthSq > 0) {
-            var invLength = 1 / Math.sqrt(lengthSq);
+            const invLength = 1 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
         }
