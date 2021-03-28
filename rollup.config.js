@@ -1,9 +1,9 @@
 import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
-import { terser } from "rollup-plugin-terser";
-import { version } from './package.json';
 import jscc from 'rollup-plugin-jscc';
+import { terser } from 'rollup-plugin-terser';
+import { version } from './package.json';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -28,22 +28,6 @@ function spacesToTabs() {
             if (!filter(id)) return;
             return {
                 code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
-                map: { mappings: '' }
-            };
-        }
-    };
-}
-
-function preprocessor(options) {
-    const filter = createFilter([
-        '**/*.js'
-    ], []);
-
-    return {
-        transform(code, id) {
-            if (!filter(id)) return;
-            return {
-                code: new Preprocessor(code).process(options),
                 map: { mappings: '' }
             };
         }
