@@ -706,7 +706,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                         canUseMorph = false;
                     }
                 } else {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
                     // #endif
                 }
@@ -743,7 +743,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                 // 32bit index buffer is used but not supported
                 if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (vertexBuffer.numVertices > 0xFFFF) {
                         console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
                     }

@@ -492,7 +492,7 @@ class LayerComposition extends EventHandler {
     // logs render action and their properties
     _logRenderActions() {
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this.logRenderActions) {
             console.log("Render Actions for composition: " + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
@@ -524,7 +524,7 @@ class LayerComposition extends EventHandler {
 
     _isLayerAdded(layer) {
         if (this.layerList.indexOf(layer) >= 0) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("Layer is already added.");
             // #endif
             return true;
@@ -535,7 +535,7 @@ class LayerComposition extends EventHandler {
     _isSublayerAdded(layer, transparent) {
         for (var i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Sublayer is already added.");
                 // #endif
                 return true;

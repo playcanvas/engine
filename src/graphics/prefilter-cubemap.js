@@ -39,7 +39,7 @@ function prefilterCubemap(options) {
     var cpuSync = options.cpuSync;
 
     if (cpuSync && !sourceCubemap._levels[0]) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: prefilter: cubemap must have _levels");
         // #endif
         return;
@@ -310,13 +310,13 @@ function shFromCubemap(device, source, dontFlipX) {
     var x, y;
 
     if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: SH: cubemap must be RGBA8");
         // #endif
         return;
     }
     if (!source._levels[0]) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: SH: cubemap must be synced to CPU");
         // #endif
         return;
@@ -369,7 +369,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("ERROR: SH: cubemap must be composed of arrays or images");
             // #endif
             return;

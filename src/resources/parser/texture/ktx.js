@@ -55,7 +55,7 @@ class KtxParser {
 
         var texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             addressU: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
@@ -76,7 +76,7 @@ class KtxParser {
         var headerU32 = new Uint32Array(data, 0, 16);
 
         if (IDENTIFIER[0] !== headerU32[0] || IDENTIFIER[1] !== headerU32[1] || IDENTIFIER[2] !== headerU32[2]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Invalid definition header found in KTX file. Expected 0xAB4B5458, 0x203131BB, 0x0D0A1A0A");
             // #endif
             return null;
@@ -99,28 +99,28 @@ class KtxParser {
         };
 
         if (header.pixelDepth > 1) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("More than 1 pixel depth not supported!");
             // #endif
             return null;
         }
 
         if (header.numberOfArrayElements > 1) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Array texture not supported!");
             // #endif
             return null;
         }
 
         if (header.glFormat !== 0) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("We only support compressed formats!");
             // #endif
             return null;
         }
 
         if (!KNOWN_FORMATS[header.glInternalFormat]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Unknown glInternalFormat: " + header.glInternalFormat);
             // #endif
             return null;

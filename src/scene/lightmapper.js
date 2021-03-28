@@ -263,7 +263,7 @@ class Lightmapper {
     createTexture(size, type, name) {
 
         let tex = new Texture(this.device, {
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_LIGHTMAP,
             // #endif
             width: size,
@@ -498,7 +498,7 @@ class Lightmapper {
         let device = this.device;
         const startTime = now();
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         device.fire('lightmapper:start', {
             timestamp: startTime,
             target: this
@@ -561,7 +561,7 @@ class Lightmapper {
         this.stats.fboTime = device._renderTargetCreationTime - startFboTime;
         this.stats.lightmapCount = bakeNodes.length;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         device.fire('lightmapper:end', {
             timestamp: nowTime,
             target: this
@@ -968,7 +968,7 @@ class Lightmapper {
 
                     this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     this.stats.shadowMapTime += this.renderer._shadowMapTime;
                     this.stats.forwardTime += this.renderer._forwardTime;
                     this.stats.renderPasses++;

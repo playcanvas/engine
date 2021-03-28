@@ -547,7 +547,7 @@ class AssetRegistry extends EventHandler {
 
         var data = materialAsset.data;
         if (data.mappingFormat !== 'path') {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Skipping: ' + materialAsset.name + ', material files must be mappingFormat: "path" to be loaded from URL');
             // #endif
             callback(null, textures);

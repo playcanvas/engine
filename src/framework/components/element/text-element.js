@@ -752,7 +752,7 @@ class TextElement {
                             }
                         }
 
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         if (!json.missingChars) {
                             json.missingChars = new Set();
                         }
@@ -1282,7 +1282,7 @@ class TextElement {
         var g = value.g;
         var b = value.b;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._color === value) {
             console.warn("Setting element.color to itself will have no effect");
         }
@@ -1605,7 +1605,7 @@ class TextElement {
         var b = (value instanceof Color) ? value.b : value[2];
         var a = (value instanceof Color) ? value.a : value[3];
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._outlineColor === value) {
             console.warn("Setting element.outlineColor to itself will have no effect");
         }
@@ -1663,7 +1663,7 @@ class TextElement {
         var b = (value instanceof Color) ? value.b : value[2];
         var a = (value instanceof Color) ? value.a : value[3];
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._shadowColor === value) {
             console.warn("Setting element.shadowColor to itself will have no effect");
         }

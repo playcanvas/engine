@@ -600,7 +600,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCylinder(device, opts) {
-    // #ifdef DEBUG
+    // #if _DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
         console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     }

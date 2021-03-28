@@ -238,12 +238,12 @@ class ScriptAttributes {
      */
     add(name, args) {
         if (this.index[name]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
             // #endif
             return;
         } else if (ScriptAttributes.reservedNames.has(name)) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
             // #endif
             return;

@@ -1132,7 +1132,7 @@ class ParticleEmitter {
     addTime(delta, isOnStop) {
         var device = this.graphicsDevice;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var startTime = now();
         // #endif
 
@@ -1209,7 +1209,7 @@ class ParticleEmitter {
             this.meshInstance.drawOrder = this.drawOrder;
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._addTimeTime += now() - startTime;
         // #endif
     }

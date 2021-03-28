@@ -3,7 +3,7 @@ import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
 import { terser } from "rollup-plugin-terser";
 import { version } from './package.json';
-import Preprocessor from 'preprocessor';
+import jscc from 'rollup-plugin-jscc';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -151,10 +151,8 @@ const target_release_es5 = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: false,
-            DEBUG: false,
-            RELEASE: true
+        jscc({
+            values: {}
         }),
         shaderChunks(true),
         replace({
@@ -176,10 +174,8 @@ const target_release_es5min = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: false,
-            DEBUG: false,
-            RELEASE: true
+        jscc({
+            values: {}
         }),
         shaderChunks(true),
         replace({
@@ -201,10 +197,8 @@ const target_release_es6 = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: false,
-            DEBUG: false,
-            RELEASE: true
+        jscc({
+            values: {}
         }),
         shaderChunks(true),
         replace({
@@ -226,10 +220,11 @@ const target_debug = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: true,
-            DEBUG: true,
-            RELEASE: false
+        jscc({
+            values: {
+                _DEBUG: 1,
+                _PROFILER: 1
+            }
         }),
         shaderChunks(false),
         replace({
@@ -251,10 +246,10 @@ const target_profiler = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: true,
-            DEBUG: false,
-            RELEASE: false
+        jscc({
+            values: {
+                _PROFILER: 1
+            }
         }),
         shaderChunks(false),
         replace({

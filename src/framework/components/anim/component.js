@@ -199,14 +199,14 @@ class AnimComponent extends Component {
      */
     assignAnimation(nodeName, animTrack, layerName) {
         if (!this.data.stateGraph) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
             // #endif
             return;
         }
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             // #endif
             return;
@@ -224,7 +224,7 @@ class AnimComponent extends Component {
     removeNodeAnimations(nodeName, layerName) {
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
             // #endif
             return;
@@ -237,7 +237,7 @@ class AnimComponent extends Component {
         if (param && param.type === type) {
             return param.value;
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
     }
@@ -248,7 +248,7 @@ class AnimComponent extends Component {
             param.value = value;
             return;
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
     }
@@ -297,7 +297,7 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign non integer value to integer parameter');
             // #endif
         }
@@ -369,7 +369,7 @@ class AnimComponent extends Component {
         if (typeof value === 'string') {
             const entity = this.entity.root.findByGuid(value);
             this.data.rootBone = entity;
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!entity) {
                 console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
             }
