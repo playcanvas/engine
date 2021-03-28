@@ -1003,7 +1003,7 @@ export const TEXHINT_LIGHTMAP = 3;
 /**
  * @constant
  * @name TEXTUREPROJECTION_NONE
- * @type {number}
+ * @type {string}
  * @description Texture data is not stored a specific projection format.
  */
 export const TEXTUREPROJECTION_NONE = "none";
@@ -1011,7 +1011,7 @@ export const TEXTUREPROJECTION_NONE = "none";
 /**
  * @constant
  * @name TEXTUREPROJECTION_CUBE
- * @type {number}
+ * @type {string}
  * @description Texture data is stored in cubemap projection format.
  */
 export const TEXTUREPROJECTION_CUBE = "cube";
@@ -1019,7 +1019,7 @@ export const TEXTUREPROJECTION_CUBE = "cube";
 /**
  * @constant
  * @name TEXTUREPROJECTION_EQUIRECT
- * @type {number}
+ * @type {string}
  * @description Texture data is stored in equirectangular projection format.
  */
 export const TEXTUREPROJECTION_EQUIRECT = "equirect";
@@ -1027,7 +1027,7 @@ export const TEXTUREPROJECTION_EQUIRECT = "equirect";
 /**
  * @constant
  * @name TEXTUREPROJECTION_OCTAHEDRAL
- * @type {number}
+ * @type {string}
  * @description Texture data is stored in octahedral projection format.
  */
 export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
