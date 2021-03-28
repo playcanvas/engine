@@ -117,7 +117,7 @@ class GraphNode extends EventHandler {
         if (!this._forward) {
             this._forward = new Vec3();
         }
-        return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
+        return this.getWorldTransform().getZ(this._forward).normalize().mulScalar(-1);
     }
 
     /**

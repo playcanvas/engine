@@ -122,7 +122,7 @@ class ElementDragHelper extends EventHandler {
         this._chooseRayOriginAndDirection();
 
         _planeOrigin.copy(this._element.entity.getPosition());
-        _planeNormal.copy(this._element.entity.forward).scale(-1);
+        _planeNormal.copy(this._element.entity.forward).mulScalar(-1);
 
         var denominator = _planeNormal.dot(_rayDirection);
 
@@ -130,7 +130,7 @@ class ElementDragHelper extends EventHandler {
         if (Math.abs(denominator) > 0) {
             var rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
             var collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
-            var position = _rayOrigin.add(_rayDirection.scale(collisionDistance));
+            var position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
 
             _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(position, position);
 

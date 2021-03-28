@@ -1044,7 +1044,7 @@ class ForwardRenderer {
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
             // Directionals shine down the negative Y axis
-            wtm.getY(directional._direction).scale(-1);
+            wtm.getY(directional._direction).mulScalar(-1);
             directional._direction.normalize();
             this.lightDir[cnt][0] = directional._direction.x;
             this.lightDir[cnt][1] = directional._direction.y;
@@ -1172,7 +1172,7 @@ class ForwardRenderer {
         }
 
         // Spots shine down the negative Y axis
-        wtm.getY(spot._direction).scale(-1);
+        wtm.getY(spot._direction).mulScalar(-1);
         spot._direction.normalize();
         this.lightDir[cnt][0] = spot._direction.x;
         this.lightDir[cnt][1] = spot._direction.y;
