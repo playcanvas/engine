@@ -28,7 +28,7 @@ import { Component } from '../component.js';
  * * "cone": The component will render a cone (radius 0.5, height 1)
  * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
  * * "plane": The component will render a plane (1 unit in each dimension)
- * * "sphere": The component will render a sphere (radius 0.5).
+ * * "sphere": The component will render a sphere (radius 0.5)
  * @property {Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
  * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on this model.
