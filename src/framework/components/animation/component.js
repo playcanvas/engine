@@ -23,8 +23,8 @@ import { Component } from '../component.js';
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
  * @property {Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
  * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
- * @property {number} duration Get the duration in seconds of the current animation. [read only].
- * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only].
+ * @property {number} duration Get the duration in seconds of the current animation. [read only]
+ * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
  */
 class AnimationComponent extends Component {
