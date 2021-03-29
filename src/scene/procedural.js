@@ -891,14 +891,14 @@ function createBox(device, opts) {
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var corners = [
-        new Vec3(-he.x, -he.y,  he.z),
-        new Vec3(he.x, -he.y,  he.z),
-        new Vec3(he.x,  he.y,  he.z),
-        new Vec3(-he.x,  he.y,  he.z),
+        new Vec3(-he.x, -he.y, he.z),
+        new Vec3(he.x, -he.y, he.z),
+        new Vec3(he.x, he.y, he.z),
+        new Vec3(-he.x, he.y, he.z),
         new Vec3(he.x, -he.y, -he.z),
         new Vec3(-he.x, -he.y, -he.z),
-        new Vec3(-he.x,  he.y, -he.z),
-        new Vec3(he.x,  he.y, -he.z)
+        new Vec3(-he.x, he.y, -he.z),
+        new Vec3(he.x, he.y, -he.z)
     ];
 
     var faceAxes = [
