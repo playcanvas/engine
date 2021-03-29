@@ -8,11 +8,11 @@ const _schema = ['enabled'];
 
 /**
  * @class
- * @name pc.LayoutChildComponentSystem
- * @augments pc.ComponentSystem
+ * @name LayoutChildComponentSystem
+ * @augments ComponentSystem
  * @description Create a new LayoutChildComponentSystem.
- * @classdesc Manages creation of {@link pc.LayoutChildComponent}s.
- * @param {pc.Application} app - The application.
+ * @classdesc Manages creation of {@link LayoutChildComponent}s.
+ * @param {Application} app - The application.
  */
 class LayoutChildComponentSystem extends ComponentSystem {
     constructor(app) {

@@ -1,7 +1,7 @@
 /**
  * @function
- * @name pc.getTouchTargetCoords
- * @description Similar to {@link pc.getTargetCoords} for the MouseEvents.
+ * @name getTouchTargetCoords
+ * @description Similar to {@link getTargetCoords} for the MouseEvents.
  * This function takes a browser Touch object and returns the co-ordinates of the
  * touch relative to the target element.
  * @param {Touch} touch - The browser Touch object.
@@ -30,8 +30,8 @@ function getTouchTargetCoords(touch) {
 
 /**
  * @class
- * @name pc.Touch
- * @classdesc A instance of a single point touch on a {@link pc.TouchDevice}.
+ * @name Touch
+ * @classdesc A instance of a single point touch on a {@link TouchDevice}.
  * @description Create a new Touch object from the browser Touch.
  * @param {Touch} touch - The browser Touch object.
  * @property {number} id The identifier of the touch.
@@ -57,15 +57,15 @@ class Touch {
 
 /**
  * @class
- * @name pc.TouchEvent
+ * @name TouchEvent
  * @classdesc A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
- * browser event and provides lists of {@link pc.Touch} objects.
+ * browser event and provides lists of {@link Touch} objects.
  * @description Create a new TouchEvent from an existing browser event.
- * @param {pc.TouchDevice} device - The source device of the touch events.
+ * @param {TouchDevice} device - The source device of the touch events.
  * @param {TouchEvent} event - The original browser TouchEvent.
  * @property {Element} element The target Element that the event was fired from.
- * @property {pc.Touch[]} touches A list of all touches currently in contact with the device.
- * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event.
+ * @property {Touch[]} touches A list of all touches currently in contact with the device.
+ * @property {Touch[]} changedTouches A list of touches that have changed since the last event.
  * @property {TouchEvent} event - The original browser TouchEvent.
  */
 class TouchEvent {
@@ -91,12 +91,12 @@ class TouchEvent {
 
     /**
      * @function
-     * @name pc.TouchEvent#getTouchById
+     * @name TouchEvent#getTouchById
      * @description Get an event from one of the touch lists by the id. It is useful to access
      * touches by their id so that you can be sure you are referencing the same touch.
      * @param {number} id - The identifier of the touch.
-     * @param {pc.Touch[]} list - An array of touches to search.
-     * @returns {pc.Touch} The {@link pc.Touch} object or null.
+     * @param {Touch[]} list - An array of touches to search.
+     * @returns {Touch} The {@link Touch} object or null.
      */
     getTouchById(id, list) {
         var i, l = list.length;

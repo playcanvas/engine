@@ -3,11 +3,11 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
 var tipJointIds = window.XRHand ? [
-    XRHand.THUMB_PHALANX_TIP,
-    XRHand.INDEX_PHALANX_TIP,
-    XRHand.MIDDLE_PHALANX_TIP,
-    XRHand.RING_PHALANX_TIP,
-    XRHand.LITTLE_PHALANX_TIP
+    'thumb-tip',
+    'index-finger-tip',
+    'middle-finger-tip',
+    'ring-finger-tip',
+    'pinky-finger-tip'
 ] : [];
 
 var tipJointIdsIndex = {};
@@ -18,16 +18,16 @@ for (var i = 0; i < tipJointIds.length; i++) {
 
 /**
  * @class
- * @name pc.XrJoint
+ * @name XrJoint
  * @classdesc Represents joint of a finger
  * @description Represents joint of a finger
  * @param {number} index - Index of a joint within a finger
- * @param {number} id - Id of a joint based on XRHand specs
- * @param {pc.XrHand} hand - Hand that joint relates to
- * @param {pc.XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint
+ * @param {string} id - Id of a joint based on WebXR Hand Input Specs
+ * @param {XrHand} hand - Hand that joint relates to
+ * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint
  * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger
- * @property {pc.XrHand} hand Hand that joint relates to
- * @property {pc.XrFinger|null} finger Finger that joint relates to
+ * @property {XrHand} hand Hand that joint relates to
+ * @property {XrFinger|null} finger Finger that joint relates to
  * @property {boolean} wrist True if joint is a wrist
  * @property {boolean} tip True if joint is a tip of a finger
  * @property {number} radius The radius of a joint, which is a distance from joint to the edge of a skin
@@ -44,7 +44,7 @@ class XrJoint {
         this._finger = finger;
         if (this._finger) this._finger._joints.push(this);
 
-        this._wrist = id === XRHand.WRIST;
+        this._wrist = id === 'wrist';
         if (this._wrist) this._hand._wrist = this;
 
         this._tip = this._finger && !! tipJointIdsIndex[id];
@@ -92,9 +92,9 @@ class XrJoint {
 
     /**
      * @function
-     * @name pc.XrJoint#getPosition
+     * @name XrJoint#getPosition
      * @description Get the world space position of a joint
-     * @returns {pc.Vec3} The world space position of a joint
+     * @returns {Vec3} The world space position of a joint
      */
     getPosition() {
         this._updateTransforms();
@@ -104,9 +104,9 @@ class XrJoint {
 
     /**
      * @function
-     * @name pc.XrJoint#getRotation
+     * @name XrJoint#getRotation
      * @description Get the world space rotation of a joint
-     * @returns {pc.Quat} The world space rotation of a joint
+     * @returns {Quat} The world space rotation of a joint
      */
     getRotation() {
         this._updateTransforms();

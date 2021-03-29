@@ -8,16 +8,19 @@ var _invMatrix = new Mat4();
 
 /**
  * @class
- * @name pc.SkinInstance
+ * @name SkinInstance
  * @classdesc A skin instance is responsible for generating the matrix palette that is used to
  * skin vertices from object space to world space.
- * @param {pc.Skin} skin - The skin that will provide the inverse bind pose matrices to
+ * @param {Skin} skin - The skin that will provide the inverse bind pose matrices to
  * generate the final matrix palette.
- * @property {pc.GraphNode[]} bones An array of nodes representing each bone in this skin instance.
+ * @property {GraphNode[]} bones An array of nodes representing each bone in this skin instance.
  */
 class SkinInstance {
     constructor(skin) {
         this._dirty = true;
+
+        // optional root bone - used for cache lookup, not used for skinning
+        this._rootBone = null;
 
         // sequencial index of when the bone update was performed the last time
         this._skinUpdateIndex = -1;
@@ -63,6 +66,14 @@ class SkinInstance {
             this.boneTexture.destroy();
             this.boneTexture = null;
         }
+    }
+
+    get rootBone() {
+        return this._rootBone;
+    }
+
+    set rootBone(rootBone) {
+        this._rootBone = rootBone;
     }
 
     initSkin(skin) {

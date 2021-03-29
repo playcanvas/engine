@@ -11,14 +11,14 @@ import { Listener } from './listener.js';
 
 /**
  * @class
- * @name pc.SoundManager
- * @augments pc.EventHandler
+ * @name SoundManager
+ * @augments EventHandler
  * @classdesc The SoundManager is used to load and play audio. As well as apply system-wide settings
  * like global volume, suspend and resume.
  * @description Creates a new sound manager.
  * @param {object} [options] - Options options object.
  * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available.
- * @property {number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
+ * @property {number} volume Global volume for the manager. All {@link SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
  */
 class SoundManager extends EventHandler {
     constructor(options) {
@@ -106,13 +106,13 @@ class SoundManager extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundManager#playSound
-     * @description Create a new pc.Channel and begin playback of the sound.
-     * @param {pc.Sound} sound - The Sound object to play.
+     * @name SoundManager#playSound
+     * @description Create a new {@link Channel} and begin playback of the sound.
+     * @param {Sound} sound - The Sound object to play.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
-     * @returns {pc.Channel} The channel playing the sound.
+     * @returns {Channel} The channel playing the sound.
      */
     playSound(sound, options) {
         options = options || {};
@@ -127,14 +127,14 @@ class SoundManager extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundManager#playSound3d
-     * @description Create a new pc.Channel3d and begin playback of the sound at the position specified.
-     * @param {pc.Sound} sound - The Sound object to play.
-     * @param {pc.Vec3} position - The position of the sound in 3D space.
+     * @name SoundManager#playSound3d
+     * @description Create a new {@link Channel3d} and begin playback of the sound at the position specified.
+     * @param {Sound} sound - The Sound object to play.
+     * @param {Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
-     * @returns {pc.Channel3d} The 3D channel playing the sound.
+     * @returns {Channel3d} The 3D channel playing the sound.
      */
     playSound3d(sound, position, options) {
         options = options || {};

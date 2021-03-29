@@ -114,7 +114,7 @@
         app.root.addChild(light);
         light.setLocalEulerAngles(0, 10, 0);
 
-        // Create an entity with a point light component that is configured as a baked light
+        // Create an entity with a omni light component that is configured as a baked light
         var lightPoint = new pc.Entity("Point");
         lightPoint.addComponent("light", {
             affectDynamic: false,
@@ -128,7 +128,7 @@
             shadowType: pc.SHADOW_PCF3,
             color: pc.Color.RED,
             range: 10,
-            type: "point"
+            type: "omni"
         });
         lightPoint.setLocalPosition(-6, 5, 0);
         app.root.addChild(lightPoint);

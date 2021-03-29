@@ -2,21 +2,21 @@
 /**
  * @constant
  * @type {string}
- * @name pc.BODYTYPE_STATIC
+ * @name BODYTYPE_STATIC
  * @description Rigid body has infinite mass and cannot move.
  */
 export const BODYTYPE_STATIC = 'static';
 /**
  * @constant
  * @type {string}
- * @name pc.BODYTYPE_DYNAMIC
+ * @name BODYTYPE_DYNAMIC
  * @description Rigid body is simulated according to applied forces.
  */
 export const BODYTYPE_DYNAMIC = 'dynamic';
 /**
  * @constant
  * @type {string}
- * @name pc.BODYTYPE_KINEMATIC
+ * @name BODYTYPE_KINEMATIC
  * @description Rigid body has infinite mass and does not respond to forces but can still be moved by setting their velocity or position.
  */
 export const BODYTYPE_KINEMATIC = 'kinematic';

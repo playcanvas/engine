@@ -9,6 +9,16 @@ describe("pc.Vec2", function () {
         equal(4, v1.y);
     });
 
+    it("add", function() {
+        var v1 = new pc.Vec2(2, 4);
+        var v2 = new pc.Vec2(1, 2);
+
+        v1.add(v2);
+
+        equal(3, v1.x);
+        equal(6, v1.y);
+    });
+
     it("add2", function() {
         var v1 = new pc.Vec2(2, 4);
         var v2 = new pc.Vec2(1, 2);
@@ -18,6 +28,15 @@ describe("pc.Vec2", function () {
 
         equal(3, r.x);
         equal(6, r.y);
+    });
+
+    it("addScalar", function() {
+        var v = new pc.Vec2(2, 4);
+
+        v.addScalar(2);
+
+        equal(4, v.x);
+        equal(6, v.y);
     });
 
     it("clone", function () {
@@ -50,6 +69,33 @@ describe("pc.Vec2", function () {
 
     it("constructor: args", function() {
         var v = new pc.Vec2(1, 2);
+
+        equal(1, v.x);
+        equal(2, v.y);
+    });
+
+    it("div", function() {
+        var v1 = new pc.Vec2(9, 16);
+        var v2 = new pc.Vec2(3, 4);
+        v1.div(v2);
+
+        equal(3, v1.x);
+        equal(4, v1.y);
+    });
+
+    it("div2", function() {
+        var v1 = new pc.Vec2(9, 16);
+        var v2 = new pc.Vec2(3, 4);
+        var r = new pc.Vec2();
+        r.div2(v1, v2);
+
+        equal(3, r.x);
+        equal(4, r.y);
+    });
+
+    it("divScalar", function() {
+        var v = new pc.Vec2(3, 6);
+        v.divScalar(3);
 
         equal(1, v.x);
         equal(2, v.y);
@@ -144,6 +190,14 @@ describe("pc.Vec2", function () {
         equal(8, r.y);
     });
 
+    it("mulScalar", function() {
+        var v = new pc.Vec2(1, 2);
+        v.mulScalar(2);
+
+        equal(2, v.x);
+        equal(4, v.y);
+    });
+
     it("normalize", function(){
         var x = new pc.Vec2(10, 0);
         var y = new pc.Vec2(0, 10);
@@ -155,14 +209,6 @@ describe("pc.Vec2", function () {
         y.normalize()
         equal(0, y.x);
         equal(1, y.y);
-    });
-
-    it("scale", function() {
-        var v = new pc.Vec2(1, 2);
-        v.scale(2);
-
-        equal(2, v.x);
-        equal(4, v.y);
     });
 
     it("set", function() {
@@ -195,6 +241,15 @@ describe("pc.Vec2", function () {
         equal(2, r.y);
     });
 
+    it("subScalar", function() {
+        var v = new pc.Vec2(2, 4);
+
+        v.subScalar(2);
+
+        equal(0, v.x);
+        equal(2, v.y);
+    });
+
     it("toString", function() {
         var v1 = new pc.Vec2(2, 4);
 
@@ -204,4 +259,3 @@ describe("pc.Vec2", function () {
     });
 
 });
-

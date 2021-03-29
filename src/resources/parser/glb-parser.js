@@ -20,6 +20,7 @@ import {
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
+import { Texture } from '../../graphics/texture.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
@@ -315,18 +316,18 @@ var cloneTexture = function (texture) {
         return result;
     };
 
-    var result = new pc.Texture(texture.device, texture);   // duplicate texture
+    var result = new Texture(texture.device, texture);   // duplicate texture
     result._levels = shallowCopyLevels(texture);            // shallow copy the levels structure
     return result;
 };
 
 // given a texture asset, clone it
 var cloneTextureAsset = function (src) {
-    var result = new pc.Asset(src.name + '_clone',
-                              src.type,
-                              src.file,
-                              src.data,
-                              src.options);
+    var result = new Asset(src.name + '_clone',
+                           src.type,
+                           src.file,
+                           src.data,
+                           src.options);
     result.loaded = true;
     result.resource = cloneTexture(src.resource);
     src.registry.add(result);
@@ -335,6 +336,10 @@ var cloneTextureAsset = function (src) {
 
 var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
+    if (!positionDesc) {
+        // ignore meshes without positions
+        return null;
+    }
     var numVertices = positionDesc.count;
 
     // generate vertexDesc elements
@@ -575,7 +580,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
+var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) {
     var i, j, bindMatrix;
     var joints = gltfSkin.joints;
     var numJoints = joints.length;
@@ -605,14 +610,14 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
         boneNames[i] = nodes[joints[i]].name;
     }
 
-    var skeleton = gltfSkin.skeleton;
+    // create a cache key from bone names and see if we have matching skin
+    const key = boneNames.join("#");
+    let skin = glbSkins.get(key);
+    if (!skin) {
 
-    var skin = new Skin(device, ibp, boneNames);
-    skin.skeleton = nodes[skeleton];
-
-    skin.bones = [];
-    for (i = 0; i < joints.length; i++) {
-        skin.bones[i] = nodes[joints[i]];
+        // create the skin and add it to the cache
+        skin = new Skin(device, ibp, boneNames);
+        glbSkins.set(key, skin);
     }
 
     return skin;
@@ -628,7 +633,6 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
 
         var primitiveType, vertexBuffer, numIndices;
         var indices = null;
-        var mesh = new Mesh(device);
         var canUseMorph = true;
 
         // try and get draco compressed data first
@@ -702,7 +706,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                         canUseMorph = false;
                     }
                 } else {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
                     // #endif
                 }
@@ -716,94 +720,98 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
             primitiveType = getPrimitiveType(primitive);
         }
 
-        // build the mesh
-        mesh.vertexBuffer = vertexBuffer;
-        mesh.primitive[0].type = primitiveType;
-        mesh.primitive[0].base = 0;
-        mesh.primitive[0].indexed = (indices !== null);
+        var mesh = null;
+        if (vertexBuffer) {
+            // build the mesh
+            mesh = new Mesh(device);
+            mesh.vertexBuffer = vertexBuffer;
+            mesh.primitive[0].type = primitiveType;
+            mesh.primitive[0].base = 0;
+            mesh.primitive[0].indexed = (indices !== null);
 
-        // index buffer
-        if (indices !== null) {
-            var indexFormat;
-            if (indices instanceof Uint8Array) {
-                indexFormat = INDEXFORMAT_UINT8;
-            } else if (indices instanceof Uint16Array) {
-                indexFormat = INDEXFORMAT_UINT16;
-            } else {
-                indexFormat = INDEXFORMAT_UINT32;
-            }
-
-            // 32bit index buffer is used but not supported
-            if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
-
-                // #ifdef DEBUG
-                if (vertexBuffer.numVertices > 0xFFFF) {
-                    console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
-                }
-                // #endif
-
-                // convert to 16bit
-                indexFormat = INDEXFORMAT_UINT16;
-                indices = new Uint16Array(indices);
-            }
-
-            var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
-            mesh.indexBuffer[0] = indexBuffer;
-            mesh.primitive[0].count = indices.length;
-        } else {
-            mesh.primitive[0].count = vertexBuffer.numVertices;
-        }
-
-        mesh.materialIndex = primitive.material;
-
-        var accessor = accessors[primitive.attributes.POSITION];
-        var min = accessor.min;
-        var max = accessor.max;
-        var aabb = new BoundingBox(
-            new Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
-            new Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
-        );
-        mesh.aabb = aabb;
-
-        // morph targets
-        if (canUseMorph && primitive.hasOwnProperty('targets')) {
-            var targets = [];
-
-            primitive.targets.forEach(function (target, index) {
-                var options = {};
-
-                if (target.hasOwnProperty('POSITION')) {
-                    accessor = accessors[target.POSITION];
-                    options.deltaPositions = getAccessorData(accessor, bufferViews);
-                    options.deltaPositionsType = getComponentType(accessor.componentType);
-                    if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
-                        options.aabb = new BoundingBox();
-                        options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
-                    }
-                }
-
-                if (target.hasOwnProperty('NORMAL')) {
-                    accessor = accessors[target.NORMAL];
-                    options.deltaNormals = getAccessorData(accessor, bufferViews);
-                    options.deltaNormalsType = getComponentType(accessor.componentType);
-                }
-
-                if (gltfMesh.hasOwnProperty('extras') &&
-                    gltfMesh.extras.hasOwnProperty('targetNames')) {
-                    options.name = gltfMesh.extras.targetNames[index];
+            // index buffer
+            if (indices !== null) {
+                var indexFormat;
+                if (indices instanceof Uint8Array) {
+                    indexFormat = INDEXFORMAT_UINT8;
+                } else if (indices instanceof Uint16Array) {
+                    indexFormat = INDEXFORMAT_UINT16;
                 } else {
-                    options.name = targets.length.toString(10);
+                    indexFormat = INDEXFORMAT_UINT32;
                 }
 
-                targets.push(new MorphTarget(options));
-            });
+                // 32bit index buffer is used but not supported
+                if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
 
-            mesh.morph = new Morph(targets, device);
+                    // #if _DEBUG
+                    if (vertexBuffer.numVertices > 0xFFFF) {
+                        console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
+                    }
+                    // #endif
 
-            // set default morph target weights if they're specified
-            if (gltfMesh.hasOwnProperty('weights')) {
-                for (var i = 0; i < gltfMesh.weights.length; ++i) {
-                    targets[i].defaultWeight = gltfMesh.weights[i];
+                    // convert to 16bit
+                    indexFormat = INDEXFORMAT_UINT16;
+                    indices = new Uint16Array(indices);
+                }
+
+                var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
+                mesh.indexBuffer[0] = indexBuffer;
+                mesh.primitive[0].count = indices.length;
+            } else {
+                mesh.primitive[0].count = vertexBuffer.numVertices;
+            }
+
+            mesh.materialIndex = primitive.material;
+
+            var accessor = accessors[primitive.attributes.POSITION];
+            var min = accessor.min;
+            var max = accessor.max;
+            var aabb = new BoundingBox(
+                new Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
+                new Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
+            );
+            mesh.aabb = aabb;
+
+            // morph targets
+            if (canUseMorph && primitive.hasOwnProperty('targets')) {
+                var targets = [];
+
+                primitive.targets.forEach(function (target, index) {
+                    var options = {};
+
+                    if (target.hasOwnProperty('POSITION')) {
+                        accessor = accessors[target.POSITION];
+                        options.deltaPositions = getAccessorData(accessor, bufferViews);
+                        options.deltaPositionsType = getComponentType(accessor.componentType);
+                        if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
+                            options.aabb = new BoundingBox();
+                            options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
+                        }
+                    }
+
+                    if (target.hasOwnProperty('NORMAL')) {
+                        accessor = accessors[target.NORMAL];
+                        options.deltaNormals = getAccessorData(accessor, bufferViews);
+                        options.deltaNormalsType = getComponentType(accessor.componentType);
+                    }
+
+                    if (gltfMesh.hasOwnProperty('extras') &&
+                        gltfMesh.extras.hasOwnProperty('targetNames')) {
+                        options.name = gltfMesh.extras.targetNames[index];
+                    } else {
+                        options.name = targets.length.toString(10);
+                    }
+
+                    targets.push(new MorphTarget(options));
+                });
+
+                mesh.morph = new Morph(targets, device);
+
+                // set default morph target weights if they're specified
+                if (gltfMesh.hasOwnProperty('weights')) {
+                    for (var i = 0; i < gltfMesh.weights.length; ++i) {
+                        targets[i].defaultWeight = gltfMesh.weights[i];
+                    }
                 }
             }
         }
@@ -1253,8 +1261,10 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
         var target = channel.target;
         var curve = curves[channel.sampler];
 
+        var node = nodes[target.node];
+        var entityPath = [nodes[0].name, ...AnimBinder.splitPath(node.path, '/')];
         curve._paths.push({
-            entityPath: AnimBinder.splitPath(nodes[target.node].path, '/'),
+            entityPath: entityPath,
             component: 'graph',
             propertyPath: [transformSchema[target.path]]
         });
@@ -1361,8 +1371,12 @@ var createSkins = function (device, gltf, nodes, bufferViews) {
     if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
         return [];
     }
+
+    // cache for skins to filter out duplicates
+    var glbSkins = new Map();
+
     return gltf.skins.map(function (gltfSkin) {
-        return createSkin(device, gltfSkin, gltf.accessors, bufferViews, nodes);
+        return createSkin(device, gltfSkin, gltf.accessors, bufferViews, nodes, glbSkins);
     });
 };
 
@@ -1528,14 +1542,7 @@ var createResources = function (device, gltf, bufferViews, textureAssets, option
 };
 
 var applySampler = function (texture, gltfSampler) {
-    var defaultSampler = {
-        magFilter: 9729,
-        minFilter: 9987,
-        wrapS: 10497,
-        wrapT: 10497
-    };
-
-    var getFilter = function (filter) {
+    var getFilter = function (filter, defaultValue) {
         switch (filter) {
             case 9728: return FILTER_NEAREST;
             case 9729: return FILTER_LINEAR;
@@ -1543,25 +1550,25 @@ var applySampler = function (texture, gltfSampler) {
             case 9985: return FILTER_LINEAR_MIPMAP_NEAREST;
             case 9986: return FILTER_NEAREST_MIPMAP_LINEAR;
             case 9987: return FILTER_LINEAR_MIPMAP_LINEAR;
-            default:   return FILTER_LINEAR;
+            default:   return defaultValue;
         }
     };
 
-    var getWrap = function (wrap) {
+    var getWrap = function (wrap, defaultValue) {
         switch (wrap) {
             case 33071: return ADDRESS_CLAMP_TO_EDGE;
             case 33648: return ADDRESS_MIRRORED_REPEAT;
             case 10497: return ADDRESS_REPEAT;
-            default:    return ADDRESS_REPEAT;
+            default:    return defaultValue;
         }
     };
 
     if (texture) {
-        gltfSampler = gltfSampler || defaultSampler;
-        texture.minFilter = getFilter(gltfSampler.minFilter);
-        texture.magFilter = getFilter(gltfSampler.magFilter);
-        texture.addressU = getWrap(gltfSampler.wrapS);
-        texture.addressV = getWrap(gltfSampler.wrapT);
+        gltfSampler = gltfSampler || { };
+        texture.minFilter = getFilter(gltfSampler.minFilter, FILTER_LINEAR_MIPMAP_LINEAR);
+        texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
+        texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
+        texture.addressV = getWrap(gltfSampler.wrapT, ADDRESS_REPEAT);
     }
 };
 
@@ -2097,7 +2104,10 @@ class GlbParser {
                 if (gltfNode.hasOwnProperty('mesh')) {
                     var meshGroup = glb.meshes[gltfNode.mesh];
                     for (var mi = 0; mi < meshGroup.length; mi++) {
-                        createMeshInstance(model, meshGroup[mi], glb.skins, skinInstances, glb.materials, node, gltfNode);
+                        const mesh = meshGroup[mi];
+                        if (mesh) {
+                            createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);
+                        }
                     }
                 }
             }

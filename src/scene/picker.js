@@ -17,15 +17,15 @@ var _prepareDeprecationWarning = false;
 
 /**
  * @class
- * @name pc.Picker
+ * @name Picker
  * @classdesc Picker object used to select mesh instances from screen coordinates.
  * @description Create a new instance of a Picker object.
- * @param {pc.Application} app - The application managing this picker instance.
+ * @param {Application} app - The application managing this picker instance.
  * @param {number} width - The width of the pick buffer in pixels.
  * @param {number} height - The height of the pick buffer in pixels.
  * @property {number} width Width of the pick buffer in pixels (read-only).
  * @property {number} height Height of the pick buffer in pixels (read-only).
- * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
+ * @property {RenderTarget} renderTarget The render target used by the picker internally (read-only).
  */
 class Picker {
     constructor(app, width, height) {
@@ -33,7 +33,7 @@ class Picker {
             app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
                 // #endif
             }
@@ -76,14 +76,14 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#getSelection
+     * @name Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
      * previously prepared pick buffer.The rectangle using top-left coordinate system.
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle.
      * @param {number} [height] - The height of the rectangle.
-     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection.
+     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection(10, 20);
@@ -95,7 +95,7 @@ class Picker {
         var device = this.device;
 
         if (typeof x === 'object') {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!_prepareDeprecationWarning) {
                 _prepareDeprecationWarning = true;
                 console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
@@ -156,14 +156,14 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#prepare
+     * @name Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
+     * of the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera - The camera component used to render the scene.
-     * @param {pc.Scene} scene - The scene containing the pickable mesh instances.
-     * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+     * in any way, {@link Picker#prepare} does not need to be called again.
+     * @param {CameraComponent} camera - The camera component used to render the scene.
+     * @param {Scene} scene - The scene containing the pickable mesh instances.
+     * @param {Layer|RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
      * If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     prepare(camera, scene, arg) {
@@ -172,7 +172,7 @@ class Picker {
         var self = this;
 
         if (camera instanceof Camera) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!_getSelectionDeprecationWarning) {
                 _getSelectionDeprecationWarning = true;
                 console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
@@ -254,14 +254,14 @@ class Picker {
             var layer;
             var layerCamId, transparent;
             for (i = 0; i < layers.length; i++) {
-                if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
+                if (layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
             }
             for (i = 0; i < layers.length; i++) {
                 layer = layers[i];
                 if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
                 layerCamId = layer.cameras.indexOf(camera);
                 if (layerCamId < 0) continue;
-                if (layer.overrideClear && layer._clearDepthBuffer && !layer._pickerCleared) {
+                if (layer._clearDepthBuffer && !layer._pickerCleared) {
                     this.meshInstances.push(this.clearDepthCommand);
                     layer._pickerCleared = true;
                 }
@@ -357,11 +357,11 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#resize
+     * @name Picker#resize
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
      * to match the resolution of the corresponding frame buffer use for general rendering of the
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
+     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers will
      * yield greater performance, so there is a trade off.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.

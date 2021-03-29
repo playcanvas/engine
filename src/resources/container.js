@@ -11,12 +11,12 @@ import { SkinInstance } from '../scene/skin-instance.js';
 
 /**
  * @class
- * @name pc.ContainerResource
+ * @name ContainerResource
  * @classdesc Container for a list of animations, textures, materials and a model.
  * @param {object} data - The loaded GLB data.
- * @property {pc.Asset[]} animations - Array of assets of animations in the GLB container.
- * @property {pc.Asset[]} textures - Array of assets of textures in the GLB container.
- * @property {pc.Asset[]} materials - Array of assets of materials in the GLB container.
+ * @property {Asset[]} animations - Array of assets of animations in the GLB container.
+ * @property {Asset[]} textures - Array of assets of textures in the GLB container.
+ * @property {Asset[]} materials - Array of assets of materials in the GLB container.
  */
 class ContainerResource {
     constructor(data) {
@@ -29,12 +29,42 @@ class ContainerResource {
         this.registry = null;
     }
 
+    /**
+     * @function
+     * @name ContainerResource#instantiateModelEntity
+     * @description Instantiates an entity with a model component.
+     * @param {object} [options] - The initialization data for the model component type {@link ModelComponent}.
+     * @returns {Entity} A single entity with a model component. Model component internally contains a hierarchy based on {@link GraphNode}.
+     * @example
+     * // load a glb file and instantiate an entity with a model component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateModelEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     * });
+     */
     instantiateModelEntity(options) {
         var entity = new Entity();
         entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
         return entity;
     }
 
+    /**
+     * @function
+     * @name ContainerResource#instantiateRenderEntity
+     * @description Instantiates an entity with a render component.
+     * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
+     * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
+     * @example
+     * // load a glb file and instantiate an entity with a model component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateRenderEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     * });
+     */
     instantiateRenderEntity(options) {
         // helper function to recursively clone a hierarchy while converting ModelComponent to RenderComponents
         var cloneToEntity = function (skinInstances, model, node) {
@@ -149,6 +179,11 @@ class ContainerResource {
             this.materials = null;
         }
 
+        if (this.renders) {
+            destroyAssets(this.renders);
+            this.renders = null;
+        }
+
         if (this.model) {
             destroyAsset(this.model);
             this.model = null;
@@ -161,8 +196,8 @@ class ContainerResource {
 
 /**
  * @class
- * @name pc.ContainerHandler
- * @implements {pc.ResourceHandler}
+ * @name ContainerHandler
+ * @implements {ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
  * The asset options object can be used to pass load time callbacks for handling the various resources
@@ -190,8 +225,8 @@ class ContainerResource {
  *     },
  * });
  * ```
- * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
- * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ * @param {GraphicsDevice} device - The graphics device that will be rendering.
+ * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ContainerHandler {
     constructor(device, defaultMaterial) {

@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.SortedLoopArray
+ * @name SortedLoopArray
  * @classdesc Helper class used to hold an array of items in a specific order. This array is safe to modify
  * while we loop through it. The class assumes that it holds objects that need to be sorted based on
  * one of their fields.
@@ -33,18 +33,18 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#_binarySearch
+     * @name SortedLoopArray#_binarySearch
      * @description Searches for the right spot to insert the specified item.
      * @param {object} item - The item.
      * @returns {number} The index where to insert the item.
      */
     _binarySearch(item) {
-        var left = 0;
-        var right = this.items.length - 1;
-        var search = item[this._sortBy];
+        let left = 0;
+        let right = this.items.length - 1;
+        const search = item[this._sortBy];
 
-        var middle;
-        var current;
+        let middle;
+        let current;
         while (left <= right) {
             middle = Math.floor((left + right) / 2);
             current = this.items[middle][this._sortBy];
@@ -59,21 +59,21 @@ class SortedLoopArray {
     }
 
     _doSort(a, b) {
-        var sortBy = this._sortBy;
+        const sortBy = this._sortBy;
         return a[sortBy] - b[sortBy];
     }
 
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#insert
+     * @name SortedLoopArray#insert
      * @description Inserts the specified item into the array at the right
      * index based on the 'sortBy' field passed into the constructor. This
      * also adjusts the loopIndex accordingly.
      * @param {object} item - The item to insert.
      */
     insert(item) {
-        var index = this._binarySearch(item);
+        const index = this._binarySearch(item);
         this.items.splice(index, 0, item);
         this.length++;
         if (this.loopIndex >= index) {
@@ -84,7 +84,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#append
+     * @name SortedLoopArray#append
      * @description Appends the specified item to the end of the array. Faster than insert()
      * as it does not binary search for the right index. This also adjusts
      * the loopIndex accordingly.
@@ -98,12 +98,12 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#remove
+     * @name SortedLoopArray#remove
      * @description Removes the specified item from the array.
      * @param {object} item - The item to remove.
      */
     remove(item) {
-        var idx = this.items.indexOf(item);
+        const idx = this.items.indexOf(item);
         if (idx < 0) return;
 
         this.items.splice(idx, 1);
@@ -116,7 +116,7 @@ class SortedLoopArray {
     /**
      * @private
      * @function
-     * @name pc.SortedLoopArray#sort
+     * @name SortedLoopArray#sort
      * @description Sorts elements in the array based on the 'sortBy' field
      * passed into the constructor. This also updates the loopIndex
      * if we are currently looping.
@@ -126,7 +126,7 @@ class SortedLoopArray {
      */
     sort() {
         // get current item pointed to by loopIndex
-        var current = (this.loopIndex >= 0 ? this.items[this.loopIndex] : null);
+        const current = (this.loopIndex >= 0 ? this.items[this.loopIndex] : null);
         // sort
         this.items.sort(this._sortHandler);
         // find new loopIndex

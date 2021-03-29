@@ -5,12 +5,12 @@ import { Component } from '../component.js';
 /**
  * @component
  * @class
- * @name pc.CollisionComponent
- * @augments pc.Component
- * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent}
+ * @name CollisionComponent
+ * @augments Component
+ * @classdesc A collision volume. Use this in conjunction with a {@link RigidBodyComponent}
  * to make a collision volume that can be simulated using the physics engine.
  *
- * If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision
+ * If the {@link Entity} does not have a {@link RigidBodyComponent} then this collision
  * volume will act as a trigger volume. When an entity with a dynamic or kinematic body enters
  * or leaves an entity with a trigger volume, both entities will receive trigger events.
  *
@@ -23,8 +23,8 @@ import { Component } from '../component.js';
  * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
  *
  * @description Create a new CollisionComponent.
- * @param {pc.CollisionComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the collision volume. Can be:
  *
  * * "box": A box-shaped collision volume.
@@ -38,7 +38,7 @@ import { Component } from '../component.js';
  * * "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
- * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the
+ * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the
  * x, y and z axes. Defaults to [0.5, 0.5, 0.5].
  * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
  * volumes. Defaults to 0.5.
@@ -46,9 +46,9 @@ import { Component } from '../component.js';
  * collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
  * @property {number} height The total height of the capsule, cylinder or cone-shaped collision
  * volume from tip to tip. Defaults to 2.
- * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be
+ * @property {Asset|number} asset The asset for the model of the mesh collision volume - can also be
  * an asset id. Defaults to null.
- * @property {pc.Model} model The model that is added to the scene graph for the mesh collision
+ * @property {Model} model The model that is added to the scene graph for the mesh collision
  * volume.
  */
 class CollisionComponent extends Component {
@@ -71,39 +71,39 @@ class CollisionComponent extends Component {
     // Events Documentation
     /**
      * @event
-     * @name pc.CollisionComponent#contact
+     * @name CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
-     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#collisionstart
+     * @name CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result - Details of the contact between the two Entities.
+     * @param {ContactResult} result - Details of the contact between the two Entities.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#collisionend
+     * @name CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
+     * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#triggerenter
+     * @name CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
+     * a {@link RigidBodyComponent} attached.
+     * @param {Entity} other - The {@link Entity} that entered this collision volume.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#triggerleave
+     * @name CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.
+     * a {@link RigidBodyComponent} attached.
+     * @param {Entity} other - The {@link Entity} that exited this collision volume.
      */
 
     onSetType(name, oldValue, newValue) {

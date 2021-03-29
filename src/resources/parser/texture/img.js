@@ -7,9 +7,10 @@ import { Texture } from '../../../graphics/texture.js';
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
 
 /**
+ * @private
  * @class
- * @name pc.ImgParser
- * @implements {pc.TextureParser}
+ * @name ImgParser
+ * @implements {TextureParser}
  * @classdesc Parser for browser-supported image formats.
  */
 class ImgParser {
@@ -40,7 +41,7 @@ class ImgParser {
         var format = (ext === ".jpg" || ext === ".jpeg") ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
         var texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             width: data.width,

@@ -31,10 +31,10 @@ function upgradeDataSchema(data) {
 
 /**
  * @class
- * @name pc.FontHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Font} resources.
- * @param {pc.ResourceLoader} loader - The resource loader.
+ * @name FontHandler
+ * @implements {ResourceHandler}
+ * @classdesc Resource handler used for loading {@link Font} resources.
+ * @param {ResourceLoader} loader - The resource loader.
  */
 class FontHandler {
     constructor(loader) {

@@ -6,11 +6,11 @@ import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../grap
 /* eslint-disable jsdoc/check-examples */
 /**
  * @class
- * @name pc.XrDepthSensing
- * @augments pc.EventHandler
+ * @name XrDepthSensing
+ * @augments EventHandler
  * @classdesc Depth Sensing provides depth information which is reconstructed using the underlying AR system. It provides the ability to query depth values (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for reconstructing real world geometry, virtual object placement, occlusion of virtual objects by real world geometry and more.
  * @description Depth Sensing provides depth information which is reconstructed using the underlying AR system. It provides the ability to query depth values (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for reconstructing real world geometry, virtual object placement, occlusion of virtual objects by real world geometry and more.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Depth Sensing is supported.
  * @property {number} width Width of depth texture or 0 if not available.
  * @property {number} height Height of depth texture or 0 if not available.
@@ -83,20 +83,20 @@ class XrDepthSensing extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrDepthSensing#available
+     * @name XrDepthSensing#available
      * @description Fired when depth sensing data becomes available.
      */
 
     /**
      * @event
-     * @name pc.XrDepthSensing#unavailable
+     * @name XrDepthSensing#unavailable
      * @description Fired when depth sensing data becomes unavailable.
      */
 
     /**
      * @event
-     * @name pc.XrDepthSensing#resize
-     * @description Fired when the depth sensing texture been resized. {@link pc.XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
+     * @name XrDepthSensing#resize
+     * @description Fired when the depth sensing texture been resized. {@link XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
      * @param {number} width - The new width of the depth texture in pixels.
      * @param {number} height - The new height of the depth texture in pixels.
      * @example
@@ -181,10 +181,10 @@ class XrDepthSensing extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrDepthSensing#getDepth
+     * @name XrDepthSensing#getDepth
      * @param {number} x - x coordinate of pixel in depth texture.
      * @param {number} y - y coordinate of pixel in depth texture.
-     * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link pc.XrDepthSensing#width} and {@link pc.XrDepthSensing#height}. This is not using a GPU texture and is a CPU path.
+     * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link XrDepthSensing#width} and {@link XrDepthSensing#height}. This is not using a GPU texture and is a CPU path.
      * @example
      * var depth = app.xr.depthSensing.getDepth(x, y);
      * if (depth !== null) {
@@ -204,7 +204,7 @@ class XrDepthSensing extends EventHandler {
     }
 
     /**
-     * @name pc.XrDepthSensing#available
+     * @name XrDepthSensing#available
      * @type {boolean}
      * @description True if depth sensing information is available.
      * @example
@@ -226,9 +226,9 @@ class XrDepthSensing extends EventHandler {
 
     /* eslint-disable jsdoc/check-examples */
     /**
-     * @name pc.XrDepthSensing#texture
-     * @type {pc.Texture}
-     * @description Texture that contains packed depth information. The format of this texture is {@link pc.PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can be normalized using {@link pc.XrDepthSensing#uvMatrix}.
+     * @name XrDepthSensing#texture
+     * @type {Texture}
+     * @description Texture that contains packed depth information. The format of this texture is {@link PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can be normalized using {@link XrDepthSensing#uvMatrix}.
      * @example
      * material.diffuseMap = depthSensing.texture;
      * @example
@@ -261,9 +261,9 @@ class XrDepthSensing extends EventHandler {
     }
 
     /**
-     * @name pc.XrDepthSensing#uvMatrix
-     * @type {pc.Mat4}
-     * @description 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader. It is updated when the depth texture is resized. Refer to {@link pc.XrDepthSensing#resize}.
+     * @name XrDepthSensing#uvMatrix
+     * @type {Mat4}
+     * @description 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader. It is updated when the depth texture is resized. Refer to {@link XrDepthSensing#resize}.
      * @example
      * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
      */

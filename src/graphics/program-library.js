@@ -45,7 +45,7 @@ class ProgramLibrary {
     getProgram(name, options) {
         var generator = this._generators[name];
         if (generator === undefined) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("ProgramLibrary#getProgram: No program library functions registered for: " + name);
             // #endif
             return null;

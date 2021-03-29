@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimCurve
+ * @name AnimCurve
  * @classdesc Animation curve links an input data set to an output data set
  * and defines the interpolation method to use.
  * @description Create a new animation curve
@@ -10,9 +10,9 @@
  * @param {number} output - index of the curve which specifies the value data.
  * @param {number} interpolation - the interpolation method to use. One of the following:
  *
- * * {@link pc.INTERPOLATION_STEP}
- * * {@link pc.INTERPOLATION_LINEAR}
- * * {@link pc.INTERPOLATION_CUBIC}
+ * * {@link INTERPOLATION_STEP}
+ * * {@link INTERPOLATION_LINEAR}
+ * * {@link INTERPOLATION_CUBIC}
  */
 class AnimCurve {
     constructor(paths, input, output, interpolation) {

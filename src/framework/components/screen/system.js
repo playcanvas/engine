@@ -12,11 +12,11 @@ const _schema = ['enabled'];
 
 /**
  * @class
- * @name pc.ScreenComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Manages creation of {@link pc.ScreenComponent}s.
+ * @name ScreenComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Manages creation of {@link ScreenComponent}s.
  * @description Create a new ScreenComponentSystem.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class ScreenComponentSystem extends ComponentSystem {
     constructor(app) {

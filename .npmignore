@@ -1,9 +1,0 @@
-.*
-/examples
-/extras
-/src
-/tests
-/conf-api.json
-/conf-tsd.json
-/externs.js
-/rollup.config.js

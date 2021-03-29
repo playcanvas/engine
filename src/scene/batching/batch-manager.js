@@ -82,11 +82,11 @@ function getScaleSign(mi) {
 
 /**
  * @class
- * @name pc.BatchManager
+ * @name BatchManager
  * @classdesc Glues many mesh instances into a single one for better performance.
- * @param {pc.GraphicsDevice} device - The graphics device used by the batch manager.
- * @param {pc.Entity} root - The entity under which batched models are added.
- * @param {pc.Scene} scene - The scene that the batch manager affects.
+ * @param {GraphicsDevice} device - The graphics device used by the batch manager.
+ * @param {Entity} root - The entity under which batched models are added.
+ * @param {Scene} scene - The scene that the batch manager affects.
  */
 class BatchManager {
     constructor(device, root, scene) {
@@ -100,7 +100,7 @@ class BatchManager {
         this._batchList = [];
         this._dirtyGroups = [];
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats = {
             createTime: 0,
             updateLastFrameTime: 0
@@ -120,16 +120,16 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#addGroup
+     * @name BatchManager#addGroup
      * @description Adds new global batch group.
      * @param {string} name - Custom name.
      * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale after being batched?
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
-     * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
+     * {@link BatchManager#prepare} will split objects into local groups based on this size.
      * @param {number} [id] - Optional custom unique id for the group (will be generated automatically otherwise).
-     * @param {number[]} [layers] - Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will
+     * @param {number[]} [layers] - Optional layer ID array. Default is [{@link LAYERID_WORLD}]. The whole batch group will
      * belong to these layers. Layers of source models will be ignored.
-     * @returns {pc.BatchGroup} Group object.
+     * @returns {BatchGroup} Group object.
      */
     addGroup(name, dynamic, maxAabbSize, id, layers) {
         if (id === undefined) {
@@ -138,7 +138,7 @@ class BatchManager {
         }
 
         if (this._batchGroups[id]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("batch group with id " + id + " already exists");
             // #endif
             return;
@@ -152,14 +152,14 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#removeGroup
+     * @name BatchManager#removeGroup
      * @description Remove global batch group by id.
      * Note, this traverses the entire scene graph and clears the batch group id from all components.
      * @param {number} id - Batch Group ID.
      */
     removeGroup(id) {
         if (!this._batchGroups[id]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("batch group with id " + id + " doesn't exist");
             // #endif
             return;
@@ -182,10 +182,10 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#markGroupDirty
+     * @name BatchManager#markGroupDirty
      * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
      * Note, re-batching a group is a potentially expensive operation.
-     * @param  {number} id - Batch Group ID to mark as dirty.
+     * @param {number} id - Batch Group ID to mark as dirty.
      */
     markGroupDirty(id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
@@ -195,10 +195,10 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#getGroupByName
-     * @description Retrieves a {@link pc.BatchGroup} object with a corresponding name, if it exists, or null otherwise.
+     * @name BatchManager#getGroupByName
+     * @description Retrieves a {@link BatchGroup} object with a corresponding name, if it exists, or null otherwise.
      * @param {string} name - Name.
-     * @returns {pc.BatchGroup} Group object.
+     * @returns {BatchGroup} Group object.
      */
     getGroupByName(name) {
         var groups = this._batchGroups;
@@ -214,10 +214,10 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#getBatches
-     * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied.
-     * @param  {number} batchGroupId - The id of the batch group.
-     * @returns {pc.Batch[]} A list of batches that are used to render the batch group.
+     * @name BatchManager#getBatches
+     * @description Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
+     * @param {number} batchGroupId - The id of the batch group.
+     * @returns {Batch[]} A list of batches that are used to render the batch group.
      */
     getBatches(batchGroupId) {
         var results = [];
@@ -262,7 +262,7 @@ class BatchManager {
                 this.markGroupDirty(groupId);
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
             // #endif
         }
@@ -277,7 +277,7 @@ class BatchManager {
                 this.markGroupDirty(groupId);
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
             // #endif
         }
@@ -335,7 +335,7 @@ class BatchManager {
 
             node.model.removeModelFromLayers();
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             node.model._batchGroup = group;
             // #endif
         }
@@ -369,7 +369,7 @@ class BatchManager {
 
         if (valid) {
             group._ui = true;
-            // #ifdef DEBUG
+            // #if _DEBUG
             node.element._batchGroup = group;
             // #endif
         }
@@ -415,7 +415,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#generate
+     * @name BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
      * @param {number[]} [groupIds] - Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
@@ -459,7 +459,7 @@ class BatchManager {
 
             groupData = this._batchGroups[groupId];
             if (!groupData) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("batch group " + groupId + " not found");
                 // #endif
                 continue;
@@ -481,7 +481,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#prepare
+     * @name BatchManager#prepare
      * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
      * The input list will be split, if:
      *
@@ -492,12 +492,12 @@ class BatchManager {
      * * Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end).
      * * Bounding box of a batch is larger than maxAabbSize in any dimension.
      *
-     * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances
+     * @param {MeshInstance[]} meshInstances - Input list of mesh instances
      * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
      * @param {boolean} translucent - Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {pc.MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
+     * @returns {MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link BatchManager#create}.
      */
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
@@ -629,16 +629,16 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#create
-     * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
-     * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances.
+     * @name BatchManager#create
+     * @description Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and returns a {@link Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
+     * @param {MeshInstance[]} meshInstances - Input list of mesh instances.
      * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done automatically with default batches.
-     * @returns {pc.Batch} The resulting batch object.
+     * @returns {Batch} The resulting batch object.
      */
     create(meshInstances, dynamic, batchGroupId) {
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var time = now();
         // #endif
 
@@ -767,7 +767,7 @@ class BatchManager {
 
                                 for (j = 0; j < totalComponents; j += stream.numComponents) {
                                     vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    mat3.transform(vec, vec);
+                                    mat3.transformVector(vec, vec);
                                     subarray[j] = vec.x;
                                     subarray[j + 1] = vec.y;
                                     subarray[j + 2] = vec.z;
@@ -872,7 +872,7 @@ class BatchManager {
             batch.model = newModel;
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats.createTime += now() - time;
         // #endif
 
@@ -882,9 +882,9 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#update
+     * @name BatchManager#update
      * @description Updates bounding box for a batch. Called automatically.
-     * @param {pc.Batch} batch - A batch object.
+     * @param {Batch} batch - A batch object.
      */
     update(batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
@@ -899,7 +899,7 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#updateAll
+     * @name BatchManager#updateAll
      * @description Updates bounding boxes for all dynamic batches. Called automatically.
      */
     updateAll() {
@@ -909,7 +909,7 @@ class BatchManager {
             this.generate(this._dirtyGroups);
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var time = now();
         // #endif
 
@@ -918,18 +918,18 @@ class BatchManager {
             this.update(this._batchList[i]);
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats.updateLastFrameTime = now() - time;
         // #endif
     }
 
     /**
      * @function
-     * @name pc.BatchManager#clone
+     * @name BatchManager#clone
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
-     * @param {pc.Batch} batch - A batch object.
-     * @param {pc.MeshInstance[]} clonedMeshInstances - New mesh instances.
-     * @returns {pc.Batch} New batch object.
+     * @param {Batch} batch - A batch object.
+     * @param {MeshInstance[]} clonedMeshInstances - New mesh instances.
+     * @returns {Batch} New batch object.
      */
     clone(batch, clonedMeshInstances) {
         var batch2 = new Batch(clonedMeshInstances, batch.dynamic, batch.batchGroupId);
@@ -967,9 +967,9 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#destroy
+     * @name BatchManager#destroy
      * @description Removes the batch model from all layers and destroys it.
-     * @param {pc.Batch} batch - A batch object.
+     * @param {Batch} batch - A batch object.
      */
     destroy(batch) {
         if (!batch.model)

@@ -1,15 +1,12 @@
-import { http } from '../net/http.js';
-
 import { SceneParser } from './parser/scene.js';
-
-import { TemplateUtils } from '../templates/template-utils.js';
+import { SceneUtils } from "./scene-utils.js";
 
 /**
  * @class
- * @name pc.SceneHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Scene} resources.
- * @param {pc.Application} app - The running {@link pc.Application}.
+ * @name SceneHandler
+ * @implements {ResourceHandler}
+ * @classdesc Resource handler used for loading {@link Scene} resources.
+ * @param {Application} app - The running {@link Application}.
  */
 class SceneHandler {
     constructor(app) {
@@ -18,38 +15,7 @@ class SceneHandler {
     }
 
     load(url, callback) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        var assets = this._app.assets;
-
-        http.get(url.load, {
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        }, function (err, response) {
-            if (!err) {
-                TemplateUtils.waitForTemplatesInScene(
-                    response,
-                    assets,
-                    callback);
-            } else {
-                var errMsg = 'Error while loading scene ' + url.original;
-                if (err.message) {
-                    errMsg += ': ' + err.message;
-                    if (err.stack) {
-                        errMsg += '\n' + err.stack;
-                    }
-                } else {
-                    errMsg += ': ' + err;
-                }
-
-                callback(errMsg);
-            }
-        });
+        SceneUtils.load(url, callback);
     }
 
     open(url, data) {

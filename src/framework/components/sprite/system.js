@@ -19,10 +19,10 @@ const _schema = ['enabled'];
 
 /**
  * @class
- * @name pc.SpriteComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Manages creation of {@link pc.SpriteComponent}s.
- * @param {pc.Application} app - The application.
+ * @name SpriteComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Manages creation of {@link SpriteComponent}s.
+ * @param {Application} app - The application.
  */
 class SpriteComponentSystem extends ComponentSystem {
     constructor(app) {

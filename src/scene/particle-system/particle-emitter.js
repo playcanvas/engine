@@ -50,7 +50,7 @@ const particleVerts = [
     [-1, 1]
 ];
 
-var _createTexture = function (device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
+function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     var mipFilter = FILTER_NEAREST;
     if (filter && format === PIXELFORMAT_R8_G8_B8_A8)
@@ -84,7 +84,7 @@ var _createTexture = function (device, width, height, pixelData, format = PIXELF
     texture.unlock();
 
     return texture;
-};
+}
 
 function saturate(x) {
     return Math.max(Math.min(x, 1), 0);
@@ -415,7 +415,7 @@ class ParticleEmitter {
         this.worldBoundsMul.y = 1.0 / this.worldBoundsSize.y;
         this.worldBoundsMul.z = 1.0 / this.worldBoundsSize.z;
 
-        this.worldBoundsAdd.copy(this.worldBounds.center).mul(this.worldBoundsMul).scale(-1);
+        this.worldBoundsAdd.copy(this.worldBounds.center).mul(this.worldBoundsMul).mulScalar(-1);
         this.worldBoundsAdd.x += 0.5;
         this.worldBoundsAdd.y += 0.5;
         this.worldBoundsAdd.z += 0.5;
@@ -459,7 +459,7 @@ class ParticleEmitter {
 
         this.worldBounds.copy(this.worldBoundsTrail[0]);
 
-        this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+        this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
 
         if (this.localSpace) {
             this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, nodeWT);
@@ -483,7 +483,7 @@ class ParticleEmitter {
         this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
 
         this.worldBounds.copy(this.worldBoundsTrail[0]);
-        this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+        this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
 
         this.prevWorldBoundsSize.copy(this.worldBoundsSize);
         this.prevWorldBoundsCenter.copy(this.worldBounds.center);
@@ -607,7 +607,7 @@ class ParticleEmitter {
             this.worldBoundsTrail[0].copy(this.worldBounds);
             this.worldBoundsTrail[1].copy(this.worldBounds);
 
-            this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+            this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
             if (this.pack8) this.calculateBoundsMad();
@@ -1132,7 +1132,7 @@ class ParticleEmitter {
     addTime(delta, isOnStop) {
         var device = this.graphicsDevice;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var startTime = now();
         // #endif
 
@@ -1209,7 +1209,7 @@ class ParticleEmitter {
             this.meshInstance.drawOrder = this.drawOrder;
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._addTimeTime += now() - startTime;
         // #endif
     }

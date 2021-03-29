@@ -6,13 +6,13 @@ import { VrDisplay } from './vr-display.js';
  * @private
  * @deprecated
  * @class
- * @name pc.VrManager
- * @augments pc.EventHandler
- * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
- * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
- * @param {pc.Application} app - The main application.
- * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device.
- * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list.
+ * @name VrManager
+ * @augments EventHandler
+ * @classdesc Manage and update {@link VrDisplay}s that are attached to this device.
+ * @description Manage and update {@link VrDisplay}s that are attached to this device.
+ * @param {Application} app - The main application.
+ * @property {VrDisplay[]} displays The list of {@link VrDisplay}s that are attached to this device.
+ * @property {VrDisplay} display The default {@link VrDisplay} to be used. Usually the first in the `displays` list.
  * @property {boolean} isSupported Reports whether this device supports the WebVR API.
  */
 class VrManager extends EventHandler {
@@ -53,9 +53,9 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @event
-     * @name pc.VrManager#displayconnect
+     * @name VrManager#displayconnect
      * @description Fired when an VR display is connected.
-     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been connected.
+     * @param {VrDisplay} display - The {@link VrDisplay} that has just been connected.
      * @example
      * this.app.vr.on("displayconnect", function (display) {
      *     // use `display` here
@@ -66,9 +66,9 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @event
-     * @name pc.VrManager#displaydisconnect
+     * @name VrManager#displaydisconnect
      * @description Fired when an VR display is disconnected.
-     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been disconnected.
+     * @param {VrDisplay} display - The {@link VrDisplay} that has just been disconnected.
      * @example
      * this.app.vr.on("displaydisconnect", function (display) {
      *     // `display` is no longer connected
@@ -79,7 +79,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @static
-     * @name pc.VrManager.isSupported
+     * @name VrManager.isSupported
      * @type {boolean}
      * @description Reports whether this device supports the WebVR API.
      */
@@ -99,7 +99,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrManager#destroy
+     * @name VrManager#destroy
      * @description Remove events and clear up manager.
      */
     destroy() {
@@ -110,7 +110,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrManager#poll
+     * @name VrManager#poll
      * @description Called once per frame to poll all attached displays.
      */
     poll() {

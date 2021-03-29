@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.Shader
+ * @name Shader
  * @classdesc A shader is a program that is responsible for rendering graphical primitives on a device's
  * graphics processor. The shader is generated from a shader definition. This shader definition specifies
  * the code for processing vertices and fragments processed by the GPU. The language of the code is GLSL
@@ -8,10 +8,10 @@
  * the PlayCanvas engine should map vertex buffer elements onto the attributes specified in the vertex
  * shader code.
  * @description Creates a new shader object.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
  * @param {object} definition - The shader definition from which to build the shader.
  * @param {object} definition.attributes - Object detailing the mapping of vertex shader attribute names
- * to semantics (pc.SEMANTIC_*). This enables the engine to match vertex buffer data as inputs to the
+ * to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as inputs to the
  * shader.
  * @param {string} definition.vshader - Vertex shader source (GLSL code).
  * @param {string} definition.fshader - Fragment shader source (GLSL code).
@@ -63,7 +63,7 @@ class Shader {
 
     /**
      * @function
-     * @name pc.Shader#destroy
+     * @name Shader#destroy
      * @description Frees resources associated with this shader.
      */
     destroy() {

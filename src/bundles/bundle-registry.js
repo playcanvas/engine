@@ -1,8 +1,8 @@
 /**
  * @private
  * @class
- * @name pc.BundleRegistry
- * @param {pc.AssetRegistry} assets - The asset registry.
+ * @name BundleRegistry
+ * @param {AssetRegistry} assets - The asset registry.
  * @classdesc Keeps track of which assets are in bundles and loads files from bundles.
  */
 class BundleRegistry {
@@ -251,10 +251,10 @@ class BundleRegistry {
     /**
      * @private
      * @function
-     * @name pc.BundleRegistry#listBundlesForAsset
+     * @name BundleRegistry#listBundlesForAsset
      * @description Lists all of the available bundles that reference the specified asset id.
-     * @param {pc.Asset} asset - The asset.
-     * @returns {pc.Asset[]} An array of bundle assets or null if the asset is not in any bundle.
+     * @param {Asset} asset - The asset.
+     * @returns {Asset[]} An array of bundle assets or null if the asset is not in any bundle.
      */
     listBundlesForAsset(asset) {
         return this._assetsInBundles[asset.id] || null;
@@ -263,9 +263,9 @@ class BundleRegistry {
     /**
      * @private
      * @function
-     * @name pc.BundleRegistry#list
+     * @name BundleRegistry#list
      * @description Lists all of the available bundles. This includes bundles that are not loaded.
-     * @returns {pc.Asset[]} An array of bundle assets.
+     * @returns {Asset[]} An array of bundle assets.
      */
     list() {
         var result = [];
@@ -279,7 +279,7 @@ class BundleRegistry {
     /**
      * @private
      * @function
-     * @name pc.BundleRegistry#hasUrl
+     * @name BundleRegistry#hasUrl
      * @description Returns true if there is a bundle that contains the specified URL.
      * @param {string} url - The url.
      * @returns {boolean} True or false.
@@ -291,7 +291,7 @@ class BundleRegistry {
     /**
      * @private
      * @function
-     * @name pc.BundleRegistry#canLoadUrl
+     * @name BundleRegistry#canLoadUrl
      * @description Returns true if there is a bundle that contains the specified URL
      * and that bundle is either loaded or currently being loaded.
      * @param {string} url - The url.
@@ -304,7 +304,7 @@ class BundleRegistry {
     /**
      * @private
      * @function
-     * @name pc.BundleRegistry#loadUrl
+     * @name BundleRegistry#loadUrl
      * @description Loads the specified file URL from a bundle that is either loaded or currently being loaded.
      * @param {string} url - The URL. Make sure you are using a relative URL that does not contain any query parameters.
      * @param {Function} callback - The callback is called when the file has been loaded or if an error occures. The callback
@@ -341,9 +341,9 @@ class BundleRegistry {
     /**
      * @private
      * @function
-     * @name pc.ResourceLoader#destroy
+     * @name ResourceLoader#destroy
      * @description Destroys the registry, and releases its resources. Does not unload bundle assets
-     * as these should be unloaded by the {@link pc.AssetRegistry}.
+     * as these should be unloaded by the {@link AssetRegistry}.
      */
     destroy() {
         this._assets.off('add', this._onAssetAdded, this);

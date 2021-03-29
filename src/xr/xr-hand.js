@@ -15,24 +15,24 @@ var vecC = new Vec3();
 
 if (window.XRHand) {
     fingerJointIds = [
-        [XRHand.THUMB_METACARPAL, XRHand.THUMB_PHALANX_PROXIMAL, XRHand.THUMB_PHALANX_DISTAL, XRHand.THUMB_PHALANX_TIP],
-        [XRHand.INDEX_METACARPAL, XRHand.INDEX_PHALANX_PROXIMAL, XRHand.INDEX_PHALANX_INTERMEDIATE, XRHand.INDEX_PHALANX_DISTAL, XRHand.INDEX_PHALANX_TIP],
-        [XRHand.MIDDLE_METACARPAL, XRHand.MIDDLE_PHALANX_PROXIMAL, XRHand.MIDDLE_PHALANX_INTERMEDIATE, XRHand.MIDDLE_PHALANX_DISTAL, XRHand.MIDDLE_PHALANX_TIP],
-        [XRHand.RING_METACARPAL, XRHand.RING_PHALANX_PROXIMAL, XRHand.RING_PHALANX_INTERMEDIATE, XRHand.RING_PHALANX_DISTAL, XRHand.RING_PHALANX_TIP],
-        [XRHand.LITTLE_METACARPAL, XRHand.LITTLE_PHALANX_PROXIMAL, XRHand.LITTLE_PHALANX_INTERMEDIATE, XRHand.LITTLE_PHALANX_DISTAL, XRHand.LITTLE_PHALANX_TIP]
+        ['thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip'],
+        ['index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-phalanx-intermediate', 'index-finger-phalanx-distal', 'index-finger-tip'],
+        ['middle-finger-metacarpal', 'middle-finger-phalanx-proximal', 'middle-finger-phalanx-intermediate', 'middle-finger-phalanx-distal', 'middle-finger-tip'],
+        ['ring-finger-metacarpal', 'ring-finger-phalanx-proximal', 'ring-finger-phalanx-intermediate', 'ring-finger-phalanx-distal', 'ring-finger-tip'],
+        ['pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-phalanx-intermediate', 'pinky-finger-phalanx-distal', 'pinky-finger-tip']
     ];
 }
 
 /**
  * @class
- * @name pc.XrHand
+ * @name XrHand
  * @classdesc Represents a hand with fingers and joints
  * @description Represents a hand with fingers and joints
- * @param {pc.XrInputSource} inputSource - Input Source that hand is related to
- * @property {pc.XrFinger[]} fingers List of fingers of a hand
- * @property {pc.XrJoint[]} joints List of joints of hand
- * @property {pc.XrJoint[]} tips List of joints that are tips of a fingers
- * @property {pc.XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system
+ * @param {XrInputSource} inputSource - Input Source that hand is related to
+ * @property {XrFinger[]} fingers List of fingers of a hand
+ * @property {XrJoint[]} joints List of joints of hand
+ * @property {XrJoint[]} tips List of joints that are tips of a fingers
+ * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system
  * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost
  */
 class XrHand extends EventHandler {
@@ -53,15 +53,15 @@ class XrHand extends EventHandler {
 
         this._wrist = null;
 
-        if (xrHand[XRHand.WRIST])
-            this._wrist = new XrJoint(0, XRHand.WRIST, this, null);
+        if (xrHand.get('wrist'))
+            this._wrist = new XrJoint(0, 'wrist', this, null);
 
         for (var f = 0; f < fingerJointIds.length; f++) {
             var finger = new XrFinger(f, this);
 
             for (var j = 0; j < fingerJointIds[f].length; j++) {
                 var jointId = fingerJointIds[f][j];
-                if (! xrHand[jointId]) continue;
+                if (! xrHand.get(jointId)) continue;
                 new XrJoint(j, jointId, this, finger);
             }
         }
@@ -69,23 +69,23 @@ class XrHand extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHand#tracking
+     * @name XrHand#tracking
      * @description Fired when tracking becomes available.
      */
 
     /**
      * @event
-     * @name pc.XrHand#trackinglost
+     * @name XrHand#trackinglost
      * @description Fired when tracking is lost.
      */
 
-    update = function (frame) {
+    update(frame) {
         var xrInputSource = this._inputSource._xrInputSource;
 
         // joints
         for (var j = 0; j < this._joints.length; j++) {
             var joint = this._joints[j];
-            var jointSpace = xrInputSource.hand[joint._id];
+            var jointSpace = xrInputSource.hand.get(joint._id);
             if (jointSpace) {
                 var pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
                 if (pose) {
@@ -107,12 +107,12 @@ class XrHand extends EventHandler {
             }
         }
 
-        var j1 = this._jointsById[XRHand.THUMB_METACARPAL];
-        var j4 = this._jointsById[XRHand.THUMB_PHALANX_TIP];
-        var j6 = this._jointsById[XRHand.INDEX_PHALANX_PROXIMAL];
-        var j9 = this._jointsById[XRHand.INDEX_PHALANX_TIP];
-        var j16 = this._jointsById[XRHand.RING_PHALANX_PROXIMAL];
-        var j21 = this._jointsById[XRHand.LITTLE_PHALANX_PROXIMAL];
+        var j1 = this._jointsById['thumb-metacarpal'];
+        var j4 = this._jointsById['thumb-tip'];
+        var j6 = this._jointsById['index-finger-phalanx-proximal'];
+        var j9 = this._jointsById['index-finger-tip'];
+        var j16 = this._jointsById['ring-finger-phalanx-proximal'];
+        var j21 = this._jointsById['pinky-finger-phalanx-proximal'];
 
         // ray
         if (j1 && j4 && j6 && j9 && j16 && j21) {
@@ -177,10 +177,10 @@ class XrHand extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrHand#getJointById
+     * @name XrHand#getJointById
      * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
-     * @param {number} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
-     * @returns {pc.XrJoint|null} Joint or null if not available
+     * @param {string} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
+     * @returns {XrJoint|null} Joint or null if not available
      */
     getJointById(id) {
         return this._jointsById[id] || null;

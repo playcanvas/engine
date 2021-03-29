@@ -61,7 +61,7 @@ class JsonModelParser {
         }
 
         if (modelData.version <= 1) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
             // #endif
             return null;
@@ -415,7 +415,7 @@ class JsonModelParser {
 
             if (mesh.skin) {
                 var skinIndex = skins.indexOf(mesh.skin);
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (skinIndex === -1) {
                     throw new Error('Mesh\'s skin does not appear in skin array.');
                 }
@@ -425,7 +425,7 @@ class JsonModelParser {
 
             if (mesh.morph) {
                 var morphIndex = morphs.indexOf(mesh.morph);
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (morphIndex === -1) {
                     throw new Error('Mesh\'s morph does not appear in morph array.');
                 }

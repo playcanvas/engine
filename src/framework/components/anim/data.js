@@ -9,6 +9,7 @@ class AnimComponentData {
         this.playing = false;
 
         // Non-serialized
+        this.rootBone = null;
         this.stateGraph = null;
         this.layers = [];
         this.layerIndices = {};

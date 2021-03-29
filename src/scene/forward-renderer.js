@@ -51,7 +51,6 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
-import { VisibleInstanceList } from './layer.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(
@@ -110,7 +109,7 @@ var boneTextureSize = [0, 0, 0, 0];
 var boneTexture, instancingData, modelMatrix, normalMatrix;
 
 var shadowMapCubeCache = {};
-var maxBlurSize = 25;
+const maxBlurSize = 25;
 
 var keyA, keyB;
 
@@ -235,7 +234,7 @@ function createShadowMap(device, width, height, shadowType) {
     var filter = getShadowFiltering(device, shadowType);
 
     var shadowMap = new Texture(device, {
-        // #ifdef PROFILER
+        // #if _PROFILER
         profilerHint: TEXHINT_SHADOWMAP,
         // #endif
         format: format,
@@ -267,7 +266,7 @@ function createShadowMap(device, width, height, shadowType) {
 
 function createShadowCubeMap(device, size) {
     var cubemap = new Texture(device, {
-        // #ifdef PROFILER
+        // #if _PROFILER
         profilerHint: TEXHINT_SHADOWMAP,
         // #endif
         format: PIXELFORMAT_R8_G8_B8_A8,
@@ -396,10 +395,10 @@ function getDepthKey(meshInstance) {
 
 /**
  * @class
- * @name pc.ForwardRenderer
+ * @name ForwardRenderer
  * @classdesc The forward renderer render scene objects.
  * @description Creates a new forward renderer object.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
  */
 class ForwardRenderer {
     constructor(graphicsDevice) {
@@ -568,7 +567,7 @@ class ForwardRenderer {
     getShadowCamera(device, light) {
         var shadowCam = light._shadowCamera;
 
-        if (shadowCam === null) {
+        if (!shadowCam) {
             shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type);
             createShadowBuffer(device, light);
         } else {
@@ -1045,7 +1044,7 @@ class ForwardRenderer {
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
             // Directionals shine down the negative Y axis
-            wtm.getY(directional._direction).scale(-1);
+            wtm.getY(directional._direction).mulScalar(-1);
             directional._direction.normalize();
             this.lightDir[cnt][0] = directional._direction.x;
             this.lightDir[cnt][1] = directional._direction.y;
@@ -1173,7 +1172,7 @@ class ForwardRenderer {
         }
 
         // Spots shine down the negative Y axis
-        wtm.getY(spot._direction).scale(-1);
+        wtm.getY(spot._direction).mulScalar(-1);
         spot._direction.normalize();
         this.lightDir[cnt][0] = spot._direction.x;
         this.lightDir[cnt][1] = spot._direction.y;
@@ -1291,7 +1290,7 @@ class ForwardRenderer {
     }
 
     cull(camera, drawCalls, visibleList) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var cullTime = now();
         var numDrawCallsCulled = 0;
         // #endif
@@ -1329,7 +1328,7 @@ class ForwardRenderer {
 
                 if (drawCall.cull) {
                     visible = drawCall._isVisible(camera);
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     numDrawCallsCulled++;
                     // #endif
                 }
@@ -1346,7 +1345,7 @@ class ForwardRenderer {
             }
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._cullTime += now() - cullTime;
         this._numDrawCallsCulled += numDrawCallsCulled;
         // #endif
@@ -1355,11 +1354,15 @@ class ForwardRenderer {
     }
 
     cullLights(camera, lights) {
-        var i, light;
-        for (i = 0; i < lights.length; i++) {
-            light = lights[i];
-            if (light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+        for (let i = 0; i < lights.length; i++) {
+            let light = lights[i];
+
+            // if enabled light is not already marked as visible
+            if (!light.visibleThisFrame && light.enabled) {
+
+                if (light._type === LIGHTTYPE_DIRECTIONAL) {
+                    light.visibleThisFrame = true;
+                } else {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
@@ -1376,7 +1379,7 @@ class ForwardRenderer {
         var drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var skinTime = now();
         // #endif
 
@@ -1389,13 +1392,13 @@ class ForwardRenderer {
             }
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._skinTime += now() - skinTime;
         // #endif
     }
 
     updateGpuSkinMatrices(drawCalls) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var skinTime = now();
         // #endif
 
@@ -1412,13 +1415,13 @@ class ForwardRenderer {
             }
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._skinTime += now() - skinTime;
         // #endif
     }
 
     updateMorphing(drawCalls) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var morphTime = now();
         // #endif
 
@@ -1430,7 +1433,7 @@ class ForwardRenderer {
                 morphInst.update();
             }
         }
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._morphTime += now() - morphTime;
         // #endif
     }
@@ -1515,20 +1518,18 @@ class ForwardRenderer {
         return 0;
     }
 
-    renderShadows(lights, cameraPass) {
+    renderShadows(lights, camera) {
+
         var device = this.device;
         device.grabPassAvailable = false;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var shadowMapStartTime = now();
         // #endif
 
-        var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
-        var numInstances;
+        var i, j, light, shadowShader, type, shadowCam, shadowCamNode, passes, shadowType, smode;
         var meshInstance, mesh, material;
         var style;
-        var settings;
-        var visibleList, visibleLength;
         var passFlag = 1 << SHADER_SHADOW;
 
         for (i = 0; i < lights.length; i++) {
@@ -1545,17 +1546,10 @@ class ForwardRenderer {
                 var cameraPos;
                 shadowCam = this.getShadowCamera(device, light);
                 shadowCamNode = shadowCam._node;
-                pass = 0;
                 passes = 1;
 
                 if (type === LIGHTTYPE_DIRECTIONAL) {
-                    if (light._visibleLength[cameraPass] < 0) continue; // prevent light from rendering more than once for this camera
-                    settings = light._visibleCameraSettings[cameraPass];
-                    shadowCamNode.setPosition(settings.x, settings.y, settings.z);
-                    shadowCam.orthoHeight = settings.orthoHeight;
-                    shadowCam.farClip = settings.farClip;
-                    pass = cameraPass;
-
+                    passes = light.numCascades;
                 } else if (type === LIGHTTYPE_SPOT) {
                     cameraPos = shadowCamNode.getPosition();
                     this.viewPos[0] = cameraPos.x;
@@ -1572,18 +1566,11 @@ class ForwardRenderer {
                     this.viewPosId.setValue(this.viewPos);
                     this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
                     passes = 6;
-
                 }
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 this.device.pushMarker("SHADOW " + light._node.name);
                 // #endif
-
-                if (type !== LIGHTTYPE_OMNI) {
-                    shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                    shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
-                    light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
-                }
 
                 if (device.webgl2) {
                     if (type === LIGHTTYPE_OMNI) {
@@ -1604,7 +1591,9 @@ class ForwardRenderer {
                     }
                 }
 
-                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                    light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                }
 
                 this._shadowMapUpdates += passes;
 
@@ -1618,15 +1607,10 @@ class ForwardRenderer {
                     device.setColorWrite(true, true, true, true);
                 }
 
-                if (pass) {
-                    passes = pass + 1; // predefined single pass
-                } else {
-                    pass = 0; // omni light passes
-                }
-
+                let pass = 0;
                 while (pass < passes) {
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     var doPopMarker = false;
                     if (passes > 1) {
                         this.device.pushMarker("PASS " + pass);
@@ -1634,23 +1618,40 @@ class ForwardRenderer {
                     }
                     // #endif
 
+                    // directional shadows are per camera, so get appropriate render data
+                    const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, pass);
+                    const visibleCasters = lightRenderData.visibleCasters;
+                    const visibleLength = visibleCasters.length;
+
                     if (type === LIGHTTYPE_OMNI) {
                         shadowCamNode.setRotation(pointLightRotations[pass]);
                         shadowCam.renderTarget = light._shadowCubeMap[pass];
+                    } else if (type === LIGHTTYPE_DIRECTIONAL) {
+                        shadowCamNode.setPosition(lightRenderData.position);
+                        shadowCam.orthoHeight = lightRenderData.orthoHeight;
+                        shadowCam.farClip = lightRenderData.farClip;
+
+                        // cascade viewport
+                        const rect = light.cascades[pass];
+                        shadowCam.rect = rect;
+                        shadowCam.scissorRect = rect;
                     }
 
-                    this.setCamera(shadowCam, shadowCam.renderTarget, true, type !== LIGHTTYPE_OMNI);
+                    if (type !== LIGHTTYPE_OMNI) {
+                        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
+                        shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+                        light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                    }
 
-                    visibleList = light._visibleList[pass];
-                    visibleLength = light._visibleLength[pass];
+                    this.setCamera(shadowCam, shadowCam.renderTarget, true, passes === 1);
 
                     // Sort shadow casters
                     shadowType = light._shadowType;
                     smode = shadowType + type * numShadowModes;
 
                     // Render
-                    for (j = 0, numInstances = visibleLength; j < numInstances; j++) {
-                        meshInstance = visibleList[j];
+                    for (j = 0; j < visibleLength; j++) {
+                        meshInstance = visibleCasters[j];
                         mesh = meshInstance.mesh;
                         material = meshInstance.material;
 
@@ -1694,9 +1695,8 @@ class ForwardRenderer {
                         this._shadowDrawCalls++;
                     }
                     pass++;
-                    if (type === LIGHTTYPE_DIRECTIONAL) light._visibleLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (doPopMarker)
                         this.device.popMarker();
                     // #endif
@@ -1705,7 +1705,7 @@ class ForwardRenderer {
 
                 if (light._isVsm) {
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     this.device.pushMarker("VSM");
                     // #endif
 
@@ -1756,12 +1756,12 @@ class ForwardRenderer {
                         drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                     }
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     this.device.popMarker();
                     // #endif
                 }
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 this.device.popMarker();
                 // #endif
             }
@@ -1777,7 +1777,7 @@ class ForwardRenderer {
 
         device.grabPassAvailable = true;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
     }
@@ -1894,7 +1894,7 @@ class ForwardRenderer {
 
         var passFlag = 1 << pass;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var forwardStartTime = now();
         // #endif
 
@@ -1915,7 +1915,7 @@ class ForwardRenderer {
                 drawCall.command();
             } else {
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 if (camera === skipRenderCamera) {
                     if (_skipRenderCounter >= skipRenderAfter) continue;
                     _skipRenderCounter++;
@@ -1966,7 +1966,7 @@ class ForwardRenderer {
                     }
 
                     if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         console.error('Error in material "' + material.name + '" with flags ' + objDefs);
                         // #endif
                         drawCall._shader[pass].failed = true;
@@ -2135,7 +2135,7 @@ class ForwardRenderer {
         }
         device.updateEnd();
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
         // #endif
     }
@@ -2176,7 +2176,7 @@ class ForwardRenderer {
     }
 
     prepareStaticMeshes(meshInstances, lights) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var prepareTime = now();
         var searchTime = 0;
         var subSearchTime = 0;
@@ -2270,7 +2270,7 @@ class ForwardRenderer {
                     }
                 }
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 subTriAabbTime = now();
                 // #endif
 
@@ -2310,11 +2310,11 @@ class ForwardRenderer {
                     triBounds[index + 4] = maxy;
                     triBounds[index + 5] = maxz;
                 }
-                // #ifdef PROFILER
+                // #if _PROFILER
                 triAabbTime += now() - subTriAabbTime;
                 // #endif
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 subSearchTime = now();
                 // #endif
                 for (s = 0; s < staticLights.length; s++) {
@@ -2339,13 +2339,13 @@ class ForwardRenderer {
                         }
                     }
                 }
-                // #ifdef PROFILER
+                // #if _PROFILER
                 searchTime += now() - subSearchTime;
                 // #endif
 
                 if (triLightCombUsed) {
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     subCombineTime = now();
                     // #endif
 
@@ -2360,11 +2360,11 @@ class ForwardRenderer {
                         combIb.push(indices[j + 2]);
                     }
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     combineTime += now() - subCombineTime;
                     // #endif
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     subWriteMeshTime = now();
                     // #endif
 
@@ -2449,7 +2449,7 @@ class ForwardRenderer {
                         newDrawCalls.push(instance);
                     }
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     writeMeshTime += now() - subWriteMeshTime;
                     // #endif
                 } else {
@@ -2462,7 +2462,7 @@ class ForwardRenderer {
         for (i = 0; i < newDrawCalls.length; i++) {
             meshInstances[i] = newDrawCalls[i];
         }
-        // #ifdef PROFILER
+        // #if _PROFILER
         scene._stats.lastStaticPrepareFullTime = now() - prepareTime;
         scene._stats.lastStaticPrepareSearchTime = searchTime;
         scene._stats.lastStaticPrepareWriteTime = writeMeshTime;
@@ -2544,6 +2544,7 @@ class ForwardRenderer {
             meshInstances[i].visibleThisFrame = false;
         }
 
+        // clear light visibility
         len = lights.length;
         for (i = 0; i < len; i++) {
             lights[i].visibleThisFrame = lights[i]._type === LIGHTTYPE_DIRECTIONAL;
@@ -2563,7 +2564,7 @@ class ForwardRenderer {
         for (i = 0; i < len; i++) {
             layer = comp.layerList[i];
             layer._shaderVersion = shaderVersion;
-            // #ifdef PROFILER
+            // #if _PROFILER
             layer._skipRenderCounter = 0;
             layer._forwardDrawCalls = 0;
             layer._shadowDrawCalls = 0;
@@ -2580,22 +2581,9 @@ class ForwardRenderer {
             }
             layer._postRenderCounterMax = layer._postRenderCounter;
 
+            // prepare layer for culling with the camera
             for (j = 0; j < layer.cameras.length; j++) {
-                // Create visible arrays for every camera inside each layer if not present
-                if (!layer.instances.visibleOpaque[j]) layer.instances.visibleOpaque[j] = new VisibleInstanceList();
-                if (!layer.instances.visibleTransparent[j]) layer.instances.visibleTransparent[j] = new VisibleInstanceList();
-                // Mark visible arrays as not processed yet
-                layer.instances.visibleOpaque[j].done = false;
-                layer.instances.visibleTransparent[j].done = false;
-            }
-
-            // remove visible lists if cameras have been removed, remove one per frame
-            if (layer.cameras.length < layer.instances.visibleOpaque.length) {
-                layer.instances.visibleOpaque.splice(layer.cameras.length, 1);
-            }
-
-            if (layer.cameras.length < layer.instances.visibleTransparent.length) {
-                layer.instances.visibleTransparent.splice(layer.cameras.length, 1);
+                layer.instances.prepare(j);
             }
 
             // Generate static lighting for meshes in this layer if needed
@@ -2616,14 +2604,13 @@ class ForwardRenderer {
     }
 
     cullLocalShadowmap(light, drawCalls) {
-        var i, type, shadowCam, shadowCamNode, passes, pass, numInstances, meshInstance, visibleList, vlen, visible;
+        var i, type, passes, pass, numInstances, meshInstance, visible;
         var lightNode;
         type = light._type;
         if (type === LIGHTTYPE_DIRECTIONAL) return;
         light.visibleThisFrame = true; // force light visibility if function was manually called
 
-        shadowCam = this.getShadowCamera(this.device, light);
-
+        let shadowCam = this.getShadowCamera(this.device, light);
         shadowCam.projection = PROJECTION_PERSPECTIVE;
         shadowCam.nearClip = light.attenuationEnd / 1000;
         shadowCam.farClip = light.attenuationEnd;
@@ -2635,7 +2622,7 @@ class ForwardRenderer {
             shadowCam.fov = 90;
             passes = 6;
         }
-        shadowCamNode = shadowCam._node;
+        let shadowCamNode = shadowCam._node;
         lightNode = light._node;
         shadowCamNode.setPosition(lightNode.getPosition());
         if (type === LIGHTTYPE_SPOT) {
@@ -2651,12 +2638,11 @@ class ForwardRenderer {
 
             this.updateCameraFrustum(shadowCam);
 
-            visibleList = light._visibleList[pass];
-            if (!visibleList) {
-                visibleList = light._visibleList[pass] = [];
-            }
-            light._visibleLength[pass] = 0;
-            vlen = 0;
+            // render data are shared between cameras for local lights, so pass null for camera
+            const lightRenderData = light.getRenderData(null, pass);
+            const visibleCasters = lightRenderData.visibleCasters;
+            let count = 0;
+
             for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
                 meshInstance = drawCalls[i];
                 visible = true;
@@ -2664,22 +2650,21 @@ class ForwardRenderer {
                     visible = meshInstance._isVisible(shadowCam);
                 }
                 if (visible) {
-                    visibleList[vlen] = meshInstance;
-                    vlen++;
                     meshInstance.visibleThisFrame = true;
+                    visibleCasters[count] = meshInstance;
+                    count++;
                 }
             }
-            light._visibleLength[pass] = vlen;
 
-            if (visibleList.length !== vlen) {
-                visibleList.length = vlen;
-            }
-            visibleList.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+            visibleCasters.length = count;
+
+            // TODO: we should probably sort shadow meshes by shader and not depth
+            visibleCasters.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
         }
     }
 
-    cullDirectionalShadowmap(light, drawCalls, camera, pass) {
-        var i, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
+    cullDirectionalShadowmap(light, drawCalls, camera) {
+        var i, shadowCam, shadowCamNode, lightNode, frustumSize;
         var unitPerTexel, delta, p;
         var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
         var visible, numInstances;
@@ -2697,124 +2682,118 @@ class ForwardRenderer {
         shadowCamNode.setRotation(lightNode.getRotation());
         shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
 
-        // Positioning directional light frustum I
-        // Construct light's orthographic frustum around camera frustum
-        // Use very large near/far planes this time
+        for (let cascade = 0; cascade < light.numCascades; cascade++) {
+            // Positioning directional light frustum I
+            // Construct light's orthographic frustum around camera frustum
+            // Use very large near/far planes this time
 
-        // 1. Get the frustum of the camera
-        _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
+            // 1. Get the frustum of the camera
+            _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
 
-        // 2. Figure out the maximum diagonal of the frustum in light's projected space.
-        frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
-        frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
+            // 2. Figure out the maximum diagonal of the frustum in light's projected space.
+            frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
+            frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
 
-        // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
-        shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
-        c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
-        for (i = 0; i < 8; i++) {
-            c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
-        }
-
-        // 4. Come up with a bounding box (in light-space) by calculating the min
-        // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-        minx = miny = minz = 1000000;
-        maxx = maxy = maxz = -1000000;
-        for (i = 0; i < 8; i++) {
-            p = frustumPoints[i];
-            if (p.x < minx) minx = p.x;
-            if (p.x > maxx) maxx = p.x;
-            if (p.y < miny) miny = p.y;
-            if (p.y > maxy) maxy = p.y;
-            if (p.z < minz) minz = p.z;
-            if (p.z > maxz) maxz = p.z;
-        }
-
-        // 5. Enlarge the light's frustum so that the frustum will be the same size
-        // no matter how the view frustum moves.
-        // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
-        unitPerTexel = frustumSize / light._shadowResolution;
-        delta = (frustumSize - (maxx - minx)) * 0.5;
-        minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
-        delta = (frustumSize - (maxy - miny)) * 0.5;
-        miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
-        maxx = minx + frustumSize;
-        maxy = miny + frustumSize;
-
-        // 6. Use your min and max values to create an off-center orthographic projection.
-        centerx = (maxx + minx) * 0.5;
-        centery = (maxy + miny) * 0.5;
-        shadowCamNode.translateLocal(centerx, centery, 100000);
-
-        shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
-        shadowCam.nearClip = 0;
-        shadowCam.farClip = 200000;
-        shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
-        shadowCam.orthoHeight = frustumSize * 0.5;
-
-        this.updateCameraFrustum(shadowCam);
-
-        // Cull shadow casters and find their AABB
-        emptyAabb = true;
-        visibleList = light._visibleList[pass];
-        if (!visibleList) {
-            visibleList = light._visibleList[pass] = [];
-        }
-        vlen = light._visibleLength[pass] = 0;
-
-        for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
-            meshInstance = drawCalls[i];
-            visible = true;
-            if (meshInstance.cull) {
-                visible = meshInstance._isVisible(shadowCam);
+            // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
+            shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
+            c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
+            for (i = 0; i < 8; i++) {
+                c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
-            if (visible) {
-                visibleList[vlen] = meshInstance;
-                vlen++;
-                meshInstance.visibleThisFrame = true;
 
-                drawCallAabb = meshInstance.aabb;
-                if (emptyAabb) {
-                    visibleSceneAabb.copy(drawCallAabb);
-                    emptyAabb = false;
-                } else {
-                    visibleSceneAabb.add(drawCallAabb);
+            // 4. Come up with a bounding box (in light-space) by calculating the min
+            // and max X, Y, and Z values from your 8 light-space frustum coordinates.
+            minx = miny = minz = 1000000;
+            maxx = maxy = maxz = -1000000;
+            for (i = 0; i < 8; i++) {
+                p = frustumPoints[i];
+                if (p.x < minx) minx = p.x;
+                if (p.x > maxx) maxx = p.x;
+                if (p.y < miny) miny = p.y;
+                if (p.y > maxy) maxy = p.y;
+                if (p.z < minz) minz = p.z;
+                if (p.z > maxz) maxz = p.z;
+            }
+
+            // 5. Enlarge the light's frustum so that the frustum will be the same size
+            // no matter how the view frustum moves.
+            // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
+            unitPerTexel = frustumSize / light._shadowResolution;
+            delta = (frustumSize - (maxx - minx)) * 0.5;
+            minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
+            delta = (frustumSize - (maxy - miny)) * 0.5;
+            miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
+            maxx = minx + frustumSize;
+            maxy = miny + frustumSize;
+
+            // 6. Use your min and max values to create an off-center orthographic projection.
+            centerx = (maxx + minx) * 0.5;
+            centery = (maxy + miny) * 0.5;
+            shadowCamNode.translateLocal(centerx, centery, 100000);
+
+            shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
+            shadowCam.nearClip = 0;
+            shadowCam.farClip = 200000;
+            shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
+            shadowCam.orthoHeight = frustumSize * 0.5;
+
+            this.updateCameraFrustum(shadowCam);
+
+            // Cull shadow casters and find their AABB
+            emptyAabb = true;
+
+            const lightRenderData = light.getRenderData(camera, cascade);
+            const visibleCasters = lightRenderData.visibleCasters;
+            let count = 0;
+
+            for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
+                meshInstance = drawCalls[i];
+                visible = true;
+                if (meshInstance.cull) {
+                    visible = meshInstance._isVisible(shadowCam);
+                }
+                if (visible) {
+                    meshInstance.visibleThisFrame = true;
+                    visibleCasters[count] = meshInstance;
+                    count++;
+
+                    // update bounds
+                    drawCallAabb = meshInstance.aabb;
+                    if (emptyAabb) {
+                        visibleSceneAabb.copy(drawCallAabb);
+                        emptyAabb = false;
+                    } else {
+                        visibleSceneAabb.add(drawCallAabb);
+                    }
                 }
             }
+
+            visibleCasters.length = count;
+
+            // TODO: we should probably sort shadow meshes by shader and not depth
+            visibleCasters.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+
+            // Positioning directional light frustum II
+            // Fit clipping planes tightly around visible shadow casters
+
+            // 1. Calculate minz/maxz based on casters' AABB
+            var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+
+            // Always use the scene's aabb's Z value
+            // Otherwise object between the light and the frustum won't cast shadow.
+            maxz = z.max;
+            if (z.min > minz) minz = z.min;
+
+            // 2. Fix projection
+            shadowCamNode.setPosition(lightNode.getPosition());
+            shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
+            shadowCam.farClip = maxz - minz;
+
+            // Save projection variables to use in rendering later
+            lightRenderData.position.copy(shadowCamNode.getPosition());
+            lightRenderData.orthoHeight = shadowCam.orthoHeight;
+            lightRenderData.farClip = shadowCam.farClip;
         }
-        light._visibleLength[pass] = vlen;
-
-        if (visibleList.length !== vlen) {
-            visibleList.length = vlen;
-        }
-        visibleList.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
-
-        // Positioning directional light frustum II
-        // Fit clipping planes tightly around visible shadow casters
-
-        // 1. Calculate minz/maxz based on casters' AABB
-        var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
-
-        // Always use the scene's aabb's Z value
-        // Otherwise object between the light and the frustum won't cast shadow.
-        maxz = z.max;
-        if (z.min > minz) minz = z.min;
-
-        // 2. Fix projection
-        shadowCamNode.setPosition(lightNode.getPosition());
-        shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
-        shadowCam.farClip = maxz - minz;
-
-        // Save projection variables to use in rendering later
-        var settings = light._visibleCameraSettings[pass];
-        if (!settings) {
-            settings = light._visibleCameraSettings[pass] = {};
-        }
-        var lpos = shadowCamNode.getPosition();
-        settings.x = lpos.x;
-        settings.y = lpos.y;
-        settings.z = lpos.z;
-        settings.orthoHeight = shadowCam.orthoHeight;
-        settings.farClip = shadowCam.farClip;
     }
 
     gpuUpdate(drawCalls) {
@@ -2860,7 +2839,7 @@ class ForwardRenderer {
 
     updateLightStats(comp, compUpdatedFlags) {
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         if (compUpdatedFlags & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
             var stats = this.scene._stats;
             stats.lights = comp._lights.length;
@@ -2888,14 +2867,112 @@ class ForwardRenderer {
         // #endif
     }
 
+    // Shadow map culling for directional and visible local lights
+    // visible meshInstances are collected into light._renderData, and are marked as visible
+    // for directional lights also shadow camera matrix is set up
+    cullShadowmaps(comp) {
+
+        // shadow casters culling for local (point and spot) lights
+        for (let i = 0; i < comp._lights.length; i++) {
+            const light = comp._lights[i];
+            if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+                if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
+                    const casters = comp._lightShadowCasters[i].list;
+                    this.cullLocalShadowmap(light, casters);
+                }
+            }
+        }
+
+        // shadow casters culling for global (directional) lights
+        // render actions store which directional lights are needed for each camera, so these are getting culled
+        const renderActions = comp._renderActions;
+        for (let i = 0; i < renderActions.length; i++) {
+            const renderAction = renderActions[i];
+            let count = renderAction.directionalLightsIndices.length;
+            for (let j = 0; j < count; j++) {
+                const lightIndex = renderAction.directionalLightsIndices[j];
+                const light = comp._lights[lightIndex];
+                const casters = comp._lightShadowCasters[lightIndex].list;
+                this.cullDirectionalShadowmap(light, casters, renderAction.camera.camera);
+            }
+        }
+    }
+
+    // visibility culling of lights, meshInstances, shadows casters
+    // Also applies meshInstance.visible and camera.cullingMask
+    cullComposition(comp) {
+
+        // #if _PROFILER
+        const cullTime = now();
+        // #endif
+
+        const renderActions = comp._renderActions;
+        for (let i = 0; i < renderActions.length; i++) {
+            let renderAction = renderActions[i];
+
+            // layer
+            let layerIndex = renderAction.layerIndex;
+            let layer = comp.layerList[layerIndex];
+            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
+            let transparent = comp.subLayerList[layerIndex];
+
+            // camera
+            let cameraPass = renderAction.cameraIndex;
+            let camera = layer.cameras[cameraPass];
+
+            if (camera) {
+
+                camera.frameBegin(renderAction.renderTarget);
+
+                // update camera and frustum once
+                if (renderAction.firstCameraUse) {
+                    this.updateCameraFrustum(camera.camera);
+                    this._camerasRendered++;
+                }
+
+                // cull each layer's non-directional lights once with each camera
+                // lights aren't collected anywhere, but marked as visible
+                this.cullLights(camera.camera, layer._lights);
+
+                // cull mesh instances
+                let objects = layer.instances;
+
+                // collect them into layer arrays
+                let visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+
+                // shared objects are only culled once
+                if (!visible.done) {
+
+                    if (layer.onPreCull) {
+                        layer.onPreCull(cameraPass);
+                    }
+
+                    let drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                    visible.length = this.cull(camera.camera, drawCalls, visible.list);
+                    visible.done = true;
+
+                    if (layer.onPostCull) {
+                        layer.onPostCull(cameraPass);
+                    }
+                }
+
+                camera.frameEnd();
+            }
+        }
+
+        // cull shadow casters for all lights
+        this.cullShadowmaps(comp);
+
+        // #if _PROFILER
+        this._cullTime += now() - cullTime;
+        // #endif
+    }
+
     renderComposition(comp) {
         var device = this.device;
         var camera;
-        var renderedRt = comp._renderedRt;
-        var renderedByCam = comp._renderedByCam;
-        var renderedLayer = comp._renderedLayer;
         var renderAction, renderActions = comp._renderActions;
-        var i, layer, layerIndex, transparent, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
+        var i, layer, layerIndex, transparent;
 
         // update the skybox, since this might change _meshInstances
         if (this.scene.updateSkybox) {
@@ -2905,7 +2982,7 @@ class ForwardRenderer {
 
         this.beginLayers(comp);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var layerCompositionUpdateTime = now();
         // #endif
 
@@ -2915,7 +2992,7 @@ class ForwardRenderer {
             this.scene.updateLitShaders = true;
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
         // #endif
 
@@ -2925,156 +3002,51 @@ class ForwardRenderer {
         this.beginFrame(comp);
         this.setSceneConstants();
 
-        // Camera culling (once for each camera + layer)
-        // Also applies meshInstance.visible and camera.cullingMask
-        var renderedLength = 0;
-        var cameraPass;
-        var objects, drawCalls, visible;
-
-        for (i = 0; i < renderActions.length; i++) {
-            renderAction = renderActions[i];
-
-            // layer
-            layerIndex = renderAction.layerIndex;
-            layer = comp.layerList[layerIndex];
-            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
-            transparent = comp.subLayerList[layerIndex];
-
-            // camera
-            cameraPass = renderAction.cameraIndex;
-            camera = layer.cameras[cameraPass];
-            if (!camera) continue;
-            camera.frameBegin(renderAction.renderTarget);
-
-            // find out if this is first time the camera is used, and first time camera-layer combination is used
-            processedThisCamera = false;
-            processedThisCameraAndLayer = false;
-            for (k = 0; k < renderedLength; k++) {
-                if (renderedByCam[k] === camera) {
-                    processedThisCamera = true;
-                    if (renderedLayer[k] === layer) {
-                        processedThisCameraAndLayer = true;
-                        break;
-                    }
-                }
-            }
-
-            // update camera frustum once
-            if (!processedThisCamera) {
-                this.updateCameraFrustum(camera.camera);
-                this._camerasRendered++;
-            }
-
-            // cull each layer's non-directional lights once with each camera
-            // lights aren't collected anywhere, but marked as visible
-            if (!processedThisCameraAndLayer) {
-                this.cullLights(camera.camera, layer._lights);
-            }
-
-            // record camera / layer used
-            if (!processedThisCamera || !processedThisCameraAndLayer) {
-                renderedByCam[renderedLength] = camera;
-                renderedLayer[renderedLength] = layer;
-                renderedLength++;
-            }
-
-            // cull mesh instances
-            objects = layer.instances;
-
-            // collect them into layer arrays
-            visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
-
-            // shared objects are only culled once
-            if (!visible.done) {
-
-                if (layer.onPreCull) {
-                    layer.onPreCull(cameraPass);
-                }
-
-                drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
-                visible.length = this.cull(camera.camera, drawCalls, visible.list);
-                visible.done = true;
-
-                if (layer.onPostCull) {
-                    layer.onPostCull(cameraPass);
-                }
-            }
-
-            camera.frameEnd();
-        }
-
-        // Shadowmap culling for directional and visible local lights
-        // collected into light._visibleList
-        // objects are also globally marked as visible
-        // Also sets up local shadow camera matrices
-        var light, casters;
-
-        // #ifdef PROFILER
-        var cullTime = now();
-        // #endif
-
-        // Local light casters - culled once for the whole frame
-        for (i = 0; i < comp._lights.length; i++) {
-            light = comp._lights[i];
-            if (!light.visibleThisFrame) continue;
-            if (light._type === LIGHTTYPE_DIRECTIONAL) continue;
-            if (!light.castShadows || !light.enabled || light.shadowUpdateMode === SHADOWUPDATE_NONE) continue;
-            casters = comp._lightShadowCasters[i];
-            this.cullLocalShadowmap(light, casters);
-        }
-
-        // Directional light casters - culled once for each camera
-        var globalLightCounter = -1;
-        for (i = 0; i < comp._lights.length; i++) {
-            light = comp._lights[i];
-            if (light._type !== LIGHTTYPE_DIRECTIONAL) continue;
-            globalLightCounter++;
-            if (!light.castShadows || !light.enabled || light.shadowUpdateMode === SHADOWUPDATE_NONE) continue;
-            casters = comp._lightShadowCasters[i];
-            let cameras = comp._globalLightCameras[globalLightCounter];
-            for (let j = 0; j < cameras.length; j++) {
-                this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
-            }
-        }
-
-        // #ifdef PROFILER
-        this._cullTime += now() - cullTime;
-        // #endif
-
-        // Can call script callbacks here and tell which objects are visible
+        // visibility culling of lights, meshInstances, shadows casters
+        // after this the scene culling is done and script callbacks can be called to report which objects are visible
+        this.cullComposition(comp);
 
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
-        // Shadow render for all local visible culled lights
+        // render shadows for all local visible lights - these shadow maps are shared by all cameras
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
         this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
 
         // Rendering
-        renderedLength = 0;
-        var sortTime, draws, drawTime;
+        let sortTime, drawTime;
         for (i = 0; i < renderActions.length; i++) {
             renderAction = renderActions[i];
 
             // layer
             layerIndex = renderAction.layerIndex;
             layer = comp.layerList[layerIndex];
-            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
             transparent = comp.subLayerList[layerIndex];
 
-            cameraPass = renderAction.cameraIndex;
+            let cameraPass = renderAction.cameraIndex;
             camera = layer.cameras[cameraPass];
 
-            // #ifdef DEBUG
-            this.device.pushMarker(layer.name);
+            // render directional shadow maps for this camera - these get re-rendered for each camera
+            if (renderAction.directionalLights.length > 0) {
+                this.renderShadows(renderAction.directionalLights, camera.camera);
+            }
+
+            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) {
+                continue;
+            }
+
+            // #if _DEBUG
             this.device.pushMarker(camera ? camera.entity.name : "noname");
+            this.device.pushMarker(layer.name);
             // #endif
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             drawTime = now();
             // #endif
 
-            if (camera) camera.frameBegin(renderAction.renderTarget);
+            if (camera) {
+                camera.frameBegin(renderAction.renderTarget);
+            }
 
             // Call prerender callback if there's one
             if (!transparent && layer.onPreRenderOpaque) {
@@ -3085,58 +3057,45 @@ class ForwardRenderer {
 
             // Called for the first sublayer and for every camera
             if (!(layer._preRenderCalledForCameras & (1 << cameraPass))) {
-                if (layer.onPreRender) layer.onPreRender(cameraPass);
-                layer._preRenderCalledForCameras |= 1 << cameraPass;
-                if (layer.overrideClear) {
-                    this.clearView(camera.camera, renderAction.renderTarget, true, true, layer._clearOptions);
+                if (layer.onPreRender) {
+                    layer.onPreRender(cameraPass);
                 }
+                layer._preRenderCalledForCameras |= 1 << cameraPass;
             }
 
             if (camera) {
-                // Each camera must only clear each render target once
-                rt = renderAction.renderTarget;
-                processedThisCameraAndRt = false;
-                for (k = 0; k < renderedLength; k++) {
-                    if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                        processedThisCameraAndRt = true;
-                        break;
-                    }
+
+                // clear buffers
+                if (renderAction.clearColor || renderAction.clearDepth || renderAction.clearStencil) {
+
+                    // TODO: refactor clearView to accept flags from renderAction directly as well
+                    const backupColor = camera.camera._clearColorBuffer;
+                    const backupDepth = camera.camera._clearDepthBuffer;
+                    const backupStencil = camera.camera._clearStencilBuffer;
+
+                    camera.camera._clearColorBuffer = renderAction.clearColor;
+                    camera.camera._clearDepthBuffer = renderAction.clearDepth;
+                    camera.camera._clearStencilBuffer = renderAction.clearStencil;
+
+                    this.clearView(camera.camera, renderAction.renderTarget, true, true);
+
+                    camera.camera._clearColorBuffer = backupColor;
+                    camera.camera._clearDepthBuffer = backupDepth;
+                    camera.camera._clearStencilBuffer = backupStencil;
                 }
 
-                if (!processedThisCameraAndRt) {
-                    // clear once per camera + RT
-                    if (!layer.overrideClear) {
-                        this.clearView(camera.camera, renderAction.renderTarget, true, true);
-                    }
-                    renderedRt[renderedLength] = rt;
-                    renderedByCam[renderedLength] = camera;
-                    renderedLength++;
-                }
-
-
-                // #ifdef PROFILER
-                draws = this._shadowDrawCalls;
-                // #endif
-
-                // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
-                this.renderShadows(layer._splitLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
-
-                // #ifdef PROFILER
-                layer._shadowDrawCalls += this._shadowDrawCalls - draws;
-                // #endif
-
-                // #ifdef PROFILER
+                // #if _PROFILER
                 sortTime = now();
                 // #endif
 
                 layer._sortVisible(transparent, camera.camera.node, cameraPass);
 
-                 // #ifdef PROFILER
+                 // #if _PROFILER
                 this._sortTime += now() - sortTime;
                  // #endif
 
-                objects = layer.instances;
-                visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+                let objects = layer.instances;
+                let visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;
@@ -3144,9 +3103,7 @@ class ForwardRenderer {
                 // Set camera shader constants, viewport, scissor, render target
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
-                // #ifdef PROFILER
-                draws = this._forwardDrawCalls;
-                // #endif
+                const draws = this._forwardDrawCalls;
                 this.renderForward(camera.camera,
                                    visible.list,
                                    visible.length,
@@ -3155,9 +3112,7 @@ class ForwardRenderer {
                                    layer.cullingMask,
                                    layer.onDrawCall,
                                    layer);
-                // #ifdef PROFILER
                 layer._forwardDrawCalls += this._forwardDrawCalls - draws;
-                // #endif
 
                 // Revert temp frame stuff
                 device.setColorWrite(true, true, true, true);
@@ -3166,6 +3121,11 @@ class ForwardRenderer {
                 device.setDepthBias(false);
 
                 camera.frameEnd();
+
+                // trigger postprocessing for camera
+                if (renderAction.triggerPostprocess && camera.onPostprocessing) {
+                    camera.onPostprocessing(camera);
+                }
             }
 
             // Call postrender callback if there's one
@@ -3183,12 +3143,12 @@ class ForwardRenderer {
                 }
             }
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             this.device.popMarker();
             this.device.popMarker();
             // #endif
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             layer._renderTime += now() - drawTime;
             // #endif
         }

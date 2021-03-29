@@ -2,7 +2,7 @@ import { VersionedObject } from './versioned-object.js';
 
 /**
  * @class
- * @name pc.ScopeId
+ * @name ScopeId
  * @classdesc The scope for a variable.
  * @param {string} name - The variable name.
  * @property {string} name The variable name.
@@ -21,7 +21,7 @@ class ScopeId {
 
     /**
      * @function
-     * @name pc.ScopeId#setValue
+     * @name ScopeId#setValue
      * @description Set variable value.
      * @param {*} value - The value.
      */
@@ -35,7 +35,7 @@ class ScopeId {
 
     /**
      * @function
-     * @name pc.ScopeId#getValue
+     * @name ScopeId#getValue
      * @description Get variable value.
      * @returns {*} The value.
      */

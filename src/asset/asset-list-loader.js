@@ -5,11 +5,11 @@ import { Asset } from './asset.js';
 /**
  * @private
  * @class
- * @name pc.AssetListLoader
- * @augments pc.EventHandler
+ * @name AssetListLoader
+ * @augments EventHandler
  * @classdesc Used to load a group of assets and fires a callback when all assets are loaded.
- * @param {pc.Asset[]|number[]} assetList - An array of pc.Asset objects to load or an array of Asset IDs to load.
- * @param {pc.AssetRegistry} assetRegistry - The application's asset registry.
+ * @param {Asset[]|number[]} assetList - An array of {@link Asset} objects to load or an array of Asset IDs to load.
+ * @param {AssetRegistry} assetRegistry - The application's asset registry.
  */
 class AssetListLoader extends EventHandler {
     constructor(assetList, assetRegistry) {
@@ -60,7 +60,7 @@ class AssetListLoader extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.AssetListLoader#load
+     * @name AssetListLoader#load
      * @description Start loading asset list, call done() when all assets have loaded or failed to load.
      * @param {Function} done - Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load.
      * @param {object} [scope] - Scope to use when calling callback.
@@ -93,7 +93,7 @@ class AssetListLoader extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.AssetListLoader#ready
+     * @name AssetListLoader#ready
      * @param {Function} done - Callback called when all assets in the list are loaded.
      * @param {object} [scope] - Scope to use when calling callback.
      */

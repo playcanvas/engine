@@ -2,12 +2,12 @@ import { EventHandler } from '../core/event-handler.js';
 
 /**
  * @class
- * @name pc.ScriptRegistry
- * @augments pc.EventHandler
+ * @name ScriptRegistry
+ * @augments EventHandler
  * @classdesc Container for all Script Types that are available to this application.
- * @description Create an instance of a pc.ScriptRegistry.
- * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
- * @param {pc.Application} app - Application to attach registry to.
+ * @description Create an instance of a ScriptRegistry.
+ * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link Application#scripts} {@link ADDRESS_REPEAT}.
+ * @param {Application} app - Application to attach registry to.
  */
 class ScriptRegistry extends EventHandler {
     constructor(app) {
@@ -26,12 +26,12 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#add
-     * @description Add {@link pc.ScriptType} to registry.
-     * Note: when {@link pc.createScript} is called, it will add the {@link pc.ScriptType} to the registry automatically.
+     * @name ScriptRegistry#add
+     * @description Add {@link ScriptType} to registry.
+     * Note: when {@link createScript} is called, it will add the {@link ScriptType} to the registry automatically.
      * If a script already exists in registry, and the new script has a `swap` method defined,
      * it will perform code hot swapping automatically in async manner.
-     * @param {Class<pc.ScriptType>} script - Script Type that is created using {@link pc.createScript}.
+     * @param {Class<ScriptType>} script - Script Type that is created using {@link createScript}.
      * @returns {boolean} True if added for the first time or false if script already exists.
      * @example
      * var PlayerController = pc.createScript('playerController');
@@ -139,9 +139,9 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#remove
-     * @description Remove {@link pc.ScriptType}.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+     * @name ScriptRegistry#remove
+     * @description Remove {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
@@ -173,10 +173,10 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#get
-     * @description Get {@link pc.ScriptType} by name.
-     * @param {string} name - Name of a {@link pc.ScriptType}.
-     * @returns {Class<pc.ScriptType>} The Script Type if it exists in the registry or null otherwise.
+     * @name ScriptRegistry#get
+     * @description Get {@link ScriptType} by name.
+     * @param {string} name - Name of a {@link ScriptType}.
+     * @returns {Class<ScriptType>} The Script Type if it exists in the registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
@@ -188,10 +188,10 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#has
-     * @description Check if a {@link pc.ScriptType} with the specified name is in the registry.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
-     * @returns {boolean} True if {@link pc.ScriptType} is in registry.
+     * @name ScriptRegistry#has
+     * @description Check if a {@link ScriptType} with the specified name is in the registry.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @returns {boolean} True if {@link ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -211,9 +211,9 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#list
-     * @description Get list of all {@link pc.ScriptType}s from registry.
-     * @returns {Array<Class<pc.ScriptType>>} list of all {@link pc.ScriptType}s in registry.
+     * @name ScriptRegistry#list
+     * @description Get list of all {@link ScriptType}s from registry.
+     * @returns {Array<Class<ScriptType>>} list of all {@link ScriptType}s in registry.
      * @example
      * // logs array of all Script Type names available in registry
      * console.log(app.scripts.list().map(function (o) {
@@ -221,7 +221,7 @@ class ScriptRegistry extends EventHandler {
      * }));
      */
     /* eslint-enable jsdoc/no-undefined-types */
-    list = function () {
+    list() {
         return this._list;
     }
 }

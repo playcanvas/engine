@@ -8,10 +8,10 @@ import { Vec4 } from '../../math/vec4.js';
 
 /**
  * @class
- * @name pc.ComponentSystem
- * @augments pc.EventHandler
+ * @name ComponentSystem
+ * @augments EventHandler
  * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
- * @param {pc.Application} app - The application managing this system.
+ * @param {Application} app - The application managing this system.
  */
 class ComponentSystem extends EventHandler {
     constructor(app) {
@@ -143,11 +143,11 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#addComponent
-     * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity.
-     * @param {pc.Entity} entity - The Entity to attach this component to.
+     * @name ComponentSystem#addComponent
+     * @description Create new {@link Component} and {@link ComponentData} instances and attach them to the entity.
+     * @param {Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
-     * @returns {pc.Component} Returns a Component of type defined by the component system.
+     * @returns {Component} Returns a Component of type defined by the component system.
      * @example
      * var entity = new pc.Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
@@ -177,9 +177,9 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#removeComponent
-     * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}.
-     * @param {pc.Entity} entity - The entity to remove the component from.
+     * @name ComponentSystem#removeComponent
+     * @description Remove the {@link Component} from the entity and delete the associated {@link ComponentData}.
+     * @param {Entity} entity - The entity to remove the component from.
      * @example
      * app.systems.model.removeComponent(entity);
      * // entity.model === undefined
@@ -197,11 +197,11 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#cloneComponent
+     * @name ComponentSystem#cloneComponent
      * @description Create a clone of component. This creates a copy all ComponentData variables.
-     * @param {pc.Entity} entity - The entity to clone the component from.
-     * @param {pc.Entity} clone - The entity to clone the component into.
-     * @returns {pc.Component} The newly cloned component.
+     * @param {Entity} entity - The entity to clone the component from.
+     * @param {Entity} clone - The entity to clone the component into.
+     * @returns {Component} The newly cloned component.
      */
     cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data
@@ -212,10 +212,10 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#initializeComponentData
-     * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
+     * @name ComponentSystem#initializeComponentData
+     * @description Called during {@link ComponentSystem#addComponent} to initialize the {@link ComponentData} in the store
      * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely.
-     * @param {pc.Component} component - The component being initialized.
+     * @param {Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.
      * @param {string[]|object[]} properties - The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
      */
@@ -261,7 +261,7 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#getPropertiesOfType
+     * @name ComponentSystem#getPropertiesOfType
      * @description Searches the component schema for properties that match the specified type.
      * @param {string} type - The type to search for.
      * @returns {string[]|object[]} An array of property descriptors matching the specified type.

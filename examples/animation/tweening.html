@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <style>
         body { 
@@ -55,29 +56,20 @@
         };
 
         // A list of assets that need to be loaded
-        var assetManifest = [
-            {
+        var assetManifest = {
+            font: {
                 type: "font",
                 url: "../assets/fonts/arial.json"
             },
-            {
+            script: {
                 type: "script",
                 url: "../../scripts/animation/tween.js"
             }
-        ];
+        };
 
         // Load all assets and then run the example
-        var assetsToLoad = assetManifest.length;
-        assetManifest.forEach(function (entry) {
-            app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
-                if (!err && asset) {
-                    assetsToLoad--;
-                    entry.asset = asset;
-                    if (assetsToLoad === 0) {
-                        run();
-                    }
-                }
-            });
+        loadManifestAssets(app, assetManifest, function () {
+            run();
         });
 
         function run() {
@@ -135,7 +127,7 @@
                 colors.push(pc.Color.WHITE, pc.Color.WHITE);
 
                 // Create a text label for the sphere
-                createText(assetManifest[0].asset, easingFunctions[i], -0.5, -i, 0, 0);
+                createText(assetManifest["font"].asset, easingFunctions[i], -0.5, -i, 0, 0);
             }
 
             // Create an entity with a directional light component

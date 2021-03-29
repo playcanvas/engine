@@ -14,6 +14,17 @@ describe("pc.Vec3", function () {
         equal(6, v1.z);
     });
 
+    it("add", function() {
+        var v1 = new pc.Vec3(2, 4, 6);
+        var v2 = new pc.Vec3(1, 2, 3);
+
+        v1.add(v2);
+
+        equal(3, v1.x);
+        equal(6, v1.y);
+        equal(9, v1.z);
+    });
+
     it("add2", function() {
         var v1 = new pc.Vec3(2, 4, 6);
         var v2 = new pc.Vec3(1, 2, 3);
@@ -24,6 +35,16 @@ describe("pc.Vec3", function () {
         equal(3, r.x);
         equal(6, r.y);
         equal(9, r.z);
+    });
+
+    it("addScalar", function() {
+        var v = new pc.Vec3(2, 4, 6);
+
+        v.addScalar(2);
+
+        equal(4, v.x);
+        equal(6, v.y);
+        equal(8, v.z);
     });
 
     it("clone", function () {
@@ -97,6 +118,36 @@ describe("pc.Vec3", function () {
         equal(0, r.x);
         equal(0, r.y);
         equal(1, r.z);
+    });
+
+    it("div", function() {
+        var v1 = new pc.Vec3(9, 16, 25);
+        var v2 = new pc.Vec3(3, 4, 5);
+        v1.div(v2);
+
+        equal(3, v1.x);
+        equal(4, v1.y);
+        equal(5, v1.z);
+    });
+
+    it("div2", function() {
+        var v1 = new pc.Vec3(9, 16, 25);
+        var v2 = new pc.Vec3(3, 4, 5);
+        var r = new pc.Vec3();
+        r.div2(v1, v2);
+
+        equal(3, r.x);
+        equal(4, r.y);
+        equal(5, r.z);
+    });
+
+    it("divScalar", function() {
+        var v = new pc.Vec3(3, 6, 9);
+        v.divScalar(3);
+
+        equal(1, v.x);
+        equal(2, v.y);
+        equal(3, v.z);
     });
 
     it("dot", function() {
@@ -188,6 +239,15 @@ describe("pc.Vec3", function () {
         equal(9, r.z);
     });
 
+    it("mulScalar", function() {
+        var v = new pc.Vec3(1, 2, 3);
+        v.mulScalar(2);
+
+        equal(2, v.x);
+        equal(4, v.y);
+        equal(6, v.z);
+    });
+
     it("normalize", function(){
         var x = new pc.Vec3(10, 0, 0);
         var y = new pc.Vec3(0, 10, 0);
@@ -227,15 +287,6 @@ describe("pc.Vec3", function () {
         equal(p.z, 0);
     });
 
-    it("scale", function() {
-        var v = new pc.Vec3(1, 2, 3);
-        v.scale(2);
-
-        equal(2, v.x);
-        equal(4, v.y);
-        equal(6, v.z);
-    });
-
     it("set", function() {
         var v1 = new pc.Vec3();
 
@@ -269,6 +320,16 @@ describe("pc.Vec3", function () {
         equal(3, r.z);
     });
 
+    it("subScalar", function() {
+        var v = new pc.Vec3(2, 4, 6);
+
+        v.subScalar(2);
+
+        equal(0, v.x);
+        equal(2, v.y);
+        equal(4, v.z);
+    });
+
     it("toString", function() {
         var v1 = new pc.Vec3(2, 4, 6);
 
@@ -276,6 +337,5 @@ describe("pc.Vec3", function () {
 
         equal(s, '[2, 4, 6]');
     });
-
 });
 

@@ -3,7 +3,7 @@ import { CompressUtils } from './compress-utils';
 /**
  * @private
  * @class
- * @name pc.Decompress
+ * @name Decompress
  * @classdesc Reconstruct original object field names in a compressed scene
  * @param {object} node - The current node of the object being decompressed,
  * initially the 'entities' field of a scene

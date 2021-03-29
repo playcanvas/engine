@@ -4,8 +4,8 @@
  * @name VignetteEffect
  * @classdesc Implements the VignetteEffect post processing effect.
  * @description Creates new instance of the post effect.
- * @augments pc.PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @augments PostEffect
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {number} offset Controls the offset of the effect.
  * @property {number} darkness Controls the darkness of the effect.
  */

@@ -75,7 +75,7 @@ class ParticleGPUUpdater {
         this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
     }
 
-    randomize = function () {
+    randomize() {
         this.frameRandomUniform[0] = Math.random();
         this.frameRandomUniform[1] = Math.random();
         this.frameRandomUniform[2] = Math.random();
@@ -84,7 +84,7 @@ class ParticleGPUUpdater {
     // This shouldn't change emitter state, only read from it
     update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.pushMarker("ParticleGPU");
         // #endif
 
@@ -192,7 +192,7 @@ class ParticleGPUUpdater {
         if (emitter.pack8)
             this._setInputBounds();
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.popMarker("");
         // #endif
     }

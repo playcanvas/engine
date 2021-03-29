@@ -169,7 +169,6 @@ class CollisionSystemImpl {
     remove(entity, data) {
         var app = this.system.app;
         if (entity.rigidbody && entity.rigidbody.body) {
-            app.systems.rigidbody.removeBody(entity.rigidbody.body);
             entity.rigidbody.disableSimulation();
         }
 
@@ -358,12 +357,14 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                     var vb = mesh.vertexBuffer;
 
                     var format = vb.getFormat();
-                    var stride = format.size / 4;
+                    var stride;
                     var positions;
                     for (j = 0; j < format.elements.length; j++) {
                         var element = format.elements[j];
                         if (element.name === SEMANTIC_POSITION) {
                             positions = new Float32Array(vb.lock(), element.offset);
+                            stride = element.stride / 4;
+                            break;
                         }
                     }
 
@@ -565,11 +566,11 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 
 /**
  * @class
- * @name pc.CollisionComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Manages creation of {@link pc.CollisionComponent}s.
+ * @name CollisionComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Manages creation of {@link CollisionComponent}s.
  * @description Creates a new CollisionComponentSystem.
- * @param {pc.Application} app - The running {pc.Application}.
+ * @param {Application} app - The running {@link Application}.
  */
 class CollisionComponentSystem extends ComponentSystem {
     constructor(app) {
@@ -661,7 +662,7 @@ class CollisionComponentSystem extends ComponentSystem {
                     impl = new CollisionCompoundSystemImpl(this);
                     break;
                 default:
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("_createImplementation: Invalid collision system type: " + type);
                     // #endif
             }

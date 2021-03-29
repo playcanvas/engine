@@ -28,11 +28,11 @@ const _schema = [
 /**
  * @private
  * @class
- * @name pc.AudioSourceComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
- * @param {pc.Application} app - The application managing this system.
- * @param {pc.SoundManager} manager - A sound manager instance.
+ * @name AudioSourceComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link SoundComponentSystem}.
+ * @param {Application} app - The application managing this system.
+ * @param {SoundManager} manager - A sound manager instance.
  */
 class AudioSourceComponentSystem extends ComponentSystem {
     constructor(app, manager) {
@@ -110,7 +110,7 @@ class AudioSourceComponentSystem extends ComponentSystem {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponentSystem#setVolume
+     * @name AudioSourceComponentSystem#setVolume
      * @description Set the volume for the entire AudioSource system. All sources will
      * have their volume multiplied by this value.
      * @param {number} volume - The value to set the volume to. Valid from 0 to 1.

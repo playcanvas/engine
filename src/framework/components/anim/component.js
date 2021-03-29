@@ -6,24 +6,24 @@ import { AnimController } from '../../../anim/controller/anim-controller.js';
 import { Component } from '../component.js';
 
 import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
 } from '../../../anim/controller/constants.js';
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 
 /**
- * @private
  * @component
  * @class
- * @name pc.AnimComponent
- * @augments pc.Component
+ * @name AnimComponent
+ * @augments Component
  * @classdesc The Anim Component allows an Entity to playback animations on models and entity properties.
  * @description Create a new AnimComponent.
- * @param {pc.AnimComponentSystem} system - The {@link pc.ComponentSystem} that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
+ * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
     constructor(system, entity) {
@@ -31,9 +31,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#loadStateGraph
+     * @name AnimComponent#loadStateGraph
      * @description Initialises component animation controllers using the provided state graph.
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
      */
@@ -53,10 +52,9 @@ class AnimComponent extends Component {
         data.layers = [];
 
         var graph;
-        if (this.entity.model?.model?.graph) {
-            graph = this.entity.model?.model?.graph;
+        if (this.rootBone) {
+            graph = this.rootBone;
         } else {
-            // animating hierarchy without model
             graph = this.entity;
         }
 
@@ -87,7 +85,7 @@ class AnimComponent extends Component {
             var layerName = layer.name;
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
-                if (stateName !== ANIM_STATE_START && stateName !== ANIM_STATE_END && stateName !== ANIM_STATE_ANY) {
+                if (ANIM_CONTROL_STATES.indexOf(stateName) === -1) {
                     var stateKey = layerName + ':' + stateName;
                     if (!this.data.animationAssets[stateKey]) {
                         this.data.animationAssets[stateKey] = {
@@ -105,6 +103,7 @@ class AnimComponent extends Component {
             var layer = this.data.layers[i];
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
+                if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
                 var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
                     this.removeNodeAnimations(stateName, layer.name);
@@ -130,9 +129,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#removeStateGraph
+     * @name AnimComponent#removeStateGraph
      * @description Removes all layers from the anim component.
      */
     removeStateGraph() {
@@ -155,9 +153,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#reset
+     * @name AnimComponent#reset
      * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing
      */
     reset() {
@@ -170,9 +167,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#rebind
+     * @name AnimComponent#rebind
      * @description Rebind all of the components layers
      */
     rebind() {
@@ -182,12 +178,11 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#findAnimationLayer
-     * @description Finds a pc.AnimComponentLayer in this component.
+     * @name AnimComponent#findAnimationLayer
+     * @description Finds a {@link AnimComponentLayer} in this component.
      * @param {string} layerName - The name of the anim component layer to find
-     * @returns {pc.AnimComponentLayer} layer
+     * @returns {AnimComponentLayer} layer
      */
     findAnimationLayer(layerName) {
         var layerIndex = this.data.layerIndices[layerName];
@@ -195,24 +190,23 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#assignAnimation
-     * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
+     * @name AnimComponent#assignAnimation
+     * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-     * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     assignAnimation(nodeName, animTrack, layerName) {
         if (!this.data.stateGraph) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
             // #endif
             return;
         }
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             // #endif
             return;
@@ -221,17 +215,16 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#removeNodeAnimations
+     * @name AnimComponent#removeNodeAnimations
      * @description Removes animations from a node in the loaded state graph.
      * @param {string} nodeName - The name of the node that should have its animation tracks removed.
-     * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
             // #endif
             return;
@@ -244,7 +237,7 @@ class AnimComponent extends Component {
         if (param && param.type === type) {
             return param.value;
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
     }
@@ -255,15 +248,14 @@ class AnimComponent extends Component {
             param.value = value;
             return;
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#getFloat
+     * @name AnimComponent#getFloat
      * @description Returns a float parameter value by name.
      * @param {string} name - The name of the float to return the value of.
      * @returns {number} A float
@@ -273,9 +265,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#setFloat
+     * @name AnimComponent#setFloat
      * @description Sets the value of a float parameter that was defined in the animation components state graph.
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The new float value to set this parameter to.
@@ -285,9 +276,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#getInteger
+     * @name AnimComponent#getInteger
      * @description Returns an integer parameter value by name.
      * @param {string} name - The name of the integer to return the value of.
      * @returns {number} An integer
@@ -297,9 +287,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#setInteger
+     * @name AnimComponent#setInteger
      * @description Sets the value of an integer parameter that was defined in the animation components state graph.
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The new integer value to set this parameter to.
@@ -308,16 +297,15 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign non integer value to integer parameter');
             // #endif
         }
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#getBoolean
+     * @name AnimComponent#getBoolean
      * @description Returns a boolean parameter value by name.
      * @param {string} name - The name of the boolean to return the value of.
      * @returns {boolean} A boolean
@@ -327,9 +315,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#setBoolean
+     * @name AnimComponent#setBoolean
      * @description Sets the value of a boolean parameter that was defined in the animation components state graph.
      * @param {string} name - The name of the parameter to set.
      * @param {boolean} value - The new boolean value to set this parameter to.
@@ -339,9 +326,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#getTrigger
+     * @name AnimComponent#getTrigger
      * @description Returns a trigger parameter value by name.
      * @param {string} name - The name of the trigger to return the value of.
      * @returns {boolean} A boolean
@@ -351,9 +337,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#setTrigger
+     * @name AnimComponent#setTrigger
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
      * @param {string} name - The name of the parameter to set.
      */
@@ -362,9 +347,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
      * @function
-     * @name pc.AnimComponent#resetTrigger
+     * @name AnimComponent#resetTrigger
      * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
      * @param {string} name - The name of the parameter to set.
      */
@@ -373,8 +357,33 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
-     * @name pc.AnimComponent#stateGraphAsset
+     * @name AnimComponent#rootBone
+     * @type {Entity}
+     * @description The entity that this anim component should use as the root of the animation hierarchy
+     */
+    get rootBone() {
+        return this.data.rootBone;
+    }
+
+    set rootBone(value) {
+        if (typeof value === 'string') {
+            const entity = this.entity.root.findByGuid(value);
+            this.data.rootBone = entity;
+            // #if _DEBUG
+            if (!entity) {
+                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
+            }
+            // #endif
+        } else if (value?.constructor.name === 'Entity') {
+            this.data.rootBone = value;
+        } else {
+            this.data.rootBone = null;
+        }
+        this.rebind();
+    }
+
+    /**
+     * @name AnimComponent#stateGraphAsset
      * @type {number}
      * @description The state graph asset this component should use to generate it's animation state graph
      */
@@ -429,7 +438,7 @@ class AnimComponent extends Component {
 
     /**
      * @private
-     * @name pc.AnimComponent#animationAssets
+     * @name AnimComponent#animationAssets
      * @type {object}
      * @description The animation assets used to load each states animation tracks
      */
@@ -443,8 +452,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
-     * @name pc.AnimComponent#playable
+     * @name AnimComponent#playable
      * @type {boolean}
      * @readonly
      * @description Returns whether all component layers are currently playable
@@ -459,9 +467,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @private
-     * @name pc.AnimComponent#baseLayer
-     * @type {pc.AnimComponentLayer}
+     * @name AnimComponent#baseLayer
+     * @type {AnimComponentLayer}
      * @readonly
      * @description Returns the base layer of the state graph
      */

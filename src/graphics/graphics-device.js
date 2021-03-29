@@ -184,43 +184,43 @@ function testTextureFloatHighPrecision(device) {
 
 /**
  * @readonly
- * @name pc.GraphicsDevice#precision
+ * @name GraphicsDevice#precision
  * @type {string}
  * @description The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or 'lowp'.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxCubeMapSize
+ * @name GraphicsDevice#maxCubeMapSize
  * @type {number}
  * @description The maximum supported dimension of a cube map.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxTextureSize
+ * @name GraphicsDevice#maxTextureSize
  * @type {number}
  * @description The maximum supported dimension of a texture.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxVolumeSize
+ * @name GraphicsDevice#maxVolumeSize
  * @type {number}
  * @description The maximum supported dimension of a 3D texture (any axis).
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxAnisotropy
+ * @name GraphicsDevice#maxAnisotropy
  * @type {number}
  * @description The maximum supported texture anisotropy setting.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#supportsInstancing
+ * @name GraphicsDevice#supportsInstancing
  * @type {boolean}
  * @description True if hardware instancing is supported.
  */
 /**
  * @event
- * @name pc.GraphicsDevice#resizecanvas
+ * @name GraphicsDevice#resizecanvas
  * @description The 'resizecanvas' event is fired when the canvas is resized.
  * @param {number} width - The new width of the canvas in pixels.
  * @param {number} height - The new height of the canvas in pixels.
@@ -228,8 +228,8 @@ function testTextureFloatHighPrecision(device) {
 
 /**
  * @class
- * @name pc.GraphicsDevice
- * @augments pc.EventHandler
+ * @name GraphicsDevice
+ * @augments EventHandler
  * @classdesc The graphics device manages the underlying graphics context. It is responsible
  * for submitting render state changes and graphics primitives to the hardware. A graphics
  * device is tied to a specific canvas HTML element. It is valid to have more than one
@@ -240,7 +240,7 @@ function testTextureFloatHighPrecision(device) {
  * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
  * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only].
  * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only].
- * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
+ * @property {ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
  */
 class GraphicsDevice extends EventHandler {
     constructor(canvas, options) {
@@ -268,24 +268,24 @@ class GraphicsDevice extends EventHandler {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        this._contextLostHandler = function (event) {
+        this._contextLostHandler = event => {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.log('pc.GraphicsDevice: WebGL context lost.');
             // #endif
             this.fire('devicelost');
-        }.bind(this);
+        };
 
-        this._contextRestoredHandler = function () {
-            // #ifdef DEBUG
+        this._contextRestoredHandler = () => {
+            // #if _DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
             // #endif
             this.restoreContext();
             this.contextLost = false;
             this.fire('devicerestored');
-        }.bind(this);
+        };
 
         // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
@@ -619,7 +619,7 @@ class GraphicsDevice extends EventHandler {
         this._renderTargetCreationTime = 0;
 
         this._vram = {
-            // #ifdef PROFILER
+            // #if _PROFILER
             texShadow: 0,
             texAsset: 0,
             texLightmap: 0,
@@ -650,7 +650,11 @@ class GraphicsDevice extends EventHandler {
         } else {
             this.textureFloatRenderable = false;
         }
-        if (this.extTextureHalfFloat) {
+
+        // two extensions allow us to render to half float buffers
+        if (this.extColorBufferHalfFloat) {
+            this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
+        } else if (this.extTextureHalfFloat) {
             if (this.webgl2) {
                 // EXT_color_buffer_float should affect both float and halffloat formats
                 this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
@@ -667,7 +671,7 @@ class GraphicsDevice extends EventHandler {
         this._textureFloatHighPrecision = undefined;
         this._textureHalfFloatUpdatable = undefined;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._spectorMarkers = [];
         this._spectorCurrentMarker = "";
         // #endif
@@ -680,7 +684,7 @@ class GraphicsDevice extends EventHandler {
 
         VertexFormat.init(this);
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
         // #endif
 
@@ -693,7 +697,7 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     updateMarker() {
         this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
     }
@@ -741,12 +745,12 @@ class GraphicsDevice extends EventHandler {
             if (!highpAvailable) {
                 if (mediumpAvailable) {
                     precision = "mediump";
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn("WARNING: highp not supported, using mediump");
                     // #endif
                 } else {
                     precision = "lowp";
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn( "WARNING: highp and mediump not supported, using lowp" );
                     // #endif
                 }
@@ -828,6 +832,9 @@ class GraphicsDevice extends EventHandler {
         this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
         this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+
+        // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
+        this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
 
         this.supportsInstancing = !!this.extInstancing;
     }
@@ -1080,7 +1087,7 @@ class GraphicsDevice extends EventHandler {
         // print error if we cannot grab framebuffer at this point
         if (!this.grabPassAvailable) {
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
             // #endif
 
@@ -1095,7 +1102,7 @@ class GraphicsDevice extends EventHandler {
         var width = this.width;
         var height = this.height;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.pushMarker("grabPass");
         // #endif
 
@@ -1141,7 +1148,7 @@ class GraphicsDevice extends EventHandler {
             }
         }
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.popMarker();
         // #endif
 
@@ -1163,7 +1170,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setViewport
+     * @name GraphicsDevice#setViewport
      * @description Set the active rectangle for rendering on the specified device.
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the viewport.
      * @param {number} y - The pixel space y-coordinate of the bottom left corner of the viewport.
@@ -1182,7 +1189,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setScissor
+     * @name GraphicsDevice#setScissor
      * @description Set the active scissor rectangle on the specified device.
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
      * @param {number} y - The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
@@ -1202,9 +1209,9 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#getProgramLibrary
+     * @name GraphicsDevice#getProgramLibrary
      * @description Retrieves the program library assigned to the specified graphics device.
-     * @returns {pc.ProgramLibrary} The program library assigned to the device.
+     * @returns {ProgramLibrary} The program library assigned to the device.
      */
     getProgramLibrary() {
         return this.programLib;
@@ -1213,12 +1220,12 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setProgramLibrary
+     * @name GraphicsDevice#setProgramLibrary
      * @description Assigns a program library to the specified device. By default, a graphics
      * device is created with a program library that manages all of the programs that are
      * used to render any graphical primitives. However, this function allows the user to
      * replace the existing program library with a new one.
-     * @param {pc.ProgramLibrary} programLib - The program library to assign to the device.
+     * @param {ProgramLibrary} programLib - The program library to assign to the device.
      */
     setProgramLibrary(programLib) {
         this.programLib = programLib;
@@ -1257,10 +1264,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#copyRenderTarget
+     * @name GraphicsDevice#copyRenderTarget
      * @description Copies source render target into destination render target. Mostly used by post-effects.
-     * @param {pc.RenderTarget} source - The source render target.
-     * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
+     * @param {RenderTarget} source - The source render target.
+     * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
      * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
      * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
@@ -1269,7 +1276,7 @@ class GraphicsDevice extends EventHandler {
         var gl = this.gl;
 
         if (!this.webgl2 && depth) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("Depth is not copyable on WebGL 1.0");
             // #endif
             return false;
@@ -1278,7 +1285,7 @@ class GraphicsDevice extends EventHandler {
             if (!dest) {
                 // copying to backbuffer
                 if (!source._colorBuffer) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("Can't copy empty color buffer to backbuffer");
                     // #endif
                     return false;
@@ -1286,13 +1293,13 @@ class GraphicsDevice extends EventHandler {
             } else {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("Can't copy color buffer, because one of the render targets doesn't have it");
                     // #endif
                     return false;
                 }
                 if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("Can't copy render targets of different color formats");
                     // #endif
                     return false;
@@ -1301,13 +1308,13 @@ class GraphicsDevice extends EventHandler {
         }
         if (depth) {
             if (!source._depthBuffer || !dest._depthBuffer) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
                 // #endif
                 return false;
             }
             if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Can't copy render targets of different depth formats");
                 // #endif
                 return false;
@@ -1341,14 +1348,14 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#initRenderTarget
+     * @name GraphicsDevice#initRenderTarget
      * @description Initialize render target before it can be used.
-     * @param {pc.RenderTarget} target - The render target to be initialized.
+     * @param {RenderTarget} target - The render target to be initialized.
      */
     initRenderTarget(target) {
         if (target._glFrameBuffer) return;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var startTime = now();
         this.fire('fbo:create', {
             timestamp: startTime,
@@ -1422,7 +1429,7 @@ class GraphicsDevice extends EventHandler {
             }
         }
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._checkFbo();
         // #endif
 
@@ -1460,14 +1467,14 @@ class GraphicsDevice extends EventHandler {
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
                 }
             }
-            // #ifdef DEBUG
+            // #if _DEBUG
             this._checkFbo();
             // #endif
         }
 
         this.targets.push(target);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;
         // #endif
     }
@@ -1475,9 +1482,9 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#getCopyShader
+     * @name GraphicsDevice#getCopyShader
      * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
-     * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
+     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `shaderChunks`).
      */
     getCopyShader() {
         if (!this._copyShader) {
@@ -1491,11 +1498,11 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#updateBegin
+     * @name GraphicsDevice#updateBegin
      * @description Marks the beginning of a block of rendering. Internally, this function
      * binds the render target currently set on the device. This function should be matched
-     * with a call to pc.GraphicsDevice#updateEnd. Calls to pc.GraphicsDevice#updateBegin
-     * and pc.GraphicsDevice#updateEnd must not be nested.
+     * with a call to {@link GraphicsDevice#updateEnd}. Calls to {@link GraphicsDevice#updateBegin}
+     * and {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateBegin() {
         this.boundVao = null;
@@ -1526,10 +1533,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#updateEnd
+     * @name GraphicsDevice#updateEnd
      * @description Marks the end of a block of rendering. This function should be called
-     * after a matching call to pc.GraphicsDevice#updateBegin. Calls to pc.GraphicsDevice#updateBegin
-     * and pc.GraphicsDevice#updateEnd must not be nested.
+     * after a matching call to {@link GraphicsDevice#updateBegin}. Calls to {@link GraphicsDevice#updateBegin}
+     * and {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateEnd() {
         var gl = this.gl;
@@ -1543,7 +1550,7 @@ class GraphicsDevice extends EventHandler {
         if (target) {
             // If the active render target is auto-mipmapped, generate its mip chain
             var colorBuffer = target._colorBuffer;
-            if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer.pot) {
+            if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
                 gl.generateMipmap(colorBuffer._glTarget);
@@ -1791,7 +1798,7 @@ class GraphicsDevice extends EventHandler {
 
             // Update texture stats
             this._vram.tex -= texture._gpuSize;
-            // #ifdef PROFILER
+            // #if _PROFILER
             if (texture.profilerHint === TEXHINT_SHADOWMAP) {
                 this._vram.texShadow -= texture._gpuSize;
             } else if (texture.profilerHint === TEXHINT_ASSET) {
@@ -1833,7 +1840,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     uploadTexture(texture) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (!texture.device) {
             if (!this._destroyedTextures.has(texture)) {
                 this._destroyedTextures.add(texture);
@@ -1865,7 +1872,7 @@ class GraphicsDevice extends EventHandler {
 
             mipObject = texture._levels[mipLevel];
 
-            if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
+            if (mipLevel === 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                 // We have more than one mip levels we want to assign, but we need all mips to make
                 // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                 // (this implies the call to _completePartialMipLevels above was unsuccessful)
@@ -2042,14 +2049,14 @@ class GraphicsDevice extends EventHandler {
             }
         }
 
-        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture.pot && texture._levels.length === 1) {
+        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || this.webgl2) && texture._levels.length === 1) {
             gl.generateMipmap(texture._glTarget);
             texture._mipmapsUploaded = true;
         }
 
         if (texture._gpuSize) {
             this._vram.tex -= texture._gpuSize;
-            // #ifdef PROFILER
+            // #if _PROFILER
             if (texture.profilerHint === TEXHINT_SHADOWMAP) {
                 this._vram.texShadow -= texture._gpuSize;
             } else if (texture.profilerHint === TEXHINT_ASSET) {
@@ -2062,7 +2069,7 @@ class GraphicsDevice extends EventHandler {
 
         texture._gpuSize = texture.gpuSize;
         this._vram.tex += texture._gpuSize;
-        // #ifdef PROFILER
+        // #if _PROFILER
         if (texture.profilerHint === TEXHINT_SHADOWMAP) {
             this._vram.texShadow += texture._gpuSize;
         } else if (texture.profilerHint === TEXHINT_ASSET) {
@@ -2114,7 +2121,7 @@ class GraphicsDevice extends EventHandler {
 
         if (flags & 1) {
             var filter = texture._minFilter;
-            if (!texture.pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+            if ((!texture.pot && !this.webgl2) || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                 if (filter === FILTER_NEAREST_MIPMAP_NEAREST || filter === FILTER_NEAREST_MIPMAP_LINEAR) {
                     filter = FILTER_NEAREST;
                 } else if (filter === FILTER_LINEAR_MIPMAP_NEAREST || filter === FILTER_LINEAR_MIPMAP_LINEAR) {
@@ -2235,7 +2242,7 @@ class GraphicsDevice extends EventHandler {
             // don't capture index buffer in VAO
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             var locZero = false;
             // #endif
 
@@ -2252,7 +2259,7 @@ class GraphicsDevice extends EventHandler {
                     e = elements[j];
                     var loc = semanticToLocation[e.name];
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (loc === 0) {
                         locZero = true;
                     }
@@ -2278,7 +2285,7 @@ class GraphicsDevice extends EventHandler {
                 this._vaoMap.set(key, vao);
             }
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!locZero) {
                 console.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
             }
@@ -2324,17 +2331,17 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#draw
+     * @name GraphicsDevice#draw
      * @description Submits a graphical primitive to the hardware for immediate rendering.
      * @param {object} primitive - Primitive object describing how to submit current vertex/index buffers defined as follows:
      * @param {number} primitive.type - The type of primitive to render. Can be:
-     * * {@link pc.PRIMITIVE_POINTS}
-     * * {@link pc.PRIMITIVE_LINES}
-     * * {@link pc.PRIMITIVE_LINELOOP}
-     * * {@link pc.PRIMITIVE_LINESTRIP}
-     * * {@link pc.PRIMITIVE_TRIANGLES}
-     * * {@link pc.PRIMITIVE_TRISTRIP}
-     * * {@link pc.PRIMITIVE_TRIFAN}
+     * * {@link PRIMITIVE_POINTS}
+     * * {@link PRIMITIVE_LINES}
+     * * {@link PRIMITIVE_LINELOOP}
+     * * {@link PRIMITIVE_LINESTRIP}
+     * * {@link PRIMITIVE_TRIANGLES}
+     * * {@link PRIMITIVE_TRISTRIP}
+     * * {@link PRIMITIVE_TRIFAN}
      * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the draw call.
      * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
@@ -2379,7 +2386,7 @@ class GraphicsDevice extends EventHandler {
                 texture = samplerValue;
                 this.setTexture(texture, textureUnit);
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (this.renderTarget) {
                     // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
                     if (this.renderTarget._samples < 2) {
@@ -2467,23 +2474,24 @@ class GraphicsDevice extends EventHandler {
 
         this._drawCallsPerFrame++;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
         // #endif
     }
 
     /**
      * @function
-     * @name pc.GraphicsDevice#clear
+     * @name GraphicsDevice#clear
      * @description Clears the frame buffer of the currently set render target.
      * @param {object} options - Optional options object that controls the behavior of the clear operation defined as follows:
      * @param {number[]} options.color - The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
      * @param {number} options.depth - The depth value to clear the depth buffer to in the range 0.0 to 1.0.
      * @param {number} options.flags - The buffers to clear (the types being color, depth and stencil). Can be any bitwise
      * combination of:
-     * * pc.CLEARFLAG_COLOR
-     * * pc.CLEARFLAG_DEPTH
-     * * pc.CLEARFLAG_STENCIL
+     * * {@link CLEARFLAG_COLOR}
+     * * {@link CLEARFLAG_DEPTH}
+     * * {@link CLEARFLAG_STENCIL}
+     * @param {number} options.stencil - The stencil value to clear the stencil buffer to. Defaults to 0.
      * @example
      * // Clear color buffer to black and depth buffer to 1.0
      * device.clear();
@@ -2572,11 +2580,11 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setRenderTarget
+     * @name GraphicsDevice#setRenderTarget
      * @description Sets the specified render target on the device. If null
      * is passed as a parameter, the back buffer becomes the current target
      * for all rendering operations.
-     * @param {pc.RenderTarget} renderTarget - The render target to activate.
+     * @param {RenderTarget} renderTarget - The render target to activate.
      * @example
      * // Set a render target to receive all rendering output
      * device.setRenderTarget(renderTarget);
@@ -2590,9 +2598,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getRenderTarget
+     * @name GraphicsDevice#getRenderTarget
      * @description Queries the currently set render target on the device.
-     * @returns {pc.RenderTarget} The current render target.
+     * @returns {RenderTarget} The current render target.
      * @example
      * // Get the current render target
      * var renderTarget = device.getRenderTarget();
@@ -2603,7 +2611,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getDepthTest
+     * @name GraphicsDevice#getDepthTest
      * @description Queries whether depth testing is enabled.
      * @returns {boolean} True if depth testing is enabled and false otherwise.
      * @example
@@ -2616,7 +2624,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setDepthTest
+     * @name GraphicsDevice#setDepthTest
      * @description Enables or disables depth testing of fragments. Once this state
      * is set, it persists until it is changed. By default, depth testing is enabled.
      * @param {boolean} depthTest - True to enable depth testing and false otherwise.
@@ -2637,17 +2645,17 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setDepthFunc
+     * @name GraphicsDevice#setDepthFunc
      * @description Configures the depth test.
      * @param {number} func - A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
-     * * {@link pc.FUNC_NEVER}: don't draw
-     * * {@link pc.FUNC_LESS}: draw if new depth < depth buffer
-     * * {@link pc.FUNC_EQUAL}: draw if new depth == depth buffer
-     * * {@link pc.FUNC_LESSEQUAL}: draw if new depth <= depth buffer
-     * * {@link pc.FUNC_GREATER}: draw if new depth > depth buffer
-     * * {@link pc.FUNC_NOTEQUAL}: draw if new depth != depth buffer
-     * * {@link pc.FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
-     * * {@link pc.FUNC_ALWAYS}: always draw
+     * * {@link FUNC_NEVER}: don't draw
+     * * {@link FUNC_LESS}: draw if new depth < depth buffer
+     * * {@link FUNC_EQUAL}: draw if new depth == depth buffer
+     * * {@link FUNC_LESSEQUAL}: draw if new depth <= depth buffer
+     * * {@link FUNC_GREATER}: draw if new depth > depth buffer
+     * * {@link FUNC_NOTEQUAL}: draw if new depth != depth buffer
+     * * {@link FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
+     * * {@link FUNC_ALWAYS}: always draw
      */
     setDepthFunc(func) {
         if (this.depthFunc === func) return;
@@ -2657,7 +2665,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getDepthWrite
+     * @name GraphicsDevice#getDepthWrite
      * @description Queries whether writes to the depth buffer are enabled.
      * @returns {boolean} True if depth writing is enabled and false otherwise.
      * @example
@@ -2670,7 +2678,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setDepthWrite
+     * @name GraphicsDevice#setDepthWrite
      * @description Enables or disables writes to the depth buffer. Once this state
      * is set, it persists until it is changed. By default, depth writes are enabled.
      * @param {boolean} writeDepth - True to enable depth writing and false otherwise.
@@ -2686,7 +2694,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setColorWrite
+     * @name GraphicsDevice#setColorWrite
      * @description Enables or disables writes to the color buffer. Once this state
      * is set, it persists until it is changed. By default, color writes are enabled
      * for all color channels.
@@ -2714,7 +2722,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setAlphaToCoverage
+     * @name GraphicsDevice#setAlphaToCoverage
      * @description Enables or disables alpha to coverage (WebGL2 only).
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
      */
@@ -2733,9 +2741,9 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setTransformFeedbackBuffer
+     * @name GraphicsDevice#setTransformFeedbackBuffer
      * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
-     * @param {pc.VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer} tf - The output vertex buffer.
      */
     setTransformFeedbackBuffer(tf) {
         if (this.transformFeedbackBuffer === tf)
@@ -2759,7 +2767,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setRaster
+     * @name GraphicsDevice#setRaster
      * @description Enables or disables rasterization. Useful with transform feedback, when you only need to process the data without drawing.
      * @param {boolean} on - True to enable rasterization and false to disable it.
      */
@@ -2795,7 +2803,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getBlending
+     * @name GraphicsDevice#getBlending
      * @description Queries whether blending is enabled.
      * @returns {boolean} True if blending is enabled and false otherwise.
      */
@@ -2805,7 +2813,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlending
+     * @name GraphicsDevice#setBlending
      * @description Enables or disables blending.
      * @param {boolean} blending - True to enable blending and false to disable it.
      */
@@ -2823,7 +2831,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilTest
+     * @name GraphicsDevice#setStencilTest
      * @description Enables or disables stencil test.
      * @param {boolean} enable - True to enable stencil test and false to disable it.
      */
@@ -2841,18 +2849,18 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilFunc
+     * @name GraphicsDevice#setStencilFunc
      * @description Configures stencil test for both front and back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
      * reference value, and mask value. Can be:
-     * * {@link pc.FUNC_NEVER}: never pass
-     * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link pc.FUNC_ALWAYS}: always pass
+     * * {@link FUNC_NEVER}: never pass
+     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * * {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2869,18 +2877,18 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilFuncFront
+     * @name GraphicsDevice#setStencilFuncFront
      * @description Configures stencil test for front faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
-     * * {@link pc.FUNC_NEVER}: never pass
-     * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link pc.FUNC_ALWAYS}: always pass
+     * * {@link FUNC_NEVER}: never pass
+     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * * {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2896,18 +2904,18 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilFuncBack
+     * @name GraphicsDevice#setStencilFuncBack
      * @description Configures stencil test for back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
-     * * {@link pc.FUNC_NEVER}: never pass
-     * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link pc.FUNC_ALWAYS}: always pass
+     * * {@link FUNC_NEVER}: never pass
+     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * * {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2923,21 +2931,21 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilOperation
+     * @name GraphicsDevice#setStencilOperation
      * @description Configures how stencil buffer values should be modified based on the result
      * of depth/stencil tests. Works for both front and back faces.
      * @param {number} fail - Action to take if stencil test is failed.
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link pc.STENCILOP_ZERO}: set value to zero
-     * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
-     * * {@link pc.STENCILOP_INCREMENT}: increment the value
-     * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link pc.STENCILOP_DECREMENT}: decrement the value
-     * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * * {@link STENCILOP_ZERO}: set value to zero
+     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * * {@link STENCILOP_INCREMENT}: increment the value
+     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * * {@link STENCILOP_DECREMENT}: decrement the value
+     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * * {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperation(fail, zfail, zpass, writeMask) {
@@ -2957,21 +2965,21 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilOperationFront
+     * @name GraphicsDevice#setStencilOperationFront
      * @description Configures how stencil buffer values should be modified based on the result
      * of depth/stencil tests. Works for front faces.
      * @param {number} fail - Action to take if stencil test is failed.
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link pc.STENCILOP_ZERO}: set value to zero
-     * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
-     * * {@link pc.STENCILOP_INCREMENT}: increment the value
-     * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link pc.STENCILOP_DECREMENT}: decrement the value
-     * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * * {@link STENCILOP_ZERO}: set value to zero
+     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * * {@link STENCILOP_INCREMENT}: increment the value
+     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * * {@link STENCILOP_DECREMENT}: decrement the value
+     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * * {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
@@ -2989,21 +2997,21 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilOperationBack
+     * @name GraphicsDevice#setStencilOperationBack
      * @description Configures how stencil buffer values should be modified based on the result
      * of depth/stencil tests. Works for back faces.
      * @param {number} fail - Action to take if stencil test is failed.
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link pc.STENCILOP_ZERO}: set value to zero
-     * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
-     * * {@link pc.STENCILOP_INCREMENT}: increment the value
-     * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link pc.STENCILOP_DECREMENT}: decrement the value
-     * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * * {@link STENCILOP_ZERO}: set value to zero
+     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * * {@link STENCILOP_INCREMENT}: increment the value
+     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * * {@link STENCILOP_DECREMENT}: decrement the value
+     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * * {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
@@ -3021,20 +3029,20 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendFunction
+     * @name GraphicsDevice#setBlendFunction
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
-     * * {@link pc.BLENDMODE_ZERO}
-     * * {@link pc.BLENDMODE_ONE}
-     * * {@link pc.BLENDMODE_SRC_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * * {@link pc.BLENDMODE_DST_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
-     * * {@link pc.BLENDMODE_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_DST_ALPHA}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * * {@link BLENDMODE_ZERO}
+     * * {@link BLENDMODE_ONE}
+     * * {@link BLENDMODE_SRC_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
+     * * {@link BLENDMODE_DST_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_DST_COLOR}
+     * * {@link BLENDMODE_SRC_ALPHA}
+     * * {@link BLENDMODE_SRC_ALPHA_SATURATE}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
+     * * {@link BLENDMODE_DST_ALPHA}
+     * * {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
      */
@@ -3049,20 +3057,20 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendFunctionSeparate
+     * @name GraphicsDevice#setBlendFunctionSeparate
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
-     * * {@link pc.BLENDMODE_ZERO}
-     * * {@link pc.BLENDMODE_ONE}
-     * * {@link pc.BLENDMODE_SRC_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * * {@link pc.BLENDMODE_DST_COLOR}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
-     * * {@link pc.BLENDMODE_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
-     * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * * {@link pc.BLENDMODE_DST_ALPHA}
-     * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * * {@link BLENDMODE_ZERO}
+     * * {@link BLENDMODE_ONE}
+     * * {@link BLENDMODE_SRC_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
+     * * {@link BLENDMODE_DST_COLOR}
+     * * {@link BLENDMODE_ONE_MINUS_DST_COLOR}
+     * * {@link BLENDMODE_SRC_ALPHA}
+     * * {@link BLENDMODE_SRC_ALPHA_SATURATE}
+     * * {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
+     * * {@link BLENDMODE_DST_ALPHA}
+     * * {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
      * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
@@ -3082,15 +3090,15 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendEquation
+     * @name GraphicsDevice#setBlendEquation
      * @description Configures the blending equation. The default blend equation is
-     * pc.BLENDEQUATION_ADD.
+     * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
-     * * {@link pc.BLENDEQUATION_ADD}
-     * * {@link pc.BLENDEQUATION_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_MIN}
-     * * {@link pc.BLENDEQUATION_MAX}
+     * * {@link BLENDEQUATION_ADD}
+     * * {@link BLENDEQUATION_SUBTRACT}
+     * * {@link BLENDEQUATION_REVERSE_SUBTRACT}
+     * * {@link BLENDEQUATION_MIN}
+     * * {@link BLENDEQUATION_MAX}
      *
      * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
      */
@@ -3104,15 +3112,15 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendEquationSeparate
+     * @name GraphicsDevice#setBlendEquationSeparate
      * @description Configures the blending equation. The default blend equation is
-     * pc.BLENDEQUATION_ADD.
+     * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
-     * * {@link pc.BLENDEQUATION_ADD}
-     * * {@link pc.BLENDEQUATION_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
-     * * {@link pc.BLENDEQUATION_MIN}
-     * * {@link pc.BLENDEQUATION_MAX}
+     * * {@link BLENDEQUATION_ADD}
+     * * {@link BLENDEQUATION_SUBTRACT}
+     * * {@link BLENDEQUATION_REVERSE_SUBTRACT}
+     * * {@link BLENDEQUATION_MIN}
+     * * {@link BLENDEQUATION_MAX}
      *
      * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
      * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel. Accepts same values as blendEquation.
@@ -3128,14 +3136,14 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setCullMode
+     * @name GraphicsDevice#setCullMode
      * @description Controls how triangles are culled based on their face direction.
-     * The default cull mode is pc.CULLFACE_BACK.
+     * The default cull mode is {@link CULLFACE_BACK}.
      * @param {number} cullMode - The cull mode to set. Can be:
-     * * {@link pc.CULLFACE_NONE}
-     * * {@link pc.CULLFACE_BACK}
-     * * {@link pc.CULLFACE_FRONT}
-     * * {@link pc.CULLFACE_FRONTANDBACK}
+     * * {@link CULLFACE_NONE}
+     * * {@link CULLFACE_BACK}
+     * * {@link CULLFACE_FRONT}
+     * * {@link CULLFACE_FRONTANDBACK}
      */
     setCullMode(cullMode) {
         if (this.cullMode !== cullMode) {
@@ -3162,11 +3170,11 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setIndexBuffer
+     * @name GraphicsDevice#setIndexBuffer
      * @description Sets the current index buffer on the graphics device. On subsequent
-     * calls to pc.GraphicsDevice#draw, the specified index buffer will be used to provide
+     * calls to {@link GraphicsDevice#draw}, the specified index buffer will be used to provide
      * index data for any indexed primitives.
-     * @param {pc.IndexBuffer} indexBuffer - The index buffer to assign to the device.
+     * @param {IndexBuffer} indexBuffer - The index buffer to assign to the device.
      */
     setIndexBuffer(indexBuffer) {
         // Store the index buffer
@@ -3175,10 +3183,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setVertexBuffer
+     * @name GraphicsDevice#setVertexBuffer
      * @description Sets the current vertex buffer on the graphics device. On subsequent calls to
-     * {@link pc.GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
-     * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -3193,7 +3201,7 @@ class GraphicsDevice extends EventHandler {
         var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
 
         if (!glShader) {
-            // #ifdef PROFILER
+            // #if _PROFILER
             var startTime = now();
             this.fire('shader:compile:start', {
                 timestamp: startTime,
@@ -3206,7 +3214,7 @@ class GraphicsDevice extends EventHandler {
             gl.shaderSource(glShader, src);
             gl.compileShader(glShader);
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             var endTime = now();
             this.fire('shader:compile:end', {
                 timestamp: endTime,
@@ -3217,12 +3225,12 @@ class GraphicsDevice extends EventHandler {
 
             if (isVertexShader) {
                 this.vertexShaderCache[src] = glShader;
-                // #ifdef PROFILER
+                // #if _PROFILER
                 this._shaderStats.vsCompiled++;
                 // #endif
             } else {
                 this.fragmentShaderCache[src] = glShader;
-                // #ifdef PROFILER
+                // #if _PROFILER
                 this._shaderStats.fsCompiled++;
                 // #endif
             }
@@ -3262,7 +3270,7 @@ class GraphicsDevice extends EventHandler {
                 var semantic = attrs[attr];
                 var loc = semanticToLocation[semantic];
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (locations.hasOwnProperty(loc)) {
                     console.warn("WARNING: Two attribues are mapped to the same location in a shader: " + locations[loc] + " and " + attr);
                 }
@@ -3280,7 +3288,7 @@ class GraphicsDevice extends EventHandler {
         shader._glFragmentShader = glFragmentShader;
         shader._glProgram = glProgram;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._shaderStats.linked++;
         if (definition.tag === SHADERTAG_MATERIAL) {
             this._shaderStats.materialShaders++;
@@ -3327,7 +3335,7 @@ class GraphicsDevice extends EventHandler {
 
         var definition = shader.definition;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var startTime = now();
         this.fire('shader:link:start', {
             timestamp: startTime,
@@ -3388,7 +3396,7 @@ class GraphicsDevice extends EventHandler {
 
         shader.ready = true;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var endTime = now();
         this.fire('shader:link:end', {
             timestamp: endTime,
@@ -3402,9 +3410,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setShader
+     * @name GraphicsDevice#setShader
      * @description Sets the active shader to be used during subsequent draw calls.
-     * @param {pc.Shader} shader - The shader to set to assign to the device.
+     * @param {Shader} shader - The shader to set to assign to the device.
      * @returns {boolean} True if the shader was successfully set, false otherwise.
      */
     setShader(shader) {
@@ -3420,7 +3428,7 @@ class GraphicsDevice extends EventHandler {
             // Set the active shader
             this.gl.useProgram(shader._glProgram);
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             this._shaderSwitchesPerFrame++;
             // #endif
 
@@ -3443,13 +3451,13 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#getBoneLimit
+     * @name GraphicsDevice#getBoneLimit
      * @description Queries the maximum number of bones that can be referenced by a shader.
-     * The shader generators (pc.programlib) use this number to specify the matrix array
+     * The shader generators (programlib) use this number to specify the matrix array
      * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of
      * available uniform vectors available after subtracting the number taken by a typical
      * heavyweight shader. If a different number is required, it can be tuned via
-     * pc.GraphicsDevice#setBoneLimit.
+     * {@link GraphicsDevice#setBoneLimit}.
      * @returns {number} The maximum number of bones that can be supported by the host hardware.
      */
     getBoneLimit() {
@@ -3459,7 +3467,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setBoneLimit
+     * @name GraphicsDevice#setBoneLimit
      * @description Specifies the maximum number of bones that the device can support on
      * the current hardware. This function allows the default calculated value based on
      * available vector uniforms to be overridden.
@@ -3471,10 +3479,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#resizeCanvas
+     * @name GraphicsDevice#resizeCanvas
      * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
      * Note that the specified width and height values will be multiplied by the value of
-     * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
+     * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
      * the canvas.
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -3505,7 +3513,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#clearShaderCache
+     * @name GraphicsDevice#clearShaderCache
      * @description Frees memory from all shaders ever allocated with this device.
      */
     clearShaderCache() {
@@ -3525,7 +3533,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#clearVertexArrayObjectCache
+     * @name GraphicsDevice#clearVertexArrayObjectCache
      * @description Frees memory from all vertex array objects ever allocated with this device.
      */
     clearVertexArrayObjectCache() {
@@ -3566,7 +3574,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#width
+     * @name GraphicsDevice#width
      * @type {number}
      * @description Width of the back buffer in pixels.
      */
@@ -3576,7 +3584,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#height
+     * @name GraphicsDevice#height
      * @type {number}
      * @description Height of the back buffer in pixels.
      */
@@ -3585,7 +3593,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @name pc.GraphicsDevice#fullscreen
+     * @name GraphicsDevice#fullscreen
      * @type {boolean}
      * @description Fullscreen mode.
      */
@@ -3604,7 +3612,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @private
-     * @name pc.GraphicsDevice#enableAutoInstancing
+     * @name GraphicsDevice#enableAutoInstancing
      * @type {boolean}
      * @description Automatic instancing.
      */
@@ -3616,11 +3624,11 @@ class GraphicsDevice extends EventHandler {
         this._enableAutoInstancing = value && this.extInstancing;
     }
 
-/**
- * @name pc.GraphicsDevice#maxPixelRatio
- * @type {number}
- * @description Maximum pixel ratio.
- */
+    /**
+     * @name GraphicsDevice#maxPixelRatio
+     * @type {number}
+     * @description Maximum pixel ratio.
+     */
     get maxPixelRatio() {
         return this._maxPixelRatio;
     }
@@ -3632,8 +3640,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#textureFloatHighPrecision
-     * @type {number}
+     * @name GraphicsDevice#textureFloatHighPrecision
+     * @type {boolean}
      * @description Check if high precision floating-point textures are supported.
      */
     get textureFloatHighPrecision() {
@@ -3645,8 +3653,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#textureHalfFloatUpdatable
-     * @type {number}
+     * @name GraphicsDevice#textureHalfFloatUpdatable
+     * @type {boolean}
      * @description Check if texture with half float format can be updated with data.
      */
     get textureHalfFloatUpdatable() {

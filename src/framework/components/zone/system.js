@@ -11,11 +11,11 @@ const _schema = ['enabled'];
 /**
  * @private
  * @class
- * @name pc.ZoneComponentSystem
+ * @name ZoneComponentSystem
  * @classdesc Defines zone in world.
  * @description Create a new ZoneComponentSystem.
- * @param {pc.Application} app - The application.
- * @augments pc.ComponentSystem
+ * @param {Application} app - The application.
+ * @augments ComponentSystem
  */
 class ZoneComponentSystem extends ComponentSystem {
     constructor(app) {

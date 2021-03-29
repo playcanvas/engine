@@ -37,15 +37,15 @@
 
         var miniStats = new pcx.MiniStats(app);
 
-        // All model component primitive shape types
-        var shapes = ["box", "plane", "cone", "cylinder", "sphere", "capsule"];
-        var x = -1, z = -1;
+        // All render component primitive shape types
+        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
 
-        shapes.forEach(function (shape) {
-            // Create an entity with a model component that is
-            // set up to be lightmapped with baked direct lighting
+        for (var i = 0; i < 40; i++) {
+            var shape = shapes[Math.floor(Math.random() * shapes.length)];
+
+            // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
             var entity = new pc.Entity();
-            entity.addComponent("model", {
+            entity.addComponent('render', {
                 castShadows: false,
                 castShadowsLightmap: true,
                 lightmapped: true,
@@ -53,16 +53,12 @@
             });
             app.root.addChild(entity);
 
-            // Lay out the 6 primitives in two rows, 3 per row
-            entity.setLocalPosition(x * 1.2, 0, z);
-            if (x++ === 1) {
-                x = -1;
-                z = 1;
-            }
-        });
+            // random orientation
+            entity.setLocalPosition(Math.random() * 10 - 5, Math.random() * 5, Math.random() * 10 - 5);
+        };
 
         var ground = new pc.Entity();
-        ground.addComponent("model", {
+        ground.addComponent('render', {
             castShadows: false,
             castShadowsLightmap: false,
             lightmapped: true,
@@ -70,10 +66,9 @@
         });
         app.root.addChild(ground);
         ground.setLocalPosition(0, -1, 0);
-        ground.setLocalScale(10, 10, 10);
+        ground.setLocalScale(40, 40, 40);
 
-        // Create an entity with a directional light component
-        // that is configured as a baked light
+        // Create an entity with a directional light component that is configured as a baked light
         var light = new pc.Entity();
         light.addComponent("light", {
             affectDynamic: false,
@@ -82,13 +77,33 @@
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
-            shadowDistance: 16,
+            shadowDistance: 50,
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
+            color: pc.Color.GREEN,
             type: "directional"
         });
         app.root.addChild(light);
         light.setLocalEulerAngles(45, 30, 0);
+
+        // Create an entity with a point light component that is configured as a baked light
+        var lightPoint = new pc.Entity();
+        lightPoint.addComponent("light", {
+            affectDynamic: false,
+            affectLightmapped: true,
+            bake: true,
+            castShadows: true,
+            normalOffsetBias: 0.05,
+            shadowBias: 0.2,
+            shadowDistance: 50,
+            shadowResolution: 512,
+            shadowType: pc.SHADOW_PCF3,
+            color: pc.Color.RED,
+            range: 100,
+            type: "point"
+        });
+        lightPoint.setLocalPosition(0, 2, 0);
+        app.root.addChild(lightPoint);
 
         // Create an entity with a camera component
         var camera = new pc.Entity();
@@ -98,44 +113,27 @@
             nearClip: 0.05
         });
         app.root.addChild(camera);
-        camera.setLocalPosition(0, 0, 8);
 
+        // lightmap baking properties
         app.scene.lightmapMode = pc.BAKE_COLOR;
         app.scene.lightmapMaxResolution = 2048;
 
-        // For baked lights, this property perhaps has the biggest
-        // impact on lightmap resolution:
+        // For baked lights, this property perhaps has the biggest impact on lightmap resolution:
         app.scene.lightmapSizeMultiplier = 32;
 
+        // bake lightmaps
         app.lightmapper.bake(null, pc.BAKE_COLOR);
 
-        var baked = true;
+        // Set an update function on the app's update event
+        var time = 4;
+        app.on("update", function (dt) {
+            time += dt;
 
-        // Toggle the scene between baked and dynamic lighting
-        function toggleBaked(e) {
-            e.preventDefault();
+            // orbit camera
+            camera.setLocalPosition(20 * Math.sin(time * 0.4), 3, 6);
+            camera.lookAt(pc.Vec3.ZERO);
+        });
 
-            baked = !baked;
-
-            app.root.findComponents('model').forEach(function (modelComponent) {
-                modelComponent.castShadows = !baked;
-                modelComponent.castShadowsLightmap = baked;
-                modelComponent.lightmapped = baked;
-            });
-            app.root.findComponents('light').forEach(function (lightComponent) {
-                lightComponent.affectDynamic = !baked;
-                lightComponent.affectLightmapped = baked;
-                lightComponent.bake = baked;
-            });
-
-            if (baked) {
-                // If we're baking, rebake all lights in the scene
-                app.lightmapper.bake(null, pc.BAKE_COLOR);
-            }
-        }
-
-        window.addEventListener('mousedown', toggleBaked, { passive: false });
-        window.addEventListener('touchstart', toggleBaked, { passive: false });
     </script>
 </body>
 </html>

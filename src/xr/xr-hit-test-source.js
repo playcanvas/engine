@@ -8,11 +8,11 @@ var poolQuat = [];
 
 /**
  * @class
- * @name pc.XrHitTestSource
- * @augments pc.EventHandler
+ * @name XrHitTestSource
+ * @augments EventHandler
  * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
  * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
  * @param {boolean} transient - True if XRHitTestSource created for input source profile.
  * @example
@@ -31,8 +31,8 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTestSource#remove
-     * @description Fired when {pc.XrHitTestSource} is removed.
+     * @name XrHitTestSource#remove
+     * @description Fired when {@link XrHitTestSource} is removed.
      * @example
      * hitTestSource.once('remove', function () {
      *     // hit test source has been removed
@@ -41,11 +41,11 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTestSource#result
+     * @name XrHitTestSource#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {pc.Vec3} position - Position of hit test
-     * @param {pc.Quat} rotation - Rotation of hit test
-     * @param {pc.XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {Vec3} position - Position of hit test
+     * @param {Quat} rotation - Rotation of hit test
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
      * @example
      * hitTestSource.on('result', function (position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -55,7 +55,7 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrHitTestSource#remove
+     * @name XrHitTestSource#remove
      * @description Stop and remove hit test source.
      */
     remove() {

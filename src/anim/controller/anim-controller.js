@@ -1,25 +1,25 @@
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
-import { AnimBlendTree } from './anim-blend-tree.js';
+import { AnimNode } from './anim-node.js';
 import { AnimTransition } from './anim-transition.js';
 
 import {
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
 /**
  * @private
  * @class
- * @name pc.AnimController
+ * @name AnimController
  * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
  * @description Create a new AnimController.
- * @param {pc.animEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
+ * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
  * @param {object[]} states - The list of states used to form the controller state graph.
  * @param {object[]} transitions - The list of transitions used to form the controller state graph.
  * @param {object[]} parameters - The anim components parameters.
- * @param {boolean} activate - Determines whether the anim controller should automatically play once all pc.AnimNodes are assigned animations.
+ * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
  */
 class AnimController {
     constructor(animEvaluator, states, transitions, parameters, activate) {
@@ -219,7 +219,7 @@ class AnimController {
     _findTransition(from, to) {
         var transitions = [];
 
-        // If from and to is supplied, find transitions that include the required source and destination states
+        // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
             transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
@@ -281,7 +281,12 @@ class AnimController {
 
         // return the highest priority transition to use
         if (transitions.length > 0) {
-            return transitions[0];
+            var transition = transitions[0];
+            if (transition.to === ANIM_STATE_END) {
+                var startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
+                transition.to = startTransition.to;
+            }
+            return transition;
         }
         return null;
     }
@@ -407,7 +412,7 @@ class AnimController {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign an animation track to an animation state that does not exist.');
             // #endif
             return;
@@ -420,15 +425,19 @@ class AnimController {
     }
 
     removeNodeAnimations(nodeName) {
+        if (ANIM_CONTROL_STATES.indexOf(nodeName) !== -1) {
+            return;
+        }
         var state = this._findState(nodeName);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to unassign animation tracks from a state that does not exist.');
             // #endif
             return;
         }
 
         state.animations = [];
+        return true;
     }
 
     play(stateName) {
@@ -517,13 +526,16 @@ class AnimController {
                 }
             }
         } else {
-            if (this.activeState._blendTree.constructor === AnimBlendTree) {
+            if (this.activeState._blendTree.constructor !== AnimNode) {
                 state = this.activeState;
                 for (i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
                     clip = this._animEvaluator.findClip(animation.name);
                     if (clip) {
                         clip.blendWeight = animation.normalizedWeight;
+                        if (animation.parent.syncAnimations) {
+                            clip.speed = animation.speed;
+                        }
                     }
                 }
             }

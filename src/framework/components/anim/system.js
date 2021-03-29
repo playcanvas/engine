@@ -12,13 +12,12 @@ const _schema = [
 ];
 
 /**
- * @private
  * @class
- * @name pc.AnimComponentSystem
- * @augments pc.ComponentSystem
+ * @name AnimComponentSystem
+ * @augments ComponentSystem
  * @classdesc The AnimComponentSystem manages creating and deleting AnimComponents.
  * @description Create an AnimComponentSystem.
- * @param {pc.Application} app - The application managing this system.
+ * @param {Application} app - The application managing this system.
  */
 class AnimComponentSystem extends ComponentSystem {
     constructor(app) {
@@ -43,6 +42,9 @@ class AnimComponentSystem extends ComponentSystem {
         }
         if (data.animationAssets) {
             component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
+        }
+        if (data.rootBone) {
+            component.rootBone = data.rootBone;
         }
     }
 

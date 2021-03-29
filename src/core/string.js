@@ -1,54 +1,60 @@
-var ASCII_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
-var ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-var ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE;
+const ASCII_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
+const ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE;
 
-var HIGH_SURROGATE_BEGIN = 0xD800;
-var HIGH_SURROGATE_END = 0xDBFF;
-var LOW_SURROGATE_BEGIN = 0xDC00;
-var LOW_SURROGATE_END = 0xDFFF;
-var ZERO_WIDTH_JOINER = 0x200D;
+const HIGH_SURROGATE_BEGIN = 0xD800;
+const HIGH_SURROGATE_END = 0xDBFF;
+const LOW_SURROGATE_BEGIN = 0xDC00;
+const LOW_SURROGATE_END = 0xDFFF;
+const ZERO_WIDTH_JOINER = 0x200D;
 
 // Flag emoji
-var REGIONAL_INDICATOR_BEGIN = 0x1F1E6;
-var REGIONAL_INDICATOR_END = 0x1F1FF;
+const REGIONAL_INDICATOR_BEGIN = 0x1F1E6;
+const REGIONAL_INDICATOR_END = 0x1F1FF;
 
 // Skin color modifications to emoji
-var FITZPATRICK_MODIFIER_BEGIN = 0x1F3FB;
-var FITZPATRICK_MODIFIER_END = 0x1F3FF;
+const FITZPATRICK_MODIFIER_BEGIN = 0x1F3FB;
+const FITZPATRICK_MODIFIER_END = 0x1F3FF;
 
 // Accent characters
-var DIACRITICAL_MARKS_BEGIN = 0x20D0;
-var DIACRITICAL_MARKS_END = 0x20FF;
+const DIACRITICAL_MARKS_BEGIN = 0x20D0;
+const DIACRITICAL_MARKS_END = 0x20FF;
 
 // Special emoji joins
-var VARIATION_MODIFIER_BEGIN = 0xFE00;
-var VARIATION_MODIFIER_END = 0xFE0F;
+const VARIATION_MODIFIER_BEGIN = 0xFE00;
+const VARIATION_MODIFIER_END = 0xFE0F;
 
-function getCodePointData(string, i) {
-    var size = string.length;
-    i = i || 0;
+function getCodePointData(string, i = 0) {
+    const size = string.length;
+
     // Account for out-of-bounds indices:
     if (i < 0 || i >= size) {
         return null;
     }
-    var first = string.charCodeAt(i);
-    var second;
+    const first = string.charCodeAt(i);
     if (size > 1 && first >= HIGH_SURROGATE_BEGIN && first <= HIGH_SURROGATE_END) {
-        second = string.charCodeAt(i + 1);
+        const second = string.charCodeAt(i + 1);
         if (second >= LOW_SURROGATE_BEGIN && second <= LOW_SURROGATE_END) {
             // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-            return { code: (first - HIGH_SURROGATE_BEGIN) * 0x400 + second - LOW_SURROGATE_BEGIN + 0x10000, long: true };
+            return {
+                code: (first - HIGH_SURROGATE_BEGIN) * 0x400 + second - LOW_SURROGATE_BEGIN + 0x10000,
+                long: true
+            };
         }
     }
-    return { code: first, long: false };
+
+    return {
+        code: first,
+        long: false
+    };
 }
 
 function isCodeBetween(string, begin, end) {
     if (!string)
         return false;
-    var codeData = getCodePointData(string);
+    const codeData = getCodePointData(string);
     if (codeData) {
-        var code = codeData.code;
+        const code = codeData.code;
         return code >= begin && code <= end;
     }
     return false;
@@ -60,8 +66,8 @@ function numCharsToTakeForNextSymbol(string, index) {
         return 1;
     }
     if (isCodeBetween(string[index], HIGH_SURROGATE_BEGIN, HIGH_SURROGATE_END)) {
-        var first = string.substring(index, index + 2);
-        var second = string.substring(index + 2, index + 4);
+        const first = string.substring(index, index + 2);
+        const second = string.substring(index + 2, index + 4);
 
         // check if second character is fitzpatrick (color) modifier
         // or if this is a pair of regional indicators (a flag)
@@ -92,35 +98,35 @@ function numCharsToTakeForNextSymbol(string, index) {
 
 /**
  * @namespace
- * @name pc.string
+ * @name string
  * @description Extended String API.
  */
-var string = {
+const string = {
     /**
      * @constant
      * @type {string}
-     * @name pc.string.ASCII_LOWERCASE
+     * @name string.ASCII_LOWERCASE
      * @description All lowercase letters.
      */
     ASCII_LOWERCASE: ASCII_LOWERCASE,
     /**
      * @constant
      * @type {string}
-     * @name pc.string.ASCII_UPPERCASE
+     * @name string.ASCII_UPPERCASE
      * @description All uppercase letters.
      */
     ASCII_UPPERCASE: ASCII_UPPERCASE,
     /**
      * @constant
      * @type {string}
-     * @name pc.string.ASCII_LETTERS
+     * @name string.ASCII_LETTERS
      * @description All ASCII letters.
      */
     ASCII_LETTERS: ASCII_LETTERS,
 
     /**
      * @function
-     * @name pc.string.format
+     * @name string.format
      * @description Return a string with {n} replaced with the n-th argument.
      * @param {string} s - The string to format.
      * @param {object} [arguments] - All other arguments are substituted into the string.
@@ -130,7 +136,7 @@ var string = {
      * console.log(s); // Prints "Hello world"
      */
     format: function (s) {
-        for (var i = 1; i < arguments.length; i++) {
+        for (let i = 1; i < arguments.length; i++) {
             s = s.replace('{' + (i - 1) + '}', arguments[i]);
         }
         return s;
@@ -138,7 +144,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.toBool
+     * @name string.toBool
      * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
      * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
      * an Exception.
@@ -146,7 +152,7 @@ var string = {
      * @param {boolean} [strict] - In strict mode an Exception is thrown if s is not an accepted string value. Defaults to false.
      * @returns {boolean} The converted value.
      */
-    toBool: function (s, strict) {
+    toBool: function (s, strict = false) {
         if (s === 'true') {
             return true;
         }
@@ -164,7 +170,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.getCodePoint
+     * @name string.getCodePoint
      * @description Get the code point number for a character in a string. Polyfill for
      * [`codePointAt`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
      * @param {string} string - The string to get the code point from.
@@ -172,13 +178,13 @@ var string = {
      * @returns {number} The code point value for the character in the string.
      */
     getCodePoint: function (string, i) {
-        var codePointData = getCodePointData(string, i);
+        const codePointData = getCodePointData(string, i);
         return codePointData && codePointData.code;
     },
 
     /**
      * @function
-     * @name pc.string.getCodePoints
+     * @name string.getCodePoints
      * @description Gets an array of all code points in a string.
      * @param {string} string - The string to get code points from.
      * @returns {number[]} The code points in the string.
@@ -187,9 +193,9 @@ var string = {
         if (typeof string !== 'string') {
             throw new TypeError('Not a string');
         }
-        var i = 0;
-        var arr = [];
-        var codePoint;
+        let i = 0;
+        const arr = [];
+        let codePoint;
         while (!!(codePoint = getCodePointData(string, i))) {
             arr.push(codePoint.code);
             i += codePoint.long ? 2 : 1;
@@ -199,22 +205,22 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.getSymbols
+     * @name string.getSymbols
      * @description Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
-     * some symbols (such as emoji or accented characters) are actually made up of multiple character codes.
+     * some symbols (such as emoji or accented characters) are actually made up of multiple character codes. See
+     * {@link https://mathiasbynens.be/notes/javascript-unicode here} for more info.
      * @param {string} string - The string to break into symbols.
      * @returns {string[]} The symbols in the string.
-     * @see {@link https://mathiasbynens.be/notes/javascript-unicode Unicode strings in JavaScript}
      */
     getSymbols: function (string) {
         if (typeof string !== 'string') {
             throw new TypeError('Not a string');
         }
-        var index = 0;
-        var length = string.length;
-        var output = [];
-        var take = 0;
-        var ch;
+        let index = 0;
+        const length = string.length;
+        const output = [];
+        let take = 0;
+        let ch;
         while (index < length) {
             take += numCharsToTakeForNextSymbol(string, index + take);
             ch = string[index + take];
@@ -230,7 +236,7 @@ var string = {
                 // Not a complete char yet
                 continue;
             }
-            var char = string.substring(index, index + take);
+            const char = string.substring(index, index + take);
             output.push(char);
             index += take;
             take = 0;
@@ -240,18 +246,18 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.fromCodePoint
+     * @name string.fromCodePoint
      * @description Get the string for a given code point or set of code points. Polyfill for
      * [`fromCodePoint`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCodePoint}.
      * @param {...number} args - The code points to convert to a string.
      * @returns {string} The converted string.
      */
     fromCodePoint: function (/* ...args */) {
-        var chars = [];
-        var current;
-        var codePoint;
-        var units;
-        for (var i = 0; i < arguments.length; ++i) {
+        const chars = [];
+        let current;
+        let codePoint;
+        let units;
+        for (let i = 0; i < arguments.length; ++i) {
             current = Number(arguments[i]);
             codePoint = current - 0x10000;
             units = current > 0xFFFF ? [(codePoint >> 10) + 0xD800, (codePoint % 0x400) + 0xDC00] : [current];

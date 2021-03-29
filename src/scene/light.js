@@ -8,7 +8,7 @@ import { Vec4 } from '../math/vec4.js';
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_LIGHTMAP,
+    MASK_LIGHTMAP, MASK_DYNAMIC,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL
@@ -22,10 +22,44 @@ var tmpVec = new Vec3();
 
 var chanId = { r: 0, g: 1, b: 2, a: 3 };
 
+// viewport in shadows map for cascades for directional light
+const directionalCascades = [
+    [new Vec4(0, 0, 1, 1)],
+    [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5)],
+    [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5)],
+    [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
+];
+
+// Class storing rendering related private information
+class LightRenderData {
+    constructor(camera, face, lightType) {
+
+        // camera this applies to. Only used by directional light, as directional shadow map
+        // is culled and rendered for each camera. Local lights' shadow is culled and rendered one time
+        // and shared between cameras (even though it's not strictly correct and we can get shadows
+        // from a mesh that is not visible by the camera)
+        this.camera = camera;
+
+        // face index, value is based on light type:
+        // - spot: always 0
+        // - omni: cubemap face, 0..5
+        // - directional: 0 for simple shadows, cascade index for cascaded shadow map
+        this.face = face;
+
+        // shadow camera settings, only used by directional lights
+        this.position = lightType === LIGHTTYPE_DIRECTIONAL ? new Vec3() : null;
+        this.orthoHeight = 0;
+        this.farClip = 0;
+
+        // visible shadow casters
+        this.visibleCasters = [];
+    }
+}
+
 /**
  * @private
  * @class
- * @name pc.Light
+ * @name Light
  * @classdesc A light.
  */
 class Light {
@@ -35,8 +69,8 @@ class Light {
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
         this._castShadows = false;
-        this.enabled = false;
-        this.mask = 1;
+        this._enabled = false;
+        this.mask = MASK_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -63,6 +97,10 @@ class Light {
         // Spot properties
         this._innerConeAngle = 40;
         this._outerConeAngle = 45;
+
+        // Directional properties
+        this.cascades = null;   // an array of Vec4 viewports per cascade
+        this.numCascades = 1;
 
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
@@ -95,21 +133,41 @@ class Light {
         this._cacheShadowMap = false;
         this._isCachedShadowMap = false;
 
-        this._visibleLength = [0]; // lengths of passes in culledList
-        this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for omni, cameraCount for directional)
-        this._visibleCameraSettings = []; // camera settings used in each directional light pass
+        // private rendering data
+        this._renderData = [];
+
+        // true if the light is visible by any camera within a frame
+        this.visibleThisFrame = false;
     }
 
     destroy() {
         this._destroyShadowMap();
+        this._renderData = null;
+    }
+
+    // returns LightRenderData with matching camera and face
+    getRenderData(camera, face) {
+
+        // returns existing
+        for (let i = 0; i < this._renderData.length; i++) {
+            let current = this._renderData[i];
+            if (current.camera === camera && current.face === face) {
+                return current;
+            }
+        }
+
+        // create new one
+        const rd = new LightRenderData(camera, face, this._type);
+        this._renderData.push(rd);
+        return rd;
     }
 
     /**
      * @private
      * @function
-     * @name pc.Light#clone
+     * @name Light#clone
      * @description Duplicates a light node but does not 'deep copy' the hierarchy.
-     * @returns {pc.Light} A cloned Light.
+     * @returns {Light} A cloned Light.
      */
     clone() {
         var clone = new Light();
@@ -119,7 +177,7 @@ class Light {
         clone.setColor(this._color);
         clone.intensity = this._intensity;
         clone.castShadows = this.castShadows;
-        clone.enabled = this.enabled;
+        clone._enabled = this._enabled;
 
         // Omni and spot properties
         clone.attenuationStart = this.attenuationStart;
@@ -135,6 +193,9 @@ class Light {
         // Spot properties
         clone.innerConeAngle = this._innerConeAngle;
         clone.outerConeAngle = this._outerConeAngle;
+
+        // Directional properties
+        clone.numCascades = this.numCascades;
 
         // shape properties
         clone.shape = this._shape;
@@ -156,6 +217,14 @@ class Light {
         return clone;
     }
 
+    get numCascades() {
+        return this.cascades.length;
+    }
+
+    set numCascades(value) {
+        this.cascades = directionalCascades[value - 1];
+    }
+
     getColor() {
         return this._color;
     }
@@ -168,15 +237,15 @@ class Light {
             var node = this._node;
 
             spotCenter.copy(node.up);
-            spotCenter.scale(-range * 0.5 * f);
+            spotCenter.mulScalar(-range * 0.5 * f);
             spotCenter.add(node.getPosition());
             sphere.center = spotCenter;
 
             spotEndPoint.copy(node.up);
-            spotEndPoint.scale(-range);
+            spotEndPoint.mulScalar(-range);
 
             tmpVec.copy(node.right);
-            tmpVec.scale(Math.sin(angle * math.DEG_TO_RAD) * range);
+            tmpVec.mulScalar(Math.sin(angle * math.DEG_TO_RAD) * range);
             spotEndPoint.add(tmpVec);
 
             sphere.radius = spotEndPoint.length() * 0.5;
@@ -281,6 +350,10 @@ class Light {
         }
     }
 
+    layersDirty() {
+        this._scene.layers._dirtyLights = true;
+    }
+
     updateKey() {
         // Key definition:
         // Bit
@@ -315,7 +388,9 @@ class Light {
         }
 
         if (key !== this.key && this._scene !== null) {
-            this._scene.layers._dirtyLights = true;
+// TODO: most of the changes to the key should not invalidate the composition,
+            // probably only _type and _castShadows
+            this.layersDirty();
         }
 
         this.key = key;
@@ -384,6 +459,17 @@ class Light {
         this._shadowType = value;
         this._destroyShadowMap();
         this.updateKey();
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(value) {
+        if (this._enabled !== value) {
+            this._enabled = value;
+            this.layersDirty();
+        }
     }
 
     get castShadows() {
