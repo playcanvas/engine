@@ -204,10 +204,6 @@ class CollisionSystemImpl {
 
 // Box Collision System
 class CollisionBoxSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
             var he = data.halfExtents;
@@ -222,10 +218,6 @@ class CollisionBoxSystemImpl extends CollisionSystemImpl {
 
 // Sphere Collision System
 class CollisionSphereSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
             return new Ammo.btSphereShape(data.radius);
@@ -236,10 +228,6 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         var shape = null;
         var axis = (data.axis !== undefined) ? data.axis : 1;
@@ -265,10 +253,6 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         var halfExtents = null;
         var shape = null;
@@ -302,10 +286,6 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         var shape = null;
         var axis = (data.axis !== undefined) ? data.axis : 1;
@@ -331,10 +311,6 @@ class CollisionConeSystemImpl extends CollisionSystemImpl {
 
 // Mesh Collision System
 class CollisionMeshSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     // override for the mesh implementation because the asset model needs
     // special handling
     beforeInitialize(component, data) {}
@@ -520,10 +496,6 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
 // Compound Collision System
 class CollisionCompoundSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
             return new Ammo.btCompoundShape();

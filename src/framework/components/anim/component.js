@@ -26,10 +26,6 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
  * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
-    constructor(system, entity) {
-        super(system, entity);
-    }
-
     /**
      * @function
      * @name AnimComponent#loadStateGraph

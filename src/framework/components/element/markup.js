@@ -504,8 +504,6 @@ function evaluateMarkup(symbols) {
 }
 
 class Markup {
-    constructor() {}
-
     static evaluate(symbols) {
         return evaluateMarkup(symbols);
     }

@@ -6,8 +6,6 @@
  * into instances of {@link AnimTarget}.
  */
 class AnimBinder {
-    constructor() {}
-
     // join a list of path segments into a path string using the full stop character. If another character is supplied,
     // it will join using that character instead
     static joinPath(pathSegments, character) {
