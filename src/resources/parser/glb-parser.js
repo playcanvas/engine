@@ -795,24 +795,23 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                         options.deltaNormalsType = getComponentType(accessor.componentType);
                     }
 
+                    // name if specified
                     if (gltfMesh.hasOwnProperty('extras') &&
                         gltfMesh.extras.hasOwnProperty('targetNames')) {
                         options.name = gltfMesh.extras.targetNames[index];
                     } else {
-                        options.name = targets.length.toString(10);
+                        options.name = index.toString(10);
+                    }
+
+                    // default weight if specified
+                    if (gltfMesh.hasOwnProperty('weights')) {
+                        options.defaultWeight = gltfMesh.weights[index];
                     }
 
                     targets.push(new MorphTarget(options));
                 });
 
                 mesh.morph = new Morph(targets, device);
-
-                // set default morph target weights if they're specified
-                if (gltfMesh.hasOwnProperty('weights')) {
-                    for (var i = 0; i < gltfMesh.weights.length; ++i) {
-                        targets[i].defaultWeight = gltfMesh.weights[i];
-                    }
-                }
             }
         }
 
