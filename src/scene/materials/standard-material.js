@@ -526,7 +526,7 @@ class StandardMaterial extends Material {
             this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
         }
 
-        for (let p in _matTex2D) {
+        for (const p in _matTex2D) {
             this._updateMap(p);
         }
 
@@ -706,7 +706,7 @@ class StandardMaterial extends Material {
         }
 
         // Minimal options for Depth and Shadow passes
-        let minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
+        const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)

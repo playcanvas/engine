@@ -150,7 +150,7 @@ class Light {
 
         // returns existing
         for (let i = 0; i < this._renderData.length; i++) {
-            let current = this._renderData[i];
+            const current = this._renderData[i];
             if (current.camera === camera && current.face === face) {
                 return current;
             }

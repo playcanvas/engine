@@ -238,7 +238,7 @@ class LayerComposition extends EventHandler {
             }
 
             // collect a list of layers this camera renders
-            let cameraLayers = [];
+            const cameraLayers = [];
 
             // render in order of cameras sorted by priority
             var renderActionCount = 0;
@@ -248,7 +248,7 @@ class LayerComposition extends EventHandler {
 
                 // first render action for this camera
                 let cameraFirstRenderAction = true;
-                let cameraFirstRenderActionIndex = renderActionCount;
+                const cameraFirstRenderActionIndex = renderActionCount;
 
                 // last render action for the camera
                 let lastRenderAction = null;
@@ -333,7 +333,7 @@ class LayerComposition extends EventHandler {
         this._lightShadowCasters.length = lightCount;
         for (let i = 0; i < lightCount; i++) {
 
-            let casters = this._lightShadowCasters[i];
+            const casters = this._lightShadowCasters[i];
             if (casters) {
                 casters.clear();
             } else {
@@ -426,7 +426,7 @@ class LayerComposition extends EventHandler {
 
         // clear flags - use camera clear flags in the first render action for each camera,
         // or when render target (from layer) was not yet cleared by this camera
-        let needsClear = cameraFirstRenderAction || !used;
+        const needsClear = cameraFirstRenderAction || !used;
         let clearColor = needsClear ? camera.clearColorBuffer : false;
         let clearDepth = needsClear ? camera.clearDepthBuffer : false;
         let clearStencil = needsClear ? camera.clearStencilBuffer : false;
@@ -462,7 +462,7 @@ class LayerComposition extends EventHandler {
 
         for (let a = startIndex; a >= 0; a--) {
 
-            let ra = this._renderActions[a];
+            const ra = this._renderActions[a];
             const layer = this.layerList[ra.layerIndex];
 
             // if we hit render action with a render target (other than depth layer), that marks the end of camera stack

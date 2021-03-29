@@ -91,7 +91,7 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
     constantSource.setValue(source);
 
     const constantParams = device.scope.resolve("params");
-    let params = new Float32Array(4);
+    const params = new Float32Array(4);
     params[1] = specularPower;
     params[2] = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
     params[3] = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale

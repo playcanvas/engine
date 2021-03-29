@@ -48,7 +48,7 @@ class RenderAction {
         this.directionalLightsIndices.length = 0;
 
         for (let i = 0; i < dirLights.length; i++) {
-            let light = dirLights[i];
+            const light = dirLights[i];
             for (let l = 0; l < cameraLayers.length; l++) {
 
                 // if layer has the light

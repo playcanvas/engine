@@ -299,11 +299,11 @@ class ImmediateData {
         let angle = 0;
 
         for (let i = 0; i < numSegments; i++) {
-            let sin0 = Math.sin(angle);
-            let cos0 = Math.cos(angle);
+            const sin0 = Math.sin(angle);
+            const cos0 = Math.cos(angle);
             angle += step;
-            let sin1 = Math.sin(angle);
-            let cos1 = Math.cos(angle);
+            const sin1 = Math.sin(angle);
+            const cos1 = Math.cos(angle);
 
             points[i * 6].set(center.x + radius * sin0, center.y, center.z + radius * cos0);
             points[i * 6 + 1].set(center.x + radius * sin1, center.y, center.z + radius * cos1);

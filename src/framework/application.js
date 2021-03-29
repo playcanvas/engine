@@ -1831,7 +1831,7 @@ class Application extends EventHandler {
         var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
-        let lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
+        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
 
         // Append
         lineBatch.addLines(position, color);
@@ -2066,7 +2066,7 @@ class Application extends EventHandler {
         this._initImmediate();
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
-        let matrix = new Mat4();
+        const matrix = new Mat4();
         matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, height, 0.0));
 
         if (!material) {
@@ -2084,7 +2084,7 @@ class Application extends EventHandler {
     renderDepthTexture(x, y, width, height, options) {
         this._initImmediate();
 
-        let material = new Material();
+        const material = new Material();
         material.shader = this._immediateData.getDepthTextureShader();
         material.update();
 

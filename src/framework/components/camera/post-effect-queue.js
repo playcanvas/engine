@@ -88,7 +88,7 @@ class PostEffectQueue {
         const format = hdr ? device.getHdrFormat() : PIXELFORMAT_R8_G8_B8_A8;
         const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
 
-        let colorBuffer = this._allocateColorBuffer(format, name);
+        const colorBuffer = this._allocateColorBuffer(format, name);
 
         var useStencil =  this.app.graphicsDevice.supportsStencil;
         var samples = useDepth ? device.samples : 1;
@@ -128,11 +128,11 @@ class PostEffectQueue {
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
-        let effects = this.effects;
+        const effects = this.effects;
         const isFirstEffect = effects.length === 0;
 
-        let inputTarget = this._createOffscreenTarget(isFirstEffect, effect.hdr);
-        let newEntry = new PostEffect(effect, inputTarget);
+        const inputTarget = this._createOffscreenTarget(isFirstEffect, effect.hdr);
+        const newEntry = new PostEffect(effect, inputTarget);
         effects.push(newEntry);
 
         this._sourceTarget = newEntry.inputTarget;
