@@ -115,7 +115,7 @@ class IndexBuffer {
      *
      * * {@link INDEXFORMAT_UINT8}
      * * {@link INDEXFORMAT_UINT16}
-     * * {@link INDEXFORMAT_UINT32}.
+     * * {@link INDEXFORMAT_UINT32}
      */
     getFormat() {
         return this.format;
