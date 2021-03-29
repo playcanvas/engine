@@ -9,7 +9,7 @@ class ObjectPool {
 
     _resize(size) {
         if (size > this._pool.length) {
-            for (var i = this._pool.length; i < size; i++) {
+            for (let i = this._pool.length; i < size; i++) {
                 this._pool[i] = new this._constructor();
             }
         }

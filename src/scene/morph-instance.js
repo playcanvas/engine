@@ -277,7 +277,7 @@ class MorphInstance {
 
         var device = this.device;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.pushMarker("MorphUpdate");
         // #endif
 
@@ -292,7 +292,7 @@ class MorphInstance {
             this.zeroTextures = this._activeTargets.length === 0;
         }
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.popMarker("");
         // #endif
     }

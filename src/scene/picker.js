@@ -33,7 +33,7 @@ class Picker {
             app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
                 // #endif
             }
@@ -95,7 +95,7 @@ class Picker {
         var device = this.device;
 
         if (typeof x === 'object') {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!_prepareDeprecationWarning) {
                 _prepareDeprecationWarning = true;
                 console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
@@ -172,7 +172,7 @@ class Picker {
         var self = this;
 
         if (camera instanceof Camera) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!_getSelectionDeprecationWarning) {
                 _getSelectionDeprecationWarning = true;
                 console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");

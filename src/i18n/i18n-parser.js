@@ -38,7 +38,7 @@ class I18nParser {
     }
 
     parse(data) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._validate(data);
         // #endif
 

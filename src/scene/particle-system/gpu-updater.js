@@ -84,7 +84,7 @@ class ParticleGPUUpdater {
     // This shouldn't change emitter state, only read from it
     update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.pushMarker("ParticleGPU");
         // #endif
 
@@ -192,7 +192,7 @@ class ParticleGPUUpdater {
         if (emitter.pack8)
             this._setInputBounds();
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.popMarker("");
         // #endif
     }

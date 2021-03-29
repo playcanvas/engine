@@ -253,7 +253,7 @@ class Layer {
         this._needsStaticPrepare = true;
         this._staticPrepareDone = false;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
         this._skipRenderCounter = 0;
 
@@ -361,7 +361,7 @@ class Layer {
             if (this.onDisable) this.onDisable();
 
         } else if (this._refCounter === 0) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Trying to decrement layer counter below 0");
             // #endif
             return;

@@ -196,7 +196,7 @@ function calculateTangents(positions, normals, uvs, indices) {
 
         // Gram-Schmidt orthogonalize
         var ndott = n.dot(t1);
-        temp.copy(n).scale(ndott);
+        temp.copy(n).mulScalar(ndott);
         temp.sub2(t1, temp).normalize();
 
         tangents[i * 4]     = temp.x;
@@ -600,7 +600,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCylinder(device, opts) {
-    // #ifdef DEBUG
+    // #if _DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
         console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     }

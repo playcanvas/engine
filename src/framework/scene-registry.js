@@ -44,7 +44,7 @@ class SceneRegistry {
      */
     add(name, url) {
         if (this._index.hasOwnProperty(name)) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
             // #endif
             return false;

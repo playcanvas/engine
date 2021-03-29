@@ -145,7 +145,7 @@ class Texture {
         this._compareOnRead = false;
         this._compareFunc = FUNC_LESS;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.profilerHint = 0;
         // #endif
 
@@ -161,12 +161,12 @@ class Texture {
             if (options.hasOwnProperty('type')) {
                 this.type = options.type;
             } else if (options.hasOwnProperty('rgbm')) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
                 // #endif
                 this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
             } else if (options.hasOwnProperty('swizzleGGGR')) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
                 // #endif
                 this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
@@ -207,7 +207,7 @@ class Texture {
                 this._addressW = (options.addressW !== undefined) ? options.addressW : this._addressW;
             }
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             this.profilerHint = (options.profilerHint !== undefined) ? options.profilerHint : this.profilerHint;
             // #endif
         }
@@ -322,7 +322,7 @@ class Texture {
     set addressW(addressW) {
         if (!this.device.webgl2) return;
         if (!this._volume) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             // #endif
             return;
@@ -849,7 +849,7 @@ class Texture {
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._lockedLevel === -1) {
             console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
         }
@@ -874,7 +874,7 @@ class Texture {
     }
 
     getDds() {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this.format !== PIXELFORMAT_R8_G8_B8_A8)
             console.error("This format is not implemented yet");
         // #endif
@@ -888,7 +888,7 @@ class Texture {
             if (!this.cubemap) {
                 mipSize = this._levels[i].length;
                 if (!mipSize) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("No byte array for mip " + i);
                     // #endif
                     return;
@@ -897,14 +897,14 @@ class Texture {
             } else {
                 for (face = 0; face < 6; face++) {
                     if (!this._levels[i][face]) {
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         console.error('No level data for mip ' + i + ', face ' + face);
                         // #endif
                         return;
                     }
                     mipSize = this._levels[i][face].length;
                     if (!mipSize) {
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         console.error("No byte array for mip " + i + ", face " + face);
                         // #endif
                         return;

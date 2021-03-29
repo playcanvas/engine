@@ -518,7 +518,7 @@ class SpriteComponent extends Component {
             this._currentClip = clip;
             this._currentClip.play();
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Trying to play sprite animation ' + name + ' which does not exist.');
             // #endif
         }

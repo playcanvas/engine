@@ -1310,7 +1310,7 @@ class Application extends EventHandler {
 
         if (this.vr) this.vr.poll();
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.updateStart = now();
         // #endif
 
@@ -1338,7 +1338,7 @@ class Application extends EventHandler {
             this.gamepads.update(dt);
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
         // #endif
     }
@@ -1352,7 +1352,7 @@ class Application extends EventHandler {
      * does not need to be called explicitly.
      */
     render() {
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.renderStart = now();
         // #endif
 
@@ -1362,7 +1362,7 @@ class Application extends EventHandler {
         this.renderer.renderComposition(this.scene.layers);
         this.fire('postrender');
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
         // #endif
     }
@@ -1693,7 +1693,7 @@ class Application extends EventHandler {
             });
             this.assets.load(asset);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("setAreaLightLuts: asset is not valid");
             // #endif
         }
@@ -2262,7 +2262,7 @@ var makeTick = function (_app) {
 
         application._fillFrameStatsBasic(currentTime, dt, ms);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         application._fillFrameStats();
         // #endif
 

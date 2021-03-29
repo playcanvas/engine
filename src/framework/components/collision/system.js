@@ -662,7 +662,7 @@ class CollisionComponentSystem extends ComponentSystem {
                     impl = new CollisionCompoundSystemImpl(this);
                     break;
                 default:
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("_createImplementation: Invalid collision system type: " + type);
                     // #endif
             }
