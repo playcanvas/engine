@@ -165,7 +165,7 @@ class Skeleton {
                 // Determine the interpolated keyframe for this animated node
                 interpKey = this._interpolatedKeyDict[nodeName];
                 if (interpKey === undefined) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn('Unknown skeleton node name: ' + nodeName);
                     // #endif
                     continue;

@@ -338,14 +338,14 @@ class RigidBodyComponent extends Component {
      * @example
      * // Apply a force at the body's center
      * // Calculate a force vector pointing in the world space direction of the entity
-     * var force = this.entity.forward.clone().scale(100);
+     * var force = this.entity.forward.clone().mulScalar(100);
      *
      * // Apply the force
      * this.entity.rigidbody.applyForce(force);
      * @example
      * // Apply a force at some relative offset from the body's center
      * // Calculate a force vector pointing in the world space direction of the entity
-     * var force = this.entity.forward.clone().scale(100);
+     * var force = this.entity.forward.clone().mulScalar(100);
      *
      * // Calculate the world space relative offset
      * var relativePos = new pc.Vec3();
@@ -431,7 +431,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error('ERROR: applyTorque: function takes 1 or 3 arguments');
                 // #endif
                 return;
@@ -508,7 +508,7 @@ class RigidBodyComponent extends Component {
                 pz = arguments[5];
                 break;
             default:
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
                 // #endif
                 return;
@@ -558,7 +558,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
                 // #endif
                 return;

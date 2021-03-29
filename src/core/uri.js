@@ -74,7 +74,7 @@ class URI {
      * @property {string} fragment The fragment, the section after a #.
      */
     constructor(uri) {
-        let result = uri.match(re);
+        const result = uri.match(re);
 
         this.scheme = result[2];
         this.authority = result[4];
@@ -134,7 +134,7 @@ class URI {
         if (this.query) {
             const queryParams = decodeURIComponent(this.query).split("&");
             for (const queryParam of queryParams) {
-                let pair = queryParam.split("=");
+                const pair = queryParam.split("=");
                 result[pair[0]] = pair[1];
             }
         }

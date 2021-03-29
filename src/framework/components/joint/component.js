@@ -37,7 +37,7 @@ class JointComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (typeof Ammo === 'undefined') {
             console.error('ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
         }

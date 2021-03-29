@@ -22,7 +22,7 @@ class MorphTarget {
     constructor(options) {
 
         if (arguments.length === 2) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
             // #endif
             options = arguments[1];

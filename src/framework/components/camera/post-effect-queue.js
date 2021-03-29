@@ -278,7 +278,7 @@ class PostEffectQueue {
                     var len = self.effects.length;
                     if (len) {
 
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         self.app.graphicsDevice.pushMarker("Postprocess");
                         // #endif
 
@@ -289,18 +289,18 @@ class PostEffectQueue {
                                 rect = self.camera.rect;
                             }
 
-                            // #ifdef DEBUG
+                            // #if _DEBUG
                             self.app.graphicsDevice.pushMarker(fx.name);
                             // #endif
 
                             fx.effect.render(fx.inputTarget, fx.outputTarget, rect);
 
-                            // #ifdef DEBUG
+                            // #if _DEBUG
                             self.app.graphicsDevice.popMarker("");
                             // #endif
                         }
 
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         self.app.graphicsDevice.popMarker("");
                         // #endif
                     }

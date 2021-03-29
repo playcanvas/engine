@@ -52,7 +52,7 @@ function StandardMaterialValidator() {
 StandardMaterialValidator.prototype.setInvalid = function (key, data) {
     this.valid = false;
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     console.warn('Ignoring invalid StandardMaterial property: ' + key, data[key]);
     // #endif
 
@@ -75,7 +75,7 @@ StandardMaterialValidator.prototype.validate = function (data) {
         type = TYPES[key];
 
         if (!type) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Ignoring unsupported input property to standard material: ' + key);
             // #endif
             this.valid = false;

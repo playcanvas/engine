@@ -8,24 +8,22 @@
  * @property {string} url - The url of the scene file.
  * @property {boolean} loaded - Returns true if the scene data is still being loaded
  */
-function SceneRegistryItem(name, url) {
-    this.name = name;
-    this.url = url;
-    this.data = null;
-    this._loading = false;
-    this._onLoadedCallbacks = [];
-}
+class SceneRegistryItem {
+    constructor(name, url) {
+        this.name = name;
+        this.url = url;
+        this.data = null;
+        this._loading = false;
+        this._onLoadedCallbacks = [];
+    }
 
-Object.defineProperty(SceneRegistryItem.prototype, "loaded", {
-    get: function () {
+    get loaded() {
         return !!this.data;
     }
-});
 
-Object.defineProperty(SceneRegistryItem.prototype, "loading", {
-    get: function () {
+    get loading() {
         return this._loading;
     }
-});
+}
 
 export { SceneRegistryItem };

@@ -112,7 +112,7 @@ class DdsParser {
 
         var texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             addressU: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
@@ -137,7 +137,7 @@ class DdsParser {
         // Check magic number
         var magic = headerU32[0];
         if (magic !== DDS_MAGIC) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Invalid magic number found in DDS file. Expected 0x20534444. Got " + magic + ".");
             // #endif
             return null;
@@ -171,7 +171,7 @@ class DdsParser {
 
         // Verify DDS header size
         if (header.size !== 124) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Invalid size for DDS header. Expected 124. Got " + header.size + ".");
             // #endif
             return null;

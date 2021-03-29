@@ -81,7 +81,7 @@ class HdrParser {
 
         var texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             addressU: ADDRESS_REPEAT,
@@ -229,7 +229,7 @@ class HdrParser {
     }
 
     _error(message) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error(message);
         // #endif
     }

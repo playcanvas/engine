@@ -28,7 +28,7 @@ class DefaultAnimBinder {
         flatten(graph);
         this.nodes = nodes;
         this.targetCache = {};
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.visitedFallbackGraphPaths = {};
         // #endif
 
@@ -136,7 +136,7 @@ class DefaultAnimBinder {
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
                 console.warn('Anim Binder: Multiple animation curves with the path ' + fallbackGraphPath + ' are present in the ' + this.graph.path + ' graph which may result in the incorrect binding of animations');
