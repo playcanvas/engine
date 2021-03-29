@@ -84,9 +84,9 @@ var _lightPropsDefault = [];
  * Affects point and spot lights only. Defaults to {@link LIGHTFALLOFF_LINEAR}.
  * @property {number} mask Defines a mask to determine which {@link MeshInstance}s are
  * lit by this light. Defaults to 1.
- * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects
- * @property {boolean} affectLightmapped If enabled the light will affect lightmapped objects
- * @property {boolean} bake If enabled the light will be rendered into lightmaps
+ * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects.
+ * @property {boolean} affectLightmapped If enabled the light will affect lightmapped objects.
+ * @property {boolean} bake If enabled the light will be rendered into lightmaps.
  * @property {boolean} bakeDir If enabled and bake=true, the light's direction will contribute to directional lightmaps.
  * Be aware, that directional lightmap is an approximation and can only hold single direction per pixel.
  * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
@@ -113,7 +113,7 @@ var _lightPropsDefault = [];
  * @property {number} cookieAngle Angle for spotlight cookie rotation.
  * @property {Vec2} cookieScale Spotlight cookie scale.
  * @property {Vec2} cookieOffset Spotlight cookie position offset.
- * @property {boolean} isStatic Mark light as non-movable (optimization)
+ * @property {boolean} isStatic Mark light as non-movable (optimization).
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */

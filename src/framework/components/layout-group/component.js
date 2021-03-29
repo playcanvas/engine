@@ -30,7 +30,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * vertically. Can be:
  *
  * * {@link ORIENTATION_HORIZONTAL}
- * * {@link ORIENTATION_VERTICAL}
+ * * {@link ORIENTATION_VERTICAL}.
  *
  * Defaults to {@link ORIENTATION_HORIZONTAL}.
  * @property {boolean} reverseX Reverses the order of children along the x axis.

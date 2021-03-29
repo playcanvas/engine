@@ -3,11 +3,11 @@ var CompressUtils = {
      * @private
      * @function
      * @name CompressUtils#setCompressedPRS
-     * @description Set position, rotation and scale of an entity
-     *   using compressed scene format
-     * @param {Entity} entity - The entity
-     * @param {object} data - Json entity data from a compressed scene
-     * @param {object} compressed - Compression metadata
+     * @description Set position, rotation and scale of an entity using compressed
+     * scene format.
+     * @param {Entity} entity - The entity.
+     * @param {object} data - Json entity data from a compressed scene.
+     * @param {object} compressed - Compression metadata.
      */
     setCompressedPRS: function (entity, data, compressed) {
         var a = compressed.singleVecs;
@@ -39,11 +39,11 @@ var CompressUtils = {
      * @private
      * @function
      * @name CompressUtils#oneCharToKey
-     * @description Retrieve the original field name (key) for a
-     *   single character key from a compressed entity
-     * @param {string} s - The compressed key string
-     * @param {object} data - Compression metadata
-     * @returns {string} The original key
+     * @description Retrieve the original field name (key) for a single character key
+     * from a compressed entity.
+     * @param {string} s - The compressed key string.
+     * @param {object} data - Compression metadata.
+     * @returns {string} The original key.
      */
     oneCharToKey: function (s, data) {
         var i = s.charCodeAt(0) - data.fieldFirstCode;
@@ -55,11 +55,11 @@ var CompressUtils = {
      * @private
      * @function
      * @name CompressUtils#multCharToKey
-     * @description Retrieve the original field name (key) for a
-     *   multi-character key from a compressed entity
-     * @param {string} s - The compressed key string
-     * @param {object} data - Compression metadata
-     * @returns {string} The original key
+     * @description Retrieve the original field name (key) for a multi-character key
+     * from a compressed entity.
+     * @param {string} s - The compressed key string.
+     * @param {object} data - Compression metadata.
+     * @returns {string} The original key.
      */
     multCharToKey: function (s, data) {
         var ind = 0;

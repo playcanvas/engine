@@ -17,7 +17,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * * {@link CURVE_LINEAR}
  * * {@link CURVE_SMOOTHSTEP}
  * * {@link CURVE_SPLINE}
- * * {@link CURVE_STEP}
+ * * {@link CURVE_STEP}.
  *
  * Defaults to {@link CURVE_SMOOTHSTEP}.
  * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated.

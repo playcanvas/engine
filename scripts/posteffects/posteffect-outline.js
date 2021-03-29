@@ -2,7 +2,7 @@
 /**
  * @class
  * @name OutlineEffect
- * @classdesc Applies an outline effect on input render target
+ * @classdesc Applies an outline effect on input render target.
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.

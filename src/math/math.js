@@ -333,7 +333,7 @@ const math = {
      * @private
      * @name math.between
      * @description Checks whether a given number resides between two other given numbers.
-     * @returns {boolean} true if between or false otherwise.
+     * @returns {boolean} True if between or false otherwise.
      * @param {number} num - The number to check the position of.
      * @param {number} a - The first upper or lower threshold to check between.
      * @param {number} b - The second upper or lower threshold to check between.

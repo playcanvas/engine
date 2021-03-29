@@ -6,7 +6,7 @@ var SceneUtils = {
      * @function
      * @static
      * @name SceneUtils.load
-     * @description Loads the scene JSON file from a URL
+     * @description Loads the scene JSON file from a URL.
      * @param {string} url - URL to scene JSON.
      * @param {Function} callback - The callback to the JSON file is loaded.
      */

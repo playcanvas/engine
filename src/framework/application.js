@@ -162,7 +162,7 @@ var _deprecationWarning = false;
  *     // ...and update functions.
  *     var app = this.app;
  * };
- * ```
+ * ```.
  *
  * If you are using the Engine without the Editor, you have to create the application
  * instance manually.
@@ -1624,7 +1624,7 @@ class Application extends EventHandler {
      * * {@link BAKE_COLOR}: single color lightmap
      * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
      * var settings = {

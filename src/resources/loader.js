@@ -33,7 +33,7 @@ class ResourceLoader {
      * * {@link ASSET_CSS}
      * * {@link ASSET_HTML}
      * * {@link ASSET_SCRIPT}
-     * * {@link ASSET_CONTAINER}
+     * * {@link ASSET_CONTAINER}.
      *
      * @param {ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
      * @example
