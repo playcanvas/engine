@@ -1,5 +1,4 @@
 import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
