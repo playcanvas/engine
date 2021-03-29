@@ -160,10 +160,10 @@ const math = {
      * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerpAngle: function (a, b, alpha) {
-        if (b - a > 180 ) {
+        if (b - a > 180) {
             b -= 360;
         }
-        if (b - a < -180 ) {
+        if (b - a < -180) {
             b += 360;
         }
         return math.lerp(a, b, math.clamp(alpha, 0, 1));

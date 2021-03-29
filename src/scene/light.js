@@ -262,7 +262,7 @@ class Light {
             var angle = this._outerConeAngle;
             var node = this._node;
 
-            var scl = Math.abs( Math.sin(angle * math.DEG_TO_RAD) * range );
+            var scl = Math.abs(Math.sin(angle * math.DEG_TO_RAD) * range);
 
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);

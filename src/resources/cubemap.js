@@ -260,11 +260,11 @@ class CubemapHandler {
                     premultiplyAlpha: 'none',
                     imageOrientation: 'flipY'
                 })
-                    .then( function (imageBitmap) {
+                    .then(function (imageBitmap) {
                         asset.resource._levels[0] = imageBitmap;
                         onReady(index, asset);
                     })
-                    .catch( function (e) {
+                    .catch(function (e) {
                         callback(e);
                     });
             } else {

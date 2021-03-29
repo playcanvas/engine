@@ -892,13 +892,13 @@ function createBox(device, opts) {
 
     var corners = [
         new Vec3(-he.x, -he.y,  he.z),
-        new Vec3( he.x, -he.y,  he.z),
-        new Vec3( he.x,  he.y,  he.z),
+        new Vec3(he.x, -he.y,  he.z),
+        new Vec3(he.x,  he.y,  he.z),
         new Vec3(-he.x,  he.y,  he.z),
-        new Vec3( he.x, -he.y, -he.z),
+        new Vec3(he.x, -he.y, -he.z),
         new Vec3(-he.x, -he.y, -he.z),
         new Vec3(-he.x,  he.y, -he.z),
-        new Vec3( he.x,  he.y, -he.z)
+        new Vec3(he.x,  he.y, -he.z)
     ];
 
     var faceAxes = [

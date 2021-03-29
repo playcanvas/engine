@@ -158,7 +158,7 @@ class LayerComposition extends EventHandler {
         // funtion moves transparent or opaque meshes based on moveTransparent from src to dest array
         function moveByBlendType(dest, src, moveTransparent) {
             var material, isTransparent;
-            for (var s = 0; s < src.length; ) {
+            for (var s = 0; s < src.length;) {
 
                 material = src[s].material;
                 isTransparent = material && material.blendType !== BLEND_NONE;

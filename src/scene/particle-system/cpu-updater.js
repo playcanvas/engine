@@ -35,7 +35,7 @@ function glMod(x, y) {
     return x - y * Math.floor(x / y);
 }
 
-function encodeFloatRGBA( v ) {
+function encodeFloatRGBA(v) {
     var encX = frac(v);
     var encY = frac(255.0 * v);
     var encZ = frac(65025.0 * v);
@@ -49,7 +49,7 @@ function encodeFloatRGBA( v ) {
     return [encX, encY, encZ, encW];
 }
 
-function encodeFloatRG( v ) {
+function encodeFloatRG(v) {
     var encX = frac(v);
     var encY = frac(255.0 * v);
 
@@ -97,17 +97,17 @@ class ParticleCPUUpdater {
             randomPos.z = edgeZ * (max == Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
 
             if (!emitter.localSpace)
-                randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+                randomPosTformed.copy(emitterPos).add(spawnMatrix.transformPoint(randomPos));
             else
-                randomPosTformed.copy( spawnMatrix.transformPoint(randomPos) );
+                randomPosTformed.copy(spawnMatrix.transformPoint(randomPos));
         } else {
             randomPos.normalize();
             var spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
             var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
             if (!emitter.localSpace)
-                randomPosTformed.copy(emitterPos).add( randomPos.mulScalar(r * emitter.emitterRadius) );
+                randomPosTformed.copy(emitterPos).add(randomPos.mulScalar(r * emitter.emitterRadius));
             else
-                randomPosTformed.copy( randomPos.mulScalar(r * emitter.emitterRadius) );
+                randomPosTformed.copy(randomPos.mulScalar(r * emitter.emitterRadius));
         }
 
         var particleRate, startSpawnTime;

@@ -35,7 +35,7 @@ class SkinPartition {
             this.indices.push(remappedIndex);
         } else {
             // Create new partitioned vertex
-            for (var influence = 0; influence < 4; influence++ ) {
+            for (var influence = 0; influence < 4; influence++) {
                 if (vertexArray.blendWeight.data[idx * 4 + influence] === 0)
                     continue;
 
@@ -96,7 +96,7 @@ class SkinPartition {
     }
 
     getBoneRemap(boneIndex) {
-        for (var i = 0; i < this.boneIndices.length; i++ ) {
+        for (var i = 0; i < this.boneIndices.length; i++) {
             if (this.boneIndices[i] === boneIndex) {
                 return i;
             }
@@ -206,7 +206,7 @@ function partitionSkin(model, materialMappings, boneLimit) {
             for (j = 0; j < meshesToSplit.length; j++) {
                 mesh = meshesToSplit[j];
                 var indices = mesh.indices;
-                for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count; ) {
+                for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count;) {
                     // Extract primitive
                     // Convert vertices
                     // There is a little bit of wasted time here if the vertex was already added previously

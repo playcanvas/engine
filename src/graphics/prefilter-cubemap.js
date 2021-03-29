@@ -276,8 +276,8 @@ function areaElement(x, y) {
 }
 function texelCoordSolidAngle(u, v, size) {
     // Scale up to [-1, 1] range (inclusive), offset by 0.5 to point to texel center.
-    var _u = (2.0 * (u + 0.5) / size ) - 1.0;
-    var _v = (2.0 * (v + 0.5) / size ) - 1.0;
+    var _u = (2.0 * (u + 0.5) / size) - 1.0;
+    var _v = (2.0 * (v + 0.5) / size) - 1.0;
 
     // fixSeams
     _u *= 1.0 - 1.0 / size;

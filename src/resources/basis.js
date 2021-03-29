@@ -207,9 +207,9 @@ function BasisWorker() {
             result.levels = result.levels.map(function (v) {
                 return v.buffer;
             });
-            self.postMessage( { url: url, data: result }, result.levels);
+            self.postMessage({ url: url, data: result }, result.levels);
         } catch (err) {
-            self.postMessage( { url: url.toString(), err: err.toString() } );
+            self.postMessage({ url: url.toString(), err: err.toString() });
         }
     };
 
@@ -218,20 +218,20 @@ function BasisWorker() {
     var workerInit = function (basisModule) {
         var instantiateWasmFunc = function (imports, successCallback) {
             WebAssembly.instantiate(basisModule, imports)
-                .then( function (result) {
+                .then(function (result) {
                     successCallback(result);
                 });
             return {};
         };
 
-        self.BASIS(basisModule ? { instantiateWasm: instantiateWasmFunc } : null).then( function (instance) {
+        self.BASIS(basisModule ? { instantiateWasm: instantiateWasmFunc } : null).then(function (instance) {
             basis = instance;
             basis.initializeBasis();
             for (var i = 0; i < queue.length; ++i) {
                 workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
             }
             queue = [];
-        } );
+        });
     };
 
     // handle incoming worker requests

@@ -19,7 +19,7 @@ class ImgParser {
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
         // disable ImageBitmap
-        this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
+        this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
     }
 
     load(url, callback, asset) {
@@ -108,10 +108,10 @@ class ImgParser {
                     premultiplyAlpha: 'none',
                     imageOrientation: 'flipY'
                 })
-                    .then( function (imageBitmap) {
+                    .then(function (imageBitmap) {
                         callback(null, imageBitmap);
                     })
-                    .catch( function (e) {
+                    .catch(function (e) {
                         callback(e);
                     });
             }
