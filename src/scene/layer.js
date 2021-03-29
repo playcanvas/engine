@@ -115,7 +115,7 @@ class InstanceList {
  * * {@link SORTMODE_MANUAL}
  * * {@link SORTMODE_MATERIALMESH}
  * * {@link SORTMODE_BACK2FRONT}
- * * {@link SORTMODE_FRONT2BACK}.
+ * * {@link SORTMODE_FRONT2BACK}
  *
  * Defaults to {@link SORTMODE_BACK2FRONT}.
  * @property {number} shaderPass A type of shader to use during rendering. Possible values are:

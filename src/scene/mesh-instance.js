@@ -63,7 +63,7 @@ class Command {
  *
  * * {@link RENDERSTYLE_SOLID}
  * * {@link RENDERSTYLE_WIREFRAME}
- * * {@link RENDERSTYLE_POINTS}.
+ * * {@link RENDERSTYLE_POINTS}
  *
  * Defaults to {@link RENDERSTYLE_SOLID}.
  * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
