@@ -274,7 +274,7 @@ TextMesh.prototype.parseCommands = function (commands) {
     const scalar = this.characterSize / this.fontData.unitsPerEm;
 
     // Generate front vertices
-    let vertices = [];
+    const vertices = [];
     for (let p = 0; p < vertexData.length; p += 2) {
         vertices.push(vertexData[p] * scalar, vertexData[p + 1] * scalar, this.depth);
     }
@@ -293,16 +293,16 @@ TextMesh.prototype.parseCommands = function (commands) {
     // Generate sides
     polygons.forEach(poly => {
         for (let i = 0; i < poly.points.length - 1; i++) {
-            let base = vertices.length / 3;
-            let p1 = poly.points[i];
-            let p2 = poly.points[i + 1];
+            const base = vertices.length / 3;
+            const p1 = poly.points[i];
+            const p2 = poly.points[i + 1];
             vertices.push(p1.x * scalar, p1.y * scalar, this.depth, p2.x * scalar, p2.y * scalar, this.depth,
                           p1.x * scalar, p1.y * scalar, 0, p2.x * scalar, p2.y * scalar, 0);
             indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
         }
     });
 
-    let normals = pc.calculateNormals(vertices, indices);
+    const normals = pc.calculateNormals(vertices, indices);
 
     return { vertices, normals, indices };
 };
@@ -313,7 +313,7 @@ TextMesh.prototype.calculateWidth = function () {
 
     let width = 0;
     for (var i = 0; i < this.text.length; i++) {
-        let char = this.text.charAt(i);
+        const char = this.text.charAt(i);
         width += font.charToGlyph(char).advanceWidth * scalar;
 
         if (i < this.text.length - 1) {

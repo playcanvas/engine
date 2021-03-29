@@ -305,7 +305,7 @@ class Picker {
         }
 
         // save old camera state
-        let originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
+        const originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
 
         // clear registered meshes, rendering will register them again
         self.mapping.length = 0;
@@ -336,8 +336,8 @@ class Picker {
         this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
 
         // add layer to be rendered by the camera
-        let originalLayers = camera.layers.slice();
-        let cameraLayers = camera.layers;
+        const originalLayers = camera.layers.slice();
+        const cameraLayers = camera.layers;
         cameraLayers.push(this.layer.id);
         camera.layers = cameraLayers;
 

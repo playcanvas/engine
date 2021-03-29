@@ -1355,7 +1355,7 @@ class ForwardRenderer {
 
     cullLights(camera, lights) {
         for (let i = 0; i < lights.length; i++) {
-            let light = lights[i];
+            const light = lights[i];
 
             // if enabled light is not already marked as visible
             if (!light.visibleThisFrame && light.enabled) {
@@ -2610,7 +2610,7 @@ class ForwardRenderer {
         if (type === LIGHTTYPE_DIRECTIONAL) return;
         light.visibleThisFrame = true; // force light visibility if function was manually called
 
-        let shadowCam = this.getShadowCamera(this.device, light);
+        const shadowCam = this.getShadowCamera(this.device, light);
         shadowCam.projection = PROJECTION_PERSPECTIVE;
         shadowCam.nearClip = light.attenuationEnd / 1000;
         shadowCam.farClip = light.attenuationEnd;
@@ -2622,7 +2622,7 @@ class ForwardRenderer {
             shadowCam.fov = 90;
             passes = 6;
         }
-        let shadowCamNode = shadowCam._node;
+        const shadowCamNode = shadowCam._node;
         lightNode = light._node;
         shadowCamNode.setPosition(lightNode.getPosition());
         if (type === LIGHTTYPE_SPOT) {
@@ -2888,7 +2888,7 @@ class ForwardRenderer {
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
-            let count = renderAction.directionalLightsIndices.length;
+            const count = renderAction.directionalLightsIndices.length;
             for (let j = 0; j < count; j++) {
                 const lightIndex = renderAction.directionalLightsIndices[j];
                 const light = comp._lights[lightIndex];
@@ -2908,17 +2908,17 @@ class ForwardRenderer {
 
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
-            let renderAction = renderActions[i];
+            const renderAction = renderActions[i];
 
             // layer
-            let layerIndex = renderAction.layerIndex;
-            let layer = comp.layerList[layerIndex];
+            const layerIndex = renderAction.layerIndex;
+            const layer = comp.layerList[layerIndex];
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
-            let transparent = comp.subLayerList[layerIndex];
+            const transparent = comp.subLayerList[layerIndex];
 
             // camera
-            let cameraPass = renderAction.cameraIndex;
-            let camera = layer.cameras[cameraPass];
+            const cameraPass = renderAction.cameraIndex;
+            const camera = layer.cameras[cameraPass];
 
             if (camera) {
 
@@ -2935,10 +2935,10 @@ class ForwardRenderer {
                 this.cullLights(camera.camera, layer._lights);
 
                 // cull mesh instances
-                let objects = layer.instances;
+                const objects = layer.instances;
 
                 // collect them into layer arrays
-                let visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+                const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
                 // shared objects are only culled once
                 if (!visible.done) {
@@ -2947,7 +2947,7 @@ class ForwardRenderer {
                         layer.onPreCull(cameraPass);
                     }
 
-                    let drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                    const drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
                     visible.length = this.cull(camera.camera, drawCalls, visible.list);
                     visible.done = true;
 
@@ -3023,7 +3023,7 @@ class ForwardRenderer {
             layer = comp.layerList[layerIndex];
             transparent = comp.subLayerList[layerIndex];
 
-            let cameraPass = renderAction.cameraIndex;
+            const cameraPass = renderAction.cameraIndex;
             camera = layer.cameras[cameraPass];
 
             // render directional shadow maps for this camera - these get re-rendered for each camera
@@ -3094,8 +3094,8 @@ class ForwardRenderer {
                 this._sortTime += now() - sortTime;
                  // #endif
 
-                let objects = layer.instances;
-                let visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+                const objects = layer.instances;
+                const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;

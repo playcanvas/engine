@@ -155,7 +155,7 @@ class CameraComponent extends Component {
 
     dirtyLayerCompositionCameras() {
         // layer composition needs to update order
-        let layerComp = this.system.app.scene.layers;
+        const layerComp = this.system.app.scene.layers;
         layerComp._dirtyCameras = true;
     }
 
