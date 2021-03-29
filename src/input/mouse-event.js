@@ -19,7 +19,7 @@ function isMousePointerLocked() {
  *
  * * {@link MOUSEBUTTON_LEFT}
  * * {@link MOUSEBUTTON_MIDDLE}
- * * {@link MOUSEBUTTON_RIGHT}.
+ * * {@link MOUSEBUTTON_RIGHT}
  *
  * @property {number} wheelDelta A value representing the amount the mouse wheel has moved, only
  * valid for {@link mousewheel} events.
