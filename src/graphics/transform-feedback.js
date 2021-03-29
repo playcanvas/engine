@@ -28,7 +28,7 @@ import { VertexBuffer } from './vertex-buffer.js';
  * * {@link BUFFER_STATIC}
  * * {@link BUFFER_DYNAMIC}
  * * {@link BUFFER_STREAM}
- * * {@link BUFFER_GPUDYNAMIC}.
+ * * {@link BUFFER_GPUDYNAMIC}
  *
  * Defaults to {@link BUFFER_GPUDYNAMIC} (which is recommended for continuous update).
  * @example
