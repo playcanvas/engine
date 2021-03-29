@@ -892,7 +892,7 @@ class ForwardRenderer {
             return ret;
         }
 
-        function convertToUint(data){
+        function convertToUint(data) {
 
             var count = data.length;
             var ret = new Uint8ClampedArray(count);
@@ -1996,7 +1996,7 @@ class ForwardRenderer {
                     device.setDepthWrite(material.depthWrite);
 
                     // this fixes the case where the user wishes to turn off depth testing but wants to write depth
-                    if (material.depthWrite && !material.depthTest){
+                    if (material.depthWrite && !material.depthTest) {
                         device.setDepthFunc(FUNC_ALWAYS);
                         device.setDepthTest(true);
                     } else {

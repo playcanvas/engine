@@ -65,7 +65,7 @@ class Picker {
             depth: 1.0,
             flags: CLEARFLAG_DEPTH
         };
-        this.clearDepthCommand = new Command(0, 0, function (){
+        this.clearDepthCommand = new Command(0, 0, function () {
             device.clear(self._clearDepthOptions);
         });
 

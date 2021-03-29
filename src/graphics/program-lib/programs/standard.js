@@ -1014,7 +1014,7 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(function (light){
+        var hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
@@ -1259,7 +1259,7 @@ var standard = {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
-            if (options.refraction){
+            if (options.refraction) {
                 code += chunks.refractionPS;
             }
         }
@@ -1518,7 +1518,7 @@ var standard = {
                 code += "   addReflection();\n";
             }
 
-            if (hasAreaLights){
+            if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
                 code += "   dReflection.rgb *= dSpecularity;\n";
