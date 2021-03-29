@@ -1956,8 +1956,6 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
 
 // -- GlbParser
 class GlbParser {
-    constructor() {}
-
     // parse the gltf or glb data asynchronously, loading external resources
     static parseAsync(filename, urlBase, data, device, registry, options, callback) {
         // parse the data

@@ -43,8 +43,6 @@ var JSON_TEXTURE_TYPE = {
  * and opening of texture assets.
  */
 class TextureParser {
-    constructor() {}
-
     /**
      * @function
      * @name TextureParser#load
