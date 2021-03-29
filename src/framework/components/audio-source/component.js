@@ -198,7 +198,7 @@ class AudioSourceComponent extends Component {
     }
 
     onSetLoop(name, oldValue, newValue) {
-        if (oldValue != newValue) {
+        if (oldValue !== newValue) {
             if (this.channel) {
                 this.channel.setLoop(newValue);
             }
@@ -206,7 +206,7 @@ class AudioSourceComponent extends Component {
     }
 
     onSetVolume(name, oldValue, newValue) {
-        if (oldValue != newValue) {
+        if (oldValue !== newValue) {
             if (this.channel) {
                 this.channel.setVolume(newValue);
             }
@@ -214,7 +214,7 @@ class AudioSourceComponent extends Component {
     }
 
     onSetPitch(name, oldValue, newValue) {
-        if (oldValue != newValue) {
+        if (oldValue !== newValue) {
             if (this.channel) {
                 this.channel.setPitch(newValue);
             }
@@ -222,7 +222,7 @@ class AudioSourceComponent extends Component {
     }
 
     onSetMaxDistance(name, oldValue, newValue) {
-        if (oldValue != newValue) {
+        if (oldValue !== newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setMaxDistance(newValue);
             }
@@ -230,7 +230,7 @@ class AudioSourceComponent extends Component {
     }
 
     onSetMinDistance(name, oldValue, newValue) {
-        if (oldValue != newValue) {
+        if (oldValue !== newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setMinDistance(newValue);
             }
@@ -238,7 +238,7 @@ class AudioSourceComponent extends Component {
     }
 
     onSetRollOffFactor(name, oldValue, newValue) {
-        if (oldValue != newValue) {
+        if (oldValue !== newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setRollOffFactor(newValue);
             }

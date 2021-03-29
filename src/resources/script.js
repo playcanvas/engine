@@ -95,7 +95,7 @@ class ScriptHandler {
 
         var done = false;
         element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
+            if (!done && (!this.readyState || (this.readyState === "loaded" || this.readyState === "complete"))) {
                 done = true; // prevent double event firing
                 callback(null, url, element);
             }

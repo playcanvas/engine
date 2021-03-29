@@ -644,7 +644,7 @@ class Mesh extends RefCountedObject {
                 // find vec3 position stream
                 var stream = this._geometryData.vertexStreamDictionary[SEMANTIC_POSITION];
                 if (stream) {
-                    if (stream.componentCount == 3) {
+                    if (stream.componentCount === 3) {
                         this._aabb.compute(stream.data, this._geometryData.vertexCount);
                     }
                 }

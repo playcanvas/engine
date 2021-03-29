@@ -582,13 +582,13 @@ class BatchManager {
                 }
                 // Split stencil mask (UI elements), both front and back expected to be the same
                 if (stencil) {
-                    if (!(sf = mi.stencilFront) || stencil.func != sf.func || stencil.zpass != sf.zpass) {
+                    if (!(sf = mi.stencilFront) || stencil.func !== sf.func || stencil.zpass !== sf.zpass) {
                         skipMesh(mi);
                         continue;
                     }
                 }
                 // Split by negative scale
-                if (scaleSign != getScaleSign(mi)) {
+                if (scaleSign !== getScaleSign(mi)) {
                     skipMesh(mi);
                     continue;
                 }
@@ -670,7 +670,7 @@ class BatchManager {
 
                 // index counts (handles special case of TRI-FAN-type non-indexed primitive used by UI)
                 batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
-                    (mesh.primitive[0].type == PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
+                    (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
 
                 // if first mesh
                 if (!streams) {
@@ -792,7 +792,7 @@ class BatchManager {
                     // source index buffer data mapped to its format
                     var srcFormat = mesh.indexBuffer[0].getFormat();
                     indexData = new typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
-                } else if (mesh.primitive[0].type == PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
+                } else if (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
                     // Special case for UI image elements
                     indexBase = 0;
                     numIndices = 6;

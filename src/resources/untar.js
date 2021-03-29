@@ -29,7 +29,7 @@ function UntarScope(isWorker) {
         while (bytesRead < length) {
             var spaceIndex;
             for (spaceIndex = bytesRead; spaceIndex < length; spaceIndex++) {
-                if (paxArray[spaceIndex] == 0x20)
+                if (paxArray[spaceIndex] === 0x20)
                     break;
             }
 

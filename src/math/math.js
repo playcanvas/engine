@@ -306,7 +306,7 @@ const math = {
 
                 // If exponent was 0xff and one mantissa bit was set, it means NaN,
                 // not Inf, so make sure we set one mantissa bit too.
-                bits |= ((e == 255) ? 0 : 1) && (x & 0x007fffff);
+                bits |= ((e === 255) ? 0 : 1) && (x & 0x007fffff);
                 return bits;
             }
 

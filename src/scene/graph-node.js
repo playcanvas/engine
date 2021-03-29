@@ -492,7 +492,7 @@ class GraphNode extends EventHandler {
             // check all the children
             var children = currentParent._children;
             for (var j = 0, jmax = children.length; j < jmax; j++) {
-                if (children[j].name == part) {
+                if (children[j].name === part) {
                     result = children[j];
                     break;
                 }
