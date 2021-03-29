@@ -268,7 +268,7 @@ class GraphicsDevice extends EventHandler {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        this._contextLostHandler = event => {
+        this._contextLostHandler = (event) => {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
