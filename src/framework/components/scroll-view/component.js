@@ -657,7 +657,6 @@ class ScrollViewComponent extends Component {
      * @description Fired whenever the scroll position changes.
      * @param {Vec2} scrollPosition - Horizontal and vertical scroll values in the range 0...1.
      */
-
 }
 
 export { ScrollViewComponent };

@@ -623,7 +623,7 @@ class ParticleEmitter {
         this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
         var emitterPos = (this.node === null || this.localSpace) ? Vec3.ZERO : this.node.getPosition();
         if (this.emitterShape === EMITTERSHAPE_BOX) {
-            if (this.node === null || this.localSpace){
+            if (this.node === null || this.localSpace) {
                 spawnMatrix.setTRS(Vec3.ZERO, Quat.IDENTITY, this.spawnBounds);
             } else {
                 spawnMatrix.setTRS(Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
@@ -1167,7 +1167,7 @@ class ParticleEmitter {
             extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
             extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
             extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
-            if (this.meshInstance.node === null){
+            if (this.meshInstance.node === null) {
                 spawnMatrix.setTRS(Vec3.ZERO, Quat.IDENTITY, this.emitterExtents);
             } else {
                 spawnMatrix.setTRS(Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.emitterExtents).mul(this.meshInstance.node.localScale));

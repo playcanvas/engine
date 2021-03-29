@@ -1014,7 +1014,7 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(function (light){
+        var hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
@@ -1259,7 +1259,7 @@ var standard = {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
-            if (options.refraction){
+            if (options.refraction) {
                 code += chunks.refractionPS;
             }
         }
@@ -1317,7 +1317,7 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if ( hasAreaLights ) code += chunks.ltc;
+            if (hasAreaLights) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
@@ -1518,7 +1518,7 @@ var standard = {
                 code += "   addReflection();\n";
             }
 
-            if (hasAreaLights){
+            if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
                 code += "   dReflection.rgb *= dSpecularity;\n";
@@ -1682,10 +1682,10 @@ var standard = {
                 } else {
                     if (hasAreaLights) {
                         // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.clearCoat > 0) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     } else {
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.clearCoat > 0) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 }
@@ -1699,7 +1699,7 @@ var standard = {
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                if (options.clearCoat > 0 ) {
+                if (options.clearCoat > 0) {
                     code += "   ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {

@@ -59,8 +59,10 @@ class ApplicationStats {
         };
 
         this.particles = {
-            updatesPerFrame: 0, _updatesPerFrame: 0,
-            frameTime: 0, _frameTime: 0
+            updatesPerFrame: 0,
+            _updatesPerFrame: 0,
+            frameTime: 0,
+            _frameTime: 0
         };
 
         this.shaders = device._shaderStats;

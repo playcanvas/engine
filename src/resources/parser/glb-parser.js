@@ -671,7 +671,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
 
                         if (!status || !status.ok() || outputGeometry.ptr == 0) {
                             callback("Failed to decode draco compressed asset: " +
-                            (status ? status.error_msg() : ('Mesh asset - invalid draco compressed geometry type: ' + geometryType) ));
+                            (status ? status.error_msg() : ('Mesh asset - invalid draco compressed geometry type: ' + geometryType)));
                             return;
                         }
 
@@ -691,7 +691,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                                 indices = new Uint16Array(decoderModule.HEAPU16.buffer, ptr, numIndices).slice();
                             }
 
-                            decoderModule._free( ptr );
+                            decoderModule._free(ptr);
                         }
 
                         // vertices
@@ -1860,7 +1860,7 @@ var parseGlb = function (glbData, callback) {
         }
         var chunkType = data.getUint32(offset + 4, true);
         var chunkData = new Uint8Array(glbData, offset + 8, chunkLength);
-        chunks.push( { length: chunkLength, type: chunkType, data: chunkData } );
+        chunks.push({ length: chunkLength, type: chunkType, data: chunkData });
         offset += chunkLength + 8;
     }
 

@@ -339,7 +339,6 @@ class Chunks {
  * material.update();
  */
 class StandardMaterial extends Material {
-
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
@@ -486,7 +485,7 @@ class StandardMaterial extends Material {
             }
         }
 
-        if (this.enableGGXSpecular){
+        if (this.enableGGXSpecular) {
             this._setParameter('material_anisotropy', this.anisotropy);
         }
 

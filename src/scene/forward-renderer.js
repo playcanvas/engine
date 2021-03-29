@@ -193,8 +193,8 @@ function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMin
     var maxz = -9999999999;
     var z;
 
-    for ( var i = 0; i < 8; ++i ) {
-        w2sc.transformPoint( _sceneAABB_LS[i], _sceneAABB_LS[i] );
+    for (var i = 0; i < 8; ++i) {
+        w2sc.transformPoint(_sceneAABB_LS[i], _sceneAABB_LS[i]);
         z = _sceneAABB_LS[i].z;
         if (z < minz) minz = z;
         if (z > maxz) maxz = z;
@@ -892,7 +892,7 @@ class ForwardRenderer {
             return ret;
         }
 
-        function convertToUint(data){
+        function convertToUint(data) {
 
             var count = data.length;
             var ret = new Uint8ClampedArray(count);
@@ -1996,7 +1996,7 @@ class ForwardRenderer {
                     device.setDepthWrite(material.depthWrite);
 
                     // this fixes the case where the user wishes to turn off depth testing but wants to write depth
-                    if (material.depthWrite && !material.depthTest){
+                    if (material.depthWrite && !material.depthTest) {
                         device.setDepthFunc(FUNC_ALWAYS);
                         device.setDepthTest(true);
                     } else {
@@ -2691,12 +2691,12 @@ class ForwardRenderer {
             _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
 
             // 2. Figure out the maximum diagonal of the frustum in light's projected space.
-            frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
-            frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
+            frustumSize = frustumDiagonal.sub2(frustumPoints[0], frustumPoints[6]).length();
+            frustumSize = Math.max(frustumSize, frustumDiagonal.sub2(frustumPoints[4], frustumPoints[6]).length());
 
             // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
-            shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
-            c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
+            shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
+            c2sc.copy(shadowCamView).mul(camera._node.getWorldTransform());
             for (i = 0; i < 8; i++) {
                 c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
@@ -2720,9 +2720,9 @@ class ForwardRenderer {
             // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
             unitPerTexel = frustumSize / light._shadowResolution;
             delta = (frustumSize - (maxx - minx)) * 0.5;
-            minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
+            minx = Math.floor((minx - delta) / unitPerTexel) * unitPerTexel;
             delta = (frustumSize - (maxy - miny)) * 0.5;
-            miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
+            miny = Math.floor((miny - delta) / unitPerTexel) * unitPerTexel;
             maxx = minx + frustumSize;
             maxy = miny + frustumSize;
 
@@ -2777,7 +2777,7 @@ class ForwardRenderer {
             // Fit clipping planes tightly around visible shadow casters
 
             // 1. Calculate minz/maxz based on casters' AABB
-            var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+            var z = _getZFromAABBSimple(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy);
 
             // Always use the scene's aabb's Z value
             // Otherwise object between the light and the frustum won't cast shadow.

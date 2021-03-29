@@ -12,7 +12,6 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeCartesian2D extends AnimBlendTree {
-
     static _p = new Vec2();
 
     static _pip = new Vec2();

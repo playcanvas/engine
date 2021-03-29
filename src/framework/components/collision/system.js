@@ -466,7 +466,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             var previousScale = component.shape.getLocalScaling();
             if (worldScale.x !== previousScale.x() ||
                 worldScale.y !== previousScale.y() ||
-                worldScale.z !== previousScale.z() ) {
+                worldScale.z !== previousScale.z()) {
                 this.doRecreatePhysicalShape(component);
             }
         }

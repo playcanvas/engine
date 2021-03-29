@@ -46,7 +46,7 @@ class ContainerResource {
      */
     instantiateModelEntity(options) {
         var entity = new Entity();
-        entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
+        entity.addComponent("model", Object.assign({ type: "asset", asset: this.model }, options));
         return entity;
     }
 
@@ -105,7 +105,7 @@ class ContainerResource {
 
                 // create render components for mesh instances
                 if (attachedMi) {
-                    entity.addComponent("render", Object.assign( { type: "asset" }, options));
+                    entity.addComponent("render", Object.assign({ type: "asset" }, options));
                     entity.render.meshInstances = attachedMi;
                 }
 
