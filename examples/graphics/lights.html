@@ -113,20 +113,20 @@
         spotlight.addChild(cone);
         app.root.addChild(spotlight);
 
-        // Create a point light
-        var pointlight = new pc.Entity();
-        pointlight.addComponent("light", {
-            type: "point",
+        // Create a omni light
+        var omnilight = new pc.Entity();
+        omnilight.addComponent("light", {
+            type: "omni",
             color: pc.Color.YELLOW,
             range: 100,
             castShadows: true,
             intensity: 0.6
         });
-        pointlight.addComponent("model", {
+        omnilight.addComponent("model", {
             type: "sphere"
         });
-        pointlight.model.material = createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: pc.Color.YELLOW });
-        app.root.addChild(pointlight);
+        omnilight.model.material = createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: pc.Color.YELLOW });
+        app.root.addChild(omnilight);
 
         // Create a directional light
         var directionallight = new pc.Entity();
@@ -180,7 +180,7 @@
         app.keyboard.on("keydown", function (e) {
             switch (e.key) {
                 case pc.KEY_1:
-                    pointlight.enabled = !pointlight.enabled
+                    omnilight.enabled = !omnilight.enabled
                     break;
                 case pc.KEY_2:
                     spotlight.enabled = !spotlight.enabled;
@@ -201,7 +201,7 @@
                 spotlight.rotateLocal(90, 0, 0);
                 spotlight.setLocalPosition(20 * Math.sin(angleRad), 5, 20 * Math.cos(angleRad));
 
-                pointlight.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                omnilight.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
 
                 directionallight.setLocalEulerAngles(45, 60 * angleRad, 0);
             }
@@ -209,7 +209,7 @@
             // update text showing which lights are enabled
             if (text) {
                 text.element.text = 
-                    "[Key 1] Point light: " + pointlight.enabled +
+                    "[Key 1] Omni light: " + omnilight.enabled +
                     "\n[Key 2] Spot light: " + spotlight.enabled +
                     "\n[Key 3] Directional light: " + directionallight.enabled;
             }

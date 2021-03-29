@@ -32,13 +32,13 @@ class Tags extends EventHandler {
      * tags.add(['level-2', 'mob']);
      */
     add() {
-        var changed = false;
-        var tags = this._processArguments(arguments, true);
+        let changed = false;
+        const tags = this._processArguments(arguments, true);
 
         if (!tags.length)
             return changed;
 
-        for (var i = 0; i < tags.length; i++) {
+        for (let i = 0; i < tags.length; i++) {
             if (this._index[tags[i]])
                 continue;
 
@@ -70,17 +70,17 @@ class Tags extends EventHandler {
      * tags.remove(['level-2', 'mob']);
      */
     remove() {
-        var changed = false;
+        let changed = false;
 
         if (!this._list.length)
             return changed;
 
-        var tags = this._processArguments(arguments, true);
+        const tags = this._processArguments(arguments, true);
 
         if (!tags.length)
             return changed;
 
-        for (var i = 0; i < tags.length; i++) {
+        for (let i = 0; i < tags.length; i++) {
             if (!this._index[tags[i]])
                 continue;
 
@@ -109,11 +109,11 @@ class Tags extends EventHandler {
         if (!this._list.length)
             return;
 
-        var tags = this._list.slice(0);
+        const tags = this._list.slice(0);
         this._list = [];
         this._index = { };
 
-        for (var i = 0; i < tags.length; i++)
+        for (let i = 0; i < tags.length; i++)
             this.fire('remove', tags[i], this._parent);
 
         this.fire('change', this._parent);
@@ -150,16 +150,16 @@ class Tags extends EventHandler {
         if (!this._list.length || !tags.length)
             return false;
 
-        for (var i = 0; i < tags.length; i++) {
+        for (let i = 0; i < tags.length; i++) {
             if (tags[i].length === 1) {
                 // single occurance
                 if (this._index[tags[i][0]])
                     return true;
             } else {
                 // combined occurance
-                var multiple = true;
+                let multiple = true;
 
-                for (var t = 0; t < tags[i].length; t++) {
+                for (let t = 0; t < tags[i].length; t++) {
                     if (this._index[tags[i][t]])
                         continue;
 
@@ -186,18 +186,18 @@ class Tags extends EventHandler {
     }
 
     _processArguments(args, flat) {
-        var tags = [];
-        var tmp = [];
+        const tags = [];
+        let tmp = [];
 
         if (!args || !args.length)
             return tags;
 
-        for (var i = 0; i < args.length; i++) {
+        for (let i = 0; i < args.length; i++) {
             if (args[i] instanceof Array) {
                 if (!flat)
                     tmp = [];
 
-                for (var t = 0; t < args[i].length; t++) {
+                for (let t = 0; t < args[i].length; t++) {
                     if (typeof args[i][t] !== 'string')
                         continue;
 

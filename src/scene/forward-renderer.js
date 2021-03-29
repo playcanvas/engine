@@ -235,7 +235,7 @@ function createShadowMap(device, width, height, shadowType) {
     var filter = getShadowFiltering(device, shadowType);
 
     var shadowMap = new Texture(device, {
-        // #ifdef PROFILER
+        // #if _PROFILER
         profilerHint: TEXHINT_SHADOWMAP,
         // #endif
         format: format,
@@ -267,7 +267,7 @@ function createShadowMap(device, width, height, shadowType) {
 
 function createShadowCubeMap(device, size) {
     var cubemap = new Texture(device, {
-        // #ifdef PROFILER
+        // #if _PROFILER
         profilerHint: TEXHINT_SHADOWMAP,
         // #endif
         format: PIXELFORMAT_R8_G8_B8_A8,
@@ -1045,7 +1045,7 @@ class ForwardRenderer {
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
             // Directionals shine down the negative Y axis
-            wtm.getY(directional._direction).scale(-1);
+            wtm.getY(directional._direction).mulScalar(-1);
             directional._direction.normalize();
             this.lightDir[cnt][0] = directional._direction.x;
             this.lightDir[cnt][1] = directional._direction.y;
@@ -1173,7 +1173,7 @@ class ForwardRenderer {
         }
 
         // Spots shine down the negative Y axis
-        wtm.getY(spot._direction).scale(-1);
+        wtm.getY(spot._direction).mulScalar(-1);
         spot._direction.normalize();
         this.lightDir[cnt][0] = spot._direction.x;
         this.lightDir[cnt][1] = spot._direction.y;
@@ -1291,7 +1291,7 @@ class ForwardRenderer {
     }
 
     cull(camera, drawCalls, visibleList) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var cullTime = now();
         var numDrawCallsCulled = 0;
         // #endif
@@ -1329,7 +1329,7 @@ class ForwardRenderer {
 
                 if (drawCall.cull) {
                     visible = drawCall._isVisible(camera);
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     numDrawCallsCulled++;
                     // #endif
                 }
@@ -1346,7 +1346,7 @@ class ForwardRenderer {
             }
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._cullTime += now() - cullTime;
         this._numDrawCallsCulled += numDrawCallsCulled;
         // #endif
@@ -1380,7 +1380,7 @@ class ForwardRenderer {
         var drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var skinTime = now();
         // #endif
 
@@ -1393,13 +1393,13 @@ class ForwardRenderer {
             }
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._skinTime += now() - skinTime;
         // #endif
     }
 
     updateGpuSkinMatrices(drawCalls) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var skinTime = now();
         // #endif
 
@@ -1416,13 +1416,13 @@ class ForwardRenderer {
             }
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._skinTime += now() - skinTime;
         // #endif
     }
 
     updateMorphing(drawCalls) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var morphTime = now();
         // #endif
 
@@ -1434,7 +1434,7 @@ class ForwardRenderer {
                 morphInst.update();
             }
         }
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._morphTime += now() - morphTime;
         // #endif
     }
@@ -1524,7 +1524,7 @@ class ForwardRenderer {
         var device = this.device;
         device.grabPassAvailable = false;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var shadowMapStartTime = now();
         // #endif
 
@@ -1569,7 +1569,7 @@ class ForwardRenderer {
                     passes = 6;
                 }
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 this.device.pushMarker("SHADOW " + light._node.name);
                 // #endif
 
@@ -1611,7 +1611,7 @@ class ForwardRenderer {
                 let pass = 0;
                 while (pass < passes) {
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     var doPopMarker = false;
                     if (passes > 1) {
                         this.device.pushMarker("PASS " + pass);
@@ -1697,7 +1697,7 @@ class ForwardRenderer {
                     }
                     pass++;
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (doPopMarker)
                         this.device.popMarker();
                     // #endif
@@ -1706,7 +1706,7 @@ class ForwardRenderer {
 
                 if (light._isVsm) {
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     this.device.pushMarker("VSM");
                     // #endif
 
@@ -1757,12 +1757,12 @@ class ForwardRenderer {
                         drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                     }
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     this.device.popMarker();
                     // #endif
                 }
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 this.device.popMarker();
                 // #endif
             }
@@ -1778,7 +1778,7 @@ class ForwardRenderer {
 
         device.grabPassAvailable = true;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
     }
@@ -1895,7 +1895,7 @@ class ForwardRenderer {
 
         var passFlag = 1 << pass;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var forwardStartTime = now();
         // #endif
 
@@ -1916,7 +1916,7 @@ class ForwardRenderer {
                 drawCall.command();
             } else {
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 if (camera === skipRenderCamera) {
                     if (_skipRenderCounter >= skipRenderAfter) continue;
                     _skipRenderCounter++;
@@ -1967,7 +1967,7 @@ class ForwardRenderer {
                     }
 
                     if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         console.error('Error in material "' + material.name + '" with flags ' + objDefs);
                         // #endif
                         drawCall._shader[pass].failed = true;
@@ -2136,7 +2136,7 @@ class ForwardRenderer {
         }
         device.updateEnd();
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
         // #endif
     }
@@ -2177,7 +2177,7 @@ class ForwardRenderer {
     }
 
     prepareStaticMeshes(meshInstances, lights) {
-        // #ifdef PROFILER
+        // #if _PROFILER
         var prepareTime = now();
         var searchTime = 0;
         var subSearchTime = 0;
@@ -2271,7 +2271,7 @@ class ForwardRenderer {
                     }
                 }
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 subTriAabbTime = now();
                 // #endif
 
@@ -2311,11 +2311,11 @@ class ForwardRenderer {
                     triBounds[index + 4] = maxy;
                     triBounds[index + 5] = maxz;
                 }
-                // #ifdef PROFILER
+                // #if _PROFILER
                 triAabbTime += now() - subTriAabbTime;
                 // #endif
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 subSearchTime = now();
                 // #endif
                 for (s = 0; s < staticLights.length; s++) {
@@ -2340,13 +2340,13 @@ class ForwardRenderer {
                         }
                     }
                 }
-                // #ifdef PROFILER
+                // #if _PROFILER
                 searchTime += now() - subSearchTime;
                 // #endif
 
                 if (triLightCombUsed) {
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     subCombineTime = now();
                     // #endif
 
@@ -2361,11 +2361,11 @@ class ForwardRenderer {
                         combIb.push(indices[j + 2]);
                     }
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     combineTime += now() - subCombineTime;
                     // #endif
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     subWriteMeshTime = now();
                     // #endif
 
@@ -2450,7 +2450,7 @@ class ForwardRenderer {
                         newDrawCalls.push(instance);
                     }
 
-                    // #ifdef PROFILER
+                    // #if _PROFILER
                     writeMeshTime += now() - subWriteMeshTime;
                     // #endif
                 } else {
@@ -2463,7 +2463,7 @@ class ForwardRenderer {
         for (i = 0; i < newDrawCalls.length; i++) {
             meshInstances[i] = newDrawCalls[i];
         }
-        // #ifdef PROFILER
+        // #if _PROFILER
         scene._stats.lastStaticPrepareFullTime = now() - prepareTime;
         scene._stats.lastStaticPrepareSearchTime = searchTime;
         scene._stats.lastStaticPrepareWriteTime = writeMeshTime;
@@ -2565,7 +2565,7 @@ class ForwardRenderer {
         for (i = 0; i < len; i++) {
             layer = comp.layerList[i];
             layer._shaderVersion = shaderVersion;
-            // #ifdef PROFILER
+            // #if _PROFILER
             layer._skipRenderCounter = 0;
             layer._forwardDrawCalls = 0;
             layer._shadowDrawCalls = 0;
@@ -2840,7 +2840,7 @@ class ForwardRenderer {
 
     updateLightStats(comp, compUpdatedFlags) {
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         if (compUpdatedFlags & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
             var stats = this.scene._stats;
             stats.lights = comp._lights.length;
@@ -2903,7 +2903,7 @@ class ForwardRenderer {
     // Also applies meshInstance.visible and camera.cullingMask
     cullComposition(comp) {
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         const cullTime = now();
         // #endif
 
@@ -2964,7 +2964,7 @@ class ForwardRenderer {
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._cullTime += now() - cullTime;
         // #endif
     }
@@ -2983,7 +2983,7 @@ class ForwardRenderer {
 
         this.beginLayers(comp);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var layerCompositionUpdateTime = now();
         // #endif
 
@@ -2993,7 +2993,7 @@ class ForwardRenderer {
             this.scene.updateLitShaders = true;
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
         // #endif
 
@@ -3022,7 +3022,6 @@ class ForwardRenderer {
             // layer
             layerIndex = renderAction.layerIndex;
             layer = comp.layerList[layerIndex];
-            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
             transparent = comp.subLayerList[layerIndex];
 
             let cameraPass = renderAction.cameraIndex;
@@ -3033,12 +3032,16 @@ class ForwardRenderer {
                 this.renderShadows(renderAction.directionalLights, camera.camera);
             }
 
-            // #ifdef DEBUG
+            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) {
+                continue;
+            }
+
+            // #if _DEBUG
             this.device.pushMarker(camera ? camera.entity.name : "noname");
             this.device.pushMarker(layer.name);
             // #endif
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             drawTime = now();
             // #endif
 
@@ -3082,7 +3085,7 @@ class ForwardRenderer {
                     camera.camera._clearStencilBuffer = backupStencil;
                 }
 
-                // #ifdef PROFILER
+                // #if _PROFILER
                 sortTime = now();
                 // #endif
 
@@ -3092,7 +3095,7 @@ class ForwardRenderer {
 
                 layer._sortVisible(transparent, camera.camera.node, cameraPass);
 
-                 // #ifdef PROFILER
+                 // #if _PROFILER
                 this._sortTime += now() - sortTime;
                  // #endif
 
@@ -3145,12 +3148,12 @@ class ForwardRenderer {
                 }
             }
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             this.device.popMarker();
             this.device.popMarker();
             // #endif
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             layer._renderTime += now() - drawTime;
             // #endif
         }

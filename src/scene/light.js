@@ -237,15 +237,15 @@ class Light {
             var node = this._node;
 
             spotCenter.copy(node.up);
-            spotCenter.scale(-range * 0.5 * f);
+            spotCenter.mulScalar(-range * 0.5 * f);
             spotCenter.add(node.getPosition());
             sphere.center = spotCenter;
 
             spotEndPoint.copy(node.up);
-            spotEndPoint.scale(-range);
+            spotEndPoint.mulScalar(-range);
 
             tmpVec.copy(node.right);
-            tmpVec.scale(Math.sin(angle * math.DEG_TO_RAD) * range);
+            tmpVec.mulScalar(Math.sin(angle * math.DEG_TO_RAD) * range);
             spotEndPoint.add(tmpVec);
 
             sphere.radius = spotEndPoint.length() * 0.5;

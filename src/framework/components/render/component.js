@@ -119,7 +119,7 @@ class RenderComponent extends Component {
     // this allows to find if a skin instance already exists for a rootbone, and a specific skin
     static _skinInstanceCache = new Map();
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     // function that logs out the state of the skin instances cache
     static logCachedSkinInstances() {
         console.log("CachedSkinInstances");

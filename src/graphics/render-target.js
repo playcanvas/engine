@@ -84,7 +84,7 @@ class RenderTarget {
                 this._depth = true;
                 this._stencil = true;
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
                 // #endif
                 this._depth = false;
@@ -207,7 +207,7 @@ class RenderTarget {
             if (source._device) {
                 this._device = source._device;
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Render targets are not initialized");
                 // #endif
                 return false;

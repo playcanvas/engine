@@ -99,7 +99,8 @@
             // Create an Entity with a camera component
             var camera = new pc.Entity();
             camera.addComponent("camera", {
-                clearColor: new pc.Color(0.4, 0.45, 0.5)
+                clearColor: new pc.Color(0.4, 0.45, 0.5),
+                farClip: 50
             });
             camera.addComponent("script");
             camera.script.create("bloom", {
@@ -268,6 +269,11 @@
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
                         "\n[Key 5] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
+                }
+
+                // display the depth texture
+                if (camera.script.bokeh.enabled) {
+                    app.renderDepthTexture(0.6, 0.7, 0.6, 0.3);
                 }
             });
         }

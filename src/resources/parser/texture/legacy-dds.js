@@ -93,7 +93,7 @@ class LegacyDdsParser {
         }
 
         if (!format) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
             // #endif
             texture = new Texture(device, {
@@ -107,7 +107,7 @@ class LegacyDdsParser {
 
         texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             addressU: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,

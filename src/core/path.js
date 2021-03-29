@@ -4,7 +4,7 @@ import { isDefined } from './core.js';
  * @namespace path
  * @description File path API.
  */
-var path = {
+const path = {
     /**
      * @constant
      * @type {string}
@@ -29,13 +29,12 @@ var path = {
      * console.log(path); // Prints 'alpha/beta/gamma'
      */
     join: function () {
-        var index;
-        var num = arguments.length;
-        var result = arguments[0];
+        const num = arguments.length;
+        let result = arguments[0];
 
-        for (index = 0; index < num - 1; ++index) {
-            var one = arguments[index];
-            var two = arguments[index + 1];
+        for (let index = 0; index < num - 1; ++index) {
+            const one = arguments[index];
+            const two = arguments[index + 1];
             if (!isDefined(one) || !isDefined(two)) {
                 throw new Error("undefined argument to pc.path.join");
             }
@@ -62,16 +61,16 @@ var path = {
      * @returns {string} The normalized path.
      */
     normalize: function (pathname) {
-        var lead = pathname.startsWith(path.delimiter);
-        var trail = pathname.endsWith(path.delimiter);
+        const lead = pathname.startsWith(path.delimiter);
+        const trail = pathname.endsWith(path.delimiter);
 
-        var parts = pathname.split('/');
+        const parts = pathname.split('/');
 
-        var result = '';
+        let result = '';
 
-        var cleaned = [];
+        let cleaned = [];
 
-        for (var i = 0; i < parts.length; i++) {
+        for (let i = 0; i < parts.length; i++) {
             if (parts[i] === '') continue;
             if (parts[i] === '.') continue;
             if (parts[i] === '..' && cleaned.length > 0) {
@@ -105,9 +104,9 @@ var path = {
      * @returns {string[]} The split path which is an array of two strings, the path and the filename.
      */
     split: function (pathname) {
-        var parts = pathname.split(path.delimiter);
-        var tail = parts.slice(parts.length - 1)[0];
-        var head = parts.slice(0, parts.length - 1).join(path.delimiter);
+        const parts = pathname.split(path.delimiter);
+        const tail = parts.slice(parts.length - 1)[0];
+        const head = parts.slice(0, parts.length - 1).join(path.delimiter);
         return [head, tail];
     },
 
@@ -134,7 +133,7 @@ var path = {
      * @returns {string} The directory part of the path.
      */
     getDirectory: function (pathname) {
-        var parts = pathname.split(path.delimiter);
+        const parts = pathname.split(path.delimiter);
         return parts.slice(0, parts.length - 1).join(path.delimiter);
     },
     /**
@@ -149,7 +148,7 @@ var path = {
      * pc.path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
      */
     getExtension: function (pathname) {
-        var ext = pathname.split('?')[0].split('.').pop();
+        const ext = pathname.split('?')[0].split('.').pop();
         if (ext !== pathname) {
             return "." + ext;
         }
@@ -187,9 +186,9 @@ var path = {
      * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
      */
     extractPath: function (pathname) {
-        var result = "";
-        var parts = pathname.split("/");
-        var i = 0;
+        let result = "";
+        const parts = pathname.split("/");
+        let i = 0;
 
         if (parts.length > 1) {
             if (path.isRelativePath(pathname)) {

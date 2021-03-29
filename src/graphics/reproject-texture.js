@@ -75,14 +75,15 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
-        "#define NUM_SAMPLES " + numSamples + "\n\n" +
+        "#define NUM_SAMPLES " + numSamples + "\n" +
+        "#define NUM_SAMPLES_SQRT " + Math.round(Math.sqrt(numSamples)).toFixed(1) + "\n\n" +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
         device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n"
     );
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     device.pushMarker("ReprojectTexture");
     // #endif
 
@@ -106,7 +107,7 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
         drawQuadWithShader(device, targ, shader);
     }
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     device.popMarker("");
     // #endif
 }

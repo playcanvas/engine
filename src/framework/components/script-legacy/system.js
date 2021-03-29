@@ -264,7 +264,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     broadcast(name, functionName) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
         // #endif
         var args = Array.prototype.slice.call(arguments, 2);

@@ -287,7 +287,12 @@ class TextElement {
         if (text === undefined) text = this._text;
 
         // get the list of symbols
-        this._symbols = string.getSymbols(text.normalize('NFC'));
+        // NOTE: we must normalize text here in order to be consistent with the number of
+        // symbols returned from the bidi algorithm. If we don't, then in some cases bidi
+        // returns a different number of RTL codes to what we expect.
+        // NOTE: IE doesn't support string.normalize(), so we must check for its existence
+        // before invoking.
+        this._symbols = string.getSymbols(text.normalize ? text.normalize('NFC') : text);
 
         // handle null string
         if (this._symbols.length === 0) {
@@ -711,6 +716,18 @@ class TextElement {
             for (i = 0; i < l; i++) {
                 char = this._symbols[i];
 
+                // handle line break
+                const isLineBreak = LINE_BREAK_CHAR.test(char);
+                if (isLineBreak) {
+                    numBreaksThisLine++;
+                    if (this._maxLines < 0 || lines < this._maxLines) {
+                        breakLine(this._symbols, i, _xMinusTrailingWhitespace);
+                        wordStartIndex = i + 1;
+                        lineStartIndex = i + 1;
+                    }
+                    continue;
+                }
+
                 var x = 0;
                 var y = 0;
                 var advance = 0;
@@ -735,7 +752,7 @@ class TextElement {
                             }
                         }
 
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         if (!json.missingChars) {
                             json.missingChars = new Set();
                         }
@@ -767,19 +784,6 @@ class TextElement {
                     y = data.yoffset * scale;
                 } else {
                     console.error("Couldn't substitute missing character: '" + char + "'");
-                }
-
-                var isLineBreak = LINE_BREAK_CHAR.test(char);
-
-                if (isLineBreak) {
-                    numBreaksThisLine++;
-                    if (this._maxLines < 0 || lines < this._maxLines) {
-                        breakLine(this._symbols, i, _xMinusTrailingWhitespace);
-                        wordStartIndex = i + 1;
-                        lineStartIndex = i + 1;
-                    }
-
-                    continue;
                 }
 
                 var isWhitespace = WHITESPACE_CHAR.test(char);
@@ -892,7 +896,7 @@ class TextElement {
                 // we need to keep track of the width of the line without any trailing whitespace
                 // characters. This applies to both single whitespaces and also multiple sequential
                 // whitespaces.
-                if (!isWhitespace && !isLineBreak) {
+                if (!isWhitespace) {
                     _xMinusTrailingWhitespace = _x;
                 }
 
@@ -1278,7 +1282,7 @@ class TextElement {
         var g = value.g;
         var b = value.b;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._color === value) {
             console.warn("Setting element.color to itself will have no effect");
         }
@@ -1601,7 +1605,7 @@ class TextElement {
         var b = (value instanceof Color) ? value.b : value[2];
         var a = (value instanceof Color) ? value.a : value[3];
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._outlineColor === value) {
             console.warn("Setting element.outlineColor to itself will have no effect");
         }
@@ -1659,7 +1663,7 @@ class TextElement {
         var b = (value instanceof Color) ? value.b : value[2];
         var a = (value instanceof Color) ? value.a : value[3];
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._shadowColor === value) {
             console.warn("Setting element.shadowColor to itself will have no effect");
         }

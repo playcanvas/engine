@@ -260,7 +260,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
     rebind() {
         this.targetCache = {};
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.visitedFallbackGraphPaths = {};
         // #endif
 

@@ -204,7 +204,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 var checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
                 // #endif
             }
@@ -237,7 +237,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // backwards compatibility
         if (_data.bodyType) {
             data.type = _data.bodyType;
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
             // #endif
         }
@@ -356,7 +356,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
                     // #endif
 
@@ -382,7 +382,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (!Ammo.AllHitsRayResultCallback) {
             console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
         }
@@ -736,7 +736,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     onUpdate(dt) {
         var i, len;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats.physicsStart = now();
         // #endif
 
@@ -775,7 +775,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (!this.dynamicsWorld.setInternalTickCallback)
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;
         // #endif
     }

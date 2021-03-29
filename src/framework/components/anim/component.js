@@ -195,18 +195,18 @@ class AnimComponent extends Component {
      * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-     * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     assignAnimation(nodeName, animTrack, layerName) {
         if (!this.data.stateGraph) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
             // #endif
             return;
         }
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             // #endif
             return;
@@ -219,12 +219,12 @@ class AnimComponent extends Component {
      * @name AnimComponent#removeNodeAnimations
      * @description Removes animations from a node in the loaded state graph.
      * @param {string} nodeName - The name of the node that should have its animation tracks removed.
-     * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
             // #endif
             return;
@@ -237,7 +237,7 @@ class AnimComponent extends Component {
         if (param && param.type === type) {
             return param.value;
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
     }
@@ -248,7 +248,7 @@ class AnimComponent extends Component {
             param.value = value;
             return;
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
     }
@@ -297,7 +297,7 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign non integer value to integer parameter');
             // #endif
         }
@@ -369,7 +369,7 @@ class AnimComponent extends Component {
         if (typeof value === 'string') {
             const entity = this.entity.root.findByGuid(value);
             this.data.rootBone = entity;
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!entity) {
                 console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
             }

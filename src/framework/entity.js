@@ -137,13 +137,13 @@ class Entity extends GraphNode {
     addComponent(type, data) {
         var system = this._app.systems[type];
         if (!system) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("addComponent: System " + type + " doesn't exist");
             // #endif
             return null;
         }
         if (this.c[type]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("addComponent: Entity already has " + type + " component");
             // #endif
             return null;
@@ -165,13 +165,13 @@ class Entity extends GraphNode {
     removeComponent(type) {
         var system = this._app.systems[type];
         if (!system) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("removeComponent: System " + type + " doesn't exist");
             // #endif
             return;
         }
         if (!this.c[type]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("removeComponent: Entity doesn't have " + type + " component");
             // #endif
             return;

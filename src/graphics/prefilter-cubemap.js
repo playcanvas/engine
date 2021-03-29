@@ -39,7 +39,7 @@ function prefilterCubemap(options) {
     var cpuSync = options.cpuSync;
 
     if (cpuSync && !sourceCubemap._levels[0]) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: prefilter: cubemap must have _levels");
         // #endif
         return;
@@ -60,7 +60,7 @@ function prefilterCubemap(options) {
                                        "outputCubemap");
     var constantTexSource = device.scope.resolve("source");
     var constantParams = device.scope.resolve("params");
-    var params = new Vec4();
+    var params = new Float32Array(4);
     var size = sourceCubemap.width;
     var format = sourceCubemap.format;
 
@@ -94,10 +94,10 @@ function prefilterCubemap(options) {
                 face: face,
                 depth: false
             });
-            params.x = face;
-            params.y = 0;
+            params[0] = face;
+            params[1] = 0;
             constantTexSource.setValue(sourceCubemap);
-            constantParams.setValue(params.data);
+            constantParams.setValue(params);
 
             drawQuadWithShader(device, targ, shader2);
             syncToCpu(device, targ, face);
@@ -127,12 +127,12 @@ function prefilterCubemap(options) {
                     face: face,
                     depth: false
                 });
-                params.x = face;
-                params.y = sampleGloss;
-                params.z = size;
-                params.w = rgbmSource ? 3 : 0;
+                params[0] = face;
+                params[1] = sampleGloss;
+                params[2] = size;
+                params[3] = rgbmSource ? 3 : 0;
                 constantTexSource.setValue(sourceCubemap);
-                constantParams.setValue(params.data);
+                constantParams.setValue(params);
 
                 drawQuadWithShader(device, targ, shader2);
                 if (i === steps - 1 && cpuSync) {
@@ -160,10 +160,10 @@ function prefilterCubemap(options) {
                 face: face,
                 depth: false
             });
-            params.x = face;
-            params.w = 2;
+            params[0] = face;
+            params[3] = 2;
             constantTexSource.setValue(sourceCubemap);
-            constantParams.setValue(params.data);
+            constantParams.setValue(params);
 
             drawQuadWithShader(device, targ, shader2);
             syncToCpu(device, targ, face);
@@ -212,13 +212,13 @@ function prefilterCubemap(options) {
                         face: face,
                         depth: false
                     });
-                    params.x = face;
-                    params.y = pass < 0 ? unblurredGloss : gloss[i];
-                    params.z = mipSize[i];
-                    params.w = rgbmSource ? 3 : pass;
+                    params[0] = face;
+                    params[1] = pass < 0 ? unblurredGloss : gloss[i];
+                    params[2] = mipSize[i];
+                    params[3] = rgbmSource ? 3 : pass;
                     constantTexSource.setValue(i === 0 ? sourceCubemap :
                         method === 0 ? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
-                    constantParams.setValue(params.data);
+                    constantParams.setValue(params);
 
                     drawQuadWithShader(device, targ, shader);
                     if (cpuSync) syncToCpu(device, targ, face);
@@ -310,13 +310,13 @@ function shFromCubemap(device, source, dontFlipX) {
     var x, y;
 
     if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: SH: cubemap must be RGBA8");
         // #endif
         return;
     }
     if (!source._levels[0]) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: SH: cubemap must be synced to CPU");
         // #endif
         return;
@@ -369,7 +369,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("ERROR: SH: cubemap must be composed of arrays or images");
             // #endif
             return;

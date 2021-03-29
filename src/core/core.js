@@ -10,22 +10,22 @@
  * @name _typeLookup
  * @description Create look up table for types.
  */
-var _typeLookup = function () {
-    var result = { };
-    var names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
+const _typeLookup = function () {
+    const result = { };
+    const names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
 
-    for (var i = 0; i < names.length; i++)
+    for (let i = 0; i < names.length; i++)
         result["[object " + names[i] + "]"] = names[i].toLowerCase();
 
     return result;
 }();
 
-var version = "__CURRENT_SDK_VERSION__";
-var revision = "__REVISION__";
-var config = { };
-var common = { };
-var apps = { }; // Storage for the applications using the PlayCanvas Engine
-var data = { }; // Storage for exported entity data
+const version = "__CURRENT_SDK_VERSION__";
+const revision = "__REVISION__";
+const config = { };
+const common = { };
+const apps = { }; // Storage for the applications using the PlayCanvas Engine
+const data = { }; // Storage for exported entity data
 
 /**
  * @private
@@ -40,7 +40,7 @@ function type(obj) {
         return "null";
     }
 
-    var type = typeof obj;
+    const type = typeof obj;
 
     if (type === "undefined" || type === "number" || type === "string" || type === "boolean") {
         return type;
@@ -76,14 +76,12 @@ function type(obj) {
  * // logs "b"
  */
 function extend(target, ex) {
-    var prop,
-        copy;
+    for (const prop in ex) {
+        const copy = ex[prop];
 
-    for (prop in ex) {
-        copy = ex[prop];
-        if (type(copy) == "object") {
+        if (type(copy) === "object") {
             target[prop] = extend({}, copy);
-        } else if (type(copy) == "array") {
+        } else if (type(copy) === "array") {
             target[prop] = extend([], copy);
         } else {
             target[prop] = copy;
@@ -102,7 +100,7 @@ function extend(target, ex) {
  * @returns {boolean} True if the Object is not undefined.
  */
 function isDefined(o) {
-    var a;
+    let a;
     return (o !== a);
 }
 

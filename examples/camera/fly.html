@@ -93,7 +93,7 @@
         // make our scene prettier by adding a directional light
         var light = new pc.Entity();
         light.addComponent("light", {
-            type: "point",
+            type: "omni",
             color: new pc.Color(1, 1, 1),
             range: 100
         });

@@ -182,7 +182,7 @@ class IndexBuffer {
 
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
             // #endif
             return false;

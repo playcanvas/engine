@@ -105,9 +105,9 @@ class ParticleCPUUpdater {
             var spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
             var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
             if (!emitter.localSpace)
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(r * emitter.emitterRadius) );
+                randomPosTformed.copy(emitterPos).add( randomPos.mulScalar(r * emitter.emitterRadius) );
             else
-                randomPosTformed.copy( randomPos.scale(r * emitter.emitterRadius) );
+                randomPosTformed.copy( randomPos.mulScalar(r * emitter.emitterRadius) );
         }
 
         var particleRate, startSpawnTime;
@@ -263,7 +263,7 @@ class ParticleCPUUpdater {
                     radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
                 else
                     radialVelocityVec.copy(particlePosPrev);
-                radialVelocityVec.normalize().scale(radialSpeed);
+                radialVelocityVec.normalize().mulScalar(radialSpeed);
 
                 cf *= 3;
                 cc *= 3;
@@ -318,10 +318,10 @@ class ParticleCPUUpdater {
 
                 if (emitter.initialVelocity > 0) {
                     if (emitter.emitterShape === EMITTERSHAPE_SPHERE) {
-                        randomPos.copy(rndFactor3Vec).scale(2).sub(Vec3.ONE).normalize();
-                        localVelocityVec.add(randomPos.scale(emitter.initialVelocity));
+                        randomPos.copy(rndFactor3Vec).mulScalar(2).sub(Vec3.ONE).normalize();
+                        localVelocityVec.add(randomPos.mulScalar(emitter.initialVelocity));
                     } else {
-                        localVelocityVec.add(Vec3.FORWARD.scale(emitter.initialVelocity));
+                        localVelocityVec.add(Vec3.FORWARD.mulScalar(emitter.initialVelocity));
                     }
                 }
 
@@ -353,7 +353,7 @@ class ParticleCPUUpdater {
 
                 moveDirVec.copy(localVelocityVec);
 
-                particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
+                particlePos.copy(particlePosPrev).add(localVelocityVec.mulScalar(delta));
                 particleFinalPos.copy(particlePos);
 
                 particleTex[id * particleTexChannels] =      particleFinalPos.x;

@@ -58,7 +58,7 @@ class GeometryData {
 
     _validateVertexCount(count, semantic) {
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this.vertexCount !== count) {
             console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
         }

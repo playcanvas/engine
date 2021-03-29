@@ -706,7 +706,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                         canUseMorph = false;
                     }
                 } else {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
                     // #endif
                 }
@@ -743,7 +743,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                 // 32bit index buffer is used but not supported
                 if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (vertexBuffer.numVertices > 0xFFFF) {
                         console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
                     }
@@ -1542,14 +1542,7 @@ var createResources = function (device, gltf, bufferViews, textureAssets, option
 };
 
 var applySampler = function (texture, gltfSampler) {
-    var defaultSampler = {
-        magFilter: 9729,
-        minFilter: 9987,
-        wrapS: 10497,
-        wrapT: 10497
-    };
-
-    var getFilter = function (filter) {
+    var getFilter = function (filter, defaultValue) {
         switch (filter) {
             case 9728: return FILTER_NEAREST;
             case 9729: return FILTER_LINEAR;
@@ -1557,25 +1550,25 @@ var applySampler = function (texture, gltfSampler) {
             case 9985: return FILTER_LINEAR_MIPMAP_NEAREST;
             case 9986: return FILTER_NEAREST_MIPMAP_LINEAR;
             case 9987: return FILTER_LINEAR_MIPMAP_LINEAR;
-            default:   return FILTER_LINEAR;
+            default:   return defaultValue;
         }
     };
 
-    var getWrap = function (wrap) {
+    var getWrap = function (wrap, defaultValue) {
         switch (wrap) {
             case 33071: return ADDRESS_CLAMP_TO_EDGE;
             case 33648: return ADDRESS_MIRRORED_REPEAT;
             case 10497: return ADDRESS_REPEAT;
-            default:    return ADDRESS_REPEAT;
+            default:    return defaultValue;
         }
     };
 
     if (texture) {
-        gltfSampler = gltfSampler || defaultSampler;
-        texture.minFilter = getFilter(gltfSampler.minFilter);
-        texture.magFilter = getFilter(gltfSampler.magFilter);
-        texture.addressU = getWrap(gltfSampler.wrapS);
-        texture.addressV = getWrap(gltfSampler.wrapT);
+        gltfSampler = gltfSampler || { };
+        texture.minFilter = getFilter(gltfSampler.minFilter, FILTER_LINEAR_MIPMAP_LINEAR);
+        texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
+        texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
+        texture.addressV = getWrap(gltfSampler.wrapT, ADDRESS_REPEAT);
     }
 };
 

@@ -262,7 +262,7 @@ class ScreenComponent extends Component {
 
     set priority(value) {
         if (value > 0xFF) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Clamping screen priority from ' + value + ' to 255');
             // #endif
             value = 0xFF;

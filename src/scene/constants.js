@@ -206,7 +206,6 @@ export const LIGHTTYPE_SPOT = 2;
 
 /**
  * @constant
- * @private
  * @name LIGHTSHAPE_PUNCTUAL
  * @type {number}
  * @description Infinitesimally small point light source shape.
@@ -215,7 +214,6 @@ export const LIGHTSHAPE_PUNCTUAL = 0;
 
 /**
  * @constant
- * @private
  * @name LIGHTSHAPE_RECT
  * @type {number}
  * @description Rectangle shape of light source.
@@ -224,7 +222,6 @@ export const LIGHTSHAPE_RECT = 1;
 
 /**
  * @constant
- * @private
  * @name LIGHTSHAPE_DISK
  * @type {number}
  * @description Disk shape of light source.
@@ -233,7 +230,6 @@ export const LIGHTSHAPE_DISK = 2;
 
 /**
  * @constant
- * @private
  * @name LIGHTSHAPE_SPHERE
  * @type {number}
  * @description Sphere shape of light source.

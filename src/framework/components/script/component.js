@@ -314,11 +314,11 @@ class ScriptComponent extends Component {
     }
 
     _scriptMethod(script, method, arg) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         try {
         // #endif
             script[method](arg);
-        // #ifdef DEBUG
+        // #if _DEBUG
         } catch (ex) {
             // disable script if it fails to call method
             script.enabled = false;

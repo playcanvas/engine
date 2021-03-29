@@ -4,8 +4,8 @@ var categories = [
         name: "animation",
         examples: [
             "blend",
-            "blend-trees-1D",
-            "blend-trees-2D-cartesian",
+            "blend-trees-1d",
+            "blend-trees-2d-cartesian",
             "blend-trees-directional",
             "component-properties",
             "locomotion",
@@ -21,6 +21,7 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "area-lights",
             "area-picker",
             "batching-dynamic",
             "clustered-lighting",

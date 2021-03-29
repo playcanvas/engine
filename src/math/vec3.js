@@ -182,12 +182,12 @@ class Vec3 {
      */
     cross(lhs, rhs) {
         // Create temporary variables in case lhs or rhs are 'this'
-        var lx = lhs.x;
-        var ly = lhs.y;
-        var lz = lhs.z;
-        var rx = rhs.x;
-        var ry = rhs.y;
-        var rz = rhs.z;
+        const lx = lhs.x;
+        const ly = lhs.y;
+        const lz = lhs.z;
+        const rx = rhs.x;
+        const ry = rhs.y;
+        const rz = rhs.z;
 
         this.x = ly * rz - ry * lz;
         this.y = lz * rx - rz * lx;
@@ -209,9 +209,9 @@ class Vec3 {
      * console.log("The between v1 and v2 is: " + d);
      */
     distance(rhs) {
-        var x = this.x - rhs.x;
-        var y = this.y - rhs.y;
-        var z = this.z - rhs.z;
+        const x = this.x - rhs.x;
+        const y = this.y - rhs.y;
+        const z = this.z - rhs.z;
         return Math.sqrt(x * x + y * y + z * z);
     }
 
@@ -459,9 +459,9 @@ class Vec3 {
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
-        var lengthSq = this.x * this.x + this.y * this.y + this.z * this.z;
+        const lengthSq = this.x * this.x + this.y * this.y + this.z * this.z;
         if (lengthSq > 0) {
-            var invLength = 1 / Math.sqrt(lengthSq);
+            const invLength = 1 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
             this.z *= invLength;
@@ -516,9 +516,9 @@ class Vec3 {
      * console.log("The result of the vector projection is: " + v.toString());
      */
     project(rhs) {
-        var a_dot_b = this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
-        var b_dot_b = rhs.x * rhs.x + rhs.y * rhs.y + rhs.z * rhs.z;
-        var s = a_dot_b / b_dot_b;
+        const a_dot_b = this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
+        const b_dot_b = rhs.x * rhs.x + rhs.y * rhs.y + rhs.z * rhs.z;
+        const s = a_dot_b / b_dot_b;
         this.x = rhs.x * s;
         this.y = rhs.y * s;
         this.z = rhs.z * s;

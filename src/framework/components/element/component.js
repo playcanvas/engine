@@ -17,7 +17,7 @@ import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './consta
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
-// #ifdef DEBUG
+// #if _DEBUG
 var _debugLogging = false;
 // #endif
 
@@ -220,7 +220,7 @@ class ElementComponent extends Component {
         this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
 
         this._batchGroupId = -1;
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._batchGroup = null;
         // #endif
         //
@@ -426,7 +426,7 @@ class ElementComponent extends Component {
                     this.system._prerender = [];
                     this.system.app.once('prerender', this._onPrerender, this);
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (_debugLogging) console.log('register prerender');
                     // #endif
                 }
@@ -438,7 +438,7 @@ class ElementComponent extends Component {
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (_debugLogging) console.log('set prerender root to: ' + current.name);
                 // #endif
             }
@@ -450,7 +450,7 @@ class ElementComponent extends Component {
     _onPrerender() {
         for (var i = 0; i < this.system._prerender.length; i++) {
             var mask = this.system._prerender[i];
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (_debugLogging) console.log('prerender from: ' + mask.name);
             // #endif
 
@@ -519,7 +519,7 @@ class ElementComponent extends Component {
 
         if (mask) {
             var ref = mask.element._image._maskRef;
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
             // #endif
 
@@ -535,7 +535,7 @@ class ElementComponent extends Component {
 
             this._maskedBy = mask;
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (_debugLogging) console.log("no masking on: " + this.entity.name);
             // #endif
 
@@ -569,7 +569,7 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (_debugLogging) {
                     console.log("masking from: " + this.entity.name + " with " + (sp.ref + 1));
                     console.log("depth++ to: ", depth);
@@ -606,7 +606,7 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (_debugLogging) {
                     console.log("masking from: " + this.entity.name + " with " + sp.ref);
                     console.log("depth++ to: ", depth);
@@ -1070,7 +1070,7 @@ Object.defineProperty(ElementComponent.prototype, "drawOrder", {
         }
 
         if (value > 0xFFFFFF) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Element.drawOrder larger than max size of: " + 0xFFFFFF);
             // #endif
             value = 0xFFFFFF;
@@ -1350,7 +1350,7 @@ Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         for (var i = 0; i < 4; i++) {
             this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
             if (screenSpace)
-                this._screenCorners[i].scale(this.screen.screen.scale);
+                this._screenCorners[i].mulScalar(this.screen.screen.scale);
 
             if (parentBottomLeft) {
                 this._screenCorners[i].add(parentBottomLeft);

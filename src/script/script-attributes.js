@@ -175,7 +175,7 @@ class ScriptAttributes {
      * @description Add Attribute.
      * @param {string} name - Name of an attribute.
      * @param {object} args - Object with Arguments for an attribute.
-     * @param {string} args.type - Type of an attribute value. Can be one of "boolean", "number", "string", "json", "asset", "entity", "rgb", "rgba", "vec2", "vec3", "vec4" or "curve".
+     * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type - Type of an attribute value.  Can be one of "boolean", "number", "string", "json", "asset", "entity", "rgb", "rgba", "vec2", "vec3", "vec4" or "curve".
      * @param {*} [args.default] - Default attribute value.
      * @param {string} [args.title] - Title for Editor's for field UI.
      * @param {string} [args.description] - Description for Editor's for field UI.
@@ -238,12 +238,12 @@ class ScriptAttributes {
      */
     add(name, args) {
         if (this.index[name]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
             // #endif
             return;
         } else if (ScriptAttributes.reservedNames.has(name)) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
             // #endif
             return;

@@ -291,7 +291,7 @@ class VertexIterator {
         if (element) {
 
             if (numVertices > this.vertexBuffer.numVertices) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("NumVertices provided to setData: " + numVertices + " is larger than space in VertexBuffer: " + this.vertexBuffer.numVertices);
                 // #endif
 

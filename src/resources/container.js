@@ -179,6 +179,11 @@ class ContainerResource {
             this.materials = null;
         }
 
+        if (this.renders) {
+            destroyAssets(this.renders);
+            this.renders = null;
+        }
+
         if (this.model) {
             destroyAsset(this.model);
             this.model = null;
