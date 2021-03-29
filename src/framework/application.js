@@ -162,7 +162,7 @@ var _deprecationWarning = false;
  *     // ...and update functions.
  *     var app = this.app;
  * };
- * ```.
+ * ```
  *
  * If you are using the Engine without the Editor, you have to create the application
  * instance manually.
