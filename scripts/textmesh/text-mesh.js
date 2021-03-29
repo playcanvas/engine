@@ -32,7 +32,7 @@ class Polygon {
 
     close() {
         let cur = this.points[this.points.length - 1];
-        this.points.forEach(next => {
+        this.points.forEach((next) => {
             this.area += 0.5 * cur.cross(next);
             cur = next;
         });
@@ -82,7 +82,7 @@ class Polygon {
 
     inside(p) {
         let count = 0, cur = this.points[this.points.length - 1];
-        this.points.forEach(next => {
+        this.points.forEach((next) => {
             const p0 = (cur.y < next.y ? cur : next);
             const p1 = (cur.y < next.y ? next : cur);
             if (p0.y < p.y + EPSILON && p1.y > p.y + EPSILON) {
@@ -253,7 +253,7 @@ TextMesh.prototype.parseCommands = function (commands) {
         const coords = [];
         const holes = [];
         poly.points.forEach(({ x, y }) => coords.push(x, y));
-        poly.children.forEach(child => {
+        poly.children.forEach((child) => {
             // Children's children are new, separate shapes
             child.children.forEach(process);
 
@@ -265,7 +265,7 @@ TextMesh.prototype.parseCommands = function (commands) {
         vertexData.set(coords, vertexCount * 2);
 
         // Add index data
-        earcut(coords, holes).forEach(i => indices.push(i + vertexCount));
+        earcut(coords, holes).forEach((i) => indices.push(i + vertexCount));
         vertexCount += coords.length / 2;
     }
 
@@ -291,7 +291,7 @@ TextMesh.prototype.parseCommands = function (commands) {
     }
 
     // Generate sides
-    polygons.forEach(poly => {
+    polygons.forEach((poly) => {
         for (let i = 0; i < poly.points.length - 1; i++) {
             const base = vertices.length / 3;
             const p1 = poly.points[i];

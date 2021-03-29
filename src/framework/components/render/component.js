@@ -143,7 +143,7 @@ class RenderComponent extends Component {
         if (cachedObjArray) {
 
             // find matching skin
-            const cachedObj = cachedObjArray.find(element => element.skin === skin);
+            const cachedObj = cachedObjArray.find((element) => element.skin === skin);
             if (cachedObj) {
                 cachedObj.incRefCount();
                 skinInstance = cachedObj.skinInstance;
@@ -164,7 +164,7 @@ class RenderComponent extends Component {
         }
 
         // find entry for the skin
-        let cachedObj = cachedObjArray.find(element => element.skin === skin);
+        let cachedObj = cachedObjArray.find((element) => element.skin === skin);
         if (!cachedObj) {
             cachedObj = new SkinInstanceCachedObject(skin, skinInstance);
             cachedObjArray.push(cachedObj);
@@ -185,7 +185,7 @@ class RenderComponent extends Component {
                 if (cachedObjArray) {
 
                     // actual skin instance
-                    const cachedObjIndex = cachedObjArray.findIndex(element => element.skinInstance === skinInstance);
+                    const cachedObjIndex = cachedObjArray.findIndex((element) => element.skinInstance === skinInstance);
                     if (cachedObjIndex >= 0) {
 
                         // dec ref on the object
