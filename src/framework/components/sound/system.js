@@ -144,7 +144,7 @@ class SoundComponentSystem extends ComponentSystem  {
 
     get context() {
         if (!hasAudioContext()) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('WARNING: Audio context is not supported on this browser');
             // #endif
             return null;

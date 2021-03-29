@@ -431,7 +431,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error('ERROR: applyTorque: function takes 1 or 3 arguments');
                 // #endif
                 return;
@@ -508,7 +508,7 @@ class RigidBodyComponent extends Component {
                 pz = arguments[5];
                 break;
             default:
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
                 // #endif
                 return;
@@ -558,7 +558,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
                 // #endif
                 return;

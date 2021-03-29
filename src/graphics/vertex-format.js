@@ -132,7 +132,7 @@ class VertexFormat {
             if (vertexCount) {
                 offset = math.roundUp(offset, elementSize);
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
                 // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
                 if ( (elementSize % 4) !== 0)

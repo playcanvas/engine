@@ -87,7 +87,7 @@ class ModelComponent extends Component {
 
         this._clonedModel = false;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._batchGroup = null;
         // #endif
 
@@ -588,7 +588,7 @@ class ModelComponent extends Component {
 
         // return if the model has been flagged as immutable
         if (value && value._immutable) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Invalid attempt to assign a model to multiple ModelComponents');
             // #endif
             return;

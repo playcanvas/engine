@@ -412,7 +412,7 @@ class AnimController {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign an animation track to an animation state that does not exist.');
             // #endif
             return;
@@ -430,7 +430,7 @@ class AnimController {
         }
         var state = this._findState(nodeName);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to unassign animation tracks from a state that does not exist.');
             // #endif
             return;

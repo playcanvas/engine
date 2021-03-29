@@ -66,7 +66,7 @@ class AnimComponentLayer {
      */
     assignAnimation(nodeName, animTrack) {
         if (animTrack.constructor !== AnimTrack) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             // #endif
             return;

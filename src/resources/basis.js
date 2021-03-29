@@ -477,7 +477,7 @@ function basisDownloadFromConfig(callback) {
                           urlBase + wasmModule.fallbackUrl,
                           callback);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("WARNING: unable to load basis wasm module - no config was specified");
             // #endif
             return false;

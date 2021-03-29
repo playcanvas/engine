@@ -57,7 +57,7 @@ class AnimationComponent extends Component {
         var data = this.data;
 
         if (!data.animations[name]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("Trying to play animation '" + name + "' which doesn't exist");
             // #endif
             return;

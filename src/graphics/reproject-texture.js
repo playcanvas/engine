@@ -83,7 +83,7 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
         device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n"
     );
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     device.pushMarker("ReprojectTexture");
     // #endif
 
@@ -107,7 +107,7 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
         drawQuadWithShader(device, targ, shader);
     }
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     device.popMarker("");
     // #endif
 }

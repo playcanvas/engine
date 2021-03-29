@@ -70,7 +70,7 @@ class ModelHandler {
                 return p.parser.parse(data);
             }
         }
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.warn("pc.ModelHandler#open: No model parser found for: " + url);
         // #endif
         return null;
