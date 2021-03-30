@@ -174,7 +174,7 @@ const math = {
      * @name math.powerOfTwo
      * @description Returns true if argument is a power-of-two and false otherwise.
      * @param {number} x - Number to check for power-of-two property.
-     * @returns {boolean} True if power-of-two and false otherwise.
+     * @returns {boolean} true if power-of-two and false otherwise.
      */
     powerOfTwo: function (x) {
         return ((x !== 0) && !(x & (x - 1)));
