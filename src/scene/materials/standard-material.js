@@ -738,7 +738,7 @@ class StandardMaterial extends Material {
         for (const asset in this._assetReferences) {
             this._assetReferences[asset]._unbind();
         }
-        this._assetReferences = {};
+        this._assetReferences = null;
         this._validator = null;
 
         super.destroy();
