@@ -37,7 +37,7 @@ class KtxParser {
     }
 
     load(url, callback, asset) {
-        var options = {
+        const options = {
             cache: true,
             responseType: "arraybuffer",
             retry: this.maxRetries > 0,
@@ -47,13 +47,13 @@ class KtxParser {
     }
 
     open(url, data, device) {
-        var textureData = this.parse(data);
+        const textureData = this.parse(data);
 
         if (!textureData) {
             return null;
         }
 
-        var texture = new Texture(device, {
+        const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
@@ -73,7 +73,7 @@ class KtxParser {
     }
 
     parse(data) {
-        var headerU32 = new Uint32Array(data, 0, 16);
+        const headerU32 = new Uint32Array(data, 0, 16);
 
         if (IDENTIFIER[0] !== headerU32[0] || IDENTIFIER[1] !== headerU32[1] || IDENTIFIER[2] !== headerU32[2]) {
             // #if _DEBUG
@@ -82,7 +82,7 @@ class KtxParser {
             return null;
         }
 
-        var header = {
+        const header = {
             endianness: headerU32[3], // todo: Use this information
             glType: headerU32[4],
             glTypeSize: headerU32[5],
@@ -127,25 +127,25 @@ class KtxParser {
         }
 
         // Byte offset locating the first byte of texture level data
-        var offset = (16 * 4) + header.bytesOfKeyValueData;
+        let offset = (16 * 4) + header.bytesOfKeyValueData;
 
-        var levels = [];
-        var isCubeMap = false;
-        for (var mipmapLevel = 0; mipmapLevel < (header.numberOfMipmapLevels || 1); mipmapLevel++) {
-            var imageSizeInBytes = new Uint32Array(data.slice(offset, offset + 4))[0];
+        const levels = [];
+        let isCubeMap = false;
+        for (let mipmapLevel = 0; mipmapLevel < (header.numberOfMipmapLevels || 1); mipmapLevel++) {
+            const imageSizeInBytes = new Uint32Array(data.slice(offset, offset + 4))[0];
             offset += 4;
             // Currently array textures not supported. Keeping this here for reference.
-            // for (var arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
-            var faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
+            // for (let arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
+            const faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
             // Create array for cubemaps
             if (header.numberOfFaces > 1) {
                 isCubeMap = true;
                 levels.push([]);
             }
-            for (var face = 0; face < header.numberOfFaces; face++) {
+            for (let face = 0; face < header.numberOfFaces; face++) {
                 // Currently more than 1 pixel depth not supported. Keeping this here for reference.
-                // for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
-                var mipData = new Uint8Array(data, offset, faceSizeInBytes);
+                // for (let  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
+                const mipData = new Uint8Array(data, offset, faceSizeInBytes);
                 // Handle cubemaps
                 if (header.numberOfFaces > 1) {
                     levels[mipmapLevel].push(mipData);

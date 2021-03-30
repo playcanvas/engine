@@ -48,13 +48,13 @@ function getProjectionName(projection) {
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats. When
  * specularPower is specified it will perform a phong-weighted convolution of the source (for generating
  * a gloss maps).
- * @param {GraphicsDevice} device - The graphics device
- * @param {Texture} source - The source texture
- * @param {Texture} target - The target texture
- * @param {number} [specularPower] - optional specular power. When specular power is specified,
+ * @param {GraphicsDevice} device - The graphics device.
+ * @param {Texture} source - The source texture.
+ * @param {Texture} target - The target texture.
+ * @param {number} [specularPower] - Optional specular power. When specular power is specified,
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
- * @param {number} [numSamples] - optional number of samples (default is 1024).
+ * @param {number} [numSamples] - Optional number of samples (default is 1024).
  */
 function reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024) {
     const processFunc = (specularPower === 1) ? 'reproject' : 'prefilter';

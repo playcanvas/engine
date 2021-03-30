@@ -13,13 +13,13 @@ import {
 
 import { TextureAtlas } from '../scene/texture-atlas.js';
 
-var JSON_ADDRESS_MODE = {
+const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
     "clamp": ADDRESS_CLAMP_TO_EDGE,
     "mirror": ADDRESS_MIRRORED_REPEAT
 };
 
-var JSON_FILTER_MODE = {
+const JSON_FILTER_MODE = {
     "nearest": FILTER_NEAREST,
     "linear": FILTER_LINEAR,
     "nearest_mip_nearest": FILTER_NEAREST_MIPMAP_NEAREST,
@@ -28,7 +28,7 @@ var JSON_FILTER_MODE = {
     "linear_mip_linear": FILTER_LINEAR_MIPMAP_LINEAR
 };
 
-var regexFrame = /^data\.frames\.(\d+)$/;
+const regexFrame = /^data\.frames\.(\d+)$/;
 
 /**
  * @class
@@ -52,8 +52,8 @@ class TextureAtlasHandler {
             };
         }
 
-        var self = this;
-        var handler = this._loader.getHandler("texture");
+        const self = this;
+        const handler = this._loader.getHandler("texture");
 
         // if supplied with a json file url (probably engine-only)
         // load json data then load texture of same name
@@ -64,7 +64,7 @@ class TextureAtlasHandler {
             }, function (err, response) {
                 if (!err) {
                     // load texture
-                    var textureUrl = url.original.replace('.json', '.png');
+                    const textureUrl = url.original.replace('.json', '.png');
                     self._loader.load(textureUrl, "texture", function (err, texture) {
                         if (err) {
                             callback(err);
@@ -86,13 +86,13 @@ class TextureAtlasHandler {
 
     // Create texture atlas resource using the texture from the texture loader
     open(url, data) {
-        var resource = new TextureAtlas();
+        const resource = new TextureAtlas();
         if (data.texture && data.data) {
             resource.texture = data.texture;
             resource.__data = data.data; // store data temporarily to be copied into asset
         } else {
-            var handler = this._loader.getHandler("texture");
-            var texture = handler.open(url, data);
+            const handler = this._loader.getHandler("texture");
+            const texture = handler.open(url, data);
             if (!texture) return null;
             resource.texture = texture;
         }
@@ -116,7 +116,7 @@ class TextureAtlasHandler {
         }
 
         // pass texture data
-        var texture = asset.resource.texture;
+        const texture = asset.resource.texture;
         if (texture) {
             texture.name = asset.name;
 
@@ -139,7 +139,7 @@ class TextureAtlasHandler {
                 texture.anisotropy = asset.data.anisotropy;
 
             if (asset.data.hasOwnProperty('rgbm')) {
-                var type = asset.data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+                const type = asset.data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
                 if (texture.type !== type) {
                     texture.type = type;
                 }
@@ -149,9 +149,9 @@ class TextureAtlasHandler {
         asset.resource.texture = texture;
 
         // set frames
-        var frames = {};
-        for (var key in asset.data.frames) {
-            var frame = asset.data.frames[key];
+        const frames = {};
+        for (const key in asset.data.frames) {
+            const frame = asset.data.frames[key];
             frames[key] = {
                 rect: new Vec4(frame.rect),
                 pivot: new Vec2(frame.pivot),
@@ -165,12 +165,12 @@ class TextureAtlasHandler {
     }
 
     _onAssetChange(asset, attribute, value) {
-        var frame;
+        let frame;
 
         if (attribute === 'data' || attribute === 'data.frames') {
             // set frames
-            var frames = {};
-            for (var key in value.frames) {
+            const frames = {};
+            for (const key in value.frames) {
                 frame = value.frames[key];
                 frames[key] = {
                     rect: new Vec4(frame.rect),
@@ -180,9 +180,9 @@ class TextureAtlasHandler {
             }
             asset.resource.frames = frames;
         } else {
-            var match = attribute.match(regexFrame);
+            const match = attribute.match(regexFrame);
             if (match) {
-                var frameKey = match[1];
+                const frameKey = match[1];
 
                 if (value) {
                     // add or update frame

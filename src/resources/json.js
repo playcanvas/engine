@@ -14,7 +14,7 @@ class JsonHandler {
         }
 
         // if this a blob URL we need to set the response type as json
-        var options = {
+        const options = {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };

@@ -91,7 +91,7 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#select
      * @description Fired when input source has triggered primary action. This could be pressing a trigger button, or touching a screen.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
      * var ray = new pc.Ray();
      * inputSource.on('select', function (evt) {
@@ -106,28 +106,28 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#selectstart
      * @description Fired when input source has started to trigger primary action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#selectend
      * @description Fired when input source has ended triggerring primary action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#squeeze
      * @description Fired when input source has triggered squeeze action. This is associated with "grabbing" action on the controllers.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#squeezestart
      * @description Fired when input source has started to trigger sqeeze action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
      * inputSource.on('squeezestart', function (evt) {
      *     if (obj.containsPoint(inputSource.getPosition())) {
@@ -140,14 +140,14 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#squeezeend
      * @description Fired when input source has ended triggerring sqeeze action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#hittest:add
      * @description Fired when new {@link XrHitTestSource} is added to the input source.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
      * @example
      * inputSource.on('hittest:add', function (hitTestSource) {
      *     // new hit test source is added
@@ -158,7 +158,7 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:remove
      * @description Fired when {@link XrHitTestSource} is removed to the the input source.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
      * @example
      * inputSource.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -169,9 +169,9 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {Vec3} position - Position of hit test
-     * @param {Quat} rotation - Rotation of hit test
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
+     * @param {Vec3} position - Position of hit test.
+     * @param {Quat} rotation - Rotation of hit test.
      * @example
      * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
      *     target.setPosition(position);

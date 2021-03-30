@@ -6,7 +6,7 @@ import { Sprite } from '../scene/sprite.js';
 
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
-    var spriteAsset = this;
+    const spriteAsset = this;
     if (spriteAsset.resource) {
         spriteAsset.resource.atlas = atlasAsset.resource;
     }
@@ -14,7 +14,7 @@ function onTextureAtlasLoaded(atlasAsset) {
 
 // The scope of this function is the sprite asset
 function onTextureAtlasAdded(atlasAsset) {
-    var spriteAsset = this;
+    const spriteAsset = this;
     spriteAsset.registry.load(atlasAsset);
 }
 
@@ -58,7 +58,7 @@ class SpriteHandler {
 
     // Create sprite resource
     open(url, data) {
-        var sprite = new Sprite(this._device);
+        const sprite = new Sprite(this._device);
         if (url) {
             // if url field is present json data is being loaded from file
             // store data on sprite object temporarily
@@ -70,7 +70,7 @@ class SpriteHandler {
 
     // Set sprite data
     patch(asset, assets) {
-        var sprite = asset.resource;
+        const sprite = asset.resource;
         if (sprite.__data) {
             // loading from a json file we have asset data store temporarily on the sprite resource
             // copy it into asset.data and delete
@@ -80,7 +80,7 @@ class SpriteHandler {
             asset.data.frameKeys = sprite.__data.frameKeys;
 
             if (sprite.__data.textureAtlasAsset) {
-                var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
+                const atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
                 if (atlas) {
                     asset.data.textureAtlasAsset = atlas.id;
                 } else {
@@ -105,7 +105,7 @@ class SpriteHandler {
 
     // Load atlas
     _updateAtlas(asset) {
-        var sprite = asset.resource;
+        const sprite = asset.resource;
         if (!asset.data.textureAtlasAsset) {
             sprite.atlas = null;
             return;
@@ -114,7 +114,7 @@ class SpriteHandler {
         this._assets.off('load:' + asset.data.textureAtlasAsset, onTextureAtlasLoaded, asset);
         this._assets.on('load:' + asset.data.textureAtlasAsset, onTextureAtlasLoaded, asset);
 
-        var atlasAsset = this._assets.get(asset.data.textureAtlasAsset);
+        const atlasAsset = this._assets.get(asset.data.textureAtlasAsset);
         if (atlasAsset && atlasAsset.resource) {
             sprite.atlas = atlasAsset.resource;
         } else {

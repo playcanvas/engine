@@ -45,7 +45,7 @@ class ContainerResource {
      * });
      */
     instantiateModelEntity(options) {
-        var entity = new Entity();
+        const entity = new Entity();
         entity.addComponent("model", Object.assign({ type: "asset", asset: this.model }, options));
         return entity;
     }
@@ -67,20 +67,20 @@ class ContainerResource {
      */
     instantiateRenderEntity(options) {
         // helper function to recursively clone a hierarchy while converting ModelComponent to RenderComponents
-        var cloneToEntity = function (skinInstances, model, node) {
+        const cloneToEntity = function (skinInstances, model, node) {
 
             if (node) {
-                var entity = new Entity();
+                const entity = new Entity();
                 node._cloneInternal(entity);
 
                 // find all mesh instances attached to this node
-                var attachedMi = null;
-                for (var m = 0; m < model.meshInstances.length; m++) {
-                    var mi = model.meshInstances[m];
+                let attachedMi = null;
+                for (let m = 0; m < model.meshInstances.length; m++) {
+                    const mi = model.meshInstances[m];
                     if (mi.node === node) {
 
                         // clone mesh instance
-                        var cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
+                        const cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
 
                         // clone morph instance
                         if (mi.morphInstance) {
@@ -110,9 +110,9 @@ class ContainerResource {
                 }
 
                 // recursivelly clone children
-                var children = node.children;
-                for (var i = 0; i < children.length; i++) {
-                    var childClone = cloneToEntity(skinInstances, model, children[i]);
+                const children = node.children;
+                for (let i = 0; i < children.length; i++) {
+                    const childClone = cloneToEntity(skinInstances, model, children[i]);
                     entity.addChild(childClone);
                 }
 
@@ -123,22 +123,22 @@ class ContainerResource {
         };
 
         // clone GraphNode hierarchy from model to Entity hierarchy
-        var skinInstances = [];
-        var entity = cloneToEntity(skinInstances, this.model.resource, this.model.resource.graph);
+        const skinInstances = [];
+        const entity = cloneToEntity(skinInstances, this.model.resource, this.model.resource.graph);
 
         // clone skin instances - now that all entities (bones) are created
-        for (var i = 0; i < skinInstances.length; i++) {
-            var srcSkinInstance = skinInstances[i].src;
-            var dstMeshInstance = skinInstances[i].dst;
+        for (let i = 0; i < skinInstances.length; i++) {
+            const srcSkinInstance = skinInstances[i].src;
+            const dstMeshInstance = skinInstances[i].dst;
 
-            var skin = srcSkinInstance.skin;
-            var cloneSkinInstance = new SkinInstance(skin);
+            const skin = srcSkinInstance.skin;
+            const cloneSkinInstance = new SkinInstance(skin);
 
             // Resolve bone IDs to cloned entities
-            var bones = [];
-            for (var j = 0; j < skin.boneNames.length; j++) {
-                var boneName = skin.boneNames[j];
-                var bone = entity.findByName(boneName);
+            const bones = [];
+            for (let j = 0; j < skin.boneNames.length; j++) {
+                const boneName = skin.boneNames[j];
+                const bone = entity.findByName(boneName);
                 bones.push(bone);
             }
 
@@ -150,14 +150,14 @@ class ContainerResource {
     }
 
     destroy() {
-        var registry = this.registry;
+        const registry = this.registry;
 
-        var destroyAsset = function (asset) {
+        const destroyAsset = function (asset) {
             registry.remove(asset);
             asset.unload();
         };
 
-        var destroyAssets = function (assets) {
+        const destroyAssets = function (assets) {
             assets.forEach(function (asset) {
                 destroyAsset(asset);
             });
@@ -247,16 +247,16 @@ class ContainerHandler {
             };
         }
 
-        var options = {
+        const options = {
             responseType: Http.ResponseType.ARRAY_BUFFER,
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
 
-        var self = this;
+        const self = this;
 
         // parse downloaded file data
-        var parseData = function (arrayBuffer) {
+        const parseData = function (arrayBuffer) {
             GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
                                  path.extractPath(url.load),
                                  arrayBuffer,
@@ -297,12 +297,12 @@ class ContainerHandler {
 
     // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
     patch(asset, assets) {
-        var container = asset.resource;
-        var data = container && container.data;
+        const container = asset.resource;
+        const data = container && container.data;
 
         if (data) {
-            var createAsset = function (type, resource, index) {
-                var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
+            const createAsset = function (type, resource, index) {
+                const subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
                     url: ''
                 });
                 subAsset.resource = resource;
@@ -311,25 +311,25 @@ class ContainerHandler {
                 return subAsset;
             };
 
-            var i;
+            let i;
 
             // create model asset
-            var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+            const model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
             // render assets
-            var renders = [];
+            const renders = [];
             for (i = 0; i < data.meshes.length; ++i) {
                 renders.push(createAsset('render', data.meshes[i], i));
             }
 
             // create material assets
-            var materials = [];
+            const materials = [];
             for (i = 0; i < data.materials.length; ++i) {
                 materials.push(createAsset('material', data.materials[i], i));
             }
 
             // create animation assets
-            var animations = [];
+            const animations = [];
             for (i = 0; i < data.animations.length; ++i) {
                 animations.push(createAsset('animation', data.animations[i], i));
             }

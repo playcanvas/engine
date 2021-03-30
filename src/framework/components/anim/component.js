@@ -151,7 +151,7 @@ class AnimComponent extends Component {
     /**
      * @function
      * @name AnimComponent#reset
-     * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing
+     * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing.
      */
     reset() {
         this.data.parameters = Object.assign({}, this.data.stateGraph.parameters);
@@ -165,7 +165,7 @@ class AnimComponent extends Component {
     /**
      * @function
      * @name AnimComponent#rebind
-     * @description Rebind all of the components layers
+     * @description Rebind all of the components layers.
      */
     rebind() {
         for (var i = 0; i < this.data.layers.length; i++) {
@@ -177,8 +177,8 @@ class AnimComponent extends Component {
      * @function
      * @name AnimComponent#findAnimationLayer
      * @description Finds a {@link AnimComponentLayer} in this component.
-     * @param {string} layerName - The name of the anim component layer to find
-     * @returns {AnimComponentLayer} layer
+     * @param {string} layerName - The name of the anim component layer to find.
+     * @returns {AnimComponentLayer} Layer.
      */
     findAnimationLayer(layerName) {
         var layerIndex = this.data.layerIndices[layerName];
@@ -254,7 +254,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#getFloat
      * @description Returns a float parameter value by name.
      * @param {string} name - The name of the float to return the value of.
-     * @returns {number} A float
+     * @returns {number} A float.
      */
     getFloat(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_FLOAT);
@@ -276,7 +276,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#getInteger
      * @description Returns an integer parameter value by name.
      * @param {string} name - The name of the integer to return the value of.
-     * @returns {number} An integer
+     * @returns {number} An integer.
      */
     getInteger(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_INTEGER);
@@ -304,7 +304,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#getBoolean
      * @description Returns a boolean parameter value by name.
      * @param {string} name - The name of the boolean to return the value of.
-     * @returns {boolean} A boolean
+     * @returns {boolean} A boolean.
      */
     getBoolean(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_BOOLEAN);
@@ -326,7 +326,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#getTrigger
      * @description Returns a trigger parameter value by name.
      * @param {string} name - The name of the trigger to return the value of.
-     * @returns {boolean} A boolean
+     * @returns {boolean} A boolean.
      */
     getTrigger(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_TRIGGER);
@@ -355,7 +355,7 @@ class AnimComponent extends Component {
     /**
      * @name AnimComponent#rootBone
      * @type {Entity}
-     * @description The entity that this anim component should use as the root of the animation hierarchy
+     * @description The entity that this anim component should use as the root of the animation hierarchy.
      */
     get rootBone() {
         return this.data.rootBone;
@@ -381,7 +381,7 @@ class AnimComponent extends Component {
     /**
      * @name AnimComponent#stateGraphAsset
      * @type {number}
-     * @description The state graph asset this component should use to generate it's animation state graph
+     * @description The state graph asset this component should use to generate it's animation state graph.
      */
     get stateGraphAsset() {
         return this.data.stateGraphAsset;
@@ -436,7 +436,7 @@ class AnimComponent extends Component {
      * @private
      * @name AnimComponent#animationAssets
      * @type {object}
-     * @description The animation assets used to load each states animation tracks
+     * @description The animation assets used to load each states animation tracks.
      */
     get animationAssets() {
         return this.data.animationAssets;
@@ -451,7 +451,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#playable
      * @type {boolean}
      * @readonly
-     * @description Returns whether all component layers are currently playable
+     * @description Returns whether all component layers are currently playable.
      */
     get playable() {
         for (var i = 0; i < this.data.layers.length; i++) {
@@ -466,7 +466,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#baseLayer
      * @type {AnimComponentLayer}
      * @readonly
-     * @description Returns the base layer of the state graph
+     * @description Returns the base layer of the state graph.
      */
     get baseLayer() {
         if (this.data.layers.length > 0) {

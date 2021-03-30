@@ -14,13 +14,13 @@ import { KtxParser } from './parser/texture/ktx.js';
 import { LegacyDdsParser } from './parser/texture/legacy-dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
-var JSON_ADDRESS_MODE = {
+const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
     "clamp": ADDRESS_CLAMP_TO_EDGE,
     "mirror": ADDRESS_MIRRORED_REPEAT
 };
 
-var JSON_FILTER_MODE = {
+const JSON_FILTER_MODE = {
     "nearest": FILTER_NEAREST,
     "linear": FILTER_LINEAR,
     "nearest_mip_nearest": FILTER_NEAREST_MIPMAP_NEAREST,
@@ -29,7 +29,7 @@ var JSON_FILTER_MODE = {
     "linear_mip_linear": FILTER_LINEAR_MIPMAP_LINEAR
 };
 
-var JSON_TEXTURE_TYPE = {
+const JSON_TEXTURE_TYPE = {
     "default": TEXTURETYPE_DEFAULT,
     "rgbm": TEXTURETYPE_RGBM,
     "rgbe": TEXTURETYPE_RGBE,
@@ -49,8 +49,8 @@ class TextureParser {
      * @description Load the texture from the remote URL. When loaded (or failed),
      * use the callback to return an the raw resource data (or error).
      * @param {object} url - The URL of the resource to load.
-     * @param {string} url.load - The URL to use for loading the resource
-     * @param {string} url.original - The original URL useful for identifying the resource type
+     * @param {string} url.load - The URL to use for loading the resource.
+     * @param {string} url.original - The original URL useful for identifying the resource type.
      * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
@@ -67,7 +67,7 @@ class TextureParser {
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
-     * @param {GraphicsDevice} device - The graphics device
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
     /* eslint-disable jsdoc/require-returns-check */
@@ -83,11 +83,11 @@ class TextureParser {
 // after invoking gl.generateMipmap on the texture (which was the previous method of ensuring
 // the texture's full mip chain was complete).
 // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
-var _completePartialMipmapChain = function (texture) {
+const _completePartialMipmapChain = function (texture) {
 
-    var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+    const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
 
-    var isHtmlElement = function (object) {
+    const isHtmlElement = function (object) {
         return (object instanceof HTMLCanvasElement) ||
                (object instanceof HTMLImageElement) ||
                (object instanceof HTMLVideoElement);
@@ -103,21 +103,21 @@ var _completePartialMipmapChain = function (texture) {
         return;
     }
 
-    var downsample = function (width, height, data) {
-        var sampledWidth = Math.max(1, width >> 1);
-        var sampledHeight = Math.max(1, height >> 1);
-        var sampledData = new data.constructor(sampledWidth * sampledHeight * 4);
+    const downsample = function (width, height, data) {
+        const sampledWidth = Math.max(1, width >> 1);
+        const sampledHeight = Math.max(1, height >> 1);
+        const sampledData = new data.constructor(sampledWidth * sampledHeight * 4);
 
-        var xs = Math.floor(width / sampledWidth);
-        var ys = Math.floor(height / sampledHeight);
-        var xsys = xs * ys;
+        const xs = Math.floor(width / sampledWidth);
+        const ys = Math.floor(height / sampledHeight);
+        const xsys = xs * ys;
 
-        for (var y = 0; y < sampledHeight; ++y) {
-            for (var x = 0; x < sampledWidth; ++x) {
-                for (var e = 0; e < 4; ++e) {
-                    var sum = 0;
-                    for (var sy = 0; sy < ys; ++sy) {
-                        for (var sx = 0; sx < xs; ++sx) {
+        for (let y = 0; y < sampledHeight; ++y) {
+            for (let x = 0; x < sampledWidth; ++x) {
+                for (let e = 0; e < 4; ++e) {
+                    let sum = 0;
+                    for (let sy = 0; sy < ys; ++sy) {
+                        for (let sx = 0; sx < xs; ++sx) {
                             sum += data[(x * xs + sx + (y * ys + sy) * width) * 4 + e];
                         }
                     }
@@ -130,12 +130,12 @@ var _completePartialMipmapChain = function (texture) {
     };
 
     // step through levels
-    for (var level = texture._levels.length; level < requiredMipLevels; ++level) {
-        var width = Math.max(1, texture._width >> (level - 1));
-        var height = Math.max(1, texture._height >> (level - 1));
+    for (let level = texture._levels.length; level < requiredMipLevels; ++level) {
+        const width = Math.max(1, texture._width >> (level - 1));
+        const height = Math.max(1, texture._height >> (level - 1));
         if (texture._cubemap) {
-            var mips = [];
-            for (var face = 0; face < 6; ++face) {
+            const mips = [];
+            for (let face = 0; face < 6; ++face) {
                 mips.push(downsample(width, height, texture._levels[level - 1][face]));
             }
             texture._levels.push(mips);
@@ -188,7 +188,7 @@ class TextureHandler {
 
     set maxRetries(value) {
         this.imgParser.maxRetries = value;
-        for (var parser in this.parsers) {
+        for (const parser in this.parsers) {
             if (this.parsers.hasOwnProperty(parser)) {
                 this.parsers[parser].maxRetries = value;
             }
@@ -200,7 +200,7 @@ class TextureHandler {
     }
 
     _getParser(url) {
-        var ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
+        const ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
         return this.parsers[ext] || this.imgParser;
     }
 
@@ -219,7 +219,7 @@ class TextureHandler {
         if (!url)
             return;
 
-        var texture = this._getParser(url).open(url, data, this._device);
+        let texture = this._getParser(url).open(url, data, this._device);
 
         if (texture === null) {
             texture = new Texture(this._device, {
@@ -237,7 +237,7 @@ class TextureHandler {
     }
 
     patch(asset, assets) {
-        var texture = asset.resource;
+        const texture = asset.resource;
         if (!texture) {
             return;
         }
@@ -246,7 +246,7 @@ class TextureHandler {
             texture.name = asset.name;
         }
 
-        var assetData = asset.data;
+        const assetData = asset.data;
 
         if (assetData.hasOwnProperty('minfilter')) {
             texture.minFilter = JSON_FILTER_MODE[assetData.minfilter];
@@ -285,7 +285,7 @@ class TextureHandler {
             texture.type = TEXTURETYPE_RGBM;
         } else if (asset.file && asset.getPreferredFile) {
             // basis normalmaps flag the variant as swizzled
-            var preferredFile = asset.getPreferredFile();
+            const preferredFile = asset.getPreferredFile();
             if (preferredFile) {
                 if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
                     texture.type = TEXTURETYPE_SWIZZLEGGGR;

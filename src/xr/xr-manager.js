@@ -28,9 +28,9 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
  * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
  * is running. Can be any of XRSPACE_*.
  * @property {Entity|null} camera Active camera for which XR session is running or null.
- * @property {XrInput} input provides access to Input Sources.
- * @property {XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
- * @property {object|null} session provides access to XRSession of WebXR
+ * @property {XrInput} input Provides access to Input Sources.
+ * @property {XrHitTest} hitTest Provides ability to hit test representation of real world geometry of underlying AR system.
+ * @property {object|null} session Provides access to XRSession of WebXR.
  */
 class XrManager extends EventHandler {
     constructor(app) {
@@ -113,7 +113,7 @@ class XrManager extends EventHandler {
     /**
      * @event
      * @name XrManager#start
-     * @description Fired when XR session is started
+     * @description Fired when XR session is started.
      * @example
      * app.xr.on('start', function () {
      *     // XR session has started
@@ -123,7 +123,7 @@ class XrManager extends EventHandler {
     /**
      * @event
      * @name XrManager#end
-     * @description Fired when XR session is ended
+     * @description Fired when XR session is ended.
      * @example
      * app.xr.on('end', function () {
      *     // XR session has ended
@@ -156,14 +156,14 @@ class XrManager extends EventHandler {
      * @function
      * @name XrManager#start
      * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create.
-     * @param {CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
-     * @param {string} type - session type. Can be one of the following:
+     * @param {CameraComponent} camera - It will be used to render XR session and manipulated based on pose tracking.
+     * @param {string} type - Session type. Can be one of the following:
      *
      * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
      * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
      * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
-     * @param {string} spaceType - reference space type. Can be one of the following:
+     * @param {string} spaceType - Reference space type. Can be one of the following:
      *
      * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
      * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
@@ -175,7 +175,7 @@ class XrManager extends EventHandler {
      * button.on('click', function () {
      *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
      * });
-     * @param {object} [options] - object with additional options for XR session initialization.
+     * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
@@ -296,8 +296,8 @@ class XrManager extends EventHandler {
     /**
      * @function
      * @name XrManager#isAvailable
-     * @description Check if specific type of session is available
-     * @param {string} type - session type. Can be one of the following:
+     * @description Check if specific type of session is available.
+     * @param {string} type - Session type. Can be one of the following:
      *
      * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
      * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.

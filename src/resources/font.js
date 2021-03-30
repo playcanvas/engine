@@ -15,9 +15,9 @@ function upgradeDataSchema(data) {
             }];
         }
         data.chars = Object.keys(data.chars || {}).reduce(function (newChars, key) {
-            var existing = data.chars[key];
+            const existing = data.chars[key];
             // key by letter instead of char code
-            var newKey = existing.letter !== undefined ? existing.letter : string.fromCodePoint(key);
+            const newKey = existing.letter !== undefined ? existing.letter : string.fromCodePoint(key);
             if (data.version < 2) {
                 existing.map = existing.map || 0;
             }
@@ -50,7 +50,7 @@ class FontHandler {
             };
         }
 
-        var self = this;
+        const self = this;
         if (path.getExtension(url.original) === '.json') {
             // load json data then load texture of same name
             http.get(url.load, {
@@ -59,7 +59,7 @@ class FontHandler {
             }, function (err, response) {
                 // update asset data
                 if (!err) {
-                    var data = upgradeDataSchema(response);
+                    const data = upgradeDataSchema(response);
                     self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
                         if (err) return callback(err);
 
@@ -83,15 +83,15 @@ class FontHandler {
     }
 
     _loadTextures(url, data, callback) {
-        var numTextures = data.info.maps.length;
-        var numLoaded = 0;
-        var error = null;
+        const numTextures = data.info.maps.length;
+        let numLoaded = 0;
+        let error = null;
 
-        var textures = new Array(numTextures);
-        var loader = this._loader;
+        const textures = new Array(numTextures);
+        const loader = this._loader;
 
-        var loadTexture = function (index) {
-            var onLoaded = function (err, texture) {
+        const loadTexture = function (index) {
+            const onLoaded = function (err, texture) {
                 if (error) return;
 
                 if (err) {
@@ -114,12 +114,12 @@ class FontHandler {
             }
         };
 
-        for (var i = 0; i < numTextures; i++)
+        for (let i = 0; i < numTextures; i++)
             loadTexture(i);
     }
 
     open(url, data, asset) {
-        var font;
+        let font;
         if (data.textures) {
             // both data and textures exist
             font = new Font(data.textures, data.data);
@@ -133,7 +133,7 @@ class FontHandler {
     patch(asset, assets) {
         // if not already set, get font data block from asset
         // and assign to font resource
-        var font = asset.resource;
+        const font = asset.resource;
         if (!font.data && asset.data) {
             // font data present in asset but not in font
             font.data = asset.data;

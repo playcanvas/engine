@@ -377,9 +377,9 @@ class Mesh extends RefCountedObject {
      * finally {@link Mesh#update} to rebuild the mesh, allowing different {@link VertexFormat}.
      * @param {boolean} [verticesDynamic] - Indicates the {@link VertexBuffer} should be created with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
      * @param {boolean} [indicesDynamic] - Indicates the {@link IndexBuffer} should be created with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
-     * @param {number} [maxVertices] - {@link VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
+     * @param {number} [maxVertices] - A {@link VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
      * no value is provided, a size to fit the provided vertices will be allocated.
-     * @param {number} [maxIndices] - {@link IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
+     * @param {number} [maxIndices] - An {@link IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
      * no value is provided, a size to fit the provided indices will be allocated.
      */
     clear(verticesDynamic, indicesDynamic, maxVertices = 0, maxIndices = 0) {
