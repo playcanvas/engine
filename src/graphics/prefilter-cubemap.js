@@ -13,7 +13,7 @@ import { Texture } from './texture.js';
 
 function syncToCpu(device, targ, face) {
     var tex = targ._colorBuffer;
-    if (tex.format != PIXELFORMAT_R8_G8_B8_A8) return;
+    if (tex.format !== PIXELFORMAT_R8_G8_B8_A8) return;
     var pixels = new Uint8Array(tex.width * tex.height * 4);
     var gl = device.gl;
     device.setFramebuffer(targ._glFrameBuffer);
@@ -425,23 +425,23 @@ function shFromCubemap(device, source, dontFlipX) {
                     dx = dir.z;
                     dy = -dir.y;
                     dz = -dir.x;
-                } else if (face == px) {
+                } else if (face === px) {
                     dx = -dir.z;
                     dy = -dir.y;
                     dz = dir.x;
-                } else if (face == ny) {
+                } else if (face === ny) {
                     dx = dir.x;
                     dy = dir.z;
                     dz = dir.y;
-                } else if (face == py) {
+                } else if (face === py) {
                     dx = dir.x;
                     dy = -dir.z;
                     dz = -dir.y;
-                } else if (face == nz) {
+                } else if (face === nz) {
                     dx = dir.x;
                     dy = -dir.y;
                     dz = dir.z;
-                } else if (face == pz) {
+                } else if (face === pz) {
                     dx = -dir.x;
                     dy = -dir.y;
                     dz = -dir.z;

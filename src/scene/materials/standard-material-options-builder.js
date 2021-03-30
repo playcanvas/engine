@@ -315,19 +315,19 @@ StandardMaterialOptionsBuilder.prototype._getMapTransformID = function (xform, u
     var i, same;
     for (i = 0; i < this._mapXForms[uv].length; i++) {
         same = true;
-        if (this._mapXForms[uv][i][0] != xform.x) {
+        if (this._mapXForms[uv][i][0] !== xform.x) {
             same = false;
             break;
         }
-        if (this._mapXForms[uv][i][1] != xform.y) {
+        if (this._mapXForms[uv][i][1] !== xform.y) {
             same = false;
             break;
         }
-        if (this._mapXForms[uv][i][2] != xform.z) {
+        if (this._mapXForms[uv][i][2] !== xform.z) {
             same = false;
             break;
         }
-        if (this._mapXForms[uv][i][3] != xform.w) {
+        if (this._mapXForms[uv][i][3] !== xform.w) {
             same = false;
             break;
         }

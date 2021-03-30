@@ -817,7 +817,7 @@ var standard = {
         }
 
         // GENERATE FRAGMENT SHADER
-        if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
+        if (options.forceFragmentPrecision && options.forceFragmentPrecision !== "highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;
 

@@ -119,7 +119,7 @@ class AnimClip {
         }
 
         // update snapshot if time has changed
-        if (this._time != this._snapshot._time) {
+        if (this._time !== this._snapshot._time) {
             this._track.eval(this._time, this._snapshot);
         }
     }

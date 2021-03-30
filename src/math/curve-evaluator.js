@@ -115,7 +115,7 @@ class CurveEvaluator {
             a = keys[index - 1];
         }
 
-        if (index == keys.length - 2) {
+        if (index === keys.length - 2) {
             d = [keys[index + 1][0] + (keys[index + 1][0] - keys[index][0]),
                 keys[index + 1][1] + (keys[index + 1][1] - keys[index][1])];
         } else {

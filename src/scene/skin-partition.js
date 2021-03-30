@@ -63,7 +63,7 @@ class SkinPartition {
                     var boneIndex = vertexArray.blendIndices.data[idx * 4 + influence];
                     var needToAdd = true;
                     for (j = 0; j < bonesToAddCount; j++) {
-                        if (bonesToAdd[j] == boneIndex) {
+                        if (bonesToAdd[j] === boneIndex) {
                             needToAdd = false;
                             break;
                         }

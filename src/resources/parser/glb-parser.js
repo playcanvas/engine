@@ -679,8 +679,9 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                         // indices
                         const numFaces = outputGeometry.num_faces();
-                        if (geometryType == decoderModule.TRIANGULAR_MESH) {
+                        if (geometryType === decoderModule.TRIANGULAR_MESH) {
                             const bit32 = outputGeometry.num_points() > 65535;
+
                             numIndices = numFaces * 3;
                             const dataSize = numIndices * (bit32 ? 4 : 2);
                             const ptr = decoderModule._malloc(dataSize);
@@ -973,7 +974,7 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
             color = specData.diffuseFactor;
             // Convert from linear space to sRGB space
             material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-            material.opacity = (color[3] != null) ? color[3] : 1;
+            material.opacity = color[3];
         } else {
             material.diffuse.set(1, 1, 1);
             material.opacity = 1;

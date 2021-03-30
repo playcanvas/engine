@@ -136,7 +136,7 @@ class HdrParser {
 
         // read the resolution specifier
         const resolution = reader.readLine().split(' ');
-        if (resolution.length != 4) {
+        if (resolution.length !== 4) {
             this._error("radiance header has invalid resolution");
             return null;
         }
@@ -167,7 +167,7 @@ class HdrParser {
 
         // check first scanline width to determine whether the file is RLE
         reader.peekUint8s(rgbe);
-        if ((rgbe[0] != 2 || rgbe[1] != 2 || (rgbe[2] & 0x80) != 0)) {
+        if ((rgbe[0] !== 2 || rgbe[1] !== 2 || (rgbe[2] & 0x80) !== 0)) {
             // not RLE
             return this._readPixelsFlat(reader, width, height);
         }
@@ -183,7 +183,7 @@ class HdrParser {
             reader.readUint8s(rgbe);
 
             // sanity check it
-            if ((rgbe[2] << 8) + rgbe[3] != width) {
+            if ((rgbe[2] << 8) + rgbe[3] !== width) {
                 this._error("radiance has invalid scanline width");
                 return null;
             }

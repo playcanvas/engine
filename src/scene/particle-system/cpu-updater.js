@@ -92,9 +92,9 @@ class ParticleCPUUpdater {
             var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
             var edgeY = max + (0.5 - max) * extentsInnerRatioUniform[1];
             var edgeZ = max + (0.5 - max) * extentsInnerRatioUniform[2];
-            randomPos.x = edgeX * (max == Math.abs(randomPos.x) ? Math.sign(randomPos.x) : 2 * randomPos.x);
-            randomPos.y = edgeY * (max == Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
-            randomPos.z = edgeZ * (max == Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
+            randomPos.x = edgeX * (max === Math.abs(randomPos.x) ? Math.sign(randomPos.x) : 2 * randomPos.x);
+            randomPos.y = edgeY * (max === Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
+            randomPos.z = edgeZ * (max === Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
 
             if (!emitter.localSpace)
                 randomPosTformed.copy(emitterPos).add(spawnMatrix.transformPoint(randomPos));
