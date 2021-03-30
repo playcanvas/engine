@@ -29,7 +29,7 @@ class AnimationHandler {
         }
 
         // we need to specify JSON for blob URLs
-        var options = {
+        const options = {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
@@ -53,7 +53,7 @@ class AnimationHandler {
 
     open(url, data) {
         if (path.getExtension(url).toLowerCase() === '.glb') {
-            var glb = GlbParser.parse("filename.glb", data, null);
+            const glb = GlbParser.parse("filename.glb", data, null);
             if (!glb) {
                 return null;
             }
@@ -63,30 +63,30 @@ class AnimationHandler {
     }
 
     _parseAnimationV3(data) {
-        var animData = data.animation;
+        const animData = data.animation;
 
-        var anim = new Animation();
+        const anim = new Animation();
         anim.name = animData.name;
         anim.duration = animData.duration;
 
-        for (var i = 0; i < animData.nodes.length; i++) {
-            var node = new Node();
+        for (let i = 0; i < animData.nodes.length; i++) {
+            const node = new Node();
 
-            var n = animData.nodes[i];
+            const n = animData.nodes[i];
             node._name = n.name;
 
-            for (var j = 0; j < n.keys.length; j++) {
-                var k = n.keys[j];
+            for (let j = 0; j < n.keys.length; j++) {
+                const k = n.keys[j];
 
-                var t = k.time;
-                var p = k.pos;
-                var r = k.rot;
-                var s = k.scale;
-                var pos = new Vec3(p[0], p[1], p[2]);
-                var rot = new Quat().setFromEulerAngles(r[0], r[1], r[2]);
-                var scl = new Vec3(s[0], s[1], s[2]);
+                const t = k.time;
+                const p = k.pos;
+                const r = k.rot;
+                const s = k.scale;
+                const pos = new Vec3(p[0], p[1], p[2]);
+                const rot = new Quat().setFromEulerAngles(r[0], r[1], r[2]);
+                const scl = new Vec3(s[0], s[1], s[2]);
 
-                var key = new Key(t, pos, rot, scl);
+                const key = new Key(t, pos, rot, scl);
 
                 node._keys.push(key);
             }
@@ -98,34 +98,34 @@ class AnimationHandler {
     }
 
     _parseAnimationV4(data) {
-        var animData = data.animation;
+        const animData = data.animation;
 
-        var anim = new Animation();
+        const anim = new Animation();
         anim.name = animData.name;
         anim.duration = animData.duration;
 
-        for (var i = 0; i < animData.nodes.length; i++) {
-            var node = new Node();
+        for (let i = 0; i < animData.nodes.length; i++) {
+            const node = new Node();
 
-            var n = animData.nodes[i];
+            const n = animData.nodes[i];
             node._name = n.name;
 
-            var defPos = n.defaults.p;
-            var defRot = n.defaults.r;
-            var defScl = n.defaults.s;
+            const defPos = n.defaults.p;
+            const defRot = n.defaults.r;
+            const defScl = n.defaults.s;
 
-            for (var j = 0; j < n.keys.length; j++) {
-                var k = n.keys[j];
+            for (let j = 0; j < n.keys.length; j++) {
+                const k = n.keys[j];
 
-                var t = k.t;
-                var p = defPos ? defPos : k.p;
-                var r = defRot ? defRot : k.r;
-                var s = defScl ? defScl : k.s;
-                var pos = new Vec3(p[0], p[1], p[2]);
-                var rot = new Quat().setFromEulerAngles(r[0], r[1], r[2]);
-                var scl = new Vec3(s[0], s[1], s[2]);
+                const t = k.t;
+                const p = defPos ? defPos : k.p;
+                const r = defRot ? defRot : k.r;
+                const s = defScl ? defScl : k.s;
+                const pos = new Vec3(p[0], p[1], p[2]);
+                const rot = new Quat().setFromEulerAngles(r[0], r[1], r[2]);
+                const scl = new Vec3(s[0], s[1], s[2]);
 
-                var key = new Key(t, pos, rot, scl);
+                const key = new Key(t, pos, rot, scl);
 
                 node._keys.push(key);
             }

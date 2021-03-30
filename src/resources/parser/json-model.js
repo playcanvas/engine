@@ -28,7 +28,7 @@ import { SkinInstance } from '../../scene/skin-instance.js';
 
 import { Material } from '../../scene/materials/material.js';
 
-var JSON_PRIMITIVE_TYPE = {
+const JSON_PRIMITIVE_TYPE = {
     "points": PRIMITIVE_POINTS,
     "lines": PRIMITIVE_LINES,
     "lineloop": PRIMITIVE_LINELOOP,
@@ -38,7 +38,7 @@ var JSON_PRIMITIVE_TYPE = {
     "trianglefan": PRIMITIVE_TRIFAN
 };
 
-var JSON_VERTEX_ELEMENT_TYPE = {
+const JSON_VERTEX_ELEMENT_TYPE = {
     "int8": TYPE_INT8,
     "uint8": TYPE_UINT8,
     "int16": TYPE_INT16,
@@ -55,7 +55,7 @@ class JsonModelParser {
     }
 
     parse(data) {
-        var modelData = data.model;
+        const modelData = data.model;
         if (!modelData) {
             return null;
         }
@@ -68,27 +68,27 @@ class JsonModelParser {
         }
 
         // NODE HIERARCHY
-        var nodes = this._parseNodes(data);
+        const nodes = this._parseNodes(data);
 
         // SKINS
-        var skins = this._parseSkins(data, nodes);
+        const skins = this._parseSkins(data, nodes);
 
         // VERTEX BUFFERS
-        var vertexBuffers = this._parseVertexBuffers(data);
+        const vertexBuffers = this._parseVertexBuffers(data);
 
         // INDEX BUFFER
-        var indices = this._parseIndexBuffers(data, vertexBuffers);
+        const indices = this._parseIndexBuffers(data, vertexBuffers);
 
         // MORPHS
-        var morphs = this._parseMorphs(data, nodes, vertexBuffers);
+        const morphs = this._parseMorphs(data, nodes, vertexBuffers);
 
         // MESHES
-        var meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
+        const meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
 
         // MESH INSTANCES
-        var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
+        const meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
 
-        var model = new Model();
+        const model = new Model();
         model.graph = nodes[0];
         model.meshInstances = meshInstances;
         model.skinInstances = skins.instances;
@@ -99,14 +99,14 @@ class JsonModelParser {
     }
 
     _parseNodes(data) {
-        var modelData = data.model;
-        var nodes = [];
-        var i;
+        const modelData = data.model;
+        const nodes = [];
+        let i;
 
         for (i = 0; i < modelData.nodes.length; i++) {
-            var nodeData = modelData.nodes[i];
+            const nodeData = modelData.nodes[i];
 
-            var node = new GraphNode(nodeData.name);
+            const node = new GraphNode(nodeData.name);
             node.setLocalPosition(nodeData.position[0], nodeData.position[1], nodeData.position[2]);
             node.setLocalEulerAngles(nodeData.rotation[0], nodeData.rotation[1], nodeData.rotation[2]);
             node.setLocalScale(nodeData.scale[0], nodeData.scale[1], nodeData.scale[2]);
@@ -123,34 +123,34 @@ class JsonModelParser {
     }
 
     _parseSkins(data, nodes) {
-        var modelData = data.model;
-        var skins = [];
-        var skinInstances = [];
-        var i, j;
+        const modelData = data.model;
+        const skins = [];
+        const skinInstances = [];
+        let i, j;
 
         if (!this._device.supportsBoneTextures && modelData.skins.length > 0) {
-            var boneLimit = this._device.getBoneLimit();
+            const boneLimit = this._device.getBoneLimit();
             partitionSkin(modelData, null, boneLimit);
         }
 
         for (i = 0; i < modelData.skins.length; i++) {
-            var skinData = modelData.skins[i];
+            const skinData = modelData.skins[i];
 
-            var inverseBindMatrices = [];
+            const inverseBindMatrices = [];
             for (j = 0; j < skinData.inverseBindMatrices.length; j++) {
-                var ibm = skinData.inverseBindMatrices[j];
+                const ibm = skinData.inverseBindMatrices[j];
                 inverseBindMatrices[j] = new Mat4().set(ibm);
             }
 
-            var skin = new Skin(this._device, inverseBindMatrices, skinData.boneNames);
+            const skin = new Skin(this._device, inverseBindMatrices, skinData.boneNames);
             skins.push(skin);
 
-            var skinInstance = new SkinInstance(skin);
+            const skinInstance = new SkinInstance(skin);
             // Resolve bone IDs to actual graph nodes
-            var bones = [];
+            const bones = [];
             for (j = 0; j < skin.boneNames.length; j++) {
-                var boneName = skin.boneNames[j];
-                var bone = nodes[0].findByName(boneName);
+                const boneName = skin.boneNames[j];
+                const bone = nodes[0].findByName(boneName);
                 bones.push(bone);
             }
             skinInstance.bones = bones;
@@ -165,11 +165,11 @@ class JsonModelParser {
 
     // find number of vertices used by a mesh that is using morph target with index morphIndex
     _getMorphVertexCount(modelData, morphIndex, vertexBuffers) {
-        for (var i = 0; i < modelData.meshes.length; i++) {
-            var meshData = modelData.meshes[i];
+        for (let i = 0; i < modelData.meshes.length; i++) {
+            const meshData = modelData.meshes[i];
 
             if (meshData.morph === morphIndex) {
-                var vertexBuffer = vertexBuffers[meshData.vertices];
+                const vertexBuffer = vertexBuffers[meshData.vertices];
                 return vertexBuffer.numVertices;
             }
         }
@@ -177,20 +177,20 @@ class JsonModelParser {
     }
 
     _parseMorphs(data, nodes, vertexBuffers) {
-        var modelData = data.model;
-        var morphs = [];
-        var morphInstances = [];
-        var i, j, vertexCount;
+        const modelData = data.model;
+        const morphs = [];
+        const morphInstances = [];
+        let i, j, vertexCount;
 
-        var targets, morphTarget, morphTargetArray;
+        let targets, morphTarget, morphTargetArray;
 
         if (modelData.morphs) {
 
             // convert sparse morph target vertex data to full format
-            var sparseToFull = function (data, indices, totalCount) {
-                var full = new Float32Array(totalCount * 3);
-                for (var s = 0; s < indices.length; s++) {
-                    var dstIndex = indices[s] * 3;
+            const sparseToFull = function (data, indices, totalCount) {
+                const full = new Float32Array(totalCount * 3);
+                for (let s = 0; s < indices.length; s++) {
+                    const dstIndex = indices[s] * 3;
                     full[dstIndex] = data[s * 3];
                     full[dstIndex + 1] = data[s * 3 + 1];
                     full[dstIndex + 2] = data[s * 3 + 2];
@@ -206,19 +206,19 @@ class JsonModelParser {
                 vertexCount = this._getMorphVertexCount(modelData, i, vertexBuffers);
 
                 for (j = 0; j < targets.length; j++) {
-                    var targetAabb = targets[j].aabb;
+                    const targetAabb = targets[j].aabb;
 
-                    var min = targetAabb.min;
-                    var max = targetAabb.max;
-                    var aabb = new BoundingBox(
+                    const min = targetAabb.min;
+                    const max = targetAabb.max;
+                    const aabb = new BoundingBox(
                         new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
                         new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
                     );
 
                     // convert sparse to full format
-                    var indices = targets[j].indices;
-                    var deltaPositions = targets[j].deltaPositions;
-                    var deltaNormals = targets[j].deltaNormals;
+                    const indices = targets[j].indices;
+                    let deltaPositions = targets[j].deltaPositions;
+                    let deltaNormals = targets[j].deltaNormals;
                     if (indices) {
                         deltaPositions = sparseToFull(deltaPositions, indices, vertexCount);
                         deltaNormals = sparseToFull(deltaNormals, indices, vertexCount);
@@ -232,10 +232,10 @@ class JsonModelParser {
                     morphTargetArray.push(morphTarget);
                 }
 
-                var morph = new Morph(morphTargetArray, this._device);
+                const morph = new Morph(morphTargetArray, this._device);
                 morphs.push(morph);
 
-                var morphInstance = new MorphInstance(morph);
+                const morphInstance = new MorphInstance(morph);
                 morphInstances.push(morphInstance);
             }
         }
@@ -247,10 +247,10 @@ class JsonModelParser {
     }
 
     _parseVertexBuffers(data) {
-        var modelData = data.model;
-        var vertexBuffers = [];
-        var attribute, attributeName;
-        var attributeMap = {
+        const modelData = data.model;
+        const vertexBuffers = [];
+        let attribute, attributeName;
+        const attributeMap = {
             position: SEMANTIC_POSITION,
             normal: SEMANTIC_NORMAL,
             tangent: SEMANTIC_TANGENT,
@@ -267,11 +267,11 @@ class JsonModelParser {
             texCoord7: SEMANTIC_TEXCOORD7
         };
 
-        var i, j;
+        let i, j;
         for (i = 0; i < modelData.vertices.length; i++) {
-            var vertexData = modelData.vertices[i];
+            const vertexData = modelData.vertices[i];
 
-            var formatDesc = [];
+            const formatDesc = [];
             for (attributeName in vertexData) {
                 attribute = vertexData[attributeName];
 
@@ -282,13 +282,13 @@ class JsonModelParser {
                     normalize: (attributeMap[attributeName] === SEMANTIC_COLOR)
                 });
             }
-            var vertexFormat = new VertexFormat(this._device, formatDesc);
+            const vertexFormat = new VertexFormat(this._device, formatDesc);
 
             // Create the vertex buffer
-            var numVertices = vertexData.position.data.length / vertexData.position.components;
-            var vertexBuffer = new VertexBuffer(this._device, vertexFormat, numVertices);
+            const numVertices = vertexData.position.data.length / vertexData.position.components;
+            const vertexBuffer = new VertexBuffer(this._device, vertexFormat, numVertices);
 
-            var iterator = new VertexIterator(vertexBuffer);
+            const iterator = new VertexIterator(vertexBuffer);
             for (j = 0; j < numVertices; j++) {
                 for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];
@@ -319,22 +319,22 @@ class JsonModelParser {
     }
 
     _parseIndexBuffers(data, vertexBuffers) {
-        var modelData = data.model;
-        var indexBuffer = null;
-        var indexData = null;
-        var i;
+        const modelData = data.model;
+        let indexBuffer = null;
+        let indexData = null;
+        let i;
 
         // Count the number of indices in the model
-        var numIndices = 0;
+        let numIndices = 0;
         for (i = 0; i < modelData.meshes.length; i++) {
-            var meshData = modelData.meshes[i];
+            const meshData = modelData.meshes[i];
             if (meshData.indices !== undefined) {
                 numIndices += meshData.indices.length;
             }
         }
 
         // Create an index buffer big enough to store all indices in the model
-        var maxVerts = 0;
+        let maxVerts = 0;
         for (i = 0; i < vertexBuffers.length; i++) {
             maxVerts = Math.max(maxVerts, vertexBuffers[i].numVertices);
         }
@@ -355,25 +355,25 @@ class JsonModelParser {
     }
 
     _parseMeshes(data, skins, morphs, vertexBuffers, indexBuffer, indexData) {
-        var modelData = data.model;
+        const modelData = data.model;
 
-        var meshes = [];
-        var indexBase = 0;
-        var i;
+        const meshes = [];
+        let indexBase = 0;
+        let i;
 
         for (i = 0; i < modelData.meshes.length; i++) {
-            var meshData = modelData.meshes[i];
+            const meshData = modelData.meshes[i];
 
-            var meshAabb = meshData.aabb;
-            var min = meshAabb.min;
-            var max = meshAabb.max;
-            var aabb = new BoundingBox(
+            const meshAabb = meshData.aabb;
+            const min = meshAabb.min;
+            const max = meshAabb.max;
+            const aabb = new BoundingBox(
                 new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
                 new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
             );
 
-            var indexed = (meshData.indices !== undefined);
-            var mesh = new Mesh(this._device);
+            const indexed = (meshData.indices !== undefined);
+            const mesh = new Mesh(this._device);
             mesh.vertexBuffer = vertexBuffers[meshData.vertices];
             mesh.indexBuffer[0] = indexed ? indexBuffer : null;
             mesh.primitive[0].type = JSON_PRIMITIVE_TYPE[meshData.type];
@@ -401,20 +401,20 @@ class JsonModelParser {
     }
 
     _parseMeshInstances(data, nodes, meshes, skins, skinInstances, morphs, morphInstances) {
-        var modelData = data.model;
-        var meshInstances = [];
-        var i;
+        const modelData = data.model;
+        const meshInstances = [];
+        let i;
 
         for (i = 0; i < modelData.meshInstances.length; i++) {
-            var meshInstanceData = modelData.meshInstances[i];
+            const meshInstanceData = modelData.meshInstances[i];
 
-            var node = nodes[meshInstanceData.node];
-            var mesh = meshes[meshInstanceData.mesh];
+            const node = nodes[meshInstanceData.node];
+            const mesh = meshes[meshInstanceData.mesh];
 
-            var meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
+            const meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
 
             if (mesh.skin) {
-                var skinIndex = skins.indexOf(mesh.skin);
+                const skinIndex = skins.indexOf(mesh.skin);
                 // #if _DEBUG
                 if (skinIndex === -1) {
                     throw new Error('Mesh\'s skin does not appear in skin array.');
@@ -424,7 +424,7 @@ class JsonModelParser {
             }
 
             if (mesh.morph) {
-                var morphIndex = morphs.indexOf(mesh.morph);
+                const morphIndex = morphs.indexOf(mesh.morph);
                 // #if _DEBUG
                 if (morphIndex === -1) {
                     throw new Error('Mesh\'s morph does not appear in morph array.');

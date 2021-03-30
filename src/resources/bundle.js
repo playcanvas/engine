@@ -29,7 +29,7 @@ class BundleHandler {
             };
         }
 
-        var self = this;
+        const self = this;
 
         http.get(url.load, {
             responseType: Http.ResponseType.ARRAY_BUFFER,
@@ -49,7 +49,7 @@ class BundleHandler {
     }
 
     _untar(response, callback) {
-        var self = this;
+        const self = this;
 
         // use web workers if available otherwise
         // fallback to untar'ing in the main thread
@@ -70,8 +70,8 @@ class BundleHandler {
                 }
             });
         } else {
-            var archive = new Untar(response);
-            var files = archive.untar(self._assets.prefix);
+            const archive = new Untar(response);
+            const files = archive.untar(self._assets.prefix);
             callback(null, files);
         }
     }

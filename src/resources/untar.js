@@ -1,4 +1,4 @@
-var Untar; // see below why we declare this here
+let Untar; // see below why we declare this here
 
 // The UntarScope function is going to be used
 // as the code that ends up in a Web Worker.
@@ -7,8 +7,8 @@ var Untar; // see below why we declare this here
 // We also have to make sure that we do not mangle 'Untar' variable otherwise
 // the Worker will not work.
 function UntarScope(isWorker) {
-    var utfDecoder;
-    var asciiDecoder;
+    let utfDecoder;
+    let asciiDecoder;
 
     if (typeof TextDecoder !== 'undefined') {
         utfDecoder = new TextDecoder('utf-8');
@@ -22,12 +22,12 @@ function UntarScope(isWorker) {
     }
 
     PaxHeader.parse = function (buffer, start, length) {
-        var paxArray = new Uint8Array(buffer, start, length);
-        var bytesRead = 0;
-        var fields = [];
+        const paxArray = new Uint8Array(buffer, start, length);
+        let bytesRead = 0;
+        const fields = [];
 
         while (bytesRead < length) {
-            var spaceIndex;
+            let spaceIndex;
             for (spaceIndex = bytesRead; spaceIndex < length; spaceIndex++) {
                 if (paxArray[spaceIndex] == 0x20)
                     break;
@@ -37,9 +37,9 @@ function UntarScope(isWorker) {
                 throw new Error('Invalid PAX header data format.');
             }
 
-            var fieldLength = parseInt(utfDecoder.decode(new Uint8Array(buffer, start + bytesRead, spaceIndex - bytesRead)), 10);
-            var fieldText = utfDecoder.decode(new Uint8Array(buffer, start + spaceIndex + 1, fieldLength - (spaceIndex - bytesRead) - 2));
-            var field = fieldText.split('=');
+            const fieldLength = parseInt(utfDecoder.decode(new Uint8Array(buffer, start + bytesRead, spaceIndex - bytesRead)), 10);
+            const fieldText = utfDecoder.decode(new Uint8Array(buffer, start + spaceIndex + 1, fieldLength - (spaceIndex - bytesRead) - 2));
+            const field = fieldText.split('=');
 
             if (field.length !== 2) {
                 throw new Error('Invalid PAX header data format.');
@@ -61,9 +61,9 @@ function UntarScope(isWorker) {
     };
 
     PaxHeader.prototype.applyHeader = function (file) {
-        for (var i = 0; i < this._fields.length; i++) {
-            var fieldName = this._fields[i].name;
-            var fieldValue = this._fields[i].value;
+        for (let i = 0; i < this._fields.length; i++) {
+            let fieldName = this._fields[i].name;
+            const fieldValue = this._fields[i].value;
 
             if (fieldName === 'path') {
                 fieldName = 'name';
@@ -116,25 +116,25 @@ function UntarScope(isWorker) {
      * {name, size, start, url}.
      */
     UntarInternal.prototype._readNextFile = function () {
-        var headersDataView = new DataView(this._arrayBuffer, this._bytesRead, 512);
-        var headers = asciiDecoder.decode(headersDataView);
+        const headersDataView = new DataView(this._arrayBuffer, this._bytesRead, 512);
+        const headers = asciiDecoder.decode(headersDataView);
         this._bytesRead += 512;
 
-        var name = headers.substr(0, 100).replace(/\0/g, '');
-        var ustarFormat = headers.substr(257, 6);
-        var size = parseInt(headers.substr(124, 12), 8);
-        var type = headers.substr(156, 1);
-        var start = this._bytesRead;
-        var url = null;
+        let name = headers.substr(0, 100).replace(/\0/g, '');
+        const ustarFormat = headers.substr(257, 6);
+        const size = parseInt(headers.substr(124, 12), 8);
+        const type = headers.substr(156, 1);
+        const start = this._bytesRead;
+        let url = null;
 
-        var normalFile = false;
+        let normalFile = false;
         switch (type) {
             case "0": case "": // Normal file
                 // do not create blob URL if we are in a worker
                 // because if the worker is destroyed it will also destroy the blob URLs
                 normalFile = true;
                 if (!isWorker) {
-                    var blob = new Blob([this._arrayBuffer.slice(this._bytesRead, this._bytesRead + size)]);
+                    const blob = new Blob([this._arrayBuffer.slice(this._bytesRead, this._bytesRead + size)]);
                     url = URL.createObjectURL(blob);
                 }
                 break;
@@ -157,7 +157,7 @@ function UntarScope(isWorker) {
         this._bytesRead += size;
 
         // File data is padded to reach a 512 byte boundary; skip the padded bytes too.
-        var remainder = size % 512;
+        const remainder = size % 512;
         if (remainder !== 0) {
             this._bytesRead += (512 - remainder);
         }
@@ -167,14 +167,14 @@ function UntarScope(isWorker) {
         }
 
         if (ustarFormat.indexOf("ustar") !== -1) {
-            var namePrefix = headers.substr(345, 155).replace(/\0/g, '');
+            const namePrefix = headers.substr(345, 155).replace(/\0/g, '');
 
             if (namePrefix.length > 0) {
                 name = namePrefix.trim() + name.trim();
             }
         }
 
-        var file = {
+        const file = {
             name: name,
             start: start,
             size: size,
@@ -207,9 +207,9 @@ function UntarScope(isWorker) {
             return [];
         }
 
-        var files = [];
+        const files = [];
         while (this._hasNext()) {
-            var file = this._readNextFile();
+            const file = this._readNextFile();
             if (! file) continue;
             if (filenamePrefix && file.name) {
                 file.name = filenamePrefix + file.name;
@@ -223,11 +223,11 @@ function UntarScope(isWorker) {
     // if we are in a worker then create the onmessage handler using worker.self
     if (isWorker) {
         self.onmessage = function (e) {
-            var id = e.data.id;
+            const id = e.data.id;
 
             try {
-                var archive = new UntarInternal(e.data.arrayBuffer);
-                var files = archive.untar(e.data.prefix);
+                const archive = new UntarInternal(e.data.arrayBuffer);
+                const files = archive.untar(e.data.prefix);
                 // The worker is done so send a message to the main thread.
                 // Notice we are sending the array buffer back as a Transferrable object
                 // so that the main thread can re-assume control of the array buffer.
@@ -247,17 +247,17 @@ function UntarScope(isWorker) {
 }
 
 // this is the URL that is going to be used for workers
-var workerUrl = null;
+let workerUrl = null;
 
 // Convert the UntarScope function to a string and add
 // the onmessage handler for the worker to untar archives
 function getWorkerUrl() {
     if (!workerUrl) {
         // execute UntarScope function in the worker
-        var code = '(' + UntarScope.toString() + ')(true)\n\n';
+        const code = '(' + UntarScope.toString() + ')(true)\n\n';
 
         // create blob URL for the code above to be used for the worker
-        var blob = new Blob([code], { type: 'application/javascript' });
+        const blob = new Blob([code], { type: 'application/javascript' });
 
         workerUrl = URL.createObjectURL(blob);
     }
@@ -281,23 +281,23 @@ class UntarWorker {
     }
 
     _onMessage(e) {
-        var id = e.data.id;
+        const id = e.data.id;
         if (! this._pendingRequests[id]) return;
 
-        var callback = this._pendingRequests[id];
+        const callback = this._pendingRequests[id];
 
         delete this._pendingRequests[id];
 
         if (e.data.error) {
             callback(e.data.error);
         } else {
-            var arrayBuffer = e.data.arrayBuffer;
+            const arrayBuffer = e.data.arrayBuffer;
 
             // create blob URLs for each file. We are creating the URLs
             // here - outside of the worker - so that the main thread owns them
-            for (var i = 0, len = e.data.files.length; i < len; i++) {
-                var file = e.data.files[i];
-                var blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
+            for (let i = 0, len = e.data.files.length; i < len; i++) {
+                const file = e.data.files[i];
+                const blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
                 file.url = URL.createObjectURL(blob);
             }
 
@@ -315,7 +315,7 @@ class UntarWorker {
      * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors.
      */
     untar(arrayBuffer, callback) {
-        var id = this._requestId++;
+        const id = this._requestId++;
         this._pendingRequests[id] = callback;
 
         // send data to the worker - notice the last argument
@@ -338,7 +338,7 @@ class UntarWorker {
      * @returns {boolean} Returns true of false.
      */
     hasPendingRequests() {
-        for (var key in this._pendingRequests) {
+        for (const key in this._pendingRequests) {
             return true;
         }
 
