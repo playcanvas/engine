@@ -12,7 +12,6 @@ class SceneParser {
 
     parse(data) {
         const entities = {};
-        let id, i, curEnt;
         let parent = null;
 
         const compressed = data.compressedFormat;
@@ -21,9 +20,9 @@ class SceneParser {
         }
 
         // instantiate entities
-        for (id in data.entities) {
+        for (const id in data.entities) {
             const curData = data.entities[id];
-            curEnt = this._createEntity(curData, compressed);
+            const curEnt = this._createEntity(curData, compressed);
             entities[id] = curEnt;
             if (curData.parent === null) {
                 parent = curEnt;
@@ -31,11 +30,11 @@ class SceneParser {
         }
 
         // put entities into hierarchy
-        for (id in data.entities) {
-            curEnt = entities[id];
+        for (const id in data.entities) {
+            const curEnt = entities[id];
             const children = data.entities[id].children;
             const len = children.length;
-            for (i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 const childEnt = entities[children[i]];
                 if (childEnt) {
                     curEnt.addChild(childEnt);
@@ -100,9 +99,9 @@ class SceneParser {
         // Create components in order
         const systemsList = this._app.systems.list;
 
-        let i, len = systemsList.length;
+        let len = systemsList.length;
         const entityData = entities[entity.getGuid()];
-        for (i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             const system = systemsList[i];
             const componentData = entityData.components[system.id];
             if (componentData) {
@@ -113,7 +112,7 @@ class SceneParser {
         // Open all children and add them to the node
         len = entityData.children.length;
         const children = entity._children;
-        for (i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             children[i] = this._openComponentData(children[i], entities);
         }
 

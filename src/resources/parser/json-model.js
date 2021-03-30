@@ -249,7 +249,6 @@ class JsonModelParser {
     _parseVertexBuffers(data) {
         const modelData = data.model;
         const vertexBuffers = [];
-        let attribute, attributeName;
         const attributeMap = {
             position: SEMANTIC_POSITION,
             normal: SEMANTIC_NORMAL,
@@ -267,13 +266,12 @@ class JsonModelParser {
             texCoord7: SEMANTIC_TEXCOORD7
         };
 
-        let i, j;
-        for (i = 0; i < modelData.vertices.length; i++) {
+        for (let i = 0; i < modelData.vertices.length; i++) {
             const vertexData = modelData.vertices[i];
 
             const formatDesc = [];
-            for (attributeName in vertexData) {
-                attribute = vertexData[attributeName];
+            for (const attributeName in vertexData) {
+                const attribute = vertexData[attributeName];
 
                 formatDesc.push({
                     semantic: attributeMap[attributeName],
@@ -289,9 +287,9 @@ class JsonModelParser {
             const vertexBuffer = new VertexBuffer(this._device, vertexFormat, numVertices);
 
             const iterator = new VertexIterator(vertexBuffer);
-            for (j = 0; j < numVertices; j++) {
-                for (attributeName in vertexData) {
-                    attribute = vertexData[attributeName];
+            for (let j = 0; j < numVertices; j++) {
+                for (const attributeName in vertexData) {
+                    const attribute = vertexData[attributeName];
 
                     switch (attribute.components) {
                         case 1:
@@ -359,9 +357,8 @@ class JsonModelParser {
 
         const meshes = [];
         let indexBase = 0;
-        let i;
 
-        for (i = 0; i < modelData.meshes.length; i++) {
+        for (let i = 0; i < modelData.meshes.length; i++) {
             const meshData = modelData.meshes[i];
 
             const meshAabb = meshData.aabb;
