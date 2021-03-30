@@ -47,14 +47,14 @@ class CubemapHandler {
 
     // get the list of dependent asset ids for the cubemap
     getAssetIds(cubemapAsset) {
-        var result = [];
+        const result = [];
 
         // prefiltered cubemap is stored at index 0
         result[0] = cubemapAsset.file;
 
         // faces are stored at index 1..6
         if ((cubemapAsset.loadFaces || !cubemapAsset.file) && cubemapAsset.data && cubemapAsset.data.textures) {
-            for (var i = 0; i < 6; ++i) {
+            for (let i = 0; i < 6; ++i) {
                 result[i + 1] = cubemapAsset.data.textures[i];
             }
         } else {
@@ -79,17 +79,17 @@ class CubemapHandler {
 
     // update the cubemap resources given a newly loaded set of assets with their corresponding ids
     update(cubemapAsset, assetIds, assets) {
-        var assetData = cubemapAsset.data || {};
-        var oldAssets = cubemapAsset._handlerState.assets;
-        var oldResources = cubemapAsset._resources;
-        var tex, mip, i;
+        const assetData = cubemapAsset.data || {};
+        const oldAssets = cubemapAsset._handlerState.assets;
+        const oldResources = cubemapAsset._resources;
+        let tex, mip, i;
 
         // faces, prelit cubemap 128, 64, 32, 16, 8, 4
-        var resources = [null, null, null, null, null, null, null];
+        const resources = [null, null, null, null, null, null, null];
 
         // texture type used for faces and prelit cubemaps are both taken from
         // cubemap.data.rgbm
-        var getType = function () {
+        const getType = function () {
             if (assetData.hasOwnProperty('type')) {
                 return assetData.type;
             }
@@ -105,7 +105,7 @@ class CubemapHandler {
             if (assets[0]) {
                 tex = assets[0].resource;
                 for (i = 0; i < 6; ++i) {
-                    var prelitLevels = [tex._levels[i]];
+                    const prelitLevels = [tex._levels[i]];
 
                     // construct full prem chain on highest prefilter cubemap on ios
                     if (i === 0 && this._device.useTexCubeLod) {
@@ -114,7 +114,7 @@ class CubemapHandler {
                         }
                     }
 
-                    var prelit = new Texture(this._device, {
+                    const prelit = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
                         type: getType() || tex.type,
@@ -140,22 +140,22 @@ class CubemapHandler {
             resources[6] = oldResources[6] || null;
         }
 
-        var faceAssets = assets.slice(1);
+        const faceAssets = assets.slice(1);
         if (!cubemapAsset.loaded || !this.cmpArrays(faceAssets, oldAssets.slice(1))) {
             // face assets have changed
             if (faceAssets.indexOf(null) === -1) {
                 // extract cubemap level data from face textures
-                var faceTextures = faceAssets.map(function (asset) {
+                const faceTextures = faceAssets.map(function (asset) {
                     return asset.resource;
                 });
-                var faceLevels = [];
+                const faceLevels = [];
                 for (mip = 0; mip < faceTextures[0]._levels.length; ++mip) {
                     faceLevels.push(faceTextures.map(function (faceTexture) {  // eslint-disable-line no-loop-func
                         return faceTexture._levels[mip];
                     }));
                 }
 
-                var faces = new Texture(this._device, {
+                const faces = new Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
                     type: getType() || faceTextures[0].type,
@@ -205,7 +205,7 @@ class CubemapHandler {
         if (arr1.length !== arr2.length) {
             return false;
         }
-        for (var i = 0; i < arr1.length; ++i) {
+        for (let i = 0; i < arr1.length; ++i) {
             if (arr1[i] !== arr2[i]) {
                 return false;
             }
@@ -215,7 +215,7 @@ class CubemapHandler {
 
     // convert string id to int
     resolveId(value) {
-        var valueInt = parseInt(value, 10);
+        const valueInt = parseInt(value, 10);
         return ((valueInt === value) || (valueInt.toString() === value)) ? valueInt : value;
     }
 
@@ -230,16 +230,16 @@ class CubemapHandler {
             };
         }
 
-        var self = this;
-        var assetIds = self.getAssetIds(cubemapAsset);
-        var assets = [null, null, null, null, null, null, null];
-        var loadedAssetIds = cubemapAsset._handlerState.assetIds;
-        var loadedAssets = cubemapAsset._handlerState.assets;
-        var registry = self._registry;
+        const self = this;
+        const assetIds = self.getAssetIds(cubemapAsset);
+        const assets = [null, null, null, null, null, null, null];
+        const loadedAssetIds = cubemapAsset._handlerState.assetIds;
+        const loadedAssets = cubemapAsset._handlerState.assets;
+        const registry = self._registry;
 
         // one of the dependent assets has finished loading
-        var awaiting = 7;
-        var onReady = function (index, asset) {
+        let awaiting = 7;
+        const onReady = function (index, asset) {
             assets[index] = asset;
             awaiting--;
 
@@ -253,8 +253,8 @@ class CubemapHandler {
         // handle a texture asset finished loading.
         // the engine is unable to flip ImageBitmaps (to orient them correctly for cubemaps)
         // so we do that here.
-        var onLoad = function (index, asset) {
-            var level0 = asset && asset.resource && asset.resource._levels[0];
+        const onLoad = function (index, asset) {
+            const level0 = asset && asset.resource && asset.resource._levels[0];
             if (level0 && typeof ImageBitmap !== 'undefined' && level0 instanceof ImageBitmap) {
                 createImageBitmap(level0, {
                     premultiplyAlpha: 'none',
@@ -273,12 +273,12 @@ class CubemapHandler {
         };
 
         // handle an asset load failure
-        var onError = function (index, err, asset) {
+        const onError = function (index, err, asset) {
             callback(err);
         };
 
         // process the texture asset
-        var processTexAsset = function (index, texAsset) {
+        const processTexAsset = function (index, texAsset) {
             if (texAsset.loaded) {
                 // asset already exists
                 onLoad(index, texAsset);
@@ -293,9 +293,9 @@ class CubemapHandler {
             }
         };
 
-        var texAsset;
-        for (var i = 0; i < 7; ++i) {
-            var assetId = this.resolveId(assetIds[i]);
+        let texAsset;
+        for (let i = 0; i < 7; ++i) {
+            const assetId = this.resolveId(assetIds[i]);
 
             if (!assetId) {
                 // no asset
@@ -314,7 +314,7 @@ class CubemapHandler {
                     // a chance to add the dependent scene texture to registry before we attempt
                     // to get the asset again.
                     setTimeout(function (index, assetId_) {
-                        var texAsset = registry.get(assetId_);
+                        const texAsset = registry.get(assetId_);
                         if (texAsset) {
                             processTexAsset(index, texAsset);
                         } else {
@@ -324,7 +324,7 @@ class CubemapHandler {
                 }
             } else {
                 // assetId is a url or file object and we're responsible for creating it
-                var file = (typeof assetId === "string") ? {
+                const file = (typeof assetId === "string") ? {
                     url: assetId,
                     filename: assetId
                 } : assetId;

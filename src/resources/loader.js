@@ -83,9 +83,9 @@ class ResourceLoader {
      * });
      */
     load(url, type, callback, asset) {
-        var handler = this._handlers[type];
+        const handler = this._handlers[type];
         if (!handler) {
-            var err = "No handler for asset type: " + type;
+            const err = "No handler for asset type: " + type;
             callback(err);
             return;
         }
@@ -96,7 +96,7 @@ class ResourceLoader {
             return;
         }
 
-        var key = url + type;
+        const key = url + type;
 
         if (this._cache[key] !== undefined) {
             // in cache
@@ -108,9 +108,9 @@ class ResourceLoader {
             // new request
             this._requests[key] = [callback];
 
-            var self = this;
+            const self = this;
 
-            var handleLoad = function (err, urlObj) {
+            const handleLoad = function (err, urlObj) {
                 if (err) {
                     self._onFailure(key, err);
                     return;
@@ -136,7 +136,7 @@ class ResourceLoader {
                 }, asset);
             };
 
-            var normalizedUrl = url.split('?')[0];
+            const normalizedUrl = url.split('?')[0];
             if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
                 if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
                     handleLoad('Bundle for ' + url + ' not loaded yet');
@@ -160,7 +160,7 @@ class ResourceLoader {
 
     // load an asset with no url, skipping bundles and caching
     _loadNull(handler, callback, asset) {
-        var onLoad = function (err, data, extra) {
+        const onLoad = function (err, data, extra) {
             if (err) {
                 callback(err);
             } else {
@@ -176,7 +176,7 @@ class ResourceLoader {
 
     _onSuccess(key, result, extra) {
         this._cache[key] = result;
-        for (var i = 0; i < this._requests[key].length; i++) {
+        for (let i = 0; i < this._requests[key].length; i++) {
             this._requests[key][i](null, result, extra);
         }
         delete this._requests[key];
@@ -185,7 +185,7 @@ class ResourceLoader {
     _onFailure(key, err) {
         console.error(err);
         if (this._requests[key]) {
-            for (var i = 0; i < this._requests[key].length; i++) {
+            for (let i = 0; i < this._requests[key].length; i++) {
                 this._requests[key][i](err);
             }
             delete this._requests[key];
@@ -201,7 +201,7 @@ class ResourceLoader {
      * @returns {*} The parsed resource data.
      */
     open(type, data) {
-        var handler = this._handlers[type];
+        const handler = this._handlers[type];
         if (!handler) {
             console.warn("No resource handler found for: " + type);
             return data;
@@ -220,7 +220,7 @@ class ResourceLoader {
      * @param {AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
-        var handler = this._handlers[asset.type];
+        const handler = this._handlers[asset.type];
         if (!handler)  {
             console.warn("No resource handler found for: " + asset.type);
             return;
@@ -266,7 +266,7 @@ class ResourceLoader {
     enableRetry(maxRetries = 5) {
         maxRetries = Math.max(0, maxRetries) || 0;
 
-        for (var key in this._handlers) {
+        for (const key in this._handlers) {
             this._handlers[key].maxRetries = maxRetries;
         }
     }
@@ -278,7 +278,7 @@ class ResourceLoader {
      * @description Disables retrying of failed requests when loading assets.
      */
     disableRetry() {
-        for (var key in this._handlers) {
+        for (const key in this._handlers) {
             this._handlers[key].maxRetries = 0;
         }
     }
