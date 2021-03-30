@@ -10,7 +10,7 @@ import { AnimSnapshot } from './anim-snapshot.js';
  * @param {AnimTrack} track - The animation data.
  * @param {number} time - The initial time of the clip.
  * @param {number} speed - Speed of the animation playback.
- * @param {boolean} playing - True if the clip is playing and false otherwise.
+ * @param {boolean} playing - true if the clip is playing and false otherwise.
  * @param {boolean} loop - Whether the clip should loop.
  */
 // TODO: add configurable looping start/end times?
