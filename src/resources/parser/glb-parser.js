@@ -2076,7 +2076,6 @@ class GlbParser {
         const model = new Model();
 
         // create skinInstance for each skin
-        let s;
         const skinInstances = [];
         for (let s = 0; s < glb.skins.length; s++) {
             const skinInstance = new SkinInstance(glb.skins[s]);
