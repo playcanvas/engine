@@ -43,9 +43,9 @@ class XrHitTestSource extends EventHandler {
      * @event
      * @name XrHitTestSource#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {Vec3} position - Position of hit test
-     * @param {Quat} rotation - Rotation of hit test
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {Vec3} position - Position of hit test.
+     * @param {Quat} rotation - Rotation of hit test.
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
      * @example
      * hitTestSource.on('result', function (position, rotation, inputSource) {
      *     target.setPosition(position);

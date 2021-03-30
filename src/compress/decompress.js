@@ -4,10 +4,10 @@ import { CompressUtils } from './compress-utils';
  * @private
  * @class
  * @name Decompress
- * @classdesc Reconstruct original object field names in a compressed scene
+ * @classdesc Reconstruct original object field names in a compressed scene.
  * @param {object} node - The current node of the object being decompressed,
- * initially the 'entities' field of a scene
- * @param {object} data - Compression metadata
+ * initially the 'entities' field of a scene.
+ * @param {object} data - Compression metadata.
  */
 class Decompress {
     constructor(node, data) {

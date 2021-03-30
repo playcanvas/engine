@@ -53,7 +53,7 @@ import {
  * @param {number} [vertexCount] - When specified, vertex format will be set up for non-interleaved format with a specified
  * number of vertices. (example: PPPPNNNNCCCC), where arrays of individual attributes will be stored one right after the other (subject to alignment requirements).
  * Note that in this case, the format depends on the number of vertices, and needs to change when the number of vertices changes.
- * When not specified, vertex format will be interleaved. (example: PNCPNCPNCPNC)
+ * When not specified, vertex format will be interleaved. (example: PNCPNCPNCPNC).
  * @property {object[]} elements The vertex attribute elements.
  * @property {string} elements[].name The meaning of the vertex element. This is used to link
  * the vertex data to a shader input. Can be:

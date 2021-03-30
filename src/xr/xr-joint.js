@@ -19,16 +19,16 @@ for (var i = 0; i < tipJointIds.length; i++) {
 /**
  * @class
  * @name XrJoint
- * @classdesc Represents joint of a finger
- * @description Represents joint of a finger
- * @param {number} index - Index of a joint within a finger
- * @param {string} id - Id of a joint based on WebXR Hand Input Specs
- * @param {XrHand} hand - Hand that joint relates to
- * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint
- * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger
- * @property {XrHand} hand Hand that joint relates to
- * @property {XrFinger|null} finger Finger that joint relates to
- * @property {boolean} wrist True if joint is a wrist
+ * @classdesc Represents joint of a finger.
+ * @description Represents joint of a finger.
+ * @param {number} index - Index of a joint within a finger.
+ * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
+ * @param {XrHand} hand - Hand that joint relates to.
+ * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint.
+ * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger.
+ * @property {XrHand} hand Hand that joint relates to.
+ * @property {XrFinger|null} finger Finger that joint relates to.
+ * @property {boolean} wrist True if joint is a wrist.
  * @property {boolean} tip True if joint is a tip of a finger
  * @property {number} radius The radius of a joint, which is a distance from joint to the edge of a skin
  */
@@ -93,8 +93,8 @@ class XrJoint {
     /**
      * @function
      * @name XrJoint#getPosition
-     * @description Get the world space position of a joint
-     * @returns {Vec3} The world space position of a joint
+     * @description Get the world space position of a joint.
+     * @returns {Vec3} The world space position of a joint.
      */
     getPosition() {
         this._updateTransforms();
@@ -105,8 +105,8 @@ class XrJoint {
     /**
      * @function
      * @name XrJoint#getRotation
-     * @description Get the world space rotation of a joint
-     * @returns {Quat} The world space rotation of a joint
+     * @description Get the world space rotation of a joint.
+     * @returns {Quat} The world space rotation of a joint.
      */
     getRotation() {
         this._updateTransforms();

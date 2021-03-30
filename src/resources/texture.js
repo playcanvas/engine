@@ -49,8 +49,8 @@ class TextureParser {
      * @description Load the texture from the remote URL. When loaded (or failed),
      * use the callback to return an the raw resource data (or error).
      * @param {object} url - The URL of the resource to load.
-     * @param {string} url.load - The URL to use for loading the resource
-     * @param {string} url.original - The original URL useful for identifying the resource type
+     * @param {string} url.load - The URL to use for loading the resource.
+     * @param {string} url.original - The original URL useful for identifying the resource type.
      * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
@@ -67,7 +67,7 @@ class TextureParser {
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
-     * @param {GraphicsDevice} device - The graphics device
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
     /* eslint-disable jsdoc/require-returns-check */

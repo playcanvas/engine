@@ -7,11 +7,11 @@ import { AnimSnapshot } from './anim-snapshot.js';
  * @classdesc AnimClip wraps the running state of an animation track. It contains and update
  * the animation 'cursor' and performs looping logic.
  * @description Create a new animation clip.
- * @param {AnimTrack} track - the animation data.
- * @param {number} time - the initial time of the clip.
- * @param {number} speed - speed of the animation playback.
+ * @param {AnimTrack} track - The animation data.
+ * @param {number} time - The initial time of the clip.
+ * @param {number} speed - Speed of the animation playback.
  * @param {boolean} playing - true if the clip is playing and false otherwise.
- * @param {boolean} loop - whether the clip should loop.
+ * @param {boolean} loop - Whether the clip should loop.
  */
 // TODO: add configurable looping start/end times?
 class AnimClip {

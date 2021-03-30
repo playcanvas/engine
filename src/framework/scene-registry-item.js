@@ -6,7 +6,7 @@
  * @param {string} url - The url of the scene file.
  * @property {string} name - The name of the scene.
  * @property {string} url - The url of the scene file.
- * @property {boolean} loaded - Returns true if the scene data is still being loaded
+ * @property {boolean} loaded - Returns true if the scene data is still being loaded.
  */
 class SceneRegistryItem {
     constructor(name, url) {

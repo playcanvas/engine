@@ -973,7 +973,7 @@ export const TEXTURETYPE_DEFAULT = 'default';
  * @constant
  * @name TEXTURETYPE_RGBM
  * @type {string}
- * @description Texture stores high dynamic range data in RGBM format
+ * @description Texture stores high dynamic range data in RGBM format.
  */
 export const TEXTURETYPE_RGBM = 'rgbm';
 
@@ -981,7 +981,7 @@ export const TEXTURETYPE_RGBM = 'rgbm';
  * @constant
  * @name TEXTURETYPE_RGBE
  * @type {string}
- * @description Texture stores high dynamic range data in RGBE format
+ * @description Texture stores high dynamic range data in RGBE format.
  */
 export const TEXTURETYPE_RGBE = 'rgbe';
 
