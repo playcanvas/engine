@@ -2077,9 +2077,9 @@ class GlbParser {
 
         // create skinInstance for each skin
         const skinInstances = [];
-        for (let s = 0; s < glb.skins.length; s++) {
-            const skinInstance = new SkinInstance(glb.skins[s]);
-            skinInstance.bones = glb.skins[s].bones;
+        for (const skin of glb.skins) {
+            const skinInstance = new SkinInstance(skin);
+            skinInstance.bones = skin.bones;
             skinInstances.push(skinInstance);
         }
 
