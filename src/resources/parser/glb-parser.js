@@ -2076,8 +2076,9 @@ class GlbParser {
         const model = new Model();
 
         // create skinInstance for each skin
-        let s, skinInstances = [];
-        for (s = 0; s < glb.skins.length; s++) {
+        let s;
+        const skinInstances = [];
+        for (let s = 0; s < glb.skins.length; s++) {
             const skinInstance = new SkinInstance(glb.skins[s]);
             skinInstance.bones = glb.skins[s].bones;
             skinInstances.push(skinInstance);
@@ -2090,8 +2091,8 @@ class GlbParser {
         } else {
             // create group node for all scenes
             model.graph = new GraphNode('SceneGroup');
-            for (s = 0; s < glb.scenes.length; s++) {
-                model.graph.addChild(glb.scenes[s]);
+            for (const scene of glb.scenes) {
+                model.graph.addChild(scene);
             }
         }
 
