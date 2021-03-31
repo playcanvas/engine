@@ -114,7 +114,11 @@ class GeometryVertexStream {
  *
  * ~~~javascript
  * var mesh = new pc.Mesh(device);
- * var positions = [0, 0, 0,     1, 0, 0,     1, 1, 0];
+ * var positions = [
+ *     0, 0, 0, // pos 1
+ *     1, 0, 0, // pos 2
+ *     1, 1, 0  // pos 3
+ * ];
  * mesh.setPositions(positions);
  * mesh.update();
  * ~~~
@@ -124,9 +128,22 @@ class GeometryVertexStream {
  *
  * ~~~javascript
  * var mesh = new pc.Mesh(device);
- * var positions = new Float32Array([0, 0, 0,     1, 0, 0,     1, 1, 0,      0, 1, 0]);
- * var uvs = new Float32Array([0, 0,     1, 0,     1, 1,     0, 1]);
- * var indices = [0, 1, 2,    0, 2, 3];
+ * var positions = new Float32Array([
+ *     0, 0, 0, // pos 1
+ *     1, 0, 0, // pos 2
+ *     1, 1, 0, // pos 3
+ *     0, 1, 0  // pos 4
+ * ]);
+ * var uvs = new Float32Array([
+ *     0, 0, // uv 1
+ *     1, 0, // uv 2
+ *     1, 1, // uv 3
+ *     0, 1  // uv 4
+ * ]);
+ * var indices = [
+ *     0, 1, 2, // triangle 1
+ *     0, 2, 3  // triangle 2
+ * ];
  * mesh.setPositions(positions);
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
