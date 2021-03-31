@@ -904,7 +904,7 @@ class TextElement {
 
                 var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
                 var isCJK = CJK_CHAR.test(char);
-                var isNextCJK = (nextchar !== null) ? CJK_CHAR.test(nextchar) : false;
+                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar);
                 if (isWordBoundary || isNextCJK || (isCJK && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)))) { // char is space, tab, or dash OR CJK character
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
