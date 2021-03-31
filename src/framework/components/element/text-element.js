@@ -902,10 +902,10 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
-                var isCJK = CJK_CHAR.test(char);
-                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar);
-                if (isWordBoundary || isNextCJK || (isCJK && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)))) { // char is space, tab, or dash OR CJK character
+                const isWordBoundary = WORD_BOUNDARY_CHAR.test(char); // char is space, tab, or dash 
+                const isCJKBoundary = CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)); // char is CJK character boundary
+                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar); // next character is CJK character 
+                if (isWordBoundary || isCJKBoundary || isNextCJK) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
