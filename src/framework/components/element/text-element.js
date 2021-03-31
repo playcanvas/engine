@@ -902,9 +902,9 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                const isWordBoundary = WORD_BOUNDARY_CHAR.test(char); // char is space, tab, or dash 
+                const isWordBoundary = WORD_BOUNDARY_CHAR.test(char); // char is space, tab, or dash
                 const isCJKBoundary = CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)); // char is CJK character boundary
-                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar); // next character is CJK character 
+                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar); // next character is CJK character
                 if (isWordBoundary || isCJKBoundary || isNextCJK) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
