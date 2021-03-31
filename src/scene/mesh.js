@@ -102,18 +102,17 @@ class GeometryVertexStream {
  * @classdesc A graphical primitive. The mesh is defined by a {@link VertexBuffer} and an optional
  * {@link IndexBuffer}. It also contains a primitive definition which controls the type of the
  * primitive and the portion of the vertex or index buffer to use.
- * ***
- * Mesh APIs
- * =========
+ *
+ * ## Mesh APIs
  * There are two ways a mesh can be generated or updated.
  *
- * Simple Mesh API
- * ---------
+ * ### Simple Mesh API
  * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs} that provide a simple way to provide
  * vertex and index data for the Mesh, and hiding the complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
  *
  * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
- * ~~~
+ *
+ * ~~~javascript
  * var mesh = new pc.Mesh(device);
  * var positions = [0, 0, 0,     1, 0, 0,     1, 1, 0];
  * mesh.setPositions(positions);
@@ -122,7 +121,8 @@ class GeometryVertexStream {
  *
  * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
  * Float32Array is used for positions and uvs.
- * ~~~
+ *
+ * ~~~javascript
  * var mesh = new pc.Mesh(device);
  * var positions = new Float32Array([0, 0, 0,     1, 0, 0,     1, 1, 0,      0, 1, 0]);
  * var uvs = new Float32Array([0, 0,     1, 0,     1, 1,     0, 1]);
@@ -144,11 +144,9 @@ class GeometryVertexStream {
  * * {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
  * * {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
- * Update Vertex and Index buffers.
- * ---------
+ * ### Update Vertex and Index buffers.
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
  * See {@link VertexBuffer}, {@link IndexBuffer} and {@link VertexFormat} for details.
- * ***
  * @description Create a new mesh.
  * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
  * from the {@link Application}.
