@@ -727,6 +727,22 @@ class StandardMaterial extends Material {
 
         this.dirtyShader = false;
     }
+
+    /**
+     * @function
+     * @name StandardMaterial#destroy
+     * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
+     */
+    destroy() {
+        // unbind (texture) asset references
+        for (const asset in this._assetReferences) {
+            this._assetReferences[asset]._unbind();
+        }
+        this._assetReferences = null;
+        this._validator = null;
+
+        super.destroy();
+    }
 }
 
 function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMode) {
