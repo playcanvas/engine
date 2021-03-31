@@ -47,6 +47,7 @@ const LINE_BREAK_CHAR = /^[\r\n]$/;
 const WHITESPACE_CHAR = /^[ \t]$/;
 const WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
 const CJK_CHAR = /^[\u4E00-\u9FFF]$/;
+const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 const CONTROL_CHARS = [
@@ -626,7 +627,7 @@ class TextElement {
         var fontMaxY = 0;
         var scale = 1;
 
-        var char, data, i, j, quad;
+        var char, data, i, j, quad, nextchar;
 
         function breakLine(symbols, lineBreakIndex, lineBreakX) {
             self._lineWidths.push(Math.abs(lineBreakX));
@@ -715,6 +716,7 @@ class TextElement {
             // in order to wrap lines in the correct order
             for (i = 0; i < l; i++) {
                 char = this._symbols[i];
+                nextchar = ((i + 1) >= l) ? null : this._symbols[i + 1];
 
                 // handle line break
                 const isLineBreak = LINE_BREAK_CHAR.test(char);
@@ -902,7 +904,8 @@ class TextElement {
 
                 var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
                 var isCJK = CJK_CHAR.test(char);
-                if (isWordBoundary || isCJK) { // char is space, tab, or dash OR CJK
+                var isNextCJK = nextchar ? CJK_CHAR.test(nextchar) : false;
+                if (isWordBoundary || isNextCJK || (isCJK && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)))) { // char is space, tab, or dash OR CJK and next character isn't a space, tab or dash
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
