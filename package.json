@@ -51,7 +51,7 @@
     "README-zh.md"
   ],
   "devDependencies": {
-    "@babel/core": "7.13.13",
+    "@babel/core": "7.13.14",
     "@babel/plugin-proposal-class-properties": "7.13.0",
     "@babel/preset-env": "7.13.12",
     "@playcanvas/eslint-config": "1.0.8",
