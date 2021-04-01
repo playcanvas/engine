@@ -40,8 +40,8 @@ const KNOWN_FORMATS = {
 function createContainer(pixelFormat, buffer, byteOffset, byteSize) {
     return (pixelFormat === PIXELFORMAT_111110F) ?
         new Uint32Array(buffer, byteOffset, byteSize / 4) :
-            new Uint8Array(buffer, byteOffset, byteSize);
-};
+        new Uint8Array(buffer, byteOffset, byteSize);
+}
 
 /**
  * @private
