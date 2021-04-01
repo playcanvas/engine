@@ -60,18 +60,19 @@
 
         // cluster structure
         var worldLayer = app.scene.layers.getLayerByName("World");
-        var bounds = new pc.BoundingBox(new pc.Vec3(0, 50, 0), new pc.Vec3(60, 60, 60));
-        var cells = new pc.Vec3(60, 60, 60);
-        worldLayer.clusters = new pc.WorldClusters(app.graphicsDevice, bounds, cells, 28);
+//        var cells = new pc.Vec3(60, 60, 60);
+        var cells = new pc.Vec3(10, 10, 10);
+        worldLayer.clusters = new pc.WorldClusters(app.graphicsDevice, cells, 16);
 
 
         // lights
-        var count = 254;
+//        var count = 254;
+        var count = 20;
         var intensity = 2;
         var lightList = [];
         for (i = 0; i < count; i++) {
             var lightPoint = new pc.Entity();
-            var color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+            var color = new pc.Color(intensity * Math.random() * 0.6, intensity * Math.random() * 0.6, intensity * Math.random() * 0.6, 1);
             lightPoint.addComponent("light", {
                 castShadows: false,
                 color: color,
@@ -115,8 +116,10 @@
 
             // debug textures
             app.renderTexture(0.7, -0.3, 0.5, 0.5, worldLayer.clusters.texture);
-            app.renderTexture(0.8, 0.7, 0.1, 0.5, worldLayer.clusters.lightsTextureFloat);
-            app.renderTexture(0.93, 0.7, 0.05, 0.5, worldLayer.clusters.lightsTexture8);
+            app.renderTexture(0.9, 0.7, 0.2, 0.5, worldLayer.clusters.lightsTexture8);
+            if (worldLayer.clusters.lightsTextureFloat) {
+                app.renderTexture(0.7, 0.7, 0.1, 0.5, worldLayer.clusters.lightsTextureFloat);
+            }
 
             // move lights
             lightList.forEach(function(light, i) {
@@ -124,6 +127,12 @@
                 var angle = i / count * Math.PI * 2;
                 var y = Math.sin(time * 0.3 + 10 * angle) * 55 + 50;
                 light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
+
+                if (worldLayer.clusters.boundsMin) {
+                    var dynamicBounds = new pc.BoundingBox();
+                    dynamicBounds.setMinMax(worldLayer.clusters.boundsMin, worldLayer.clusters.boundsMax);
+                    app.renderWireBoundingBox(dynamicBounds, pc.Color.YELLOW);
+                }
             });
         });
 

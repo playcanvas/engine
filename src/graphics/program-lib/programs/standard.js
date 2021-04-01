@@ -21,6 +21,7 @@ import {
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
+import { WorldClusters } from '../../../scene/world-clusters.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -456,24 +457,95 @@ var standard = {
         return `
 
         // not valid light
-        if (indices.${component} <= 0.0)
+        if (indices.${component} <= 0.0) {
+
             break;
 
-        {
+        } else {
+
             // read point light properties
-            float lightV = (indices.${component} + 0.5) * lightsTextureInvSize.y;
-            vec4 lightPosRange = texture2D(lightsTextureFloat, vec2(0.5 * lightsTextureInvSize.x, lightV));
-            vec3 lightColor =    texture2D(lightsTextureFloat, vec2(1.5 * lightsTextureInvSize.x, lightV)).rgb;
+            float lightV = (indices.${component} + 0.5) * lightsTextureInvSize.w;
+
+            #ifdef CLUSTER_TEXTURE_FLOAT
+
+                vec4 lightPosRange = texture2D(lightsTextureFloat, vec2(0.5 * lightsTextureInvSize.x, lightV));
+                vec3 lightPos = lightPosRange.xyz;
+                float range = lightPosRange.w;
+                vec3 lightColor = texture2D(lightsTextureFloat, vec2(1.5 * lightsTextureInvSize.x, lightV)).rgb;
+
+            #else   // 8bit
+
+                vec4 encPosX = texture2D(lightsTexture8, vec2(1.5 * lightsTextureInvSize.z, lightV));
+                vec4 encPosY = texture2D(lightsTexture8, vec2(2.5 * lightsTextureInvSize.z, lightV));
+                vec4 encPosZ = texture2D(lightsTexture8, vec2(3.5 * lightsTextureInvSize.z, lightV));
+                vec4 encRange = texture2D(lightsTexture8, vec2(4.5 * lightsTextureInvSize.z, lightV));
+
+                vec3 lightPos = vec3(
+                    DecodeClusterFloatRGBA(encPosX) * hack1.x - hack1.y,
+                    DecodeClusterFloatRGBA(encPosY) * hack1.x - hack1.y,
+                    DecodeClusterFloatRGBA(encPosZ) * hack1.x - hack1.y
+                );
+                float range = DecodeClusterFloatRGBA(encRange) *           1000.0;
+
+                vec3 lightColor = vec3(0.8, 1.8, 1.8);
+
+            #endif
 
             // evaluate point light
-            getLightDirPoint(lightPosRange.xyz);
-            dAtten = getFalloffLinear(lightPosRange.w);
+            getLightDirPoint(lightPos);
+            dAtten = getFalloffLinear(range);
             if (dAtten > 0.00001) {
                 dAtten *= getLightDiffuse();
                 dDiffuseLight += dAtten * lightColor;
             }
         }
         `;
+    },
+
+    _addClusteredLighting: function () {
+        let code = `
+
+        // world space position to 3d integer cell cordinates in the cluster structure
+        vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
+
+        // no lighting when cell coordinate is out of range
+        if (any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax))) {
+            return;
+        }
+
+        // cell index (mapping from 3d cell coordinates to linear memory)
+        float cellIndex = dot(clusterCellsDot, cellCoords);
+
+        // convert cell index to uv coordinates
+        float clusterV = floor(cellIndex * clusterTextureSize.y);
+        float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+        clusterV = (clusterV + 0.5) * clusterTextureSize.z;
+        `;
+
+        code += `
+        // loop over maximum possible number of supported light cells
+        const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+        for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+
+            vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
+            vec4 indices = lightIndices * 255.0;
+        `;
+
+        // evaluate 4 referenced lights
+        code += this._addLightCodeClustered("x");
+        code += this._addLightCodeClustered("y");
+        code += this._addLightCodeClustered("z");
+        code += this._addLightCodeClustered("w");
+
+        code += `
+            // end of the cell array
+            if (lightCellIndex > clusterPixelsPerCell) {
+                break;
+            }
+        }
+        `;
+
+        return code;
     },
 
     createShaderDefinition: function (device, options) {
@@ -1051,10 +1123,12 @@ var standard = {
         }
 
 
-        var useCluster = true;
+        const useCluster = true;
+        const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
 
         if (useCluster) {
             code += `
+            #define CLUSTER_TEXTURE_${clusterTextureFormat}
             uniform sampler2D clusterWorldTexture;
             uniform sampler2D lightsTexture8;
             uniform highp sampler2D lightsTextureFloat;
@@ -1065,6 +1139,13 @@ var standard = {
             uniform vec3 clusterTextureSize;
             uniform vec3 clusterBoundsMin;
             uniform vec3 clusterCellsDot;
+            uniform vec3 clusterCellsMax;
+
+            uniform vec4 hack1;
+
+            float DecodeClusterFloatRGBA(vec4 rgba) {
+                return dot(rgba, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+            }
             `;
         }
 
@@ -1577,47 +1658,13 @@ var standard = {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
-
-                code += `
-
-                // world space position to 3d integer cell cordinates in the cluster structure
-                vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
-
-                // cell index (mapping from 3d cell coordinates to linear memory)
-                float cellIndex = dot(clusterCellsDot, cellCoords);
-
-                // convert cell index to uv coordinates
-                float clusterV = floor(cellIndex * clusterTextureSize.y);
-                float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
-                clusterV = (clusterV + 0.5) * clusterTextureSize.z;
-                `;
-
-                code += `
-                // loop over maximum possible number of supported light cells
-                float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
-                for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
-
-                    vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
-                    vec4 indices = lightIndices * 255.0;
-                `;
-
-                // evaluate 4 referenced lights
-                code += this._addLightCodeClustered("x");
-                code += this._addLightCodeClustered("y");
-                code += this._addLightCodeClustered("z");
-                code += this._addLightCodeClustered("w");
-
-                code += `
-                    // end of the cell array
-                    if (lightCellIndex > clusterPixelsPerCell)
-                        break;
-                }
-                `;
+                code += this._addClusteredLighting();
             }
 
             for (i = 0; i < options.lights.length; i++) {
 
                 // if clustered lights are used, skip normal lights
+                // I added it as a break in the loop to avoid indenting the whole loop within if block for now.
                 if (useCluster) {
                     break;
                 }

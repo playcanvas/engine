@@ -3014,6 +3014,8 @@ class ForwardRenderer {
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
         this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
 
+        let updateClusters = true;
+
         // Rendering
         let sortTime, drawTime;
         for (i = 0; i < renderActions.length; i++) {
@@ -3090,7 +3092,10 @@ class ForwardRenderer {
                 // #endif
 
 
-                layer._updateClusters();
+                if (updateClusters) {
+                    updateClusters = false;
+                    layer._updateClusters();
+                }
 
 
                 layer._sortVisible(transparent, camera.camera.node, cameraPass);

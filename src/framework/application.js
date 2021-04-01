@@ -38,6 +38,7 @@ import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
+import { WorldClusters } from '../scene/world-clusters.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -443,6 +444,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
+        WorldClusters.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
@@ -2034,6 +2036,12 @@ class Application extends EventHandler {
     renderWireCube(matrix, color, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderWireCube(matrix, color, options);
+    }
+
+    //// probably just take min and max instead of AABB
+    renderWireBoundingBox(boundingBox, color, options = this._getDefaultImmediateOptions(true)) {
+        this._initImmediate();
+        this._immediateData.renderWireBoundingBox(boundingBox, color, options);
     }
 
     // // Draw lines forming sphere at this frame
