@@ -54,6 +54,7 @@ class XrInputSource extends EventHandler {
 
         this._ray = new Ray();
         this._rayLocal = new Ray();
+        this._grip = false;
         this._gripSpace = xrInputSource.gripSpace;
         this._targetRaySpace = xrInputSource.targetRaySpace;
         this._hand = null;
@@ -199,6 +200,7 @@ class XrInputSource extends EventHandler {
             if (this._gripSpace) {
                 var gripPose = frame.getPose(this._gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
+                    this._grip = true;
                     this._dirtyLocal = true;
                     this._localPositionLast.copy(this._localPosition);
                     this._localPosition.copy(gripPose.transform.position);
@@ -435,7 +437,7 @@ class XrInputSource extends EventHandler {
     }
 
     get grip() {
-        return !! this._gripSpace;
+        return this._grip;
     }
 
     get hand() {
