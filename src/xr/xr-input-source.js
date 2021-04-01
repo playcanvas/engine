@@ -311,6 +311,12 @@ class XrInputSource extends EventHandler {
         return this._localRotation;
     }
 
+    /**
+     * @function
+     * @name XrInputSource#getLinearVelocity
+     * @description Get the linear velocity (units per second) of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     * @returns {Vec3|null} The world space linear velocity of handheld input source.
+     */
     getLinearVelocity() {
         if (! this._velocitiesAvailable)
             return null;
