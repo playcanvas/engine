@@ -426,7 +426,7 @@ class XrManager extends EventHandler {
         });
     }
 
-    update(frame) {
+    update(frame, dt) {
         if (! this._session) return;
 
         var i, view, viewRaw, layer, viewport;
@@ -502,7 +502,7 @@ class XrManager extends EventHandler {
         this._camera.camera._node.setLocalPosition(this._localPosition);
         this._camera.camera._node.setLocalRotation(this._localRotation);
 
-        this.input.update(frame);
+        this.input.update(frame, dt);
 
         if (this._type === XRTYPE_AR) {
             if (this.hitTest.supported)

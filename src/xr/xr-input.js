@@ -20,6 +20,7 @@ class XrInput extends EventHandler {
         this.manager = manager;
         this._session = null;
         this._inputSources = [];
+        this.velocitiesSupported = (window.XRPose && XRPose.prototype.hasOwnProperty('linearVelocity')) || false;
 
         this._onInputSourcesChangeEvt = function (evt) {
             self._onInputSourcesChange(evt);
@@ -233,9 +234,9 @@ class XrInput extends EventHandler {
         }
     }
 
-    update(frame) {
+    update(frame, dt) {
         for (var i = 0; i < this._inputSources.length; i++) {
-            this._inputSources[i].update(frame);
+            this._inputSources[i].update(frame, dt);
         }
     }
 

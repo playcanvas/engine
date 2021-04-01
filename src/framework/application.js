@@ -2298,7 +2298,7 @@ var makeTick = function (_app) {
         application.fire("frameupdate", ms);
 
         if (frame) {
-            application.xr.update(frame);
+            application.xr.update(frame, dt);
             application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;

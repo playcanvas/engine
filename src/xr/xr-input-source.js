@@ -54,19 +54,30 @@ class XrInputSource extends EventHandler {
 
         this._ray = new Ray();
         this._rayLocal = new Ray();
-        this._grip = false;
+        this._gripSpace = xrInputSource.gripSpace;
+        this._targetRaySpace = xrInputSource.targetRaySpace;
         this._hand = null;
+        this._velocitiesAvailable = false;
 
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
 
-        this._localTransform = null;
-        this._worldTransform = null;
         this._position = new Vec3();
         this._rotation = new Quat();
+        this._dirtyLocal = true;
         this._localPosition = null;
         this._localRotation = null;
-        this._dirtyLocal = true;
+        this._localTransform = null;
+        this._worldTransform = null;
+
+        if (this._gripSpace) {
+            this._localPositionLast = new Vec3();
+            this._localPosition = new Vec3();
+            this._localRotation = new Quat();
+            this._localTransform = new Mat4();
+            this._worldTransform = new Mat4();
+            this._linearVelocity = new Vec3();
+        }
 
         this._selecting = false;
         this._squeezing = false;
@@ -179,32 +190,33 @@ class XrInputSource extends EventHandler {
      * });
      */
 
-    update(frame) {
+    update(frame, dt) {
         // hand
         if (this._hand) {
             this._hand.update(frame);
         } else {
             // grip
-            if (this._xrInputSource.gripSpace) {
-                var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+            if (this._gripSpace) {
+                var gripPose = frame.getPose(this._gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
-                    if (! this._grip) {
-                        this._grip = true;
-
-                        this._localTransform = new Mat4();
-                        this._worldTransform = new Mat4();
-
-                        this._localPosition = new Vec3();
-                        this._localRotation = new Quat();
-                    }
                     this._dirtyLocal = true;
+                    this._localPositionLast.copy(this._localPosition);
                     this._localPosition.copy(gripPose.transform.position);
                     this._localRotation.copy(gripPose.transform.orientation);
+
+                    this._velocitiesAvailable = true;
+                    if (this._manager.input.velocitiesSupported && gripPose.linearVelocity) {
+                        this._linearVelocity.copy(gripPose.linearVelocity);
+                    } else {
+                        this._linearVelocity.sub2(this._localPosition, this._localPositionLast).divScalar(dt);
+                    }
+                } else {
+                    this._velocitiesAvailable = false;
                 }
             }
 
             // ray
-            var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
+            var targetRayPose = frame.getPose(this._targetRaySpace, this._manager._referenceSpace);
             if (targetRayPose) {
                 this._dirtyRay = true;
                 this._rayLocal.origin.copy(targetRayPose.transform.position);
@@ -297,6 +309,13 @@ class XrInputSource extends EventHandler {
      */
     getLocalRotation() {
         return this._localRotation;
+    }
+
+    getLinearVelocity() {
+        if (! this._velocitiesAvailable)
+            return null;
+
+        return this._linearVelocity;
     }
 
     /**
@@ -410,7 +429,7 @@ class XrInputSource extends EventHandler {
     }
 
     get grip() {
-        return this._grip;
+        return !! this._gripSpace;
     }
 
     get hand() {
