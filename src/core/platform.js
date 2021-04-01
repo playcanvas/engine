@@ -19,12 +19,15 @@ if (typeof navigator !== 'undefined') {
         xbox = true;
 
     if (/(windows phone|iemobile|wpdesktop)/i.test(ua)) {
+        desktop = false;
         mobile = true;
         windows = true;
     } else if (/android/i.test(ua)) {
+        desktop = false;
         mobile = true;
         android = true;
     } else if (/ip([ao]d|hone)/i.test(ua)) {
+        desktop = false;
         mobile = true;
         ios = true;
     }
