@@ -502,7 +502,7 @@ class XrManager extends EventHandler {
         this._camera.camera._node.setLocalPosition(this._localPosition);
         this._camera.camera._node.setLocalRotation(this._localRotation);
 
-        this.input.update(frame, dt);
+        this.input.update(frame);
 
         if (this._type === XRTYPE_AR) {
             if (this.hitTest.supported)

@@ -59,9 +59,12 @@ class XrInputSource extends EventHandler {
         this._targetRaySpace = xrInputSource.targetRaySpace;
         this._hand = null;
         this._velocitiesAvailable = false;
+        this._velocitiesTimestamp = Date.now();
 
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
+
+        this.vec3A = new Vec3();
 
         this._position = new Vec3();
         this._rotation = new Quat();
@@ -78,6 +81,7 @@ class XrInputSource extends EventHandler {
             this._localTransform = new Mat4();
             this._worldTransform = new Mat4();
             this._linearVelocity = new Vec3();
+            this._linearVelocity2 = new Vec3();
         }
 
         this._selecting = false;
@@ -191,7 +195,7 @@ class XrInputSource extends EventHandler {
      * });
      */
 
-    update(frame, dt) {
+    update(frame) {
         // hand
         if (this._hand) {
             this._hand.update(frame);
@@ -202,6 +206,11 @@ class XrInputSource extends EventHandler {
                 if (gripPose) {
                     this._grip = true;
                     this._dirtyLocal = true;
+
+                    const now = Date.now();
+                    const dt = (now - this._velocitiesTimestamp) / 1000;
+                    this._velocitiesTimestamp = now;
+
                     this._localPositionLast.copy(this._localPosition);
                     this._localPosition.copy(gripPose.transform.position);
                     this._localRotation.copy(gripPose.transform.orientation);
@@ -209,8 +218,9 @@ class XrInputSource extends EventHandler {
                     this._velocitiesAvailable = true;
                     if (this._manager.input.velocitiesSupported && gripPose.linearVelocity) {
                         this._linearVelocity.copy(gripPose.linearVelocity);
-                    } else {
-                        this._linearVelocity.sub2(this._localPosition, this._localPositionLast).divScalar(dt);
+                    } else if (dt > 0) {
+                        this.vec3A.sub2(this._localPosition, this._localPositionLast).divScalar(dt);
+                        this._linearVelocity.lerp(this._linearVelocity, this.vec3A, 0.15);
                     }
                 } else {
                     this._velocitiesAvailable = false;

@@ -234,9 +234,9 @@ class XrInput extends EventHandler {
         }
     }
 
-    update(frame, dt) {
+    update(frame) {
         for (var i = 0; i < this._inputSources.length; i++) {
-            this._inputSources[i].update(frame, dt);
+            this._inputSources[i].update(frame);
         }
     }
 
