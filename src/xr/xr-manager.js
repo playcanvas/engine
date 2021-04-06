@@ -426,7 +426,7 @@ class XrManager extends EventHandler {
         });
     }
 
-    update(frame, dt) {
+    update(frame) {
         if (! this._session) return;
 
         var i, view, viewRaw, layer, viewport;

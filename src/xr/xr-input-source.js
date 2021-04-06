@@ -8,6 +8,8 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
+import { now } from '../core/time.js';
+
 var quat = new Quat();
 var ids = 0;
 
@@ -59,7 +61,7 @@ class XrInputSource extends EventHandler {
         this._targetRaySpace = xrInputSource.targetRaySpace;
         this._hand = null;
         this._velocitiesAvailable = false;
-        this._velocitiesTimestamp = Date.now();
+        this._velocitiesTimestamp = now();
 
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
@@ -207,7 +209,7 @@ class XrInputSource extends EventHandler {
                     this._grip = true;
                     this._dirtyLocal = true;
 
-                    const now = Date.now();
+                    const now = now();
                     const dt = (now - this._velocitiesTimestamp) / 1000;
                     this._velocitiesTimestamp = now;
 
