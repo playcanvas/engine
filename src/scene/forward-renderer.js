@@ -3094,7 +3094,7 @@ class ForwardRenderer {
 
                 if (updateClusters) {
                     updateClusters = false;
-                    layer._updateClusters();
+                    layer._updateClusters(this.scene.gammaCorrection);
                 }
 
 

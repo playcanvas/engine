@@ -301,10 +301,10 @@ class Layer {
         this._clearColor.copy(val);
     }
 
-    _updateClusters = function () {
+    _updateClusters = function (gammaCorrection) {
 
         if (this.clusters) {
-            this.clusters.update(this._lights);
+            this.clusters.update(this._lights, gammaCorrection);
         }
     }
 

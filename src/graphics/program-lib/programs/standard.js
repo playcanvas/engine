@@ -466,28 +466,39 @@ var standard = {
             // read point light properties
             float lightV = (indices.${component} + 0.5) * lightsTextureInvSize.w;
 
+            // shared data from 8bit texture
+            vec4 colorA = texture2D(lightsTexture8, vec2(1.5 * lightsTextureInvSize.z, lightV));
+            vec4 colorB = texture2D(lightsTexture8, vec2(2.5 * lightsTextureInvSize.z, lightV));
+            vec3 lightColor = vec3(
+                DecodeClusterFloat2(colorA.xy),
+                DecodeClusterFloat2(colorA.zw),
+                DecodeClusterFloat2(colorB.xy)
+            ) * clusterCompressionLimit0.y;
+
+
+
+
+
             #ifdef CLUSTER_TEXTURE_FLOAT
 
                 vec4 lightPosRange = texture2D(lightsTextureFloat, vec2(0.5 * lightsTextureInvSize.x, lightV));
                 vec3 lightPos = lightPosRange.xyz;
                 float range = lightPosRange.w;
-                vec3 lightColor = texture2D(lightsTextureFloat, vec2(1.5 * lightsTextureInvSize.x, lightV)).rgb;
 
             #else   // 8bit
 
-                vec4 encPosX = texture2D(lightsTexture8, vec2(1.5 * lightsTextureInvSize.z, lightV));
-                vec4 encPosY = texture2D(lightsTexture8, vec2(2.5 * lightsTextureInvSize.z, lightV));
-                vec4 encPosZ = texture2D(lightsTexture8, vec2(3.5 * lightsTextureInvSize.z, lightV));
-                vec4 encRange = texture2D(lightsTexture8, vec2(4.5 * lightsTextureInvSize.z, lightV));
+                vec4 encPosX = texture2D(lightsTexture8, vec2(3.5 * lightsTextureInvSize.z, lightV));
+                vec4 encPosY = texture2D(lightsTexture8, vec2(4.5 * lightsTextureInvSize.z, lightV));
+                vec4 encPosZ = texture2D(lightsTexture8, vec2(5.5 * lightsTextureInvSize.z, lightV));
 
                 vec3 lightPos = vec3(
-                    DecodeClusterFloatRGBA(encPosX) * hack1.x - hack1.y,
-                    DecodeClusterFloatRGBA(encPosY) * hack1.x - hack1.y,
-                    DecodeClusterFloatRGBA(encPosZ) * hack1.x - hack1.y
+                    DecodeClusterFloat4(encPosX) * hack1.x - hack1.y,
+                    DecodeClusterFloat4(encPosY) * hack1.x - hack1.y,
+                    DecodeClusterFloat4(encPosZ) * hack1.x - hack1.y
                 );
-                float range = DecodeClusterFloatRGBA(encRange) *           1000.0;
 
-                vec3 lightColor = vec3(0.8, 1.8, 1.8);
+                vec4 encRange = texture2D(lightsTexture8, vec2(6.5 * lightsTextureInvSize.z, lightV));
+                float range = DecodeClusterFloat4(encRange) * clusterCompressionLimit0.x;
 
             #endif
 
@@ -1140,11 +1151,16 @@ var standard = {
             uniform vec3 clusterBoundsMin;
             uniform vec3 clusterCellsDot;
             uniform vec3 clusterCellsMax;
+            uniform vec2 clusterCompressionLimit0;
 
             uniform vec4 hack1;
 
-            float DecodeClusterFloatRGBA(vec4 rgba) {
-                return dot(rgba, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+            float DecodeClusterFloat4(vec4 data) {
+                return dot(data, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+            }
+
+            float DecodeClusterFloat2(vec2 data) {
+                return dot(data, vec2(1.0, 1.0 / 255.0));
             }
             `;
         }

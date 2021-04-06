@@ -68,11 +68,11 @@
         // lights
 //        var count = 254;
         var count = 20;
-        var intensity = 2;
+        var intensity = 1.6;
         var lightList = [];
         for (i = 0; i < count; i++) {
             var lightPoint = new pc.Entity();
-            var color = new pc.Color(intensity * Math.random() * 0.6, intensity * Math.random() * 0.6, intensity * Math.random() * 0.6, 1);
+            var color = new pc.Color(intensity * Math.random() * 0.9, intensity * Math.random() * 0.9, intensity * Math.random() * 0.9, 1);
             lightPoint.addComponent("light", {
                 castShadows: false,
                 color: color,

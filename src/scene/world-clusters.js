@@ -6,20 +6,20 @@ import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL } from './constants.js';
 
-let boundsSize = new Vec3();
-let boundsMin = new Vec3();
-let boundsLimit = new Vec3();
-let min3 = new Vec3();
-let max3 = new Vec3();
-let rad3 = new Vec3();
+let tempVec3 = new Vec3();
+let tempMin3 = new Vec3();
+let tempMax3 = new Vec3();
 let tempSphere = new BoundingSphere();
+
+const epsilon = 0.000001;
 const oneDiv255 = 1 / 255;
 
 const ddd = 500;
 
 // packs a float value in [0..1) range to 4 bytes and stores them in an array with start offset
 // based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
-// Note: calls to Math.round are only needed on iOS, precision is somehow really bad without it
+// Note: calls to Math.round are only needed on iOS, precision is somehow really bad without it,
+// looks like an issue with their implementation of Uint8ClampedArray
 function packFloatTo4Bytes(value, array, offset) {
     const enc1 = (255.0 * value) % 1;
     const enc2 = (65025.0 * value) % 1;
@@ -29,6 +29,14 @@ function packFloatTo4Bytes(value, array, offset) {
     array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
     array[offset + 2] = Math.round((enc2 - oneDiv255 * enc3) * 255);
     array[offset + 3] = Math.round(enc3 * 255);
+}
+
+function packFloatTo2Bytes(value, array, offset) {
+    const enc1 = (255.0 * value) % 1;
+    const enc2 = (65025.0 * value) % 1;
+
+    array[offset + 0] = Math.round(((value % 1) - oneDiv255 * enc1) * 255);
+    array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
 }
 
 class WorldClusters {
@@ -53,6 +61,9 @@ class WorldClusters {
         } else {
             WorldClusters.lightTextureFormat = WorldClusters.FORMAT_8BIT;
         }
+
+
+        WorldClusters.lightTextureFormat = WorldClusters.FORMAT_8BIT;
     }
 
     constructor(device, cells, maxCellLightCount) {
@@ -61,9 +72,19 @@ class WorldClusters {
         // bounds of all lights
         this._bounds = new BoundingBox();
 
+        // bounds of all light volumes (volume covered by the clusters)
+        this.boundsMin = new Vec3();
+        this.boundsMax = new Vec3();
+        this.boundsDelta = new Vec3();
+
         // number of cells along 3 axes
-        this._cells = new Vec3();
+        this._cells = new Vec3();       // number of cells
+        this._cellsLimit = new Vec3();   // number of cells minus one
         this.cells = cells;
+
+        // limits on some light properties, used for compression to 8bit texture
+        this._maxAttenuation = 0;
+        this._maxColorValue = 0;
 
         // internal list of lights
         this._usedLights = [];
@@ -92,6 +113,10 @@ class WorldClusters {
         this._clusterCellsMaxId = device.scope.resolve("clusterCellsMax");
         this._clusterCellsMaxData = new Float32Array(3);
 
+        // compression limit 0
+        this._clusterCompressionLimit0Id = device.scope.resolve("clusterCompressionLimit0");
+        this._clusterCompressionLimit0Data = new Float32Array(2);
+
         this.initLightsTexture();
     }
 
@@ -107,6 +132,7 @@ class WorldClusters {
 
     set cells(value) {
         this._cells.copy(value);
+        this._cellsLimit.copy(value).sub(Vec3.ONE);
         this._cellsDirty = true;
     }
 
@@ -132,26 +158,28 @@ class WorldClusters {
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;
 
-        let pixelsPerLight8;
-        let pixelsPerLightFloat;
+        // shared 8bit texture pixels:
+        // 0: lightType, -, -, -
+        // 1: color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
+        // 2: color.b, color.b, -, -
+        let pixelsPerLight8 = 3;
+        let pixelsPerLightFloat = 0;
 
         // float texture format
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
             pixelsPerLight8 = 1;
-            pixelsPerLightFloat = 2;
+            pixelsPerLightFloat = 1;
 
         } else { // 8bit texture
 
             // each line is a pixel
-            //  0:  lightType, -, -, -
-            //  1:  pos.x
-            //  2:  pox.y
-            //  3:  pos.z
-            //  4:  attenuationEnd
+            //  3:  pos.x
+            //  4:  pox.y
+            //  5:  pos.z
+            //  6:  attenuationEnd
 
-            pixelsPerLight8 = 5;
-            pixelsPerLightFloat = 0;
+            pixelsPerLight8 = 7;
         }
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
@@ -180,18 +208,26 @@ class WorldClusters {
     }
 
     // fill up both float and 8bit texture data with light properties
-    addLightData(light, lightIndex) {
+    addLightData(light, lightIndex, gammaCorrection) {
 
-        // 8bit texture
+        // data always stored in 8bit texture
         const data8 = this.lights8;
         const data8Index = lightIndex * this.lightsTexture8.width * 4;
 
         // light type
         data8[data8Index + 0] = Math.random() * 255;
 
-        const dataFloat = this.lightsFloat;
+        // light color
+        const invMaxColorValue = 1.0 / this._maxColorValue;
+        const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
+        packFloatTo2Bytes(color[0] * invMaxColorValue, data8, data8Index + 4);
+        packFloatTo2Bytes(color[1] * invMaxColorValue, data8, data8Index + 6);
+        packFloatTo2Bytes(color[2] * invMaxColorValue, data8, data8Index + 8);
+
+        // high precision data stored using float texture
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
+            const dataFloat = this.lightsFloat;
             const dataFloatIndex = lightIndex * this.lightsTextureFloat.width * 4;
 
             // pos / range
@@ -201,14 +237,7 @@ class WorldClusters {
             dataFloat[dataFloatIndex + 2] = pos.z;
             dataFloat[dataFloatIndex + 3] = light.attenuationEnd;
 
-            // color
-            // TODO: needs to use this: scene.gammaCorrection ? omni._linearFinalColor : omni._finalColor
-            dataFloat[dataFloatIndex + 4] = light._color.r;
-            dataFloat[dataFloatIndex + 5] = light._color.g;
-            dataFloat[dataFloatIndex + 6] = light._color.b;
-            dataFloat[dataFloatIndex + 7] = 0;  // unused
-
-        } else {
+        } else {    // high precision data stored using 8bit texture
 
             // position scaled to 0..1 range
             const pos = light._node.getPosition();
@@ -223,12 +252,10 @@ class WorldClusters {
             const normPos = pos.clone().sub(min).div(delta);
 //            const normPos = pos;
 
-            packFloatTo4Bytes(normPos.x, data8, data8Index + 4);
-            packFloatTo4Bytes(normPos.y, data8, data8Index + 8);
-            packFloatTo4Bytes(normPos.z, data8, data8Index + 12);
-
-            // !!!!!!!!!!!!!!!!!!!!
-            packFloatTo4Bytes(light.attenuationEnd / 1000, data8, data8Index + 16);
+            packFloatTo4Bytes(normPos.x, data8, data8Index + 12);
+            packFloatTo4Bytes(normPos.y, data8, data8Index + 16);
+            packFloatTo4Bytes(normPos.z, data8, data8Index + 20);
+            packFloatTo4Bytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 24);
 
 
         }
@@ -302,15 +329,25 @@ class WorldClusters {
         this._clusterCellsDotId.setValue(this._clusterCellsDotData);
         this._clusterCellsMaxId.setValue(this._clusterCellsMaxData);
 
-        const boundsHalf = this._bounds.halfExtents;
-        this._clusterCellsCountByBoundsSizeData[0] = this._cells.x / (boundsHalf.x * 2);
-        this._clusterCellsCountByBoundsSizeData[1] = this._cells.y / (boundsHalf.y * 2);
-        this._clusterCellsCountByBoundsSizeData[2] = this._cells.z / (boundsHalf.z * 2);
+        const boundsDelta = this.boundsDelta;
+        this._clusterCellsCountByBoundsSizeData[0] = this._cells.x / boundsDelta.x;
+        this._clusterCellsCountByBoundsSizeData[1] = this._cells.y / boundsDelta.y;
+        this._clusterCellsCountByBoundsSizeData[2] = this._cells.z / boundsDelta.z;
         this._clusterCellsCountByBoundsSizeId.setValue(this._clusterCellsCountByBoundsSizeData);
+
+        this._clusterBoundsMinData[0] = this.boundsMin.x;
+        this._clusterBoundsMinData[1] = this.boundsMin.y;
+        this._clusterBoundsMinData[2] = this.boundsMin.z;
 
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
             this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
         }
+
+        this._clusterCompressionLimit0Data[0] = this._maxAttenuation;
+        this._clusterCompressionLimit0Data[1] = this._maxColorValue;
+        this._clusterCompressionLimit0Id.setValue(this._clusterCompressionLimit0Data);
+
+
 
 
         this._hack1Id = this.device.scope.resolve("hack1");
@@ -318,39 +355,41 @@ class WorldClusters {
 
     }
 
-
+    // evaluates min and max coordinates of AABB of the light in the cell space
     evalLightCellMinMax(light, min, max) {
 
+        // light's bounding sphere
         light.getBoundingSphere(tempSphere);
         const worldPos = tempSphere.center;
-        const rad = tempSphere.radius;
-        rad3 = new Vec3(rad, rad, rad);
+        const radius = tempSphere.radius;
 
-        min.copy(worldPos).sub(rad3);
-        min.sub(boundsMin);
-        min.div(boundsSize);
+        // min point of AABB in cell space
+        min.copy(worldPos).subScalar(radius);
+        min.sub(this.boundsMin);
+        min.div(this.boundsDelta);
         min.mul2(min, this.cells);
         min.floor();
 
-        max.copy(worldPos).add(rad3);
-        max.sub(boundsMin);
-        max.div(boundsSize);
+        // max point of AABB in cell space
+        max.copy(worldPos).addScalar(radius);
+        max.sub(this.boundsMin);
+        max.div(this.boundsDelta);
         max.mul2(max, this.cells);
         max.ceil();
 
         // clamp to limits
         min.max(Vec3.ZERO);
-        max.min(boundsLimit);
+        max.min(this._cellsLimit);
     }
 
     collectLights(lights) {
 
-        const useLights = this._usedLights;
-        useLights.length = 0;
+        const usedLights = this._usedLights;
+        usedLights.length = 0;
 
         // skip index 0 as that is used for unused light
         let lightIndex = 1;
-        useLights[0] = null;
+        usedLights[0] = null;
 
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
@@ -367,64 +406,81 @@ class WorldClusters {
                 }
             }
 
-            useLights[lightIndex] = light;
+            usedLights[lightIndex] = light;
             lightIndex++;
         }
     }
 
     evaluateBounds() {
 
-        const useLights = this._usedLights;
-        this.boundsMin = new Vec3(0, 0, 0);     // don't use vec3, unwrapp it
-        this.boundsMax = new Vec3(1, 1, 1);
+        const usedLights = this._usedLights;
 
+        // bounds of the area the lights cover
         const min = this.boundsMin;
         const max = this.boundsMax;
 
-        if (useLights.length > 1) {
+        // if at least one light (index 0 is null, so ignore that one)
+        if (usedLights.length > 1) {
 
-            // first light
-            useLights[1].getBoundingSphere(tempSphere);             // we do this elsewhere as well, maybe do just once
+            // AABB of the first light
+            usedLights[1].getBoundingSphere(tempSphere);             // we do this elsewhere as well, maybe do just once
             min.copy(tempSphere.center);
-            min.sub(new Vec3(tempSphere.radius, tempSphere.radius, tempSphere.radius));
+            min.subScalar(tempSphere.radius);
             max.copy(tempSphere.center);
-            max.add(new Vec3(tempSphere.radius, tempSphere.radius, tempSphere.radius));
+            max.addScalar(tempSphere.radius);
 
-            for (let i = 2; i < useLights.length; i++) {
-                useLights[i].getBoundingSphere(tempSphere);             // we do this elsewhere as well, maybe do just once
-                min3.copy(tempSphere.center);
-                min3.sub(new Vec3(tempSphere.radius, tempSphere.radius, tempSphere.radius));
-                max3.copy(tempSphere.center);
-                max3.add(new Vec3(tempSphere.radius, tempSphere.radius, tempSphere.radius));
+            for (let i = 2; i < usedLights.length; i++) {
 
-                if (min3.x < min.x) { min.x = min3.x; }
-                if (min3.y < min.y) { min.y = min3.y; }
-                if (min3.z < min.z) { min.z = min3.z; }
+                // expand by AABB of this light
+                usedLights[i].getBoundingSphere(tempSphere);             // we do this elsewhere as well, maybe do just once
+                tempVec3.copy(tempSphere.center);
+                tempVec3.subScalar(tempSphere.radius);
+                min.min(tempVec3);
 
-                if (max3.x > max.x) { max.x = max3.x; }
-                if (max3.y > max.y) { max.y = max3.y; }
-                if (max3.z > max.z) { max.z = max3.z; }
+                tempVec3.copy(tempSphere.center);
+                tempVec3.addScalar(tempSphere.radius);
+                max.max(tempVec3);
             }
+        } else {
+
+            // any small volume if no lights
+            min.set(0, 0, 0);
+            max.set(1, 1, 1);
         }
 
-        this._bounds.setMinMax(min, max);
-        this._clusterBoundsMinData[0] = min.x;
-        this._clusterBoundsMinData[1] = min.y;
-        this._clusterBoundsMinData[2] = min.z;
+        // bounds range
+        this.boundsDelta.sub2(max, min);
     }
 
-    updateClusters() {
+    // evaluate ranges of variables compressed to 8bit texture to allow their scaling to 0..1 range
+    evaluateCompressionLimits(gammaCorrection) {
+
+        let maxAttenuation = 0;
+        let maxColorValue = 0;
+
+        const usedLights = this._usedLights;
+        for (let i = 1; i < usedLights.length; i++) {
+            const light = usedLights[i];
+            maxAttenuation = Math.max(light.attenuationEnd, maxAttenuation);
+
+            const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
+            maxColorValue = Math.max(color[0], maxColorValue);
+            maxColorValue = Math.max(color[1], maxColorValue);
+            maxColorValue = Math.max(color[2], maxColorValue);
+        }
+
+        // increase slightly as compression needs value < 1
+        this._maxAttenuation = maxAttenuation + epsilon;
+        this._maxColorValue = maxColorValue + epsilon;
+    }
+
+    updateClusters(gammaCorrection) {
 
         const useLights = this._usedLights;
 
         // clear clusters
         this.counts.fill(0);
         this.clusters.fill(0);
-
-        // bounds
-        boundsMin.copy(this._bounds.getMin());
-        boundsSize.copy(this._bounds.halfExtents).mulScalar(2);
-        boundsLimit.copy(this.cells).sub(Vec3.ONE);
 
         // local accessors
         const divX = this._cells.x;
@@ -440,17 +496,17 @@ class WorldClusters {
             const light = useLights[i];
 
             // add light data into textures
-            this.addLightData(light, i);
+            this.addLightData(light, i, gammaCorrection);
 
             // light's bounds in cell space
-            this.evalLightCellMinMax(light, min3, max3);
+            this.evalLightCellMinMax(light, tempMin3, tempMax3);
 
-            const xStart = min3.x;
-            const xEnd = max3.x;
-            const yStart = min3.y;
-            const yEnd = max3.y;
-            const zStart = min3.z;
-            const zEnd = max3.z;
+            const xStart = tempMin3.x;
+            const xEnd = tempMax3.x;
+            const yStart = tempMin3.y;
+            const yEnd = tempMax3.y;
+            const zStart = tempMin3.z;
+            const zEnd = tempMax3.z;
 
             // add the light to the cells
             for (let x = xStart; x <= xEnd; x++) {
@@ -477,11 +533,12 @@ class WorldClusters {
         }
     }
 
-    update(lights) {
+    update(lights, gammaCorrection) {
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
-        this.updateClusters();
+        this.evaluateCompressionLimits(gammaCorrection);
+        this.updateClusters(gammaCorrection);
         this.uploadTextures();
         this.updateUniforms();
     }
