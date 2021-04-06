@@ -209,9 +209,9 @@ class XrInputSource extends EventHandler {
                     this._grip = true;
                     this._dirtyLocal = true;
 
-                    const now = now();
-                    const dt = (now - this._velocitiesTimestamp) / 1000;
-                    this._velocitiesTimestamp = now;
+                    const timestamp = now();
+                    const dt = (timestamp - this._velocitiesTimestamp) / 1000;
+                    this._velocitiesTimestamp = timestamp;
 
                     this._localPositionLast.copy(this._localPosition);
                     this._localPosition.copy(gripPose.transform.position);
