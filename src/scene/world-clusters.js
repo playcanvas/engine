@@ -6,10 +6,9 @@ import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL } from './constants.js';
 
-let tempVec3 = new Vec3();
 let tempMin3 = new Vec3();
 let tempMax3 = new Vec3();
-let tempSphere = new BoundingSphere();
+let tempBox = new BoundingBox();
 
 const epsilon = 0.000001;
 const oneDiv255 = 1 / 255;
@@ -358,20 +357,18 @@ class WorldClusters {
     // evaluates min and max coordinates of AABB of the light in the cell space
     evalLightCellMinMax(light, min, max) {
 
-        // light's bounding sphere
-        light.getBoundingSphere(tempSphere);
-        const worldPos = tempSphere.center;
-        const radius = tempSphere.radius;
+        // light's bounding box
+        light.getBoundingBox(tempBox);
 
         // min point of AABB in cell space
-        min.copy(worldPos).subScalar(radius);
+        min.copy(tempBox.getMin());
         min.sub(this.boundsMin);
         min.div(this.boundsDelta);
         min.mul2(min, this.cells);
         min.floor();
 
         // max point of AABB in cell space
-        max.copy(worldPos).addScalar(radius);
+        max.copy(tempBox.getMax());
         max.sub(this.boundsMin);
         max.div(this.boundsDelta);
         max.mul2(max, this.cells);
@@ -423,23 +420,16 @@ class WorldClusters {
         if (usedLights.length > 1) {
 
             // AABB of the first light
-            usedLights[1].getBoundingSphere(tempSphere);             // we do this elsewhere as well, maybe do just once
-            min.copy(tempSphere.center);
-            min.subScalar(tempSphere.radius);
-            max.copy(tempSphere.center);
-            max.addScalar(tempSphere.radius);
+            usedLights[1].getBoundingBox(tempBox);
+            min.copy(tempBox.getMin());
+            max.copy(tempBox.getMax());
 
             for (let i = 2; i < usedLights.length; i++) {
 
                 // expand by AABB of this light
-                usedLights[i].getBoundingSphere(tempSphere);             // we do this elsewhere as well, maybe do just once
-                tempVec3.copy(tempSphere.center);
-                tempVec3.subScalar(tempSphere.radius);
-                min.min(tempVec3);
-
-                tempVec3.copy(tempSphere.center);
-                tempVec3.addScalar(tempSphere.radius);
-                max.max(tempVec3);
+                usedLights[i].getBoundingBox(tempBox);
+                min.min(tempBox.getMin());
+                max.max(tempBox.getMax());
             }
         } else {
 
