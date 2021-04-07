@@ -1,19 +1,17 @@
 import { Vec3 } from '../math/vec3.js';
 import { math } from '../math/math.js';
 import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL } from './constants.js';
 
+let tempVec3 = new Vec3();
 let tempMin3 = new Vec3();
 let tempMax3 = new Vec3();
 let tempBox = new BoundingBox();
 
 const epsilon = 0.000001;
 const oneDiv255 = 1 / 255;
-
-const ddd = 500;
 
 // packs a float value in [0..1) range to 4 bytes and stores them in an array with start offset
 // based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
@@ -93,6 +91,20 @@ class WorldClusters {
         this._pixelsPerCellCount = this._maxCellLightCount / 4;
 
         // register shader uniforms
+        this.registerUniforms(device);
+
+        // alocate textures to store lights
+        this.initLightsTexture();
+    }
+
+    destroy() {
+
+        // TODO
+        // release textures
+    }
+
+    registerUniforms(device) {
+
         this._clusterWorldTextureId = device.scope.resolve("clusterWorldTexture");
         this._clusterPixelsPerCellId = device.scope.resolve("clusterPixelsPerCell");
 
@@ -101,6 +113,9 @@ class WorldClusters {
 
         this._clusterBoundsMinId = device.scope.resolve("clusterBoundsMin");
         this._clusterBoundsMinData = new Float32Array(3);
+
+        this._clusterBoundsDeltaId = device.scope.resolve("clusterBoundsDelta");
+        this._clusterBoundsDeltaData = new Float32Array(3);
 
         this._clusterCellsCountByBoundsSizeId = device.scope.resolve("clusterCellsCountByBoundsSize");
         this._clusterCellsCountByBoundsSizeData = new Float32Array(3);
@@ -115,14 +130,6 @@ class WorldClusters {
         // compression limit 0
         this._clusterCompressionLimit0Id = device.scope.resolve("clusterCompressionLimit0");
         this._clusterCompressionLimit0Data = new Float32Array(2);
-
-        this.initLightsTexture();
-    }
-
-    destroy() {
-
-        // TODO
-        // release textures
     }
 
     get cells() {
@@ -130,9 +137,15 @@ class WorldClusters {
     }
 
     set cells(value) {
-        this._cells.copy(value);
-        this._cellsLimit.copy(value).sub(Vec3.ONE);
-        this._cellsDirty = true;
+
+        // make sure we have whole numbers
+        tempVec3.copy(value).floor();
+
+        if (!this._cells.equals(tempVec3)) {
+            this._cells.copy(tempVec3);
+            this._cellsLimit.copy(tempVec3).sub(Vec3.ONE);
+            this._cellsDirty = true;
+        }
     }
 
     createTexture(width, height, format) {
@@ -224,13 +237,14 @@ class WorldClusters {
         packFloatTo2Bytes(color[2] * invMaxColorValue, data8, data8Index + 8);
 
         // high precision data stored using float texture
+        const pos = light._node.getPosition();
+
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
             const dataFloat = this.lightsFloat;
             const dataFloatIndex = lightIndex * this.lightsTextureFloat.width * 4;
 
             // pos / range
-            const pos = light._node.getPosition();
             dataFloat[dataFloatIndex + 0] = pos.x;
             dataFloat[dataFloatIndex + 1] = pos.y;
             dataFloat[dataFloatIndex + 2] = pos.z;
@@ -238,25 +252,12 @@ class WorldClusters {
 
         } else {    // high precision data stored using 8bit texture
 
-            // position scaled to 0..1 range
-            const pos = light._node.getPosition();
-            // const min = this._bounds.getMin();
-            // const max = this._bounds.getMax();
-
-
-            const min = new Vec3(-ddd, -ddd, -ddd);
-            const max = new Vec3(ddd, ddd, ddd);
-
-            const delta = max.clone().sub(min);
-            const normPos = pos.clone().sub(min).div(delta);
-//            const normPos = pos;
-
+            // position and range scaled to 0..1 range
+            const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
             packFloatTo4Bytes(normPos.x, data8, data8Index + 12);
             packFloatTo4Bytes(normPos.y, data8, data8Index + 16);
             packFloatTo4Bytes(normPos.z, data8, data8Index + 20);
             packFloatTo4Bytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 24);
-
-
         }
     }
 
@@ -296,6 +297,8 @@ class WorldClusters {
             this._clusterTextureSizeData[1] = 1.0 / width;
             this._clusterTextureSizeData[2] = 1.0 / height;
 
+            // TODO: release previous texture !!!!!!!!
+
             this.clusterTexture = this.createTexture(width, height, PIXELFORMAT_R8_G8_B8_A8);
         }
     }
@@ -318,16 +321,15 @@ class WorldClusters {
 
     updateUniforms() {
 
+        // textures
         this._clusterWorldTextureId.setValue(this.clusterTexture);
         this._lightsTexture8Id.setValue(this.lightsTexture8);
 
-        this._clusterPixelsPerCellId.setValue(this._pixelsPerCellCount);
-        this._lightsTextureInvSizeId.setValue(this._lightsTextureInvSizeData);
-        this._clusterTextureSizeId.setValue(this._clusterTextureSizeData);
-        this._clusterBoundsMinId.setValue(this._clusterBoundsMinData);
-        this._clusterCellsDotId.setValue(this._clusterCellsDotData);
-        this._clusterCellsMaxId.setValue(this._clusterCellsMaxData);
+        if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
+            this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
+        }
 
+        // uniform values
         const boundsDelta = this.boundsDelta;
         this._clusterCellsCountByBoundsSizeData[0] = this._cells.x / boundsDelta.x;
         this._clusterCellsCountByBoundsSizeData[1] = this._cells.y / boundsDelta.y;
@@ -338,20 +340,22 @@ class WorldClusters {
         this._clusterBoundsMinData[1] = this.boundsMin.y;
         this._clusterBoundsMinData[2] = this.boundsMin.z;
 
-        if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
-            this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
-        }
+        this._clusterBoundsDeltaData[0] = boundsDelta.x;
+        this._clusterBoundsDeltaData[1] = boundsDelta.y;
+        this._clusterBoundsDeltaData[2] = boundsDelta.z;
 
         this._clusterCompressionLimit0Data[0] = this._maxAttenuation;
         this._clusterCompressionLimit0Data[1] = this._maxColorValue;
+
+        // assign values
+        this._clusterPixelsPerCellId.setValue(this._pixelsPerCellCount);
+        this._lightsTextureInvSizeId.setValue(this._lightsTextureInvSizeData);
+        this._clusterTextureSizeId.setValue(this._clusterTextureSizeData);
+        this._clusterBoundsMinId.setValue(this._clusterBoundsMinData);
+        this._clusterBoundsDeltaId.setValue(this._clusterBoundsDeltaData);
+        this._clusterCellsDotId.setValue(this._clusterCellsDotData);
+        this._clusterCellsMaxId.setValue(this._clusterCellsMaxData);
         this._clusterCompressionLimit0Id.setValue(this._clusterCompressionLimit0Data);
-
-
-
-
-        this._hack1Id = this.device.scope.resolve("hack1");
-        this._hack1Id.setValue([2 * ddd, ddd, 1000, 0.5]);
-
     }
 
     // evaluates min and max coordinates of AABB of the light in the cell space

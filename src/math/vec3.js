@@ -474,30 +474,35 @@ class Vec3 {
         this.x = Math.floor(this.x);
         this.y = Math.floor(this.y);
         this.z = Math.floor(this.z);
+        return this;
     }
 
     ceil() {
         this.x = Math.ceil(this.x);
         this.y = Math.ceil(this.y);
         this.z = Math.ceil(this.z);
+        return this;
     }
 
     round() {
         this.x = Math.round(this.x);
         this.y = Math.round(this.y);
         this.z = Math.round(this.z);
+        return this;
     }
 
     min(rhs) {
         if (rhs.x < this.x) this.x = rhs.x;
         if (rhs.y < this.y) this.y = rhs.y;
         if (rhs.z < this.z) this.z = rhs.z;
+        return this;
     }
 
     max(rhs) {
         if (rhs.x > this.x) this.x = rhs.x;
         if (rhs.y > this.y) this.y = rhs.y;
         if (rhs.z > this.z) this.z = rhs.z;
+        return this;
     }
 
     /**
