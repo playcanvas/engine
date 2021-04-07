@@ -13,6 +13,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrImageTracking } from './xr-image-tracking.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
+import { XrPlaneDetection } from './xr-plane-detection.js';
 
 /**
  * @class
@@ -59,6 +60,7 @@ class XrManager extends EventHandler {
         this.domOverlay = new XrDomOverlay(this);
         this.hitTest = new XrHitTest(this);
         this.imageTracking = new XrImageTracking(this);
+        this.planeDetection = new XrPlaneDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
 
@@ -219,10 +221,16 @@ class XrManager extends EventHandler {
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
-            opts.optionalFeatures.push('depth-sensing');
 
-            if (options && options.imageTracking) {
-                opts.optionalFeatures.push('image-tracking');
+            if (options) {
+                if (options.depthSensing)
+                    opts.optionalFeatures.push('depth-sensing');
+
+                if (options.imageTracking)
+                    opts.optionalFeatures.push('image-tracking');
+
+                if (options.planeDetection)
+                    opts.optionalFeatures.push('plane-detection');
             }
 
             if (this.domOverlay.root) {
@@ -516,6 +524,9 @@ class XrManager extends EventHandler {
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
+
+            if (this.planeDetection.supported)
+                this.planeDetection.update(frame);
         }
 
         this.fire('update', frame);

@@ -152,7 +152,11 @@ class XrDepthSensing extends EventHandler {
     update(frame, view) {
         if (view) {
             if (! this._depthInfo) this._matrixDirty = true;
-            this._depthInfo = frame.getDepthInformation(view);
+            try {
+                this._depthInfo = frame.getDepthInformation(view);
+            } catch (ex) {
+                this._depthInfo = null;
+            }
         } else {
             if (this._depthInfo) this._matrixDirty = true;
             this._depthInfo = null;

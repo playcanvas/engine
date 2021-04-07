@@ -1,0 +1,129 @@
+import { EventHandler } from '../core/event-handler.js';
+import { XrPlane } from './xr-plane.js';
+
+/**
+ * @class
+ * @name XrPlaneDetection
+ * @classdesc Plane Detection provides the ability to detect real world surfaces based on estimations of underlying AR system.
+ * @description Plane Detection provides the ability to detect real world surfaces based on estimations of underlying AR system.
+ * @param {XrManager} manager - WebXR Manager.
+ * @property {boolean} supported True if Plane Detection is supported.
+ * @property {boolean} available True if Plane Detection is available. This property can be set to true only during running session.
+ * @property {XrPlane[]} planes List of {@link XrPlane} that contain individual plane information.
+ */
+class XrPlaneDetection extends EventHandler {
+    constructor(manager) {
+        super();
+
+        this._manager = manager;
+        this._supported = !! window.XRPlane;
+        this._available = false;
+
+        this._planesIndex = new Map();
+        this._planes = [];
+
+        if (this._supported) {
+            this._manager.on('end', this._onSessionEnd, this);
+        }
+    }
+
+    /**
+     * @event
+     * @name XrPlaneDetection#available
+     * @description Fired when plane detection becomes available.
+     */
+
+    /**
+     * @event
+     * @name XrPlaneDetection#unavailable
+     * @description Fired when plane detection becomes unavailable.
+     */
+
+    /**
+     * @event
+     * @name XrPlaneDetection#add
+     * @description Fired when new {@link XrPlane} is added to the list.
+     * @param {XrPlane} plane - Plane that has been added.
+     * @example
+     * app.xr.planeDetection.on('add', function (plane) {
+     *     // new plane is added
+     * });
+     */
+
+    /**
+     * @event
+     * @name XrPlaneDetection#remove
+     * @description Fired when a {@link XrPlane} is removed to the list.
+     * @param {XrPlane} plane - Plane that has been removed.
+     * @example
+     * app.xr.planeDetection.on('remove', function (plane) {
+     *     // new plane is removed
+     * });
+     */
+
+    _onSessionEnd() {
+        for (let i = 0; i < this._planes.length; i++) {
+            this._planes[i].destroy();
+        }
+        this._planesIndex.clear();
+        this._planes = [];
+
+        if (this._available) {
+            this._available = false;
+            this.fire('unavailable');
+        }
+    }
+
+    update(frame) {
+        let detectedPlanes;
+
+        if (! this._available) {
+            try {
+                detectedPlanes = frame.detectedPlanes;
+                this._available = true;
+                this.fire('available');
+            } catch (ex) {
+                return;
+            }
+        } else {
+            detectedPlanes = frame.detectedPlanes;
+        }
+
+        for (const [xrPlane, plane] of this._planesIndex) {
+            if (! detectedPlanes.has(xrPlane)) {
+                this._planesIndex.delete(xrPlane);
+                this._planes.splice(this._planes.indexOf(plane), 1);
+                plane.destroy();
+                this.fire('remove', plane);
+            }
+        }
+
+        for (const xrPlane of detectedPlanes) {
+            let plane = this._planesIndex.get(xrPlane);
+
+            if (! plane) {
+                plane = new XrPlane(this, xrPlane);
+                this._planesIndex.set(xrPlane, plane);
+                this._planes.push(plane);
+                this.fire('add', plane);
+                plane.update(frame);
+            } else {
+                plane.update(frame);
+            }
+        }
+    }
+
+    get supported() {
+        return this._supported;
+    }
+
+    get available() {
+        return this._available;
+    }
+
+    get planes() {
+        return this._planes;
+    }
+}
+
+export { XrPlaneDetection };
