@@ -1748,7 +1748,7 @@ class GraphicsDevice extends EventHandler {
             case PIXELFORMAT_111110F: // WebGL2 only
                 texture._glFormat = gl.RGB;
                 texture._glInternalFormat = gl.R11F_G11F_B10F;
-                texture._glPixelType = gl.FLOAT;
+                texture._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
                 break;
             case PIXELFORMAT_SRGB: // WebGL2 only
                 texture._glFormat = gl.RGB;
