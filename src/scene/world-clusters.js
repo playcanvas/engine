@@ -28,6 +28,7 @@ function packFloatTo4Bytes(value, array, offset) {
     array[offset + 3] = Math.round(enc3 * 255);
 }
 
+// packs a float value in [0..1) range to 2 bytes and stores them in an array with start offset
 function packFloatTo2Bytes(value, array, offset) {
     const enc1 = (255.0 * value) % 1;
     const enc2 = (65025.0 * value) % 1;
@@ -58,9 +59,6 @@ class WorldClusters {
         } else {
             WorldClusters.lightTextureFormat = WorldClusters.FORMAT_8BIT;
         }
-
-
-        WorldClusters.lightTextureFormat = WorldClusters.FORMAT_8BIT;
     }
 
     constructor(device, cells, maxCellLightCount) {
@@ -180,7 +178,7 @@ class WorldClusters {
         // float texture format
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
-            pixelsPerLight8 = 1;
+            // 0: pos.x, pos.y, pos.z, attenuationEnd
             pixelsPerLightFloat = 1;
 
         } else { // 8bit texture
