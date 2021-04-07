@@ -90,7 +90,7 @@ class BoundingBox {
     /**
      * @function
      * @name BoundingBox#clone
-     * @description Returns a clone of the AABB
+     * @description Returns a clone of the AABB.
      * @returns {BoundingBox} A duplicate AABB.
      */
     clone() {

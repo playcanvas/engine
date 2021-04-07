@@ -96,7 +96,7 @@ class XrDepthSensing extends EventHandler {
     /**
      * @event
      * @name XrDepthSensing#resize
-     * @description Fired when the depth sensing texture been resized. {@link XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
+     * @description Fired when the depth sensing texture been resized. The {@link XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
      * @param {number} width - The new width of the depth texture in pixels.
      * @param {number} height - The new height of the depth texture in pixels.
      * @example
@@ -182,8 +182,8 @@ class XrDepthSensing extends EventHandler {
     /**
      * @function
      * @name XrDepthSensing#getDepth
-     * @param {number} x - x coordinate of pixel in depth texture.
-     * @param {number} y - y coordinate of pixel in depth texture.
+     * @param {number} x - X coordinate of pixel in depth texture.
+     * @param {number} y - Y coordinate of pixel in depth texture.
      * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link XrDepthSensing#width} and {@link XrDepthSensing#height}. This is not using a GPU texture and is a CPU path.
      * @example
      * var depth = app.xr.depthSensing.getDepth(x, y);

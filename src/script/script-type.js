@@ -99,7 +99,7 @@ class ScriptType extends EventHandler {
      * @readonly
      * @name ScriptType.scriptName
      * @type {string|null}
-     * @description Name of a Script Type
+     * @description Name of a Script Type.
      */
     static get scriptName() {
         return this.__name;

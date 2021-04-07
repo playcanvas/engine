@@ -108,7 +108,7 @@ class MorphInstance {
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
-        let morph = this.morph;
+        const morph = this.morph;
         if (morph) {
 
             // decrease ref count

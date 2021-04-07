@@ -536,10 +536,10 @@ class Application extends EventHandler {
 
                     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
-                    gl.blitFramebuffer( 0, 0, this.renderTarget.width, this.renderTarget.height,
-                                        0, 0, this.renderTarget.width, this.renderTarget.height,
-                                        gl.DEPTH_BUFFER_BIT,
-                                        gl.NEAREST);
+                    gl.blitFramebuffer(0, 0, this.renderTarget.width, this.renderTarget.height,
+                                       0, 0, this.renderTarget.width, this.renderTarget.height,
+                                       gl.DEPTH_BUFFER_BIT,
+                                       gl.NEAREST);
                 }
 
             });
@@ -1626,7 +1626,7 @@ class Application extends EventHandler {
      * * {@link BAKE_COLOR}: single color lightmap
      * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
      * var settings = {
@@ -1833,7 +1833,7 @@ class Application extends EventHandler {
         var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
-        let lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
+        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
 
         // Append
         lineBatch.addLines(position, color);
@@ -2074,7 +2074,7 @@ class Application extends EventHandler {
         this._initImmediate();
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
-        let matrix = new Mat4();
+        const matrix = new Mat4();
         matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, height, 0.0));
 
         if (!material) {
@@ -2092,7 +2092,7 @@ class Application extends EventHandler {
     renderDepthTexture(x, y, width, height, options) {
         this._initImmediate();
 
-        let material = new Material();
+        const material = new Material();
         material.shader = this._immediateData.getDepthTextureShader();
         material.update();
 

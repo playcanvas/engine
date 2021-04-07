@@ -25,7 +25,7 @@ class AnimClipHandler {
         }
 
         // we need to specify JSON for blob URLs
-        var options = {
+        const options = {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
@@ -44,15 +44,15 @@ class AnimClipHandler {
     }
 
     open(url, data) {
-        var name = data.name;
-        var duration = data.duration;
-        var inputs = data.inputs.map(function (input) {
+        const name = data.name;
+        const duration = data.duration;
+        const inputs = data.inputs.map(function (input) {
             return new AnimData(1, input);
         });
-        var outputs = data.outputs.map(function (output) {
+        const outputs = data.outputs.map(function (output) {
             return new AnimData(output.components, output.data);
         });
-        var curves = data.curves.map(function (curve) {
+        const curves = data.curves.map(function (curve) {
             return new AnimCurve(
                 [curve.path],
                 curve.inputIndex,

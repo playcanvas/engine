@@ -14,7 +14,7 @@ let id = 0;
  * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
  * @param {ArrayBuffer} [initialData] - Initial data.
  */
-class VertexBuffer{
+class VertexBuffer {
     constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;

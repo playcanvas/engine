@@ -7,10 +7,6 @@ import { Material } from './material.js';
  * @classdesc A Depth material is for rendering linear depth values to a render target.
  */
 class DepthMaterial extends Material {
-    constructor() {
-        super();
-    }
-
     /**
      * @private
      * @function

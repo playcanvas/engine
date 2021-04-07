@@ -93,7 +93,7 @@ class AnimComponentLayer {
      * @readonly
      * @name AnimComponentLayer#name
      * @type {string}
-     * @description Returns the name of the layer
+     * @description Returns the name of the layer.
      */
     get name() {
         return this._name;
@@ -102,7 +102,7 @@ class AnimComponentLayer {
     /**
      * @name AnimComponentLayer#playing
      * @type {string}
-     * @description Whether this layer is currently playing
+     * @description Whether this layer is currently playing.
      */
     get playing() {
         return this._controller.playing;
@@ -165,7 +165,7 @@ class AnimComponentLayer {
     /**
      * @name AnimComponentLayer#activeStateCurrentTime
      * @type {number}
-     * @description The active states time in seconds
+     * @description The active states time in seconds.
      */
     get activeStateCurrentTime() {
         return this._controller.activeStateCurrentTime;
@@ -202,7 +202,7 @@ class AnimComponentLayer {
      * @readonly
      * @name AnimComponentLayer#states
      * @type {string[]}
-     * @description Lists all available states in this layers state graph
+     * @description Lists all available states in this layers state graph.
      */
     get states() {
         return this._controller.states;
