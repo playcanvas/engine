@@ -137,8 +137,10 @@ class KtxParser {
             return null;
         }
 
+        const format = KNOWN_FORMATS[header.glInternalFormat];
+
         // only support subset of pixel formats
-        if (!KNOWN_FORMATS[header.glInternalFormat]) {
+        if (format === undefined) {
             // #if _DEBUG
             console.warn("Unknown glInternalFormat: " + header.glInternalFormat);
             // #endif
@@ -148,7 +150,6 @@ class KtxParser {
         // offset locating the first byte of texture level data
         let offset = 16 + header.bytesOfKeyValueData / 4;
 
-        const format = KNOWN_FORMATS[header.glInternalFormat];
         const isCubemap = (header.numberOfFaces > 1);
         const levels = [];
         for (let mipmapLevel = 0; mipmapLevel < (header.numberOfMipmapLevels || 1); mipmapLevel++) {
