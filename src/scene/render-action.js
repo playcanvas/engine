@@ -40,6 +40,13 @@ class RenderAction {
         this.directionalLightsIndices = [];
     }
 
+    // prepares render action for re-use
+    reset() {
+        this.directionalLightsSet.clear();
+        this.directionalLights.length = 0;
+        this.directionalLightsIndices.length = 0;
+    }
+
     // store directional lights that are needed for this camera based on layers it renders
     collectDirectionalLights(cameraLayers, dirLights, allLights) {
 

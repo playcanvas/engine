@@ -443,6 +443,7 @@ class LayerComposition extends EventHandler {
         }
 
         // store the properties - write all as we reuse previously allocated class instances
+        renderAction.reset();
         renderAction.triggerPostprocess = false;
         renderAction.layerIndex = layerIndex;
         renderAction.cameraIndex = cameraIndex;
