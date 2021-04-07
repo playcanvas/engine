@@ -54,8 +54,8 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  *
  * * {@link BODYTYPE_STATIC}: infinite mass and cannot move.
  * * {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
- * * {@link BODYTYPE_KINEMATIC}: infinite mass, does not respond to forces and should be moved
- * by setting their position and rotation on the {@link Entity}.
+ * * {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be moved
+ * by setting the position and rotation of component's {@link Entity}).
  *
  * Defaults to {@link BODYTYPE_STATIC}.
  */
