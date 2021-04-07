@@ -10,6 +10,15 @@ import { XrPlane } from './xr-plane.js';
  * @property {boolean} supported True if Plane Detection is supported.
  * @property {boolean} available True if Plane Detection is available. This property can be set to true only during running session.
  * @property {XrPlane[]} planes List of {@link XrPlane} that contain individual plane information.
+ * @example
+ * // start session with plane detection enabled
+ * app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+ *     planeDetection: true
+ * });
+ * @example
+ * app.xr.planeDetection.on('add', function (plane) {
+ *     // new plane been added
+ * });
  */
 class XrPlaneDetection extends EventHandler {
     constructor(manager) {

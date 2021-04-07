@@ -13,7 +13,6 @@ let ids = 0;
  * @param {XRPlane} xrPlane - XRPlane that is instantiated by WebXR system.
  * @property {number} id Unique identifier of a plane.
  * @property {string|null} orientation Plane's pecific orientation (horizontal or vertical) or null if orientation is anything else.
- * @property {object[]} points List of DOMPointReadOnly objects that is an object with `x y z` properties that define local point of a planes polygon.
  */
 class XrPlane extends EventHandler {
     constructor(planeDetection, xrPlane) {
@@ -100,6 +99,32 @@ class XrPlane extends EventHandler {
         return this._orientation;
     }
 
+    /**
+     * @name XrPlane#points
+     * @type {object[]}
+     * @description List of DOMPointReadOnly objects that is an object with `x y z` properties that define local point of a planes polygon.
+     * @example
+     * // prepare reusable objects
+     * var vecA = new pc.Vec3();
+     * var vecB = new pc.Vec3();
+     * var color = new pc.Color(1, 1, 1);
+     *
+     * // update Mat4 to plane position and rotation
+     * transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
+     *
+     * // draw lines between points
+     * for (var i = 0; i < plane.points.length; i++) {
+     *     vecA.copy(plane.points[i]);
+     *     vecB.copy(plane.points[(i + 1) % plane.points.length]);
+     *
+     *     // transform from planes local to world coords
+     *     transform.transformPoint(vecA, vecA);
+     *     transform.transformPoint(vecB, vecB);
+     *
+     *     // render line
+     *     app.renderLine(vecA, vecB, color);
+     * }
+     */
     get points() {
         return this._xrPlane.polygon;
     }
