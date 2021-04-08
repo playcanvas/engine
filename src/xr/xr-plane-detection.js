@@ -9,7 +9,7 @@ import { XrPlane } from './xr-plane.js';
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Plane Detection is supported.
  * @property {boolean} available True if Plane Detection is available. This property can be set to true only during running session.
- * @property {XrPlane[]} planes List of {@link XrPlane} that contain individual plane information.
+ * @property {XrPlane[]|null} planes List of {@link XrPlane} that contain individual plane information, or null if plane detection isn't available.
  * @example
  * // start session with plane detection enabled
  * app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
@@ -28,8 +28,11 @@ class XrPlaneDetection extends EventHandler {
         this._supported = !! window.XRPlane;
         this._available = false;
 
+        // key - XRPlane (native plane does not have ID's)
+        // value - XrPlane
         this._planesIndex = new Map();
-        this._planes = [];
+
+        this._planes = null;
 
         if (this._supported) {
             this._manager.on('end', this._onSessionEnd, this);
@@ -75,7 +78,7 @@ class XrPlaneDetection extends EventHandler {
             this._planes[i].destroy();
         }
         this._planesIndex.clear();
-        this._planes = [];
+        this._planes = null;
 
         if (this._available) {
             this._available = false;
@@ -89,6 +92,7 @@ class XrPlaneDetection extends EventHandler {
         if (! this._available) {
             try {
                 detectedPlanes = frame.detectedPlanes;
+                this._planes = [];
                 this._available = true;
                 this.fire('available');
             } catch (ex) {
@@ -98,25 +102,33 @@ class XrPlaneDetection extends EventHandler {
             detectedPlanes = frame.detectedPlanes;
         }
 
+        // iterate through indexed planes
         for (const [xrPlane, plane] of this._planesIndex) {
-            if (! detectedPlanes.has(xrPlane)) {
-                this._planesIndex.delete(xrPlane);
-                this._planes.splice(this._planes.indexOf(plane), 1);
-                plane.destroy();
-                this.fire('remove', plane);
-            }
+            if (detectedPlanes.has(xrPlane))
+                continue;
+
+            // if indexed plane is not listed in detectedPlanes anymore
+            // then remove it
+            this._planesIndex.delete(xrPlane);
+            this._planes.splice(this._planes.indexOf(plane), 1);
+            plane.destroy();
+            this.fire('remove', plane);
         }
 
+        // iterate through detected planes
         for (const xrPlane of detectedPlanes) {
             let plane = this._planesIndex.get(xrPlane);
 
             if (! plane) {
+                // detected plane is not indexed
+                // then create new XrPlane
                 plane = new XrPlane(this, xrPlane);
                 this._planesIndex.set(xrPlane, plane);
                 this._planes.push(plane);
-                this.fire('add', plane);
                 plane.update(frame);
+                this.fire('add', plane);
             } else {
+                // if already indexed, just update
                 plane.update(frame);
             }
         }
