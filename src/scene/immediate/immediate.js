@@ -15,6 +15,8 @@ import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { ImmediateBatches } from '../immediate/immediate-batches.js';
 
+const tempPoints = [];
+
 class Immediate {
     constructor(device, app) {
         this.device = device;
@@ -231,19 +233,36 @@ class Immediate {
         batch.addLines(this.cubePositions, color);
     }
 
-    renderWireSphere(center, radius, color, options) {
+    renderWireBoundingBox(boundingBox, color, options) {
+        const min = boundingBox.getMin();
+        const max = boundingBox.getMax();
+        const cubeWorldPos = [
+            new Vec3(min.x, min.y, min.z), new Vec3(min.x, max.y, min.z), new Vec3(max.x, max.y, min.z), new Vec3(max.x, min.y, min.z),
+            new Vec3(min.x, min.y, max.z), new Vec3(min.x, max.y, max.z), new Vec3(max.x, max.y, max.z), new Vec3(max.x, min.y, max.z)
+        ];
+        const cubePositions = [
+            cubeWorldPos[0], cubeWorldPos[1],
+            cubeWorldPos[1], cubeWorldPos[2],
+            cubeWorldPos[2], cubeWorldPos[3],
+            cubeWorldPos[3], cubeWorldPos[0],
 
-        const numSegments = 20;
+            cubeWorldPos[4], cubeWorldPos[5],
+            cubeWorldPos[5], cubeWorldPos[6],
+            cubeWorldPos[6], cubeWorldPos[7],
+            cubeWorldPos[7], cubeWorldPos[4],
 
-        // preallocate array of positions
-        if (!this.spherePoints) {
-            this.spherePoints = [];
-            for (let i = 0; i < numSegments * 6; i++) {
-                this.spherePoints.push(new Vec3());
-            }
-        }
+            cubeWorldPos[0], cubeWorldPos[4],
+            cubeWorldPos[1], cubeWorldPos[5],
+            cubeWorldPos[2], cubeWorldPos[6],
+            cubeWorldPos[3], cubeWorldPos[7]
+        ];
 
-        const points = this.spherePoints;
+        const batch = this.getBatch(options.layer, options.depthTest);
+        batch.addLines(cubePositions, color);
+    }
+
+    renderWireSphere(center, radius, color, numSegments, options) {
+
         const step = 2 * Math.PI / numSegments;
         let angle = 0;
 
@@ -254,16 +273,17 @@ class Immediate {
             let sin1 = Math.sin(angle);
             let cos1 = Math.cos(angle);
 
-            points[i * 6].set(center.x + radius * sin0, center.y, center.z + radius * cos0);
-            points[i * 6 + 1].set(center.x + radius * sin1, center.y, center.z + radius * cos1);
-            points[i * 6 + 2].set(center.x + radius * sin0, center.y + radius * cos0, center.z);
-            points[i * 6 + 3].set(center.x + radius * sin1, center.y + radius * cos1, center.z);
-            points[i * 6 + 4].set(center.x, center.y + radius * sin0, center.z + radius * cos0);
-            points[i * 6 + 5].set(center.x, center.y + radius * sin1, center.z + radius * cos1);
+            tempPoints.push(center.x + radius * sin0, center.y, center.z + radius * cos0);
+            tempPoints.push(center.x + radius * sin1, center.y, center.z + radius * cos1);
+            tempPoints.push(center.x + radius * sin0, center.y + radius * cos0, center.z);
+            tempPoints.push(center.x + radius * sin1, center.y + radius * cos1, center.z);
+            tempPoints.push(center.x, center.y + radius * sin0, center.z + radius * cos0);
+            tempPoints.push(center.x, center.y + radius * sin1, center.z + radius * cos1);
         }
 
         const batch = this.getBatch(options.layer, options.depthTest);
-        batch.addLines(points, color);
+        batch.addLinesArrays(tempPoints, color);
+        tempPoints.length = 0;
     }
 
     getGraphNode(matrix) {

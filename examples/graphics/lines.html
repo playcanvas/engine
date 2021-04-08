@@ -100,12 +100,15 @@
         // helper function to generate a color for 3d point by lerping between green and red color
         // based on its y coordinate
         function groundColor(point) {
-            return new pc.Color().lerp(pc.Color.GREEN, pc.Color.RED, (point.y + 3) * 0.2);
+            return new pc.Color().lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
         }
 
         // access two layers, used to render lines to them
         var worldLayer = app.scene.layers.getLayerByName("World");
         var immediateLayer = app.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
+
+        // bounding box of the meshes
+        var bounds = new pc.BoundingBox();
 
         // update loop executes each frame
         var time = 0;
@@ -147,7 +150,19 @@
                 // move them equally spaced out around in the circle
                 var offset = i * Math.PI * 2 / numInstances;
                 entity = spheres[i];
-                entity.setLocalPosition(30 + 20 * Math.sin(time * 0.2 + offset), 5, 30 + 20 * Math.cos(time * 0.2 + offset));
+                entity.setLocalPosition(
+                    30 + 20 * Math.sin(time * 0.2 + offset),
+                    5 + 2 * Math.sin(time + 3 * i / numInstances),
+                    30 + 20 * Math.cos(time * 0.2 + offset)
+                );
+
+                // update bounding box for all meshes
+                var thisBounds = entity.render.meshInstances[0].aabb;
+                if (i === 0) {
+                    bounds.copy(thisBounds);
+                } else {
+                    bounds.add(thisBounds);
+                }
 
                 var options = {
 
@@ -160,11 +175,14 @@
 
                 // render either wiframe sphere or cube around the sphere objects
                 if (i % 2) {
-                    app.renderWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, options);
+                    app.renderWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, 30, options);
                 } else {
                     app.renderWireCube(entity.getWorldTransform(), pc.Color.CYAN, options);
                 }
             }
+
+            // wireframe box for the bounds around all meshes
+            app.renderWireBoundingBox(bounds, pc.Color.WHITE);
         });
     </script>
 </body>

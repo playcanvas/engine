@@ -22,6 +22,7 @@ class ImmediateBatch {
     }
 
     // add line positions and colors to the batch
+    // this function expects position in Vec3 and colors in Color format
     addLines(positions, color) {
 
         // positions
@@ -42,6 +43,28 @@ class ImmediateBatch {
             }
         } else {
             // single colored line
+            for (let i = 0; i < count; i++) {
+                destCol.push(color.r, color.g, color.b, color.a);
+            }
+        }
+    }
+
+    // add line positions and colors to the batch
+    // this function expects positions as arrays of numbers
+    // and color as instance of Color or array of number specifying the same number of vertices as positions
+    addLinesArrays(positions, color) {
+
+        // positions
+        this.positions.push(...positions);
+
+        // colors
+        const destCol = this.colors;
+        if (color.length) {
+            // multi colored line
+            destCol.push(...color);
+        } else {
+            // single colored line
+            const count = positions.length / 3;
             for (let i = 0; i < count; i++) {
                 destCol.push(color.r, color.g, color.b, color.a);
             }

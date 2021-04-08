@@ -2014,9 +2014,13 @@ class Application extends EventHandler {
         this._immediate.renderWireCube(matrix, color, options);
     }
 
+    renderWireBoundingBox(boundingBox, color, options = this._getDefaultImmediateOptions(true)) {
+        this._immediate.renderWireBoundingBox(boundingBox, color, options);
+    }
+
     // // Draw lines forming sphere at this frame
-    renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
-        this._immediate.renderWireSphere(center, radius, color, options);
+    renderWireSphere(center, radius, color, segments = 20, options = this._getDefaultImmediateOptions(true)) {
+        this._immediate.renderWireSphere(center, radius, color, segments, options);
     }
 
     // Draw meshInstance at this frame
