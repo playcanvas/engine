@@ -1811,13 +1811,6 @@ class Application extends EventHandler {
     _addLines(positions, colors, options) {
         var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
         var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
-<<<<<<< HEAD
-=======
-        var mask = (options && options.mask) ? options.mask : undefined;
-
-        this._initImmediate();
-        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
->>>>>>> master
 
         const batch = this._immediate.getBatch(layer, depthTest);
         batch.addLines(positions, colors);
