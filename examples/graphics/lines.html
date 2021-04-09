@@ -83,9 +83,13 @@
 
             // create render component
             var component = entity.addComponent("render", {
-                type: "sphere",
+                type: (i % 2 ? "sphere" : "cylinder"),
                 material: material
             });
+
+            if (!(i % 2)) {
+                entity.setLocalScale(3, 5, 3);
+            }
 
             // add entity for rendering
             app.root.addChild(entity);
@@ -177,6 +181,9 @@
                 if (i % 2) {
                     app.renderWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, 30, options);
                 } else {
+
+                    // rotate the cylinders
+                    entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
                     app.renderWireCube(entity.getWorldTransform(), pc.Color.CYAN, options);
                 }
             }
