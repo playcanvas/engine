@@ -5,10 +5,10 @@ import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL } from './constants.js';
 
-let tempVec3 = new Vec3();
-let tempMin3 = new Vec3();
-let tempMax3 = new Vec3();
-let tempBox = new BoundingBox();
+const tempVec3 = new Vec3();
+const tempMin3 = new Vec3();
+const tempMax3 = new Vec3();
+const tempBox = new BoundingBox();
 
 const epsilon = 0.000001;
 const oneDiv255 = 1 / 255;
@@ -38,7 +38,6 @@ function packFloatTo2Bytes(value, array, offset) {
 }
 
 class WorldClusters {
-
     // format for high precision light texture - float
     static FORMAT_FLOAT = 0;
 
@@ -289,7 +288,7 @@ class WorldClusters {
             // TODO: handle the case where this goes over texture limit - either report error, or drop down number of cells / lights per cell
             let width = Math.ceil(Math.sqrt(totalPixels));
             width = math.roundUp(width, this._pixelsPerCellCount);
-            let height = Math.ceil(totalPixels / width);
+            const height = Math.ceil(totalPixels / width);
 
             this._clusterTextureSizeData[0] = width;
             this._clusterTextureSizeData[1] = 1.0 / width;
