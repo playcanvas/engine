@@ -44,10 +44,7 @@ class JsonStandardMaterialParser {
         // usual flow is that data is validated in resource loader
         // but if not, validate here.
         if (!data.validated) {
-            if (!this._validator) {
-                this._validator = new StandardMaterialValidator();
-            }
-            this._validator.validate(data);
+            data = this._validate(data);
         }
 
         if (data.chunks) {
@@ -164,10 +161,10 @@ class JsonStandardMaterialParser {
 
     // check for invalid properties
     _validate(data) {
-        if (!this._validator) {
-            this._validator = new StandardMaterialValidator();
-        }
         if (!data.validated) {
+            if (!this._validator) {
+                this._validator = new StandardMaterialValidator();
+            }
             this._validator.validate(data);
         }
         return data;

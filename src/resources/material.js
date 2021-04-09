@@ -144,10 +144,8 @@ class MaterialHandler {
         materialAsset.resource[parameterName] = texture;
     }
 
-    // assign a placeholder texture while waiting for one to load
-    // placeholder textures do not replace the data[parameterName] value
-    // in the asset.data thus preserving the final asset id until it is loaded
-    _getPlaceholderTexture(parameterName, materialAsset) {
+    // returns the correct placeholder texture for the texture parameter
+    _getPlaceholderTexture(parameterName) {
         // create placeholder textures on-demand
         if (!this._placeholderTextures) {
             this._createPlaceholders();
@@ -159,6 +157,7 @@ class MaterialHandler {
         return texture;
     }
 
+    // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset) {
 
         materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset);
@@ -173,21 +172,11 @@ class MaterialHandler {
         this._assets.load(textureAsset);
     }
 
-    _onTextureRemove(parameterName, materialAsset, textureAsset) {
+    _onTextureRemoveOrUnload(parameterName, materialAsset, textureAsset) {
         const material = materialAsset.resource;
         if (material) {
-            if (material[parameterName] === textureAsset.resource) {
-                this._assignTexture(parameterName, materialAsset, null);
-                material.update();
-            }
-        }
-    }
-
-    _onTextureUnload(parameterName, materialAsset, textureAsset) {
-        const material = materialAsset.resource;
-        if (material) {
-            if (material[parameterName] === textureAsset.resource) {
-                this._assignTexture(parameterName, materialAsset, null);
+            if (materialAsset.resource[parameterName] === textureAsset.resource) {
+                this._assignPlaceholderTexture(parameterName, materialAsset);
                 material.update();
             }
         }
@@ -220,10 +209,10 @@ class MaterialHandler {
         this._assets.load(cubemapAsset);
     }
 
-    _onCubemapRemove(parameterName, materialAsset, cubemapAsset) {
+    _onCubemapRemoveOrUnload(parameterName, materialAsset, cubemapAsset) {
         const material = materialAsset.resource;
 
-        if (material[parameterName] === cubemapAsset.resource) {
+        if (materialAsset.data.prefilteredCubeMap128 === cubemapAsset.resources[1]) {
             this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
             material.update();
         }
@@ -253,8 +242,8 @@ class MaterialHandler {
                     assetReference = new AssetReference(name, materialAsset, assets, {
                         load: this._onTextureLoad,
                         add: this._onTextureAdd,
-                        remove: this._onTextureRemove,
-                        unload: this._onTextureUnload
+                        remove: this._onTextureRemoveOrUnload,
+                        unload: this._onTextureRemoveOrUnload
                     }, this);
 
                     material._assetReferences[name] = assetReference;
@@ -307,7 +296,8 @@ class MaterialHandler {
                     assetReference = new AssetReference(name, materialAsset, assets, {
                         load: this._onCubemapLoad,
                         add: this._onCubemapAdd,
-                        remove: this._onCubemapRemove
+                        remove: this._onCubemapRemoveOrUnload,
+                        unload: this._onCubemapRemoveOrUnload
                     }, this);
 
                     material._assetReferences[name] = assetReference;
