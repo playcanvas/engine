@@ -182,7 +182,7 @@
             }
 
             // wireframe box for the bounds around all meshes
-            app.renderWireBoundingBox(bounds, pc.Color.WHITE);
+            app.renderWireAlignedBox(bounds.getMin(), bounds.getMax(), pc.Color.WHITE);
         });
     </script>
 </body>

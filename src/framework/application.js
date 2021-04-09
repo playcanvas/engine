@@ -2014,8 +2014,8 @@ class Application extends EventHandler {
         this._immediate.renderWireCube(matrix, color, options);
     }
 
-    renderWireBoundingBox(boundingBox, color, options = this._getDefaultImmediateOptions(true)) {
-        this._immediate.renderWireBoundingBox(boundingBox, color, options);
+    renderWireAlignedBox(minPoint, maxPoint, color, options = this._getDefaultImmediateOptions(true)) {
+        this._immediate.renderWireAlignedBox(minPoint, maxPoint, color, options);
     }
 
     // // Draw lines forming sphere at this frame
