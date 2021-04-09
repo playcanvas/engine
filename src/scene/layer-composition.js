@@ -329,7 +329,7 @@ class LayerComposition extends EventHandler {
 
     updateShadowCasters() {
 
-        // _lightCompositionData already has the right size, just clean it up
+        // _lightCompositionData already has the right size, just clean up shadow casters
         const lightCount = this._lights.length;
         for (let i = 0; i < lightCount; i++) {
             this._lightCompositionData[i].clearShadowCasters();
@@ -352,10 +352,7 @@ class LayerComposition extends EventHandler {
                     const lightCompData = this._lightCompositionData[lightIndex];
 
                     // add unique meshes from the layer to casters
-                    const meshInstances = layer.shadowCasters;
-                    for (let k = 0; k < meshInstances.length; k++) {
-                        lightCompData.addShadowCaster(meshInstances[k]);
-                    }
+                    lightCompData.addShadowCasters(layer.shadowCasters);
                 }
             }
         }
@@ -376,9 +373,16 @@ class LayerComposition extends EventHandler {
                 const light = lights[j];
 
                 // add new light
-                if (!this._lightsMap.has(light)) {
-                    this._lightsMap.set(light, this._lights.length);
+                let lightIndex = this._lightsMap.get(light);
+                if (!lightIndex) {
+                    lightIndex = this._lights.length;
+                    this._lightsMap.set(light, lightIndex);
                     this._lights.push(light);
+
+                    // make sure the light has composition data allocated
+                    if (!this._lightCompositionData[lightIndex]) {
+                        this._lightCompositionData[lightIndex] = new LightCompositionData();
+                    }
                 }
             }
 
@@ -390,18 +394,9 @@ class LayerComposition extends EventHandler {
         // split light list by type
         this._splitLightsArray(this);
 
-        // adjust _lightCompositionData to the right size, matching number of lights, and clean it up
+        // adjust _lightCompositionData to the right size, matching number of lights, and clean up shadow casters
         const lightCount = this._lights.length;
         this._lightCompositionData.length = lightCount;
-        for (let i = 0; i < lightCount; i++) {
-
-            const lightCompData = this._lightCompositionData[i];
-            if (lightCompData) {
-                lightCompData.clearShadowCasters();
-            } else {
-                this._lightCompositionData[i] = new LightCompositionData();
-            }
-        }
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects

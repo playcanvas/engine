@@ -13,10 +13,15 @@ class LightCompositionData {
         this.shadowCastersList.length = 0;
     }
 
-    addShadowCaster(item) {
-        if (!this.shadowCastersSet.has(item)) {
-            this.shadowCastersSet.add(item);
-            this.shadowCastersList.push(item);
+    addShadowCasters(casters) {
+
+        // add unique casters to the set and the list
+        for (let i = 0; i < casters.length; i++) {
+            const item = casters[i];
+            if (!this.shadowCastersSet.has(item)) {
+                this.shadowCastersSet.add(item);
+                this.shadowCastersList.push(item);
+            }
         }
     }
 }
