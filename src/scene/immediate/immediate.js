@@ -260,11 +260,11 @@ class Immediate {
         let angle = 0;
 
         for (let i = 0; i < numSegments; i++) {
-            let sin0 = Math.sin(angle);
-            let cos0 = Math.cos(angle);
+            const sin0 = Math.sin(angle);
+            const cos0 = Math.cos(angle);
             angle += step;
-            let sin1 = Math.sin(angle);
-            let cos1 = Math.cos(angle);
+            const sin1 = Math.sin(angle);
+            const cos1 = Math.cos(angle);
 
             tempPoints.push(center.x + radius * sin0, center.y, center.z + radius * cos0);
             tempPoints.push(center.x + radius * sin1, center.y, center.z + radius * cos1);
@@ -298,7 +298,7 @@ class Immediate {
     onPreRender() {
 
         // update line batches
-        this.allBatches.forEach(batches => {
+        this.allBatches.forEach((batches) => {
             batches.onPreRender();
         });
 
@@ -316,7 +316,7 @@ class Immediate {
     onPostRender() {
 
         // clean up line batches
-        this.allBatches.forEach(batches => {
+        this.allBatches.forEach((batches) => {
             batches.onPostRender();
         });
         this.allBatches.clear();

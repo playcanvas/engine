@@ -19,13 +19,13 @@ class ImmediateBatches {
     }
 
     onPreRender() {
-        this.map.forEach(batch => {
+        this.map.forEach((batch) => {
             batch.onPreRender();
         });
     }
 
     onPostRender() {
-        this.map.forEach(batch => {
+        this.map.forEach((batch) => {
             batch.onPostRender();
         });
     }
