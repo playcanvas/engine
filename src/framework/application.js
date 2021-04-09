@@ -2044,7 +2044,7 @@ class Application extends EventHandler {
         this._immediateData.renderWireBoundingBox(boundingBox, color, options);
     }
 
-    // // Draw lines forming sphere at this frame
+    // Draw lines forming sphere at this frame
     renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderWireSphere(center, radius, color, options);
