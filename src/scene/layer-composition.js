@@ -8,7 +8,7 @@ import {
 } from './constants.js';
 
 import { RenderAction } from './render-action.js';
-import { ShadowCasters } from './shadow-casters.js';
+import { LightCompositionData } from './light-composition-data.js';
 
 /**
  * @class
@@ -58,8 +58,9 @@ class LayerComposition extends EventHandler {
         // a map of Light to index in _lights for fast lookup
         this._lightsMap = new Map();
 
-        // each entry in _lights has entry of type ShadowCasters here at the same index, storing shadow casters for the light
-        this._lightShadowCasters = [];
+        // each entry in _lights has entry of type LightCompositionData here at the same index,
+        // storing shadow casters and additional composition related data for the light
+        this._lightCompositionData = [];
 
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
@@ -328,17 +329,10 @@ class LayerComposition extends EventHandler {
 
     updateShadowCasters() {
 
-        // adjust _lightShadowCasters to the right size, matching number of lights, and clean it up
+        // _lightCompositionData already has the right size, just clean it up
         const lightCount = this._lights.length;
-        this._lightShadowCasters.length = lightCount;
         for (let i = 0; i < lightCount; i++) {
-
-            const casters = this._lightShadowCasters[i];
-            if (casters) {
-                casters.clear();
-            } else {
-                this._lightShadowCasters[i] = new ShadowCasters();
-            }
+            this._lightCompositionData[i].clearShadowCasters();
         }
 
         // for each layer
@@ -355,12 +349,12 @@ class LayerComposition extends EventHandler {
 
                     // find its index in global light list, and get shadow casters for it
                     const lightIndex = this._lightsMap.get(lights[j]);
-                    const casters = this._lightShadowCasters[lightIndex];
+                    const lightCompData = this._lightCompositionData[lightIndex];
 
                     // add unique meshes from the layer to casters
                     const meshInstances = layer.shadowCasters;
                     for (let k = 0; k < meshInstances.length; k++) {
-                        casters.add(meshInstances[k]);
+                        lightCompData.addShadowCaster(meshInstances[k]);
                     }
                 }
             }
@@ -395,6 +389,19 @@ class LayerComposition extends EventHandler {
 
         // split light list by type
         this._splitLightsArray(this);
+
+        // adjust _lightCompositionData to the right size, matching number of lights, and clean it up
+        const lightCount = this._lights.length;
+        this._lightCompositionData.length = lightCount;
+        for (let i = 0; i < lightCount; i++) {
+
+            const lightCompData = this._lightCompositionData[i];
+            if (lightCompData) {
+                lightCompData.clearShadowCasters();
+            } else {
+                this._lightCompositionData[i] = new LightCompositionData();
+            }
+        }
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects

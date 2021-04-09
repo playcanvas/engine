@@ -2878,7 +2878,7 @@ class ForwardRenderer {
             const light = comp._lights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightShadowCasters[i].list;
+                    const casters = comp._lightCompositionData[i].shadowCastersList;
                     this.cullLocalShadowmap(light, casters);
                 }
             }
@@ -2893,7 +2893,7 @@ class ForwardRenderer {
             for (let j = 0; j < count; j++) {
                 const lightIndex = renderAction.directionalLightsIndices[j];
                 const light = comp._lights[lightIndex];
-                const casters = comp._lightShadowCasters[lightIndex].list;
+                const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
                 this.cullDirectionalShadowmap(light, casters, renderAction.camera.camera);
             }
         }
