@@ -45,7 +45,7 @@ class CssHandler {
  * @returns {Element} The style DOM element.
  */
 function createStyle(cssString) {
-    var result = document.createElement('style');
+    const result = document.createElement('style');
     result.type = 'text/css';
     if (result.styleSheet) {
         result.styleSheet.cssText = cssString;

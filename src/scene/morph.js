@@ -107,11 +107,11 @@ class Morph extends RefCountedObject {
             target = this._targets[i];
             if (target.options.deltaPositions) {
                 deltaArrays.push(target.options.deltaPositions);
-                deltaInfos.push( { target: target, name: 'texturePositions' } );
+                deltaInfos.push({ target: target, name: 'texturePositions' });
             }
             if (target.options.deltaNormals) {
                 deltaArrays.push(target.options.deltaNormals);
-                deltaInfos.push( { target: target, name: 'textureNormals' } );
+                deltaInfos.push({ target: target, name: 'textureNormals' });
             }
         }
 

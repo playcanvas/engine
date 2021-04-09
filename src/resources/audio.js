@@ -7,23 +7,23 @@ import { hasAudioContext } from '../audio/capabilities.js';
 import { Sound } from '../sound/sound.js';
 
 // checks if user is running IE
-var ie = (function () {
+const ie = (function () {
     if (typeof window === 'undefined') {
         // Node.js => return false
         return false;
     }
-    var ua = window.navigator.userAgent;
+    const ua = window.navigator.userAgent;
 
-    var msie = ua.indexOf('MSIE ');
+    const msie = ua.indexOf('MSIE ');
     if (msie > 0) {
         // IE 10 or older => return version number
         return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
     }
 
-    var trident = ua.indexOf('Trident/');
+    const trident = ua.indexOf('Trident/');
     if (trident > 0) {
         // IE 11 => return version number
-        var rv = ua.indexOf('rv:');
+        const rv = ua.indexOf('rv:');
         return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
     }
 
@@ -54,7 +54,7 @@ class AudioHandler {
     }
 
     _isSupported(url) {
-        var ext = path.getExtension(url);
+        const ext = path.getExtension(url);
 
         if (toMIME[ext]) {
             return true;
@@ -70,12 +70,12 @@ class AudioHandler {
             };
         }
 
-        var success = function (resource) {
+        const success = function (resource) {
             callback(null, new Sound(resource));
         };
 
-        var error = function (err) {
-            var msg = 'Error loading audio url: ' + url.original;
+        const error = function (err) {
+            let msg = 'Error loading audio url: ' + url.original;
             if (err) {
                 msg += ': ' + (err.message || err);
             }
@@ -111,7 +111,7 @@ class AudioHandler {
      */
     _createSound(url, success, error) {
         if (hasAudioContext()) {
-            var manager = this.manager;
+            const manager = this.manager;
 
             if (!manager.context) {
                 error('Audio manager has no audio context');
@@ -119,7 +119,7 @@ class AudioHandler {
             }
 
             // if this is a blob URL we need to set the response type to arraybuffer
-            var options = {
+            const options = {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
             };
@@ -137,7 +137,7 @@ class AudioHandler {
                 manager.context.decodeAudioData(response, success, error);
             });
         } else {
-            var audio = null;
+            let audio = null;
 
             try {
                 audio = new Audio();
@@ -153,7 +153,7 @@ class AudioHandler {
                 document.body.appendChild(audio);
             }
 
-            var onReady = function () {
+            const onReady = function () {
                 audio.removeEventListener('canplaythrough', onReady);
 
                 // remove from DOM no longer necessary

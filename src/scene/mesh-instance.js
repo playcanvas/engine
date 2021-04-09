@@ -216,7 +216,7 @@ class MeshInstance {
                 meshInstances[i]._renderStyle = renderStyle;
 
                 // process all unique meshes
-                let mesh = meshInstances[i].mesh;
+                const mesh = meshInstances[i].mesh;
                 if (!_meshSet.has(mesh)) {
                     _meshSet.add(mesh);
                     mesh.prepareRenderState(renderStyle);
@@ -472,7 +472,7 @@ class MeshInstance {
 
     destroy() {
 
-        let mesh = this.mesh;
+        const mesh = this.mesh;
         if (mesh) {
 
             // this decreases ref count on the mesh
@@ -625,7 +625,7 @@ class MeshInstance {
     setRealtimeLightmap(name, texture) {
 
         // no change
-        let old = this.getParameter(name);
+        const old = this.getParameter(name);
         if (old === texture)
             return;
 

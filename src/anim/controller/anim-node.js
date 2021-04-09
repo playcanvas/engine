@@ -69,12 +69,12 @@ class AnimNode {
         return this._weightedSpeed * this._speed;
     }
 
-    get weightedSpeed() {
-        return this._weightedSpeed;
-    }
-
     get absoluteSpeed() {
         return Math.abs(this._speed);
+    }
+
+    get weightedSpeed() {
+        return this._weightedSpeed;
     }
 
     set weightedSpeed(weightedSpeed) {

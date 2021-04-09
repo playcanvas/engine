@@ -13,8 +13,6 @@ import { math } from '../math/math.js';
  * object at `http`.
  */
 class Http {
-    constructor() {}
-
     static ContentType = {
         FORM_URLENCODED: "application/x-www-form-urlencoded",
         GIF: "image/gif",

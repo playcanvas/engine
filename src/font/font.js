@@ -30,7 +30,7 @@ class Font {
         return this._data;
     }
 
-    set data(value){
+    set data(value) {
         this._data = value;
         if (!value)
             return;

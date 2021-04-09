@@ -10,7 +10,7 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
-var PLACEHOLDER_MAP = {
+const PLACEHOLDER_MAP = {
     aoMap: 'white',
     diffuseMap: 'gray',
     specularMap: 'gray',
@@ -69,7 +69,7 @@ class MaterialHandler {
     }
 
     open(url, data) {
-        var material = this._parser.parse(data);
+        const material = this._parser.parse(data);
 
         // temp storage for engine-only as we need this during patching
         if (data._engine) {
@@ -85,14 +85,14 @@ class MaterialHandler {
     _createPlaceholders() {
         this._placeholderTextures = {};
 
-        var textures = {
+        const textures = {
             white: [255, 255, 255, 255],
             gray: [128, 128, 128, 255],
             black: [0, 0, 0, 255],
             normal: [128, 128, 255, 255]
         };
 
-        for (var key in textures) {
+        for (const key in textures) {
             if (!textures.hasOwnProperty(key))
                 continue;
 
@@ -105,9 +105,9 @@ class MaterialHandler {
             this._placeholderTextures[key].name = 'placeholder';
 
             // fill pixels with color
-            var pixels = this._placeholderTextures[key].lock();
-            for (var i = 0; i < 4; i++) {
-                for (var c = 0; c < 4; c++) {
+            const pixels = this._placeholderTextures[key].lock();
+            for (let i = 0; i < 4; i++) {
+                for (let c = 0; c < 4; c++) {
                     pixels[i * 4 + c] = textures[key][c];
                 }
             }
@@ -153,8 +153,8 @@ class MaterialHandler {
             this._createPlaceholders();
         }
 
-        var placeholder = PLACEHOLDER_MAP[parameterName];
-        var texture = this._placeholderTextures[placeholder];
+        const placeholder = PLACEHOLDER_MAP[parameterName];
+        const texture = this._placeholderTextures[placeholder];
 
         materialAsset.resource[parameterName] = texture;
     }
@@ -169,7 +169,7 @@ class MaterialHandler {
     }
 
     _onTextureRemove(parameterName, materialAsset, textureAsset) {
-        var material = materialAsset.resource;
+        const material = materialAsset.resource;
         if (material) {
             if (material[parameterName] === textureAsset.resource) {
                 this._assignTexture(parameterName, materialAsset, null);
@@ -206,7 +206,7 @@ class MaterialHandler {
     }
 
     _onCubemapRemove(parameterName, materialAsset, cubemapAsset) {
-        var material = materialAsset.resource;
+        const material = materialAsset.resource;
 
         if (material[parameterName] === cubemapAsset.resource) {
             this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
@@ -216,15 +216,15 @@ class MaterialHandler {
 
     _bindAndAssignAssets(materialAsset, assets) {
         // always migrate before updating material from asset data
-        var data = this._parser.migrate(materialAsset.data);
+        const data = this._parser.migrate(materialAsset.data);
 
-        var material = materialAsset.resource;
+        const material = materialAsset.resource;
 
-        var pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === "path");
 
-        var TEXTURES = standardMaterialTextureParameters;
+        const TEXTURES = standardMaterialTextureParameters;
 
-        var i, name, assetReference;
+        let i, name, assetReference;
         // iterate through all texture parameters
         for (i = 0; i < TEXTURES.length; i++) {
             name = TEXTURES[i];
@@ -275,7 +275,7 @@ class MaterialHandler {
             }
         }
 
-        var CUBEMAPS = standardMaterialCubemapParameters;
+        const CUBEMAPS = standardMaterialCubemapParameters;
 
         // iterate through all cubemap parameters
         for (i = 0; i < CUBEMAPS.length; i++) {

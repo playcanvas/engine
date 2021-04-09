@@ -1,14 +1,14 @@
 /**
  * @class
  * @name XrFinger
- * @classdesc Represents finger with related joints and index
- * @description Represents finger with related joints and index
- * @param {number} index - Index of a finger
- * @param {XrHand} hand - Hand that finger relates to
- * @property {number} index Index of a finger, numeration is: thumb, index, middle, ring, little
- * @property {XrHand} hand Hand that finger relates to
- * @property {XrJoint[]} joints List of joints that relates to this finger, starting from joint closest to wrist all the way to the tip of a finger
- * @property {XrJoint|null} tip Tip of a finger, or null if not available
+ * @classdesc Represents finger with related joints and index.
+ * @description Represents finger with related joints and index.
+ * @param {number} index - Index of a finger.
+ * @param {XrHand} hand - Hand that finger relates to.
+ * @property {number} index Index of a finger, numeration is: thumb, index, middle, ring, little.
+ * @property {XrHand} hand Hand that finger relates to.
+ * @property {XrJoint[]} joints List of joints that relates to this finger, starting from joint closest to wrist all the way to the tip of a finger.
+ * @property {XrJoint|null} tip Tip of a finger, or null if not available.
  */
 class XrFinger {
     constructor(index, hand) {

@@ -68,7 +68,7 @@ class URI {
      * @classdesc A URI object.
      * @param {string} uri - URI string.
      * @property {string} scheme The scheme. (e.g. http).
-     * @property {string} authority The authority. (e.g. www.example.com).
+     * @property {string} authority The authority. (e.g. `www.example.com`).
      * @property {string} path The path. (e.g. /users/example).
      * @property {string} query The query, the section after a ?. (e.g. search=value).
      * @property {string} fragment The fragment, the section after a #.

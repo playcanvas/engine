@@ -34,7 +34,7 @@ class XrHitTest extends EventHandler {
      * @event
      * @name XrHitTest#add
      * @description Fired when new {@link XrHitTestSource} is added to the list.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
      * @example
      * app.xr.hitTest.on('add', function (hitTestSource) {
      *     // new hit test source is added
@@ -45,7 +45,7 @@ class XrHitTest extends EventHandler {
      * @event
      * @name XrHitTest#remove
      * @description Fired when {@link XrHitTestSource} is removed to the list.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
      * @example
      * app.xr.hitTest.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -56,10 +56,10 @@ class XrHitTest extends EventHandler {
      * @event
      * @name XrHitTest#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {Vec3} position - Position of hit test
-     * @param {Quat} rotation - Rotation of hit test
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
+     * @param {Vec3} position - Position of hit test.
+     * @param {Quat} rotation - Rotation of hit test.
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);

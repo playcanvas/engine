@@ -150,7 +150,7 @@ class Light {
 
         // returns existing
         for (let i = 0; i < this._renderData.length; i++) {
-            let current = this._renderData[i];
+            const current = this._renderData[i];
             if (current.camera === camera && current.face === face) {
                 return current;
             }
@@ -262,7 +262,7 @@ class Light {
             var angle = this._outerConeAngle;
             var node = this._node;
 
-            var scl = Math.abs( Math.sin(angle * math.DEG_TO_RAD) * range );
+            var scl = Math.abs(Math.sin(angle * math.DEG_TO_RAD) * range);
 
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);

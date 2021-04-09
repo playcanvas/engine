@@ -100,38 +100,46 @@ describe("pc.SceneRegistry", function () {
         expect(registry.findByUrl("/test3.json").name).to.equal("New Scene 3");
     });
 
-    it("load and cache, check data is valid, unload data, check data is removed with SceneItem", function () {
+    var promisedLoadSceneData = function (registry, sceneItemOrUrl) {
+        return new Promise(function (resolve, reject) {
+            registry.loadSceneData(sceneItemOrUrl, function (err, sceneItem) {
+                if (err) {
+                    reject(err);
+                }
+
+                resolve(sceneItem);
+            });
+        });
+    };
+
+    it("load and cache, check data is valid, unload data, check data is removed with SceneItem", async function () {
         var registry = new pc.SceneRegistry(app);
-        registry.add("New Scene 1", "/test1.json");
+        registry.add("New Scene 1", "base/tests/test-assets/scenes/test1.json");
 
         var sceneItem = registry.find("New Scene 1");
-        registry.loadSceneData(sceneItem, function (err, sceneItem) {
-            expect(err).to.null;
-            expect(sceneItem.data).to.exist;
-            expect(sceneItem._loading).to.equal(false);
+        await promisedLoadSceneData(registry, sceneItem);
 
-            registry.unloadSceneData(sceneItem);
-            expect(sceneItem.data).to.null;
-            expect(sceneItem._loading).to.equal(false);
+        expect(sceneItem).to.exist;
+        expect(sceneItem.data).to.exist;
+        expect(sceneItem._loading).to.equal(false);
 
-            done();
-        });
+        registry.unloadSceneData(sceneItem);
+        expect(sceneItem.data).to.null;
+        expect(sceneItem._loading).to.equal(false);
     });
 
-    it("load and cache, check data is valid, unload data, check data is removed with Urls", function () {
+    it("load and cache, check data is valid, unload data, check data is removed with Urls", async function () {
         var registry = new pc.SceneRegistry(app);
-        registry.add("New Scene 1", "/test1.json");
+        var sceneUrl = "base/tests/test-assets/scenes/test1.json";
+        registry.add("New Scene 1", sceneUrl);
 
-        registry.loadSceneData("test1.json", function (err, sceneItem) {
-            expect(err).to.null;
-            expect(sceneItem.data).to.exist;
-            expect(sceneItem._loading).to.equal(false);
+        var sceneItem = await promisedLoadSceneData(registry, sceneUrl);
+        expect(sceneItem).to.exist;
+        expect(sceneItem.data).to.exist;
+        expect(sceneItem._loading).to.equal(false);
 
-            registry.unloadSceneData("test1.json");
-            expect(sceneItem.data).to.null;
-            expect(sceneItem._loading).to.equal(false);
-
-            done();
-        });
+        registry.unloadSceneData(sceneUrl);
+        expect(sceneItem.data).to.null;
+        expect(sceneItem._loading).to.equal(false);
     });
 });

@@ -574,7 +574,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @private
      * @function
      * @name RigidBodyComponentSystem#_checkForCollisions
-     * @description Checks for collisions and fires collision events
+     * @description Checks for collisions and fires collision events.
      * @param {number} world - The pointer to the dynamics world that invoked this callback.
      * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
      */

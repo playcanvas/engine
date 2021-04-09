@@ -26,14 +26,14 @@ if (window.XRHand) {
 /**
  * @class
  * @name XrHand
- * @classdesc Represents a hand with fingers and joints
- * @description Represents a hand with fingers and joints
- * @param {XrInputSource} inputSource - Input Source that hand is related to
- * @property {XrFinger[]} fingers List of fingers of a hand
- * @property {XrJoint[]} joints List of joints of hand
- * @property {XrJoint[]} tips List of joints that are tips of a fingers
- * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system
- * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost
+ * @classdesc Represents a hand with fingers and joints.
+ * @description Represents a hand with fingers and joints.
+ * @param {XrInputSource} inputSource - Input Source that hand is related to.
+ * @property {XrFinger[]} fingers List of fingers of a hand.
+ * @property {XrJoint[]} joints List of joints of hand.
+ * @property {XrJoint[]} tips List of joints that are tips of a fingers.
+ * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system.
+ * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost.
  */
 class XrHand extends EventHandler {
     constructor(inputSource) {
@@ -178,9 +178,9 @@ class XrHand extends EventHandler {
     /**
      * @function
      * @name XrHand#getJointById
-     * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
-     * @param {string} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
-     * @returns {XrJoint|null} Joint or null if not available
+     * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/.
+     * @param {string} id - Id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/.
+     * @returns {XrJoint|null} Joint or null if not available.
      */
     getJointById(id) {
         return this._jointsById[id] || null;

@@ -1,7 +1,6 @@
 import { SceneParser } from '../resources/parser/scene.js';
 
 /**
- * @private
  * @class
  * @name Template
  * @classdesc Create a Template resource from raw database data.
@@ -18,7 +17,6 @@ class Template {
     }
 
     /**
-     * @private
      * @function
      * @name Template#instantiate
      * @description Create an instance of this template.

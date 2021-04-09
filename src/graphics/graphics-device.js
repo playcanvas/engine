@@ -268,7 +268,7 @@ class GraphicsDevice extends EventHandler {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        this._contextLostHandler = event => {
+        this._contextLostHandler = (event) => {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
@@ -737,7 +737,7 @@ class GraphicsDevice extends EventHandler {
             var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
 
             var fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-            var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT );
+            var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
 
             var highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
             var mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
@@ -751,7 +751,7 @@ class GraphicsDevice extends EventHandler {
                 } else {
                     precision = "lowp";
                     // #if _DEBUG
-                    console.warn( "WARNING: highp and mediump not supported, using lowp" );
+                    console.warn("WARNING: highp and mediump not supported, using lowp");
                     // #endif
                 }
             }
@@ -877,6 +877,7 @@ class GraphicsDevice extends EventHandler {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
+        this.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
     }
 
     initializeRenderState() {
@@ -1329,10 +1330,10 @@ class GraphicsDevice extends EventHandler {
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dest._glFrameBuffer);
             var w = source ? source.width : dest.width;
             var h = source ? source.height : dest.height;
-            gl.blitFramebuffer( 0, 0, w, h,
-                                0, 0, w, h,
-                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                                gl.NEAREST);
+            gl.blitFramebuffer(0, 0, w, h,
+                               0, 0, w, h,
+                               (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                               gl.NEAREST);
             this.renderTarget = prevRt;
             gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
         } else {
@@ -1748,7 +1749,7 @@ class GraphicsDevice extends EventHandler {
             case PIXELFORMAT_111110F: // WebGL2 only
                 texture._glFormat = gl.RGB;
                 texture._glInternalFormat = gl.R11F_G11F_B10F;
-                texture._glPixelType = gl.FLOAT;
+                texture._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
                 break;
             case PIXELFORMAT_SRGB: // WebGL2 only
                 texture._glFormat = gl.RGB;
@@ -3323,7 +3324,7 @@ class GraphicsDevice extends EventHandler {
             lines[i] = (i + 1) + ":\t" + lines[i];
         }
 
-        return lines.join( "\n" );
+        return lines.join("\n");
     }
 
     postLink(shader) {
