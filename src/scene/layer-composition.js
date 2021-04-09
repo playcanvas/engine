@@ -10,6 +10,8 @@ import {
 import { RenderAction } from './render-action.js';
 import { LightCompositionData } from './light-composition-data.js';
 
+const tempSet = new Set();
+
 /**
  * @class
  * @name LayerComposition
@@ -339,23 +341,30 @@ class LayerComposition extends EventHandler {
         const len = this.layerList.length;
         for (let i = 0; i < len; i++) {
             const layer = this.layerList[i];
-            const lights = layer._lights;
 
-            // for each light of a layer
-            for (let j = 0; j < lights.length; j++) {
+            // layer can be in the list two times (opaque, transp), add casters only one time
+            if (!tempSet.has(layer)) {
+                tempSet.add(layer);
 
-                // only need casters when casting shadows
-                if (lights[j].castShadows) {
+                // for each light of a layer
+                const lights = layer._lights;
+                for (let j = 0; j < lights.length; j++) {
 
-                    // find its index in global light list, and get shadow casters for it
-                    const lightIndex = this._lightsMap.get(lights[j]);
-                    const lightCompData = this._lightCompositionData[lightIndex];
+                    // only need casters when casting shadows
+                    if (lights[j].castShadows) {
 
-                    // add unique meshes from the layer to casters
-                    lightCompData.addShadowCasters(layer.shadowCasters);
+                        // find its index in global light list, and get shadow casters for it
+                        const lightIndex = this._lightsMap.get(lights[j]);
+                        const lightCompData = this._lightCompositionData[lightIndex];
+
+                        // add unique meshes from the layer to casters
+                        lightCompData.addShadowCasters(layer.shadowCasters);
+                    }
                 }
             }
         }
+
+        tempSet.clear();
     }
 
     updateLights() {
@@ -367,22 +376,34 @@ class LayerComposition extends EventHandler {
         const count = this.layerList.length;
         for (let i = 0; i < count; i++) {
             const layer = this.layerList[i];
-            const lights = layer._lights;
 
-            for (let j = 0; j < lights.length; j++) {
-                const light = lights[j];
+            // layer can be in the list two times (opaque, transp), process it only one time
+            if (!tempSet.has(layer)) {
+                tempSet.add(layer);
 
-                // add new light
-                let lightIndex = this._lightsMap.get(light);
-                if (!lightIndex) {
-                    lightIndex = this._lights.length;
-                    this._lightsMap.set(light, lightIndex);
-                    this._lights.push(light);
+                const lights = layer._lights;
+                for (let j = 0; j < lights.length; j++) {
+                    const light = lights[j];
 
-                    // make sure the light has composition data allocated
-                    if (!this._lightCompositionData[lightIndex]) {
-                        this._lightCompositionData[lightIndex] = new LightCompositionData();
+                    // add new light
+                    let lightIndex = this._lightsMap.get(light);
+                    if (lightIndex === undefined) {
+                        lightIndex = this._lights.length;
+                        this._lightsMap.set(light, lightIndex);
+                        this._lights.push(light);
+
+                        // make sure the light has composition data allocated
+                        let lightCompData = this._lightCompositionData[lightIndex];
+                        if (!lightCompData) {
+                            lightCompData = new LightCompositionData();
+                            this._lightCompositionData[lightIndex] = lightCompData;
+                        } else {
+                            lightCompData.clearLayerIds();
+                        }
                     }
+
+                    // register layer with the light
+                    this._lightCompositionData[lightIndex].addLayerId(layer.id);
                 }
             }
 
@@ -390,6 +411,8 @@ class LayerComposition extends EventHandler {
             this._splitLightsArray(layer);
             layer._dirtyLights = false;
         }
+
+        tempSet.clear();
 
         // split light list by type
         this._splitLightsArray(this);
