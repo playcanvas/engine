@@ -167,8 +167,9 @@ class JsonStandardMaterialParser {
         if (!this._validator) {
             this._validator = new StandardMaterialValidator();
         }
-        this._validator.validate(data);
-
+        if (!data.validated) {
+            this._validator.validate(data);
+        }
         return data;
     }
 }
