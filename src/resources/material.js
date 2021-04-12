@@ -183,15 +183,16 @@ class MaterialHandler {
     }
 
     _assignCubemap(parameterName, materialAsset, textures) {
-        // NB removed swapping out asset id for resource here
+        // NB we now set resource directly (like textures)
+        materialAsset.resource[parameterName] = textures[0]; // the primary cubemap texture
         if (textures.length === 7) {
             // the prefiltered textures
-            materialAsset.data.prefilteredCubeMap128 = textures[1];
-            materialAsset.data.prefilteredCubeMap64 = textures[2];
-            materialAsset.data.prefilteredCubeMap32 = textures[3];
-            materialAsset.data.prefilteredCubeMap16 = textures[4];
-            materialAsset.data.prefilteredCubeMap8 = textures[5];
-            materialAsset.data.prefilteredCubeMap4 = textures[6];
+            materialAsset.resource.prefilteredCubeMap128 = textures[1];
+            materialAsset.resource.prefilteredCubeMap64 = textures[2];
+            materialAsset.resource.prefilteredCubeMap32 = textures[3];
+            materialAsset.resource.prefilteredCubeMap16 = textures[4];
+            materialAsset.resource.prefilteredCubeMap8 = textures[5];
+            materialAsset.resource.prefilteredCubeMap4 = textures[6];
         }
     }
 
