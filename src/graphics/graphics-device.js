@@ -877,7 +877,7 @@ class GraphicsDevice extends EventHandler {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
-        this.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
+        this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
     }
 
     initializeRenderState() {
