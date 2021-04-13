@@ -104,7 +104,8 @@
             var camera = new pc.Entity();
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.4, 0.45, 0.5),
-                farClip: 50
+                farClip: 50,
+                fov: 45
             });
             camera.addComponent("script");
             camera.script.create("ssao", {

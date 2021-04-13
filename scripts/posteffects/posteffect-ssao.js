@@ -363,13 +363,13 @@ function SSAOEffect(graphicsDevice) {
             "",
             "    float occlusion = 0.0;",
             "",
-            "    if (uIntensity > 0.0) {",
+            "    //if (uIntensity > 0.0) {",
             "        occlusion = scalableAmbientObscurance(uv, origin, normal);",
-            "    }",
+            "    //}",
             "",
-            "    if (uSsctIntensity > 0.0) {",
-            "        occlusion = max(occlusion, dominantLightShadowing(uv, origin, normal));",
-            "    }",
+            "    //if (uSsctIntensity > 0.0) {",
+            "    //    occlusion = max(occlusion, dominantLightShadowing(uv, origin, normal));",
+            "    //}",
             "",
             // occlusion to visibility
             "    float aoVisibility = pow(saturate(1.0 - occlusion), uPower);",
@@ -408,32 +408,43 @@ Object.assign(SSAOEffect.prototype, {
         var device = this.device;
         var scope = device.scope;
 
+        var sampleCount = 7.0;
+        var spiralTurns = 5;
+        var step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
+
+        var radius = 0.3;
+        var bias = 0.0005;
+        var peak = 0.1 * radius;
+        var intensity = (peak * 2.0 * 3.141) * 1.0;
+        var projectionScale = 0.5;
+
         scope.resolve("uMaxBlur").setValue(this.maxBlur);
         scope.resolve("uAspect").setValue(device.width / device.height);
         scope.resolve("uResolution").setValue([device.width, device.height, 1.0 / device.width, 1.0 / device.height]);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
 
-        scope.resolve("uInvFarPlane").setValue(1.0 / 1000.0);
-        scope.resolve("uSampleCount").setValue([16.0, 16.0]);
-        scope.resolve("uSpiralTurns").setValue(1.0);
-        scope.resolve("uAngleIncCosSin").setValue([0.7071,0.7071]);
+        scope.resolve("uInvFarPlane").setValue(1.0 / 50.0);
+        scope.resolve("uSampleCount").setValue([7.0, 1.0 / 7.0]);
+        scope.resolve("uSpiralTurns").setValue(5.0);
+        scope.resolve("uAngleIncCosSin").setValue([Math.cos(step), Math.sin(step)]);
         scope.resolve("uMaxLevel").setValue(0.0);
-        scope.resolve("uInvRadiusSquared").setValue(1.0 / 10.0);
-        scope.resolve("uMinHorizonAngleSineSquared").setValue(0.25);
-        scope.resolve("uBias").setValue(0.0);
-        scope.resolve("uPeak2").setValue(1.0);
-        scope.resolve("uProjectionScaleRadius").setValue(1.0);
-        scope.resolve("uIntensity").setValue(1.0);
-        scope.resolve("uSsctVsLightDirection").setValue([0, -1.0, 0]);
-        scope.resolve("uSsctShadowDistance").setValue(1.0);
-        scope.resolve("uSsctConeAngleTangeant").setValue(1.0);
-        scope.resolve("uSsctContactDistanceMaxInv").setValue(1.0);
-        scope.resolve("uProjectionScale").setValue(1.0);
-        scope.resolve("uSsctIntensity").setValue(1.0);
-        scope.resolve("uSsctDepthBias").setValue([0, 0]);
-        scope.resolve("uSsctSampleCount").setValue(16);
-        scope.resolve("uSsctRayCount").setValue([16, 1.0/16]);
+        scope.resolve("uInvRadiusSquared").setValue(1.0 / (radius * radius));
+        scope.resolve("uMinHorizonAngleSineSquared").setValue(0.0);
+        scope.resolve("uBias").setValue(bias);
+        scope.resolve("uPeak2").setValue(peak * peak);
+        scope.resolve("uIntensity").setValue(intensity);
         scope.resolve("uPower").setValue(1.0);
+
+        scope.resolve("uProjectionScale").setValue(projectionScale);
+        scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
+        scope.resolve("uSsctVsLightDirection").setValue([0, -1, 0]);
+        scope.resolve("uSsctShadowDistance").setValue(0.3);
+        scope.resolve("uSsctConeAngleTangeant").setValue(Math.tan(1.0 * 0.5));
+        scope.resolve("uSsctContactDistanceMaxInv").setValue(1.0 / 1.0);
+        scope.resolve("uSsctIntensity").setValue(0.8);
+        scope.resolve("uSsctDepthBias").setValue([0.01, 0.01]);
+        scope.resolve("uSsctSampleCount").setValue(4);
+        scope.resolve("uSsctRayCount").setValue([1.0, 1.0 / 1.0]);
 
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
     }
