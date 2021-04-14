@@ -57,6 +57,8 @@ class XrAnchor extends EventHandler {
         const ind = this._anchors._list.indexOf(this);
         if (ind !== -1) this._anchors._list.splice(ind, 1);
 
+        this._xrAnchor.delete();
+
         this._xrAnchor = null;
 
         this.fire('remove');
