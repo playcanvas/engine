@@ -8,7 +8,7 @@ import { XrAnchor } from './xr-anchor.js';
  * @description Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Anchors are supported.
- * @property {XrAnchor[]} anchors List of active {@link XrAnchor}'s.
+ * @property {XrAnchor[]} list List of active {@link XrAnchor}'s.
  */
 class XrAnchors extends EventHandler {
     constructor(manager) {
@@ -169,7 +169,7 @@ class XrAnchors extends EventHandler {
         return this._supported;
     }
 
-    get anchors() {
+    get list() {
         return this._list;
     }
 }
