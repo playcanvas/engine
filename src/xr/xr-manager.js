@@ -13,6 +13,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrImageTracking } from './xr-image-tracking.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
+import { XrAnchors } from './xr-anchors.js';
 
 /**
  * @class
@@ -61,6 +62,7 @@ class XrManager extends EventHandler {
         this.imageTracking = new XrImageTracking(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
+        this.anchors = new XrAnchors(this);
 
         this._camera = null;
         this.views = [];
@@ -220,6 +222,7 @@ class XrManager extends EventHandler {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
             opts.optionalFeatures.push('depth-sensing');
+            opts.optionalFeatures.push('anchors');
 
             if (options && options.imageTracking) {
                 opts.optionalFeatures.push('image-tracking');
@@ -516,6 +519,9 @@ class XrManager extends EventHandler {
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
+
+            if (this.anchors.supported)
+                this.anchors.update(frame);
         }
 
         this.fire('update', frame);

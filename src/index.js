@@ -297,6 +297,8 @@ export { XrHitTestSource } from './xr/xr-hit-test-source.js';
 export { XrImageTracking } from './xr/xr-image-tracking.js';
 export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
+export { XrAnchors } from './xr/xr-anchors.js';
+export { XrAnchor } from './xr/xr-anchor.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';
