@@ -2038,12 +2038,6 @@ class Application extends EventHandler {
         this._immediateData.renderWireCube(matrix, color, options);
     }
 
-    // probably just take min and max instead of AABB
-    renderWireBoundingBox(boundingBox, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireBoundingBox(boundingBox, color, options);
-    }
-
     // Draw lines forming sphere at this frame
     renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();

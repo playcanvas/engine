@@ -239,34 +239,6 @@ class ImmediateData {
         options.layer.addMeshInstances(this.meshInstanceArray, true);
     }
 
-    renderWireBoundingBox(boundingBox, color, options) {
-        const min = boundingBox.getMin();
-        const max = boundingBox.getMax();
-        const cubeWorldPos = [
-            new Vec3(min.x, min.y, min.z), new Vec3(min.x, max.y, min.z), new Vec3(max.x, max.y, min.z), new Vec3(max.x, min.y, min.z),
-            new Vec3(min.x, min.y, max.z), new Vec3(min.x, max.y, max.z), new Vec3(max.x, max.y, max.z), new Vec3(max.x, min.y, max.z)
-        ];
-        const cubePositions = [
-            cubeWorldPos[0], cubeWorldPos[1],
-            cubeWorldPos[1], cubeWorldPos[2],
-            cubeWorldPos[2], cubeWorldPos[3],
-            cubeWorldPos[3], cubeWorldPos[0],
-
-            cubeWorldPos[4], cubeWorldPos[5],
-            cubeWorldPos[5], cubeWorldPos[6],
-            cubeWorldPos[6], cubeWorldPos[7],
-            cubeWorldPos[7], cubeWorldPos[4],
-
-            cubeWorldPos[0], cubeWorldPos[4],
-            cubeWorldPos[1], cubeWorldPos[5],
-            cubeWorldPos[2], cubeWorldPos[6],
-            cubeWorldPos[3], cubeWorldPos[7]
-        ];
-
-        const lineBatch = this.prepareLineBatch(options.layer, options.depthTest, undefined, cubePositions.length);
-        lineBatch.addLines(cubePositions, color);
-    }
-
     // Draw lines forming a transformed unit-sized cube at this frame
     renderWireCube(matrix, color, options) {
 
