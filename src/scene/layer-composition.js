@@ -1,5 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
+import { Vec3 } from '../math/vec3.js';
+
 import {
     LAYERID_DEPTH,
     BLEND_NONE,
@@ -8,9 +10,13 @@ import {
 } from './constants.js';
 
 import { RenderAction } from './render-action.js';
+import { WorldClusters } from './world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
+import { getApplication } from '../framework/globals.js';
+
 const tempSet = new Set();
+const tempClusterArray = [];
 
 /**
  * @class
@@ -18,7 +24,9 @@ const tempSet = new Set();
  * @augments EventHandler
  * @classdesc Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define rendering order.
  * @description Create a new layer composition.
- * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
+ * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
+ * from the {@link Application}.
+  * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
  * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
  * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
  * True means only semi-transparent objects are rendered, and false means opaque.
@@ -29,9 +37,10 @@ const tempSet = new Set();
  */
 // Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
-    constructor(name = "Untitled") {
+    constructor(graphicsDevice, name = "Untitled") {
         super();
 
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this.name = name;
 
         // enable logging
@@ -72,6 +81,37 @@ class LayerComposition extends EventHandler {
 
         // the actual rendering sequence, generated based on layers and cameras
         this._renderActions = [];
+
+        // all currently created light clusters, that need to be updated before rendering
+        this._worldClusters = [];
+
+        // empty cluster with no lights
+        this._emptyWorldClusters = null;
+    }
+
+    destroy() {
+
+        // empty light cluster
+        this._emptyWorldClusters.destroy();
+        this._emptyWorldClusters = null;
+
+        // all other clusters
+        this._worldClusters.forEach((cluster) => cluster.destroy());
+        this._worldClusters = null;
+    }
+
+    get emptyWorldClusters() {
+        if (!this._emptyWorldClusters) {
+
+            // create cluster structure with no lights
+            this._emptyWorldClusters = new WorldClusters(this.device, new Vec3(1, 1, 1), 4);
+            this._emptyWorldClusters.name = "ClusterEmpty";
+
+            // update it once to avoid doing it each frame
+            this._emptyWorldClusters.update([], false);
+        }
+
+        return this._emptyWorldClusters;
     }
 
     // function which splits list of lights on a a target object into separate lists of lights based on light type
@@ -320,6 +360,9 @@ class LayerComposition extends EventHandler {
             }
 
             this._renderActions.length = renderActionCount;
+
+            // prepare clustered lighting for render actions
+            this.allocateLightClusters();
         }
 
         if ((result & COMPUPDATED_LIGHTS) || (result & COMPUPDATED_CAMERAS)) {
@@ -397,13 +440,8 @@ class LayerComposition extends EventHandler {
                         if (!lightCompData) {
                             lightCompData = new LightCompositionData();
                             this._lightCompositionData[lightIndex] = lightCompData;
-                        } else {
-                            lightCompData.clearLayerIds();
                         }
                     }
-
-                    // register layer with the light
-                    this._lightCompositionData[lightIndex].addLayerId(layer.id);
                 }
             }
 
@@ -417,9 +455,90 @@ class LayerComposition extends EventHandler {
         // split light list by type
         this._splitLightsArray(this);
 
-        // adjust _lightCompositionData to the right size, matching number of lights, and clean up shadow casters
+        // adjust _lightCompositionData to the right size, matching number of lights
         const lightCount = this._lights.length;
         this._lightCompositionData.length = lightCount;
+    }
+
+    // find existing light cluster that is compatible with specified layer
+    findCompatibleCluster(layer, renderActionCount) {
+
+        // check already set up render actions
+        for (let i = 0; i < renderActionCount; i++) {
+            const ra = this._renderActions[i];
+            const raLayer = this.layerList[ra.layerIndex];
+
+            // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
+            if (layer === raLayer) {
+                return ra.lightClusters;
+            }
+
+            if (ra.lightClusters) {
+                // if the layer has exactly the same set of lights, use the same cluster
+                if (layer._clusteredLightsSet.isEqual(raLayer._clusteredLightsSet)) {
+                    return ra.lightClusters;
+                }
+            }
+        }
+
+        // no match
+        return null;
+    }
+
+    // assign light clusters to render actions that need it
+    allocateLightClusters() {
+
+        // reuse previously allocated clusters
+        tempClusterArray.push(...this._worldClusters);
+
+        // start with no clusters
+        this._worldClusters.length = 0;
+
+        // process all render actions
+        const count = this._renderActions.length;
+        for (let i = 0; i < count; i++) {
+            const ra = this._renderActions[i];
+            const layer = this.layerList[ra.layerIndex];
+
+            // if the layer has lights used by clusters
+            if (layer._clusteredLightsSet.size) {
+
+                // and if the layer has meshes
+                const transparent = this.subLayerList[ra.layerIndex];
+                const meshInstances = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                if (meshInstances.length) {
+
+                    // reuse cluster that was already set up and is compatible
+                    let clusters = this.findCompatibleCluster(layer, i);
+                    if (!clusters) {
+
+                        // use already allocated cluster from before
+                        if (tempClusterArray.length) {
+                            clusters = tempClusterArray.pop();
+                        }
+
+                        // create new cluster
+                        if (!clusters) {
+                            clusters = new WorldClusters(this.device, new Vec3(10, 10, 10), 16);
+                        }
+
+                        clusters.name = "Cluster-" + this._worldClusters.length;
+                        this._worldClusters.push(clusters);
+                    }
+
+                    ra.lightClusters = clusters;
+                }
+            }
+
+            // no clustered lights, use the cluster with no lights
+            if (!ra.lightClusters) {
+                ra.lightClusters = this.emptyWorldClusters;
+            }
+        }
+
+        // delete leftovers
+        tempClusterArray.forEach((item) => item.destroy());
+        tempClusterArray.length = 0;
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
@@ -539,6 +658,8 @@ class LayerComposition extends EventHandler {
                     " Meshes: ", (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
                     (" RT: " + (ra.renderTarget ? ra.renderTarget.name : "-")).padEnd(30, " ") +
                     " Clear: " + clear +
+                    " Lights: (" + layer._clusteredLightsSet.size + "/" + layer._lightsSet.size + ")" +
+                    " " + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : "").padEnd(10, " ") +
                     (ra.firstCameraUse ? " CAM-FIRST" : "") +
                     (ra.triggerPostprocess ? " POSTPROCESS" : "") +
                     (dirLightCount ? (" DirLights: " + dirLightCount) : "")

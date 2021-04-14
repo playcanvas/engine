@@ -58,16 +58,21 @@
         cylinder.setLocalScale(50, 100, 50);
 
 
+        var extraLayer = new pc.Layer({ name: "Extra" });
+        app.scene.layers.push(extraLayer);
+
+
+
         // cluster structure
         var worldLayer = app.scene.layers.getLayerByName("World");
 //        var cells = new pc.Vec3(60, 60, 60);
-        var cells = new pc.Vec3(10, 10, 10);
-        worldLayer.clusters = new pc.WorldClusters(app.graphicsDevice, cells, 16);
+//        var cells = new pc.Vec3(10, 10, 10);
+//        worldLayer.clusters = new pc.WorldClusters(app.graphicsDevice, cells, 16);
 
 
         // lights
 //        var count = 254;
-        var count = 20;
+        var count = 40;
         var intensity = 1.6;
         var lightList = [];
         for (i = 0; i < count; i++) {
@@ -79,7 +84,7 @@
                 range: 12,
                 type: "point",
                 intensity: 1,
-                layers: [worldLayer.id]   // !!!!!!!!!!!!!!!!
+                layers: Math.random() < 0.5 ? [worldLayer.id, extraLayer.id] : [worldLayer.id]   // !!!!!!!!!!!!!!!!
             });
 
             var material = new pc.StandardMaterial();
@@ -88,7 +93,11 @@
 
             lightPoint.addComponent('render', {
                 type: "sphere",
-                material: material
+                material: material,
+
+
+
+                layers: Math.random() < 0.5 ? [extraLayer.id] : [worldLayer.id]
             });
             lightPoint.setLocalScale(5, 5, 5);
 
@@ -101,7 +110,8 @@
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.2),
             farClip: 500,
-            nearClip: 0.05
+            nearClip: 0.05,
+            layers: [worldLayer.id, extraLayer.id]
         });
         app.root.addChild(camera);
 
@@ -114,12 +124,12 @@
             camera.setLocalPosition(120, 120, 120);
             camera.lookAt(new pc.Vec3(0, 40, 0));
 
-            // debug textures
-            app.renderTexture(0.7, -0.3, 0.5, 0.5, worldLayer.clusters.texture);
-            app.renderTexture(0.9, 0.7, 0.2, 0.5, worldLayer.clusters.lightsTexture8);
-            if (worldLayer.clusters.lightsTextureFloat) {
-                app.renderTexture(0.7, 0.7, 0.1, 0.5, worldLayer.clusters.lightsTextureFloat);
-            }
+            // // debug textures
+            // app.renderTexture(0.7, -0.3, 0.5, 0.5, worldLayer.clusters.texture);
+            // app.renderTexture(0.9, 0.7, 0.2, 0.5, worldLayer.clusters.lightsTexture8);
+            // if (worldLayer.clusters.lightsTextureFloat) {
+            //     app.renderTexture(0.7, 0.7, 0.1, 0.5, worldLayer.clusters.lightsTextureFloat);
+            // }
 
             // move lights
             lightList.forEach(function(light, i) {
@@ -128,11 +138,11 @@
                 var y = Math.sin(time * 0.3 + 10 * angle) * 55 + 50;
                 light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
 
-                if (worldLayer.clusters.boundsMin) {
-                    var dynamicBounds = new pc.BoundingBox();
-                    dynamicBounds.setMinMax(worldLayer.clusters.boundsMin, worldLayer.clusters.boundsMax);
-                    app.renderWireBoundingBox(dynamicBounds, pc.Color.YELLOW);
-                }
+                // if (worldLayer.clusters.boundsMin) {
+                //     var dynamicBounds = new pc.BoundingBox();
+                //     dynamicBounds.setMinMax(worldLayer.clusters.boundsMin, worldLayer.clusters.boundsMax);
+                //     app.renderWireBoundingBox(dynamicBounds, pc.Color.YELLOW);
+                // }
             });
         });
 

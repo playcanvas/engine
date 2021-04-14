@@ -62,6 +62,7 @@ class WorldClusters {
 
     constructor(device, cells, maxCellLightCount) {
         this.device = device;
+        this.name = "Untitled";
 
         // bounds of all lights
         this._bounds = new BoundingBox();
@@ -96,8 +97,16 @@ class WorldClusters {
 
     destroy() {
 
-        // TODO
         // release textures
+        if (this.lightsTexture8) {
+            this.lightsTexture8.destroy();
+            this.lightsTexture8 = null;
+        }
+
+        if (this.lightsTextureFloat) {
+            this.lightsTextureFloat.destroy();
+            this.lightsTextureFloat = null;
+        }
     }
 
     registerUniforms(device) {
@@ -395,11 +404,11 @@ class WorldClusters {
             // !!!!!!!!!!!!!!!!!!!!!!!
             // possibly skip culled lights when integrated into culling: light.visibleThisFrame
 
-            if (light.enabled && light._type !== LIGHTTYPE_DIRECTIONAL) {
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL) {
 
                 // storing light index in 8bits
                 if (lightIndex > 255) {
-                    console.warn("Clustered lighting: more than 255 visible lights in the frame, ignoring some.");
+                    console.warn("Clustered lighting: more than 254 visible lights in the frame, ignoring some.");
                     break;
                 }
             }
@@ -524,6 +533,7 @@ class WorldClusters {
         }
     }
 
+    // internal update of the cluster data, executes once per frame
     update(lights, gammaCorrection) {
         this.updateCells();
         this.collectLights(lights);
@@ -531,6 +541,10 @@ class WorldClusters {
         this.evaluateCompressionLimits(gammaCorrection);
         this.updateClusters(gammaCorrection);
         this.uploadTextures();
+    }
+
+    // called on already updated clusters, activates for rendering by setting up uniforms / textures on the device
+    activate() {
         this.updateUniforms();
     }
 }

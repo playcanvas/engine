@@ -421,6 +421,7 @@ class ForwardRenderer {
         this._morphTime = 0;
         this._instancingTime = 0;
         this._layerCompositionUpdateTime = 0;
+        this._lightClustersTime = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -2969,6 +2970,22 @@ class ForwardRenderer {
         // #endif
     }
 
+    updateClusters(comp) {
+
+        // #if _PROFILER
+        const startTime = now();
+        // #endif
+
+        for (let i = 0; i < comp._worldClusters.length; i++) {
+            const cluster = comp._worldClusters[i];
+            cluster.update(comp._lights, this.scene.gammaCorrection);
+        }
+
+        // #if _PROFILER
+        this._lightClustersTime += now() - startTime;
+        // #endif
+    }
+
     renderComposition(comp) {
         var device = this.device;
         var camera;
@@ -3007,14 +3024,15 @@ class ForwardRenderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
+        // update light clusters
+        this.updateClusters(comp);
+
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
         this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
-
-        let updateClusters = true;
 
         // Rendering
         let sortTime, drawTime;
@@ -3091,13 +3109,6 @@ class ForwardRenderer {
                 sortTime = now();
                 // #endif
 
-
-                if (updateClusters) {
-                    updateClusters = false;
-                    layer._updateClusters(this.scene.gammaCorrection);
-                }
-
-
                 layer._sortVisible(transparent, camera.camera.node, cameraPass);
 
                  // #if _PROFILER
@@ -3112,6 +3123,11 @@ class ForwardRenderer {
 
                 // Set camera shader constants, viewport, scissor, render target
                 this.setCamera(camera.camera, renderAction.renderTarget);
+
+                // upload clustered lights uniforms
+                if (renderAction.lightClusters) {
+                    renderAction.lightClusters.activate();
+                }
 
                 const draws = this._forwardDrawCalls;
                 this.renderForward(camera.camera,

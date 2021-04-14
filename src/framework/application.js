@@ -662,17 +662,16 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition("default");
 
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
-
-        this.scene.layers = this.defaultLayerComposition;
+        const defaultLayerComposition = new LayerComposition(this.graphicsDevice, "default");
+        defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
+        defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
+        defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerUi);
+        this.scene.layers = defaultLayerComposition;
 
         this._immediateLayer = this.defaultLayerImmediate;
 
@@ -1052,7 +1051,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition("application");
+            var composition = new LayerComposition(this.graphicsDevice, "application");
 
             var layers = {};
             for (var key in props.layers) {
@@ -1418,6 +1417,7 @@ class Application extends EventHandler {
         this.graphicsDevice._shaderSwitchesPerFrame = 0;
         this.renderer._cullTime = 0;
         this.renderer._layerCompositionUpdateTime = 0;
+        this.renderer._lightClustersTime = 0;
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
@@ -2154,6 +2154,12 @@ class Application extends EventHandler {
         }
 
         ComponentSystem.destroy();
+
+        // layer composition
+        if (this.scene.layers) {
+            this.scene.layers.destroy();
+            this.scene.layers = null;
+        }
 
         // destroy all texture resources
         var assets = this.assets.list();

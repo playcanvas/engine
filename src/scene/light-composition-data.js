@@ -2,9 +2,6 @@
 class LightCompositionData {
     constructor() {
 
-        // ids of layers the light is on
-        this.layerIds = [];
-
         // stored in a set for fast de-duplication
         this.shadowCastersSet = new Set();
 
@@ -27,14 +24,6 @@ class LightCompositionData {
                 this.shadowCastersList.push(item);
             }
         }
-    }
-
-    clearLayerIds() {
-        this.layerIds.length = 0;
-    }
-
-    addLayerId(id) {
-        this.layerIds.push(id);
     }
 }
 
