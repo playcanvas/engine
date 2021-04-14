@@ -12,7 +12,7 @@ function SSAOEffect(graphicsDevice) {
 
     this.needsDepthBuffer = true;
 
-    this.shader = new pc.Shader(graphicsDevice, {
+    this.ssaoShader = new pc.Shader(graphicsDevice, {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
@@ -209,8 +209,8 @@ function SSAOEffect(graphicsDevice) {
             "highp vec3 computeViewSpaceNormal(const highp vec3 position, const highp vec2 uv) {",
             "    highp vec2 uvdx = uv + vec2(uResolution.z, 0.0);",
             "    highp vec2 uvdy = uv + vec2(0.0, uResolution.w);",
-            "    highp vec3 px = computeViewSpacePositionFromDepth(uvdx, getLinearScreenDepth(uvdx));",
-            "    highp vec3 py = computeViewSpacePositionFromDepth(uvdy, getLinearScreenDepth(uvdy));",
+            "    highp vec3 px = computeViewSpacePositionFromDepth(uvdx, -getLinearScreenDepth(uvdx));",
+            "    highp vec3 py = computeViewSpacePositionFromDepth(uvdy, -getLinearScreenDepth(uvdy));",
             "    highp vec3 dpdx = px - position;",
             "    highp vec3 dpdy = py - position;",
             "    return faceNormal(dpdx, dpdy);",
@@ -266,7 +266,7 @@ function SSAOEffect(graphicsDevice) {
             "    vec2 uvSamplePos = uv + vec2(ssRadius * tap.xy) * uResolution.zw;",
             "",
             "    float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, float(uMaxLevel));",
-            "    highp float occlusionDepth = getLinearScreenDepth(uvSamplePos);",
+            "    highp float occlusionDepth = -getLinearScreenDepth(uvSamplePos);",
             "    highp vec3 p = computeViewSpacePositionFromDepth(uvSamplePos, occlusionDepth);",
             "",
                 // now we have the sample, compute AO
@@ -357,18 +357,18 @@ function SSAOEffect(graphicsDevice) {
             "void main() {",
             "    highp vec2 uv = vUv0; //variable_vertex.xy;", // interpolated to pixel center
             "",
-            "    highp float depth = getLinearScreenDepth(vUv0);",
+            "    highp float depth = -getLinearScreenDepth(vUv0);",
             "    highp vec3 origin = computeViewSpacePositionFromDepth(uv, depth);",
             "    vec3 normal = computeViewSpaceNormal(origin, uv);",
             "",
             "    float occlusion = 0.0;",
             "",
-            "    //if (uIntensity > 0.0) {",
+            "    if (uIntensity > 0.0) {",
             "        occlusion = scalableAmbientObscurance(uv, origin, normal);",
-            "    //}",
+            "    }",
             "",
             "    //if (uSsctIntensity > 0.0) {",
-            "    //    occlusion = max(occlusion, dominantLightShadowing(uv, origin, normal));",
+            "        //occlusion = max(occlusion, dominantLightShadowing(uv, origin, normal));",
             "    //}",
             "",
             // occlusion to visibility
@@ -379,7 +379,7 @@ function SSAOEffect(graphicsDevice) {
             "    aoVisibility += gl_FragCoord.x * MEDIUMP_FLT_MIN;",
             "#endif",
             "",
-            "   vec4 inCol = texture2D( uColorBuffer,  uv );",
+            "    vec4 inCol = vec4(1.0, 1.0, 1.0, 1.0); //texture2D( uColorBuffer,  uv );",
             "",
             "    gl_FragColor.rgb = inCol.rgb * vec3(aoVisibility); //postProcess.color.rgb = vec3(aoVisibility, pack(origin.z));",
             "    gl_FragColor.a = 1.0;",
@@ -396,6 +396,183 @@ function SSAOEffect(graphicsDevice) {
         ].join("\n")
     });
 
+    this.blurShader = new pc.Shader(graphicsDevice, {
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION
+        },
+        vshader: [
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n"+pc.shaderChunks.gles3VS) : "",
+            "attribute vec2 aPosition;",
+            "",
+            "varying vec2 vUv0;",
+            "",
+            "void main(void)",
+            "{",
+            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
+            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
+            "}"
+        ].join("\n"),
+        fshader: [
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n"+pc.shaderChunks.gles3PS) : "",
+            "precision " + graphicsDevice.precision + " float;",
+            pc.shaderChunks.screenDepthPS,
+            "",
+            "varying vec2 vUv0;",
+            "",
+            "uniform sampler2D uColorBuffer;",
+            "uniform sampler2D uSSAOBuffer;",
+            "uniform vec4 uResolution;",
+            "",
+            "uniform float uAspect;",
+            "",
+            "void main_test()",
+            "{",
+            "    vec2 aspectCorrect = vec2( 1.0, uAspect );",
+            "    highp vec2 uv = vUv0; //variable_vertex.xy;", // interpolated to pixel center
+            "",
+            "    //float depth = getLinearScreenDepth(vUv0);",
+            "    //gl_FragColor.rgb = vec3(fract(floor(depth*256.0*256.0)),fract(floor(depth*256.0)),fract(depth));",
+            "    //gl_FragColor.a = 1.0;",
+            "",
+            "    vec4 ssao = texture2D( uSSAOBuffer,  uv );",
+            "    vec4 inCol = texture2D( uColorBuffer,  uv );",
+            "",
+            "    gl_FragColor.rgb = inCol.rgb*ssao.rgb; // * vec3(aoVisibility); // postProcess.color.rg= vec3(aoVisibility, pack(origin.z));",
+            "    gl_FragColor.a = 1.0;",
+            "}",
+            "",
+            "// bilateral filter, based on https://www.shadertoy.com/view/4dfGDH#",
+            "",
+            "// A bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter for images.",
+            "// It replaces the intensity of each pixel with a weighted average of intensity values from nearby pixels.",
+            "// This weight can be based on a Gaussian distribution. Crucially, the weights depend not only on",
+            "// Euclidean distance of pixels, but also on the radiometric differences (e.g., range differences, such",
+            "// as color intensity, depth distance, etc.). This preserves sharp edges.",
+            "",
+            "float normpdf(in float x, in float sigma)",
+            "{",
+            "    return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;",
+            "}",
+            "",
+            "float normpdf3(in vec3 v, in float sigma)",
+            "{",
+            "    return 0.39894 * exp(-0.5 * dot(v, v) / (sigma * sigma)) / sigma;",
+            "}",
+            "",
+            "vec3 decodeRGBM(vec4 rgbm) {",
+            "    vec3 color = (8.0 * rgbm.a) * rgbm.rgb;",
+            "    return color * color;",
+            "}",
+            "",
+            "float saturate(float x) {",
+            "    return clamp(x, 0.0, 1.0);",
+            "}",
+            "",
+            "vec4 encodeRGBM(vec3 color) { // modified RGBM ",
+            "    vec4 encoded;",
+            "    encoded.rgb = pow(color.rgb, vec3(0.5));",
+            "    encoded.rgb *= 1.0 / 8.0;",
+            "",
+            "    encoded.a = saturate( max( max( encoded.r, encoded.g ), max( encoded.b, 1.0 / 255.0 ) ) );",
+            "    encoded.a = ceil(encoded.a * 255.0) / 255.0;",
+            "",
+            "    encoded.rgb /= encoded.a;",
+            "    return encoded;",
+            "}",
+            "",
+            "// filter size",
+            "#define MSIZE 15",
+            "",
+            "// varying vec2 vUv0;",
+            "uniform sampler2D source;",
+            "uniform vec2 pixelOffset;",
+            "uniform vec2 sigmas;",
+            "",
+            "void main(void) {",
+            "",
+            "    vec4 pixelRgbm = texture2D(source, vUv0);",
+            "",
+            "    // range sigma - controls blurriness based on a pixel distance",
+            "    float sigma = sigmas.x;",
+            "",
+            "    // domain sigma - controls blurriness based on a pixel similarity (to preserve edges)",
+            "    float bSigma = sigmas.y;",
+            "",
+            "    // lightmap specific optimization - skip pixels that were not baked",
+            "    // this also allows dilate filter that work on the output of this to work correctly, as it depeonds on .a being zero",
+            "    // to dilate, which the following blur filter would otherwise modify",
+            "    //if (pixelRgbm.a <= 0.0) {",
+            "    //    gl_FragColor = pixelRgbm;",
+            "    //    return ;",
+            "    //}",
+            "",
+            "    // create the 1-D kernel",
+            "    const int kSize = (MSIZE-1)/2;",
+            "    float kernel[MSIZE];",
+            "    for (int j = 0; j <= kSize; ++j) {",
+            "        kernel[kSize+j] = kernel[kSize-j] = normpdf(float(j), sigma);",
+            "    }",
+            "",
+            "    vec3 pixelHdr = decodeRGBM(pixelRgbm);",
+            "    vec3 accumulatedHdr = vec3(0.0);",
+            "    float accumulatedFactor = 0.0;",
+            "    float bZnorm = 1.0 / normpdf(0.0, bSigma);",
+            "",
+            "    // read out the texels",
+            "    for (int i = -kSize; i <= kSize; ++i) {",
+            "        for (int j = -kSize; j <= kSize; ++j) {",
+            "",
+            "            // sample the pixel with offset",
+            "            vec2 coord = vUv0 + vec2(float(i), float(j)) * pixelOffset;",
+            "            vec4 rgbm = texture2D(source, coord);",
+            "",
+            "            // lightmap - only use baked pixels",
+            "            if (rgbm.a > 0.0) {",
+            "                vec3 hdr = decodeRGBM(rgbm);",
+            "",
+            "                // bilateral factors",
+            "                float factor = kernel[kSize + j] * kernel[kSize + i];",
+            "                factor *= normpdf3(hdr - pixelHdr, bSigma) * bZnorm;",
+            "",
+            "                // accumulate",
+            "                accumulatedHdr += factor * hdr;",
+            "                accumulatedFactor += factor;",
+            "            }",
+            "        }",
+            "    }",
+            "",
+            "    gl_FragColor = encodeRGBM(accumulatedHdr / accumulatedFactor);",
+            "",
+            "    vec4 inCol = texture2D( uColorBuffer,  vUv0 );",
+            "",
+            "    gl_FragColor.rgb *= inCol.rgb;",
+            "    gl_FragColor.a = 1.0;",
+            "}",
+            "",
+        ].join("\n")
+    });
+
+    // Render targets
+    var width = graphicsDevice.width;
+    var height = graphicsDevice.height;
+    this.targets = [];
+    for (var i = 0; i < 1; i++) {
+        var colorBuffer = new pc.Texture(graphicsDevice, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            width: width,
+            height: height,
+            mipmaps: false
+        });
+        colorBuffer.minFilter = pc.FILTER_LINEAR;
+        colorBuffer.magFilter = pc.FILTER_LINEAR;
+        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.name = 'ssao_' + i;
+        var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
+
+        this.targets.push(target);
+    }
+
     // Uniforms
     this.maxBlur = 0.02;
 }
@@ -408,15 +585,16 @@ Object.assign(SSAOEffect.prototype, {
         var device = this.device;
         var scope = device.scope;
 
-        var sampleCount = 7.0;
-        var spiralTurns = 5;
+        var sampleCount = 32.0;
+        var spiralTurns = 14.0;
         var step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
 
-        var radius = 0.3;
+        var radius = 1.0;
         var bias = 0.0005;
         var peak = 0.1 * radius;
-        var intensity = (peak * 2.0 * 3.141) * 1.0;
-        var projectionScale = 0.5;
+        var intensity = (peak * 2.0 * 3.141) * 0.5;
+
+        var projectionScale = 0.5 * device.height;
 
         scope.resolve("uMaxBlur").setValue(this.maxBlur);
         scope.resolve("uAspect").setValue(device.width / device.height);
@@ -446,7 +624,28 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uSsctSampleCount").setValue(4);
         scope.resolve("uSsctRayCount").setValue([1.0, 1.0 / 1.0]);
 
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+//        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.ssaoShader, rect);
+
+        pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.ssaoShader, rect);
+
+        scope.resolve("source").setValue(this.targets[0].colorBuffer);
+
+        // inverse texture size
+        var pixelOffset = [];
+        pixelOffset[0] = 1 / device.width;
+        pixelOffset[1] = 1 / device.height;
+        scope.resolve("pixelOffset").setValue(pixelOffset);
+
+        // bounce dilate between textures
+        // bilateral filter sigmas
+        var sigmas = [];
+        sigmas[0] = 10;
+        sigmas[1] = 0.2;
+        scope.resolve("sigmas").setValue(sigmas);
+
+//        scope.resolve("uSSAOBuffer").setValue(this.targets[0].colorBuffer);
+
+        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.blurShader, rect);
     }
 });
 
