@@ -13,28 +13,27 @@ const tempBox = new BoundingBox();
 const epsilon = 0.000001;
 const oneDiv255 = 1 / 255;
 
-// packs a float value in [0..1) range to 4 bytes and stores them in an array with start offset
+// packs a float value in [0..1) range to specified number of bytes and stores them in an array with start offset
 // based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
 // Note: calls to Math.round are only needed on iOS, precision is somehow really bad without it,
 // looks like an issue with their implementation of Uint8ClampedArray
-function packFloatTo4Bytes(value, array, offset) {
+function packFloatToBytes(value, array, offset, numBytes) {
     const enc1 = (255.0 * value) % 1;
-    const enc2 = (65025.0 * value) % 1;
-    const enc3 = (16581375.0 * value) % 1;
-
     array[offset + 0] = Math.round(((value % 1) - oneDiv255 * enc1) * 255);
-    array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
-    array[offset + 2] = Math.round((enc2 - oneDiv255 * enc3) * 255);
-    array[offset + 3] = Math.round(enc3 * 255);
-}
 
-// packs a float value in [0..1) range to 2 bytes and stores them in an array with start offset
-function packFloatTo2Bytes(value, array, offset) {
-    const enc1 = (255.0 * value) % 1;
-    const enc2 = (65025.0 * value) % 1;
+    if (numBytes > 1) {
+        const enc2 = (65025.0 * value) % 1;
+        array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
 
-    array[offset + 0] = Math.round(((value % 1) - oneDiv255 * enc1) * 255);
-    array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
+        if (numBytes > 2) {
+            const enc3 = (16581375.0 * value) % 1;
+            array[offset + 2] = Math.round((enc2 - oneDiv255 * enc3) * 255);
+
+            if (numBytes > 3) {
+                array[offset + 3] = Math.round(enc3 * 255);
+            }
+        }
+    }
 }
 
 class WorldClusters {
@@ -241,9 +240,9 @@ class WorldClusters {
         // light color
         const invMaxColorValue = 1.0 / this._maxColorValue;
         const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
-        packFloatTo2Bytes(color[0] * invMaxColorValue, data8, data8Index + 4);
-        packFloatTo2Bytes(color[1] * invMaxColorValue, data8, data8Index + 6);
-        packFloatTo2Bytes(color[2] * invMaxColorValue, data8, data8Index + 8);
+        packFloatToBytes(color[0] * invMaxColorValue, data8, data8Index + 4, 2);
+        packFloatToBytes(color[1] * invMaxColorValue, data8, data8Index + 6, 2);
+        packFloatToBytes(color[2] * invMaxColorValue, data8, data8Index + 8, 2);
 
         // high precision data stored using float texture
         const pos = light._node.getPosition();
@@ -263,10 +262,10 @@ class WorldClusters {
 
             // position and range scaled to 0..1 range
             const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
-            packFloatTo4Bytes(normPos.x, data8, data8Index + 12);
-            packFloatTo4Bytes(normPos.y, data8, data8Index + 16);
-            packFloatTo4Bytes(normPos.z, data8, data8Index + 20);
-            packFloatTo4Bytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 24);
+            packFloatToBytes(normPos.x, data8, data8Index + 12, 4);
+            packFloatToBytes(normPos.y, data8, data8Index + 16, 4);
+            packFloatToBytes(normPos.z, data8, data8Index + 20, 4);
+            packFloatToBytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 24, 4);
         }
     }
 
