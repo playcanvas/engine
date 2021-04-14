@@ -1129,11 +1129,9 @@ var standard = {
             code += "#define AREA_LUTS_PRECISION highp\n";
         }
 
-
-        const useCluster = true;
-        const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
-
-        if (useCluster) {
+        // clustered lighting
+        if (WorldClusters.enabled) {
+            const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
             code += `
             #define CLUSTER_TEXTURE_${clusterTextureFormat}
             uniform sampler2D clusterWorldTexture;
@@ -1665,7 +1663,8 @@ var standard = {
             // light source shape support
             var shapeString = '';
 
-            if (useCluster) {
+            // clustered lighting
+            if (WorldClusters.enabled) {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
@@ -1676,7 +1675,7 @@ var standard = {
 
                 // if clustered lights are used, skip normal lights
                 // I added it as a break in the loop to avoid indenting the whole loop within if block for now.
-                if (useCluster) {
+                if (WorldClusters.enabled) {
                     break;
                 }
 

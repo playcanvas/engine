@@ -364,7 +364,9 @@ class LayerComposition extends EventHandler {
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions
-            this.allocateLightClusters();
+            if (WorldClusters.enabled) {
+                this.allocateLightClusters();
+            }
         }
 
         if ((result & COMPUPDATED_LIGHTS) || (result & COMPUPDATED_CAMERAS)) {

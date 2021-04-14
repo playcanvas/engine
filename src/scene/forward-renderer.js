@@ -52,6 +52,7 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
+import { WorldClusters } from './world-clusters.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(
@@ -3125,7 +3126,7 @@ class ForwardRenderer {
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
-                if (renderAction.lightClusters) {
+                if (WorldClusters.enabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate();
                 }
 
