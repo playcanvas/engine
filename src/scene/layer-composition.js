@@ -26,7 +26,7 @@ const tempClusterArray = [];
  * @description Create a new layer composition.
  * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
  * from the {@link Application}.
-  * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
+ * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
  * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
  * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
  * True means only semi-transparent objects are rendered, and false means opaque.
