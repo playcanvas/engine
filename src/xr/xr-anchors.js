@@ -4,8 +4,8 @@ import { XrAnchor } from './xr-anchor.js';
 /**
  * @class
  * @name XrAnchors
- * @classdesc Anchor provides an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by underlying AR system, such that the anchor remain aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer sessions with lots of movement.
- * @description Anchor provides an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by underlying AR system, such that the anchor remain aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer sessions with lots of movement.
+ * @classdesc Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
+ * @description Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Anchors are supported.
  * @property {XrAnchor[]} anchors List of active {@link XrAnchor}'s.
