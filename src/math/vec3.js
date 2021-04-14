@@ -470,6 +470,12 @@ class Vec3 {
         return this;
     }
 
+    /**
+     * @function
+     * @name Vec3#floor
+     * @description Each element is set to the largest integer less than or equal to its value.
+     * @returns {Vec3} Self for chaining.
+     */
     floor() {
         this.x = Math.floor(this.x);
         this.y = Math.floor(this.y);
@@ -477,6 +483,12 @@ class Vec3 {
         return this;
     }
 
+    /**
+     * @function
+     * @name Vec3#ceil
+     * @description Each element is rounded up to the next largest integer.
+     * @returns {Vec3} Self for chaining.
+     */
     ceil() {
         this.x = Math.ceil(this.x);
         this.y = Math.ceil(this.y);
@@ -484,6 +496,12 @@ class Vec3 {
         return this;
     }
 
+    /**
+     * @function
+     * @name Vec3#round
+     * @description Each element is rounded up to the nearest integer.
+     * @returns {Vec3} Self for chaining.
+     */
     round() {
         this.x = Math.round(this.x);
         this.y = Math.round(this.y);
@@ -491,6 +509,13 @@ class Vec3 {
         return this;
     }
 
+    /**
+     * @function
+     * @name Vec3#min
+     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec3} Self for chaining.
+     */
     min(rhs) {
         if (rhs.x < this.x) this.x = rhs.x;
         if (rhs.y < this.y) this.y = rhs.y;
@@ -498,6 +523,13 @@ class Vec3 {
         return this;
     }
 
+    /**
+     * @function
+     * @name Vec3#max
+     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec3} Self for chaining.
+     */
     max(rhs) {
         if (rhs.x > this.x) this.x = rhs.x;
         if (rhs.y > this.y) this.y = rhs.y;
