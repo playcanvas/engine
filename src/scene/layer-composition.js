@@ -92,8 +92,10 @@ class LayerComposition extends EventHandler {
     destroy() {
 
         // empty light cluster
-        this._emptyWorldClusters.destroy();
-        this._emptyWorldClusters = null;
+        if (this._emptyWorldClusters) {
+            this._emptyWorldClusters.destroy();
+            this._emptyWorldClusters = null;
+        }
 
         // all other clusters
         this._worldClusters.forEach((cluster) => cluster.destroy());
