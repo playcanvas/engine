@@ -423,6 +423,7 @@ class ForwardRenderer {
         this._instancingTime = 0;
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
+        this._lightClusters = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -2984,6 +2985,7 @@ class ForwardRenderer {
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
+        this._lightClusters = comp._worldClusters.length;
         // #endif
     }
 

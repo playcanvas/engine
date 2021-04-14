@@ -38,8 +38,25 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        // set up options for mini-stats, start with the default options and add clusted lighting stats
+        var options = pcx.MiniStats.getDefaultOptions();
+        options.stats.push(
+            {
+                name: "Clusters",
+                stats: ["frame.lightClustersTime"],
+                decimalPlaces: 1,
+                unitsName: "ms",
+                watermark: 3
+            },
+            {
+                name: "Num Clusters",
+                stats: ["frame.lightClusters"],
+                watermark: 3
+            }
+        );
+
         // performance stats on screen
-        var miniStats = new pcx.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app, options);
 
         // high polycount cylinder
         var material = new pc.StandardMaterial();

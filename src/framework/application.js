@@ -1404,6 +1404,8 @@ class Application extends EventHandler {
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
         stats.instancingTime = this.renderer._instancingTime;
+        stats.lightClusters = this.renderer._lightClusters;
+        stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
         for (var i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
