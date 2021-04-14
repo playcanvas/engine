@@ -393,30 +393,25 @@ class WorldClusters {
 
     collectLights(lights) {
 
+        // skip index 0 as that is used for unused light
         const usedLights = this._usedLights;
         usedLights.length = 0;
-
-        // skip index 0 as that is used for unused light
-        let lightIndex = 1;
-        usedLights[0] = null;
+        usedLights.push(null);
 
         for (let i = 0; i < lights.length; i++) {
+
+            // use enabled and visible lights
             const light = lights[i];
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame) {
 
-            // !!!!!!!!!!!!!!!!!!!!!!!
-            // possibly skip culled lights when integrated into culling: light.visibleThisFrame
-
-            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL) {
-
-                // storing light index in 8bits
-                if (lightIndex > 255) {
-                    console.warn("Clustered lighting: more than 254 visible lights in the frame, ignoring some.");
+                // within light limit
+                if (usedLights.length < this.maxLights) {
+                    usedLights.push(light);
+                } else {
+                    console.warn("Clustered lighting: more than " + (this.maxLights - 1) + " lights in the frame, ignoring some.");
                     break;
                 }
             }
-
-            usedLights[lightIndex] = light;
-            lightIndex++;
         }
     }
 
