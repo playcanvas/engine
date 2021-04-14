@@ -40,7 +40,7 @@ class LayerComposition extends EventHandler {
     constructor(graphicsDevice, name = "Untitled") {
         super();
 
-        this.device = graphicsDevice || getApplication().graphicsDevice;
+        this.device = graphicsDevice || getApplication()?.graphicsDevice;
         this.name = name;
 
         // enable logging

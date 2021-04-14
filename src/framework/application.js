@@ -2158,7 +2158,6 @@ class Application extends EventHandler {
         // layer composition
         if (this.scene.layers) {
             this.scene.layers.destroy();
-            this.scene.layers = null;
         }
 
         // destroy all texture resources
