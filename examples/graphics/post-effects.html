@@ -58,11 +58,7 @@
             vignette: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-vignette.js"
-            },
-            ssao: {
-                type: "script",
-                url: "../../scripts/posteffects/posteffect-ssao.js"
-            }            
+            }
         };
 
         // Load all assets and then run the example
@@ -104,15 +100,9 @@
             var camera = new pc.Entity();
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.4, 0.45, 0.5),
-                farClip: 50,
-                fov: 45
+                farClip: 50
             });
             camera.addComponent("script");
-            camera.script.create("ssao", {
-                attributes: {
-                    maxBlur: 0.02
-                }
-            });            
             camera.script.create("bloom", {
                 attributes: {
                     bloomIntensity: 1,
@@ -139,11 +129,6 @@
             });
             camera.translate(0, 7, 24);
             camera.rotate(0, 0, 0);
-
-            camera.script.bloom.enabled = false;
-            camera.script.sepia.enabled = false;
-            camera.script.vignette.enabled = false;
-            camera.script.bokeh.enabled = false;
 
             // Create an Entity for the ground
             var ground = new pc.Entity();
@@ -199,21 +184,18 @@
             app.keyboard.on("keydown", function (e) {
                 switch (e.key) {
                     case pc.KEY_1:
-                        camera.script.ssao.enabled = !camera.script.ssao.enabled;
-                        break;                        
-                    case pc.KEY_2:
                         camera.script.bloom.enabled = !camera.script.bloom.enabled;
                         break;
-                    case pc.KEY_3:
+                    case pc.KEY_2:
                         camera.script.sepia.enabled = !camera.script.sepia.enabled;
                         break;
-                    case pc.KEY_4:
+                    case pc.KEY_3:
                         camera.script.vignette.enabled = !camera.script.vignette.enabled;
                         break;
-                    case pc.KEY_5:
+                    case pc.KEY_4:
                         camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
-                        break;                    
-                    case pc.KEY_6:
+                        break;
+                    case pc.KEY_5:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                         break;
                 }
@@ -281,17 +263,16 @@
                 // update text showing which post effects are enabled
                 if (text) {
                     text.element.text = 
-                        "[Key 1] SSAO: " + camera.script.ssao.enabled +                        
-                        "\n[Key 2] Bloom: " + camera.script.bloom.enabled +
-                        "\n[Key 3] Sepia: " + camera.script.sepia.enabled +
-                        "\n[Key 4] Vignette: " + camera.script.vignette.enabled +
-                        "\n[Key 5] Bokeh: " + camera.script.bokeh.enabled +
-                        "\n[Key 6] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "[Key 1] Bloom: " + camera.script.bloom.enabled +
+                        "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
+                        "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
+                        "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
+                        "\n[Key 5] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
                 // display the depth texture
-                if (camera.script.bokeh.enabled || camera.script.ssao.enabled) {
+                if (camera.script.bokeh.enabled) {
                     app.renderDepthTexture(0.6, 0.7, 0.6, 0.3);
                 }
             });
