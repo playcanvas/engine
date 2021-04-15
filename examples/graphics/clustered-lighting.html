@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.dbg.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <style>
         body {
             margin: 0;
@@ -25,101 +26,125 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
-        // enabled clustered lighting. This is a temporary API and will change in the future
-        pc.WorldClusters.enabled = true;
-
-        // adjust default clusterered lighting parameters to handle many lights:
-        // 1) subdivide space with lights into this many cells:
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(10, 10, 10);
-
-        // 2) and allow this many lights per cell:
-        app.scene.layers.clusteredLightingMaxLights = 32;
-
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
-        });
-
-        // set up options for mini-stats, start with the default options and add clusted lighting stats
-        var options = pcx.MiniStats.getDefaultOptions();
-        options.stats.push(
-            {
-                // CPU time it takes to process the clusters each frame
-                name: "Clusters",
-                stats: ["frame.lightClustersTime"],
-                decimalPlaces: 2,
-                unitsName: "ms",
-                watermark: 3
-            },
-            {
-                // number of clusters used internally
-                // should be one if all lights are on the same set of layers
-                name: "Num Clusters",
-                stats: ["frame.lightClusters"],
-                watermark: 3
+        // A list of assets that need to be loaded
+        var assetManifest = {
+            normal: {
+                type: "texture",
+                url: "../assets/textures/normal-map.png"
             }
-        );
+        };
 
-        // performance stats on screen
-        var miniStats = new pcx.MiniStats(app, options);
-
-        // high polycount cylinder
-        var material = new pc.StandardMaterial();
-        var cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
-        var cylinder = new pc.Entity();
-        cylinder.addComponent('render', {
-            material: material,
-            meshInstances: [new pc.MeshInstance(cylinderMesh, material)]
+        // Load all assets and then run the example
+        loadManifestAssets(app, assetManifest, function () {
+            run();
         });
-        app.root.addChild(cylinder);
-        cylinder.setLocalPosition(0, 50, 0);
-        cylinder.setLocalScale(50, 100, 50);
 
-        // create many omni lights that do not cast shadows
-        var count = 105;
-        var intensity = 1.6;
         var lightList = [];
-        for (var i = 0; i < count; i++) {
-            var color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
-            var lightPoint = new pc.Entity();
-            lightPoint.addComponent("light", {
-                type: "omni",
-                color: color,
-                range: 12,
-                castShadows: false
+
+        function run() {
+
+            app.start();
+
+            // enabled clustered lighting. This is a temporary API and will change in the future
+            pc.WorldClusters.enabled = true;
+
+            // adjust default clusterered lighting parameters to handle many lights:
+            // 1) subdivide space with lights into this many cells:
+            app.scene.layers.clusteredLightingCells = new pc.Vec3(10, 10, 10);
+
+            // 2) and allow this many lights per cell:
+            app.scene.layers.clusteredLightingMaxLights = 32;
+
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
             });
 
-            // attach a render component with a small sphere to each light
+            // set up options for mini-stats, start with the default options and add clusted lighting stats
+            var options = pcx.MiniStats.getDefaultOptions();
+            options.stats.push(
+                {
+                    // CPU time it takes to process the clusters each frame
+                    name: "Clusters",
+                    stats: ["frame.lightClustersTime"],
+                    decimalPlaces: 2,
+                    unitsName: "ms",
+                    watermark: 3
+                },
+                {
+                    // number of clusters used internally
+                    // should be one if all lights are on the same set of layers
+                    name: "Num Clusters",
+                    stats: ["frame.lightClusters"],
+                    watermark: 3
+                }
+            );
+
+            // performance stats on screen
+            var miniStats = new pcx.MiniStats(app, options);
+
+            // material with tiled normal map
             var material = new pc.StandardMaterial();
-            material.emissive = color;
+            material.normalMap = assetManifest["normal"].asset.resource;
+            material.normalMapTiling.set(5, 5);
+            material.bumpiness = 2;
             material.update();
 
-            lightPoint.addComponent('render', {
-                type: "sphere",
-                material: material
+            // high polycount cylinder
+            var cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
+            var cylinder = new pc.Entity();
+            cylinder.addComponent('render', {
+                material: material,
+                meshInstances: [new pc.MeshInstance(cylinderMesh, material)]
             });
-            lightPoint.setLocalScale(5, 5, 5);
+            app.root.addChild(cylinder);
+            cylinder.setLocalPosition(0, 50, 0);
+            cylinder.setLocalScale(50, 100, 50);
 
-            // add it to the scene and also keep it in an array
-            app.root.addChild(lightPoint);
-            lightList.push(lightPoint);
+            // create many omni lights that do not cast shadows
+            var count = 105;
+            var intensity = 1.6;
+            for (var i = 0; i < count; i++) {
+                var color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+                var lightPoint = new pc.Entity();
+                lightPoint.addComponent("light", {
+                    type: "omni",
+                    color: color,
+                    range: 12,
+                    castShadows: false
+                });
+
+                // attach a render component with a small sphere to each light
+                var material = new pc.StandardMaterial();
+                material.emissive = color;
+                material.update();
+
+                lightPoint.addComponent('render', {
+                    type: "sphere",
+                    material: material
+                });
+                lightPoint.setLocalScale(5, 5, 5);
+
+                // add it to the scene and also keep it in an array
+                app.root.addChild(lightPoint);
+                lightList.push(lightPoint);
+            }
+
+            // Create an entity with a camera component
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.2, 0.2, 0.2),
+                farClip: 500,
+                nearClip: 0.1
+            });
+            camera.setLocalPosition(120, 120, 120);
+            camera.lookAt(new pc.Vec3(0, 40, 0));
+            app.root.addChild(camera);
         }
-
-        // Create an entity with a camera component
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.2, 0.2),
-            farClip: 500,
-            nearClip: 0.1
-        });
-        camera.setLocalPosition(120, 120, 120);
-        camera.lookAt(new pc.Vec3(0, 40, 0));
-        app.root.addChild(camera);
 
         // Set an update function on the app's update event
         var time = 0;
@@ -128,7 +153,7 @@
 
             // move lights along sin based waves around the cylinder
             lightList.forEach(function(light, i) {
-                var angle = i / count * Math.PI * 2;
+                var angle = (i / lightList.length) * Math.PI * 2;
                 var y = Math.sin(time * 0.3 + 10 * angle) * 55 + 50;
                 light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
             });
