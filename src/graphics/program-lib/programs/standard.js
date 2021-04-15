@@ -516,26 +516,24 @@ var standard = {
         vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
 
         // no lighting when cell coordinate is out of range
-        if (any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax))) {
-            return;
-        }
+        if (!(any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
 
-        // cell index (mapping from 3d cell coordinates to linear memory)
-        float cellIndex = dot(clusterCellsDot, cellCoords);
+            // cell index (mapping from 3d cell coordinates to linear memory)
+            float cellIndex = dot(clusterCellsDot, cellCoords);
 
-        // convert cell index to uv coordinates
-        float clusterV = floor(cellIndex * clusterTextureSize.y);
-        float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
-        clusterV = (clusterV + 0.5) * clusterTextureSize.z;
+            // convert cell index to uv coordinates
+            float clusterV = floor(cellIndex * clusterTextureSize.y);
+            float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+            clusterV = (clusterV + 0.5) * clusterTextureSize.z;
         `;
 
         code += `
-        // loop over maximum possible number of supported light cells
-        const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
-        for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+            // loop over maximum possible number of supported light cells
+            const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+            for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-            vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
-            vec4 indices = lightIndices * 255.0;
+                vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
+                vec4 indices = lightIndices * 255.0;
         `;
 
         // evaluate 4 referenced lights
@@ -545,9 +543,10 @@ var standard = {
         code += this._addLightCodeClustered("w");
 
         code += `
-            // end of the cell array
-            if (lightCellIndex > clusterPixelsPerCell) {
-                break;
+                // end of the cell array
+                if (lightCellIndex > clusterPixelsPerCell) {
+                    break;
+                }
             }
         }
         `;
@@ -1673,10 +1672,12 @@ var standard = {
 
             for (i = 0; i < options.lights.length; i++) {
 
-                // if clustered lights are used, skip normal lights
-                // I added it as a break in the loop to avoid indenting the whole loop within if block for now.
-                if (WorldClusters.enabled) {
-                    break;
+                light = options.lights[i];
+                lightType = light._type;
+
+                // if clustered lights are used, skip normal lights other than directional
+                if (WorldClusters.enabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
+                    continue;
                 }
 
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
@@ -1687,8 +1688,6 @@ var standard = {
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
-                light = options.lights[i];
-                lightType = light._type;
                 usesCookieNow = false;
 
                 if (hasAreaLights && light._shape) {
