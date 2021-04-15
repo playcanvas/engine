@@ -136,7 +136,6 @@ class DefaultAnimBinder {
         }
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
-            console.log(path, node);
 
             // #if _DEBUG
             var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
