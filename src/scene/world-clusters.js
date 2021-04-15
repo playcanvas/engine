@@ -92,6 +92,11 @@ class WorldClusters {
         this._cellsLimit = new Vec3();   // number of cells minus one
         this.cells = cells;
 
+        // number of lights each cell can store, and number of pixels this takes (4 lights per pixel)
+        this._maxCellLightCount = 0;
+        this._pixelsPerCellCount = 0;
+        this.maxCellLightCount = maxCellLightCount;
+
         // limits on some light properties, used for compression to 8bit texture
         this._maxAttenuation = 0;
         this._maxColorValue = 0;
@@ -101,10 +106,6 @@ class WorldClusters {
 
         // light 0 is always reserverd for 'no light' index
         this._usedLights.push(new ClusterLight());
-
-        // each cell stores 4 lights (xyzw), so round up the count
-        this._maxCellLightCount = math.roundUp(maxCellLightCount, 4);
-        this._pixelsPerCellCount = this._maxCellLightCount / 4;
 
         // register shader uniforms
         this.registerUniforms(device);
@@ -163,6 +164,21 @@ class WorldClusters {
         // compression limit 0
         this._clusterCompressionLimit0Id = device.scope.resolve("clusterCompressionLimit0");
         this._clusterCompressionLimit0Data = new Float32Array(2);
+    }
+
+    get maxCellLightCount() {
+        return this._maxCellLightCount;
+    }
+
+    set maxCellLightCount(count) {
+
+        // each cell stores 4 lights (xyzw), so round up the count
+        const maxCellLightCount = math.roundUp(count, 4);
+        if (maxCellLightCount !== this._maxCellLightCount) {
+            this._maxCellLightCount = maxCellLightCount;
+            this._pixelsPerCellCount = this._maxCellLightCount / 4;
+            this._cellsDirty = true;
+        }
     }
 
     get cells() {
