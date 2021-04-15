@@ -42,31 +42,31 @@ function SSAOEffect(graphicsDevice) {
             "",
             "#define saturate(x) clamp(x,0.0,1.0)",
             "",
-            // Largely based on "Dominant Light Shadowing"
-            // "Lighting Technology of The Last of Us Part II" by Hawar Doghramachi, Naughty Dog, LLC
+            "// Largely based on 'Dominant Light Shadowing'",
+            "// 'Lighting Technology of The Last of Us Part II' by Hawar Doghramachi, Naughty Dog, LLC",
             "",
             "const float kSSCTLog2LodRate = 3.0;",
             "",
             "struct ConeTraceSetup {",
-            // fragment info
+            "   // fragment info",
             "    highp vec2 ssStartPos;",
             "    highp vec3 vsStartPos;",
             "    vec3 vsNormal;",
             "",
-            // light (cone) info
+            "   // light (cone) info",
             "    vec3 vsConeDirection;",
             "    float shadowDistance;",
             "    float coneAngleTangeant;",
             "    float contactDistanceMaxInv;",
-            "    vec2 jitterOffset;",          // (x = direction offset, y = step offset)
+            "    vec2 jitterOffset;          // (x = direction offset, y = step offset)",
             "",
-            // scene infos
+            "   // scene infos",
             "    highp mat4 screenFromViewMatrix;",
             "    float projectionScale;",
             "    vec4 resolution;",
             "    float maxLevel;",
             "",
-            // artistic/quality parameters
+            "   // artistic/quality parameters",
             "    float intensity;",
             "    float depthBias;",
             "    float slopeScaledDepthBias;",
@@ -74,55 +74,55 @@ function SSAOEffect(graphicsDevice) {
             "};",
             "",
             "highp float getWFromProjectionMatrix(const mat4 p, const vec3 v) {",
-                // this essentially returns (p * vec4(v, 1.0)).w, but we make some assumptions
-                // this assumes a perspective projection
+            "    // this essentially returns (p * vec4(v, 1.0)).w, but we make some assumptions",
+            "    // this assumes a perspective projection",
             "    return -v.z;",
-                // this assumes a perspective or ortho projection
-                // return p[2][3] * v.z + p[3][3];
+            "    // this assumes a perspective or ortho projection",
+            "    // return p[2][3] * v.z + p[3][3];",
             "}",
             "",
             "highp float getViewSpaceZFromW(const mat4 p, const float w) {",
-                // this assumes a perspective projection
+            "    // this assumes a perspective projection",
             "    return -w;",
-                // this assumes a perspective or ortho projection
+            "    // this assumes a perspective or ortho projection",
             "   // return (w - p[3][3]) / p[2][3];",
             "}",
             "",
             "float coneTraceOcclusion(in ConeTraceSetup setup) {",
-            // skip fragments that are back-facing trace direction
-            // (avoid overshadowing of translucent surfaces)
+            "// skip fragments that are back-facing trace direction",
+            "// (avoid overshadowing of translucent surfaces)",
             "    float NoL = dot(setup.vsNormal, setup.vsConeDirection);",
             "    if (NoL < 0.0) {",
             "        return 0.0;",
             "    }",
             "",
-            // start position of cone trace
+            "// start position of cone trace",
             "    highp vec2 ssStartPos = setup.ssStartPos;",
             "    highp vec3 vsStartPos = setup.vsStartPos;",
             "    highp float ssStartPosW = getWFromProjectionMatrix(setup.screenFromViewMatrix, vsStartPos);",
             "    highp float ssStartPosWInv = 1.0 / ssStartPosW;",
             "",
-            // end position of cone trace
+            "// end position of cone trace",
             "    highp vec3 vsEndPos = setup.vsConeDirection * setup.shadowDistance + vsStartPos;",
             "    highp float ssEndPosW = getWFromProjectionMatrix(setup.screenFromViewMatrix, vsEndPos);",
             "    highp float ssEndPosWInv = 1.0 / ssEndPosW;",
             "    highp vec2 ssEndPos = (setup.screenFromViewMatrix * vec4(vsEndPos, 1.0)).xy * ssEndPosWInv;",
             "",
-            // cone trace direction in screen-space
+            "// cone trace direction in screen-space",
             "    float ssConeLength = length(ssEndPos - ssStartPos);",     // do the math in highp
             "    vec2 ssConeVector = ssEndPos - ssStartPos;",
             "",
-            // direction perpendicular to cone trace direction
+            "// direction perpendicular to cone trace direction",
             "    vec2 perpConeDir = normalize(vec2(ssConeVector.y, -ssConeVector.x));",
             "    float vsEndRadius = setup.coneAngleTangeant * setup.shadowDistance;",
             "",
-            // normalized step
+            "// normalized step",
             "    highp float dt = 1.0 / float(setup.sampleCount);",
             "",
-            // normalized (0 to 1) screen-space postion on the ray
+            "// normalized (0 to 1) screen-space postion on the ray",
             "    highp float t = dt * setup.jitterOffset.y;",
             "",
-            // calculate depth bias
+            "// calculate depth bias",
             "    float vsDepthBias = saturate(1.0 - NoL) * setup.slopeScaledDepthBias + setup.depthBias;",
             "",
             "    float occlusion = 0.0;",
@@ -134,24 +134,24 @@ function SSAOEffect(graphicsDevice) {
             "        float level = clamp(floor(log2(ssSliceRadius)) - kSSCTLog2LodRate, 0.0, float(setup.maxLevel));",
             "        float vsSampleDepthLinear = -getLinearScreenDepth(ssSamplePos * setup.resolution.zw);",
             "",
-            // calculate depth range of cone slice
+            "       // calculate depth range of cone slice",
             "        float vsSliceRadius = vsEndRadius * t;",
             "",
-            // calculate depth of cone center
+            "       // calculate depth of cone center",
             "        float vsConeAxisDepth = -getViewSpaceZFromW(setup.screenFromViewMatrix, 1.0 / mix(ssStartPosWInv, ssEndPosWInv, t));",
             "        float vsJitteredSampleRadius = vsSliceRadius * setup.jitterOffset.x;",
             "        float vsSliceHalfRange = sqrt(vsSliceRadius * vsSliceRadius - vsJitteredSampleRadius * vsJitteredSampleRadius);",
             "        float vsSampleDepthMax = vsConeAxisDepth + vsSliceHalfRange;",
             "",
-            // calculate overlap of depth buffer height-field with trace cone
+            "       // calculate overlap of depth buffer height-field with trace cone",
             "        float vsDepthDifference = vsSampleDepthMax - vsSampleDepthLinear;",
             "        float overlap = saturate((vsDepthDifference - vsDepthBias) / (vsSliceHalfRange * 2.0));",
             "",
-            // attenuate by distance to avoid false occlusion
+            "        // attenuate by distance to avoid false occlusion",
             "        float attenuation = saturate(1.0 - (vsDepthDifference * setup.contactDistanceMaxInv));",
             "        occlusion = max(occlusion, overlap * attenuation);",
-            "        if (occlusion >= 1.0) {",  // note: this can't get > 1.0 by construction
-                // fully occluded, early exit
+            "        if (occlusion >= 1.0) {  // note: this can't get > 1.0 by construction",
+            "                                  // fully occluded, early exit",
             "            break;",
             "        }",
             "    }",
@@ -167,21 +167,21 @@ function SSAOEffect(graphicsDevice) {
             "uniform float uInvFarPlane;",
             "",
             "vec2 pack(highp float depth) {",
-            // we need 16-bits of precision
+            "// we need 16-bits of precision",
             "    highp float z = clamp(depth * uInvFarPlane, 0.0, 1.0);",
             "    highp float t = floor(256.0 * z);",
-            "    mediump float hi = t * (1.0 / 256.0);",   // we only need 8-bits of precision
-            "    mediump float lo = (256.0 * z) - t;",     // we only need 8-bits of precision
+            "    mediump float hi = t * (1.0 / 256.0);   // we only need 8-bits of precision",
+            "    mediump float lo = (256.0 * z) - t;     // we only need 8-bits of precision",
             "    return vec2(hi, lo);",
             "}",
             "",
-            // random number between 0 and 1, using interleaved gradient noise
+            "// random number between 0 and 1, using interleaved gradient noise",
             "float random(const highp vec2 w) {",
             "    const vec3 m = vec3(0.06711056, 0.00583715, 52.9829189);",
             "    return fract(m.z * fract(dot(w, m.xy)));",
             "}",
             "",
-            // returns the frag coord in the GL convention with (0, 0) at the bottom-left
+            "// returns the frag coord in the GL convention with (0, 0) at the bottom-left",
             "highp vec2 getFragCoord() {",
             "    return gl_FragCoord.xy;",
             "}",
@@ -194,18 +194,18 @@ function SSAOEffect(graphicsDevice) {
             "    return normalize(cross(dpdx, dpdy));",
             "}",
             "",
-            // Compute normals using derivatives, which essentially results in half-resolution normals
-            // this creates arifacts around geometry edges.
-            // Note: when using the spirv optimizer, this results in much slower execution time because
-            //       this whole expression is inlined in the AO loop below.
+            "// Compute normals using derivatives, which essentially results in half-resolution normals",
+            "// this creates arifacts around geometry edges.",
+            "// Note: when using the spirv optimizer, this results in much slower execution time because",
+            "//       this whole expression is inlined in the AO loop below.",
             "highp vec3 computeViewSpaceNormal(const highp vec3 position) {",
             "    return faceNormal(dFdx(position), dFdy(position));",
             "}",
             "",
-            // Compute normals directly from the depth texture, resulting in full resolution normals
-            // Note: This is actually as cheap as using derivatives because the texture fetches
-            //       are essentially equivalent to textureGather (which we don't have on ES3.0),
-            //       and this is executed just once.
+            "// Compute normals directly from the depth texture, resulting in full resolution normals",
+            "// Note: This is actually as cheap as using derivatives because the texture fetches",
+            "//       are essentially equivalent to textureGather (which we don't have on ES3.0),",
+            "//       and this is executed just once.",
             "highp vec3 computeViewSpaceNormal(const highp vec3 position, const highp vec2 uv) {",
             "    highp vec2 uvdx = uv + vec2(uResolution.z, 0.0);",
             "    highp vec2 uvdy = uv + vec2(0.0, uResolution.w);",
@@ -216,9 +216,9 @@ function SSAOEffect(graphicsDevice) {
             "    return faceNormal(dpdx, dpdy);",
             "}",
             "",
-            // Ambient Occlusion, largely inspired from:
-            // "The Alchemy Screen-Space Ambient Obscurance Algorithm" by Morgan McGuire
-            // "Scalable Ambient Obscurance" by Morgan McGuire, Michael Mara and David Luebke
+            "// Ambient Occlusion, largely inspired from:",
+            "// 'The Alchemy Screen-Space Ambient Obscurance Algorithm' by Morgan McGuire",
+            "// 'Scalable Ambient Obscurance' by Morgan McGuire, Michael Mara and David Luebke",
             "",
             "uniform vec2 uSampleCount;",
             "uniform float uSpiralTurns;",
@@ -269,21 +269,21 @@ function SSAOEffect(graphicsDevice) {
             "    highp float occlusionDepth = -getLinearScreenDepth(uvSamplePos);",
             "    highp vec3 p = computeViewSpacePositionFromDepth(uvSamplePos, occlusionDepth);",
             "",
-                // now we have the sample, compute AO
+            "    // now we have the sample, compute AO",
             "    vec3 v = p - origin;        // sample vector",
             "    float vv = dot(v, v);       // squared distance",
             "    float vn = dot(v, normal);  // distance * cos(v, normal)",
             "",
-                // discard samples that are outside of the radius, preventing distant geometry to
-                // cast shadows -- there are many functions that work and choosing one is an artistic
-                // decision.
+            "    // discard samples that are outside of the radius, preventing distant geometry to",
+            "    // cast shadows -- there are many functions that work and choosing one is an artistic",
+            "    // decision.",
             "    float w = max(0.0, 1.0 - vv * uInvRadiusSquared);",
             "    w = w*w;",
             "",
-                // discard samples that are too close to the horizon to reduce shadows cast by geometry
-                // not sufficently tessellated. The goal is to discard samples that form an angle 'beta'
-                // smaller than 'epsilon' with the horizon. We already have dot(v,n) which is equal to the
-                // sin(beta) * |v|. So the test simplifies to vn^2 < vv * sin(epsilon)^2.
+            "    // discard samples that are too close to the horizon to reduce shadows cast by geometry",
+            "    // not sufficently tessellated. The goal is to discard samples that form an angle 'beta'",
+            "    // smaller than 'epsilon' with the horizon. We already have dot(v,n) which is equal to the",
+            "    // sin(beta) * |v|. So the test simplifies to vn^2 < vv * sin(epsilon)^2.",
             "    w *= step(vv * uMinHorizonAngleSineSquared, vn * vn);",
             "",
             "    occlusion += w * max(0.0, vn + origin.z * uBias) / (vv + uPeak2);",
@@ -297,8 +297,8 @@ function SSAOEffect(graphicsDevice) {
             "    highp vec2 tapPosition = startPosition(noise);",
             "    highp mat2 angleStep = tapAngleStep();",
             "",
-                // Choose the screen-space sample radius
-                // proportional to the projected area of the sphere
+            "    // Choose the screen-space sample radius",
+            "    // proportional to the projected area of the sphere",
             "    float ssDiskRadius = -(uProjectionScaleRadius / origin.z);",
             "",
             "    float occlusion = 0.0;",
@@ -309,53 +309,10 @@ function SSAOEffect(graphicsDevice) {
             "    return sqrt(occlusion * uIntensity);",
             "}",
             "",
-            "uniform vec3 uSsctVsLightDirection;",
-            "uniform float uSsctShadowDistance;",
-            "uniform float uSsctConeAngleTangeant;",
-            "uniform float uSsctContactDistanceMaxInv;",
-            "",
-            "uniform float uProjectionScale;",
-            "",
-            "uniform float uSsctIntensity;",
-            "uniform vec2 uSsctDepthBias;",
-            "uniform int uSsctSampleCount;",
-            "uniform vec2 uSsctRayCount;",
-            "",
-            "float dominantLightShadowing(highp vec2 uv, highp vec3 origin, vec3 normal) {",
-            "    ConeTraceSetup cone;",
-            "",
-            "    cone.ssStartPos = uv * uResolution.xy;",
-            "    cone.vsStartPos = origin;",
-            "    cone.vsNormal = normal;",
-            "",
-            "    cone.vsConeDirection = uSsctVsLightDirection;",
-            "    cone.shadowDistance = uSsctShadowDistance;",
-            "    cone.coneAngleTangeant = uSsctConeAngleTangeant;",
-            "    cone.contactDistanceMaxInv = uSsctContactDistanceMaxInv;",
-            "",
-            "    cone.screenFromViewMatrix = mat4(0);",
-            "    cone.projectionScale = uProjectionScale;",
-            "    cone.resolution = uResolution;",
-            "    cone.maxLevel = float(uMaxLevel);",
-            "",
-            "    cone.intensity = uSsctIntensity;",
-            "    cone.depthBias = uSsctDepthBias.x;",
-            "    cone.slopeScaledDepthBias = uSsctDepthBias.y;",
-            "    cone.sampleCount = uSsctSampleCount;",
-            "",
-            "    float occlusion = 0.0;",
-            "    for (float i = 1.0; i <= uSsctRayCount.x; i += 1.0) {",
-            "        cone.jitterOffset.x = random(getFragCoord() * i) * 2.0 - 1.0;",      // direction
-            "        cone.jitterOffset.y = random(getFragCoord() * i * vec2(3, 11));",    // step
-            "        occlusion += coneTraceOcclusion(cone);",
-            "    }",
-            "    return occlusion * uSsctRayCount.y;",
-            "}",
-            "",
             "uniform float uPower;",
             "",
             "void main() {",
-            "    highp vec2 uv = vUv0; //variable_vertex.xy;", // interpolated to pixel center
+            "    highp vec2 uv = vUv0; //variable_vertex.xy; // interpolated to pixel center",
             "",
             "    highp float depth = -getLinearScreenDepth(vUv0);",
             "    highp vec3 origin = computeViewSpacePositionFromDepth(uv, depth);",
@@ -367,17 +324,8 @@ function SSAOEffect(graphicsDevice) {
             "        occlusion = scalableAmbientObscurance(uv, origin, normal);",
             "    }",
             "",
-            "    //if (uSsctIntensity > 0.0) {",
-            "        //occlusion = max(occlusion, dominantLightShadowing(uv, origin, normal));",
-            "    //}",
-            "",
-            // occlusion to visibility
+            "    // occlusion to visibility",
             "    float aoVisibility = pow(saturate(1.0 - occlusion), uPower);",
-            "",
-            "#if 0",
-                // this line is needed to workaround what seems to be a bug on qualcomm hardware
-            "    aoVisibility += gl_FragCoord.x * MEDIUMP_FLT_MIN;",
-            "#endif",
             "",
             "    vec4 inCol = vec4(1.0, 1.0, 1.0, 1.0); //texture2D( uColorBuffer,  uv );",
             "",
@@ -425,130 +373,60 @@ function SSAOEffect(graphicsDevice) {
             "",
             "uniform float uAspect;",
             "",
-            "void main_test()",
-            "{",
-            "    vec2 aspectCorrect = vec2( 1.0, uAspect );",
-            "    highp vec2 uv = vUv0; //variable_vertex.xy;", // interpolated to pixel center
+            "uniform int uBilatSampleCount;",
+            "uniform float uFarPlaneOverEdgeDistance;",
             "",
-            "    //float depth = getLinearScreenDepth(vUv0);",
-            "    //gl_FragColor.rgb = vec3(fract(floor(depth*256.0*256.0)),fract(floor(depth*256.0)),fract(depth));",
-            "    //gl_FragColor.a = 1.0;",
-            "",
-            "    vec4 ssao = texture2D( uSSAOBuffer,  uv );",
-            "    vec4 inCol = texture2D( uColorBuffer,  uv );",
-            "",
-            "    gl_FragColor.rgb = inCol.rgb*ssao.rgb; // * vec3(aoVisibility); // postProcess.color.rg= vec3(aoVisibility, pack(origin.z));",
-            "    gl_FragColor.a = 1.0;",
+            "float random(const highp vec2 w) {",
+            "    const vec3 m = vec3(0.06711056, 0.00583715, 52.9829189);",
+            "    return fract(m.z * fract(dot(w, m.xy)));",
             "}",
             "",
-            "// bilateral filter, based on https://www.shadertoy.com/view/4dfGDH#",
-            "",
-            "// A bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter for images.",
-            "// It replaces the intensity of each pixel with a weighted average of intensity values from nearby pixels.",
-            "// This weight can be based on a Gaussian distribution. Crucially, the weights depend not only on",
-            "// Euclidean distance of pixels, but also on the radiometric differences (e.g., range differences, such",
-            "// as color intensity, depth distance, etc.). This preserves sharp edges.",
-            "",
-            "float normpdf(in float x, in float sigma)",
-            "{",
-            "    return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;",
+            "float bilateralWeight(in float depth, in float sampleDepth) {",
+            "    float diff = (sampleDepth - depth) * uFarPlaneOverEdgeDistance;",
+            "    return max(0.0, 1.0 - diff * diff);",
             "}",
             "",
-            "float normpdf3(in vec3 v, in float sigma)",
-            "{",
-            "    return 0.39894 * exp(-0.5 * dot(v, v) / (sigma * sigma)) / sigma;",
+            "void tap(inout float sum, inout float totalWeight, float weight, float depth, vec2 position) {",
+            "    // ambient occlusion sample",
+            "    float ssao = texture2D( uSSAOBuffer, position ).r;",
+            "    float tdepth = -getLinearScreenDepth( position );",
+            "",
+            "    // bilateral sample",
+            "    float bilateral = bilateralWeight(depth, tdepth);",
+            "    bilateral *= weight;",
+            "    sum += ssao * bilateral;",
+            "    totalWeight += bilateral;",
             "}",
             "",
-            "vec3 decodeRGBM(vec4 rgbm) {",
-            "    vec3 color = (8.0 * rgbm.a) * rgbm.rgb;",
-            "    return color * color;",
-            "}",
+            "void main() {",
+            "    highp vec2 uv = vUv0; // variable_vertex.xy; // interpolated at pixel's center",
             "",
-            "float saturate(float x) {",
-            "    return clamp(x, 0.0, 1.0);",
-            "}",
+            "    // we handle the center pixel separately because it doesn't participate in",
+            "    // bilateral filtering",
+            "    float depth = -getLinearScreenDepth(vUv0); // unpack(data.gb);",
+            "    float totalWeight = 0.0; // float(uBilatSampleCount*2+1)*float(uBilatSampleCount*2+1);",
+            "    float ssao = texture2D( uSSAOBuffer, vUv0 ).r;",
+            "    float sum = ssao * totalWeight;",
             "",
-            "vec4 encodeRGBM(vec3 color) { // modified RGBM ",
-            "    vec4 encoded;",
-            "    encoded.rgb = pow(color.rgb, vec3(0.5));",
-            "    encoded.rgb *= 1.0 / 8.0;",
-            "",
-            "    encoded.a = saturate( max( max( encoded.r, encoded.g ), max( encoded.b, 1.0 / 255.0 ) ) );",
-            "    encoded.a = ceil(encoded.a * 255.0) / 255.0;",
-            "",
-            "    encoded.rgb /= encoded.a;",
-            "    return encoded;",
-            "}",
-            "",
-            "// filter size",
-            "#define MSIZE 15",
-            "",
-            "// varying vec2 vUv0;",
-            "uniform sampler2D source;",
-            "uniform vec2 pixelOffset;",
-            "uniform vec2 sigmas;",
-            "",
-            "void main(void) {",
-            "",
-            "    vec4 pixelRgbm = texture2D(source, vUv0);",
-            "",
-            "    // range sigma - controls blurriness based on a pixel distance",
-            "    float sigma = sigmas.x;",
-            "",
-            "    // domain sigma - controls blurriness based on a pixel similarity (to preserve edges)",
-            "    float bSigma = sigmas.y;",
-            "",
-            "    // lightmap specific optimization - skip pixels that were not baked",
-            "    // this also allows dilate filter that work on the output of this to work correctly, as it depeonds on .a being zero",
-            "    // to dilate, which the following blur filter would otherwise modify",
-            "    //if (pixelRgbm.a <= 0.0) {",
-            "    //    gl_FragColor = pixelRgbm;",
-            "    //    return ;",
-            "    //}",
-            "",
-            "    // create the 1-D kernel",
-            "    const int kSize = (MSIZE-1)/2;",
-            "    float kernel[MSIZE];",
-            "    for (int j = 0; j <= kSize; ++j) {",
-            "        kernel[kSize+j] = kernel[kSize-j] = normpdf(float(j), sigma);",
+            "    for (int x = -uBilatSampleCount; x <= uBilatSampleCount; x++) {",
+            "       for (int y = -uBilatSampleCount; y < uBilatSampleCount; y++) {",
+            "           float weight = 1.0;",
+            "           vec2 offset = vec2(x,y)*uResolution.zw;",
+            "           tap(sum, totalWeight, weight, depth, uv + offset);",
+            "       }",
             "    }",
             "",
-            "    vec3 pixelHdr = decodeRGBM(pixelRgbm);",
-            "    vec3 accumulatedHdr = vec3(0.0);",
-            "    float accumulatedFactor = 0.0;",
-            "    float bZnorm = 1.0 / normpdf(0.0, bSigma);",
+            "    float ao = sum * (1.0 / totalWeight);",
             "",
-            "    // read out the texels",
-            "    for (int i = -kSize; i <= kSize; ++i) {",
-            "        for (int j = -kSize; j <= kSize; ++j) {",
-            "",
-            "            // sample the pixel with offset",
-            "            vec2 coord = vUv0 + vec2(float(i), float(j)) * pixelOffset;",
-            "            vec4 rgbm = texture2D(source, coord);",
-            "",
-            "            // lightmap - only use baked pixels",
-            "            if (rgbm.a > 0.0) {",
-            "                vec3 hdr = decodeRGBM(rgbm);",
-            "",
-            "                // bilateral factors",
-            "                float factor = kernel[kSize + j] * kernel[kSize + i];",
-            "                factor *= normpdf3(hdr - pixelHdr, bSigma) * bZnorm;",
-            "",
-            "                // accumulate",
-            "                accumulatedHdr += factor * hdr;",
-            "                accumulatedFactor += factor;",
-            "            }",
-            "        }",
-            "    }",
-            "",
-            "    gl_FragColor = encodeRGBM(accumulatedHdr / accumulatedFactor);",
+            "    // simple dithering helps a lot (assumes 8 bits target)",
+            "    // this is most useful with high quality/large blurs",
+            "    // ao += ((random(gl_FragCoord.xy) - 0.5) / 255.0);",
             "",
             "    vec4 inCol = texture2D( uColorBuffer,  vUv0 );",
             "",
-            "    gl_FragColor.rgb *= inCol.rgb;",
+            "    gl_FragColor.rgb = inCol.rgb * ao;",
             "    gl_FragColor.a = 1.0;",
-            "}",
-            ""
+            "}"
         ].join("\n")
     });
 
@@ -590,11 +468,13 @@ Object.assign(SSAOEffect.prototype, {
         var step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
 
         var radius = 1.0;
-        var bias = 0.0005;
+        var bias = 0.001;
         var peak = 0.1 * radius;
-        var intensity = (peak * 2.0 * 3.141) * 0.5;
+        var intensity = (peak * 2.0 * 3.141) * 1.0;
 
         var projectionScale = 0.5 * device.height;
+
+        var bilateralThreshold = 0.7;
 
         scope.resolve("uMaxBlur").setValue(this.maxBlur);
         scope.resolve("uAspect").setValue(device.width / device.height);
@@ -624,26 +504,11 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uSsctSampleCount").setValue(4);
         scope.resolve("uSsctRayCount").setValue([1.0, 1.0 / 1.0]);
 
-//        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.ssaoShader, rect);
-
         pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.ssaoShader, rect);
 
-        scope.resolve("source").setValue(this.targets[0].colorBuffer);
-
-        // inverse texture size
-        var pixelOffset = [];
-        pixelOffset[0] = 1 / device.width;
-        pixelOffset[1] = 1 / device.height;
-        scope.resolve("pixelOffset").setValue(pixelOffset);
-
-        // bounce dilate between textures
-        // bilateral filter sigmas
-        var sigmas = [];
-        sigmas[0] = 10;
-        sigmas[1] = 0.2;
-        scope.resolve("sigmas").setValue(sigmas);
-
-//        scope.resolve("uSSAOBuffer").setValue(this.targets[0].colorBuffer);
+        scope.resolve("uSSAOBuffer").setValue(this.targets[0].colorBuffer);
+        scope.resolve("uFarPlaneOverEdgeDistance").setValue(50.0 / bilateralThreshold);
+        scope.resolve("uBilatSampleCount").setValue(4);
 
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.blurShader, rect);
     }
