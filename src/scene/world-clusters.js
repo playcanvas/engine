@@ -12,6 +12,7 @@ const tempBox = new BoundingBox();
 
 const epsilon = 0.000001;
 const oneDiv255 = 1 / 255;
+const maxTextureSize = 4096;    // maximum texture size allowed to work on all devices
 
 // packs a float value in [0..1) range to specified number of bytes and stores them in an array with start offset
 // based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
@@ -301,6 +302,22 @@ class WorldClusters {
             const cy = this._cells.y;
             const cz = this._cells.z;
 
+            // storing 4 lights per pixels
+            const numCells = cx * cy * cz;
+            const totalPixels = this._pixelsPerCellCount * numCells;
+
+            // cluster texture size - roughly square that fits all cells. The width is multiply of numPixels to simplify shader math
+            let width = Math.ceil(Math.sqrt(totalPixels));
+            width = math.roundUp(width, this._pixelsPerCellCount);
+            const height = Math.ceil(totalPixels / width);
+
+            // if the texture is allowed size
+            if (width > maxTextureSize || height > maxTextureSize) {
+                // #if _DEBUG
+                console.error("LightCluster parameters cause the texture size to be over the limit.");
+                // #endif
+            }
+
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
             this._clusterCellsMaxData[1] = cy;
@@ -311,19 +328,9 @@ class WorldClusters {
             this._clusterCellsDotData[1] = cx * cz * this._pixelsPerCellCount;
             this._clusterCellsDotData[2] = cx * this._pixelsPerCellCount;
 
-            // storing 4 lights per pixels
-            const numCells = cx * cy * cz;
-            const totalPixels = this._pixelsPerCellCount * numCells;
-
             // cluster data and number of lights per cell
             this.clusters = new Uint8ClampedArray(4 * totalPixels);
             this.counts = new Int32Array(numCells);
-
-            // cluster texture size - roughly square that fits all cells. The width is multiply of numPixels to simplify shader math
-            // TODO: handle the case where this goes over texture limit - either report error, or drop down number of cells / lights per cell
-            let width = Math.ceil(Math.sqrt(totalPixels));
-            width = math.roundUp(width, this._pixelsPerCellCount);
-            const height = Math.ceil(totalPixels / width);
 
             this._clusterTextureSizeData[0] = width;
             this._clusterTextureSizeData[1] = 1.0 / width;
