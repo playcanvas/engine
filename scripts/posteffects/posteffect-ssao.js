@@ -17,7 +17,7 @@ function SSAOEffect(graphicsDevice) {
             aPosition: pc.SEMANTIC_POSITION
         },
         vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n"+pc.shaderChunks.gles3VS) : "",
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
             "attribute vec2 aPosition;",
             "",
             "varying vec2 vUv0;",
@@ -29,7 +29,7 @@ function SSAOEffect(graphicsDevice) {
             "}"
         ].join("\n"),
         fshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n"+pc.shaderChunks.gles3PS) : "",
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             "precision " + graphicsDevice.precision + " float;",
             pc.shaderChunks.screenDepthPS,
             "",
@@ -78,7 +78,7 @@ function SSAOEffect(graphicsDevice) {
                 // this assumes a perspective projection
             "    return -v.z;",
                 // this assumes a perspective or ortho projection
-                //return p[2][3] * v.z + p[3][3];
+                // return p[2][3] * v.z + p[3][3];
             "}",
             "",
             "highp float getViewSpaceZFromW(const mat4 p, const float w) {",
@@ -401,7 +401,7 @@ function SSAOEffect(graphicsDevice) {
             aPosition: pc.SEMANTIC_POSITION
         },
         vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n"+pc.shaderChunks.gles3VS) : "",
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
             "attribute vec2 aPosition;",
             "",
             "varying vec2 vUv0;",
@@ -413,7 +413,7 @@ function SSAOEffect(graphicsDevice) {
             "}"
         ].join("\n"),
         fshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n"+pc.shaderChunks.gles3PS) : "",
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             "precision " + graphicsDevice.precision + " float;",
             pc.shaderChunks.screenDepthPS,
             "",
@@ -548,7 +548,7 @@ function SSAOEffect(graphicsDevice) {
             "    gl_FragColor.rgb *= inCol.rgb;",
             "    gl_FragColor.a = 1.0;",
             "}",
-            "",
+            ""
         ].join("\n")
     });
 
