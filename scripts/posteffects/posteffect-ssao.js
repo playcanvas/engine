@@ -492,17 +492,7 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uPeak2").setValue(peak * peak);
         scope.resolve("uIntensity").setValue(intensity);
         scope.resolve("uPower").setValue(1.0);
-
-        scope.resolve("uProjectionScale").setValue(projectionScale);
         scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
-        scope.resolve("uSsctVsLightDirection").setValue([0, -1, 0]);
-        scope.resolve("uSsctShadowDistance").setValue(0.3);
-        scope.resolve("uSsctConeAngleTangeant").setValue(Math.tan(1.0 * 0.5));
-        scope.resolve("uSsctContactDistanceMaxInv").setValue(1.0 / 1.0);
-        scope.resolve("uSsctIntensity").setValue(0.8);
-        scope.resolve("uSsctDepthBias").setValue([0.01, 0.01]);
-        scope.resolve("uSsctSampleCount").setValue(4);
-        scope.resolve("uSsctRayCount").setValue([1.0, 1.0 / 1.0]);
 
         pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.ssaoShader, rect);
 
