@@ -87,6 +87,10 @@ class LayerComposition extends EventHandler {
 
         // empty cluster with no lights
         this._emptyWorldClusters = null;
+
+        // clustered lighting parameters
+        this._clusteredLightingCells = new Vec3(10, 3, 10);
+        this._clusteredLightingMaxLights = 64;
     }
 
     destroy() {
@@ -102,6 +106,37 @@ class LayerComposition extends EventHandler {
         this._worldClusters = null;
     }
 
+    get clusteredLightingCells() {
+        return this._clusteredLightingCells;
+    }
+
+    set clusteredLightingCells(value) {
+        if (!this._clusteredLightingCells.equals(value)) {
+            this._clusteredLightingCells.copy(value);
+            this.updateWorldClusters();
+        }
+    }
+
+    get clusteredLightingMaxLights() {
+        return this._clusteredLightingMaxLights;
+    }
+
+    set clusteredLightingMaxLights(value) {
+        if (this._clusteredLightingMaxLights !== value) {
+            this._clusteredLightingMaxLights = value;
+            this.updateWorldClusters();
+        }
+    }
+
+    // update clusters with parameter changes
+    updateWorldClusters() {
+        this._worldClusters.forEach((cluster) => {
+            cluster.cells = this._clusteredLightingCells;
+            cluster.maxCellLightCount = this._clusteredLightingMaxLights;
+        });
+    }
+
+    // returns an empty light cluster object to be used when no lights are used
     get emptyWorldClusters() {
         if (!this._emptyWorldClusters) {
 
@@ -523,7 +558,7 @@ class LayerComposition extends EventHandler {
 
                         // create new cluster
                         if (!clusters) {
-                            clusters = new WorldClusters(this.device, new Vec3(10, 10, 10), 16);
+                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;

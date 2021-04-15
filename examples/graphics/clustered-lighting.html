@@ -30,6 +30,13 @@
         // enabled clustered lighting. This is a temporary API and will change in the future
         pc.WorldClusters.enabled = true;
 
+        // adjust default clusterered lighting parameters to handle many lights:
+        // 1) subdivide space with lights into this many cells:
+        app.scene.layers.clusteredLightingCells = new pc.Vec3(10, 10, 10);
+
+        // 2) and allow this many lights per cell:
+        app.scene.layers.clusteredLightingMaxLights = 32;
+
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -42,13 +49,16 @@
         var options = pcx.MiniStats.getDefaultOptions();
         options.stats.push(
             {
+                // CPU time it takes to process the clusters each frame
                 name: "Clusters",
                 stats: ["frame.lightClustersTime"],
-                decimalPlaces: 1,
+                decimalPlaces: 2,
                 unitsName: "ms",
                 watermark: 3
             },
             {
+                // number of clusters used internally
+                // should be one if all lights are on the same set of layers
                 name: "Num Clusters",
                 stats: ["frame.lightClusters"],
                 watermark: 3
