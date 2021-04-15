@@ -82,20 +82,21 @@ class DefaultAnimBinder {
             'weights': function (node) {
                 var meshInstances = findMeshInstances(node);
                 if (meshInstances) {
-                    var morphInstance;
+                    var morphInstances = [];
                     for (var i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
-                            morphInstance = meshInstances[i].morphInstance;
-                            break;
+                            morphInstances.push(meshInstances[i].morphInstance);
                         }
                     }
-                    if (morphInstance) {
+                    if (morphInstances.length > 0) {
                         var func = function (value) {
                             for (var i = 0; i < value.length; ++i) {
-                                morphInstance.setWeight(i, value[i]);
+                                for (var j = 0; j < morphInstances.length; j++) {
+                                    morphInstances[j].setWeight(i, value[i]);
+                                }
                             }
                         };
-                        return DefaultAnimBinder.createAnimTarget(func, 'vector', morphInstance.morph._targets.length, node, 'weights');
+                        return DefaultAnimBinder.createAnimTarget(func, 'vector', morphInstances[0].morph._targets.length, node, 'weights');
                     }
                 }
 
@@ -135,6 +136,7 @@ class DefaultAnimBinder {
         }
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
+            console.log(path, node);
 
             // #if _DEBUG
             var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
