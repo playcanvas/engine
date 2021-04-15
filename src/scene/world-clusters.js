@@ -36,6 +36,18 @@ function packFloatToBytes(value, array, offset, numBytes) {
     }
 }
 
+// helper class to store properties of a light used by clustering
+class ClusterLight {
+    constructor() {
+        // the light itself
+        this.light = null;
+
+        // bounding box
+        this.min = new Vec3();
+        this.max = new Vec3();
+    }
+}
+
 class WorldClusters {
     // format for high precision light texture - float
     static FORMAT_FLOAT = 0;
@@ -83,8 +95,11 @@ class WorldClusters {
         this._maxAttenuation = 0;
         this._maxColorValue = 0;
 
-        // internal list of lights
+        // internal list of lights (of type ClusterLight)
         this._usedLights = [];
+
+        // light 0 is always reserverd for 'no light' index
+        this._usedLights.push(new ClusterLight());
 
         // each cell stores 4 lights (xyzw), so round up the count
         this._maxCellLightCount = math.roundUp(maxCellLightCount, 4);
@@ -108,6 +123,15 @@ class WorldClusters {
         if (this.lightsTextureFloat) {
             this.lightsTextureFloat.destroy();
             this.lightsTextureFloat = null;
+        }
+
+        this.releaseCluxterTexture();
+    }
+
+    releaseCluxterTexture() {
+        if (this.clusterTexture) {
+            this.clusterTexture.destroy();
+            this.clusterTexture = null;
         }
     }
 
@@ -305,8 +329,7 @@ class WorldClusters {
             this._clusterTextureSizeData[1] = 1.0 / width;
             this._clusterTextureSizeData[2] = 1.0 / height;
 
-            // TODO: release previous texture !!!!!!!!
-
+            this.releaseCluxterTexture();
             this.clusterTexture = this.createTexture(width, height, PIXELFORMAT_R8_G8_B8_A8);
         }
     }
@@ -367,20 +390,17 @@ class WorldClusters {
     }
 
     // evaluates min and max coordinates of AABB of the light in the cell space
-    evalLightCellMinMax(light, min, max) {
-
-        // light's bounding box
-        light.getBoundingBox(tempBox);
+    evalLightCellMinMax(clusteredLight, min, max) {
 
         // min point of AABB in cell space
-        min.copy(tempBox.getMin());
+        min.copy(clusteredLight.min);
         min.sub(this.boundsMin);
         min.div(this.boundsDelta);
         min.mul2(min, this.cells);
         min.floor();
 
         // max point of AABB in cell space
-        max.copy(tempBox.getMax());
+        max.copy(clusteredLight.max);
         max.sub(this.boundsMin);
         max.div(this.boundsDelta);
         max.mul2(max, this.cells);
@@ -395,8 +415,7 @@ class WorldClusters {
 
         // skip index 0 as that is used for unused light
         const usedLights = this._usedLights;
-        usedLights.length = 0;
-        usedLights.push(null);
+        let lightIndex = 1;
 
         for (let i = 0; i < lights.length; i++) {
 
@@ -405,16 +424,36 @@ class WorldClusters {
             if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame) {
 
                 // within light limit
-                if (usedLights.length < this.maxLights) {
-                    usedLights.push(light);
+                if (lightIndex < this.maxLights) {
+
+                    // reuse allocated spot
+                    let clusteredLight;
+                    if (lightIndex < usedLights.length) {
+                        clusteredLight = usedLights[lightIndex];
+                    } else {
+                        // allocate new spot
+                        clusteredLight = new ClusterLight();
+                        usedLights.push(clusteredLight);
+                    }
+
+                    // store light properties
+                    clusteredLight.light = light;
+                    light.getBoundingBox(tempBox);
+                    clusteredLight.min.copy(tempBox.getMin());
+                    clusteredLight.max.copy(tempBox.getMax());
+
+                    lightIndex++;
                 } else {
                     console.warn("Clustered lighting: more than " + (this.maxLights - 1) + " lights in the frame, ignoring some.");
                     break;
                 }
             }
         }
+
+        usedLights.length = lightIndex;
     }
 
+    // evaluate the area all lights cover
     evaluateBounds() {
 
         const usedLights = this._usedLights;
@@ -427,16 +466,14 @@ class WorldClusters {
         if (usedLights.length > 1) {
 
             // AABB of the first light
-            usedLights[1].getBoundingBox(tempBox);
-            min.copy(tempBox.getMin());
-            max.copy(tempBox.getMax());
+            min.copy(usedLights[1].min);
+            max.copy(usedLights[1].max);
 
             for (let i = 2; i < usedLights.length; i++) {
 
                 // expand by AABB of this light
-                usedLights[i].getBoundingBox(tempBox);
-                min.min(tempBox.getMin());
-                max.max(tempBox.getMax());
+                min.min(usedLights[i].min);
+                max.max(usedLights[i].max);
             }
         } else {
 
@@ -457,7 +494,7 @@ class WorldClusters {
 
         const usedLights = this._usedLights;
         for (let i = 1; i < usedLights.length; i++) {
-            const light = usedLights[i];
+            const light = usedLights[i].light;
             maxAttenuation = Math.max(light.attenuationEnd, maxAttenuation);
 
             const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
@@ -473,8 +510,6 @@ class WorldClusters {
 
     updateClusters(gammaCorrection) {
 
-        const useLights = this._usedLights;
-
         // clear clusters
         this.counts.fill(0);
         this.clusters.fill(0);
@@ -489,14 +524,16 @@ class WorldClusters {
         let tooManyLights = false;
 
         // started from index 1, zero is "no-light" index
+        const useLights = this._usedLights;
         for (let i = 1; i < useLights.length; i++) {
-            const light = useLights[i];
+            const clusteredLight = useLights[i];
+            const light = clusteredLight.light;
 
             // add light data into textures
             this.addLightData(light, i, gammaCorrection);
 
             // light's bounds in cell space
-            this.evalLightCellMinMax(light, tempMin3, tempMax3);
+            this.evalLightCellMinMax(clusteredLight, tempMin3, tempMax3);
 
             const xStart = tempMin3.x;
             const xEnd = tempMax3.x;
