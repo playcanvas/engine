@@ -463,14 +463,14 @@ Object.assign(SSAOEffect.prototype, {
         var device = this.device;
         var scope = device.scope;
 
-        var sampleCount = 32.0;
-        var spiralTurns = 14.0;
+        var sampleCount = 16.0;
+        var spiralTurns = 10.0;
         var step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
 
-        var radius = 1.0;
+        var radius = 4.0;
         var bias = 0.001;
         var peak = 0.1 * radius;
-        var intensity = (peak * 2.0 * 3.141) * 1.0;
+        var intensity = (peak * 2.0 * 3.141) * 0.125;
 
         var projectionScale = 0.5 * device.height;
 
@@ -482,8 +482,8 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
 
         scope.resolve("uInvFarPlane").setValue(1.0 / 50.0);
-        scope.resolve("uSampleCount").setValue([7.0, 1.0 / 7.0]);
-        scope.resolve("uSpiralTurns").setValue(5.0);
+        scope.resolve("uSampleCount").setValue([sampleCount, 1.0 / sampleCount]);
+        scope.resolve("uSpiralTurns").setValue(spiralTurns);
         scope.resolve("uAngleIncCosSin").setValue([Math.cos(step), Math.sin(step)]);
         scope.resolve("uMaxLevel").setValue(0.0);
         scope.resolve("uInvRadiusSquared").setValue(1.0 / (radius * radius));
