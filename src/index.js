@@ -9,7 +9,6 @@ import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
 import './polyfill/OESVertexArrayObject.js';
-import './polyfill/set.js';
 
 // CORE
 export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
@@ -18,6 +17,7 @@ export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
+export { set } from './core/set-utils.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
