@@ -456,6 +456,78 @@ class Vec4 {
 
     /**
      * @function
+     * @name Vec4#floor
+     * @description Each element is set to the largest integer less than or equal to its value.
+     * @returns {Vec4} Self for chaining.
+     */
+    floor() {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        this.z = Math.floor(this.z);
+        this.w = Math.floor(this.w);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#ceil
+     * @description Each element is rounded up to the next largest integer.
+     * @returns {Vec4} Self for chaining.
+     */
+    ceil() {
+        this.x = Math.ceil(this.x);
+        this.y = Math.ceil(this.y);
+        this.z = Math.ceil(this.z);
+        this.w = Math.ceil(this.w);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#round
+     * @description Each element is rounded up to the nearest integer.
+     * @returns {Vec4} Self for chaining.
+     */
+    round() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        this.z = Math.round(this.z);
+        this.w = Math.round(this.w);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#min
+     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * @param {Vec4} rhs - The 4-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec4} Self for chaining.
+     */
+    min(rhs) {
+        if (rhs.x < this.x) this.x = rhs.x;
+        if (rhs.y < this.y) this.y = rhs.y;
+        if (rhs.z < this.z) this.z = rhs.z;
+        if (rhs.w < this.w) this.w = rhs.w;
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec4#max
+     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * @param {Vec4} rhs - The 4-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec4} Self for chaining.
+     */
+    max(rhs) {
+        if (rhs.x > this.x) this.x = rhs.x;
+        if (rhs.y > this.y) this.y = rhs.y;
+        if (rhs.z > this.z) this.z = rhs.z;
+        if (rhs.w > this.w) this.w = rhs.w;
+        return this;
+    }
+
+    /**
+     * @function
      * @name Vec4#set
      * @description Sets the specified 4-dimensional vector to the supplied numerical values.
      * @param {number} x - The value to set on the first component of the vector.
