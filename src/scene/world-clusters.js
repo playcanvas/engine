@@ -3,7 +3,7 @@ import { math } from '../math/math.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
-import { LIGHTTYPE_DIRECTIONAL } from './constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT } from './constants.js';
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -60,7 +60,7 @@ class WorldClusters {
     static FORMAT_8BIT = 2;
 
     // active light texture format, initialized at app start
-    static lightTextureFormat = WorldClusters.FORMAT_FLOAT;
+    static lightTextureFormat = WorldClusters.FORMAT_8BIT;
 
     // temporary way to enable clustered lighting, will be removed later when this becomes default
     static enabled = false;
@@ -223,24 +223,28 @@ class WorldClusters {
         // 0: lightType, -, -, -
         // 1: color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
         // 2: color.b, color.b, -, -
-        let pixelsPerLight8 = 3;
+        // 3: spotInner, spotInner, spotOuter, spotOuter
+        let pixelsPerLight8 = 4;
         let pixelsPerLightFloat = 0;
 
         // float texture format
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
             // 0: pos.x, pos.y, pos.z, attenuationEnd
-            pixelsPerLightFloat = 1;
+            // 1: spotDir.x, spotDir.y, spotDir.z, unused
+            pixelsPerLightFloat = 2;
 
         } else { // 8bit texture
 
             // each line is a pixel
-            //  3:  pos.x
-            //  4:  pox.y
-            //  5:  pos.z
-            //  6:  attenuationEnd
-
-            pixelsPerLight8 = 7;
+            //  4:  pos.x
+            //  5:  pox.y
+            //  6:  pos.z
+            //  7:  attenuationEnd
+            //  8:  spotDir.x
+            //  9:  spotDir.y
+            // 10:  spotDir.z
+            pixelsPerLight8 = 11;
         }
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
@@ -268,45 +272,85 @@ class WorldClusters {
         this._lightsTextureInvSizeData[3] = 1.0 / this.lightsTexture8.height;
     }
 
+    getSpotDirection(direction, spot) {
+
+        // Spots shine down the negative Y axis
+        const mat = spot._node.getWorldTransform();
+        mat.getY(direction).mulScalar(-1);
+        direction.normalize();
+    }
+
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex, gammaCorrection) {
 
+        const isSpot = light._type === LIGHTTYPE_SPOT;
+        const pos = light._node.getPosition();
+
         // data always stored in 8bit texture
         const data8 = this.lights8;
-        const data8Index = lightIndex * this.lightsTexture8.width * 4;
+        let data8Index = lightIndex * this.lightsTexture8.width * 4;
 
-        // light type
-        data8[data8Index + 0] = Math.random() * 255;
+        // light type & shape && falloffMode
+        data8[data8Index + 0] = isSpot ? 255 : 0;
+        data8[data8Index + 1] = light._shape * 255;
+        data8[data8Index + 2] = light._falloffMode * 255;   // we should consider making this global instead of per light
+        // here we still have unused byte
+        data8Index += 4;
 
         // light color
         const invMaxColorValue = 1.0 / this._maxColorValue;
         const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
-        packFloatToBytes(color[0] * invMaxColorValue, data8, data8Index + 4, 2);
-        packFloatToBytes(color[1] * invMaxColorValue, data8, data8Index + 6, 2);
-        packFloatToBytes(color[2] * invMaxColorValue, data8, data8Index + 8, 2);
+        packFloatToBytes(color[0] * invMaxColorValue, data8, data8Index + 0, 2);
+        packFloatToBytes(color[1] * invMaxColorValue, data8, data8Index + 2, 2);
+        packFloatToBytes(color[2] * invMaxColorValue, data8, data8Index + 4, 2);
+        // here we still have unused 2 bytes
+        data8Index += 8;
+
+        // spot light angles, 2 bytes each
+        if (isSpot) {
+            packFloatToBytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 2);
+            packFloatToBytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 2, 2);
+        }
+        data8Index += 4;
 
         // high precision data stored using float texture
-        const pos = light._node.getPosition();
-
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
             const dataFloat = this.lightsFloat;
             const dataFloatIndex = lightIndex * this.lightsTextureFloat.width * 4;
 
-            // pos / range
+            // pos and range
             dataFloat[dataFloatIndex + 0] = pos.x;
             dataFloat[dataFloatIndex + 1] = pos.y;
             dataFloat[dataFloatIndex + 2] = pos.z;
             dataFloat[dataFloatIndex + 3] = light.attenuationEnd;
 
+            // spot direction
+            if (isSpot) {
+                this.getSpotDirection(tempVec3, light);
+                dataFloat[dataFloatIndex + 4] = tempVec3.x;
+                dataFloat[dataFloatIndex + 5] = tempVec3.y;
+                dataFloat[dataFloatIndex + 6] = tempVec3.z;
+            }
+            // here we have unused float
+
         } else {    // high precision data stored using 8bit texture
 
             // position and range scaled to 0..1 range
             const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
-            packFloatToBytes(normPos.x, data8, data8Index + 12, 4);
-            packFloatToBytes(normPos.y, data8, data8Index + 16, 4);
-            packFloatToBytes(normPos.z, data8, data8Index + 20, 4);
-            packFloatToBytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 24, 4);
+            packFloatToBytes(normPos.x, data8, data8Index + 0, 4);
+            packFloatToBytes(normPos.y, data8, data8Index + 4, 4);
+            packFloatToBytes(normPos.z, data8, data8Index + 8, 4);
+            packFloatToBytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 12, 4);
+            data8Index += 16;
+
+            // spot direction
+            if (isSpot) {
+                this.getSpotDirection(tempVec3, light);
+                packFloatToBytes(tempVec3.x * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 4);
+                packFloatToBytes(tempVec3.y * (0.5 - epsilon) + 0.5, data8, data8Index + 4, 4);
+                packFloatToBytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, data8Index + 8, 4);
+            }
         }
     }
 
