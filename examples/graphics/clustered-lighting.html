@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/playcanvas.dbg.js"></script>
+    <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../assets/scripts/asset-loader.js"></script>
     <style>
@@ -40,7 +40,9 @@
             run();
         });
 
-        var lightList = [];
+        var pointLightList = [];
+        var spotLightList = [];
+        var dirLight = null;
 
         function run() {
 
@@ -51,10 +53,10 @@
 
             // adjust default clusterered lighting parameters to handle many lights:
             // 1) subdivide space with lights into this many cells:
-            app.scene.layers.clusteredLightingCells = new pc.Vec3(10, 10, 10);
+            app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
 
             // 2) and allow this many lights per cell:
-            app.scene.layers.clusteredLightingMaxLights = 32;
+            app.scene.layers.clusteredLightingMaxLights = 48;
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -94,19 +96,29 @@
             material.bumpiness = 2;
             material.update();
 
+            // ground plane
+            var ground = new pc.Entity();
+            ground.addComponent('render', {
+                type: "plane",
+                material: material
+            });
+            ground.setLocalScale(150, 150, 150);
+            app.root.addChild(ground);
+
             // high polycount cylinder
             var cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
             var cylinder = new pc.Entity();
             cylinder.addComponent('render', {
                 material: material,
-                meshInstances: [new pc.MeshInstance(cylinderMesh, material)]
+                meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
+                castShadows: true
             });
             app.root.addChild(cylinder);
             cylinder.setLocalPosition(0, 50, 0);
             cylinder.setLocalScale(50, 100, 50);
 
             // create many omni lights that do not cast shadows
-            var count = 105;
+            var count = 30;
             var intensity = 1.6;
             for (var i = 0; i < count; i++) {
                 var color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
@@ -125,14 +137,60 @@
 
                 lightPoint.addComponent('render', {
                     type: "sphere",
-                    material: material
+                    material: material,
+                    castShadows: true
                 });
                 lightPoint.setLocalScale(5, 5, 5);
 
                 // add it to the scene and also keep it in an array
                 app.root.addChild(lightPoint);
-                lightList.push(lightPoint);
+                pointLightList.push(lightPoint);
             }
+
+            // create many spot lights
+            count = 6;
+            for (var i = 0; i < count; i++) {
+                var color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+                lightSpot = new pc.Entity();
+                lightSpot.addComponent("light", {
+                    type: "spot",
+                    color: color,
+                    innerConeAngle: 5,
+                    outerConeAngle: 6 + Math.random() * 40,
+                    range: 25,
+                    castShadows: false
+                });
+
+                // attach a render component with a small cone to each light
+                material = new pc.StandardMaterial();
+                material.emissive = color;
+                material.update();
+
+                lightSpot.addComponent('render', {
+                    type: "cone",
+                    material: material
+                });
+                lightSpot.setLocalScale(5, 5, 5);
+
+                lightSpot.setLocalPosition(100, 50, 70);
+                lightSpot.lookAt(new pc.Vec3(100, 60, 70));
+                app.root.addChild(lightSpot);
+                spotLightList.push(lightSpot);
+            }
+
+            // Create a single directional light
+            dirLight = new pc.Entity();
+            dirLight.addComponent("light", {
+                type: "directional",
+                color: pc.Color.WHITE,
+                intensity: 0.2,
+                range: 200,
+                shadowDistance: 200,
+                castShadows: true,
+                shadowBias: 0.2,
+                normalOffsetBias: 0.05
+            });
+            app.root.addChild(dirLight);
 
             // Create an entity with a camera component
             var camera = new pc.Entity();
@@ -152,11 +210,24 @@
             time += dt;
 
             // move lights along sin based waves around the cylinder
-            lightList.forEach(function(light, i) {
-                var angle = (i / lightList.length) * Math.PI * 2;
-                var y = Math.sin(time * 0.3 + 10 * angle) * 55 + 50;
+            pointLightList.forEach(function(light, i) {
+                var angle = (i / pointLightList.length) * Math.PI * 2;
+                var y = Math.sin(time * 0.5 + 7 * angle) * 30 + 70;
                 light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
             });
+
+            // rotate spot lights around
+            spotLightList.forEach(function(spotlight, i) {
+                var angle = (i / spotLightList.length) * Math.PI * 2;
+                spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
+                spotlight.lookAt(pc.Vec3.ZERO);
+                spotlight.rotateLocal(90, 0, 0);
+            });
+
+            // rotate direcional light
+            if (dirLight) {
+                dirLight.setLocalEulerAngles(25, -30 * time, 0);
+            }
         });
 
     </script>
