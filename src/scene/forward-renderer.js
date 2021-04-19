@@ -3034,8 +3034,11 @@ class ForwardRenderer {
         this.gpuUpdate(comp._meshInstances);
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
+        if (!WorldClusters.enabled) {
+            this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+            this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        }
 
         // Rendering
         let sortTime, drawTime;
