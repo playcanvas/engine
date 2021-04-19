@@ -41,6 +41,11 @@ class LayerComposition extends EventHandler {
     constructor(graphicsDevice, name = "Untitled") {
         super();
 
+        if (typeof graphicsDevice === 'string') {
+            // handle previous constructor parameters: (name)
+            graphicsDevice = null;
+            name = graphicsDevice;
+        }
         this.device = graphicsDevice || getApplication()?.graphicsDevice;
         this.name = name;
 
