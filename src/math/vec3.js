@@ -499,7 +499,7 @@ class Vec3 {
     /**
      * @function
      * @name Vec3#round
-     * @description Each element is rounded up to the nearest integer.
+     * @description Each element is rounded up or down to the nearest integer.
      * @returns {Vec3} Self for chaining.
      */
     round() {
