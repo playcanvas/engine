@@ -9,7 +9,6 @@ import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
 import './polyfill/OESVertexArrayObject.js';
-import './polyfill/set.js';
 
 // CORE
 export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';

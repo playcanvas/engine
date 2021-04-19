@@ -1,4 +1,5 @@
 import { EventHandler } from '../core/event-handler.js';
+import { set } from '../core/set-utils.js';
 
 import { Vec3 } from '../math/vec3.js';
 
@@ -514,7 +515,7 @@ class LayerComposition extends EventHandler {
 
             if (ra.lightClusters) {
                 // if the layer has exactly the same set of lights, use the same cluster
-                if (layer._clusteredLightsSet.isEqual(raLayer._clusteredLightsSet)) {
+                if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
                     return ra.lightClusters;
                 }
             }
