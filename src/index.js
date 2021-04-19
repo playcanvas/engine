@@ -17,7 +17,6 @@ export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
-export { set } from './core/set-utils.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
