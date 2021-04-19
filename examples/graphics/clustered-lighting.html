@@ -178,7 +178,7 @@
                 spotLightList.push(lightSpot);
             }
 
-            // Create a single directional light
+            // Create a single directional light which casts shadows
             dirLight = new pc.Entity();
             dirLight.addComponent("light", {
                 type: "directional",
