@@ -56,6 +56,26 @@ function precisionCode(device) {
     if (device.webgl2) {
         pcode += '#ifdef GL2\nprecision ' + device.precision + ' sampler2DShadow;\n#endif\n';
     }
+
+    if (true)//platform.mobile && !options.useHighP) 
+    {
+        pcode += '#define USE_MEDP\n'; // used for code path changes (clamps or offsets)
+        pcode += '#define MEDP mediump\n';
+        pcode += '#define HIGHP highp\n';
+    } else {
+        pcode += '#define MEDP ';
+        pcode += '#define HIGHP ';
+    }
+
+    pcode += '#define MMEDP MEDP\n';
+    pcode += '#define OMEDP MEDP\n';
+    pcode += '#define LMEDP MEDP\n';
+    pcode += '#define SMEDP MEDP\n';
+    pcode += '#define RMEDP MEDP\n';
+    pcode += '#define FMEDP MEDP\n';
+    pcode += '#define PMEDP MEDP\n';
+    pcode += '#define UMEDP MEDP\n';
+
     return pcode;
 }
 

@@ -1,5 +1,5 @@
 #ifdef MAPCOLOR
-uniform vec3 material_specular;
+uniform MMEDP vec3 material_specular;
 #endif
 
 #ifdef MAPTEXTURE

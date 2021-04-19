@@ -1,5 +1,5 @@
 #ifdef MAPFLOAT
-uniform float material_shininess;
+uniform MMEDP float material_shininess;
 #endif
 
 #ifdef MAPTEXTURE

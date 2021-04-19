@@ -1,11 +1,11 @@
 void getTBN() {
 
-    vec3 B = cross(dVertexNormalW, vObjectSpaceUpW);
-    vec3 T = cross(dVertexNormalW, B);
+    MMEDP vec3 B = cross(dVertexNormalW, vObjectSpaceUpW);
+    MMEDP vec3 T = cross(dVertexNormalW, B);
 
     if (dot(B,B)==0.0) // deal with case when vObjectSpaceUpW dVertexNormalW are parallel
     {
-        float major=max(max(dVertexNormalW.x, dVertexNormalW.y),dVertexNormalW.z);
+        MMEDP float major=max(max(dVertexNormalW.x, dVertexNormalW.y),dVertexNormalW.z);
 
         if (dVertexNormalW.x==major)
         {
