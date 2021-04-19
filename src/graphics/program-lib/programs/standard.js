@@ -558,9 +558,7 @@ var standard = {
             float clusterV = floor(cellIndex * clusterTextureSize.y);
             float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
             clusterV = (clusterV + 0.5) * clusterTextureSize.z;
-        `;
 
-        code += `
             // loop over maximum possible number of supported light cells
             const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
             for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
