@@ -1447,8 +1447,18 @@ var standard = {
             }
         }
 
+        var hasPointLights = false;
+        var usesLinearFalloff = false;
+        var usesInvSquaredFalloff = false;
+        var usesSpot = false;
+        var usesCookie = false;
+        var usesCookieNow;
+
         // clustered lighting
         if (LayerComposition.enabled) {
+
+            usesSpot = true;
+
             const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
             code += `
             #define CLUSTER_TEXTURE_${clusterTextureFormat}
@@ -1472,11 +1482,6 @@ var standard = {
 
             float DecodeClusterFloat2(vec2 data) {
                 return dot(data, vec2(1.0, 1.0 / 255.0));
-            }
-
-            float getSpotEffect(vec3 lightSpotDirW, float lightInnerConeAngle, float lightOuterConeAngle) {
-                float cosAngle = dot(dLightDirNormW, lightSpotDirW);
-                return smoothstep(lightOuterConeAngle, lightInnerConeAngle, cosAngle);
             }
 
             void EvaluateClusterLight(float lightIndex) {
@@ -1559,13 +1564,6 @@ var standard = {
             }
             `;
         }
-
-        var hasPointLights = false;
-        var usesLinearFalloff = false;
-        var usesInvSquaredFalloff = false;
-        var usesSpot = false;
-        var usesCookie = false;
-        var usesCookieNow;
 
         if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
 
