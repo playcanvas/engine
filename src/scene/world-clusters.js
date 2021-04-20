@@ -124,7 +124,7 @@ class WorldClusters {
             this.lightsTextureFloat = null;
         }
 
-        this.releaseCluxterTexture();
+        this.releaseClusterTexture();
     }
 
     releaseCluxterTexture() {
