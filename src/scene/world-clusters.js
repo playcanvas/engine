@@ -393,7 +393,7 @@ class WorldClusters {
             this._clusterTextureSizeData[1] = 1.0 / width;
             this._clusterTextureSizeData[2] = 1.0 / height;
 
-            this.releaseCluxterTexture();
+            this.releaseClusterTexture();
             this.clusterTexture = this.createTexture(width, height, PIXELFORMAT_R8_G8_B8_A8);
         }
     }
