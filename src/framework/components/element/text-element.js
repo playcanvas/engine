@@ -43,25 +43,23 @@ class MeshInfo {
     }
 }
 
+const LINE_BREAK_CHAR = /^[\r\n]$/;
+const WHITESPACE_CHAR = /^[ \t]$/;
+const WORD_BOUNDARY_CHAR = /^[ \t\-]|[\u200b]$/; // NB \u200b is zero width space
+const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
+
 // 1100—11FF Hangul Jamo
-// 3130—318F Hangul Compatibility Jamo
+// 3000—303F CJK Symbols and Punctuation \
+// 3130—318F Hangul Compatibility Jamo    -- grouped
+// 4E00—9FFF CJK Unified Ideographs      /
 // A960—A97F Hangul Jamo Extended-A
 // AC00—D7AF Hangul Syllables
 // D7B0—D7FF Hangul Jamo Extended-B
-// 3000—303F CJK Symbols and Punctuation
-// 4E00—9FFF CJK Unified Ideographs
-
-const LINE_BREAK_CHAR = /^[\r\n]$/;
-const WHITESPACE_CHAR = /^[ \t]$/;
-const WORD_BOUNDARY_CHAR = /^[ \t\-]|[\u200b]$/; // NB \u200b zero width space
-//const CJK_CHAR = /^[\uac00-\ud7ff]$/; //|[\u1100-\u11ff]|[\u3130-\u318f]|[\ua960-\ua97f]|[\ud7b0-\ud7ff]|[\u3040-\u9FFF]$/; // NB \u3041 Japanese \u3131 Korean
 const CJK_CHAR = /^[\u1100-\u11ff]|[\u3000-\u9fff]|[\ua960-\ua97f]|[\uac00-\ud7ff]$/;
-
-const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 const CONTROL_CHARS = [
-    '\u200B', //zero width space
+    '\u200B', // zero width space
     '\u061C',
     '\u200E',
     '\u200F',
