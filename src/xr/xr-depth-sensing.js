@@ -122,7 +122,7 @@ class XrDepthSensing extends EventHandler {
 
     _updateTexture() {
         if (this._depthInfo) {
-            var resized = false;
+            let resized = false;
 
             // changed resolution
             if (this._depthInfo.width !== this._texture.width || this._depthInfo.height !== this._texture.height) {
@@ -132,7 +132,7 @@ class XrDepthSensing extends EventHandler {
                 resized = true;
             }
 
-            var dataBuffer = this._depthInfo.data;
+            const dataBuffer = this._depthInfo.data;
             this._depthBuffer = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
             this._texture._levels[0] = this._depthBuffer;
             this._texture.upload();
@@ -152,7 +152,11 @@ class XrDepthSensing extends EventHandler {
     update(frame, view) {
         if (view) {
             if (! this._depthInfo) this._matrixDirty = true;
-            this._depthInfo = frame.getDepthInformation(view);
+            try {
+                this._depthInfo = frame.getDepthInformation(view);
+            } catch (ex) {
+                this._depthInfo = null;
+            }
         } else {
             if (this._depthInfo) this._matrixDirty = true;
             this._depthInfo = null;
