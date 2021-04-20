@@ -178,13 +178,13 @@ Want to help us make the best 3D engine on the web? Great!
 Check out [CONTRIBUTING.md](https://github.com/playcanvas/engine/blob/master/.github/CONTRIBUTING.md) that will get you started.
 And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
 
-## PlayCanvas Platform
+## PlayCanvas Editor
 
-The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a Visual Editor, asset management, code editing, hosting and publishing services.
+The PlayCanvas Engine is an open source engine which you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):
 
 [![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
-For Editor related bugs and issues, please refer to [Editor's repo](https://github.com/playcanvas/editor).
+For Editor related bugs and issues, please refer to the [Editor's repo](https://github.com/playcanvas/editor).
 
 ## License
 
