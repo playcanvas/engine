@@ -180,7 +180,11 @@ And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, code editing, hosting and publishing services.
+The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a Visual Editor, asset management, code editing, hosting and publishing services.
+
+For Editor related bugs and issues, please refer to [Editor's repo](https://github.com/playcanvas/editor).
+
+[![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 ## License
 
