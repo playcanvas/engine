@@ -20,8 +20,8 @@ class EventHandler {
     }
 
     initEventHandler() {
-        this._callbacks = {};
-        this._callbackActive = {};
+        this._callbacks = { };
+        this._callbackActive = { };
     }
 
     _addCallback(name, callback, scope, once = false) {
@@ -97,7 +97,7 @@ class EventHandler {
         }
 
         if (!name) {
-            this._callbacks = {};
+            this._callbacks = { };
         } else if (!callback) {
             if (this._callbacks[name])
                 this._callbacks[name] = [];
