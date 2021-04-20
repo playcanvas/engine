@@ -17,8 +17,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 ## Project Showcase
 
-Many games and apps have been published using the PlayCanvas engine.
-Check out [Awesome PlayCanvas](https://github.com/playcanvas/awesome-playcanvas) list, and here is a small selection:
+Many games and apps have been published using the PlayCanvas engine. Check out the [Awesome PlayCanvas](https://github.com/playcanvas/awesome-playcanvas) list, and here is a small selection:
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
 [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
@@ -182,9 +181,9 @@ And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%
 
 The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a Visual Editor, asset management, code editing, hosting and publishing services.
 
-For Editor related bugs and issues, please refer to [Editor's repo](https://github.com/playcanvas/editor).
-
 [![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
+
+For Editor related bugs and issues, please refer to [Editor's repo](https://github.com/playcanvas/editor).
 
 ## License
 
