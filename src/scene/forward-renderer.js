@@ -52,7 +52,6 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
-import { WorldClusters } from './world-clusters.js';
 import { LayerComposition } from './layer-composition.js';
 
 // Global shadowmap resources
