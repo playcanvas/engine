@@ -79,6 +79,9 @@ class WorldClusters {
         this.device = device;
         this.name = "Untitled";
 
+        // number of time a warning was reported
+        this.reportCount = 0;
+
         // bounds of all lights
         this._bounds = new BoundingBox();
 
@@ -591,9 +594,9 @@ class WorldClusters {
         let tooManyLights = false;
 
         // started from index 1, zero is "no-light" index
-        const useLights = this._usedLights;
-        for (let i = 1; i < useLights.length; i++) {
-            const clusteredLight = useLights[i];
+        const usedLights = this._usedLights;
+        for (let i = 1; i < usedLights.length; i++) {
+            const clusteredLight = usedLights[i];
             const light = clusteredLight.light;
 
             // add light data into textures
@@ -629,9 +632,16 @@ class WorldClusters {
             }
         }
 
+        // #if _DEBUG
         if (tooManyLights) {
-            console.error("too many lights in some clusters");
+            const reportLimit = 5;
+            if (this.reportCount < reportLimit) {
+                console.warn("Too many lights in light cluster " + this.name + ", please adjust parameters." +
+                (this.reportCount == reportLimit - 1 ? " Giving up on reporting it." : ""));
+                this.reportCount++;
+            }
         }
+        // #endif
     }
 
     // internal update of the cluster data, executes once per frame
