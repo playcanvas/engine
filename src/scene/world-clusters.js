@@ -62,9 +62,6 @@ class WorldClusters {
     // active light texture format, initialized at app start
     static lightTextureFormat = WorldClusters.FORMAT_8BIT;
 
-    // temporary way to enable clustered lighting, will be removed later when this becomes default
-    static enabled = false;
-
     // executes when the app starts
     static init(device) {
         // lights high precision texture format

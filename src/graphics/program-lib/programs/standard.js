@@ -22,6 +22,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { WorldClusters } from '../../../scene/world-clusters.js';
+import { LayerComposition } from '../../../scene/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -1447,7 +1448,7 @@ var standard = {
         }
 
         // clustered lighting
-        if (WorldClusters.enabled) {
+        if (LayerComposition.enabled) {
             const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
             code += `
             #define CLUSTER_TEXTURE_${clusterTextureFormat}
@@ -1699,7 +1700,7 @@ var standard = {
             var shapeString = '';
 
             // clustered lighting
-            if (WorldClusters.enabled) {
+            if (LayerComposition.enabled) {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
@@ -1712,7 +1713,7 @@ var standard = {
                 lightType = light._type;
 
                 // if clustered lights are used, skip normal lights other than directional
-                if (WorldClusters.enabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
+                if (LayerComposition.enabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
                     continue;
                 }
 

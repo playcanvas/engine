@@ -38,6 +38,9 @@ const tempClusterArray = [];
  */
 // Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
+    // temporary way to enable clustered lighting, will be removed later when this becomes default
+    static enabled = false;
+
     constructor(graphicsDevice, name = "Untitled") {
         super();
 
@@ -405,7 +408,7 @@ class LayerComposition extends EventHandler {
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions
-            if (WorldClusters.enabled) {
+            if (LayerComposition.enabled) {
                 this.allocateLightClusters();
             }
         }

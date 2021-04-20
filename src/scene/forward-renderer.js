@@ -53,6 +53,7 @@ import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { WorldClusters } from './world-clusters.js';
+import { LayerComposition } from './layer-composition.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(
@@ -3035,7 +3036,7 @@ class ForwardRenderer {
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
         // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
-        if (!WorldClusters.enabled) {
+        if (!LayerComposition.enabled) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
@@ -3131,7 +3132,7 @@ class ForwardRenderer {
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
-                if (WorldClusters.enabled && renderAction.lightClusters) {
+                if (LayerComposition.enabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate();
                 }
 
