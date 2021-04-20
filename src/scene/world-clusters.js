@@ -53,11 +53,8 @@ class WorldClusters {
     // format for high precision light texture - float
     static FORMAT_FLOAT = 0;
 
-    // format for high precision light texture - half
-    static FORMAT_HALF = 1;
-
     // format for high precision light texture - 8bit
-    static FORMAT_8BIT = 2;
+    static FORMAT_8BIT = 1;
 
     // active light texture format, initialized at app start
     static lightTextureFormat = WorldClusters.FORMAT_8BIT;
