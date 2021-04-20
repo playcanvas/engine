@@ -45,8 +45,8 @@ class MeshInfo {
 
 const LINE_BREAK_CHAR = /^[\r\n]$/;
 const WHITESPACE_CHAR = /^[ \t]$/;
-const WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
-const CJK_CHAR = /^[\u4E00-\u9FFF]$/;
+const WORD_BOUNDARY_CHAR = /^[ \t\-]$/; // NB \u200b zero width space
+const CJK_CHAR = /^[\u3040-\u9FFF]$/; // NB \u3041 Japanese \u3131 Korean
 const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
@@ -902,9 +902,13 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                const isWordBoundary = WORD_BOUNDARY_CHAR.test(char); // char is space, tab, or dash
-                const isCJKBoundary = CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)); // char is CJK character boundary
-                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar); // next character is CJK character
+                // char is space, tab, or dash
+                const isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
+                // char is CJK character boundary
+                const isCJKBoundary = CJK_CHAR.test(char) && (((nextchar !== null) && (WORD_BOUNDARY_CHAR.test(nextchar)) || ALPHANUMERIC_CHAR.test(nextchar)));
+                // next character is CJK character
+                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar);
+
                 if (isWordBoundary || isCJKBoundary || isNextCJK) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
