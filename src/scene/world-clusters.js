@@ -107,7 +107,7 @@ class WorldClusters {
         // register shader uniforms
         this.registerUniforms(device);
 
-        // alocate textures to store lights
+        // allocate textures to store lights
         this.initLightsTexture();
     }
 
