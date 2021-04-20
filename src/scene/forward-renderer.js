@@ -3036,7 +3036,7 @@ class ForwardRenderer {
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
         // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
-        if (!LayerComposition.enabled) {
+        if (!LayerComposition.clusteredLightingEnabled) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
@@ -3132,7 +3132,7 @@ class ForwardRenderer {
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
-                if (LayerComposition.enabled && renderAction.lightClusters) {
+                if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate();
                 }
 

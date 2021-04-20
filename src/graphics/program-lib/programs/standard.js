@@ -1402,7 +1402,7 @@ var standard = {
         var usesCookieNow;
 
         // clustered lighting
-        if (LayerComposition.enabled) {
+        if (LayerComposition.clusteredLightingEnabled) {
 
             usesSpot = true;
 
@@ -1544,7 +1544,7 @@ var standard = {
             var shapeString = '';
 
             // clustered lighting
-            if (LayerComposition.enabled) {
+            if (LayerComposition.clusteredLightingEnabled) {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
@@ -1557,7 +1557,7 @@ var standard = {
                 lightType = light._type;
 
                 // if clustered lights are used, skip normal lights other than directional
-                if (LayerComposition.enabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
+                if (LayerComposition.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
                     continue;
                 }
 
