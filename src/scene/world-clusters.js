@@ -127,7 +127,7 @@ class WorldClusters {
         this.releaseClusterTexture();
     }
 
-    releaseCluxterTexture() {
+    releaseClusterTexture() {
         if (this.clusterTexture) {
             this.clusterTexture.destroy();
             this.clusterTexture = null;
