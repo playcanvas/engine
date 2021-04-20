@@ -8,8 +8,8 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
-var quat = new Quat();
-var ids = 0;
+const quat = new Quat();
+let ids = 0;
 
 /**
  * @class
@@ -186,7 +186,7 @@ class XrInputSource extends EventHandler {
         } else {
             // grip
             if (this._xrInputSource.gripSpace) {
-                var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+                const gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
                     if (! this._grip) {
                         this._grip = true;
@@ -204,7 +204,7 @@ class XrInputSource extends EventHandler {
             }
 
             // ray
-            var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
+            const targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
             if (targetRayPose) {
                 this._dirtyRay = true;
                 this._rayLocal.origin.copy(targetRayPose.transform.position);
@@ -221,7 +221,7 @@ class XrInputSource extends EventHandler {
             this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
         }
 
-        var parent = this._manager.camera.parent;
+        const parent = this._manager.camera.parent;
         if (parent) {
             this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
         } else {
@@ -230,12 +230,12 @@ class XrInputSource extends EventHandler {
     }
 
     _updateRayTransforms() {
-        var dirty = this._dirtyRay;
+        const dirty = this._dirtyRay;
         this._dirtyRay = false;
 
-        var parent = this._manager.camera.parent;
+        const parent = this._manager.camera.parent;
         if (parent) {
-            var parentTransform = this._manager.camera.parent.getWorldTransform();
+            const parentTransform = this._manager.camera.parent.getWorldTransform();
 
             parentTransform.getTranslation(this._position);
             this._rotation.setFromMat4(parentTransform);
@@ -354,13 +354,11 @@ class XrInputSource extends EventHandler {
      * });
      */
     hitTestStart(options = {}) {
-        var self = this;
-
         options.profile = this._xrInputSource.profiles[0];
 
-        var callback = options.callback;
-        options.callback = function (err, hitTestSource) {
-            if (hitTestSource) self.onHitTestSourceAdd(hitTestSource);
+        const callback = options.callback;
+        options.callback = (err, hitTestSource) => {
+            if (hitTestSource) this.onHitTestSourceAdd(hitTestSource);
             if (callback) callback(err, hitTestSource);
         };
 
@@ -385,7 +383,7 @@ class XrInputSource extends EventHandler {
     }
 
     onHitTestSourceRemove(hitTestSource) {
-        var ind = this._hitTestSources.indexOf(hitTestSource);
+        const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     }
 
