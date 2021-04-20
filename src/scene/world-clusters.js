@@ -73,7 +73,7 @@ class WorldClusters {
         this.device = device;
         this.name = "Untitled";
 
-        // number of time a warning was reported
+        // number of times a warning was reported
         this.reportCount = 0;
 
         // bounds of all lights
