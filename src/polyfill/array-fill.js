@@ -1,3 +1,4 @@
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill#polyfill
 if (!Array.prototype.fill) {
     Object.defineProperty(Array.prototype, 'fill', {
         value: function(value) {
@@ -39,6 +40,7 @@ if (!Array.prototype.fill) {
 }
 
 // implementation for typed arrays
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill#polyfill
 if (!Int8Array.prototype.fill) {
     Int8Array.prototype.fill = Array.prototype.fill;
 }
