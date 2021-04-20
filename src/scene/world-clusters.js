@@ -198,7 +198,7 @@ class WorldClusters {
     }
 
     createTexture(width, height, format) {
-        var tex = new Texture(this.device, {
+        const tex = new Texture(this.device, {
             width: width,
             height: height,
             mipmaps: false,
