@@ -174,7 +174,7 @@ class EventHandler {
                 const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
 
                 if (ind !== -1) {
-                    if (this._callbackActive[name] === this._callbacks[name])
+                    if (this._callbackActive[name] === existingCallback)
                         this._callbackActive[name] = this._callbackActive[name].slice();
 
                     this._callbacks[name].splice(ind, 1);
