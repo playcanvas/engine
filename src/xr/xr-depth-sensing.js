@@ -26,11 +26,13 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  * // GPU path, attaching texture to material
  * material.diffuseMap = depthSensing.texture;
  * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
+ * material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
  * material.update();
  *
  * // update UV transformation matrix on depth texture resize
  * depthSensing.on('resize', function () {
  *     material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
+ *     material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
  * });
  * @example
  * // GLSL shader to unpack depth texture
@@ -38,6 +40,7 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  *
  * uniform sampler2D texture_depthSensingMap;
  * uniform mat4 matrix_depth_uv;
+ * uniform float depth_raw_to_meters;
  *
  * void main(void) {
  *     // transform UVs using depth matrix
@@ -47,10 +50,10 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  *     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
  *
  *     // unpack into single value in millimeters
- *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)); // mm
+ *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)) * depth_raw_to_meters; // m
  *
  *     // normalize: 0m to 8m distance
- *     depth = min(depth / 8000.0, 1.0); // 0..1 = 0m..8m
+ *     depth = min(depth / 8.0, 1.0); // 0..1 = 0..8
  *
  *     // paint scene from black to white based on distance
  *     gl_FragColor = vec4(depth, depth, depth, 1.0);
@@ -122,7 +125,7 @@ class XrDepthSensing extends EventHandler {
         try {
             this._usage = session.depthUsage;
             this._dataFormat = session.depthDataFormat;
-        } catch(ex) {
+        } catch (ex) {
             this._usage = null;
             this._dataFormat = null;
             this._available = false;
@@ -166,12 +169,12 @@ class XrDepthSensing extends EventHandler {
 
             if (this._depthInfoCpu) {
                 const dataBuffer = this._depthInfoCpu.data;
-                this._depthBuffer = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
+                this._depthBuffer = new Uint8Array(dataBuffer);
                 this._texture._levels[0] = this._depthBuffer;
                 this._texture.upload();
             } else if (this._depthInfoGpu) {
-                // TODO
-                // GPU usage
+                this._texture._levels[0] = this._depthInfoGpu.texture;
+                this._texture.upload();
             }
 
             if (resized) this.fire('resize', depthInfo.width, depthInfo.height);
@@ -190,26 +193,25 @@ class XrDepthSensing extends EventHandler {
             return;
 
         let depthInfoCpu = null;
+        let depthInfoGpu = null;
         if (this._usage === XRDEPTHSENSINGUSAGE_CPU && view) {
             depthInfoCpu = frame.getDepthInformation(view);
-        } else {
-            depthInfoCpu = null;
+        } else if (this._usage === XRDEPTHSENSINGUSAGE_GPU && view) {
+            depthInfoGpu = frame.getDepthInformation(view);
         }
 
-        if ((this._depthInfoCpu && ! depthInfoCpu) || (! this._depthInfoCpu && depthInfoCpu)) {
+        if ((this._depthInfoCpu && ! depthInfoCpu) || (! this._depthInfoCpu && depthInfoCpu) || (this.depthInfoGpu && ! depthInfoGpu) || (! this._depthInfoGpu && depthInfoGpu)) {
             this._matrixDirty = true;
         }
         this._depthInfoCpu = depthInfoCpu;
-
-        // TODO
-        // GPU usage
+        this._depthInfoGpu = depthInfoGpu;
 
         this._updateTexture();
 
         if (this._matrixDirty) {
             this._matrixDirty = false;
 
-            let depthInfo = this._depthInfoCpu || this._depthInfoGpu;
+            const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
 
             if (depthInfo) {
                 this._matrix.data.set(depthInfo.normDepthBufferFromNormView.matrix);
@@ -276,11 +278,13 @@ class XrDepthSensing extends EventHandler {
     }
 
     get width() {
-        return this._depthInfo && this._depthInfo.width || 0;
+        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
+        return depthInfo && depthInfo.width || 0;
     }
 
     get height() {
-        return this._depthInfo && this._depthInfo.height || 0;
+        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
+        return depthInfo && depthInfo.height || 0;
     }
 
     /* eslint-disable jsdoc/check-examples */
@@ -296,6 +300,7 @@ class XrDepthSensing extends EventHandler {
      *
      * uniform sampler2D texture_depthSensingMap;
      * uniform mat4 matrix_depth_uv;
+     * uniform float depth_raw_to_meters;
      *
      * void main(void) {
      *     // transform UVs using depth matrix
@@ -305,10 +310,10 @@ class XrDepthSensing extends EventHandler {
      *     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
      *
      *     // unpack into single value in millimeters
-     *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)); // mm
+     *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)) * depth_raw_to_meters; // m
      *
      *     // normalize: 0m to 8m distance
-     *     depth = min(depth / 8000.0, 1.0); // 0..1 = 0m..8m
+     *     depth = min(depth / 8.0, 1.0); // 0..1 = 0m..8m
      *
      *     // paint scene from black to white based on distance
      *     gl_FragColor = vec4(depth, depth, depth, 1.0);
@@ -330,10 +335,16 @@ class XrDepthSensing extends EventHandler {
         return this._matrix;
     }
 
+    /**
+     * @name XrDepthSensing#rawValueToMeters
+     * @type {number}
+     * @description Multipty this coefient number by raw depth value to get depth in meters.
+     * @example
+     * material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
+     */
     get rawValueToMeters() {
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
-        if (! depthInfo) return null;
-        return depthInfo.rawValueToMeters;
+        return depthInfo && depthInfo.rawValueToMeters || 0;
     }
 }
 
