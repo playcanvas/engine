@@ -232,24 +232,24 @@ class XrDepthSensing extends EventHandler {
     /**
      * @function
      * @name XrDepthSensing#getDepth
-     * @param {number} x - X coordinate of pixel in depth texture.
-     * @param {number} y - Y coordinate of pixel in depth texture.
-     * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link XrDepthSensing#width} and {@link XrDepthSensing#height}. This is not using a GPU texture and is a CPU path.
+     * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to 1.0 (left to right).
+     * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to 1.0 (top to bottom).
+     * @description Get depth value from depth information in meters. UV is in range of 0..1, with origin in top-left corner of a texture.
      * @example
-     * var depth = app.xr.depthSensing.getDepth(x, y);
+     * var depth = app.xr.depthSensing.getDepth(u, v);
      * if (depth !== null) {
      *     // depth in meters
      * }
      * @returns {number|null} Depth in meters or null if depth information is currently not available.
      */
-    getDepth(x, y) {
+    getDepth(u, v) {
         // TODO
         // GPU usage
 
         if (! this._depthInfoCpu)
             return null;
 
-        return this._depthInfoCpu.getDepthInMeters(x, y);
+        return this._depthInfoCpu.getDepthInMeters(u, v);
     }
 
     get supported() {
