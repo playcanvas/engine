@@ -3,6 +3,7 @@
 <img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
 
 # PlayCanvas WebGL 游戏引擎
+[开发者站点](https://developer.playcanvas.com) | [例子](https://playcanvas.github.io) | [论坛](https://forum.playcanvas.com) | [博客](https://blog.playcanvas.com)
 
 PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内容的开源游戏引擎，PlayCanvas 以其独特的性能实现了在任何手机移动端和桌面浏览器端均可以流畅运行。
 
@@ -162,22 +163,6 @@ PlayCanvas 使用 Karma 进行单元测试。您可以使用如下两种方式�
 | -------------------- | ------------------------------------------------------------------------------------ |
 | `npm run test`       | Runs unit tests on a built `playcanvas.js`                                           |
 | `npm run test:watch` | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html |
-
-## 模型
-
-请移步至 [开发手册](https://developer.playcanvas.com/en/engine/) 查看如何通过 3D 模型组件换任意模型。
-
-## 相关链接
-
-- [论坛](https://forum.playcanvas.com)
-- [开发者站点](https://developer.playcanvas.com)
-- [博客](https://blog.playcanvas.com)
-
-## 贡献
-
-想要和我们一起开发最棒的网页 3D 引擎？
-
-您可以先从查看 [CONTRIBUTING.md](https://github.com/playcanvas/engine/blob/master/.github/CONTRIBUTING.md) 开始。然后，在 Issues 中查找一个您拿手的 ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22) 进行处理。
 
 ## PlayCanvas 平台
 
