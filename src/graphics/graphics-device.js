@@ -609,7 +609,7 @@ class GraphicsDevice extends EventHandler {
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
         this._primsPerFrame = [];
-        for (i = PRIMITIVE_POINTS; i <= PRIMITIVE_TRIFAN; i++) {
+        for (let i = PRIMITIVE_POINTS; i <= PRIMITIVE_TRIFAN; i++) {
             this._primsPerFrame[i] = 0;
         }
         this._renderTargetCreationTime = 0;
