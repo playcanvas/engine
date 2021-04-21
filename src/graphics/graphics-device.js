@@ -246,7 +246,6 @@ class GraphicsDevice extends EventHandler {
     constructor(canvas, options) {
         super();
 
-        var i;
         this.canvas = canvas;
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
@@ -290,18 +289,15 @@ class GraphicsDevice extends EventHandler {
         // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
-        var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
-            ["webgl", "experimental-webgl"];
+        var names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         var gl = null;
         options = options || {};
         options.stencil = true;
-        for (i = 0; i < names.length; i++) {
-            try {
-                gl = canvas.getContext(names[i], options);
-            } catch (e) { }
+        for (let i = 0; i < names.length; i++) {
+            gl = canvas.getContext(names[i], options);
 
             if (gl) {
-                this.webgl2 = preferWebGl2 && i < 2;
+                this.webgl2 = (names[i] === 'webgl2');
                 break;
             }
         }
