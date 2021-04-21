@@ -2,7 +2,9 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { Color } from '../math/color.js';
 import { Mat3 } from '../math/mat3.js';
+import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
+import { Quat } from '../math/quat.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
@@ -13,8 +15,6 @@ import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 import { StandardMaterial } from './materials/standard-material.js';
-import { Quat } from '../math/quat.js';
-import { Mat4 } from '../math/mat4.js';
 
 /**
  * @class

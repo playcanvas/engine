@@ -237,7 +237,7 @@ class Picker {
                 }
             });
 
-            this.layerComp = new LayerComposition("picker");
+            this.layerComp = new LayerComposition(device, "picker");
             this.layerComp.pushOpaque(this.layer);
 
             this.meshInstances = this.layer.opaqueMeshInstances;

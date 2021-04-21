@@ -8,6 +8,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingSphere } from '../shape/bounding-sphere.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -51,6 +52,7 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
+import { LayerComposition } from './layer-composition.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(
@@ -103,7 +105,7 @@ var worldMatY = new Vec3();
 var worldMatZ = new Vec3();
 
 var frustumDiagonal = new Vec3();
-var tempSphere = { center: null, radius: 0 };
+var tempSphere = new BoundingSphere();
 var visibleSceneAabb = new BoundingBox();
 var boneTextureSize = [0, 0, 0, 0];
 var boneTexture, instancingData, modelMatrix, normalMatrix;
@@ -420,6 +422,8 @@ class ForwardRenderer {
         this._morphTime = 0;
         this._instancingTime = 0;
         this._layerCompositionUpdateTime = 0;
+        this._lightClustersTime = 0;
+        this._lightClusters = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -2877,7 +2881,7 @@ class ForwardRenderer {
             const light = comp._lights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightShadowCasters[i].list;
+                    const casters = comp._lightCompositionData[i].shadowCastersList;
                     this.cullLocalShadowmap(light, casters);
                 }
             }
@@ -2892,7 +2896,7 @@ class ForwardRenderer {
             for (let j = 0; j < count; j++) {
                 const lightIndex = renderAction.directionalLightsIndices[j];
                 const light = comp._lights[lightIndex];
-                const casters = comp._lightShadowCasters[lightIndex].list;
+                const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
                 this.cullDirectionalShadowmap(light, casters, renderAction.camera.camera);
             }
         }
@@ -2968,6 +2972,23 @@ class ForwardRenderer {
         // #endif
     }
 
+    updateClusters(comp) {
+
+        // #if _PROFILER
+        const startTime = now();
+        // #endif
+
+        for (let i = 0; i < comp._worldClusters.length; i++) {
+            const cluster = comp._worldClusters[i];
+            cluster.update(comp._lights, this.scene.gammaCorrection);
+        }
+
+        // #if _PROFILER
+        this._lightClustersTime += now() - startTime;
+        this._lightClusters = comp._worldClusters.length;
+        // #endif
+    }
+
     renderComposition(comp) {
         var device = this.device;
         var camera;
@@ -3006,12 +3027,18 @@ class ForwardRenderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
+        // update light clusters
+        this.updateClusters(comp);
+
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
+        if (!LayerComposition.clusteredLightingEnabled) {
+            this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+            this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        }
 
         // Rendering
         let sortTime, drawTime;
@@ -3102,6 +3129,11 @@ class ForwardRenderer {
 
                 // Set camera shader constants, viewport, scissor, render target
                 this.setCamera(camera.camera, renderAction.renderTarget);
+
+                // upload clustered lights uniforms
+                if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
+                    renderAction.lightClusters.activate();
+                }
 
                 const draws = this._forwardDrawCalls;
                 this.renderForward(camera.camera,

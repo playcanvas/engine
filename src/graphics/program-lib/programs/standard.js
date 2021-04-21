@@ -21,6 +21,8 @@ import {
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
+import { WorldClusters } from '../../../scene/world-clusters.js';
+import { LayerComposition } from '../../../scene/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -1391,12 +1393,23 @@ var standard = {
                 code += (options.enableGGXSpecular) ? chunks.reflDirAnisoPS : chunks.reflDirPS;
             }
         }
+
         var hasPointLights = false;
         var usesLinearFalloff = false;
         var usesInvSquaredFalloff = false;
         var usesSpot = false;
         var usesCookie = false;
         var usesCookieNow;
+
+        // clustered lighting
+        if (LayerComposition.clusteredLightingEnabled) {
+
+            usesSpot = true;
+
+            const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
+            code += `#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += chunks.clusteredLightPS;
+        }
 
         if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
 
@@ -1530,7 +1543,24 @@ var standard = {
             // light source shape support
             var shapeString = '';
 
+            // clustered lighting
+            if (LayerComposition.clusteredLightingEnabled) {
+
+                usesLinearFalloff = true;
+                hasPointLights = true;
+                code += chunks.clusteredLightLoopPS;
+            }
+
             for (i = 0; i < options.lights.length; i++) {
+
+                light = options.lights[i];
+                lightType = light._type;
+
+                // if clustered lights are used, skip normal lights other than directional
+                if (LayerComposition.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
+                    continue;
+                }
+
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (omni shadows will use drastically different genShadowCoord)
@@ -1539,8 +1569,6 @@ var standard = {
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
-                light = options.lights[i];
-                lightType = light._type;
                 usesCookieNow = false;
 
                 if (hasAreaLights && light._shape) {

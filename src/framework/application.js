@@ -38,6 +38,7 @@ import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
+import { WorldClusters } from '../scene/world-clusters.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -443,6 +444,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
+        WorldClusters.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
@@ -660,17 +662,16 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition("default");
 
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
-
-        this.scene.layers = this.defaultLayerComposition;
+        const defaultLayerComposition = new LayerComposition(this.graphicsDevice, "default");
+        defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
+        defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
+        defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerUi);
+        this.scene.layers = defaultLayerComposition;
 
         this._immediateLayer = this.defaultLayerImmediate;
 
@@ -1050,7 +1051,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition("application");
+            var composition = new LayerComposition(this.graphicsDevice, "application");
 
             var layers = {};
             for (var key in props.layers) {
@@ -1403,6 +1404,8 @@ class Application extends EventHandler {
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
         stats.instancingTime = this.renderer._instancingTime;
+        stats.lightClusters = this.renderer._lightClusters;
+        stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
         for (var i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
@@ -1416,6 +1419,7 @@ class Application extends EventHandler {
         this.graphicsDevice._shaderSwitchesPerFrame = 0;
         this.renderer._cullTime = 0;
         this.renderer._layerCompositionUpdateTime = 0;
+        this.renderer._lightClustersTime = 0;
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
@@ -2036,7 +2040,7 @@ class Application extends EventHandler {
         this._immediateData.renderWireCube(matrix, color, options);
     }
 
-    // // Draw lines forming sphere at this frame
+    // Draw lines forming sphere at this frame
     renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderWireSphere(center, radius, color, options);
@@ -2146,6 +2150,11 @@ class Application extends EventHandler {
         }
 
         ComponentSystem.destroy();
+
+        // layer composition
+        if (this.scene.layers) {
+            this.scene.layers.destroy();
+        }
 
         // destroy all texture resources
         var assets = this.assets.list();

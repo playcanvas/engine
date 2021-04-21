@@ -20,6 +20,8 @@ import blurVSMPS from './blurVSM.frag';
 import clearCoatPS from './clearCoat.frag';
 import clearCoatGlossPS from './clearCoatGloss.frag';
 import clearCoatNormalPS from './clearCoatNormal.frag';
+import clusteredLightLoopPS from './clusteredLightLoop.frag';
+import clusteredLightPS from './clusteredLight.frag';
 import combineClearCoatPS from './combineClearCoat.frag';
 import combineDiffusePS from './combineDiffuse.frag';
 import combineDiffuseSpecularPS from './combineDiffuseSpecular.frag';
@@ -225,6 +227,8 @@ var shaderChunks = {
     clearCoatPS: clearCoatPS,
     clearCoatGlossPS: clearCoatGlossPS,
     clearCoatNormalPS: clearCoatNormalPS,
+    clusteredLightLoopPS: clusteredLightLoopPS,
+    clusteredLightPS: clusteredLightPS,
     combineClearCoatPS: combineClearCoatPS,
     combineDiffusePS: combineDiffusePS,
     combineDiffuseSpecularPS: combineDiffuseSpecularPS,

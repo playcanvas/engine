@@ -24,6 +24,7 @@ var categories = [
             "area-lights",
             "area-picker",
             "batching-dynamic",
+            "clustered-lighting",
             "grab-pass",
             "hardware-instancing",
             "hierarchy",
