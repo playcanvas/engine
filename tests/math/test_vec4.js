@@ -304,5 +304,57 @@ describe("pc.Vec4", function () {
         equal(s, '[2, 4, 6, 8]');
     });
 
+    it("floor", function () {
+        var v = new pc.Vec4(1.2, 2.6, 3.8, 4.4);
+        v.floor();
+
+        equal(1, v.x);
+        equal(2, v.y);
+        equal(3, v.z);
+        equal(4, v.w);
+    });
+
+    it("ceil", function () {
+        var v = new pc.Vec4(1.2, 2.6, 3.8, 4.4);
+        v.ceil();
+
+        equal(2, v.x);
+        equal(3, v.y);
+        equal(4, v.z);
+        equal(5, v.w);
+    });
+
+    it("round", function () {
+        var v = new pc.Vec4(1.2, 2.6, 3.8, 4.4);
+        v.round();
+
+        equal(1, v.x);
+        equal(3, v.y);
+        equal(4, v.z);
+        equal(4, v.w);
+    });
+
+    it("min", function () {
+        var v = new pc.Vec4(1, 2, 3, 4);
+        var c = new pc.Vec4(3, 0, 2, 6);
+        v.min(c);
+
+        equal(1, v.x);
+        equal(0, v.y);
+        equal(2, v.z);
+        equal(4, v.w);
+    });
+
+    it("max", function () {
+        var v = new pc.Vec4(1, 2, 3, 4);
+        var c = new pc.Vec4(3, 0, 2, 6);
+        v.max(c);
+
+        equal(3, v.x);
+        equal(2, v.y);
+        equal(3, v.z);
+        equal(6, v.w);
+    });
+
 });
 

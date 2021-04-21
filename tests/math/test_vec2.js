@@ -258,4 +258,46 @@ describe("pc.Vec2", function () {
         equal(s, '[2, 4]');
     });
 
+    it("floor", function () {
+        var v = new pc.Vec2(1.2, 2.6);
+        v.floor();
+
+        equal(1, v.x);
+        equal(2, v.y);
+    });
+
+    it("ceil", function () {
+        var v = new pc.Vec2(1.2, 2.6);
+        v.ceil();
+
+        equal(2, v.x);
+        equal(3, v.y);
+    });
+
+    it("round", function () {
+        var v = new pc.Vec2(1.2, 2.6);
+        v.round();
+
+        equal(1, v.x);
+        equal(3, v.y);
+    });
+
+    it("min", function () {
+        var v = new pc.Vec2(1, 2);
+        var c = new pc.Vec2(3, 0);
+        v.min(c);
+
+        equal(1, v.x);
+        equal(0, v.y);
+    });
+
+    it("max", function () {
+        var v = new pc.Vec2(1, 2);
+        var c = new pc.Vec2(3, 0);
+        v.max(c);
+
+        equal(3, v.x);
+        equal(2, v.y);
+    });
+
 });
