@@ -37,7 +37,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * See the {@link AssetRegistry} for details on loading resources from assets.
  * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
  * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
- * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+ * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container", cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", text", "texture"]
  * @param {object} [file] - Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
  * @example
  * var file = {
@@ -53,7 +53,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * });
  * @property {string} name The name of the asset
  * @property {number} id The asset id
- * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+ * @property {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"script"|"shader"|"sprite"|"template"|"text"|"texture")} type The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", "text", "texture"]
  * @property {Tags} tags Interface for tagging. Allows to find assets by tags using {@link AssetRegistry#findByTag} method.
  * @property {object} file The file details or null if no file
  * @property {string} [file.url] The URL of the resource file that contains the asset data
@@ -230,9 +230,9 @@ class Asset extends EventHandler {
      * @private
      * @function
      * @name Asset#getAbsoluteUrl
-     * @description Construct an asset URL from this asset's location and a relative path
-     * @param {string} relativePath - The relative path to be concatenated to this asset's base url
-     * @returns {string} Resulting URL of the asset
+     * @description Construct an asset URL from this asset's location and a relative path.
+     * @param {string} relativePath - The relative path to be concatenated to this asset's base url.
+     * @returns {string} Resulting URL of the asset.
      */
     getAbsoluteUrl(relativePath) {
         var base = path.getDirectory(this.file.url);

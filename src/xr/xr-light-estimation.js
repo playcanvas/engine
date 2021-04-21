@@ -7,10 +7,10 @@ import { Vec3 } from '../math/vec3.js';
 
 import { XRTYPE_AR } from './constants.js';
 
-var vec3A = new Vec3();
-var vec3B = new Vec3();
-var mat4A = new Mat4();
-var mat4B = new Mat4();
+const vec3A = new Vec3();
+const vec3B = new Vec3();
+const mat4A = new Mat4();
+const mat4B = new Mat4();
 
 /**
  * @class
@@ -67,7 +67,7 @@ class XrLightEstimation extends EventHandler {
      */
 
     _onSessionStart() {
-        var supported = !! this._manager.session.requestLightProbe;
+        const supported = !! this._manager.session.requestLightProbe;
         if (! supported) return;
         this._supported = true;
     }
@@ -94,7 +94,7 @@ class XrLightEstimation extends EventHandler {
      * });
      */
     start() {
-        var err;
+        let err;
 
         if (! this._manager.session)
             err = new Error('XR session is not running');
@@ -113,24 +113,23 @@ class XrLightEstimation extends EventHandler {
             return;
         }
 
-        var self = this;
         this._lightProbeRequested = true;
 
         this._manager.session.requestLightProbe(
-        ).then(function (lightProbe) {
-            var wasRequested = self._lightProbeRequested;
-            self._lightProbeRequested = false;
+        ).then((lightProbe) => {
+            const wasRequested = this._lightProbeRequested;
+            this._lightProbeRequested = false;
 
-            if (self._manager.active) {
+            if (this._manager.active) {
                 if (wasRequested) {
-                    self._lightProbe = lightProbe;
+                    this._lightProbe = lightProbe;
                 }
             } else {
-                self.fire('error', new Error('XR session is not active'));
+                this.fire('error', new Error('XR session is not active'));
             }
-        }).catch(function (ex) {
-            self._lightProbeRequested = false;
-            self.fire('error', ex);
+        }).catch((ex) => {
+            this._lightProbeRequested = false;
+            this.fire('error', ex);
         });
     }
 
@@ -148,7 +147,7 @@ class XrLightEstimation extends EventHandler {
     update(frame) {
         if (! this._lightProbe) return;
 
-        var lightEstimate = frame.getLightEstimate(this._lightProbe);
+        const lightEstimate = frame.getLightEstimate(this._lightProbe);
         if (! lightEstimate) return;
 
         if (! this._available) {
@@ -157,11 +156,11 @@ class XrLightEstimation extends EventHandler {
         }
 
         // intensity
-        var pli = lightEstimate.primaryLightIntensity;
+        const pli = lightEstimate.primaryLightIntensity;
         this._intensity = Math.max(1.0, Math.max(pli.x, Math.max(pli.y, pli.z)));
 
         // color
-        vec3A.copy(pli).scale(1 / this._intensity);
+        vec3A.copy(pli).mulScalar(1 / this._intensity);
         this._color.set(vec3A.x, vec3A.y, vec3A.z);
 
         // rotation

@@ -268,18 +268,18 @@ class GraphicsDevice extends EventHandler {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        this._contextLostHandler = event => {
+        this._contextLostHandler = (event) => {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.log('pc.GraphicsDevice: WebGL context lost.');
             // #endif
             this.fire('devicelost');
         };
 
         this._contextRestoredHandler = () => {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
             // #endif
             this.restoreContext();
@@ -619,7 +619,7 @@ class GraphicsDevice extends EventHandler {
         this._renderTargetCreationTime = 0;
 
         this._vram = {
-            // #ifdef PROFILER
+            // #if _PROFILER
             texShadow: 0,
             texAsset: 0,
             texLightmap: 0,
@@ -650,7 +650,11 @@ class GraphicsDevice extends EventHandler {
         } else {
             this.textureFloatRenderable = false;
         }
-        if (this.extTextureHalfFloat) {
+
+        // two extensions allow us to render to half float buffers
+        if (this.extColorBufferHalfFloat) {
+            this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
+        } else if (this.extTextureHalfFloat) {
             if (this.webgl2) {
                 // EXT_color_buffer_float should affect both float and halffloat formats
                 this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
@@ -667,7 +671,7 @@ class GraphicsDevice extends EventHandler {
         this._textureFloatHighPrecision = undefined;
         this._textureHalfFloatUpdatable = undefined;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._spectorMarkers = [];
         this._spectorCurrentMarker = "";
         // #endif
@@ -680,7 +684,7 @@ class GraphicsDevice extends EventHandler {
 
         VertexFormat.init(this);
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
         // #endif
 
@@ -693,7 +697,7 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     updateMarker() {
         this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
     }
@@ -733,7 +737,7 @@ class GraphicsDevice extends EventHandler {
             var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
 
             var fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-            var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT );
+            var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
 
             var highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
             var mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
@@ -741,13 +745,13 @@ class GraphicsDevice extends EventHandler {
             if (!highpAvailable) {
                 if (mediumpAvailable) {
                     precision = "mediump";
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.warn("WARNING: highp not supported, using mediump");
                     // #endif
                 } else {
                     precision = "lowp";
-                    // #ifdef DEBUG
-                    console.warn( "WARNING: highp and mediump not supported, using lowp" );
+                    // #if _DEBUG
+                    console.warn("WARNING: highp and mediump not supported, using lowp");
                     // #endif
                 }
             }
@@ -829,6 +833,9 @@ class GraphicsDevice extends EventHandler {
         this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
         this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
 
+        // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
+        this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
+
         this.supportsInstancing = !!this.extInstancing;
     }
 
@@ -870,6 +877,7 @@ class GraphicsDevice extends EventHandler {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
+        this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
     }
 
     initializeRenderState() {
@@ -1080,7 +1088,7 @@ class GraphicsDevice extends EventHandler {
         // print error if we cannot grab framebuffer at this point
         if (!this.grabPassAvailable) {
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
             // #endif
 
@@ -1095,7 +1103,7 @@ class GraphicsDevice extends EventHandler {
         var width = this.width;
         var height = this.height;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.pushMarker("grabPass");
         // #endif
 
@@ -1141,7 +1149,7 @@ class GraphicsDevice extends EventHandler {
             }
         }
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.popMarker();
         // #endif
 
@@ -1269,7 +1277,7 @@ class GraphicsDevice extends EventHandler {
         var gl = this.gl;
 
         if (!this.webgl2 && depth) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("Depth is not copyable on WebGL 1.0");
             // #endif
             return false;
@@ -1278,7 +1286,7 @@ class GraphicsDevice extends EventHandler {
             if (!dest) {
                 // copying to backbuffer
                 if (!source._colorBuffer) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("Can't copy empty color buffer to backbuffer");
                     // #endif
                     return false;
@@ -1286,13 +1294,13 @@ class GraphicsDevice extends EventHandler {
             } else {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("Can't copy color buffer, because one of the render targets doesn't have it");
                     // #endif
                     return false;
                 }
                 if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("Can't copy render targets of different color formats");
                     // #endif
                     return false;
@@ -1301,13 +1309,13 @@ class GraphicsDevice extends EventHandler {
         }
         if (depth) {
             if (!source._depthBuffer || !dest._depthBuffer) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
                 // #endif
                 return false;
             }
             if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Can't copy render targets of different depth formats");
                 // #endif
                 return false;
@@ -1322,10 +1330,10 @@ class GraphicsDevice extends EventHandler {
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dest._glFrameBuffer);
             var w = source ? source.width : dest.width;
             var h = source ? source.height : dest.height;
-            gl.blitFramebuffer( 0, 0, w, h,
-                                0, 0, w, h,
-                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                                gl.NEAREST);
+            gl.blitFramebuffer(0, 0, w, h,
+                               0, 0, w, h,
+                               (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                               gl.NEAREST);
             this.renderTarget = prevRt;
             gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
         } else {
@@ -1348,7 +1356,7 @@ class GraphicsDevice extends EventHandler {
     initRenderTarget(target) {
         if (target._glFrameBuffer) return;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var startTime = now();
         this.fire('fbo:create', {
             timestamp: startTime,
@@ -1422,7 +1430,7 @@ class GraphicsDevice extends EventHandler {
             }
         }
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._checkFbo();
         // #endif
 
@@ -1460,14 +1468,14 @@ class GraphicsDevice extends EventHandler {
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
                 }
             }
-            // #ifdef DEBUG
+            // #if _DEBUG
             this._checkFbo();
             // #endif
         }
 
         this.targets.push(target);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;
         // #endif
     }
@@ -1741,7 +1749,7 @@ class GraphicsDevice extends EventHandler {
             case PIXELFORMAT_111110F: // WebGL2 only
                 texture._glFormat = gl.RGB;
                 texture._glInternalFormat = gl.R11F_G11F_B10F;
-                texture._glPixelType = gl.FLOAT;
+                texture._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
                 break;
             case PIXELFORMAT_SRGB: // WebGL2 only
                 texture._glFormat = gl.RGB;
@@ -1791,7 +1799,7 @@ class GraphicsDevice extends EventHandler {
 
             // Update texture stats
             this._vram.tex -= texture._gpuSize;
-            // #ifdef PROFILER
+            // #if _PROFILER
             if (texture.profilerHint === TEXHINT_SHADOWMAP) {
                 this._vram.texShadow -= texture._gpuSize;
             } else if (texture.profilerHint === TEXHINT_ASSET) {
@@ -1833,7 +1841,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     uploadTexture(texture) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (!texture.device) {
             if (!this._destroyedTextures.has(texture)) {
                 this._destroyedTextures.add(texture);
@@ -2049,7 +2057,7 @@ class GraphicsDevice extends EventHandler {
 
         if (texture._gpuSize) {
             this._vram.tex -= texture._gpuSize;
-            // #ifdef PROFILER
+            // #if _PROFILER
             if (texture.profilerHint === TEXHINT_SHADOWMAP) {
                 this._vram.texShadow -= texture._gpuSize;
             } else if (texture.profilerHint === TEXHINT_ASSET) {
@@ -2062,7 +2070,7 @@ class GraphicsDevice extends EventHandler {
 
         texture._gpuSize = texture.gpuSize;
         this._vram.tex += texture._gpuSize;
-        // #ifdef PROFILER
+        // #if _PROFILER
         if (texture.profilerHint === TEXHINT_SHADOWMAP) {
             this._vram.texShadow += texture._gpuSize;
         } else if (texture.profilerHint === TEXHINT_ASSET) {
@@ -2235,7 +2243,7 @@ class GraphicsDevice extends EventHandler {
             // don't capture index buffer in VAO
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             var locZero = false;
             // #endif
 
@@ -2252,7 +2260,7 @@ class GraphicsDevice extends EventHandler {
                     e = elements[j];
                     var loc = semanticToLocation[e.name];
 
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     if (loc === 0) {
                         locZero = true;
                     }
@@ -2278,7 +2286,7 @@ class GraphicsDevice extends EventHandler {
                 this._vaoMap.set(key, vao);
             }
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!locZero) {
                 console.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
             }
@@ -2379,7 +2387,7 @@ class GraphicsDevice extends EventHandler {
                 texture = samplerValue;
                 this.setTexture(texture, textureUnit);
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (this.renderTarget) {
                     // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
                     if (this.renderTarget._samples < 2) {
@@ -2467,7 +2475,7 @@ class GraphicsDevice extends EventHandler {
 
         this._drawCallsPerFrame++;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
         // #endif
     }
@@ -3194,7 +3202,7 @@ class GraphicsDevice extends EventHandler {
         var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
 
         if (!glShader) {
-            // #ifdef PROFILER
+            // #if _PROFILER
             var startTime = now();
             this.fire('shader:compile:start', {
                 timestamp: startTime,
@@ -3207,7 +3215,7 @@ class GraphicsDevice extends EventHandler {
             gl.shaderSource(glShader, src);
             gl.compileShader(glShader);
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             var endTime = now();
             this.fire('shader:compile:end', {
                 timestamp: endTime,
@@ -3218,12 +3226,12 @@ class GraphicsDevice extends EventHandler {
 
             if (isVertexShader) {
                 this.vertexShaderCache[src] = glShader;
-                // #ifdef PROFILER
+                // #if _PROFILER
                 this._shaderStats.vsCompiled++;
                 // #endif
             } else {
                 this.fragmentShaderCache[src] = glShader;
-                // #ifdef PROFILER
+                // #if _PROFILER
                 this._shaderStats.fsCompiled++;
                 // #endif
             }
@@ -3263,7 +3271,7 @@ class GraphicsDevice extends EventHandler {
                 var semantic = attrs[attr];
                 var loc = semanticToLocation[semantic];
 
-                // #ifdef DEBUG
+                // #if _DEBUG
                 if (locations.hasOwnProperty(loc)) {
                     console.warn("WARNING: Two attribues are mapped to the same location in a shader: " + locations[loc] + " and " + attr);
                 }
@@ -3281,7 +3289,7 @@ class GraphicsDevice extends EventHandler {
         shader._glFragmentShader = glFragmentShader;
         shader._glProgram = glProgram;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._shaderStats.linked++;
         if (definition.tag === SHADERTAG_MATERIAL) {
             this._shaderStats.materialShaders++;
@@ -3316,7 +3324,7 @@ class GraphicsDevice extends EventHandler {
             lines[i] = (i + 1) + ":\t" + lines[i];
         }
 
-        return lines.join( "\n" );
+        return lines.join("\n");
     }
 
     postLink(shader) {
@@ -3328,7 +3336,7 @@ class GraphicsDevice extends EventHandler {
 
         var definition = shader.definition;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var startTime = now();
         this.fire('shader:link:start', {
             timestamp: startTime,
@@ -3389,7 +3397,7 @@ class GraphicsDevice extends EventHandler {
 
         shader.ready = true;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var endTime = now();
         this.fire('shader:link:end', {
             timestamp: endTime,
@@ -3421,7 +3429,7 @@ class GraphicsDevice extends EventHandler {
             // Set the active shader
             this.gl.useProgram(shader._glProgram);
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             this._shaderSwitchesPerFrame++;
             // #endif
 

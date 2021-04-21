@@ -8,11 +8,10 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @class
  * @name AnimBlendTreeCartesian2D
  * @classdesc An AnimBlendTree that calculates its weights using a 2D Cartesian algorithm
- * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6 Section 3
+ * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6 Section 3.
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeCartesian2D extends AnimBlendTree {
-
     static _p = new Vec2();
 
     static _pip = new Vec2();

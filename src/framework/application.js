@@ -7,6 +7,7 @@ import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
+import { Quat } from '../math/quat.js';
 
 import { http } from '../net/http.js';
 
@@ -36,6 +37,7 @@ import { LayerComposition } from '../scene/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
+import { Material } from '../scene/materials/material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -58,7 +60,6 @@ import { ModelHandler } from '../resources/model.js';
 import { RenderHandler } from '../resources/render.js';
 import { ResourceLoader } from '../resources/loader.js';
 import { SceneHandler } from '../resources/scene.js';
-import { SceneSettingsHandler } from '../resources/scene-settings.js';
 import { ScriptHandler } from '../resources/script.js';
 import { ShaderHandler } from '../resources/shader.js';
 import { SpriteHandler } from '../resources/sprite.js';
@@ -89,6 +90,7 @@ import { CollisionComponentSystem } from './components/collision/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
 import { ComponentSystem } from './components/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
+import { JointComponentSystem } from './components/joint/system.js';
 import { LayoutChildComponentSystem } from './components/layout-child/system.js';
 import { LayoutGroupComponentSystem } from './components/layout-group/system.js';
 import { LightComponentSystem } from './components/light/system.js';
@@ -248,6 +250,7 @@ var _deprecationWarning = false;
  * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
+ * * anim ({@link AnimComponentSystem})
  * * animation ({@link AnimationComponentSystem})
  * * audiolistener ({@link AudioListenerComponentSystem})
  * * button ({@link ButtonComponentSystem})
@@ -260,6 +263,7 @@ var _deprecationWarning = false;
  * * model ({@link ModelComponentSystem})
  * * particlesystem ({@link ParticleSystemComponentSystem})
  * * rigidbody ({@link RigidBodyComponentSystem})
+ * * render ({@link RenderComponentSystem})
  * * screen ({@link ScreenComponentSystem})
  * * script ({@link ScriptComponentSystem})
  * * scrollbar ({@link ScrollbarComponentSystem})
@@ -530,10 +534,10 @@ class Application extends EventHandler {
 
                     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
-                    gl.blitFramebuffer( 0, 0, this.renderTarget.width, this.renderTarget.height,
-                                        0, 0, this.renderTarget.width, this.renderTarget.height,
-                                        gl.DEPTH_BUFFER_BIT,
-                                        gl.NEAREST);
+                    gl.blitFramebuffer(0, 0, this.renderTarget.width, this.renderTarget.height,
+                                       0, 0, this.renderTarget.width, this.renderTarget.height,
+                                       gl.DEPTH_BUFFER_BIT,
+                                       gl.NEAREST);
                 }
 
             });
@@ -757,6 +761,7 @@ class Application extends EventHandler {
         this.systems = new ComponentSystemRegistry();
         this.systems.add(new RigidBodyComponentSystem(this));
         this.systems.add(new CollisionComponentSystem(this));
+        this.systems.add(new JointComponentSystem(this));
         this.systems.add(new AnimationComponentSystem(this));
         this.systems.add(new AnimComponentSystem(this));
         this.systems.add(new ModelComponentSystem(this));
@@ -1303,7 +1308,7 @@ class Application extends EventHandler {
 
         if (this.vr) this.vr.poll();
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.updateStart = now();
         // #endif
 
@@ -1331,7 +1336,7 @@ class Application extends EventHandler {
             this.gamepads.update(dt);
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
         // #endif
     }
@@ -1345,7 +1350,7 @@ class Application extends EventHandler {
      * does not need to be called explicitly.
      */
     render() {
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.renderStart = now();
         // #endif
 
@@ -1355,7 +1360,7 @@ class Application extends EventHandler {
         this.renderer.renderComposition(this.scene.layers);
         this.fire("postrender");
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
         // #endif
     }
@@ -1619,7 +1624,7 @@ class Application extends EventHandler {
      * * {@link BAKE_COLOR}: single color lightmap
      * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
      * var settings = {
@@ -1674,10 +1679,9 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @private
      * @name Application#setAreaLightLuts
      * @description Sets the area light LUT asset for this app.
-     * @param {Asset} asset - Asset of type `binary` to be set.
+     * @param {Asset} asset - LUT asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
         if (asset) {
@@ -1687,7 +1691,7 @@ class Application extends EventHandler {
             });
             this.assets.load(asset);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("setAreaLightLuts: asset is not valid");
             // #endif
         }
@@ -1827,7 +1831,7 @@ class Application extends EventHandler {
         var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
-        let lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
+        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
 
         // Append
         lineBatch.addLines(position, color);
@@ -2019,61 +2023,33 @@ class Application extends EventHandler {
         this._addLines(position, color, options);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    // lineType is optional
-    renderWireCube(matrix, color, options) {
-        var i;
-
-        this._initImmediate();
-
-        // Init cube data once
-        if (!this._immediateData.cubeLocalPos) {
-            var x = 0.5;
-            this._immediateData.cubeLocalPos = [new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
-                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)];
-            this._immediateData.cubeWorldPos = [new Vec3(), new Vec3(), new Vec3(), new Vec3(),
-                new Vec3(), new Vec3(), new Vec3(), new Vec3()];
-        }
-
-        var cubeLocalPos = this._immediateData.cubeLocalPos;
-        var cubeWorldPos = this._immediateData.cubeWorldPos;
-
-        // Transform and append lines
-        for (i = 0; i < 8; i++) {
-            matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
-        }
-        this.renderLines([
-            cubeWorldPos[0], cubeWorldPos[1],
-            cubeWorldPos[1], cubeWorldPos[2],
-            cubeWorldPos[2], cubeWorldPos[3],
-            cubeWorldPos[3], cubeWorldPos[0],
-
-            cubeWorldPos[4], cubeWorldPos[5],
-            cubeWorldPos[5], cubeWorldPos[6],
-            cubeWorldPos[6], cubeWorldPos[7],
-            cubeWorldPos[7], cubeWorldPos[4],
-
-            cubeWorldPos[0], cubeWorldPos[4],
-            cubeWorldPos[1], cubeWorldPos[5],
-            cubeWorldPos[2], cubeWorldPos[6],
-            cubeWorldPos[3], cubeWorldPos[7]
-        ], color, options);
-    }
-
-    _getDefaultImmediateOptions() {
+    _getDefaultImmediateOptions(depthTest = false) {
         return {
-            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE)
+            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+            depthTest: depthTest
         };
     }
 
+    // Draw lines forming a transformed unit-sized cube at this frame
+    renderWireCube(matrix, color, options = this._getDefaultImmediateOptions(true)) {
+        this._initImmediate();
+        this._immediateData.renderWireCube(matrix, color, options);
+    }
+
+    // // Draw lines forming sphere at this frame
+    renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
+        this._initImmediate();
+        this._immediateData.renderWireSphere(center, radius, color, options);
+    }
+
     // Draw meshInstance at this frame
-    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions()) {
+    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderMesh(null, null, null, meshInstance, options);
     }
 
     // Draw mesh at this frame
-    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions()) {
+    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderMesh(material, matrix, mesh, null, options);
     }
@@ -2086,19 +2062,33 @@ class Application extends EventHandler {
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    renderTexture(x, y, width, height, texture, options) {
+    renderTexture(x, y, width, height, texture, material, options) {
         this._initImmediate();
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
-        let matrix = new Mat4();
-        matrix.setTRS(new Vec3(x, y, 0.0), pc.Quat.IDENTITY, new Vec3(width, height, 0.0));
+        const matrix = new Mat4();
+        matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, height, 0.0));
 
-        let material = new pc.Material();
-        material.setParameter("colorMap", texture);
-        material.shader = this._immediateData.getTextureShader();
-        material.update();
+        if (!material) {
+            material = new Material();
+            material.setParameter("colorMap", texture);
+            material.shader = this._immediateData.getTextureShader();
+            material.update();
+        }
 
         this.renderQuad(matrix, material, options);
+    }
+
+    // draws a depth texture on [x,y] position on screen, with size [width, height].
+    // Coordinates / sizes are in projected space (-1 .. 1)
+    renderDepthTexture(x, y, width, height, options) {
+        this._initImmediate();
+
+        const material = new Material();
+        material.shader = this._immediateData.getDepthTextureShader();
+        material.update();
+
+        this.renderTexture(x, y, width, height, null, material, options);
     }
 
     /**
@@ -2301,7 +2291,7 @@ var makeTick = function (_app) {
 
         application._fillFrameStatsBasic(currentTime, dt, ms);
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         application._fillFrameStats();
         // #endif
 

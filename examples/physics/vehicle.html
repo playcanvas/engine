@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <script src="../wasm-loader.js"></script>
     <style>
         body { 
@@ -48,37 +49,28 @@
         var miniStats = new pcx.MiniStats(app);
 
         // A list of assets that need to be loaded
-        var assetManifest = [
-            {
+        var assetManifest = {
+            script1: {
                 type: "script",
                 url: "../../scripts/camera/tracking-camera.js"
             },
-            {
+            script2: {
                 type: "script",
                 url: "../../scripts/physics/render-physics.js"
             },
-            {
+            script3: {
                 type: "script",
                 url: "../../scripts/physics/action-physics-reset.js"
             },
-            {
+            script4: {
                 type: "script",
                 url: "../../scripts/physics/vehicle.js"
             }
-        ];
+        };
 
         // Load all assets and then run the example
-        var assetsToLoad = assetManifest.length;
-        assetManifest.forEach(function (entry) {
-            app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
-                if (!err && asset) {
-                    assetsToLoad--;
-                    entry.asset = asset;
-                    if (assetsToLoad === 0) {
-                        run();
-                    }
-                }
-            });
+        loadManifestAssets(app, assetManifest, function () {
+            run();
         });
 
         function run() {

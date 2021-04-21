@@ -5,7 +5,7 @@
  * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
  * @returns {number} The time in milliseconds.
  */
-var now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
+const now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
     return window.performance.now();
 } : Date.now;
 

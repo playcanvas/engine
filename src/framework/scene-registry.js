@@ -44,7 +44,7 @@ class SceneRegistry {
      */
     add(name, url) {
         if (this._index.hasOwnProperty(name)) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
             // #endif
             return false;
@@ -202,7 +202,7 @@ class SceneRegistry {
      * @param {SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
      */
     unloadSceneData(sceneItem) {
-        if (sceneItem instanceof String) {
+        if (typeof sceneItem === 'string') {
             sceneItem = this.findByUrl(sceneItem);
         }
 

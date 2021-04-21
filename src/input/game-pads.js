@@ -195,7 +195,10 @@ class GamePads {
 
         var key = this.current[index].map.buttons[button];
         var i = pc[key];
-        return this.current[index].pad.buttons[i].pressed && !this.previous[index][i];
+
+        // Previous pad buttons may not have been populated yet
+        // If this is the first time frame a pad has been detected
+        return this.current[index].pad.buttons[i].pressed && !(this.previous[index] && this.previous[index][i]);
     }
 
     /**

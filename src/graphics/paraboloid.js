@@ -17,7 +17,7 @@ function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount, dontFlipX)
                                       "genParaboloid");
     var constantTexSource = device.scope.resolve("source");
     var constantParams = device.scope.resolve("params");
-    var params = new Vec4();
+    var params = new Float32Array(4);
     var size = sourceCubemap.width;
     var format = sourceCubemap.format;
 
@@ -36,10 +36,10 @@ function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount, dontFlipX)
         depth: false
     });
 
-    params.x = fixSeamsAmount;
-    params.y = dontFlipX ? -1.0 : 1.0;
+    params[0] = fixSeamsAmount;
+    params[1] = dontFlipX ? -1.0 : 1.0;
     constantTexSource.setValue(sourceCubemap);
-    constantParams.setValue(params.data);
+    constantParams.setValue(params);
     drawQuadWithShader(device, targ, shader);
 
     return tex;
@@ -62,7 +62,7 @@ function getDpAtlasRect(rect, mip) {
 function generateDpAtlas(device, sixCubemaps, dontFlipX) {
     var dp;
     var rect = new Vec4();
-    var params = new Vec4();
+    var params = new Float32Array(4);
     var size = sixCubemaps[0].width * 2 * dpMult;
 
     var shader = createShaderFromCode(device,
@@ -92,11 +92,11 @@ function generateDpAtlas(device, sixCubemaps, dontFlipX) {
         dp = paraboloidFromCubemap(device, sixCubemaps[i], i, dontFlipX);
         constantTexSource.setValue(dp);
         scaleAmount = getDpAtlasRect(rect, i);
-        params.x = scaleAmount * scaleFactor;
-        params.y = params.x * 2;
-        params.x += 1;
-        params.y += 1;
-        constantParams.setValue(params.data);
+        params[0] = scaleAmount * scaleFactor;
+        params[1] = params[0] * 2;
+        params[0] += 1;
+        params[1] += 1;
+        constantParams.setValue(params);
         rect.x *= size;
         rect.y *= size;
         rect.z *= size;

@@ -82,7 +82,7 @@ export const XRSPACE_UNBOUNDED = 'unbounded';
  * @constant
  * @type string
  * @name XRTARGETRAY_GAZE
- * @description Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
+ * @description Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. This is commonly referred to as a "gaze input" device in the context of head-mounted displays.
  */
 export const XRTARGETRAY_GAZE = 'gaze';
 

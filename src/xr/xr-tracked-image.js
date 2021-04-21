@@ -45,8 +45,6 @@ class XrTrackedImage extends EventHandler {
      */
 
     prepare() {
-        var self = this;
-
         if (this._bitmap) {
             return {
                 image: this._bitmap,
@@ -55,11 +53,11 @@ class XrTrackedImage extends EventHandler {
         }
 
         return createImageBitmap(this._image)
-            .then(function (bitmap) {
-                self._bitmap = bitmap;
+            .then((bitmap) => {
+                this._bitmap = bitmap;
                 return {
-                    image: self._bitmap,
-                    widthInMeters: self._width
+                    image: this._bitmap,
+                    widthInMeters: this._width
                 };
             });
     }

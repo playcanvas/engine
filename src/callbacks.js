@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @name callbacks
  * @namespace
@@ -197,5 +195,5 @@
  * @callback callbacks.XrHitTestStart
  * @description Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
  * @param {Error|null} err - The Error object if failed to create hit test source or null.
- * @param {XrHitTestSource|null} hitTestSource - object that provides access to hit results against real world geometry.
+ * @param {XrHitTestSource|null} hitTestSource - Object that provides access to hit results against real world geometry.
  */

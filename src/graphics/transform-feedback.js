@@ -82,7 +82,7 @@ class TransformFeedback {
         this.device = inputBuffer.device;
         var gl = this.device.gl;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (!inputBuffer.format.interleaved && inputBuffer.format.elements.length > 1) {
             console.error("Vertex buffer used by TransformFeedback needs to be interleaved.");
         }
@@ -130,7 +130,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         var device = this.device;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.pushMarker("TransformFeedback");
         // #endif
 
@@ -152,7 +152,7 @@ class TransformFeedback {
         device.updateEnd();
         device.setRenderTarget(oldRt);
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         device.popMarker();
         // #endif
 

@@ -68,13 +68,13 @@ class URI {
      * @classdesc A URI object.
      * @param {string} uri - URI string.
      * @property {string} scheme The scheme. (e.g. http).
-     * @property {string} authority The authority. (e.g. www.example.com).
+     * @property {string} authority The authority. (e.g. `www.example.com`).
      * @property {string} path The path. (e.g. /users/example).
      * @property {string} query The query, the section after a ?. (e.g. search=value).
      * @property {string} fragment The fragment, the section after a #.
      */
     constructor(uri) {
-        let result = uri.match(re);
+        const result = uri.match(re);
 
         this.scheme = result[2];
         this.authority = result[4];
@@ -134,7 +134,7 @@ class URI {
         if (this.query) {
             const queryParams = decodeURIComponent(this.query).split("&");
             for (const queryParam of queryParams) {
-                let pair = queryParam.split("=");
+                const pair = queryParam.split("=");
                 result[pair[0]] = pair[1];
             }
         }

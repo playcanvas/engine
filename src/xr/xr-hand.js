@@ -7,11 +7,11 @@ import { XrJoint } from './xr-joint.js';
 
 import { Vec3 } from '../math/vec3.js';
 
-var fingerJointIds = [];
+let fingerJointIds = [];
 
-var vecA = new Vec3();
-var vecB = new Vec3();
-var vecC = new Vec3();
+const vecA = new Vec3();
+const vecB = new Vec3();
+const vecC = new Vec3();
 
 if (window.XRHand) {
     fingerJointIds = [
@@ -26,20 +26,20 @@ if (window.XRHand) {
 /**
  * @class
  * @name XrHand
- * @classdesc Represents a hand with fingers and joints
- * @description Represents a hand with fingers and joints
- * @param {XrInputSource} inputSource - Input Source that hand is related to
- * @property {XrFinger[]} fingers List of fingers of a hand
- * @property {XrJoint[]} joints List of joints of hand
- * @property {XrJoint[]} tips List of joints that are tips of a fingers
- * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system
- * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost
+ * @classdesc Represents a hand with fingers and joints.
+ * @description Represents a hand with fingers and joints.
+ * @param {XrInputSource} inputSource - Input Source that hand is related to.
+ * @property {XrFinger[]} fingers List of fingers of a hand.
+ * @property {XrJoint[]} joints List of joints of hand.
+ * @property {XrJoint[]} tips List of joints that are tips of a fingers.
+ * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system.
+ * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost.
  */
 class XrHand extends EventHandler {
     constructor(inputSource) {
         super();
 
-        var xrHand = inputSource._xrInputSource.hand;
+        const xrHand = inputSource._xrInputSource.hand;
 
         this._manager = inputSource._manager;
         this._inputSource = inputSource;
@@ -53,16 +53,30 @@ class XrHand extends EventHandler {
 
         this._wrist = null;
 
-        if (xrHand.get('wrist'))
-            this._wrist = new XrJoint(0, 'wrist', this, null);
+        if (xrHand.get('wrist')) {
+            const joint = new XrJoint(0, 'wrist', this, null);
+            this._wrist = joint;
+            this._joints.push(joint);
+            this._jointsById.wrist = joint;
+        }
 
-        for (var f = 0; f < fingerJointIds.length; f++) {
-            var finger = new XrFinger(f, this);
+        for (let f = 0; f < fingerJointIds.length; f++) {
+            const finger = new XrFinger(f, this);
 
-            for (var j = 0; j < fingerJointIds[f].length; j++) {
-                var jointId = fingerJointIds[f][j];
+            for (let j = 0; j < fingerJointIds[f].length; j++) {
+                const jointId = fingerJointIds[f][j];
                 if (! xrHand.get(jointId)) continue;
-                new XrJoint(j, jointId, this, finger);
+
+                const joint = new XrJoint(j, jointId, this, finger);
+
+                this._joints.push(joint);
+                this._jointsById[jointId] = joint;
+                if (joint.tip) {
+                    this._tips.push(joint);
+                    finger._tip = joint;
+                }
+
+                finger._joints.push(joint);
             }
         }
     }
@@ -80,14 +94,14 @@ class XrHand extends EventHandler {
      */
 
     update(frame) {
-        var xrInputSource = this._inputSource._xrInputSource;
+        const xrInputSource = this._inputSource._xrInputSource;
 
         // joints
-        for (var j = 0; j < this._joints.length; j++) {
-            var joint = this._joints[j];
-            var jointSpace = xrInputSource.hand.get(joint._id);
+        for (let j = 0; j < this._joints.length; j++) {
+            const joint = this._joints[j];
+            const jointSpace = xrInputSource.hand.get(joint._id);
             if (jointSpace) {
-                var pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
+                const pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
                 if (pose) {
                     joint.update(pose);
 
@@ -107,12 +121,12 @@ class XrHand extends EventHandler {
             }
         }
 
-        var j1 = this._jointsById['thumb-metacarpal'];
-        var j4 = this._jointsById['thumb-tip'];
-        var j6 = this._jointsById['index-finger-phalanx-proximal'];
-        var j9 = this._jointsById['index-finger-tip'];
-        var j16 = this._jointsById['ring-finger-phalanx-proximal'];
-        var j21 = this._jointsById['pinky-finger-phalanx-proximal'];
+        const j1 = this._jointsById['thumb-metacarpal'];
+        const j4 = this._jointsById['thumb-tip'];
+        const j6 = this._jointsById['index-finger-phalanx-proximal'];
+        const j9 = this._jointsById['index-finger-tip'];
+        const j16 = this._jointsById['ring-finger-phalanx-proximal'];
+        const j21 = this._jointsById['pinky-finger-phalanx-proximal'];
 
         // ray
         if (j1 && j4 && j6 && j9 && j16 && j21) {
@@ -123,11 +137,11 @@ class XrHand extends EventHandler {
             this._inputSource._rayLocal.origin.lerp(j4._localPosition, j9._localPosition, 0.5);
 
             // ray direction
-            var jointL = j1;
-            var jointR = j21;
+            let jointL = j1;
+            let jointR = j21;
 
             if (this._inputSource.handedness === XRHAND_LEFT) {
-                var t = jointL;
+                const t = jointL;
                 jointL = jointR;
                 jointR = t;
             }
@@ -147,7 +161,7 @@ class XrHand extends EventHandler {
         }
 
         // emulate squeeze events by folding all 4 fingers
-        var squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
+        const squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
 
         if (squeezing) {
             if (! this._inputSource._squeezing) {
@@ -169,7 +183,7 @@ class XrHand extends EventHandler {
     }
 
     _fingerIsClosed(index) {
-        var finger = this._fingers[index];
+        const finger = this._fingers[index];
         vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();
         vecB.sub2(finger.joints[2]._localPosition, finger.joints[3]._localPosition).normalize();
         return vecA.dot(vecB) < -0.8;
@@ -178,9 +192,9 @@ class XrHand extends EventHandler {
     /**
      * @function
      * @name XrHand#getJointById
-     * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
-     * @param {string} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
-     * @returns {XrJoint|null} Joint or null if not available
+     * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/.
+     * @param {string} id - Id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/.
+     * @returns {XrJoint|null} Joint or null if not available.
      */
     getJointById(id) {
         return this._jointsById[id] || null;

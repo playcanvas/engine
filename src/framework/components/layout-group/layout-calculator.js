@@ -655,8 +655,6 @@ CALCULATE_FNS[ORIENTATION_VERTICAL] = createCalculator(ORIENTATION_VERTICAL);
  * @classdesc Used to manage layout calculations for {@link LayoutGroupComponent}s.
  */
 class LayoutCalculator {
-    constructor() {}
-
     calculateLayout(elements, options) {
         var calculateFn = CALCULATE_FNS[options.orientation];
 

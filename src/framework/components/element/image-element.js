@@ -27,7 +27,7 @@ import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
 import { Asset } from '../../../asset/asset.js';
 
-// #ifdef DEBUG
+// #if _DEBUG
 var _debugLogging = false;
 // #endif
 
@@ -183,7 +183,7 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
             // #endif
         }
@@ -191,7 +191,7 @@ class ImageRenderable {
 
     setDrawOrder(drawOrder) {
         if (!this.meshInstance) return;
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
         // #endif
         this.meshInstance.drawOrder = drawOrder;
@@ -878,7 +878,7 @@ class ImageElement {
         var g = value.g;
         var b = value.b;
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._color === value) {
             console.warn("Setting element.color to itself will have no effect");
         }
@@ -923,7 +923,7 @@ class ImageElement {
     }
 
     set rect(value) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._rect === value) {
             console.warn('Setting element.rect to itself will have no effect');
         }

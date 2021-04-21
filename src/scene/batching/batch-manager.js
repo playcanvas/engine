@@ -100,7 +100,7 @@ class BatchManager {
         this._batchList = [];
         this._dirtyGroups = [];
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats = {
             createTime: 0,
             updateLastFrameTime: 0
@@ -138,7 +138,7 @@ class BatchManager {
         }
 
         if (this._batchGroups[id]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("batch group with id " + id + " already exists");
             // #endif
             return;
@@ -159,7 +159,7 @@ class BatchManager {
      */
     removeGroup(id) {
         if (!this._batchGroups[id]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("batch group with id " + id + " doesn't exist");
             // #endif
             return;
@@ -262,7 +262,7 @@ class BatchManager {
                 this.markGroupDirty(groupId);
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
             // #endif
         }
@@ -277,7 +277,7 @@ class BatchManager {
                 this.markGroupDirty(groupId);
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
             // #endif
         }
@@ -335,7 +335,7 @@ class BatchManager {
 
             node.model.removeModelFromLayers();
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             node.model._batchGroup = group;
             // #endif
         }
@@ -369,7 +369,7 @@ class BatchManager {
 
         if (valid) {
             group._ui = true;
-            // #ifdef DEBUG
+            // #if _DEBUG
             node.element._batchGroup = group;
             // #endif
         }
@@ -459,7 +459,7 @@ class BatchManager {
 
             groupData = this._batchGroups[groupId];
             if (!groupData) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("batch group " + groupId + " not found");
                 // #endif
                 continue;
@@ -582,13 +582,13 @@ class BatchManager {
                 }
                 // Split stencil mask (UI elements), both front and back expected to be the same
                 if (stencil) {
-                    if (!(sf = mi.stencilFront) || stencil.func != sf.func || stencil.zpass != sf.zpass) {
+                    if (!(sf = mi.stencilFront) || stencil.func !== sf.func || stencil.zpass !== sf.zpass) {
                         skipMesh(mi);
                         continue;
                     }
                 }
                 // Split by negative scale
-                if (scaleSign != getScaleSign(mi)) {
+                if (scaleSign !== getScaleSign(mi)) {
                     skipMesh(mi);
                     continue;
                 }
@@ -638,7 +638,7 @@ class BatchManager {
      */
     create(meshInstances, dynamic, batchGroupId) {
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var time = now();
         // #endif
 
@@ -670,7 +670,7 @@ class BatchManager {
 
                 // index counts (handles special case of TRI-FAN-type non-indexed primitive used by UI)
                 batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
-                    (mesh.primitive[0].type == PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
+                    (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
 
                 // if first mesh
                 if (!streams) {
@@ -792,7 +792,7 @@ class BatchManager {
                     // source index buffer data mapped to its format
                     var srcFormat = mesh.indexBuffer[0].getFormat();
                     indexData = new typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
-                } else if (mesh.primitive[0].type == PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
+                } else if (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
                     // Special case for UI image elements
                     indexBase = 0;
                     numIndices = 6;
@@ -872,7 +872,7 @@ class BatchManager {
             batch.model = newModel;
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats.createTime += now() - time;
         // #endif
 
@@ -909,7 +909,7 @@ class BatchManager {
             this.generate(this._dirtyGroups);
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         var time = now();
         // #endif
 
@@ -918,7 +918,7 @@ class BatchManager {
             this.update(this._batchList[i]);
         }
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this._stats.updateLastFrameTime = now() - time;
         // #endif
     }

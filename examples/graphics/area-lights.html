@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <style>
         body { 
             margin: 0;
@@ -36,9 +37,9 @@
             material.useMetalness = true;
 
             if (assetManifest) {
-                material.diffuseMap = assetManifest[0].asset.resource;
-                material.normalMap = assetManifest[1].asset.resource;
-                material.glossMap = assetManifest[2].asset.resource;
+                material.diffuseMap = assetManifest["color"].asset.resource;
+                material.normalMap = assetManifest["normal"].asset.resource;
+                material.glossMap = assetManifest["gloss"].asset.resource;
                 material.metalness = 0.7;
 
                 material.diffuseMapTiling.set(7, 7);
@@ -128,41 +129,37 @@
         }
 
         // A list of assets that need to be loaded
-        var assetManifest = [
-            {
+        var assetManifest = {
+            color: {
                 type: "texture",
                 url: "../assets/textures/seaside-rocks01-color.jpg"
             },
-            {
+            normal: {
                 type: "texture",
                 url: "../assets/textures/seaside-rocks01-normal.jpg"
             },
-            {
+            gloss: {
                 type: "texture",
                 url: "../assets/textures/seaside-rocks01-gloss.jpg"
             },
-            {
+            statue: {
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
-            {
+            luts: {
                 type: "binary",
                 url: "../assets/binary/area-light-luts.bin"
-            },            
-        ];
+            },
+            'helipad.dds': {
+                type: "cubemap",
+                url: { url: "../assets/cubemaps/helipad.dds" },
+                data: { type: pc.TEXTURETYPE_RGBM }
+            }
+        };
 
         // Load all assets and then run the example
-        var assetsToLoad = assetManifest.length;
-        assetManifest.forEach(function (entry) {
-            app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
-                if (!err && asset) {
-                    assetsToLoad--;
-                    entry.asset = asset;
-                    if (assetsToLoad === 0) {
-                        run();
-                    }
-                }
-            });
+        loadManifestAssets(app, assetManifest, function () {
+            run();
         });
         
         var camera;
@@ -184,7 +181,7 @@
             var miniStats = new pcx.MiniStats(app);
 
             // set the loaded area light LUT data
-            app.setAreaLightLuts(assetManifest[4].asset);
+            app.setAreaLightLuts(assetManifest["luts"].asset);
 
             // set up some general scene rendering properties
             app.scene.gammaCorrection = pc.GAMMA_SRGB;
@@ -194,17 +191,8 @@
             app.scene.skyboxMip = 1;            // use top mipmap level of cubemap (full resolution)
             app.scene.skyboxIntensity = 0.4;    // make it darker
 
-            // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
-            var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
-                url: "../assets/cubemaps/helipad.dds"
-            }, {
-                type: pc.TEXTURETYPE_RGBM
-            });
-            app.assets.add(cubemapAsset);
-            app.assets.load(cubemapAsset);
-            cubemapAsset.ready(function () {
-                app.scene.setSkybox(cubemapAsset.resources);
-            });
+            // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+            app.scene.setSkybox(assetManifest["helipad.dds"].asset.resources);
 
             // create ground plane
             createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assetManifest);
@@ -213,7 +201,7 @@
              var statue = new pc.Entity();
              statue.addComponent("model", {
                 type: "asset",
-                asset: assetManifest[3].asset.resource.model
+                asset: assetManifest["statue"].asset.resource.model
             });
             statue.setLocalScale(0.4, 0.4, 0.4);
             app.root.addChild(statue);

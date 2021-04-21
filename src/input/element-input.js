@@ -858,7 +858,7 @@ class ElementInput {
 
         rayA.origin.copy(ray.origin);
         rayA.direction.copy(ray.direction);
-        rayA.end.copy(rayA.direction).scale(camera.farClip * 2).add(rayA.origin);
+        rayA.end.copy(rayA.direction).mulScalar(camera.farClip * 2).add(rayA.origin);
 
         // sort elements
         this._elements.sort(this._sortHandler);
@@ -889,14 +889,14 @@ class ElementInput {
             var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
 
             _paddingTop.copy(element.entity.up);
-            _paddingBottom.copy(_paddingTop).scale(-1);
+            _paddingBottom.copy(_paddingTop).mulScalar(-1);
             _paddingRight.copy(element.entity.right);
-            _paddingLeft.copy(_paddingRight).scale(-1);
+            _paddingLeft.copy(_paddingRight).mulScalar(-1);
 
-            _paddingTop.scale(hitPadding.w * scaleY);
-            _paddingBottom.scale(hitPadding.y * scaleY);
-            _paddingRight.scale(hitPadding.z * scaleX);
-            _paddingLeft.scale(hitPadding.x * scaleX);
+            _paddingTop.mulScalar(hitPadding.w * scaleY);
+            _paddingBottom.mulScalar(hitPadding.y * scaleY);
+            _paddingRight.mulScalar(hitPadding.z * scaleX);
+            _paddingLeft.mulScalar(hitPadding.x * scaleX);
 
             _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
             _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
@@ -950,7 +950,7 @@ class ElementInput {
 
             ray.origin.set(_x, _y, 1);
             ray.direction.set(0, 0, -1);
-            ray.end.copy(ray.direction).scale(2).add(ray.origin);
+            ray.end.copy(ray.direction).mulScalar(2).add(ray.origin);
 
             return true;
         }

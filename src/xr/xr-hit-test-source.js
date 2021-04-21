@@ -3,8 +3,8 @@ import { EventHandler } from '../core/event-handler.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-var poolVec3 = [];
-var poolQuat = [];
+const poolVec3 = [];
+const poolQuat = [];
 
 /**
  * @class
@@ -43,9 +43,9 @@ class XrHitTestSource extends EventHandler {
      * @event
      * @name XrHitTestSource#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {Vec3} position - Position of hit test
-     * @param {Quat} rotation - Rotation of hit test
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {Vec3} position - Position of hit test.
+     * @param {Quat} rotation - Rotation of hit test.
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
      * @example
      * hitTestSource.on('result', function (position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -62,8 +62,8 @@ class XrHitTestSource extends EventHandler {
         if (! this._xrHitTestSource)
             return;
 
-        var sources = this.manager.hitTest.sources;
-        var ind = sources.indexOf(this);
+        const sources = this.manager.hitTest.sources;
+        const ind = sources.indexOf(this);
         if (ind !== -1) sources.splice(ind, 1);
 
         this.onStop();
@@ -79,10 +79,10 @@ class XrHitTestSource extends EventHandler {
 
     update(frame) {
         if (this._transient) {
-            var transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
-            for (var i = 0; i < transientResults.length; i++) {
-                var transientResult = transientResults[i];
-                var inputSource;
+            const transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
+            for (let i = 0; i < transientResults.length; i++) {
+                const transientResult = transientResults[i];
+                let inputSource;
 
                 if (transientResult.inputSource)
                     inputSource = this.manager.input._getByInputSource(transientResult.inputSource);
@@ -95,14 +95,14 @@ class XrHitTestSource extends EventHandler {
     }
 
     updateHitResults(results, inputSource) {
-        for (var i = 0; i < results.length; i++) {
-            var pose = results[i].getPose(this.manager._referenceSpace);
+        for (let i = 0; i < results.length; i++) {
+            const pose = results[i].getPose(this.manager._referenceSpace);
 
-            var position = poolVec3.pop();
+            let position = poolVec3.pop();
             if (! position) position = new Vec3();
             position.copy(pose.transform.position);
 
-            var rotation = poolQuat.pop();
+            let rotation = poolQuat.pop();
             if (! rotation) rotation = new Quat();
             rotation.copy(pose.transform.orientation);
 

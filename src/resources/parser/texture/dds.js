@@ -15,36 +15,36 @@ import { Texture } from '../../../graphics/texture.js';
 
 // Defined here:
 // https://docs.microsoft.com/en-us/windows/desktop/direct3ddds/dds-header
-var DDSD_CAPS = 0x1;            // Required in every .dds file.
-var DDSD_HEIGHT = 0x2;          // Required in every .dds file.
-var DDSD_WIDTH = 0x4;           // Required in every .dds file.
-var DDSD_PITCH = 0x8;           // Required when pitch is provided for an uncompressed texture.
-var DDSD_PIXELFORMAT = 0x1000;  // Required in every .dds file.
-var DDSD_MIPMAPCOUNT = 0x20000; // Required in a mipmapped texture.
-var DDSD_LINEARSIZE = 0x80000;  // Required when pitch is provided for a compressed texture.
-var DDSD_DEPTH = 0x800000;      // Required in a depth texture.
+const DDSD_CAPS = 0x1;            // Required in every .dds file.
+const DDSD_HEIGHT = 0x2;          // Required in every .dds file.
+const DDSD_WIDTH = 0x4;           // Required in every .dds file.
+const DDSD_PITCH = 0x8;           // Required when pitch is provided for an uncompressed texture.
+const DDSD_PIXELFORMAT = 0x1000;  // Required in every .dds file.
+const DDSD_MIPMAPCOUNT = 0x20000; // Required in a mipmapped texture.
+const DDSD_LINEARSIZE = 0x80000;  // Required when pitch is provided for a compressed texture.
+const DDSD_DEPTH = 0x800000;      // Required in a depth texture.
 
-var DDSCAPS2_CUBEMAP = 0x200;
-var DDSCAPS2_CUBEMAP_POSITIVEX = 0x400;
-var DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800;
-var DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000;
-var DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000;
-var DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
-var DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
+const DDSCAPS2_CUBEMAP = 0x200;
+const DDSCAPS2_CUBEMAP_POSITIVEX = 0x400;
+const DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800;
+const DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000;
+const DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000;
+const DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
+const DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
 
-var DDS_CUBEMAP_ALLFACES = DDSCAPS2_CUBEMAP |
+const DDS_CUBEMAP_ALLFACES = DDSCAPS2_CUBEMAP |
       DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
       DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
       DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ;
 
 // Defined here:
 // https://docs.microsoft.com/en-us/windows/desktop/direct3ddds/dds-pixelformat
-var DDPF_ALPHAPIXELS = 0x1;
-var DDPF_ALPHA = 0x2;
-var DDPF_FOURCC = 0x4;
-var DDPF_RGB = 0x40;
-var DDPF_YUV = 0x200;
-var DDPF_LUMINANCE = 0x20000;
+const DDPF_ALPHAPIXELS = 0x1;
+const DDPF_ALPHA = 0x2;
+const DDPF_FOURCC = 0x4;
+const DDPF_RGB = 0x40;
+const DDPF_YUV = 0x200;
+const DDPF_LUMINANCE = 0x20000;
 
 /* eslint-enable no-unused-vars */
 
@@ -56,22 +56,22 @@ function makeFourCC(str) {
            (str.charCodeAt(3) << 24);
 }
 
-var DDS_MAGIC = makeFourCC('DDS ');
+const DDS_MAGIC = makeFourCC('DDS ');
 
 // Standard
-var FCC_DXT1 = makeFourCC('DXT1');
-var FCC_DXT5 = makeFourCC('DXT5');
-var FCC_DX10 = makeFourCC('DX10');
-var FCC_FP32 = 116; // RGBA32f
+const FCC_DXT1 = makeFourCC('DXT1');
+const FCC_DXT5 = makeFourCC('DXT5');
+const FCC_DX10 = makeFourCC('DX10');
+const FCC_FP32 = 116; // RGBA32f
 
 // Non-standard
-var FCC_ETC1 = makeFourCC('ETC1');
-var FCC_PVRTC_2BPP_RGB_1 = makeFourCC('P231');
-var FCC_PVRTC_2BPP_RGBA_1 = makeFourCC('P241');
-var FCC_PVRTC_4BPP_RGB_1 = makeFourCC('P431');
-var FCC_PVRTC_4BPP_RGBA_1 = makeFourCC('P441');
+const FCC_ETC1 = makeFourCC('ETC1');
+const FCC_PVRTC_2BPP_RGB_1 = makeFourCC('P231');
+const FCC_PVRTC_2BPP_RGBA_1 = makeFourCC('P241');
+const FCC_PVRTC_4BPP_RGB_1 = makeFourCC('P431');
+const FCC_PVRTC_4BPP_RGBA_1 = makeFourCC('P441');
 
-var fccToFormat = {};
+const fccToFormat = {};
 fccToFormat[FCC_FP32] = PIXELFORMAT_RGBA32F;
 fccToFormat[FCC_DXT1] = PIXELFORMAT_DXT1;
 fccToFormat[FCC_DXT5] = PIXELFORMAT_DXT5;
@@ -82,6 +82,7 @@ fccToFormat[FCC_PVRTC_4BPP_RGB_1] = PIXELFORMAT_PVRTC_4BPP_RGB_1;
 fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = PIXELFORMAT_PVRTC_4BPP_RGBA_1;
 
 /**
+ * @private
  * @class
  * @name DdsParser
  * @implements {TextureParser}
@@ -93,7 +94,7 @@ class DdsParser {
     }
 
     load(url, callback, asset) {
-        var options = {
+        const options = {
             cache: true,
             responseType: "arraybuffer",
             retry: this.maxRetries > 0,
@@ -103,15 +104,15 @@ class DdsParser {
     }
 
     open(url, data, device) {
-        var textureData = this.parse(data);
+        const textureData = this.parse(data);
 
         if (!textureData) {
             return null;
         }
 
-        var texture = new Texture(device, {
+        const texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             addressU: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
@@ -129,20 +130,20 @@ class DdsParser {
     }
 
     parse(data) {
-        var arrayBuffer = data;
+        const arrayBuffer = data;
 
-        var headerU32 = new Uint32Array(arrayBuffer, 0, 32);
+        let headerU32 = new Uint32Array(arrayBuffer, 0, 32);
 
         // Check magic number
-        var magic = headerU32[0];
+        const magic = headerU32[0];
         if (magic !== DDS_MAGIC) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Invalid magic number found in DDS file. Expected 0x20534444. Got " + magic + ".");
             // #endif
             return null;
         }
 
-        var header = {
+        const header = {
             size: headerU32[1],
             flags: headerU32[2],
             height: headerU32[3],
@@ -170,21 +171,21 @@ class DdsParser {
 
         // Verify DDS header size
         if (header.size !== 124) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Invalid size for DDS header. Expected 124. Got " + header.size + ".");
             // #endif
             return null;
         }
 
         // Byte offset locating the first byte of texture level data
-        var offset = 4 + header.size;
+        let offset = 4 + header.size;
 
         // If the ddspf.flags property is set to DDPF_FOURCC and ddspf.fourCc is set to
         // "DX10" an additional DDS_HEADER_DXT10 structure will be present.
         // https://docs.microsoft.com/en-us/windows/desktop/direct3ddds/dds-header-dxt10
-        // var header10; // not used
-        var isFcc = header.ddspf.flags & DDPF_FOURCC;
-        var fcc = header.ddspf.fourCc;
+        // let header10; // not used
+        const isFcc = header.ddspf.flags & DDPF_FOURCC;
+        const fcc = header.ddspf.fourCc;
         if (isFcc && (fcc === FCC_DX10)) {
             headerU32 = new Uint32Array(arrayBuffer, 128, 5);
             // header10 = {
@@ -198,24 +199,24 @@ class DdsParser {
         }
 
         // Read texture data
-        // var bpp = header.ddspf.rgbBitCount; // not used
-        var isCubeMap = header.caps2 === DDS_CUBEMAP_ALLFACES;
-        var numFaces = isCubeMap ? 6 : 1;
-        var numMips = header.flags & DDSD_MIPMAPCOUNT ? header.mipMapCount : 1;
-        var levels = [];
+        // let bpp = header.ddspf.rgbBitCount; // not used
+        const isCubeMap = header.caps2 === DDS_CUBEMAP_ALLFACES;
+        const numFaces = isCubeMap ? 6 : 1;
+        const numMips = header.flags & DDSD_MIPMAPCOUNT ? header.mipMapCount : 1;
+        const levels = [];
         if (isCubeMap) {
-            for (var mipCnt = 0; mipCnt < numMips; mipCnt++) {
+            for (let mipCnt = 0; mipCnt < numMips; mipCnt++) {
                 levels.push([]);
             }
         }
-        for (var face = 0; face < numFaces; face++) {
-            var mipWidth = header.width;
-            var mipHeight = header.height;
+        for (let face = 0; face < numFaces; face++) {
+            let mipWidth = header.width;
+            let mipHeight = header.height;
 
-            for (var mip = 0; mip < numMips; mip++) {
-                var mipSize;
+            for (let mip = 0; mip < numMips; mip++) {
+                let mipSize;
                 if ((fcc === FCC_DXT1) || (fcc === FCC_DXT5) || (fcc === FCC_ETC1)) {
-                    var bytesPerBlock = (fcc === FCC_DXT5) ? 16 : 8;
+                    const bytesPerBlock = (fcc === FCC_DXT5) ? 16 : 8;
                     mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * bytesPerBlock;
                 } else if ((fcc === FCC_PVRTC_2BPP_RGB_1 || fcc === FCC_PVRTC_2BPP_RGBA_1)) {
                     mipSize = Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
@@ -230,7 +231,7 @@ class DdsParser {
                     return null;
                 }
 
-                var mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize) : new Uint8Array(arrayBuffer, offset, mipSize);
+                const mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize) : new Uint8Array(arrayBuffer, offset, mipSize);
                 if (isCubeMap) {
                     levels[mip][face] = mipData;
                 } else {

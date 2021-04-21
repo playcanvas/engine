@@ -1,5 +1,4 @@
-import { http } from '../net/http.js';
-import { SceneUtils } from "./scene-utils";
+import { SceneUtils } from "./scene-utils.js";
 
 class SceneSettingsHandler {
     constructor(app) {

@@ -219,7 +219,7 @@ class AnimController {
     _findTransition(from, to) {
         var transitions = [];
 
-        // If from and to is supplied, find transitions that include the required source and destination states
+        // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
             transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
@@ -281,7 +281,12 @@ class AnimController {
 
         // return the highest priority transition to use
         if (transitions.length > 0) {
-            return transitions[0];
+            var transition = transitions[0];
+            if (transition.to === ANIM_STATE_END) {
+                var startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
+                transition.to = startTransition.to;
+            }
+            return transition;
         }
         return null;
     }
@@ -407,7 +412,7 @@ class AnimController {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign an animation track to an animation state that does not exist.');
             // #endif
             return;
@@ -425,7 +430,7 @@ class AnimController {
         }
         var state = this._findState(nodeName);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to unassign animation tracks from a state that does not exist.');
             // #endif
             return;

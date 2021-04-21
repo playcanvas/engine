@@ -44,7 +44,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         if (data.reverseX !== undefined) component.reverseX = data.reverseX;
         if (data.reverseY !== undefined) component.reverseY = data.reverseY;
         if (data.alignment !== undefined) {
-            if (data.alignment instanceof Vec2){
+            if (data.alignment instanceof Vec2) {
                 component.alignment.copy(data.alignment);
             } else {
                 component.alignment.set(data.alignment[0], data.alignment[1]);
@@ -56,7 +56,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
             /* eslint-enable no-self-assign */
         }
         if (data.padding !== undefined) {
-            if (data.padding instanceof Vec4){
+            if (data.padding instanceof Vec4) {
                 component.padding.copy(data.padding);
             } else {
                 component.padding.set(data.padding[0], data.padding[1], data.padding[2], data.padding[3]);
@@ -68,7 +68,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
             /* eslint-enable no-self-assign */
         }
         if (data.spacing !== undefined) {
-            if (data.spacing instanceof Vec2){
+            if (data.spacing instanceof Vec2) {
                 component.spacing.copy(data.spacing);
             } else {
                 component.spacing.set(data.spacing[0], data.spacing[1]);

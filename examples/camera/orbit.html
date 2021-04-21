@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <style>
         body { 
             margin: 0;
@@ -40,29 +41,20 @@
         var miniStats = new pcx.MiniStats(app);
 
         // A list of assets that need to be loaded
-        var assetManifest = [
-            {
+        var assetManifest = {
+            statue: {
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
-            {
+            script: {
                 type: "script",
                 url: "../../scripts/camera/orbit-camera.js"
             }
-        ];
+        };
 
         // Load all assets and then run the example
-        var assetsToLoad = assetManifest.length;
-        assetManifest.forEach(function (entry) {
-            app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
-                if (!err && asset) {
-                    assetsToLoad--;
-                    entry.asset = asset;
-                    if (assetsToLoad === 0) {
-                        run();
-                    }
-                }
-            });
+        loadManifestAssets(app, assetManifest, function () {
+            run();
         });
 
         function run() {
@@ -70,7 +62,7 @@
             var model = new pc.Entity();
             model.addComponent("model", {
                 type: "asset",
-                asset: assetManifest[0].asset.resource.model
+                asset: assetManifest["statue"].asset.resource.model
             });
             app.root.addChild(model);
 

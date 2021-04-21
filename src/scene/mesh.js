@@ -58,7 +58,7 @@ class GeometryData {
 
     _validateVertexCount(count, semantic) {
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this.vertexCount !== count) {
             console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
         }
@@ -102,31 +102,48 @@ class GeometryVertexStream {
  * @classdesc A graphical primitive. The mesh is defined by a {@link VertexBuffer} and an optional
  * {@link IndexBuffer}. It also contains a primitive definition which controls the type of the
  * primitive and the portion of the vertex or index buffer to use.
- * ***
- * Mesh APIs
- * =========
+ *
+ * ## Mesh APIs
  * There are two ways a mesh can be generated or updated.
  *
- * Simple Mesh API
- * ---------
+ * ### Simple Mesh API
  * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs} that provide a simple way to provide
  * vertex and index data for the Mesh, and hiding the complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
  *
  * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
- * ~~~
+ *
+ * ~~~javascript
  * var mesh = new pc.Mesh(device);
- * var positions = [0, 0, 0,     1, 0, 0,     1, 1, 0];
+ * var positions = [
+ *     0, 0, 0, // pos 0
+ *     1, 0, 0, // pos 1
+ *     1, 1, 0  // pos 2
+ * ];
  * mesh.setPositions(positions);
  * mesh.update();
  * ~~~
  *
  * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
  * Float32Array is used for positions and uvs.
- * ~~~
+ *
+ * ~~~javascript
  * var mesh = new pc.Mesh(device);
- * var positions = new Float32Array([0, 0, 0,     1, 0, 0,     1, 1, 0,      0, 1, 0]);
- * var uvs = new Float32Array([0, 0,     1, 0,     1, 1,     0, 1]);
- * var indices = [0, 1, 2,    0, 2, 3];
+ * var positions = new Float32Array([
+ *     0, 0, 0, // pos 0
+ *     1, 0, 0, // pos 1
+ *     1, 1, 0, // pos 2
+ *     0, 1, 0  // pos 3
+ * ]);
+ * var uvs = new Float32Array([
+ *     0, 0, // uv 0
+ *     1, 0, // uv 1
+ *     1, 1, // uv 2
+ *     0, 1  // uv 3
+ * ]);
+ * var indices = [
+ *     0, 1, 2, // triangle 0
+ *     0, 2, 3  // triangle 1
+ * ];
  * mesh.setPositions(positions);
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
@@ -144,11 +161,9 @@ class GeometryVertexStream {
  * * {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
  * * {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
- * Update Vertex and Index buffers.
- * ---------
+ * ### Update Vertex and Index buffers.
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
  * See {@link VertexBuffer}, {@link IndexBuffer} and {@link VertexFormat} for details.
- * ***
  * @description Create a new mesh.
  * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
  * from the {@link Application}.
@@ -377,9 +392,9 @@ class Mesh extends RefCountedObject {
      * finally {@link Mesh#update} to rebuild the mesh, allowing different {@link VertexFormat}.
      * @param {boolean} [verticesDynamic] - Indicates the {@link VertexBuffer} should be created with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
      * @param {boolean} [indicesDynamic] - Indicates the {@link IndexBuffer} should be created with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
-     * @param {number} [maxVertices] - {@link VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
+     * @param {number} [maxVertices] - A {@link VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
      * no value is provided, a size to fit the provided vertices will be allocated.
-     * @param {number} [maxIndices] - {@link IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
+     * @param {number} [maxIndices] - An {@link IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
      * no value is provided, a size to fit the provided indices will be allocated.
      */
     clear(verticesDynamic, indicesDynamic, maxVertices = 0, maxIndices = 0) {
@@ -644,7 +659,7 @@ class Mesh extends RefCountedObject {
                 // find vec3 position stream
                 var stream = this._geometryData.vertexStreamDictionary[SEMANTIC_POSITION];
                 if (stream) {
-                    if (stream.componentCount == 3) {
+                    if (stream.componentCount === 3) {
                         this._aabb.compute(stream.data, this._geometryData.vertexCount);
                     }
                 }

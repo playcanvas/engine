@@ -33,7 +33,7 @@ class Picker {
             app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
                 // #endif
             }
@@ -65,7 +65,7 @@ class Picker {
             depth: 1.0,
             flags: CLEARFLAG_DEPTH
         };
-        this.clearDepthCommand = new Command(0, 0, function (){
+        this.clearDepthCommand = new Command(0, 0, function () {
             device.clear(self._clearDepthOptions);
         });
 
@@ -95,7 +95,7 @@ class Picker {
         var device = this.device;
 
         if (typeof x === 'object') {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!_prepareDeprecationWarning) {
                 _prepareDeprecationWarning = true;
                 console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
@@ -172,7 +172,7 @@ class Picker {
         var self = this;
 
         if (camera instanceof Camera) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             if (!_getSelectionDeprecationWarning) {
                 _getSelectionDeprecationWarning = true;
                 console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
@@ -305,7 +305,7 @@ class Picker {
         }
 
         // save old camera state
-        let originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
+        const originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
 
         // clear registered meshes, rendering will register them again
         self.mapping.length = 0;
@@ -336,8 +336,8 @@ class Picker {
         this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
 
         // add layer to be rendered by the camera
-        let originalLayers = camera.layers.slice();
-        let cameraLayers = camera.layers;
+        const originalLayers = camera.layers.slice();
+        const cameraLayers = camera.layers;
         cameraLayers.push(this.layer.id);
         camera.layers = cameraLayers;
 

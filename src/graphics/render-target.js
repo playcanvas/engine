@@ -84,7 +84,7 @@ class RenderTarget {
                 this._depth = true;
                 this._stencil = true;
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
                 // #endif
                 this._depth = false;
@@ -185,10 +185,10 @@ class RenderTarget {
         var gl = this._device.gl;
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
-        gl.blitFramebuffer( 0, 0, this.width, this.height,
-                            0, 0, this.width, this.height,
-                            (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                            gl.NEAREST);
+        gl.blitFramebuffer(0, 0, this.width, this.height,
+                           0, 0, this.width, this.height,
+                           (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                           gl.NEAREST);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
     }
 
@@ -207,7 +207,7 @@ class RenderTarget {
             if (source._device) {
                 this._device = source._device;
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Render targets are not initialized");
                 // #endif
                 return false;

@@ -44,7 +44,7 @@ Object.assign(ObjModelParser.prototype, {
 
         for (i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
-            var parts = line.split( /\s+/ );
+            var parts = line.split(/\s+/);
 
             if (line[0] === 'v') {
                 if (parts[0] === 'v') {

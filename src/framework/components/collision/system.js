@@ -204,10 +204,6 @@ class CollisionSystemImpl {
 
 // Box Collision System
 class CollisionBoxSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
             var he = data.halfExtents;
@@ -222,10 +218,6 @@ class CollisionBoxSystemImpl extends CollisionSystemImpl {
 
 // Sphere Collision System
 class CollisionSphereSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
             return new Ammo.btSphereShape(data.radius);
@@ -236,10 +228,6 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         var shape = null;
         var axis = (data.axis !== undefined) ? data.axis : 1;
@@ -265,10 +253,6 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         var halfExtents = null;
         var shape = null;
@@ -302,10 +286,6 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         var shape = null;
         var axis = (data.axis !== undefined) ? data.axis : 1;
@@ -331,10 +311,6 @@ class CollisionConeSystemImpl extends CollisionSystemImpl {
 
 // Mesh Collision System
 class CollisionMeshSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     // override for the mesh implementation because the asset model needs
     // special handling
     beforeInitialize(component, data) {}
@@ -357,12 +333,14 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                     var vb = mesh.vertexBuffer;
 
                     var format = vb.getFormat();
-                    var stride = format.size / 4;
+                    var stride;
                     var positions;
                     for (j = 0; j < format.elements.length; j++) {
                         var element = format.elements[j];
                         if (element.name === SEMANTIC_POSITION) {
                             positions = new Float32Array(vb.lock(), element.offset);
+                            stride = element.stride / 4;
+                            break;
                         }
                     }
 
@@ -488,7 +466,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             var previousScale = component.shape.getLocalScaling();
             if (worldScale.x !== previousScale.x() ||
                 worldScale.y !== previousScale.y() ||
-                worldScale.z !== previousScale.z() ) {
+                worldScale.z !== previousScale.z()) {
                 this.doRecreatePhysicalShape(component);
             }
         }
@@ -518,10 +496,6 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
 // Compound Collision System
 class CollisionCompoundSystemImpl extends CollisionSystemImpl {
-    constructor(system) {
-        super(system);
-    }
-
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
             return new Ammo.btCompoundShape();
@@ -660,7 +634,7 @@ class CollisionComponentSystem extends ComponentSystem {
                     impl = new CollisionCompoundSystemImpl(this);
                     break;
                 default:
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("_createImplementation: Invalid collision system type: " + type);
                     // #endif
             }

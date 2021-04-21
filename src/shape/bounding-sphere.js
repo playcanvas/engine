@@ -1,7 +1,7 @@
 import { Vec3 } from '../math/vec3.js';
 
-var tmpVecA = new Vec3();
-var tmpVecB = new Vec3();
+const tmpVecA = new Vec3();
+const tmpVecB = new Vec3();
 
 /**
  * @class
@@ -21,8 +21,8 @@ class BoundingSphere {
     }
 
     containsPoint(point) {
-        var lenSq = tmpVecA.sub2(point, this.center).lengthSq();
-        var r = this.radius;
+        const lenSq = tmpVecA.sub2(point, this.center).lengthSq();
+        const r = this.radius;
         return lenSq < r * r;
     }
 
@@ -35,25 +35,25 @@ class BoundingSphere {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
-        var m = tmpVecA.copy(ray.origin).sub(this.center);
-        var b = m.dot(tmpVecB.copy(ray.direction).normalize());
-        var c = m.dot(m) - this.radius * this.radius;
+        const m = tmpVecA.copy(ray.origin).sub(this.center);
+        const b = m.dot(tmpVecB.copy(ray.direction).normalize());
+        const c = m.dot(m) - this.radius * this.radius;
 
         // exit if ray's origin outside of sphere (c > 0) and ray pointing away from s (b > 0)
         if (c > 0 && b > 0)
             return null;
 
-        var discr = b * b - c;
+        const discr = b * b - c;
         // a negative discriminant corresponds to ray missing sphere
         if (discr < 0)
             return false;
 
         // ray intersects sphere, compute smallest t value of intersection
-        var t = Math.abs(-b - Math.sqrt(discr));
+        const t = Math.abs(-b - Math.sqrt(discr));
 
         // if t is negative, ray started inside sphere so clamp t to zero
         if (point)
-            point.copy(ray.direction).scale(t).add(ray.origin);
+            point.copy(ray.direction).mulScalar(t).add(ray.origin);
 
         return true;
     }
@@ -67,7 +67,7 @@ class BoundingSphere {
      */
     intersectsBoundingSphere(sphere) {
         tmpVecA.sub2(sphere.center, this.center);
-        var totalRadius = sphere.radius + this.radius;
+        const totalRadius = sphere.radius + this.radius;
         if (tmpVecA.lengthSq() <= totalRadius * totalRadius) {
             return true;
         }

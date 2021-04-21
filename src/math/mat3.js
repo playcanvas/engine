@@ -9,10 +9,9 @@ import { Vec3 } from './vec3.js';
  */
 class Mat3 {
     constructor() {
-        var data;
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.
-        data = new Float32Array(9);
+        const data = new Float32Array(9);
         data[0] = data[4] = data[8] = 1;
         this.data = data;
     }
@@ -44,8 +43,8 @@ class Mat3 {
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     copy(rhs) {
-        var src = rhs.data;
-        var dst = this.data;
+        const src = rhs.data;
+        const dst = this.data;
 
         dst[0] = src[0];
         dst[1] = src[1];
@@ -71,7 +70,7 @@ class Mat3 {
      * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
      */
     set(src) {
-        var dst = this.data;
+        const dst = this.data;
 
         dst[0] = src[0];
         dst[1] = src[1];
@@ -98,8 +97,8 @@ class Mat3 {
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
-        var l = this.data;
-        var r = rhs.data;
+        const l = this.data;
+        const r = rhs.data;
 
         return ((l[0] === r[0]) &&
                 (l[1] === r[1]) &&
@@ -122,7 +121,7 @@ class Mat3 {
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
     isIdentity() {
-        var m = this.data;
+        const m = this.data;
         return ((m[0] === 1) &&
                 (m[1] === 0) &&
                 (m[2] === 0) &&
@@ -144,7 +143,7 @@ class Mat3 {
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
     setIdentity() {
-        var m = this.data;
+        const m = this.data;
         m[0] = 1;
         m[1] = 0;
         m[2] = 0;
@@ -167,12 +166,12 @@ class Mat3 {
      * @returns {string} The matrix in string form.
      * @example
      * var m = new pc.Mat3();
-     * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'
+     * // Outputs [1, 0, 0, 0, 1, 0, 0, 0, 1]
      * console.log(m.toString());
      */
     toString() {
-        var t = '[';
-        for (var i = 0; i < 9; i++) {
+        let t = '[';
+        for (let i = 0; i < 9; i++) {
             t += this.data[i];
             t += (i !== 8) ? ', ' : '';
         }
@@ -192,9 +191,9 @@ class Mat3 {
      * m.transpose();
      */
     transpose() {
-        var m = this.data;
+        const m = this.data;
 
-        var tmp;
+        let tmp;
         tmp = m[1]; m[1] = m[3]; m[3] = tmp;
         tmp = m[2]; m[2] = m[6]; m[6] = tmp;
         tmp = m[5]; m[5] = m[7]; m[7] = tmp;
@@ -210,8 +209,8 @@ class Mat3 {
      * @returns {Mat3} Self for chaining.
      */
     setFromMat4(m) {
-        var src = m.data;
-        var dst = this.data;
+        const src = m.data;
+        const dst = this.data;
 
         dst[0] = src[0];
         dst[1] = src[1];
@@ -237,13 +236,11 @@ class Mat3 {
      * @returns {Vec3} The input vector v transformed by the current instance.
      */
     transformVector(vec, res = new Vec3()) {
-        var x, y, z, m;
+        const m = this.data;
 
-        m = this.data;
-
-        x = vec.x;
-        y = vec.y;
-        z = vec.z;
+        const x = vec.x;
+        const y = vec.y;
+        const z = vec.z;
 
         res.x = x * m[0] + y * m[3] + z * m[6];
         res.y = x * m[1] + y * m[4] + z * m[7];

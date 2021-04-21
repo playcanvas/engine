@@ -4,11 +4,7 @@ import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js'
 import { AnimBlendTreeDirect } from './anim-blend-tree-direct.js';
 import { AnimNode } from './anim-node.js';
 import {
-    ANIM_CONTROL_STATES
-} from './constants.js';
-
-import {
-    ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
+    ANIM_BLEND_1D, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_DIRECT, ANIM_CONTROL_STATES
 } from './constants.js';
 
 /**
