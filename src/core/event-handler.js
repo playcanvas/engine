@@ -168,9 +168,13 @@ class EventHandler {
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
             if (evt.once) {
-                const ind = this._callbacks[name].indexOf(evt);
+                // check that callback still exists because user may have unsubscribed
+                // in the event handler
+                const existingCallback = this._callbacks[name];
+                const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
+
                 if (ind !== -1) {
-                    if (this._callbackActive[name] === this._callbacks[name])
+                    if (this._callbackActive[name] === existingCallback)
                         this._callbackActive[name] = this._callbackActive[name].slice();
 
                     this._callbacks[name].splice(ind, 1);
