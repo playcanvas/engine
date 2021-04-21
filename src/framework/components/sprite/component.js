@@ -39,7 +39,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * * {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
  *
  * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
- * @property {number} spriteAsset The id of the sprite asset to render. Only works for {@link SPRITETYPE_SIMPLE} types.
+ * @property {number|Asset} spriteAsset The asset id or the {@link Asset} of the sprite to render. Only works for {@link SPRITETYPE_SIMPLE} sprites.
  * @property {Sprite} sprite The current sprite.
  * @property {number} width The width of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
  * @property {number} height The height of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
@@ -457,7 +457,7 @@ class SpriteComponent extends Component {
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
      * @param {object} [data.loop] - Whether to loop the animation clip.
-     * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
+     * @param {number|Asset} [data.spriteAsset] - The asset id or the {@link Asset} of the sprite that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.
      */
     addClip(data) {

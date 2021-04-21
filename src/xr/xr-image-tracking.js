@@ -48,7 +48,7 @@ class XrImageTracking extends EventHandler {
     add(image, width) {
         if (! this._supported || this._manager.active) return null;
 
-        var trackedImage = new XrTrackedImage(image, width);
+        const trackedImage = new XrTrackedImage(image, width);
         this._images.push(trackedImage);
         return trackedImage;
     }
@@ -62,7 +62,7 @@ class XrImageTracking extends EventHandler {
     remove(trackedImage) {
         if (this._manager.active) return;
 
-        var ind = this._images.indexOf(trackedImage);
+        const ind = this._images.indexOf(trackedImage);
         if (ind !== -1) {
             trackedImage.destroy();
             this._images.splice(ind, 1);
@@ -70,24 +70,22 @@ class XrImageTracking extends EventHandler {
     }
 
     _onSessionStart() {
-        var self = this;
+        this._manager.session.getTrackedImageScores().then((images) => {
+            this._available = true;
 
-        this._manager.session.getTrackedImageScores().then(function (images) {
-            self._available = true;
-
-            for (var i = 0; i < images.length; i++) {
-                self._images[i]._trackable = images[i] === 'trackable';
+            for (let i = 0; i < images.length; i++) {
+                this._images[i]._trackable = images[i] === 'trackable';
             }
-        }).catch(function (err) {
-            self._available = false;
-            self.fire('error', err);
+        }).catch((err) => {
+            this._available = false;
+            this.fire('error', err);
         });
     }
 
     _onSessionEnd() {
         this._available = false;
 
-        for (var i = 0; i < this._images.length; i++) {
+        for (let i = 0; i < this._images.length; i++) {
             this._images[i]._pose = null;
             this._images[i]._measuredWidth = 0;
 
@@ -115,21 +113,20 @@ class XrImageTracking extends EventHandler {
     update(frame) {
         if (! this._available) return;
 
-        var results = frame.getImageTrackingResults();
-        var index = { };
-        var i;
+        const results = frame.getImageTrackingResults();
+        const index = { };
 
-        for (i = 0; i < results.length; i++) {
+        for (let i = 0; i < results.length; i++) {
             index[results[i].index] = results[i];
 
-            var trackedImage = this._images[results[i].index];
+            const trackedImage = this._images[results[i].index];
             trackedImage._emulated = results[i].trackingState === 'emulated';
             trackedImage._measuredWidth = results[i].measuredWidthInMeters;
             trackedImage._dirtyTransform = true;
             trackedImage._pose = frame.getPose(results[i].imageSpace, this._manager._referenceSpace);
         }
 
-        for (i = 0; i < this._images.length; i++) {
+        for (let i = 0; i < this._images.length; i++) {
             if (this._images[i]._tracking && ! index[i]) {
                 this._images[i]._tracking = false;
                 this._images[i].fire('untracked');
