@@ -877,6 +877,7 @@ class GraphicsDevice extends EventHandler {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
+        this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
     }
 
     initializeRenderState() {
@@ -1748,7 +1749,7 @@ class GraphicsDevice extends EventHandler {
             case PIXELFORMAT_111110F: // WebGL2 only
                 texture._glFormat = gl.RGB;
                 texture._glInternalFormat = gl.R11F_G11F_B10F;
-                texture._glPixelType = gl.FLOAT;
+                texture._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
                 break;
             case PIXELFORMAT_SRGB: // WebGL2 only
                 texture._glFormat = gl.RGB;

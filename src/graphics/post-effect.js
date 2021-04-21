@@ -85,8 +85,8 @@ function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
     device.setRenderTarget(target);
     device.updateBegin();
 
-    var w = (target !== null) ? target.width : device.width;
-    var h = (target !== null) ? target.height : device.height;
+    var w = target ? target.width : device.width;
+    var h = target ? target.height : device.height;
     var x = 0;
     var y = 0;
 
