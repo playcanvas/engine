@@ -693,6 +693,11 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    // don't stringify GraphicsDevice to JSON by JSON.stringify
+    toJSON(key) {
+        return undefined;
+    }
+
     // #if _DEBUG
     updateMarker() {
         this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
