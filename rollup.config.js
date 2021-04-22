@@ -55,7 +55,7 @@ function shaderChunks(removeComments) {
                 code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
                 // Trim all whitespace from line endings
-                code = code.split('\n').map(line => line.trimEnd()).join('\n');
+                code = code.split('\n').map((line) => line.trimEnd()).join('\n');
 
                 // Restore final new line
                 code += '\n';
@@ -140,8 +140,11 @@ const target_release_es5 = {
         }),
         shaderChunks(true),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         spacesToTabs()
@@ -163,8 +166,11 @@ const target_release_es5min = {
         }),
         shaderChunks(true),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         terser()
@@ -186,8 +192,11 @@ const target_release_es6 = {
         }),
         shaderChunks(true),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(moduleOptions),
         spacesToTabs()
@@ -212,8 +221,11 @@ const target_debug = {
         }),
         shaderChunks(false),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         spacesToTabs()
@@ -237,8 +249,11 @@ const target_profiler = {
         }),
         shaderChunks(false),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         spacesToTabs()

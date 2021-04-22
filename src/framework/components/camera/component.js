@@ -155,7 +155,7 @@ class CameraComponent extends Component {
 
     dirtyLayerCompositionCameras() {
         // layer composition needs to update order
-        let layerComp = this.system.app.scene.layers;
+        const layerComp = this.system.app.scene.layers;
         layerComp._dirtyCameras = true;
     }
 
@@ -533,7 +533,7 @@ class CameraComponent extends Component {
     /**
      * @function
      * @name CameraComponent#startXr
-     * @description Attempt to start XR session with this camera
+     * @description Attempt to start XR session with this camera.
      * @param {string} type - The type of session. Can be one of the following:
      *
      * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has
@@ -543,7 +543,7 @@ class CameraComponent extends Component {
      * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
      * to the VR/AR device that is intended to be blended with the real-world environment.
      *
-     * @param {string} spaceType - reference space type. Can be one of the following:
+     * @param {string} spaceType - Reference space type. Can be one of the following:
      *
      * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
      * tracking capabilities.
@@ -561,7 +561,7 @@ class CameraComponent extends Component {
      * user is expected to move freely around their environment, potentially long
      * distances from their starting point.
      *
-     * @param {object} [options] - object with options for XR session initialization.
+     * @param {object} [options] - Object with options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
@@ -585,7 +585,7 @@ class CameraComponent extends Component {
     /**
      * @function
      * @name CameraComponent#endXr
-     * @description Attempt to end XR session of this camera
+     * @description Attempt to end XR session of this camera.
      * @param {callbacks.XrError} [callback] - Optional callback function called once
      * session is ended. The callback has one argument Error - it is null if successfully
      * ended XR session.

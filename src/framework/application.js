@@ -38,6 +38,7 @@ import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
+import { WorldClusters } from '../scene/world-clusters.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -443,6 +444,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
+        WorldClusters.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
@@ -534,10 +536,10 @@ class Application extends EventHandler {
 
                     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
-                    gl.blitFramebuffer( 0, 0, this.renderTarget.width, this.renderTarget.height,
-                                        0, 0, this.renderTarget.width, this.renderTarget.height,
-                                        gl.DEPTH_BUFFER_BIT,
-                                        gl.NEAREST);
+                    gl.blitFramebuffer(0, 0, this.renderTarget.width, this.renderTarget.height,
+                                       0, 0, this.renderTarget.width, this.renderTarget.height,
+                                       gl.DEPTH_BUFFER_BIT,
+                                       gl.NEAREST);
                 }
 
             });
@@ -660,17 +662,16 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition("default");
 
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
-
-        this.scene.layers = this.defaultLayerComposition;
+        const defaultLayerComposition = new LayerComposition(this.graphicsDevice, "default");
+        defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
+        defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
+        defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerUi);
+        this.scene.layers = defaultLayerComposition;
 
         this._immediateLayer = this.defaultLayerImmediate;
 
@@ -1050,7 +1051,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition("application");
+            var composition = new LayerComposition(this.graphicsDevice, "application");
 
             var layers = {};
             for (var key in props.layers) {
@@ -1403,6 +1404,8 @@ class Application extends EventHandler {
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
         stats.instancingTime = this.renderer._instancingTime;
+        stats.lightClusters = this.renderer._lightClusters;
+        stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
         for (var i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
@@ -1416,6 +1419,7 @@ class Application extends EventHandler {
         this.graphicsDevice._shaderSwitchesPerFrame = 0;
         this.renderer._cullTime = 0;
         this.renderer._layerCompositionUpdateTime = 0;
+        this.renderer._lightClustersTime = 0;
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
@@ -1624,7 +1628,7 @@ class Application extends EventHandler {
      * * {@link BAKE_COLOR}: single color lightmap
      * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
      * var settings = {
@@ -1831,7 +1835,7 @@ class Application extends EventHandler {
         var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
-        let lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
+        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
 
         // Append
         lineBatch.addLines(position, color);
@@ -2036,7 +2040,7 @@ class Application extends EventHandler {
         this._immediateData.renderWireCube(matrix, color, options);
     }
 
-    // // Draw lines forming sphere at this frame
+    // Draw lines forming sphere at this frame
     renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
         this._initImmediate();
         this._immediateData.renderWireSphere(center, radius, color, options);
@@ -2066,7 +2070,7 @@ class Application extends EventHandler {
         this._initImmediate();
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
-        let matrix = new Mat4();
+        const matrix = new Mat4();
         matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, height, 0.0));
 
         if (!material) {
@@ -2084,7 +2088,7 @@ class Application extends EventHandler {
     renderDepthTexture(x, y, width, height, options) {
         this._initImmediate();
 
-        let material = new Material();
+        const material = new Material();
         material.shader = this._immediateData.getDepthTextureShader();
         material.update();
 
@@ -2146,6 +2150,11 @@ class Application extends EventHandler {
         }
 
         ComponentSystem.destroy();
+
+        // layer composition
+        if (this.scene.layers) {
+            this.scene.layers.destroy();
+        }
 
         // destroy all texture resources
         var assets = this.assets.list();

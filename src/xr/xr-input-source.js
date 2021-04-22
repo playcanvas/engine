@@ -8,8 +8,8 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
-var quat = new Quat();
-var ids = 0;
+const quat = new Quat();
+let ids = 0;
 
 /**
  * @class
@@ -91,7 +91,7 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#select
      * @description Fired when input source has triggered primary action. This could be pressing a trigger button, or touching a screen.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
      * var ray = new pc.Ray();
      * inputSource.on('select', function (evt) {
@@ -106,28 +106,28 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#selectstart
      * @description Fired when input source has started to trigger primary action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#selectend
      * @description Fired when input source has ended triggerring primary action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#squeeze
      * @description Fired when input source has triggered squeeze action. This is associated with "grabbing" action on the controllers.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#squeezestart
      * @description Fired when input source has started to trigger sqeeze action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
      * inputSource.on('squeezestart', function (evt) {
      *     if (obj.containsPoint(inputSource.getPosition())) {
@@ -140,14 +140,14 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#squeezeend
      * @description Fired when input source has ended triggerring sqeeze action.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
     /**
      * @event
      * @name XrInputSource#hittest:add
      * @description Fired when new {@link XrHitTestSource} is added to the input source.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
      * @example
      * inputSource.on('hittest:add', function (hitTestSource) {
      *     // new hit test source is added
@@ -158,7 +158,7 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:remove
      * @description Fired when {@link XrHitTestSource} is removed to the the input source.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
      * @example
      * inputSource.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -169,9 +169,9 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {Vec3} position - Position of hit test
-     * @param {Quat} rotation - Rotation of hit test
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
+     * @param {Vec3} position - Position of hit test.
+     * @param {Quat} rotation - Rotation of hit test.
      * @example
      * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
      *     target.setPosition(position);
@@ -186,7 +186,7 @@ class XrInputSource extends EventHandler {
         } else {
             // grip
             if (this._xrInputSource.gripSpace) {
-                var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+                const gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
                     if (! this._grip) {
                         this._grip = true;
@@ -204,7 +204,7 @@ class XrInputSource extends EventHandler {
             }
 
             // ray
-            var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
+            const targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
             if (targetRayPose) {
                 this._dirtyRay = true;
                 this._rayLocal.origin.copy(targetRayPose.transform.position);
@@ -221,7 +221,7 @@ class XrInputSource extends EventHandler {
             this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
         }
 
-        var parent = this._manager.camera.parent;
+        const parent = this._manager.camera.parent;
         if (parent) {
             this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
         } else {
@@ -230,12 +230,12 @@ class XrInputSource extends EventHandler {
     }
 
     _updateRayTransforms() {
-        var dirty = this._dirtyRay;
+        const dirty = this._dirtyRay;
         this._dirtyRay = false;
 
-        var parent = this._manager.camera.parent;
+        const parent = this._manager.camera.parent;
         if (parent) {
-            var parentTransform = this._manager.camera.parent.getWorldTransform();
+            const parentTransform = this._manager.camera.parent.getWorldTransform();
 
             parentTransform.getTranslation(this._position);
             this._rotation.setFromMat4(parentTransform);
@@ -354,13 +354,11 @@ class XrInputSource extends EventHandler {
      * });
      */
     hitTestStart(options = {}) {
-        var self = this;
-
         options.profile = this._xrInputSource.profiles[0];
 
-        var callback = options.callback;
-        options.callback = function (err, hitTestSource) {
-            if (hitTestSource) self.onHitTestSourceAdd(hitTestSource);
+        const callback = options.callback;
+        options.callback = (err, hitTestSource) => {
+            if (hitTestSource) this.onHitTestSourceAdd(hitTestSource);
             if (callback) callback(err, hitTestSource);
         };
 
@@ -385,7 +383,7 @@ class XrInputSource extends EventHandler {
     }
 
     onHitTestSourceRemove(hitTestSource) {
-        var ind = this._hitTestSources.indexOf(hitTestSource);
+        const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     }
 

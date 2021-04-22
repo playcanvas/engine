@@ -623,14 +623,14 @@ class ParticleEmitter {
         this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
         var emitterPos = (this.node === null || this.localSpace) ? Vec3.ZERO : this.node.getPosition();
         if (this.emitterShape === EMITTERSHAPE_BOX) {
-            if (this.node === null || this.localSpace){
+            if (this.node === null || this.localSpace) {
                 spawnMatrix.setTRS(Vec3.ZERO, Quat.IDENTITY, this.spawnBounds);
             } else {
                 spawnMatrix.setTRS(Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
             }
-            extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
-            extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
-            extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
+            extentsInnerRatioUniform[0] = this.emitterExtents.x !== 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+            extentsInnerRatioUniform[1] = this.emitterExtents.y !== 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+            extentsInnerRatioUniform[2] = this.emitterExtents.z !== 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
         }
         for (i = 0; i < this.numParticles; i++) {
             this._cpuUpdater.calcSpawnPosition(this.particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, i);
@@ -842,7 +842,7 @@ class ParticleEmitter {
             // so wrong shader is being compiled.
             // To fix it, we need to check activeCamera!=emitter.camera in shader init too
             if (this.emitter.scene) {
-                if (this.emitter.camera != this.emitter.scene._activeCamera) {
+                if (this.emitter.camera !== this.emitter.scene._activeCamera) {
                     this.emitter.camera = this.emitter.scene._activeCamera;
                     this.emitter.onChangeCamera();
                 }
@@ -872,7 +872,7 @@ class ParticleEmitter {
                 animTex: this.emitter._isAnimated(),
                 animTexLoop: this.emitter.animLoop,
                 pack8: this.emitter.pack8,
-                customFace: this.emitter.orientation != PARTICLEORIENTATION_SCREEN
+                customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
             });
             this.shader = shader;
         };
@@ -943,12 +943,12 @@ class ParticleEmitter {
 
     _compParticleFaceParams() {
         var tangent, binormal;
-        if (this.orientation == PARTICLEORIENTATION_SCREEN) {
+        if (this.orientation === PARTICLEORIENTATION_SCREEN) {
             tangent = new Float32Array([1, 0, 0]);
             binormal = new Float32Array([0, 0, 1]);
         } else {
             var n;
-            if (this.orientation == PARTICLEORIENTATION_WORLD) {
+            if (this.orientation === PARTICLEORIENTATION_WORLD) {
                 n = this.particleNormal.normalize();
             } else {
                 var emitterMat = this.node === null ?
@@ -956,7 +956,7 @@ class ParticleEmitter {
                 n = emitterMat.transformVector(this.particleNormal).normalize();
             }
             var t = new Vec3(1, 0, 0);
-            if (Math.abs(t.dot(n)) == 1)
+            if (Math.abs(t.dot(n)) === 1)
                 t.set(0, 0, 1);
             var b = new Vec3().cross(n, t).normalize();
             t.cross(b, n).normalize();
@@ -1157,17 +1157,17 @@ class ParticleEmitter {
         }
 
         if (this.scene) {
-            if (this.camera != this.scene._activeCamera) {
+            if (this.camera !== this.scene._activeCamera) {
                 this.camera = this.scene._activeCamera;
                 this.onChangeCamera();
             }
         }
 
         if (this.emitterShape === EMITTERSHAPE_BOX) {
-            extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
-            extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
-            extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
-            if (this.meshInstance.node === null){
+            extentsInnerRatioUniform[0] = this.emitterExtents.x !== 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+            extentsInnerRatioUniform[1] = this.emitterExtents.y !== 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+            extentsInnerRatioUniform[2] = this.emitterExtents.z !== 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
+            if (this.meshInstance.node === null) {
                 spawnMatrix.setTRS(Vec3.ZERO, Quat.IDENTITY, this.emitterExtents);
             } else {
                 spawnMatrix.setTRS(Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.emitterExtents).mul(this.meshInstance.node.localScale));

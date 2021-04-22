@@ -202,7 +202,7 @@ class SceneRegistry {
      * @param {SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
      */
     unloadSceneData(sceneItem) {
-        if (sceneItem instanceof String) {
+        if (typeof sceneItem === 'string') {
             sceneItem = this.findByUrl(sceneItem);
         }
 

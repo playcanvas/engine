@@ -63,16 +63,16 @@ var _blockSizeTable = null;
  * * {@link TEXTUREPROJECTION_EQUIRECT}
  * * {@link TEXTUREPROJECTION_OCTAHEDRAL}
  * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is specified, otherwise {@link TEXTUREPROJECTION_NONE}.
- * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
- * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
- * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
- * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link ADDRESS_REPEAT}
- * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link ADDRESS_REPEAT}
- * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link ADDRESS_REPEAT}
- * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
+ * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}.
+ * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}.
+ * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1.
+ * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link ADDRESS_REPEAT}.
+ * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link ADDRESS_REPEAT}.
+ * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link ADDRESS_REPEAT}.
+ * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true.
  * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
  * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
- * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}
+ * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}.
  * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
  * seam fixing shader code to look right. Defaults to false.
  * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures

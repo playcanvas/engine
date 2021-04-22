@@ -139,11 +139,11 @@ class RenderComponent extends Component {
         let skinInstance = null;
 
         // get an array of cached object for the rootBone
-        let cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
+        const cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
         if (cachedObjArray) {
 
             // find matching skin
-            let cachedObj = cachedObjArray.find(element => element.skin === skin);
+            const cachedObj = cachedObjArray.find((element) => element.skin === skin);
             if (cachedObj) {
                 cachedObj.incRefCount();
                 skinInstance = cachedObj.skinInstance;
@@ -164,7 +164,7 @@ class RenderComponent extends Component {
         }
 
         // find entry for the skin
-        let cachedObj = cachedObjArray.find(element => element.skin === skin);
+        let cachedObj = cachedObjArray.find((element) => element.skin === skin);
         if (!cachedObj) {
             cachedObj = new SkinInstanceCachedObject(skin, skinInstance);
             cachedObjArray.push(cachedObj);
@@ -181,15 +181,15 @@ class RenderComponent extends Component {
             if (rootBone) {
 
                 // an array for boot bone
-                let cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
+                const cachedObjArray = RenderComponent._skinInstanceCache.get(rootBone);
                 if (cachedObjArray) {
 
                     // actual skin instance
-                    let cachedObjIndex = cachedObjArray.findIndex(element => element.skinInstance === skinInstance);
+                    const cachedObjIndex = cachedObjArray.findIndex((element) => element.skinInstance === skinInstance);
                     if (cachedObjIndex >= 0) {
 
                         // dec ref on the object
-                        let cachedObj = cachedObjArray[cachedObjIndex];
+                        const cachedObj = cachedObjArray[cachedObjIndex];
                         cachedObj.decRefCount();
 
                         // last reference, needs to be destroyed
@@ -415,7 +415,7 @@ class RenderComponent extends Component {
     _clearSkinInstances() {
 
         for (var i = 0; i < this._meshInstances.length; i++) {
-            let meshInstance = this._meshInstances[i];
+            const meshInstance = this._meshInstances[i];
 
             // remove it from the cache
             RenderComponent.removeCachedSkinInstance(meshInstance.skinInstance);
@@ -611,7 +611,7 @@ class RenderComponent extends Component {
 
         if (this._meshInstances) {
 
-            let mi = this._meshInstances;
+            const mi = this._meshInstances;
             for (var i = 0; i < mi.length; i++) {
 
                 // if mesh instance was created without a node, assign it here

@@ -189,7 +189,6 @@ class ScrollbarComponent extends Component {
  * @description Fired whenever the scroll value changes.
  * @param {number} value - The current scroll value.
  */
-
 }
 
 export { ScrollbarComponent };

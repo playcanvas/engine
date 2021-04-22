@@ -19,6 +19,9 @@ class RenderAction {
         // render target this render action renders to (taken from either camera or layer)
         this.renderTarget = null;
 
+        // light clusters (type WorldClusters)
+        this.lightClusters = null;
+
         // clear flags
         this.clearColor = false;
         this.clearDepth = false;
@@ -40,6 +43,14 @@ class RenderAction {
         this.directionalLightsIndices = [];
     }
 
+    // prepares render action for re-use
+    reset() {
+        this.lightClusters = null;
+        this.directionalLightsSet.clear();
+        this.directionalLights.length = 0;
+        this.directionalLightsIndices.length = 0;
+    }
+
     // store directional lights that are needed for this camera based on layers it renders
     collectDirectionalLights(cameraLayers, dirLights, allLights) {
 
@@ -48,7 +59,7 @@ class RenderAction {
         this.directionalLightsIndices.length = 0;
 
         for (let i = 0; i < dirLights.length; i++) {
-            let light = dirLights[i];
+            const light = dirLights[i];
             for (let l = 0; l < cameraLayers.length; l++) {
 
                 // if layer has the light

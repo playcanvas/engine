@@ -7,7 +7,7 @@ class GlbModelParser {
     }
 
     parse(data) {
-        var glb = GlbParser.parse("filename.glb", data, this._device);
+        const glb = GlbParser.parse("filename.glb", data, this._device);
         if (!glb) {
             return null;
         }

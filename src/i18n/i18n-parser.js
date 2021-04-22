@@ -1,6 +1,4 @@
 class I18nParser {
-    constructor() {}
-
     _validate(data) {
         if (!data.header) {
             throw new Error('pc.I18n#addData: Missing "header" field');

@@ -547,10 +547,10 @@ OrbitCameraInputTouch.prototype.onTouchStartEndCancel = function (event) {
     // We only care about the first touch for camera rotation. As the user touches the screen,
     // we stored the current touch position
     var touches = event.touches;
-    if (touches.length == 1) {
+    if (touches.length === 1) {
         this.lastTouchPoint.set(touches[0].x, touches[0].y);
 
-    } else if (touches.length == 2) {
+    } else if (touches.length === 2) {
         // If there are 2 touches on the screen, then set the pinch distance
         this.lastPinchDistance = this.getPinchDistance(touches[0], touches[1]);
         this.calcMidPoint(touches[0], touches[1], this.lastPinchMidPoint);
@@ -590,7 +590,7 @@ OrbitCameraInputTouch.prototype.onTouchMove = function (event) {
     // We only care about the first touch for camera rotation. Work out the difference moved since the last event
     // and use that to update the camera target position
     var touches = event.touches;
-    if (touches.length == 1) {
+    if (touches.length === 1) {
         var touch = touches[0];
 
         this.orbitCamera.pitch -= (touch.y - this.lastTouchPoint.y) * this.orbitSensitivity;
@@ -598,7 +598,7 @@ OrbitCameraInputTouch.prototype.onTouchMove = function (event) {
 
         this.lastTouchPoint.set(touch.x, touch.y);
 
-    } else if (touches.length == 2) {
+    } else if (touches.length === 2) {
         // Calculate the difference in pinch distance since the last event
         var currentPinchDistance = this.getPinchDistance(touches[0], touches[1]);
         var diffInPinchDistance = currentPinchDistance - this.lastPinchDistance;

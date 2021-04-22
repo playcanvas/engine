@@ -196,7 +196,7 @@ class IndexBuffer {
     _lockTypedArray() {
         var lock = this.lock();
         var indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
-            (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock) );
+            (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock));
         return indices;
     }
 

@@ -117,7 +117,7 @@ class AnimEvaluator {
      * @function
      * @name AnimEvaluator#addClip
      * @description Add a clip to the evaluator.
-     * @param {AnimClip} clip - the clip to add to the evaluator.
+     * @param {AnimClip} clip - The clip to add to the evaluator.
      */
     addClip(clip) {
         var targets = this._targets;
@@ -173,7 +173,7 @@ class AnimEvaluator {
      * @function
      * @name AnimEvaluator#removeClip
      * @description Remove a clip from the evaluator.
-     * @param {number} index - index of the clip to remove.
+     * @param {number} index - Index of the clip to remove.
      */
     removeClip(index) {
         var targets = this._targets;
@@ -222,8 +222,8 @@ class AnimEvaluator {
      * @function
      * @name AnimEvaluator#findClip
      * @description Returns the first clip which matches the given name, or null if no such clip was found.
-     * @param {string} name - name of the clip to find.
-     * @returns {AnimClip|null} - the clip with the given name or null if no such clip was found.
+     * @param {string} name - Name of the clip to find.
+     * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
      */
     findClip(name) {
         var clips = this._clips;
@@ -241,7 +241,7 @@ class AnimEvaluator {
         this._targets = {};
         var clips = [...this.clips];
         this.removeClips();
-        clips.forEach(clip => {
+        clips.forEach((clip) => {
             this.addClip(clip);
         });
     }
@@ -252,7 +252,7 @@ class AnimEvaluator {
      * @name AnimEvaluator#update
      * @description Evaluator frame update function. All the attached {@link AnimClip}s are evaluated,
      * blended and the results set on the {@link AnimTarget}.
-     * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
+     * @param {number} deltaTime - The amount of time that has passed since the last update, in seconds.
      */
     update(deltaTime) {
         // copy clips

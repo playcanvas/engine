@@ -96,7 +96,7 @@ class XrDepthSensing extends EventHandler {
     /**
      * @event
      * @name XrDepthSensing#resize
-     * @description Fired when the depth sensing texture been resized. {@link XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
+     * @description Fired when the depth sensing texture been resized. The {@link XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
      * @param {number} width - The new width of the depth texture in pixels.
      * @param {number} height - The new height of the depth texture in pixels.
      * @example
@@ -122,7 +122,7 @@ class XrDepthSensing extends EventHandler {
 
     _updateTexture() {
         if (this._depthInfo) {
-            var resized = false;
+            let resized = false;
 
             // changed resolution
             if (this._depthInfo.width !== this._texture.width || this._depthInfo.height !== this._texture.height) {
@@ -132,7 +132,7 @@ class XrDepthSensing extends EventHandler {
                 resized = true;
             }
 
-            var dataBuffer = this._depthInfo.data;
+            const dataBuffer = this._depthInfo.data;
             this._depthBuffer = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
             this._texture._levels[0] = this._depthBuffer;
             this._texture.upload();
@@ -152,7 +152,11 @@ class XrDepthSensing extends EventHandler {
     update(frame, view) {
         if (view) {
             if (! this._depthInfo) this._matrixDirty = true;
-            this._depthInfo = frame.getDepthInformation(view);
+            try {
+                this._depthInfo = frame.getDepthInformation(view);
+            } catch (ex) {
+                this._depthInfo = null;
+            }
         } else {
             if (this._depthInfo) this._matrixDirty = true;
             this._depthInfo = null;
@@ -182,8 +186,8 @@ class XrDepthSensing extends EventHandler {
     /**
      * @function
      * @name XrDepthSensing#getDepth
-     * @param {number} x - x coordinate of pixel in depth texture.
-     * @param {number} y - y coordinate of pixel in depth texture.
+     * @param {number} x - X coordinate of pixel in depth texture.
+     * @param {number} y - Y coordinate of pixel in depth texture.
      * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link XrDepthSensing#width} and {@link XrDepthSensing#height}. This is not using a GPU texture and is a CPU path.
      * @example
      * var depth = app.xr.depthSensing.getDepth(x, y);

@@ -21,6 +21,8 @@ import {
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
+import { WorldClusters } from '../../../scene/world-clusters.js';
+import { LayerComposition } from '../../../scene/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -817,7 +819,7 @@ var standard = {
         }
 
         // GENERATE FRAGMENT SHADER
-        if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
+        if (options.forceFragmentPrecision && options.forceFragmentPrecision !== "highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;
 
@@ -1014,7 +1016,7 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(function (light){
+        var hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
@@ -1259,7 +1261,7 @@ var standard = {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
-            if (options.refraction){
+            if (options.refraction) {
                 code += chunks.refractionPS;
             }
         }
@@ -1317,7 +1319,7 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if ( hasAreaLights ) code += chunks.ltc;
+            if (hasAreaLights) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
@@ -1391,12 +1393,23 @@ var standard = {
                 code += (options.enableGGXSpecular) ? chunks.reflDirAnisoPS : chunks.reflDirPS;
             }
         }
+
         var hasPointLights = false;
         var usesLinearFalloff = false;
         var usesInvSquaredFalloff = false;
         var usesSpot = false;
         var usesCookie = false;
         var usesCookieNow;
+
+        // clustered lighting
+        if (LayerComposition.clusteredLightingEnabled) {
+
+            usesSpot = true;
+
+            const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
+            code += `#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += chunks.clusteredLightPS;
+        }
 
         if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
 
@@ -1518,7 +1531,7 @@ var standard = {
                 code += "   addReflection();\n";
             }
 
-            if (hasAreaLights){
+            if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
                 code += "   dReflection.rgb *= dSpecularity;\n";
@@ -1530,7 +1543,24 @@ var standard = {
             // light source shape support
             var shapeString = '';
 
+            // clustered lighting
+            if (LayerComposition.clusteredLightingEnabled) {
+
+                usesLinearFalloff = true;
+                hasPointLights = true;
+                code += chunks.clusteredLightLoopPS;
+            }
+
             for (i = 0; i < options.lights.length; i++) {
+
+                light = options.lights[i];
+                lightType = light._type;
+
+                // if clustered lights are used, skip normal lights other than directional
+                if (LayerComposition.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
+                    continue;
+                }
+
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (omni shadows will use drastically different genShadowCoord)
@@ -1539,8 +1569,6 @@ var standard = {
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
-                light = options.lights[i];
-                lightType = light._type;
                 usesCookieNow = false;
 
                 if (hasAreaLights && light._shape) {
@@ -1682,10 +1710,10 @@ var standard = {
                 } else {
                     if (hasAreaLights) {
                         // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.clearCoat > 0) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     } else {
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.clearCoat > 0) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 }
@@ -1699,7 +1727,7 @@ var standard = {
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                if (options.clearCoat > 0 ) {
+                if (options.clearCoat > 0) {
                     code += "   ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {

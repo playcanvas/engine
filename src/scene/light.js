@@ -14,8 +14,6 @@ import {
     LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
 
-import { Application } from '../framework/application.js';
-
 var spotCenter = new Vec3();
 var spotEndPoint = new Vec3();
 var tmpVec = new Vec3();
@@ -63,7 +61,9 @@ class LightRenderData {
  * @classdesc A light.
  */
 class Light {
-    constructor() {
+    constructor(graphicsDevice) {
+        this.device = graphicsDevice;
+
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
@@ -150,7 +150,7 @@ class Light {
 
         // returns existing
         for (let i = 0; i < this._renderData.length; i++) {
-            let current = this._renderData[i];
+            const current = this._renderData[i];
             if (current.camera === camera && current.face === face) {
                 return current;
             }
@@ -170,7 +170,7 @@ class Light {
      * @returns {Light} A cloned Light.
      */
     clone() {
-        var clone = new Light();
+        var clone = new Light(this.device);
 
         // Clone Light properties
         clone.type = this._type;
@@ -262,7 +262,7 @@ class Light {
             var angle = this._outerConeAngle;
             var node = this._node;
 
-            var scl = Math.abs( Math.sin(angle * math.DEG_TO_RAD) * range );
+            var scl = Math.abs(Math.sin(angle * math.DEG_TO_RAD) * range);
 
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);
@@ -438,7 +438,7 @@ class Light {
         if (this._shadowType === value)
             return;
 
-        var device = Application.getApplication().graphicsDevice;
+        var device = this.device;
 
         if (this._type === LIGHTTYPE_OMNI)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
@@ -492,11 +492,10 @@ class Light {
         if (this._shadowResolution === value)
             return;
 
-        var device = Application.getApplication().graphicsDevice;
         if (this._type === LIGHTTYPE_OMNI) {
-            value = Math.min(value, device.maxCubeMapSize);
+            value = Math.min(value, this.device.maxCubeMapSize);
         } else {
-            value = Math.min(value, device.maxTextureSize);
+            value = Math.min(value, this.device.maxTextureSize);
         }
         this._shadowResolution = value;
     }
