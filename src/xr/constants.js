@@ -169,15 +169,15 @@ export const XRDEPTHSENSINGUSAGE_GPU = 'gpu-optimized';
 /**
  * @constant
  * @type string
- * @name XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA
+ * @name XRDEPTHSENSINGFORMAT_L8A8
  * @description Luminance Alpha - indicates that depth sensing preferred raw data format is Luminance Alpha. This format is guaranteed to be supported.
  */
-export const XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA = 'luminance-alpha';
+export const XRDEPTHSENSINGFORMAT_L8A8 = 'luminance-alpha';
 
 /**
  * @constant
  * @type string
- * @name XRDEPTHSENSINGDATAFORMAT_FLOAT32
+ * @name XRDEPTHSENSINGFORMAT_F32
  * @description Float 32 - indicates that depth sensing preferred raw data format is Float 32.
  */
-export const XRDEPTHSENSINGDATAFORMAT_FLOAT32 = 'float32';
+export const XRDEPTHSENSINGFORMAT_F32 = 'float32';

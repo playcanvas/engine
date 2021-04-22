@@ -6,7 +6,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
-import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA } from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
@@ -184,7 +184,7 @@ class XrManager extends EventHandler {
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be choosen by underlying depth sensing system.
-     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGDATAFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be choosen by underlying depth sensing system.
+     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be choosen by underlying depth sensing system.
      */
     start(camera, type, spaceType, options) {
         let callback = options;
@@ -239,7 +239,7 @@ class XrManager extends EventHandler {
                 opts.optionalFeatures.push('depth-sensing');
 
                 const usagePreference = [XRDEPTHSENSINGUSAGE_CPU];
-                const dataFormatPreference = [XRDEPTHSENSINGDATAFORMAT_LUMINANCEALPHA];
+                const dataFormatPreference = [XRDEPTHSENSINGFORMAT_L8A8];
 
                 if (options.depthSensing.usagePreference) {
                     const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
