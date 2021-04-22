@@ -1527,7 +1527,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
-    let renders = [];
+    const renders = [];
     for (let i = 0; i < meshes.length; i++) {
         renders[i] = new Render();
         renders[i].meshes = meshes[i];
