@@ -238,7 +238,6 @@ class LayerComposition extends EventHandler {
                 }
 
                 layer._dirty = false;
-                layer._version++;
             }
 
             this._dirty = false;
