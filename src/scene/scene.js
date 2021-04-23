@@ -152,8 +152,10 @@ Scene.prototype.constructor = Scene;
 
 Scene.prototype.destroy = function () {
     this.root = null;
-    this.defaultMaterial.destroy();
-    this.defaultMaterial = null;
+    if (this.defaultMaterial){
+        this.defaultMaterial.destroy();
+        this.defaultMaterial = null;
+    }
     this.off();
 };
 
