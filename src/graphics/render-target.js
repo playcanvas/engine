@@ -1,4 +1,4 @@
-import { instance} from '../core/instance-utils.js';
+import { instance } from '../core/instance-utils.js';
 
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
