@@ -232,7 +232,7 @@ class Picker {
      * in any way, {@link Picker#prepare} does not need to be called again.
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
-     * @param {[]Layer} [layers] - Layers from which objects will be picked. If not supplied, all layers the provided camera renders will be used.
+     * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers the provided camera renders will be used.
      */
     prepare(camera, scene, layers) {
 
