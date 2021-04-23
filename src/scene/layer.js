@@ -271,7 +271,6 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
-        this._version = 0;
         this._lightCube = null;
     }
 

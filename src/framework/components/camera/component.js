@@ -5,6 +5,29 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
+const properties = [
+    { name: 'aspectRatio', readonly: false },
+    { name: 'aspectRatioMode', readonly: false },
+    { name: 'calculateProjection', readonly: false },
+    { name: 'calculateTransform', readonly: false },
+    { name: 'clearColor', readonly: false },
+    { name: 'cullFaces', readonly: false },
+    { name: 'farClip', readonly: false },
+    { name: 'flipFaces', readonly: false },
+    { name: 'fov', readonly: false },
+    { name: 'frustum', readonly: true },
+    { name: 'frustumCulling', readonly: false },
+    { name: 'horizontalFov', readonly: false },
+    { name: 'nearClip', readonly: false },
+    { name: 'orthoHeight', readonly: false },
+    { name: 'projection', readonly: false },
+    { name: 'projectionMatrix', readonly: true },
+    { name: 'rect', readonly: false },
+    { name: 'scissorRect', readonly: false },
+    { name: 'viewMatrix', readonly: true },
+    { name: 'vrDisplay', readonly: false }
+];
+
 /**
  * @component
  * @class
@@ -603,31 +626,33 @@ class CameraComponent extends Component {
 
         this._camera.xr.end(callback);
     }
+
+    // function to copy properties from the source CameraComponent.
+    // properties not copied: postEffects
+    // inherited properties not copied (all): system, entity, enabled)
+    copy(source) {
+
+        // copy data driven properties
+        properties.forEach((property) => {
+            if (!property.readonly) {
+                const name = property.name;
+                this[name] = source[name];
+            }
+        });
+
+        // other properties
+        this.clearColorBuffer = source.clearColorBuffer;
+        this.clearDepthBuffer = source.clearDepthBuffer;
+        this.clearStencilBuffer = source.clearStencilBuffer;
+        this.disablePostEffectsLayer = source.disablePostEffectsLayer;
+        this.layers = source.layers;
+        this.priority = source.priority;
+        this.renderTarget = source.renderTarget;
+    }
 }
 
 // for common properties, create getters and setters which use this._camera as a storage for their values
-[
-    { name: 'aspectRatio', readonly: false },
-    { name: 'aspectRatioMode', readonly: false },
-    { name: 'calculateProjection', readonly: false },
-    { name: 'calculateTransform', readonly: false },
-    { name: 'clearColor', readonly: false },
-    { name: 'cullFaces', readonly: false },
-    { name: 'farClip', readonly: false },
-    { name: 'flipFaces', readonly: false },
-    { name: 'fov', readonly: false },
-    { name: 'frustum', readonly: true },
-    { name: 'frustumCulling', readonly: false },
-    { name: 'horizontalFov', readonly: false },
-    { name: 'nearClip', readonly: false },
-    { name: 'orthoHeight', readonly: false },
-    { name: 'projection', readonly: false },
-    { name: 'projectionMatrix', readonly: true },
-    { name: 'rect', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'viewMatrix', readonly: true },
-    { name: 'vrDisplay', readonly: false }
-].forEach(function (property) {
+properties.forEach(function (property) {
     var name = property.name;
     var options = {};
 

@@ -240,6 +240,7 @@ class GraphNode extends EventHandler {
         clone.name = this.name;
 
         var tags = this.tags._list;
+        clone.tags.clear();
         for (var i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
 
@@ -274,6 +275,12 @@ class GraphNode extends EventHandler {
         var clone = new GraphNode();
         this._cloneInternal(clone);
         return clone;
+    }
+
+    // copies properties from source to this
+    copy(source) {
+        source._cloneInternal(this);
+        return this;
     }
 
     /**
