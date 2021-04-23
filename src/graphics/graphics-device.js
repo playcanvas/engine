@@ -3480,6 +3480,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * @private
      * @function
      * @name GraphicsDevice#resizeCanvas
      * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
