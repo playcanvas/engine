@@ -1,6 +1,6 @@
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
+import { instance} from '../core/instance-utils.js';
 
-import { GraphicsDevice } from './graphics-device.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
 var defaultOptions = {
     depth: true,
@@ -53,7 +53,7 @@ class RenderTarget {
         var _arg2 = arguments[1];
         var _arg3 = arguments[2];
 
-        if (options instanceof GraphicsDevice) {
+        if (instance.of(options, "GraphicsDevice")) {
             // old constructor
             this._colorBuffer = _arg2;
             options = _arg3;

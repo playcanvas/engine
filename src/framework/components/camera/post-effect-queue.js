@@ -1,4 +1,5 @@
 import { now } from '../../../core/time.js';
+import { instance } from '../../../core/instance-utils.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
@@ -13,7 +14,7 @@ class PostEffect {
         this.effect = effect;
         this.inputTarget = inputTarget;
         this.outputTarget = null;
-        this.name = effect.constructor.name;
+        this.name = instance.name(effect);
     }
 }
 

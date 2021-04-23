@@ -1,4 +1,5 @@
 import { Asset } from '../../../asset/asset.js';
+import { instance } from '../../../core/instance-utils.js';
 
 import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
 import { AnimController } from '../../../anim/controller/anim-controller.js';
@@ -370,7 +371,7 @@ class AnimComponent extends Component {
                 console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
             }
             // #endif
-        } else if (value?.constructor.name === 'Entity') {
+        } else if (instance.of(value, 'Entity')) {
             this.data.rootBone = value;
         } else {
             this.data.rootBone = null;
