@@ -116,9 +116,6 @@ const maxBlurSize = 25;
 var keyA, keyB;
 
 var _autoInstanceBuffer = null;
-var skipRenderCamera = null;
-var _skipRenderCounter = 0;
-var skipRenderAfter = 0;
 
 var _skinUpdateIndex = 0;
 
@@ -519,6 +516,15 @@ class ForwardRenderer {
         // placeholder texture for area light LUTs
         this._createAreaLightPlaceholderLuts();
     }
+
+    // #if _PROFILER
+    // Static properties used by the Profiler in the Editor's Launch Page
+    static skipRenderCamera = null;
+
+    static _skipRenderCounter = 0;
+
+    static skipRenderAfter = 0;
+    // #endif
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {
@@ -1920,9 +1926,9 @@ class ForwardRenderer {
             } else {
 
                 // #if _PROFILER
-                if (camera === skipRenderCamera) {
-                    if (_skipRenderCounter >= skipRenderAfter) continue;
-                    _skipRenderCounter++;
+                if (camera === ForwardRenderer.skipRenderCamera) {
+                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) continue;
+                    ForwardRenderer._skipRenderCounter++;
                 }
                 if (layer) {
                     if (layer._skipRenderCounter >= layer.skipRenderAfter) continue;
