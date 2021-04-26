@@ -225,7 +225,6 @@ export { CameraComponentSystem } from './framework/components/camera/system.js';
 export { CollisionComponent } from './framework/components/collision/component.js';
 export { CollisionComponentSystem } from './framework/components/collision/system.js';
 export { Component } from './framework/components/component.js';
-export { ComponentData } from './framework/components/data.js';
 export { ComponentSystem } from './framework/components/system.js';
 export { ComponentSystemRegistry } from './framework/components/registry.js';
 export * from './framework/components/element/constants.js';
