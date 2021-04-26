@@ -1355,9 +1355,13 @@ class Application extends EventHandler {
         // #endif
 
         this.fire("prerender");
+
         this.root.syncHierarchy();
         this.batcher.updateAll();
+
+        ForwardRenderer._skipRenderCounter = 0;
         this.renderer.renderComposition(this.scene.layers);
+
         this.fire("postrender");
 
         // #if _PROFILER
