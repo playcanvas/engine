@@ -1039,6 +1039,7 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
             extractTextureTransform(baseColorTexture, material, ['diffuse', 'opacity']);
         }
         material.useMetalness = true;
+
         if (pbrData.hasOwnProperty('metallicFactor')) {
             material.metalness = pbrData.metallicFactor;
         } else {
@@ -1059,6 +1060,8 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
         }
 
         material.chunks.glossPS = glossChunk;
+
+        material.useEnvBrdf = true;
     }
 
     if (gltfMaterial.hasOwnProperty('normalTexture')) {

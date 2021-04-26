@@ -140,6 +140,7 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.customFragmentShader = stdMat.customFragmentShader;
     options.refraction = !!stdMat.refraction;
     options.useMetalness = stdMat.useMetalness;
+    options.useEnvBrdf = stdMat.useEnvBrdf;
     options.enableGGXSpecular = stdMat.enableGGXSpecular;
     options.msdf = !!stdMat.msdfMap;
     options.twoSidedLighting = stdMat.twoSidedLighting;
