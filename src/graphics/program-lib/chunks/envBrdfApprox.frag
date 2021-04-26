@@ -1,7 +1,5 @@
-float dNormalDotView;
-
 //Adapted from https://www.unrealengine.com/en-US/blog/physically-based-shading-on-mobile
-vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
+vec3 envBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 {
 	const vec4 c0 = vec4( -1, -0.0275, -0.572, 0.022 );
 	const vec4 c1 = vec4( 1, 0.0425, 1.04, -0.04 );
@@ -11,7 +9,7 @@ vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 	return SpecularColor * AB.x + AB.y;
 }
 
-vec3 EnvBRDF(vec3 specularColor, float glossiness)
+vec3 envBRDF(vec3 specularColor, float glossiness, vec3 normal)
 {
-    return EnvBRDFApprox(specularColor, 1.0-glossiness, dNormalDotView);
+    return envBRDFApprox(specularColor, 1.0-glossiness, dot(normal, dViewDirW) );
 }
