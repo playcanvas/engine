@@ -513,6 +513,7 @@ class ForwardRenderer {
         this._createAreaLightPlaceholderLuts();
     }
 
+    // Static properties used by the Profiler in the Editor's Launch Page
     static skipRenderCamera = null;
 
     static _skipRenderCounter = 0;
