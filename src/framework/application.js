@@ -421,6 +421,8 @@ class Application extends EventHandler {
         this.autoRender = true;
         this.renderNextFrame = false;
 
+        this.timeBetweenCanvasSizeCheck = 0.2;
+
         // enable if you want entity type script attributes
         // to not be re-mapped when an entity is cloned
         this.useLegacyScriptAttributeCloning = script.legacy;
@@ -2258,6 +2260,7 @@ var _frameEndData = {};
 var makeTick = function (_app) {
     var application = _app;
     var frameRequest;
+    var timeToNextCanvasSizeCheck = 0;
 
     return function (timestamp, frame) {
         if (!application.graphicsDevice)
@@ -2275,9 +2278,11 @@ var makeTick = function (_app) {
 
         var currentTime = application._processTimestamp(timestamp) || now();
         var ms = currentTime - (application._time || currentTime);
-        var dt = ms / 1000.0;
-        dt = math.clamp(dt, 0, application.maxDeltaTime);
-        dt *= application.timeScale;
+        var realDt = ms / 1000.0;
+
+        var scaledDt = realDt;
+        scaledDt = math.clamp(scaledDt, 0, application.maxDeltaTime);
+        scaledDt *= application.timeScale;
 
         application._time = currentTime;
 
@@ -2293,7 +2298,7 @@ var makeTick = function (_app) {
         if (application.graphicsDevice.contextLost)
             return;
 
-        application._fillFrameStatsBasic(currentTime, dt, ms);
+        application._fillFrameStatsBasic(currentTime, scaledDt, ms);
 
         // #if _PROFILER
         application._fillFrameStats();
@@ -2308,23 +2313,30 @@ var makeTick = function (_app) {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        application.update(dt);
+        application.update(scaledDt);
 
         application.fire("framerender");
 
         if (application.autoRender || application.renderNextFrame) {
             // In AUTO mode the resolution is changed to match the canvas size
             if (application._resolutionMode === RESOLUTION_AUTO) {
-                // Check if the canvas DOM has changed size
-                const canvas = application.graphicsDevice.canvas;
-                const pixelRatio = application.graphicsDevice.maxPixelRatio;
+                timeToNextCanvasSizeCheck -= realDt;
+                if (timeToNextCanvasSizeCheck <= 0) {
+                    // Check if the canvas DOM has changed size
+                    const canvas = application.graphicsDevice.canvas;
+                    const pixelRatio = application.graphicsDevice.maxPixelRatio;
 
-                const clientWidth = canvas.clientWidth;
-                const clientHeight = canvas.clientHeight;
+                    const clientWidth = canvas.clientWidth;
+                    const clientHeight = canvas.clientHeight;
 
-                if (canvas.width !== (clientWidth * pixelRatio) || canvas.height !== (clientHeight * pixelRatio)) {
-                    application.graphicsDevice.resizeCanvas(clientWidth, clientHeight);
+                    if (canvas.width !== (clientWidth * pixelRatio) || canvas.height !== (clientHeight * pixelRatio)) {
+                        application.graphicsDevice.resizeCanvas(clientWidth, clientHeight);
+                    }
+
+                    timeToNextCanvasSizeCheck = application.timeBetweenCanvasSizeCheck;
                 }
+            } else {
+                timeToNextCanvasSizeCheck = 0;
             }
 
             application.render();
