@@ -1,4 +1,5 @@
 // POLYFILLS
+import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
 import './polyfill/array-find-index.js';
 import './polyfill/math-log2.js';
@@ -8,6 +9,7 @@ import './polyfill/object-assign.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
+import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
@@ -79,6 +81,7 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
+export { WorldClusters } from './scene/world-clusters.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';

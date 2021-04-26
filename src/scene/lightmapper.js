@@ -279,8 +279,6 @@ class Lightmapper {
         return tex;
     }
 
-    // TODO: report warning on nodes set up for baking that don't have uv1
-
     // recursively walk the hierarchy of nodes starting at the specified node
     // collect all nodes that need to be lightmapped to bakeNodes array
     // collect all nodes with geometry to allNodes array
@@ -314,6 +312,11 @@ class Lightmapper {
             for (let i = 0; i < meshInstances.length; i++) {
                 if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
                     hasUv1 = false;
+
+                    // #if _DEBUG
+                    console.log(`Lightmapper - node [${node.name}] contains meshes without required uv1, excluding it from baking.`);
+                    // #endif
+
                     break;
                 }
             }

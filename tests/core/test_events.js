@@ -348,4 +348,11 @@ describe("pc.events", function () {
         expect(count).to.equal(2);
     });
 
+    it("Unsubscribe in event handler", function () {
+        var o = new pc.EventHandler();
+
+        o.once("test", function () { o.off() }, this);
+        o.fire("test");
+    });
+    
 });
