@@ -513,12 +513,14 @@ class ForwardRenderer {
         this._createAreaLightPlaceholderLuts();
     }
 
+    // #if _PROFILER
     // Static properties used by the Profiler in the Editor's Launch Page
     static skipRenderCamera = null;
 
     static _skipRenderCounter = 0;
 
     static skipRenderAfter = 0;
+    // #endif
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {
