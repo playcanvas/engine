@@ -338,7 +338,7 @@ class XrDepthSensing extends EventHandler {
     /**
      * @name XrDepthSensing#rawValueToMeters
      * @type {number}
-     * @description Multipty this coefient number by raw depth value to get depth in meters.
+     * @description Multiply this coefficient number by raw depth value to get depth in meters.
      * @example
      * material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
      */
