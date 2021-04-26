@@ -20,8 +20,10 @@ class DepthLayer {
         this.application = application;
         this.device = application.graphicsDevice;
 
-        // created depth layer
-        this.layer = this.init();
+        // create depth layer
+        this.clearOptions = null;
+        this.layer = null;
+        this.init();
     }
 
     // create a depth layer, which is a default depth layer, but also a template used
@@ -29,12 +31,16 @@ class DepthLayer {
     init() {
 
         var app = this.application;
-        let depthLayer = null;
+        var self = this;
 
         if (this.device.webgl2) {
 
+            this.clearOptions = {
+                flags: 0
+            };
+
             // WebGL 2 depth layer just copies existing depth
-            depthLayer = new Layer({
+            this.layer = new Layer({
                 enabled: false,
                 name: "Depth",
                 id: LAYERID_DEPTH,
@@ -78,7 +84,7 @@ class DepthLayer {
 
                     // disable clearing
                     this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                    this.cameras[cameraPass].camera._clearOptions = this.depthClearOptions;
+                    this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
                 },
 
                 onPostRenderOpaque: function (cameraPass) { // copy depth
@@ -98,17 +104,18 @@ class DepthLayer {
                                        gl.DEPTH_BUFFER_BIT,
                                        gl.NEAREST);
                 }
-
             });
-
-            depthLayer.depthClearOptions = {
-                flags: 0
-            };
 
         } else {
 
+            this.clearOptions = {
+                color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
+                depth: 1.0,
+                flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
+            };
+
             // WebGL 1 depth layer just renders same objects as in World, but with RGBA-encoded depth shader
-            depthLayer = new Layer({
+            this.layer = new Layer({
                 enabled: false,
                 name: "Depth",
                 id: LAYERID_DEPTH,
@@ -183,7 +190,7 @@ class DepthLayer {
                         this.onEnable();
                     }
                     this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                    this.cameras[cameraPass].camera._clearOptions = this.rgbaDepthClearOptions;
+                    this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
                 },
 
                 onDrawCall: function () {
@@ -196,15 +203,7 @@ class DepthLayer {
                 }
 
             });
-
-            depthLayer.rgbaDepthClearOptions = {
-                color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
-                depth: 1.0,
-                flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-            };
         }
-
-        return depthLayer;
     }
 
     // function which patches a layer to use depth layer set up in this class
@@ -213,8 +212,6 @@ class DepthLayer {
         layer.onDisable = this.layer.onDisable;
         layer.onPreRenderOpaque = this.layer.onPreRenderOpaque;
         layer.onPostRenderOpaque = this.layer.onPostRenderOpaque;
-        layer.depthClearOptions = this.layer.depthClearOptions;
-        layer.rgbaDepthClearOptions = this.layer.rgbaDepthClearOptions;
         layer.shaderPass = this.layer.shaderPass;
         layer.onPostCull = this.layer.onPostCull;
         layer.onDrawCall = this.layer.onDrawCall;
