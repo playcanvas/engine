@@ -1060,8 +1060,6 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
         }
 
         material.chunks.glossPS = glossChunk;
-
-        material.useEnvBrdf = true;
     }
 
     if (gltfMaterial.hasOwnProperty('normalTexture')) {

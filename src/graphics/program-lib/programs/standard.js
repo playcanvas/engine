@@ -1243,7 +1243,7 @@ var standard = {
             code += scode;
         } else if (cubemapReflection) {
             if (options.prefilteredCubemap) {
-                if (options.useEnvBrdf) {
+                if (options.useMetalness) {
                     code += chunks.envBrdfApproxPS;
                 } else {
                     code += chunks.envBrdfNonePS;

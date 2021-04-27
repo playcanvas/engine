@@ -57,8 +57,6 @@ var standardMaterialParameterTypes = {
     metalnessMapTiling: 'vec2',
     metalnessMapOffset: 'vec2',
 
-    useEnvBrdf: 'boolean',
-
     conserveEnergy: 'boolean',
     shininess: 'number',
     glossVertexColor: 'boolean',
