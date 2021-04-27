@@ -62,7 +62,8 @@ class AnimComponent extends Component {
                 states,
                 transitions,
                 data.parameters,
-                data.activate
+                data.activate,
+                this
             );
             data.layers.push(new AnimComponentLayer(name, controller, this));
             data.layerIndices[name] = order;

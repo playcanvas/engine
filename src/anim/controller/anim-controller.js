@@ -8,6 +8,7 @@ import {
     ANIM_PARAMETER_TRIGGER,
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
+import { EventHandler } from 'src/core/event-handler.js';
 
 /**
  * @private
@@ -22,10 +23,11 @@ import {
  * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
  */
 class AnimController {
-    constructor(animEvaluator, states, transitions, parameters, activate) {
+    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
+        this._eventHandler = eventHandler;
         var i;
         for (i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
@@ -355,14 +357,27 @@ class AnimController {
         this._currTransitionTime = 0;
         this._transitionInterruptionSource = transition.interruptionSource;
 
-        var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
+
         var activeState = this.activeState;
+        var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
+
+        // set the time in the new state to 0 or to a value based on transitionOffset if one was given
+        var timeInState = 0;
+        var timeInStateBefore = 0;
+        if (hasTransitionOffset) {
+            var offsetTime = activeState.timelineDuration * transition.transitionOffset;
+            timeInState = offsetTime;
+            timeInStateBefore = offsetTime;
+        }
+        this._timeInState = timeInState;
+        this._timeInStateBefore = timeInStateBefore;
+
         // Add clips to the evaluator for each animation in the new state.
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
                 var speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
-                clip = new AnimClip(activeState.animations[i].animTrack, 0, speed, true, activeState.loop);
+                clip = new AnimClip(activeState.animations[i].animTrack, this._timeInState, speed, true, activeState.loop, this._eventHandler);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             } else {
@@ -381,17 +396,6 @@ class AnimController {
                 clip.time = startTime;
             }
         }
-
-        // set the time in the new state to 0 or to a value based on transitionOffset if one was given
-        var timeInState = 0;
-        var timeInStateBefore = 0;
-        if (hasTransitionOffset) {
-            var offsetTime = activeState.timelineDuration * transition.transitionOffset;
-            timeInState = offsetTime;
-            timeInStateBefore = offsetTime;
-        }
-        this._timeInState = timeInState;
-        this._timeInStateBefore = timeInStateBefore;
     }
 
     _transitionToState(newStateName) {

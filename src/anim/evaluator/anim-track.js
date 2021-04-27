@@ -11,12 +11,13 @@
  * @param {AnimCurve[]} curves - The list of curves.
  */
 class AnimTrack {
-    constructor(name, duration, inputs, outputs, curves) {
+    constructor(name, duration, inputs, outputs, curves, events) {
         this._name = name;
         this._duration = duration;
         this._inputs = inputs;
         this._outputs = outputs;
         this._curves = curves;
+        this._events = events || [];
     }
 
     get name() {
@@ -37,6 +38,14 @@ class AnimTrack {
 
     get curves() {
         return this._curves;
+    }
+
+    get events() {
+        return this._events;
+    }
+
+    set events(values) {
+        this._events = values;
     }
 
     // evaluate all track curves at the specified time and store results
