@@ -8,7 +8,6 @@ import {
     ANIM_PARAMETER_TRIGGER,
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
-import { EventHandler } from 'src/core/event-handler.js';
 
 /**
  * @private
