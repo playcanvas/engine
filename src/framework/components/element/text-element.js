@@ -675,6 +675,25 @@ class TextElement {
             lineStartIndex = lineBreakIndex;
         }
 
+        // char is space, tab, or dash
+        const isWordBoundary = () => {
+            return WORD_BOUNDARY_CHAR.test(char);
+        };
+
+        const isValidNextChar = () => {
+            return (nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
+        };
+
+        // char is a CJK character and next character is a CJK boundary
+        const isNextCJKBoundary = () => {
+            return CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar));
+        };
+
+        // next character is a CJK character that can be a whole word
+        const isNextCJKWholeWord = () => {
+            return CJK_CHAR.test(nextchar);
+        };
+
         var retryUpdateMeshes = true;
         while (retryUpdateMeshes) {
             retryUpdateMeshes = false;
@@ -912,26 +931,7 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-            // char is space, tab, or dash
-            const isWordBoundary = () => {
-                return WORD_BOUNDARY_CHAR.test(char);
-            };
-
-            const isValidNextChar = () => {
-                return (nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
-            };
-
-            // char is a CJK character and next character is a CJK boundary
-            const isNextCJKBoundary = () => {
-                return CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar));
-            };
-
-            // next character is a CJK character that can be a whole word
-            const isNextCJKWholeWord = () => {
-                return CJK_CHAR.test(nextchar);
-            };
-
-            if (isWordBoundary() || (isValidNextChar() && (isNextCJKBoundary() || isNextCJKWholeWord()))) {
+                if (isWordBoundary() || (isValidNextChar() && (isNextCJKBoundary() || isNextCJKWholeWord()))) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
