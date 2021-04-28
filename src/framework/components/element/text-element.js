@@ -600,6 +600,25 @@ class TextElement {
         }
     }
 
+    // char is space, tab, or dash
+    _isWordBoundary(char) {
+        return WORD_BOUNDARY_CHAR.test(char);
+    }
+
+    _isValidNextChar(nextchar) {
+        return (nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
+    }
+
+    // char is a CJK character and next character is a CJK boundary
+    _isNextCJKBoundary(char, nextchar) {
+        return CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar));
+    }
+
+    // next character is a CJK character that can be a whole word
+    _isNextCJKWholeWord(nextchar) {
+        return CJK_CHAR.test(nextchar);
+    }
+
     _updateMeshes() {
         var json = this._font.data;
         var self = this;
@@ -674,25 +693,6 @@ class TextElement {
             wordStartX = 0;
             lineStartIndex = lineBreakIndex;
         }
-
-        // char is space, tab, or dash
-        const isWordBoundary = () => {
-            return WORD_BOUNDARY_CHAR.test(char);
-        };
-
-        const isValidNextChar = () => {
-            return (nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
-        };
-
-        // char is a CJK character and next character is a CJK boundary
-        const isNextCJKBoundary = () => {
-            return CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar));
-        };
-
-        // next character is a CJK character that can be a whole word
-        const isNextCJKWholeWord = () => {
-            return CJK_CHAR.test(nextchar);
-        };
 
         var retryUpdateMeshes = true;
         while (retryUpdateMeshes) {
@@ -931,7 +931,7 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                if (isWordBoundary() || (isValidNextChar() && (isNextCJKBoundary() || isNextCJKWholeWord()))) {
+                if (this._isWordBoundary(char) || (this._isValidNextChar(nextchar) && (this._isNextCJKBoundary(char, nextchar) || this._isNextCJKWholeWord(nextchar)))) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
