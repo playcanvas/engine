@@ -56,6 +56,7 @@ const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 // AC00—D7AF Hangul Syllables
 // D7B0—D7FF Hangul Jamo Extended-B
 const CJK_CHAR = /^[\u1100-\u11ff]|[\u3000-\u9fff]|[\ua960-\ua97f]|[\uac00-\ud7ff]$/;
+const NO_LINE_BREAK_CJK_CHAR = /^[〕〉》」』】〙〗〟ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻]$/;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 const CONTROL_CHARS = [
@@ -911,14 +912,9 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                // char is space, tab, or dash
-                const isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
-                // char is CJK character boundary
-                const isCJKBoundary = CJK_CHAR.test(char) && ((nextchar !== null) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)));
-                // next character is CJK character
-                const isNextCJK = (nextchar !== null) && CJK_CHAR.test(nextchar);
-
-                if (isWordBoundary || isCJKBoundary || isNextCJK) {
+                if ((WORD_BOUNDARY_CHAR.test(char)) || // char is space, tab, or dash
+                    (CJK_CHAR.test(char) && ((nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)))) || // char is a CJK character and next character is a CJK boundary
+                    ((nextchar !== null) && CJK_CHAR.test(nextchar) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar))) { // next character is a CJK character that can be a whole word
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
