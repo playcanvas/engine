@@ -101,7 +101,11 @@ class XrHand extends EventHandler {
             const joint = this._joints[j];
             const jointSpace = xrInputSource.hand.get(joint._id);
             if (jointSpace) {
-                const pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
+                let pose;
+
+                if (frame.session.visibilityState !== 'hidden')
+                    pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
+
                 if (pose) {
                     joint.update(pose);
 
