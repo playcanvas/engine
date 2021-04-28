@@ -912,9 +912,26 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                if ((WORD_BOUNDARY_CHAR.test(char)) || // char is space, tab, or dash
-                    (CJK_CHAR.test(char) && ((nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar)))) || // char is a CJK character and next character is a CJK boundary
-                    ((nextchar !== null) && CJK_CHAR.test(nextchar) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar))) { // next character is a CJK character that can be a whole word
+            // char is space, tab, or dash
+            const isWordBoundary = () => {
+                return WORD_BOUNDARY_CHAR.test(char);
+            };
+
+            const isValidNextChar = () => {
+                return (nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
+            };
+
+            // char is a CJK character and next character is a CJK boundary
+            const isNextCJKBoundary = () => {
+                return CJK_CHAR.test(char) && (WORD_BOUNDARY_CHAR.test(nextchar) || ALPHANUMERIC_CHAR.test(nextchar));
+            };
+
+            // next character is a CJK character that can be a whole word
+            const isNextCJKWholeWord = () => {
+                return CJK_CHAR.test(nextchar);
+            };
+
+            if (isWordBoundary() || (isValidNextChar() && (isNextCJKBoundary() || isNextCJKWholeWord()))) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
