@@ -81,7 +81,10 @@
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
-        var renderTarget = new pc.RenderTarget(this.app.graphicsDevice, texture, { depth: true });
+        var renderTarget = new pc.RenderTarget({
+            colorBuffer: texture,
+            depth: true
+        });
 
         // create a layer for object that do not render into texture
         var excludedLayer = new pc.Layer({ name: "Excluded" });
