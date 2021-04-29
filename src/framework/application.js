@@ -2317,12 +2317,12 @@ var makeTick = function (_app) {
             if (application._resolutionMode === RESOLUTION_AUTO) {
                 // Check if the canvas DOM has changed size
                 const canvas = application.graphicsDevice.canvas;
-                const pixelRatio = application.graphicsDevice.maxPixelRatio;
+                const pixelRatio = Math.min(application.graphicsDevice.maxPixelRatio, window.devicePixelRatio);
 
                 const clientWidth = canvas.clientWidth;
                 const clientHeight = canvas.clientHeight;
 
-                if (canvas.width !== (clientWidth * pixelRatio) || canvas.height !== (clientHeight * pixelRatio)) {
+                if (canvas.width !== Math.floor(clientWidth * pixelRatio) || canvas.height !== Math.floor(clientHeight * pixelRatio)) {
                     application.graphicsDevice.resizeCanvas(clientWidth, clientHeight);
                 }
             }

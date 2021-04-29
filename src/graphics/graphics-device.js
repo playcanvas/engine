@@ -3495,8 +3495,8 @@ class GraphicsDevice extends EventHandler {
         this._height = height;
 
         var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
-        width *= ratio;
-        height *= ratio;
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
 
         if (this.canvas.width === width && this.canvas.height === height)
             return;
