@@ -349,7 +349,7 @@ class PostEffectQueue {
         if (this.resizeTimeout)
             return;
 
-        // Note: this should be reviewed, as this would make postprocessing incorrect for a few frames 
+        // Note: this should be reviewed, as this would make postprocessing incorrect for a few frames
         // until the resize takes place
         if ((now() - this.resizeLast) > 100) {
             // allow resizing immediately if haven't been resized recently
