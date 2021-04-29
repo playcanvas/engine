@@ -32,7 +32,8 @@ function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount, dontFlipX)
     });
     tex.name = 'paraboloid';
 
-    var targ = new RenderTarget(device, tex, {
+    var targ = new RenderTarget({
+        colorBuffer: tex,
         depth: false
     });
 
@@ -80,7 +81,8 @@ function generateDpAtlas(device, sixCubemaps, dontFlipX) {
         mipmaps: false
     });
     tex.name = 'paraboloid';
-    var targ = new RenderTarget(device, tex, {
+    var targ = new RenderTarget({
+        colorBuffer: tex,
         depth: false
     });
 

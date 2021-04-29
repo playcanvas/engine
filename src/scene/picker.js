@@ -171,7 +171,8 @@ class Picker {
         });
         colorBuffer.name = 'pick';
 
-        this.renderTarget = new RenderTarget(this.device, colorBuffer, {
+        this.renderTarget = new RenderTarget({
+            colorBuffer: colorBuffer,
             depth: true
         });
     }
