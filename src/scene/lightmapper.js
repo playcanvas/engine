@@ -576,7 +576,6 @@ class Lightmapper {
     // as we ping-pong between various render targets anyways, and shader uses hardcoded types and ignores it anyways.
     allocateTextures(bakeNodes, passCount) {
 
-        const device = this.device;
         for (let i = 0; i < bakeNodes.length; i++) {
 
             // required lightmap size
