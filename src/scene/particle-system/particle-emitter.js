@@ -651,12 +651,10 @@ class ParticleEmitter {
                 this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart);
             }
 
-            this.rtParticleTexIN = new RenderTarget({
-                colorBuffer: this.particleTexIN,
+            this.rtParticleTexIN = new RenderTarget(gd, this.particleTexIN, {
                 depth: false
             });
-            this.rtParticleTexOUT = new RenderTarget({
-                colorBuffer: this.particleTexOUT,
+            this.rtParticleTexOUT = new RenderTarget(gd, this.particleTexOUT, {
                 depth: false
             });
             this.swapTex = false;

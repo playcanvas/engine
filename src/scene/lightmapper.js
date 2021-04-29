@@ -587,20 +587,14 @@ class Lightmapper {
             for (let pass = 0; pass < passCount; pass++) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_lightmap_" + i));
                 MeshInstance.incRefLightmap(tex);
-                bakeNode.renderTargets[pass] = new RenderTarget({
-                    colorBuffer: tex,
-                    depth: false
-                });
+                bakeNode.renderTargets[pass] = new RenderTarget(device, tex, { depth: false });
             }
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_temp_lightmap_" + size));
                 MeshInstance.incRefLightmap(tex);
-                this.renderTargets.set(size, new RenderTarget({
-                    colorBuffer: tex,
-                    depth: false
-                }));
+                this.renderTargets.set(size, new RenderTarget(device, tex, { depth: false }));
             }
         }
     }

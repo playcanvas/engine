@@ -97,12 +97,7 @@ class PostEffectQueue {
         var useStencil =  this.app.graphicsDevice.supportsStencil;
         var samples = useDepth ? device.samples : 1;
 
-        return new RenderTarget({
-            colorBuffer: colorBuffer,
-            depth: useDepth,
-            stencil: useStencil,
-            samples: samples
-        });
+        return new RenderTarget(device, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
     }
 
     _resizeOffscreenTarget(rt) {
