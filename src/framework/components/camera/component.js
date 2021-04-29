@@ -5,6 +5,7 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
+// note: when this list is modified, the copy() function needs to be adjusted
 const properties = [
     { name: 'aspectRatio', readonly: false },
     { name: 'aspectRatioMode', readonly: false },
@@ -22,7 +23,6 @@ const properties = [
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
     { name: 'projectionMatrix', readonly: true },
-    { name: 'rect', readonly: false },
     { name: 'scissorRect', readonly: false },
     { name: 'viewMatrix', readonly: true },
     { name: 'vrDisplay', readonly: false }
@@ -232,6 +232,14 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    get rect() {
+        return this._camera.rect;
+    }
+
+    set rect(value) {
+        this._camera.rect = value;
+        this.fire('set:rect', this._camera.rect);
+    }
 
     get clearColorBuffer() {
         return this._camera.clearColorBuffer;
@@ -651,6 +659,7 @@ class CameraComponent extends Component {
         this.layers = source.layers;
         this.priority = source.priority;
         this.renderTarget = source.renderTarget;
+        this.rect = source.rect;
     }
 }
 
