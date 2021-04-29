@@ -89,7 +89,8 @@ function prefilterCubemap(options) {
         });
         nextCubemap.name = 'prefiltered-cube';
         for (face = 0; face < 6; face++) {
-            targ = new RenderTarget(device, nextCubemap, {
+            targ = new RenderTarget({
+                colorBuffer: nextCubemap,
                 face: face,
                 depth: false
             });
@@ -122,7 +123,8 @@ function prefilterCubemap(options) {
             });
             nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
-                targ = new RenderTarget(device, nextCubemap, {
+                targ = new RenderTarget({
+                    colorBuffer: nextCubemap,
                     face: face,
                     depth: false
                 });
@@ -155,7 +157,8 @@ function prefilterCubemap(options) {
         });
         nextCubemap.name = 'prefiltered-cube';
         for (face = 0; face < 6; face++) {
-            targ = new RenderTarget(device, nextCubemap, {
+            targ = new RenderTarget({
+                colorBuffer: nextCubemap,
                 face: face,
                 depth: false
             });
@@ -207,7 +210,8 @@ function prefilterCubemap(options) {
             }
             for (i = 0; i < numMips; i++) {
                 for (face = 0; face < 6; face++) {
-                    targ = new RenderTarget(device, cmapsList[pass][i], { // TODO: less excessive allocations
+                    targ = new RenderTarget({ // TODO: less excessive allocations
+                        colorBuffer: cmapsList[pass][i],
                         face: face,
                         depth: false
                     });
@@ -355,7 +359,8 @@ function shFromCubemap(device, source, dontFlipX) {
                 });
                 tex2.name = 'prefiltered-cube';
 
-                var targ = new RenderTarget(device, tex2, {
+                var targ = new RenderTarget({
+                    colorBuffer: tex2,
                     depth: false
                 });
                 constantTexSource.setValue(tex);

@@ -576,7 +576,6 @@ class Lightmapper {
     // as we ping-pong between various render targets anyways, and shader uses hardcoded types and ignores it anyways.
     allocateTextures(bakeNodes, passCount) {
 
-        const device = this.device;
         for (let i = 0; i < bakeNodes.length; i++) {
 
             // required lightmap size
@@ -587,14 +586,20 @@ class Lightmapper {
             for (let pass = 0; pass < passCount; pass++) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_lightmap_" + i));
                 MeshInstance.incRefLightmap(tex);
-                bakeNode.renderTargets[pass] = new RenderTarget(device, tex, { depth: false });
+                bakeNode.renderTargets[pass] = new RenderTarget({
+                    colorBuffer: tex,
+                    depth: false
+                });
             }
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_temp_lightmap_" + size));
                 MeshInstance.incRefLightmap(tex);
-                this.renderTargets.set(size, new RenderTarget(device, tex, { depth: false }));
+                this.renderTargets.set(size, new RenderTarget({
+                    colorBuffer: tex,
+                    depth: false
+                }));
             }
         }
     }

@@ -146,7 +146,8 @@ function testTextureFloatHighPrecision(device) {
     };
     var tex1 = new Texture(device, textureOptions);
     tex1.name = 'testFHP';
-    var targ1 = new RenderTarget(device, tex1, {
+    var targ1 = new RenderTarget({
+        colorBuffer: tex1,
         depth: false
     });
     drawQuadWithShader(device, targ1, test1);
@@ -154,7 +155,8 @@ function testTextureFloatHighPrecision(device) {
     textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
     var tex2 = new Texture(device, textureOptions);
     tex2.name = 'testFHP';
-    var targ2 = new RenderTarget(device, tex2, {
+    var targ2 = new RenderTarget({
+        colorBuffer: tex2,
         depth: false
     });
     device.constantTexSource.setValue(tex1);
