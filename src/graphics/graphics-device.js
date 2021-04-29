@@ -3482,6 +3482,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * @private
      * @function
      * @name GraphicsDevice#resizeCanvas
      * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
@@ -3496,8 +3497,8 @@ class GraphicsDevice extends EventHandler {
         this._height = height;
 
         var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
-        width *= ratio;
-        height *= ratio;
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
 
         if (this.canvas.width === width && this.canvas.height === height)
             return;
