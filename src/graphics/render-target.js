@@ -45,8 +45,14 @@ var defaultOptions = {
  *     depth: true
  * });
  *
- * // Set the render target on a layer
- * layer.renderTarget = renderTarget;
+ * // Set the render target on a camera component
+ * camera.renderTarget = renderTarget;
+ *
+ * // Destroy render target at a later stage. Note that the color buffer needs
+ * // to be destroyed separately.
+ * renderTarget.colorBuffer.destroy();
+ * renderTarget.destroy();
+ * camera.renderTarget = null;
  */
 class RenderTarget {
     constructor(options) {
@@ -57,6 +63,11 @@ class RenderTarget {
             // old constructor
             this._colorBuffer = _arg2;
             options = _arg3;
+
+            // #if _DEBUG
+            console.warn('DEPRECATED: pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+            // #endif
+
         } else {
             // new constructor
             this._colorBuffer = options.colorBuffer;
