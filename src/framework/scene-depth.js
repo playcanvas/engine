@@ -18,7 +18,7 @@ import { Layer } from '../scene/layer.js';
 // Internal class abstracting the access to the depth texture of the scene.
 // For webgl 2 devices, actual depth buffer is copying to a texture at specified time during camera rendering
 // for webgl 1 devices, the scene's depth is rendered to a separate RGBA texture
-class DepthLayer {
+class SceneDepth {
     constructor(application) {
         this.application = application;
         this.device = application.graphicsDevice;
@@ -258,4 +258,4 @@ class DepthLayer {
     }
 }
 
-export { DepthLayer };
+export { SceneDepth };

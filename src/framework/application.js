@@ -104,7 +104,7 @@ import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
-import { DepthLayer } from './depth-layer.js';
+import { SceneDepth } from './scene-depth.js';
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
@@ -469,8 +469,8 @@ class Application extends EventHandler {
             id: LAYERID_WORLD
         });
 
-        this.depthLayer = new DepthLayer(this);
-        this.defaultLayerDepth = this.depthLayer.layer;
+        this.sceneDepth = new SceneDepth(this);
+        this.defaultLayerDepth = this.sceneDepth.layer;
 
         this.defaultLayerSkybox = new Layer({
             enabled: false,
@@ -513,7 +513,7 @@ class Application extends EventHandler {
                 layer = list[i];
                 switch (layer.id) {
                     case LAYERID_DEPTH:
-                        self.depthLayer.patch(layer);
+                        self.sceneDepth.patch(layer);
                         break;
                     case LAYERID_UI:
                         layer.passThrough = self.defaultLayerUi.passThrough;
