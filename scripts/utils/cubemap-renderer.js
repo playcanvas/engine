@@ -69,8 +69,7 @@ CubemapRenderer.prototype.initialize = function () {
     for (var i = 0; i < 6; i++) {
 
         // render target, connected to cubemap texture face
-        var renderTarget = new pc.RenderTarget({
-            colorBuffer: this.cubeMap,
+        var renderTarget = new pc.RenderTarget(this.app.graphicsDevice, this.cubeMap, {
             depth: this.depth,
             face: i
         });
