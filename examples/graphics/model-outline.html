@@ -70,7 +70,10 @@
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
-        var renderTarget = new pc.RenderTarget(this.app.graphicsDevice, texture, { depth: true });
+        var renderTarget = new pc.RenderTarget({
+            colorBuffer: texture,
+            depth: true
+        });
 
         // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
         var outlineLayer = new pc.Layer({ name: "OutlineLayer" });
@@ -142,7 +145,10 @@
                 magFilter: pc.FILTER_LINEAR
             });
             renderTarget.destroy();
-            renderTarget = new pc.RenderTarget(this.app.graphicsDevice, texture, { depth: true });
+            renderTarget = new pc.RenderTarget({
+                colorBuffer: texture,
+                depth: true
+            });
             outlineLayer.renderTarget = renderTarget;
 
             app.scene.layers.insert(outlineLayer, 0);
