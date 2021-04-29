@@ -15,6 +15,9 @@ import {
 
 import { Layer } from '../scene/layer.js';
 
+// Internal class abstracting the access to the depth texture of the scene.
+// For webgl 2 devices, actual depth buffer is copying to a texture at specified time during camera rendering
+// for webgl 1 devices, the scene's depth is rendered to a separate RGBA texture
 class DepthLayer {
     constructor(application) {
         this.application = application;
@@ -26,188 +29,225 @@ class DepthLayer {
         this.init();
     }
 
-    // create a depth layer, which is a default depth layer, but also a template used
-    // to patch application created depth layers to behave as one
-    init() {
+    allocateTexture(device, name, format) {
 
-        var app = this.application;
-        var self = this;
+        // allocate texture that will store the depth
+        const texture = new Texture(device, {
+            format: format,
+            width: device.width,
+            height: device.height,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+        texture.name = name;
 
-        if (this.device.webgl2) {
+        // assign it to scope to expose it to shaders
+        device.scope.resolve("uDepthMap").setValue(texture);
+        return texture;
+    }
 
-            this.clearOptions = {
-                flags: 0
-            };
+    allocateRenderTarget(renderTarget, device, name, format, isDepth) {
 
-            // WebGL 2 depth layer just copies existing depth
-            this.layer = new Layer({
-                enabled: false,
-                name: "Depth",
-                id: LAYERID_DEPTH,
+        // allocate texture buffer
+        const buffer = this.allocateTexture(device, name, format);
+        if (renderTarget) {
 
-                onEnable: function () {
-                    if (this.renderTarget) return;
-                    var depthBuffer = new Texture(app.graphicsDevice, {
-                        format: PIXELFORMAT_DEPTHSTENCIL,
-                        width: app.graphicsDevice.width,
-                        height: app.graphicsDevice.height,
-                        mipmaps: false
-                    });
-                    depthBuffer.name = 'rt-depth2';
-                    depthBuffer.minFilter = FILTER_NEAREST;
-                    depthBuffer.magFilter = FILTER_NEAREST;
-                    depthBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    depthBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new RenderTarget({
-                        colorBuffer: null,
-                        depthBuffer: depthBuffer,
-                        autoResolve: false
-                    });
-                    app.graphicsDevice.scope.resolve("uDepthMap").setValue(depthBuffer);
-                },
+            // if reallocating RT size, release previous framebuffer
+            renderTarget.destroyFrameBuffers();
 
-                onDisable: function () {
-                    if (!this.renderTarget) return;
-                    this.renderTarget._depthBuffer.destroy();
-                    this.renderTarget.destroy();
-                    this.renderTarget = null;
-                },
+            // assign new texture
+            if (isDepth) {
+                renderTarget._depthBuffer = buffer;
+            } else {
+                renderTarget._colorBuffer = buffer;
+            }
+        } else {
 
-                onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
-                    var gl = app.graphicsDevice.gl;
-                    this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+            // create new render target with the texture
+            renderTarget = new RenderTarget({
+                colorBuffer: isDepth ? null : buffer,
+                depthBuffer: isDepth ? buffer : null,
+                depth: !isDepth,
+                stencil: device.supportsStencil,
+                autoResolve: false
+            });
+        }
 
-                    if (!this.renderTarget || (this.renderTarget.width !== app.graphicsDevice.width || this.renderTarget.height !== app.graphicsDevice.height)) {
-                        this.onDisable();
-                        this.onEnable();
-                    }
+        return renderTarget;
+    }
 
-                    // disable clearing
-                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                    this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
-                },
+    releaseRenderTarget(rt) {
 
-                onPostRenderOpaque: function (cameraPass) { // copy depth
-                    if (!this.renderTarget) return;
+        if (rt) {
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        }
+    }
 
+    initWebGl2() {
+
+        const app = this.application;
+        const self = this;
+
+        this.clearOptions = {
+            flags: 0
+        };
+
+        // WebGL 2 depth layer just copies existing depth
+        this.layer = new Layer({
+            enabled: false,
+            name: "Depth",
+            id: LAYERID_DEPTH,
+
+            onEnable: function () {
+                // allocate / resize esting RT as needed
+                this.renderTarget = self.allocateRenderTarget(this.renderTarget, app.graphicsDevice, "rt-depth2", PIXELFORMAT_DEPTHSTENCIL, true);
+            },
+
+            onDisable: function () {
+                self.releaseRenderTarget(this.renderTarget);
+                this.renderTarget = null;
+            },
+
+            onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
+                const gl = app.graphicsDevice.gl;
+                this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+
+                // reallocate RT if needed
+                if (this.renderTarget.width !== app.graphicsDevice.width || this.renderTarget.height !== app.graphicsDevice.height) {
+                    this.onEnable();
+                }
+
+                // disable clearing
+                this.oldClear = this.cameras[cameraPass].camera._clearOptions;
+                this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
+            },
+
+            // copy out the depth
+            onPostRenderOpaque: function (cameraPass) {
+                if (this.renderTarget) {
                     this.cameras[cameraPass].camera._clearOptions = this.oldClear;
-
-                    var gl = app.graphicsDevice.gl;
 
                     app.graphicsDevice.setRenderTarget(this.renderTarget);
                     app.graphicsDevice.updateBegin();
 
+                    const gl = app.graphicsDevice.gl;
                     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
                     gl.blitFramebuffer(0, 0, this.renderTarget.width, this.renderTarget.height,
                                        0, 0, this.renderTarget.width, this.renderTarget.height,
-                                       gl.DEPTH_BUFFER_BIT,
-                                       gl.NEAREST);
+                                       gl.DEPTH_BUFFER_BIT, gl.NEAREST);
                 }
-            });
+            }
+        });
+    }
 
-        } else {
+    initWebGl1() {
 
-            this.clearOptions = {
-                color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
-                depth: 1.0,
-                flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-            };
+        const app = this.application;
+        const self = this;
 
-            // WebGL 1 depth layer just renders same objects as in World, but with RGBA-encoded depth shader
-            this.layer = new Layer({
-                enabled: false,
-                name: "Depth",
-                id: LAYERID_DEPTH,
-                shaderPass: SHADER_DEPTH,
+        this.clearOptions = {
+            color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
+            depth: 1.0,
+            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
+        };
 
-                onEnable: function () {
-                    if (this.renderTarget) return;
-                    var colorBuffer = new Texture(app.graphicsDevice, {
-                        format: PIXELFORMAT_R8_G8_B8_A8,
-                        width: app.graphicsDevice.width,
-                        height: app.graphicsDevice.height,
-                        mipmaps: false
-                    });
-                    colorBuffer.name = 'rt-depth1';
-                    colorBuffer.minFilter = FILTER_NEAREST;
-                    colorBuffer.magFilter = FILTER_NEAREST;
-                    colorBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new RenderTarget(app.graphicsDevice, colorBuffer, {
-                        depth: true,
-                        stencil: app.graphicsDevice.supportsStencil
-                    });
-                    app.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
-                },
+        // WebGL 1 depth layer just renders same objects as in World, but with RGBA-encoded depth shader
+        this.layer = new Layer({
+            enabled: false,
+            name: "Depth",
+            id: LAYERID_DEPTH,
+            shaderPass: SHADER_DEPTH,
 
-                onDisable: function () {
-                    if (!this.renderTarget) return;
-                    this.renderTarget._colorBuffer.destroy();
-                    this.renderTarget.destroy();
-                    this.renderTarget = null;
-                },
+            onEnable: function () {
+                // allocate / resize esting RT as needed
+                this.renderTarget = self.allocateRenderTarget(this.renderTarget, app.graphicsDevice, "rt-depth1", PIXELFORMAT_R8_G8_B8_A8, false);
+            },
 
-                onPostCull: function (cameraPass) {
-                    // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
-                    var visibleObjects = this.instances.visibleOpaque[cameraPass];
-                    var visibleList = visibleObjects.list;
-                    var visibleLength = 0;
-                    var layers = app.scene.layers.layerList;
-                    var subLayerEnabled = app.scene.layers.subLayerEnabled;
-                    var isTransparent = app.scene.layers.subLayerList;
+            onDisable: function () {
+                self.releaseRenderTarget(this.renderTarget);
+                this.renderTarget = null;
+            },
 
-                    // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
-                    var rt = app.scene.layers.getLayerById(LAYERID_WORLD).renderTarget;
-                    var cam = this.cameras[cameraPass];
-                    var layer;
-                    var j;
-                    var layerVisibleList, layerCamId, layerVisibleListLength, drawCall, transparent;
-                    for (var i = 0; i < layers.length; i++) {
-                        layer = layers[i];
-                        if (layer === this) break;
-                        if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
-                        layerCamId = layer.cameras.indexOf(cam);
-                        if (layerCamId < 0) continue;
-                        transparent = isTransparent[i];
-                        layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
-                        layerVisibleListLength = layerVisibleList.length;
-                        layerVisibleList = layerVisibleList.list;
-                        for (j = 0; j < layerVisibleListLength; j++) {
-                            drawCall = layerVisibleList[j];
-                            if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
-                                visibleList[visibleLength] = drawCall;
-                                visibleLength++;
-                            }
+            onPostCull: function (cameraPass) {
+
+                // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
+                const visibleObjects = this.instances.visibleOpaque[cameraPass];
+                const visibleList = visibleObjects.list;
+                const layerComposition = app.scene.layers;
+                var subLayerEnabled = layerComposition.subLayerEnabled;
+                var isTransparent = layerComposition.subLayerList;
+
+                // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
+                const rt = app.scene.layers.getLayerById(LAYERID_WORLD).renderTarget;
+                const cam = this.cameras[cameraPass];
+
+                let visibleLength = 0;
+                const layers = layerComposition.layerList;
+                for (let i = 0; i < layers.length; i++) {
+                    const layer = layers[i];
+                    if (layer === this) break;
+                    if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
+
+                    const layerCamId = layer.cameras.indexOf(cam);
+                    if (layerCamId < 0) continue;
+
+                    const transparent = isTransparent[i];
+                    let layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
+                    const layerVisibleListLength = layerVisibleList.length;
+                    layerVisibleList = layerVisibleList.list;
+
+                    for (let j = 0; j < layerVisibleListLength; j++) {
+                        const drawCall = layerVisibleList[j];
+                        if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
+                            visibleList[visibleLength] = drawCall;
+                            visibleLength++;
                         }
                     }
-                    visibleObjects.length = visibleLength;
-                },
+                }
+                visibleObjects.length = visibleLength;
+            },
 
-                onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
-                    if (!this.renderTarget || (this.renderTarget.width !== app.graphicsDevice.width || this.renderTarget.height !== app.graphicsDevice.height)) {
-                        this.onDisable();
-                        this.onEnable();
-                    }
-                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                    this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
-                },
+            onPreRenderOpaque: function (cameraPass) {
 
-                onDrawCall: function () {
-                    app.graphicsDevice.setColorWrite(true, true, true, true);
-                },
-
-                onPostRenderOpaque: function (cameraPass) {
-                    if (!this.renderTarget) return;
-                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
+                // reallocate RT if needed
+                if (this.renderTarget.width !== app.graphicsDevice.width || this.renderTarget.height !== app.graphicsDevice.height) {
+                    this.onEnable();
                 }
 
-            });
+                this.oldClear = this.cameras[cameraPass].camera._clearOptions;
+                this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
+            },
+
+            onDrawCall: function () {
+                app.graphicsDevice.setColorWrite(true, true, true, true);
+            },
+
+            onPostRenderOpaque: function (cameraPass) {
+                if (!this.renderTarget) return;
+                this.cameras[cameraPass].camera._clearOptions = this.oldClear;
+            }
+        });
+    }
+
+    // create a depth layer, which is a default depth layer, but also a template used
+    // to patch application created depth layers to behave as one
+    init() {
+
+        if (this.device.webgl2) {
+            this.initWebGl2();
+        } else {
+            this.initWebGl1();
         }
     }
 
     // function which patches a layer to use depth layer set up in this class
     patch(layer) {
+
         layer.onEnable = this.layer.onEnable;
         layer.onDisable = this.layer.onDisable;
         layer.onPreRenderOpaque = this.layer.onPreRenderOpaque;

@@ -54,7 +54,7 @@ class PostEffectQueue {
             self.resizeRenderTargets();
         };
 
-        camera.on('set_rect', this.onCameraRectChanged, this);
+        camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
     _allocateColorBuffer(format, name) {
@@ -104,17 +104,13 @@ class PostEffectQueue {
         const format = rt.colorBuffer.format;
         const name = rt.colorBuffer.name;
 
-        rt._colorBuffer.destroy();
+        rt.destroyFrameBuffers();
+        rt.destroyTextureBuffers();
         rt._colorBuffer = this._allocateColorBuffer(format, name);
-        rt.destroy();
     }
 
     _destroyOffscreenTarget(rt) {
-        if (rt._colorBuffer)
-            rt._colorBuffer.destroy();
-        if (rt._depthBuffer)
-            rt._depthBuffer.destroy();
-
+        rt.destroyTextureBuffers();
         rt.destroy();
     }
 
@@ -353,6 +349,7 @@ class PostEffectQueue {
         if (this.resizeTimeout)
             return;
 
+        // Note: this should be reviewed, as this would make postprocessing incorrect for few frames till reize takes place
         if ((now() - this.resizeLast) > 100) {
             // allow resizing immediately if haven't been resized recently
             this.resizeRenderTargets();

@@ -67,6 +67,9 @@ class RenderTarget {
             this._colorBuffer._isRenderTarget = true;
         }
 
+        // device, gets assigned when the framebuffer is created during the rendering
+        this._device = null;
+
         this._glFrameBuffer = null;
         this._glDepthBuffer = null;
 
@@ -122,37 +125,58 @@ class RenderTarget {
     destroy() {
 
         var device = this._device;
-        if (!device) return;
+        if (device) {
+            var idx = device.targets.indexOf(this);
+            if (idx !== -1) {
+                device.targets.splice(idx, 1);
+            }
 
-        var idx = device.targets.indexOf(this);
-        if (idx !== -1) {
-            device.targets.splice(idx, 1);
+            this.destroyFrameBuffers();
+        }
+    }
+
+    destroyFrameBuffers() {
+
+        var device = this._device;
+        if (device) {
+            var gl = device.gl;
+            if (this._glFrameBuffer) {
+                gl.deleteFramebuffer(this._glFrameBuffer);
+                this._glFrameBuffer = null;
+            }
+
+            if (this._glDepthBuffer) {
+                gl.deleteRenderbuffer(this._glDepthBuffer);
+                this._glDepthBuffer = null;
+            }
+
+            if (this._glResolveFrameBuffer) {
+                gl.deleteFramebuffer(this._glResolveFrameBuffer);
+                this._glResolveFrameBuffer = null;
+            }
+
+            if (this._glMsaaColorBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaColorBuffer);
+                this._glMsaaColorBuffer = null;
+            }
+
+            if (this._glMsaaDepthBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
+                this._glMsaaDepthBuffer = null;
+            }
+        }
+    }
+
+    destroyTextureBuffers() {
+
+        if (this._depthBuffer) {
+            this._depthBuffer.destroy();
+            this._depthBuffer = null;
         }
 
-        var gl = device.gl;
-        if (this._glFrameBuffer) {
-            gl.deleteFramebuffer(this._glFrameBuffer);
-            this._glFrameBuffer = null;
-        }
-
-        if (this._glDepthBuffer) {
-            gl.deleteRenderbuffer(this._glDepthBuffer);
-            this._glDepthBuffer = null;
-        }
-
-        if (this._glResolveFrameBuffer) {
-            gl.deleteFramebuffer(this._glResolveFrameBuffer);
-            this._glResolveFrameBuffer = null;
-        }
-
-        if (this._glMsaaColorBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaColorBuffer);
-            this._glMsaaColorBuffer = null;
-        }
-
-        if (this._glMsaaDepthBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
-            this._glMsaaDepthBuffer = null;
+        if (this._colorBuffer) {
+            this._colorBuffer.destroy();
+            this._colorBuffer = null;
         }
     }
 
