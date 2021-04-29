@@ -5,7 +5,7 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
-// note: when this list modified, copy() function needs to be adjusted
+// note: when this list is modified, the copy() function needs to be adjusted
 const properties = [
     { name: 'aspectRatio', readonly: false },
     { name: 'aspectRatioMode', readonly: false },
