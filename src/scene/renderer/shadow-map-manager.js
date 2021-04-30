@@ -54,8 +54,8 @@ class ShadowMapManager {
     }
 
     static getShadowMapFromCache(device, res, mode, layer = 0) {
-        var id = layer * 10000 + res;
-        var shadowBuffer = ShadowMapManager.shadowMapCache[mode][id];
+        const id = layer * 10000 + res;
+        let shadowBuffer = ShadowMapManager.shadowMapCache[mode][id];
         if (!shadowBuffer) {
             shadowBuffer = ShadowMapManager.createShadowMap(device, res, res, mode ? mode : SHADOW_PCF3);
             ShadowMapManager.shadowMapCache[mode][id] = shadowBuffer;
@@ -65,12 +65,12 @@ class ShadowMapManager {
 
     static createShadowCamera(device, shadowType, type) {
         // We don't need to clear the color buffer if we're rendering a depth map
-        var hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
+        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
         if (type === LIGHTTYPE_OMNI) {
             hwPcf = false;
         }
 
-        var shadowCam = new Camera();
+        const shadowCam = new Camera();
 
         if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
             shadowCam.clearColor = new Color(0, 0, 0, 0);
@@ -88,7 +88,7 @@ class ShadowMapManager {
     }
 
     static createShadowBuffer(device, light) {
-        var shadowBuffer;
+        let shadowBuffer;
         if (light._type === LIGHTTYPE_OMNI) {
             if (light._shadowType > SHADOW_PCF3) light._shadowType = SHADOW_PCF3; // no VSM or HW PCF omni lights yet
             if (light._cacheShadowMap) {
@@ -118,10 +118,10 @@ class ShadowMapManager {
 
     static createShadowMap(device, width, height, shadowType) {
 
-        var format = ShadowMapManager.getShadowFormat(device, shadowType);
-        var filter = ShadowMapManager.getShadowFiltering(device, shadowType);
+        const format = ShadowMapManager.getShadowFormat(device, shadowType);
+        const filter = ShadowMapManager.getShadowFiltering(device, shadowType);
 
-        var shadowMap = new Texture(device, {
+        const shadowMap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
@@ -154,7 +154,7 @@ class ShadowMapManager {
     }
 
     static createShadowCubeMap(device, size) {
-        var cubemap = new Texture(device, {
+        const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
@@ -170,10 +170,9 @@ class ShadowMapManager {
         });
         cubemap.name = 'shadowcube';
 
-        var targets = [];
-        var target;
-        for (var i = 0; i < 6; i++) {
-            target = new RenderTarget({
+        const targets = [];
+        for (let i = 0; i < 6; i++) {
+            const target = new RenderTarget({
                 colorBuffer: cubemap,
                 face: i,
                 depth: true
