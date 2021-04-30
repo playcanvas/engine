@@ -23,7 +23,7 @@ const spriteIndices = [
  * @class
  * @name Sprite
  * @augments EventHandler
- * @classdesc A Sprite is contains references to one or more frames of a {@link TextureAtlas}.
+ * @classdesc A Sprite contains references to one or more frames of a {@link TextureAtlas}.
  * It can be used by the {@link SpriteComponent} or the {@link ElementComponent} to render a
  * single frame or a sprite animation.
  * @param {GraphicsDevice} device - The graphics device of the application.
