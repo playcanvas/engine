@@ -23,7 +23,7 @@ import {
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
-import { ForwardRenderer } from '../scene/forward-renderer.js';
+import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/layer-composition.js';
