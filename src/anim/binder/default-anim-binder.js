@@ -1,6 +1,6 @@
 import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
-
+import { Entity } from '../../framework/entity.js';
 /**
  * @private
  * @class
@@ -34,7 +34,7 @@ class DefaultAnimBinder {
 
             // walk up to the first parent node of entity type (skips internal nodes of Model)
             var object = node;
-            while (object && object.prototype.name !== 'Entity') {
+            while (object && !(object instanceof Entity)) {
                 object = object.parent;
             }
 
