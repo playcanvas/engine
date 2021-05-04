@@ -748,10 +748,6 @@ class ForwardRenderer {
             }
 
             if (directional.castShadows) {
-                var shadowMap = directional._isPcf && this.device.webgl2 ?
-                    directional._shadowCamera.renderTarget.depthBuffer :
-                    directional._shadowCamera.renderTarget.colorBuffer;
-
                 // make bias dependent on far plane because it's not constant for direct light
                 var bias;
                 if (directional._isVsm) {
@@ -764,7 +760,7 @@ class ForwardRenderer {
                     directional.vsmBias / (directional._shadowCamera._farClip / 7.0) :
                     directional._normalOffsetBias;
 
-                this.lightShadowMapId[cnt].setValue(shadowMap);
+                this.lightShadowMapId[cnt].setValue(directional.shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
                 var params = directional._rendererParams;
                 if (params.length !== 3) params.length = 3;
@@ -823,8 +819,7 @@ class ForwardRenderer {
         }
 
         if (omni.castShadows) {
-            var shadowMap = omni._shadowCamera.renderTarget.colorBuffer;
-            this.lightShadowMapId[cnt].setValue(shadowMap);
+            this.lightShadowMapId[cnt].setValue(omni.shadowMap);
             var params = omni._rendererParams;
             if (params.length !== 4) params.length = 4;
             params[0] = omni._shadowResolution;
@@ -882,10 +877,7 @@ class ForwardRenderer {
                 spot.vsmBias / (spot.attenuationEnd / 7.0) :
                 spot._normalOffsetBias;
 
-            var shadowMap = spot._isPcf && this.device.webgl2 ?
-                spot._shadowCamera.renderTarget.depthBuffer :
-                spot._shadowCamera.renderTarget.colorBuffer;
-            this.lightShadowMapId[cnt].setValue(shadowMap);
+            this.lightShadowMapId[cnt].setValue(spot.shadowMap);
             this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
             var params = spot._rendererParams;
             if (params.length !== 4) params.length = 4;
