@@ -52,9 +52,8 @@
 
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
-        var entity, light, camera;
-
         // Load a model file and create a Entity with a model component
+        var entity;
         var url = "../assets/models/statue.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             entity = new pc.Entity();
@@ -71,8 +70,8 @@
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-        camera.translate(0, 7, 24);
-        camera.rotate(0, 0, 0);
+        camera.translate(0, 12, 35);
+        camera.rotate(-10, 0, 0);
         app.root.addChild(camera);
 
         // Create an Entity for the ground
@@ -135,7 +134,7 @@
             color: pc.Color.CYAN,
             range: 100,
             castShadows: true,
-            shadowBias: 0.05,
+            shadowBias: 0.2,
             normalOffsetBias: 0.1,
             intensity: 0.6
         });
