@@ -1243,11 +1243,6 @@ var standard = {
             code += scode;
         } else if (cubemapReflection) {
             if (options.prefilteredCubemap) {
-                if (options.useMetalness) {
-                    code += chunks.envBrdfApproxPS;
-                } else {
-                    code += chunks.envBrdfNonePS;
-                }
                 if (useTexCubeLod) {
                     code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
 

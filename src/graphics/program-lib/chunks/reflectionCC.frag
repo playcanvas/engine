@@ -2,6 +2,6 @@
 uniform float material_clearCoatReflectivity;
 
 void addReflectionCC() {
-    ccReflection += vec4(envBrdf(calcReflection(ccReflDirW, ccGlossiness), ccGlossiness, ccNormalW), material_clearCoatReflectivity);
+    ccReflection += vec4(calcReflection(ccReflDirW, ccGlossiness), material_clearCoatReflectivity);
 }
 #endif
