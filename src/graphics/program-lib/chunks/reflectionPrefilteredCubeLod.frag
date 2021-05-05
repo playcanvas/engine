@@ -17,5 +17,5 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
 }
 
 void addReflection() {   
-    dReflection += vec4(envBrdf(calcReflection(dReflDirW, dGlossiness), dGlossiness, dNormalW), material_reflectivity);
+    dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }
