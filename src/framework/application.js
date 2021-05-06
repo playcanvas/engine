@@ -1390,6 +1390,11 @@ class Application extends EventHandler {
         this.graphicsDevice.canvas.style.width = width + 'px';
         this.graphicsDevice.canvas.style.height = height + 'px';
 
+        // In AUTO mode the resolution is changed to match the canvas size
+        if (this._resolutionMode === RESOLUTION_AUTO) {
+            this.setCanvasResolution(RESOLUTION_AUTO);
+        }
+
         // return the final values calculated for width and height
         return {
             width: width,
@@ -2141,13 +2146,6 @@ var makeTick = function (_app) {
         application.fire("framerender");
 
         if (application.autoRender || application.renderNextFrame) {
-            // In AUTO mode the resolution is changed to match the canvas size
-            if (application._resolutionMode === RESOLUTION_AUTO) {
-                // Check if the canvas DOM has changed size
-                const canvas = application.graphicsDevice.canvas;
-                application.graphicsDevice.resizeCanvas(canvas.clientWidth, canvas.clientHeight);
-            }
-
             application.render();
             application.renderNextFrame = false;
         }
