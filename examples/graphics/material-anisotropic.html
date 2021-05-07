@@ -76,6 +76,7 @@
 
         var createSphere = function (x, y, z) {
             var material = new pc.StandardMaterial();
+            material.diffuse = new pc.Color(1,1,1);
             material.metalness = 1.0;
             material.shininess = (z) / (NUM_SPHERES_Z - 1) * 100;
             material.useMetalness = true;
