@@ -166,8 +166,11 @@ class ShadowRenderer {
         this.blurVsmShaderCode = [shaderChunks.blurVSMPS, "#define GAUSS\n" + shaderChunks.blurVSMPS];
         const packed = "#define PACKED\n";
         this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
+
+        // cache for vsm blur shaders
         this.blurVsmShader = [{}, {}];
         this.blurPackedVsmShader = [{}, {}];
+
         this.blurVsmWeights = {};
 
         // uniforms
