@@ -1512,7 +1512,7 @@ var standard = {
                 code += "   #endif\n";
             }
 
-            if (options.fresnelModel > 0) code += "   getFresnel();\n";
+            if (!options.useMetalness && options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
         if (addAmbient) {
@@ -1535,6 +1535,8 @@ var standard = {
                 }
                 code += "   addReflection();\n";
             }
+
+            if (options.useSpecular && options.useMetalness && options.fresnelModel > 0) code += "   getFresnel();\n";
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
