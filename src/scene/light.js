@@ -339,11 +339,11 @@ class Light {
                 if (rt) {
                     if (rt.length) {
                         for (i = 0; i < rt.length; i++) {
-                            rt[i].destroyTextureBuffers()();
+                            rt[i].destroyTextureBuffers();
                             rt[i].destroy();
                         }
                     } else {
-                        rt.destroyTextureBuffers()();
+                        rt.destroyTextureBuffers();
                         rt.destroy();
                     }
                 }
