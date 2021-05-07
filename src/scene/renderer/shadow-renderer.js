@@ -391,7 +391,6 @@ class ShadowRenderer {
         }
 
         if (light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame) {
-            let cameraPos;
             const shadowCam = forwardRenderer.getShadowCamera(device, light);
             const shadowCamNode = shadowCam._node;
             let passes = 1;
@@ -399,19 +398,11 @@ class ShadowRenderer {
             if (type === LIGHTTYPE_DIRECTIONAL) {
                 passes = light.numCascades;
             } else if (type === LIGHTTYPE_SPOT) {
-                cameraPos = shadowCamNode.getPosition();
-                forwardRenderer.viewPos[0] = cameraPos.x;
-                forwardRenderer.viewPos[1] = cameraPos.y;
-                forwardRenderer.viewPos[2] = cameraPos.z;
-                forwardRenderer.viewPosId.setValue(forwardRenderer.viewPos);
+                forwardRenderer.dispatchViewPos(shadowCamNode.getPosition());
                 this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
 
             } else if (type === LIGHTTYPE_OMNI) {
-                cameraPos = shadowCamNode.getPosition();
-                forwardRenderer.viewPos[0] = cameraPos.x;
-                forwardRenderer.viewPos[1] = cameraPos.y;
-                forwardRenderer.viewPos[2] = cameraPos.z;
-                forwardRenderer.viewPosId.setValue(forwardRenderer.viewPos);
+                forwardRenderer.dispatchViewPos(shadowCamNode.getPosition());
                 this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
                 passes = 6;
             }

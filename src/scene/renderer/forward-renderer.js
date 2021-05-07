@@ -442,12 +442,7 @@ class ForwardRenderer {
             this.viewProjId.setValue(viewProjMat.data);
 
             // View Position (world space)
-            var cameraPos = camera._node.getPosition();
-            this.viewPos[0] = cameraPos.x;
-            this.viewPos[1] = cameraPos.y;
-            this.viewPos[2] = cameraPos.z;
-
-            this.viewPosId.setValue(this.viewPos);
+            this.dispatchViewPos(camera._node.getPosition());
 
             camera.frustum.setFromMat4(viewProjMat);
         }
@@ -1333,6 +1328,15 @@ class ForwardRenderer {
         }
     }
 
+    // sets Vec3 camera position uniform
+    dispatchViewPos(position) {
+        const vp = this.viewPos;
+        vp[0] = position.x;
+        vp[1] = position.y;
+        vp[2] = position.z;
+        this.viewPosId.setValue(vp);
+    }
+
     renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
         var device = this.device;
         var scene = this.scene;
@@ -1519,10 +1523,8 @@ class ForwardRenderer {
                     this.viewId.setValue(viewL.data);
                     this.viewId3.setValue(viewMat3L.data);
                     this.viewProjId.setValue(viewProjMatL.data);
-                    this.viewPos[0] = viewPosL.x;
-                    this.viewPos[1] = viewPosL.y;
-                    this.viewPos[2] = viewPosL.z;
-                    this.viewPosId.setValue(this.viewPos);
+                    this.dispatchViewPos(viewPosL);
+
                     i += this.drawInstance(device, drawCall, mesh, style, true);
                     this._forwardDrawCalls++;
 
@@ -1534,10 +1536,8 @@ class ForwardRenderer {
                     this.viewId.setValue(viewR.data);
                     this.viewId3.setValue(viewMat3R.data);
                     this.viewProjId.setValue(viewProjMatR.data);
-                    this.viewPos[0] = viewPosR.x;
-                    this.viewPos[1] = viewPosR.y;
-                    this.viewPos[2] = viewPosR.z;
-                    this.viewPosId.setValue(this.viewPos);
+                    this.dispatchViewPos(viewPosR);
+
                     i += this.drawInstance2(device, drawCall, mesh, style);
                     this._forwardDrawCalls++;
                 } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
