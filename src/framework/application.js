@@ -1391,7 +1391,7 @@ class Application extends EventHandler {
         this.graphicsDevice.canvas.style.width = width + 'px';
         this.graphicsDevice.canvas.style.height = height + 'px';
 
-        this.updateGlCanvasSize();
+        this.updateCanvasSize();
 
         // return the final values calculated for width and height
         return {
@@ -1402,10 +1402,10 @@ class Application extends EventHandler {
 
     /**
      * @private
-     * @name Application#updateGlCanvasSize
+     * @name Application#updateCanvasSize
      * @description Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document page.
      */
-    updateGlCanvasSize() {
+    updateCanvasSize() {
         // Don't update if we are in VR
         if ((this.vr && this.vr.display) || (this.xr.active && this.xr.type === XRTYPE_VR)) {
             return;
@@ -2163,7 +2163,7 @@ var makeTick = function (_app) {
         application.fire("framerender");
 
         if (application.autoRender || application.renderNextFrame) {
-            application.updateGlCanvasSize();
+            application.updateCanvasSize();
             application.render();
             application.renderNextFrame = false;
         }
