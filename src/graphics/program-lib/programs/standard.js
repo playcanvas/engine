@@ -23,6 +23,7 @@ import {
 } from '../../../scene/constants.js';
 import { WorldClusters } from '../../../scene/world-clusters.js';
 import { LayerComposition } from '../../../scene/layer-composition.js';
+import { ShadowMapManager } from '../../../scene/renderer/shadow-map-manager.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -895,8 +896,8 @@ var standard = {
 
         } else if (shadowPass) {
             // ##### SHADOW PASS #####
-            var smode = options.pass - SHADER_SHADOW;
-            var numShadowModes = 5;
+            const smode = options.pass - SHADER_SHADOW;
+            const numShadowModes = ShadowMapManager.numShadowModes;
             lightType = Math.floor(smode / numShadowModes);
             var shadowType = smode - lightType * numShadowModes;
 

@@ -317,6 +317,20 @@ class Light {
         this._updateFinalColor();
     }
 
+    get shadowMap() {
+
+        if (this._shadowCamera) {
+            const rt = this._shadowCamera.renderTarget;
+            if (this._type === LIGHTTYPE_OMNI) {
+                return rt.colorBuffer;
+            }
+
+            return this._isPcf && this.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
+        }
+
+        return null;
+    }
+
     _destroyShadowMap() {
         if (this._shadowCamera) {
             if (!this._isCachedShadowMap) {
@@ -325,12 +339,11 @@ class Light {
                 if (rt) {
                     if (rt.length) {
                         for (i = 0; i < rt.length; i++) {
-                            if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
+                            rt[i].destroyTextureBuffers();
                             rt[i].destroy();
                         }
                     } else {
-                        if (rt.colorBuffer) rt.colorBuffer.destroy();
-                        if (rt.depthBuffer) rt.depthBuffer.destroy();
+                        rt.destroyTextureBuffers();
                         rt.destroy();
                     }
                 }
