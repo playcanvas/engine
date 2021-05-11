@@ -463,6 +463,10 @@ var standard = {
             lighting = true;
         }
 
+        if (LayerComposition.clusteredLightingEnabled) {
+            lighting = true;
+        }
+
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAntialias = false;
@@ -1406,9 +1410,11 @@ var standard = {
         if (LayerComposition.clusteredLightingEnabled) {
 
             usesSpot = true;
+            hasPointLights = true;
+            usesLinearFalloff = true;
 
             const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
-            code += `#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += `\n#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
             code += chunks.clusteredLightPS;
         }
 
