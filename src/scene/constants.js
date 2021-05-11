@@ -288,6 +288,9 @@ export const SHADOW_VSM32 = 3;
  */
 export const SHADOW_PCF5 = 4;
 
+// non-public number of supported depth shadow modes
+export const SHADOW_COUNT = 5;
+
 /**
  * @constant
  * @name BLUR_BOX

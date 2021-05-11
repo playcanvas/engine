@@ -1,6 +1,7 @@
 import { Vec3 } from '../../math/vec3.js';
 import { Quat } from '../../math/quat.js';
 import { Mat4 } from '../../math/mat4.js';
+import { Color } from '../../math/color.js';
 
 import { BoundingBox } from '../../shape/bounding-box.js';
 
@@ -9,15 +10,18 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
-    SHADOW_VSM8,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32, SHADOW_COUNT,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
+import { Camera } from '../camera.js';
+import { GraphNode } from '../graph-node.js';
 
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
-import { ShadowMapManager } from './shadow-map-manager.js';
+import { ShadowMap } from './shadow-map.js';
+import { ShadowMapCache } from './shadow-map-cache.js';
 
 const pointLightRotations = [
     new Quat().setFromEulerAngles(0, 90, 180),
@@ -176,12 +180,43 @@ class ShadowRenderer {
         // uniforms
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
 
+        // shadow map cache
+        this.shadowMapCache = new ShadowMapCache();
+    }
+
+    destroy() {
+        this.shadowMapCache.destroy();
+        this.shadowMapCache = null;
     }
 
     static scaleShiftMatrix = new Mat4().mul2(
         new Mat4().setTranslate(0.5, 0.5, 0.5),
         new Mat4().setScale(0.5, 0.5, 0.5)
     );
+
+    static createShadowCamera(device, shadowType, type) {
+        // We don't need to clear the color buffer if we're rendering a depth map
+        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
+        if (type === LIGHTTYPE_OMNI) {
+            hwPcf = false;
+        }
+
+        const shadowCam = new Camera();
+
+        if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
+            shadowCam.clearColor = new Color(0, 0, 0, 0);
+        } else {
+            shadowCam.clearColor = new Color(1, 1, 1, 1);
+        }
+
+        shadowCam.clearColorBuffer = !hwPcf;
+        shadowCam.clearDepthBuffer = true;
+        shadowCam.clearStencilBuffer = false;
+
+        shadowCam.node = new GraphNode();
+
+        return shadowCam;
+    }
 
     cullLocal(light, drawCalls) {
         const type = light._type;
@@ -197,6 +232,10 @@ class ShadowRenderer {
         shadowCam.nearClip = light.attenuationEnd / 1000;
         shadowCam.farClip = light.attenuationEnd;
         shadowCam.aspectRatio = 1;
+
+        if (!light._shadowMap) {
+            light._shadowMap = ShadowMap.create(this.device, light);
+        }
 
         let passes;
         if (type === LIGHTTYPE_SPOT) {
@@ -217,8 +256,10 @@ class ShadowRenderer {
         for (let pass = 0; pass < passes; pass++) {
             if (type === LIGHTTYPE_OMNI) {
                 shadowCamNode.setRotation(pointLightRotations[pass]);
-                shadowCam.renderTarget = light._shadowCubeMap[pass];
             }
+
+            // assign render target for the pass
+            shadowCam.renderTarget = light._shadowMap.renderTargets[pass];
 
             this.forwardRenderer.updateCameraFrustum(shadowCam);
 
@@ -256,6 +297,11 @@ class ShadowRenderer {
         const shadowCam = this.forwardRenderer.getShadowCamera(this.device, light);
         const shadowCamNode = shadowCam._node;
         const lightNode = light._node;
+
+        if (!light._shadowMap) {
+            light._shadowMap = ShadowMap.create(this.device, light);
+            shadowCam.renderTarget = light._shadowMap.renderTargets[0];
+        }
 
         shadowCamNode.setPosition(lightNode.getPosition());
         shadowCamNode.setRotation(lightNode.getRotation());
@@ -389,12 +435,9 @@ class ShadowRenderer {
             return;
         }
 
-        if (!light._shadowCamera) {
-            forwardRenderer.getShadowCamera(device, light); // fix accessing non-existing shadow map/camera when the light was created/applied, but shadowmap was never initialized
-        }
-
         if (light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame) {
             const shadowCam = forwardRenderer.getShadowCamera(device, light);
+
             const shadowCamNode = shadowCam._node;
             let passes = 1;
 
@@ -460,6 +503,9 @@ class ShadowRenderer {
                 }
                 // #endif
 
+                // assign render target for the pass
+                shadowCam.renderTarget = light._shadowMap.renderTargets[pass];
+
                 // directional shadows are per camera, so get appropriate render data
                 const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, pass);
                 const visibleCasters = lightRenderData.visibleCasters;
@@ -467,7 +513,6 @@ class ShadowRenderer {
 
                 if (type === LIGHTTYPE_OMNI) {
                     shadowCamNode.setRotation(pointLightRotations[pass]);
-                    shadowCam.renderTarget = light._shadowCubeMap[pass];
                 } else if (type === LIGHTTYPE_DIRECTIONAL) {
                     shadowCamNode.setPosition(lightRenderData.position);
                     shadowCam.orthoHeight = lightRenderData.orthoHeight;
@@ -489,7 +534,7 @@ class ShadowRenderer {
 
                 // Sort shadow casters
                 const shadowType = light._shadowType;
-                const smode = shadowType + type * ShadowMapManager.numShadowModes;
+                const smode = shadowType + type * SHADOW_COUNT;
 
                 // Render
                 for (let j = 0; j < visibleLength; j++) {
@@ -555,7 +600,10 @@ class ShadowRenderer {
                 const filterSize = light._vsmBlurSize;
                 if (filterSize > 1) {
                     const origShadowMap = shadowCam.renderTarget;
-                    const tempRt = ShadowMapManager.getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
+
+                    // temporary render target for blurring
+                    const tempShadowMap = this.shadowMapCache.get(device, light);
+                    const tempRt = tempShadowMap.renderTargets[0];
 
                     const isVsm8 = light._shadowType === SHADOW_VSM8;
                     const blurMode = light.vsmBlurMode;
@@ -597,6 +645,9 @@ class ShadowRenderer {
                     pixelOffset[0] = 0;
                     this.pixelOffsetId.setValue(pixelOffset);
                     drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
+
+                    // return back temporary shadow map
+                    this.shadowMapCache.add(light, tempShadowMap);
                 }
 
                 // #if _DEBUG

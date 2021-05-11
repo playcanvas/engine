@@ -116,6 +116,8 @@ class Light {
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
         // Shadow mapping resources
+        this._shadowMap = null;
+
         this._shadowCamera = null;
         this._shadowMatrix = new Mat4();
         this.shadowDistance = 40;
@@ -130,8 +132,6 @@ class Light {
 
         this._isVsm = false;
         this._isPcf = true;
-        this._cacheShadowMap = false;
-        this._isCachedShadowMap = false;
 
         // private rendering data
         this._renderData = [];
@@ -143,6 +143,25 @@ class Light {
     destroy() {
         this._destroyShadowMap();
         this._renderData = null;
+    }
+
+    _destroyShadowMap() {
+
+        if (this._shadowMap) {
+            if (!this._shadowMap.cached) {
+                this._shadowMap.destroy();
+            }
+            this._shadowMap = null;
+        }
+
+        if (this._shadowCamera) {
+            this._shadowCamera.renderTarget = null;
+            this._shadowCamera = null;
+        }
+
+        if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
+            this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+        }
     }
 
     // returns LightRenderData with matching camera and face
@@ -223,6 +242,17 @@ class Light {
 
     set numCascades(value) {
         this.cascades = directionalCascades[value - 1];
+    }
+
+    get shadowMap() {
+        return this._shadowMap;
+    }
+
+    set shadowMap(shadowMap) {
+        if (this._shadowMap !== shadowMap) {
+            this._destroyShadowMap();
+            this._shadowMap = shadowMap;
+        }
     }
 
     getColor() {
@@ -317,7 +347,7 @@ class Light {
         this._updateFinalColor();
     }
 
-    get shadowMap() {
+    get shadowBuffer() {
 
         if (this._shadowCamera) {
             const rt = this._shadowCamera.renderTarget;
@@ -331,32 +361,6 @@ class Light {
         return null;
     }
 
-    _destroyShadowMap() {
-        if (this._shadowCamera) {
-            if (!this._isCachedShadowMap) {
-                var rt = this._shadowCamera.renderTarget;
-                var i;
-                if (rt) {
-                    if (rt.length) {
-                        for (i = 0; i < rt.length; i++) {
-                            rt[i].destroyTextureBuffers();
-                            rt[i].destroy();
-                        }
-                    } else {
-                        rt.destroyTextureBuffers();
-                        rt.destroy();
-                    }
-                }
-            }
-            this._shadowCamera.renderTarget = null;
-            this._shadowCamera = null;
-            this._shadowCubeMap = null;
-            if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-            }
-        }
-    }
-
     updateShadow() {
         if (this.shadowUpdateMode !== SHADOWUPDATE_REALTIME) {
             this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
@@ -364,7 +368,9 @@ class Light {
     }
 
     layersDirty() {
-        this._scene.layers._dirtyLights = true;
+        if (this?._scene?.layers) {
+            this._scene.layers._dirtyLights = true;
+        }
     }
 
     updateKey() {
@@ -401,7 +407,7 @@ class Light {
         }
 
         if (key !== this.key && this._scene !== null) {
-// TODO: most of the changes to the key should not invalidate the composition,
+            // TODO: most of the changes to the key should not invalidate the composition,
             // probably only _type and _castShadows
             this.layersDirty();
         }
@@ -430,7 +436,7 @@ class Light {
         return this._shape;
     }
 
-    set shape(value = LIGHTSHAPE_PUNCTUAL) {
+    set shape(value) {
         if (this._shape === value)
             return;
 
@@ -490,11 +496,12 @@ class Light {
     }
 
     set castShadows(value) {
-        if (this._castShadows === value)
-            return;
-
-        this._castShadows = value;
-        this.updateKey();
+        if (this._castShadows !== value) {
+            this._castShadows = value;
+            this._destroyShadowMap();
+            this.layersDirty();
+            this.updateKey();
+        }
     }
 
     get shadowResolution() {
@@ -502,15 +509,15 @@ class Light {
     }
 
     set shadowResolution(value) {
-        if (this._shadowResolution === value)
-            return;
-
-        if (this._type === LIGHTTYPE_OMNI) {
-            value = Math.min(value, this.device.maxCubeMapSize);
-        } else {
-            value = Math.min(value, this.device.maxTextureSize);
+        if (this._shadowResolution !== value) {
+            if (this._type === LIGHTTYPE_OMNI) {
+                value = Math.min(value, this.device.maxCubeMapSize);
+            } else {
+                value = Math.min(value, this.device.maxTextureSize);
+            }
+            this._shadowResolution = value;
+            this._destroyShadowMap();
         }
-        this._shadowResolution = value;
     }
 
     get vsmBlurSize() {

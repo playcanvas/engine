@@ -2049,7 +2049,9 @@ class Application extends EventHandler {
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
+        this.renderer.destroy();
         this.renderer = null;
+
         this.tick = null;
 
         this.off(); // remove all events

@@ -42,7 +42,6 @@ import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { LayerComposition } from '../layer-composition.js';
 import { ShadowRenderer } from './shadow-renderer.js';
-import { ShadowMapManager } from './shadow-map-manager.js';
 
 var shadowCamView = new Mat4();
 var shadowCamViewProj = new Mat4();
@@ -198,6 +197,11 @@ class ForwardRenderer {
         this._createAreaLightPlaceholderLuts();
     }
 
+    destroy() {
+        this._shadowRenderer.destroy();
+        this._shadowRenderer = null;
+    }
+
     // #if _PROFILER
     // Static properties used by the Profiler in the Editor's Launch Page
     static skipRenderCamera = null;
@@ -256,16 +260,10 @@ class ForwardRenderer {
     }
 
     getShadowCamera(device, light) {
-        var shadowCam = light._shadowCamera;
+        let shadowCam = light._shadowCamera;
 
         if (!shadowCam) {
-            shadowCam = light._shadowCamera = ShadowMapManager.createShadowCamera(device, light._shadowType, light._type);
-            ShadowMapManager.createShadowBuffer(device, light);
-        } else {
-            var shadowBuffer = shadowCam.renderTarget;
-            if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
-                ShadowMapManager.createShadowBuffer(device, light);
-            }
+            shadowCam = light._shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type);
         }
 
         return shadowCam;
@@ -755,7 +753,7 @@ class ForwardRenderer {
                     directional.vsmBias / (directional._shadowCamera._farClip / 7.0) :
                     directional._normalOffsetBias;
 
-                this.lightShadowMapId[cnt].setValue(directional.shadowMap);
+                this.lightShadowMapId[cnt].setValue(directional.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
                 var params = directional._rendererParams;
                 if (params.length !== 3) params.length = 3;
@@ -814,7 +812,7 @@ class ForwardRenderer {
         }
 
         if (omni.castShadows) {
-            this.lightShadowMapId[cnt].setValue(omni.shadowMap);
+            this.lightShadowMapId[cnt].setValue(omni.shadowBuffer);
             var params = omni._rendererParams;
             if (params.length !== 4) params.length = 4;
             params[0] = omni._shadowResolution;
@@ -872,7 +870,7 @@ class ForwardRenderer {
                 spot.vsmBias / (spot.attenuationEnd / 7.0) :
                 spot._normalOffsetBias;
 
-            this.lightShadowMapId[cnt].setValue(spot.shadowMap);
+            this.lightShadowMapId[cnt].setValue(spot.shadowBuffer);
             this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
             var params = spot._rendererParams;
             if (params.length !== 4) params.length = 4;
