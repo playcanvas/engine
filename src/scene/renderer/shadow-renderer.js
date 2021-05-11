@@ -194,6 +194,19 @@ class ShadowRenderer {
         new Mat4().setScale(0.5, 0.5, 0.5)
     );
 
+    static spotCookieCamera = null;
+
+    static getSpotCookieCamera() {
+        if (!this.spotCookieCamera) {
+            this.spotCookieCamera = new Camera();
+            this.spotCookieCamera.projection = PROJECTION_PERSPECTIVE;
+            this.spotCookieCamera.aspectRatio = 1;
+            this.spotCookieCamera.node = new GraphNode();
+        }
+
+        return this.spotCookieCamera;
+    }
+
     static createShadowCamera(device, shadowType, type) {
         // We don't need to clear the color buffer if we're rendering a depth map
         let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);

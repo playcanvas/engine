@@ -883,19 +883,16 @@ class ForwardRenderer {
         if (spot._cookie) {
             this.lightCookieId[cnt].setValue(spot._cookie);
             if (!spot.castShadows) {
-                var shadowCam = this.getShadowCamera(this.device, spot);
-                var shadowCamNode = shadowCam._node;
+                const cookieCam = ShadowRenderer.getSpotCookieCamera();
+                cookieCam.fov = spot._outerConeAngle * 2;
 
-                shadowCamNode.setPosition(spot._node.getPosition());
-                shadowCamNode.setRotation(spot._node.getRotation());
-                shadowCamNode.rotateLocal(-90, 0, 0);
+                const cookieNode = cookieCam._node;
+                cookieNode.setPosition(spot._node.getPosition());
+                cookieNode.setRotation(spot._node.getRotation());
+                cookieNode.rotateLocal(-90, 0, 0);
 
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                shadowCam.aspectRatio = 1;
-                shadowCam.fov = spot._outerConeAngle * 2;
-
-                shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+                shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
+                shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
                 spot._shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
             }
             this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
