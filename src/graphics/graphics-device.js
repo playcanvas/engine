@@ -2193,11 +2193,11 @@ class GraphicsDevice extends EventHandler {
                 texture._parameterFlags = 0;
             }
 
-            if (texture === this.grabPassTexture) {
-                // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
-                // (for example when rendering to shadow map), in which case previous content is used
-                this.updateGrabPass();
-            } else if (texture._needsUpload || texture._needsMipmapsUpload) {
+            // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
+            // (for example when rendering to shadow map), in which case previous content is used
+            var processed = (texture === this.grabPassTexture) && this.updateGrabPass();
+
+            if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
                 this.uploadTexture(texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
