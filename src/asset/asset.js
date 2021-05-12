@@ -236,7 +236,6 @@ class Asset extends EventHandler {
      * @returns {string} Resulting URL of the asset.
      */
     getAbsoluteUrl(relativePath) {
-        // Support for Base64 paths
         if (relativePath.startsWith('blob:') || relativePath.startsWith('data:')) {
             return relativePath;
         }
