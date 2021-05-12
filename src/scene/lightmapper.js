@@ -720,7 +720,9 @@ class Lightmapper {
 
         // only prepare camera for spot light, other cameras need to be adjusted per cubemap face / per node later
         if (light.type === LIGHTTYPE_SPOT) {
-            shadowCam = this.renderer.getShadowCamera(device, light);
+
+            const lightRenderData = light.getRenderData(null, 0);
+            shadowCam = lightRenderData.shadowCamera;
 
             shadowCam._node.setPosition(light._node.getPosition());
             shadowCam._node.setRotation(light._node.getRotation());

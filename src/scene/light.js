@@ -13,6 +13,7 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
+import { ShadowRenderer } from './renderer/shadow-renderer.js';
 
 var spotCenter = new Vec3();
 var spotEndPoint = new Vec3();
@@ -28,9 +29,12 @@ const directionalCascades = [
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
 ];
 
-// Class storing rendering related private information
+// Class storing shadow rendering related private information
 class LightRenderData {
-    constructor(camera, face, lightType) {
+    constructor(device, camera, face, light) {
+
+        // light this data belongs to
+        this.light = light;
 
         // camera this applies to. Only used by directional light, as directional shadow map
         // is culled and rendered for each camera. Local lights' shadow is culled and rendered one time
@@ -38,19 +42,32 @@ class LightRenderData {
         // from a mesh that is not visible by the camera)
         this.camera = camera;
 
+        // camera used to cull / render the shadow map
+        this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
+
         // face index, value is based on light type:
         // - spot: always 0
         // - omni: cubemap face, 0..5
         // - directional: 0 for simple shadows, cascade index for cascaded shadow map
         this.face = face;
 
-        // shadow camera settings, only used by directional lights
-        this.position = lightType === LIGHTTYPE_DIRECTIONAL ? new Vec3() : null;
-        this.orthoHeight = 0;
-        this.farClip = 0;
-
         // visible shadow casters
         this.visibleCasters = [];
+    }
+
+    // returns shadow buffer currently attached to the shadow camera
+    get shadowBuffer() {
+        const rt = this.shadowCamera.renderTarget;
+        if (rt) {
+            const light = this.light;
+            if (light._type === LIGHTTYPE_OMNI) {
+                return rt.colorBuffer;
+            }
+
+            return light._isPcf && light.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
+        }
+
+        return null;
     }
 }
 
@@ -117,21 +134,20 @@ class Light {
 
         // Shadow mapping resources
         this._shadowMap = null;
-
-        this._shadowCamera = null;
         this._shadowMatrix = new Mat4();
+        this._rendererParams = [];
+
+        // Shadow mapping properties
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
         this.shadowBias = -0.0005;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
+        this._isVsm = false;
+        this._isPcf = true;
 
         this._scene = null;
         this._node = null;
-        this._rendererParams = [];
-
-        this._isVsm = false;
-        this._isPcf = true;
 
         // private rendering data
         this._renderData = [];
@@ -145,18 +161,17 @@ class Light {
         this._renderData = null;
     }
 
+    // destroys shadow map related resources, called when shadow properties change and resources
+    // need to be recreated
     _destroyShadowMap() {
+
+        this._renderData.length = 0;
 
         if (this._shadowMap) {
             if (!this._shadowMap.cached) {
                 this._shadowMap.destroy();
             }
             this._shadowMap = null;
-        }
-
-        if (this._shadowCamera) {
-            this._shadowCamera.renderTarget = null;
-            this._shadowCamera = null;
         }
 
         if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
@@ -176,7 +191,7 @@ class Light {
         }
 
         // create new one
-        const rd = new LightRenderData(camera, face, this._type);
+        const rd = new LightRenderData(this.device, camera, face, this);
         this._renderData.push(rd);
         return rd;
     }
@@ -345,20 +360,6 @@ class Light {
         this._color.set(r, g, b);
 
         this._updateFinalColor();
-    }
-
-    get shadowBuffer() {
-
-        if (this._shadowCamera) {
-            const rt = this._shadowCamera.renderTarget;
-            if (this._type === LIGHTTYPE_OMNI) {
-                return rt.colorBuffer;
-            }
-
-            return this._isPcf && this.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
-        }
-
-        return null;
     }
 
     updateShadow() {
