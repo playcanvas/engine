@@ -16,14 +16,13 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { WorldClusters } from '../../../scene/world-clusters.js';
 import { LayerComposition } from '../../../scene/layer-composition.js';
-import { ShadowMapManager } from '../../../scene/renderer/shadow-map-manager.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -901,7 +900,7 @@ var standard = {
         } else if (shadowPass) {
             // ##### SHADOW PASS #####
             const smode = options.pass - SHADER_SHADOW;
-            const numShadowModes = ShadowMapManager.numShadowModes;
+            const numShadowModes = SHADOW_COUNT;
             lightType = Math.floor(smode / numShadowModes);
             var shadowType = smode - lightType * numShadowModes;
 

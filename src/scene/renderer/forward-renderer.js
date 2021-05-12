@@ -32,17 +32,18 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     LIGHTSHAPE_PUNCTUAL,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
-    PROJECTION_PERSPECTIVE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
+    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT,
+    PROJECTION_PERSPECTIVE
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { LayerComposition } from '../layer-composition.js';
 import { ShadowRenderer } from './shadow-renderer.js';
-import { ShadowMapManager } from './shadow-map-manager.js';
+import { Camera } from '../camera.js';
+import { GraphNode } from '../graph-node.js';
 
 var shadowCamView = new Mat4();
 var shadowCamViewProj = new Mat4();
@@ -198,6 +199,11 @@ class ForwardRenderer {
         this._createAreaLightPlaceholderLuts();
     }
 
+    destroy() {
+        this._shadowRenderer.destroy();
+        this._shadowRenderer = null;
+    }
+
     // #if _PROFILER
     // Static properties used by the Profiler in the Editor's Launch Page
     static skipRenderCamera = null;
@@ -206,6 +212,20 @@ class ForwardRenderer {
 
     static skipRenderAfter = 0;
     // #endif
+
+    // temporary camera to calculate spot light cookie view-projection matrix
+    static spotCookieCamera = null;
+
+    static getSpotCookieCamera() {
+        if (!this.spotCookieCamera) {
+            this.spotCookieCamera = new Camera();
+            this.spotCookieCamera.projection = PROJECTION_PERSPECTIVE;
+            this.spotCookieCamera.aspectRatio = 1;
+            this.spotCookieCamera.node = new GraphNode();
+        }
+
+        return this.spotCookieCamera;
+    }
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {
@@ -253,22 +273,6 @@ class ForwardRenderer {
 
     lightCompare(lightA, lightB) {
         return lightA.key - lightB.key;
-    }
-
-    getShadowCamera(device, light) {
-        var shadowCam = light._shadowCamera;
-
-        if (!shadowCam) {
-            shadowCam = light._shadowCamera = ShadowMapManager.createShadowCamera(device, light._shadowType, light._type);
-            ShadowMapManager.createShadowBuffer(device, light);
-        } else {
-            var shadowBuffer = shadowCam.renderTarget;
-            if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
-                ShadowMapManager.createShadowBuffer(device, light);
-            }
-        }
-
-        return shadowCam;
     }
 
     updateCameraFrustum(camera) {
@@ -743,22 +747,26 @@ class ForwardRenderer {
             }
 
             if (directional.castShadows) {
+
+                const lightRenderData = directional.getRenderData(camera, 0);
+                const farClip = lightRenderData.shadowCamera._farClip;
+
                 // make bias dependent on far plane because it's not constant for direct light
                 var bias;
                 if (directional._isVsm) {
                     bias = -0.00001 * 20;
                 } else {
-                    bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
+                    bias = (directional.shadowBias / farClip) * 100;
                     if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
                 }
                 var normalBias = directional._isVsm ?
-                    directional.vsmBias / (directional._shadowCamera._farClip / 7.0) :
+                    directional.vsmBias / (farClip / 7.0) :
                     directional._normalOffsetBias;
 
-                this.lightShadowMapId[cnt].setValue(directional.shadowMap);
+                this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
                 var params = directional._rendererParams;
-                if (params.length !== 3) params.length = 3;
+                params.length = 3;
                 params[0] = directional._shadowResolution;
                 params[1] = normalBias;
                 params[2] = bias;
@@ -814,9 +822,13 @@ class ForwardRenderer {
         }
 
         if (omni.castShadows) {
-            this.lightShadowMapId[cnt].setValue(omni.shadowMap);
+
+            // shadow map
+            const lightRenderData = omni.getRenderData(null, 0);
+            this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
+
             var params = omni._rendererParams;
-            if (params.length !== 4) params.length = 4;
+            params.length = 4;
             params[0] = omni._shadowResolution;
             params[1] = omni._normalOffsetBias;
             params[2] = omni.shadowBias;
@@ -872,10 +884,13 @@ class ForwardRenderer {
                 spot.vsmBias / (spot.attenuationEnd / 7.0) :
                 spot._normalOffsetBias;
 
-            this.lightShadowMapId[cnt].setValue(spot.shadowMap);
+            // shadow map
+            const lightRenderData = spot.getRenderData(null, 0);
+            this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
+
             this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
             var params = spot._rendererParams;
-            if (params.length !== 4) params.length = 4;
+            params.length = 4;
             params[0] = spot._shadowResolution;
             params[1] = normalBias;
             params[2] = bias;
@@ -885,19 +900,16 @@ class ForwardRenderer {
         if (spot._cookie) {
             this.lightCookieId[cnt].setValue(spot._cookie);
             if (!spot.castShadows) {
-                var shadowCam = this.getShadowCamera(this.device, spot);
-                var shadowCamNode = shadowCam._node;
+                const cookieCam = ShadowRenderer.getSpotCookieCamera();
+                cookieCam.fov = spot._outerConeAngle * 2;
 
-                shadowCamNode.setPosition(spot._node.getPosition());
-                shadowCamNode.setRotation(spot._node.getRotation());
-                shadowCamNode.rotateLocal(-90, 0, 0);
+                const cookieNode = cookieCam._node;
+                cookieNode.setPosition(spot._node.getPosition());
+                cookieNode.setRotation(spot._node.getRotation());
+                cookieNode.rotateLocal(-90, 0, 0);
 
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                shadowCam.aspectRatio = 1;
-                shadowCam.fov = spot._outerConeAngle * 2;
-
-                shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+                shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
+                shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
                 spot._shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
             }
             this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);

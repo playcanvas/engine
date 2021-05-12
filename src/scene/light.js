@@ -13,6 +13,7 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
+import { ShadowRenderer } from './renderer/shadow-renderer.js';
 
 var spotCenter = new Vec3();
 var spotEndPoint = new Vec3();
@@ -28,9 +29,12 @@ const directionalCascades = [
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
 ];
 
-// Class storing rendering related private information
+// Class storing shadow rendering related private information
 class LightRenderData {
-    constructor(camera, face, lightType) {
+    constructor(device, camera, face, light) {
+
+        // light this data belongs to
+        this.light = light;
 
         // camera this applies to. Only used by directional light, as directional shadow map
         // is culled and rendered for each camera. Local lights' shadow is culled and rendered one time
@@ -38,19 +42,32 @@ class LightRenderData {
         // from a mesh that is not visible by the camera)
         this.camera = camera;
 
+        // camera used to cull / render the shadow map
+        this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
+
         // face index, value is based on light type:
         // - spot: always 0
         // - omni: cubemap face, 0..5
         // - directional: 0 for simple shadows, cascade index for cascaded shadow map
         this.face = face;
 
-        // shadow camera settings, only used by directional lights
-        this.position = lightType === LIGHTTYPE_DIRECTIONAL ? new Vec3() : null;
-        this.orthoHeight = 0;
-        this.farClip = 0;
-
         // visible shadow casters
         this.visibleCasters = [];
+    }
+
+    // returns shadow buffer currently attached to the shadow camera
+    get shadowBuffer() {
+        const rt = this.shadowCamera.renderTarget;
+        if (rt) {
+            const light = this.light;
+            if (light._type === LIGHTTYPE_OMNI) {
+                return rt.colorBuffer;
+            }
+
+            return light._isPcf && light.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
+        }
+
+        return null;
     }
 }
 
@@ -116,22 +133,21 @@ class Light {
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
         // Shadow mapping resources
-        this._shadowCamera = null;
+        this._shadowMap = null;
         this._shadowMatrix = new Mat4();
+        this._rendererParams = [];
+
+        // Shadow mapping properties
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
         this.shadowBias = -0.0005;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
+        this._isVsm = false;
+        this._isPcf = true;
 
         this._scene = null;
         this._node = null;
-        this._rendererParams = [];
-
-        this._isVsm = false;
-        this._isPcf = true;
-        this._cacheShadowMap = false;
-        this._isCachedShadowMap = false;
 
         // private rendering data
         this._renderData = [];
@@ -143,6 +159,24 @@ class Light {
     destroy() {
         this._destroyShadowMap();
         this._renderData = null;
+    }
+
+    // destroys shadow map related resources, called when shadow properties change and resources
+    // need to be recreated
+    _destroyShadowMap() {
+
+        this._renderData.length = 0;
+
+        if (this._shadowMap) {
+            if (!this._shadowMap.cached) {
+                this._shadowMap.destroy();
+            }
+            this._shadowMap = null;
+        }
+
+        if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
+            this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+        }
     }
 
     // returns LightRenderData with matching camera and face
@@ -157,7 +191,7 @@ class Light {
         }
 
         // create new one
-        const rd = new LightRenderData(camera, face, this._type);
+        const rd = new LightRenderData(this.device, camera, face, this);
         this._renderData.push(rd);
         return rd;
     }
@@ -223,6 +257,17 @@ class Light {
 
     set numCascades(value) {
         this.cascades = directionalCascades[value - 1];
+    }
+
+    get shadowMap() {
+        return this._shadowMap;
+    }
+
+    set shadowMap(shadowMap) {
+        if (this._shadowMap !== shadowMap) {
+            this._destroyShadowMap();
+            this._shadowMap = shadowMap;
+        }
     }
 
     getColor() {
@@ -317,46 +362,6 @@ class Light {
         this._updateFinalColor();
     }
 
-    get shadowMap() {
-
-        if (this._shadowCamera) {
-            const rt = this._shadowCamera.renderTarget;
-            if (this._type === LIGHTTYPE_OMNI) {
-                return rt.colorBuffer;
-            }
-
-            return this._isPcf && this.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
-        }
-
-        return null;
-    }
-
-    _destroyShadowMap() {
-        if (this._shadowCamera) {
-            if (!this._isCachedShadowMap) {
-                var rt = this._shadowCamera.renderTarget;
-                var i;
-                if (rt) {
-                    if (rt.length) {
-                        for (i = 0; i < rt.length; i++) {
-                            rt[i].destroyTextureBuffers();
-                            rt[i].destroy();
-                        }
-                    } else {
-                        rt.destroyTextureBuffers();
-                        rt.destroy();
-                    }
-                }
-            }
-            this._shadowCamera.renderTarget = null;
-            this._shadowCamera = null;
-            this._shadowCubeMap = null;
-            if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-            }
-        }
-    }
-
     updateShadow() {
         if (this.shadowUpdateMode !== SHADOWUPDATE_REALTIME) {
             this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
@@ -364,7 +369,9 @@ class Light {
     }
 
     layersDirty() {
-        this._scene.layers._dirtyLights = true;
+        if (this._scene?.layers) {
+            this._scene.layers._dirtyLights = true;
+        }
     }
 
     updateKey() {
@@ -401,7 +408,7 @@ class Light {
         }
 
         if (key !== this.key && this._scene !== null) {
-// TODO: most of the changes to the key should not invalidate the composition,
+            // TODO: most of the changes to the key should not invalidate the composition,
             // probably only _type and _castShadows
             this.layersDirty();
         }
@@ -430,7 +437,7 @@ class Light {
         return this._shape;
     }
 
-    set shape(value = LIGHTSHAPE_PUNCTUAL) {
+    set shape(value) {
         if (this._shape === value)
             return;
 
@@ -490,11 +497,12 @@ class Light {
     }
 
     set castShadows(value) {
-        if (this._castShadows === value)
-            return;
-
-        this._castShadows = value;
-        this.updateKey();
+        if (this._castShadows !== value) {
+            this._castShadows = value;
+            this._destroyShadowMap();
+            this.layersDirty();
+            this.updateKey();
+        }
     }
 
     get shadowResolution() {
@@ -502,15 +510,15 @@ class Light {
     }
 
     set shadowResolution(value) {
-        if (this._shadowResolution === value)
-            return;
-
-        if (this._type === LIGHTTYPE_OMNI) {
-            value = Math.min(value, this.device.maxCubeMapSize);
-        } else {
-            value = Math.min(value, this.device.maxTextureSize);
+        if (this._shadowResolution !== value) {
+            if (this._type === LIGHTTYPE_OMNI) {
+                value = Math.min(value, this.device.maxCubeMapSize);
+            } else {
+                value = Math.min(value, this.device.maxTextureSize);
+            }
+            this._shadowResolution = value;
+            this._destroyShadowMap();
         }
-        this._shadowResolution = value;
     }
 
     get vsmBlurSize() {

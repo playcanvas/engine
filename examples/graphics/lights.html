@@ -162,7 +162,11 @@
                 shadowDistance: 100,
                 shadowBias: 0.2,
                 normalOffsetBias: 0.1,
-                intensity: 0.6
+                intensity: 0.6,
+
+                // soft shadow
+                shadowType: pc.SHADOW_VSM16,
+                vsmBlurSize: 16
             });
             app.root.addChild(directionallight);
 
@@ -206,7 +210,7 @@
         }, this);
 
         // Simple update loop to rotate the light
-        var angleRad = 0;
+        var angleRad = 1;
         app.on("update", function (dt) {
             angleRad += 0.3 * dt;
 

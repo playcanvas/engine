@@ -120,6 +120,7 @@ class Lightmapper {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
+        this.shadowMapCache = renderer._shadowRenderer.shadowMapCache;
 
         this._tempSet = new Set();
         this._initCalled = false;
@@ -719,7 +720,9 @@ class Lightmapper {
 
         // only prepare camera for spot light, other cameras need to be adjusted per cubemap face / per node later
         if (light.type === LIGHTTYPE_SPOT) {
-            shadowCam = this.renderer.getShadowCamera(device, light);
+
+            const lightRenderData = light.getRenderData(null, 0);
+            shadowCam = lightRenderData.shadowCamera;
 
             shadowCam._node.setPosition(light._node.getPosition());
             shadowCam._node.setRotation(light._node.getRotation());
@@ -796,9 +799,13 @@ class Lightmapper {
         lightArray[light.type][0] = light;
     }
 
-    renderShadowMap(shadowMapRendered, casters, lightArray, light) {
+    renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
 
+        const light = bakeLight.light;
         if (!shadowMapRendered && light.castShadows) {
+
+            // allocate shadow map from the cache to avoid per light allocation
+            light.shadowMap = this.shadowMapCache.get(this.device, light);
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRenderer.cullDirectional(light, casters, this.camera);
@@ -917,7 +924,6 @@ class Lightmapper {
             const bakeLight = bakeLights[i];
 
             bakeLight.light.enabled = true; // enable next light
-            bakeLight.light._cacheShadowMap = true;
             let shadowMapRendered = false;
 
             const shadowCam = this.lightCameraPrepare(device, bakeLight);
@@ -935,7 +941,7 @@ class Lightmapper {
                 this.setupLightArray(lightArray, bakeLight.light);
 
                 // render light shadow map needs to be rendered
-                shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
+                shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
 
                 // Store original materials
                 this.backupMaterials(rcv);
@@ -1002,13 +1008,17 @@ class Lightmapper {
             // disable the light
             bakeLight.light.enabled = false;
 
-            // release light shadowmap
-            bakeLight.light._cacheShadowMap = false;
-            if (bakeLight.light._isCachedShadowMap) {
-                bakeLight.light._destroyShadowMap();
+            // release shadow map back to the cache
+            if (bakeLight.light.shadowMap?.cached) {
+                this.shadowMapCache.add(bakeLight.light, bakeLight.light.shadowMap);
+                bakeLight.light.shadowMap = null;
             }
         }
 
+        // destroy all cached shadowmaps
+        this.shadowMapCache.clear();
+
+        // postprocess lightmaps
         this.dilateTextures(device, bakeNodes, passCount);
 
         // Revert shadow casting
