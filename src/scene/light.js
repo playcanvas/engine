@@ -369,7 +369,7 @@ class Light {
     }
 
     layersDirty() {
-        if (this?._scene?.layers) {
+        if (this._scene?.layers) {
             this._scene.layers._dirtyLights = true;
         }
     }
