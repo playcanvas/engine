@@ -3,9 +3,9 @@ import {
 } from '../constants.js';
 import { ShadowMap } from './shadow-map.js';
 
-// In a normal case where the light renders shadow, the light has a unique shadow map.
+// In the normal case where the light renders a shadow, the light has a unique shadow map.
 // ShadowMapCache is used in two cases:
-// 1) by Lightmapper - when lights are baked to lightmaps one a time, shadow maps are re-used
+// 1) by Lightmapper - when lights are baked to lightmaps one at a time, shadow maps are re-used
 //    to limit allocations. Those are deleted when baking is done.
 // 2) by ShadowRenderer - when VSM blur is done, a temporary buffer is grabbed from the cache
 class ShadowMapCache {
