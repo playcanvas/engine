@@ -97,7 +97,7 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
     params[3] = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
 
     for (let face = 0; face < (target.cubemap ? 6 : 1); face++) {
-        const targ = new RenderTarget({
+        const renderTarget = new RenderTarget({
             colorBuffer: target,
             face: face,
             depth: false
@@ -105,7 +105,9 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
         params[0] = face;
         constantParams.setValue(params);
 
-        drawQuadWithShader(device, targ, shader);
+        drawQuadWithShader(device, renderTarget, shader);
+
+        renderTarget.destroy();
     }
 
     // #if _DEBUG

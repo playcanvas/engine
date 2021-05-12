@@ -1555,6 +1555,8 @@ class GraphicsDevice extends EventHandler {
             // If the active render target is auto-mipmapped, generate its mip chain
             var colorBuffer = target._colorBuffer;
             if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
+                // FIXME: if colorBuffer is a cubemap currently we're re-generating mipmaps after
+                // updating each face!
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
                 gl.generateMipmap(colorBuffer._glTarget);
@@ -2191,19 +2193,16 @@ class GraphicsDevice extends EventHandler {
                 texture._parameterFlags = 0;
             }
 
-            // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
-            // (for example when rendering to shadow map), in which case previous content is used
-            var processed = false;
             if (texture === this.grabPassTexture) {
-                processed = this.updateGrabPass();
-
-                processed = true;
-            }
-
-            if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
-                this.uploadTexture(texture);
-                texture._needsUpload = false;
-                texture._needsMipmapsUpload = false;
+                // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
+                // (for example when rendering to shadow map), in which case previous content is used
+                this.updateGrabPass();
+            } else {
+                if (texture._needsUpload || texture._needsMipmapsUpload) {
+                    this.uploadTexture(texture);
+                    texture._needsUpload = false;
+                    texture._needsMipmapsUpload = false;
+                }
             }
         } else {
             // Ensure the texture is currently bound to the correct target on the specified texture unit.
