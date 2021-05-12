@@ -1235,34 +1235,36 @@ var standard = {
             }
         }
 
-        var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
-
-        if (options.sphereMap) {
-            var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-            code += scode;
-        } else if (cubemapReflection) {
-            if (options.prefilteredCubemap) {
-                if (options.useMetalness) {
-                    code += chunks.envBrdfApproxPS;
-                } else {
-                    code += chunks.envBrdfNonePS;
-                }
-                if (useTexCubeLod) {
-                    code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-
-                } else {
-                    code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                }
-            } else {
-                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                                                        options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
-            }
-        } else if (options.dpAtlas) {
-            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-        }
-
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+
+            if (options.useMetalness) {
+                code += chunks.envBrdfApproxPS;
+            } else {
+                code += chunks.envBrdfNonePS;
+            }
+
+            var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
+
+            if (options.sphereMap) {
+                var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+                scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+                code += scode;
+            } else if (cubemapReflection) {
+                if (options.prefilteredCubemap) {
+                    if (useTexCubeLod) {
+                        code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
+
+                    } else {
+                        code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
+                    }
+                } else {
+                    code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
+                                                            options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
+                }
+            } else if (options.dpAtlas) {
+                code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+            }
+
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
