@@ -749,8 +749,7 @@ class ForwardRenderer {
             if (directional.castShadows) {
 
                 const lightRenderData = directional.getRenderData(camera, 0);
-                const shadowCamera = lightRenderData.shadowCamera;
-                const farClip = shadowCamera._farClip;
+                const farClip = lightRenderData.shadowCamera._farClip;
 
                 // make bias dependent on far plane because it's not constant for direct light
                 var bias;
