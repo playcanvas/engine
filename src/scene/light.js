@@ -45,6 +45,8 @@ class LightRenderData {
         // camera used to cull / render the shadow map
         this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
 
+        this.shadowMatrix = new Mat4();
+
         // face index, value is based on light type:
         // - spot: always 0
         // - omni: cubemap face, 0..5
@@ -134,7 +136,6 @@ class Light {
 
         // Shadow mapping resources
         this._shadowMap = null;
-        this._shadowMatrix = new Mat4();
         this._rendererParams = [];
 
         // Shadow mapping properties
@@ -145,6 +146,9 @@ class Light {
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this._isVsm = false;
         this._isPcf = true;
+
+        // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
+        this._cookieMatrix = null;
 
         this._scene = null;
         this._node = null;
@@ -592,6 +596,13 @@ class Light {
             this._intensity = value;
             this._updateFinalColor();
         }
+    }
+
+    get cookieMatrix() {
+        if (!this._cookieMatrix) {
+            this._cookieMatrix = new Mat4();
+        }
+        return this._cookieMatrix;
     }
 
     get cookie() {
