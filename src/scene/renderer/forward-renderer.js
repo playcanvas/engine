@@ -730,6 +730,7 @@ class ForwardRenderer {
         this.lightDir[cnt][2] = spot._direction.z;
         this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
+        let cookieMatrix;
         if (spot.castShadows) {
             var bias;
             if (spot._isVsm) {
@@ -754,11 +755,14 @@ class ForwardRenderer {
             params[2] = bias;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
+
+            cookieMatrix = lightRenderData.shadowMatrix;
         }
+
         if (spot._cookie) {
             this.lightCookieId[cnt].setValue(spot._cookie);
             if (!spot.castShadows) {
-                const cookieCam = ShadowRenderer.getSpotCookieCamera();
+                const cookieCam = ForwardRenderer.getSpotCookieCamera();
                 cookieCam.fov = spot._outerConeAngle * 2;
 
                 const cookieNode = cookieCam._node;
@@ -768,9 +772,12 @@ class ForwardRenderer {
 
                 shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
                 shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
-                lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+
+                if (!spot._cookieMatrix) spot._cookieMatrix = new Mat4();
+                cookieMatrix = spot._cookieMatrix;
+                spot._cookieMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
             }
-            this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
+            this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
             this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
             if (spot._cookieTransform) {
                 spot._cookieTransformUniform[0] = spot._cookieTransform.x;

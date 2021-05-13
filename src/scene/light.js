@@ -147,6 +147,9 @@ class Light {
         this._isVsm = false;
         this._isPcf = true;
 
+        // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
+        this._cookieMatrix = null;
+
         this._scene = null;
         this._node = null;
 
