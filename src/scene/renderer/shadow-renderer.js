@@ -513,7 +513,7 @@ class ShadowRenderer {
                 if (type !== LIGHTTYPE_OMNI) {
                     shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
                     shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
-                    light._shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+                    lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
                 }
 
                 forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, faceCount === 1);

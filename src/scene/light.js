@@ -45,6 +45,8 @@ class LightRenderData {
         // camera used to cull / render the shadow map
         this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
 
+        this.shadowMatrix = new Mat4();
+
         // face index, value is based on light type:
         // - spot: always 0
         // - omni: cubemap face, 0..5
@@ -134,7 +136,6 @@ class Light {
 
         // Shadow mapping resources
         this._shadowMap = null;
-        this._shadowMatrix = new Mat4();
         this._rendererParams = [];
 
         // Shadow mapping properties

@@ -622,7 +622,7 @@ class ForwardRenderer {
                     directional._normalOffsetBias;
 
                 this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
-                this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
+                this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
                 var params = directional._rendererParams;
                 params.length = 3;
                 params[0] = directional._shadowResolution;
@@ -630,7 +630,7 @@ class ForwardRenderer {
                 params[2] = bias;
                 this.lightShadowParamsId[cnt].setValue(params);
                 if (this.mainLight < 0) {
-                    this.lightShadowMatrixVsId[cnt].setValue(directional._shadowMatrix.data);
+                    this.lightShadowMatrixVsId[cnt].setValue(lightRenderData.shadowMatrix.data);
                     this.lightShadowParamsVsId[cnt].setValue(params);
                     directional._direction.normalize();
                     this.lightDirVs[cnt][0] = directional._direction.x;
@@ -746,7 +746,7 @@ class ForwardRenderer {
             const lightRenderData = spot.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
-            this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+            this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
             var params = spot._rendererParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
@@ -768,9 +768,9 @@ class ForwardRenderer {
 
                 shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
                 shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
-                spot._shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+                lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
             }
-            this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+            this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
             this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
             if (spot._cookieTransform) {
                 spot._cookieTransformUniform[0] = spot._cookieTransform.x;
