@@ -773,9 +773,8 @@ class ForwardRenderer {
                 shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
                 shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
 
-                if (!spot._cookieMatrix) spot._cookieMatrix = new Mat4();
-                cookieMatrix = spot._cookieMatrix;
-                spot._cookieMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+                cookieMatrix = spot.cookieMatrix;
+                cookieMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
             }
             this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
             this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);

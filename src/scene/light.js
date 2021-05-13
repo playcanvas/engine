@@ -598,6 +598,13 @@ class Light {
         }
     }
 
+    get cookieMatrix() {
+        if (!this._cookieMatrix) {
+            this._cookieMatrix = new Mat4();
+        }
+        return this._cookieMatrix;
+    }
+
     get cookie() {
         return this._cookie;
     }
