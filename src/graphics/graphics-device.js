@@ -43,36 +43,37 @@ import { VertexFormat } from './vertex-format.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
-var _downsampleImage = function (image, size) {
-    var srcW = image.width;
-    var srcH = image.height;
+function downsampleImage(image, size) {
+    const srcW = image.width;
+    const srcH = image.height;
 
     if ((srcW > size) || (srcH > size)) {
-        var scale = size / Math.max(srcW, srcH);
-        var dstW = Math.floor(srcW * scale);
-        var dstH = Math.floor(srcH * scale);
+        const scale = size / Math.max(srcW, srcH);
+        const dstW = Math.floor(srcW * scale);
+        const dstH = Math.floor(srcH * scale);
 
-        console.warn('Image dimensions larger than max supported texture size of ' + size + '. ' +
-                     'Resizing from ' + srcW + ', ' + srcH + ' to ' + dstW + ', ' + dstH + '.');
+        // #if _DEBUG
+        console.warn(`Image dimensions larger than max supported texture size of ${size}. Resizing from ${srcW}, ${srcH} to ${dstW}, ${dstH}.`);
+        // #endif
 
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         canvas.width = dstW;
         canvas.height = dstH;
 
-        var context = canvas.getContext('2d');
+        const context = canvas.getContext('2d');
         context.drawImage(image, 0, 0, srcW, srcH, 0, 0, dstW, dstH);
 
         return canvas;
     }
 
     return image;
-};
+}
 
 function testRenderable(gl, pixelFormat) {
-    var result = true;
+    let result = true;
 
     // Create a 2x2 texture
-    var texture = gl.createTexture();
+    const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -81,7 +82,7 @@ function testRenderable(gl, pixelFormat) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, pixelFormat, null);
 
     // Try to use this texture as a render target
-    var framebuffer = gl.createFramebuffer();
+    const framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
@@ -101,10 +102,10 @@ function testRenderable(gl, pixelFormat) {
 }
 
 function testTextureHalfFloatUpdatable(gl, pixelFormat) {
-    var result = true;
+    let result = true;
 
     // Create a 2x2 texture
-    var texture = gl.createTexture();
+    const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -114,7 +115,7 @@ function testTextureHalfFloatUpdatable(gl, pixelFormat) {
     // upload some data - on iOS prior to about November 2019, passing data to half texture would fail here
     // see details here: https://bugs.webkit.org/show_bug.cgi?id=169999
     // note that if not supported, this prints an error to console, the error can be safely ignored as it's handled
-    var data = new Uint16Array(4 * 2 * 2);
+    const data = new Uint16Array(4 * 2 * 2);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, pixelFormat, data);
 
     if (gl.getError() !== gl.NO_ERROR) {
@@ -133,10 +134,10 @@ function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
 
-    var test1 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTestPS, "ptest1");
-    var test2 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTest2PS, "ptest2");
+    const test1 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTestPS, "ptest1");
+    const test2 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTest2PS, "ptest2");
 
-    var textureOptions = {
+    const textureOptions = {
         format: PIXELFORMAT_RGBA32F,
         width: 1,
         height: 1,
@@ -144,37 +145,37 @@ function testTextureFloatHighPrecision(device) {
         minFilter: FILTER_NEAREST,
         magFilter: FILTER_NEAREST
     };
-    var tex1 = new Texture(device, textureOptions);
+    const tex1 = new Texture(device, textureOptions);
     tex1.name = 'testFHP';
-    var targ1 = new RenderTarget({
+    const targ1 = new RenderTarget({
         colorBuffer: tex1,
         depth: false
     });
     drawQuadWithShader(device, targ1, test1);
 
     textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
-    var tex2 = new Texture(device, textureOptions);
+    const tex2 = new Texture(device, textureOptions);
     tex2.name = 'testFHP';
-    var targ2 = new RenderTarget({
+    const targ2 = new RenderTarget({
         colorBuffer: tex2,
         depth: false
     });
     device.constantTexSource.setValue(tex1);
     drawQuadWithShader(device, targ2, test2);
 
-    var prevFramebuffer = device.activeFramebuffer;
+    const prevFramebuffer = device.activeFramebuffer;
     device.setFramebuffer(targ2._glFrameBuffer);
 
-    var pixels = new Uint8Array(4);
+    const pixels = new Uint8Array(4);
     device.readPixels(0, 0, 1, 1, pixels);
 
     device.setFramebuffer(prevFramebuffer);
 
-    var x = pixels[0] / 255;
-    var y = pixels[1] / 255;
-    var z = pixels[2] / 255;
-    var w = pixels[3] / 255;
-    var f = x / (256 * 256 * 256) + y / (256 * 256) + z / 256 + w;
+    const x = pixels[0] / 255;
+    const y = pixels[1] / 255;
+    const z = pixels[2] / 255;
+    const w = pixels[3] / 255;
+    const f = x / (256 * 256 * 256) + y / (256 * 256) + z / 256 + w;
 
     tex1.destroy();
     targ1.destroy();
@@ -289,10 +290,10 @@ class GraphicsDevice extends EventHandler {
         };
 
         // Retrieve the WebGL context
-        var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+        const preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
-        var names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
-        var gl = null;
+        const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
+        let gl = null;
         options = options || {};
         options.stencil = true;
         for (let i = 0; i < names.length; i++) {
@@ -314,8 +315,8 @@ class GraphicsDevice extends EventHandler {
         this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        var isChrome = !!window.chrome;
-        var isMac = navigator.appVersion.indexOf("Mac") !== -1;
+        const isChrome = !!window.chrome;
+        const isMac = navigator.appVersion.indexOf("Mac") !== -1;
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         // init polyfill for VAOs
@@ -463,8 +464,8 @@ class GraphicsDevice extends EventHandler {
         this.targetToSlot[gl.TEXTURE_3D] = 2;
 
         // Define the uniform commit functions
-        var scopeX, scopeY, scopeZ, scopeW;
-        var uniformValue;
+        let scopeX, scopeY, scopeZ, scopeW;
+        let uniformValue;
         this.commitFunction = [];
         this.commitFunction[UNIFORMTYPE_BOOL] = function (uniform, value) {
             if (uniform.value !== value) {
@@ -580,7 +581,7 @@ class GraphicsDevice extends EventHandler {
         this.scope = new ScopeSpace("Device");
 
         this.programLib = new ProgramLibrary(this);
-        for (var generator in programlib)
+        for (const generator in programlib)
             this.programLib.register(generator, programlib[generator]);
 
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
@@ -591,7 +592,7 @@ class GraphicsDevice extends EventHandler {
         // bone data.  This is based off of the Standard shader.  A user defined shader may have
         // even less space available for bones so this calculated value can be overridden via
         // pc.GraphicsDevice.setBoneLimit.
-        var numUniforms = this.vertexUniformsCount;
+        let numUniforms = this.vertexUniformsCount;
         numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
         numUniforms -= 8;     // 8 lights max, each specifying a position vector
         numUniforms -= 1;     // Eye position
@@ -677,7 +678,7 @@ class GraphicsDevice extends EventHandler {
         // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
         this.grabPassAvailable = true;
 
-        this.grabPassApha = options.alpha;
+        this.grabPassAlpha = options.alpha;
         this.createGrabPass();
 
         VertexFormat.init(this);
@@ -729,21 +730,21 @@ class GraphicsDevice extends EventHandler {
     // #endif
 
     getPrecision() {
-        var gl = this.gl;
-        var precision = "highp";
+        const gl = this.gl;
+        let precision = "highp";
 
         // Query the precision supported by ints and floats in vertex and fragment shaders.
         // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
         // instances of the default Android browser). In this case, assume highp is available.
         if (gl.getShaderPrecisionFormat) {
-            var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
-            var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
+            const vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
+            const vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
 
-            var fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-            var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
+            const fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+            const fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
 
-            var highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
-            var mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
+            const highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
+            const mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
 
             if (!highpAvailable) {
                 if (mediumpAvailable) {
@@ -764,13 +765,13 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeExtensions() {
-        var gl = this.gl;
-        var ext;
+        const gl = this.gl;
+        let ext;
 
-        var supportedExtensions = gl.getSupportedExtensions();
+        const supportedExtensions = gl.getSupportedExtensions();
 
-        var getExtension = function () {
-            for (var i = 0; i < arguments.length; i++) {
+        const getExtension = function () {
+            for (let i = 0; i < arguments.length; i++) {
                 if (supportedExtensions.indexOf(arguments[i]) !== -1) {
                     return gl.getExtension(arguments[i]);
                 }
@@ -843,12 +844,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeCapabilities() {
-        var gl = this.gl;
-        var ext;
+        const gl = this.gl;
+        let ext;
 
         this.maxPrecision = this.precision = this.getPrecision();
 
-        var contextAttribs = gl.getContextAttributes();
+        const contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs.antialias;
         this.supportsStencil = contextAttribs.stencil;
 
@@ -884,7 +885,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeRenderState() {
-        var gl = this.gl;
+        const gl = this.gl;
 
         // Initialize render state to a known start state
         this.blending = false;
@@ -1001,7 +1002,7 @@ class GraphicsDevice extends EventHandler {
 
         this.textureUnit = 0;
         this.textureUnits = [];
-        for (var i = 0; i < this.maxCombinedTextures; i++) {
+        for (let i = 0; i < this.maxCombinedTextures; i++) {
             this.textureUnits.push([null, null, null]);
         }
     }
@@ -1009,9 +1010,8 @@ class GraphicsDevice extends EventHandler {
     loseContext() {
 
         // release shaders
-        var i;
-        for (i = 0; i < this.shaders.length; i++) {
-            this.shaders[i].loseContext();
+        for (const shader of this.shaders) {
+            shader.loseContext();
         }
 
         // grab pass
@@ -1019,21 +1019,21 @@ class GraphicsDevice extends EventHandler {
 
         // release textures - they will be recreated with new context
         while (this.textures.length > 0) {
-            var texture = this.textures[0];
+            const texture = this.textures[0];
             this.destroyTexture(texture);
             texture.dirtyAll();
         }
 
         // release vertex and index buffers
-        for (i = 0; i < this.buffers.length; i++) {
-            this.buffers[i].loseContext();
+        for (const buffer of this.buffers) {
+            buffer.loseContext();
         }
 
         // Reset all render targets so they'll be recreated as required.
         // TODO: a solution for the case where a render target contains something
         // that was previously generated that needs to be re-rendered.
-        for (i = 0; i < this.targets.length; i++) {
-            this.targets[i].loseContext();
+        for (const target of this.targets) {
+            target.loseContext();
         }
     }
 
@@ -1045,14 +1045,13 @@ class GraphicsDevice extends EventHandler {
         this.initializeContextCaches();
 
         // Recompile all shaders (they'll be linked when they're next actually used)
-        var i, len;
-        for (i = 0, len = this.shaders.length; i < len; i++) {
-            this.compileAndLinkShader(this.shaders[i]);
+        for (const shader of this.shaders) {
+            this.compileAndLinkShader(shader);
         }
 
         // Recreate buffer objects and reupload buffer data to the GPU
-        for (i = 0, len = this.buffers.length; i < len; i++) {
-            this.buffers[i].unlock();
+        for (const buffer of this.buffers) {
+            buffer.unlock();
         }
 
         this.createGrabPass();
@@ -1061,8 +1060,8 @@ class GraphicsDevice extends EventHandler {
     createGrabPass() {
         if (this.grabPassTexture) return;
 
-        var grabPassTexture = new Texture(this, {
-            format: this.grabPassApha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
+        const grabPassTexture = new Texture(this, {
+            format: this.grabPassAlpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
             minFilter: FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -1072,10 +1071,10 @@ class GraphicsDevice extends EventHandler {
 
         grabPassTexture.name = 'texture_grabPass';
 
-        var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
+        const grabPassTextureId = this.scope.resolve(grabPassTexture.name);
         grabPassTextureId.setValue(grabPassTexture);
 
-        var grabPassRenderTarget = new RenderTarget({
+        const grabPassRenderTarget = new RenderTarget({
             colorBuffer: grabPassTexture,
             depth: false
         });
@@ -1086,7 +1085,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateGrabPass() {
-        var gl = this.gl;
+        const gl = this.gl;
 
         // print error if we cannot grab framebuffer at this point
         if (!this.grabPassAvailable) {
@@ -1099,12 +1098,12 @@ class GraphicsDevice extends EventHandler {
         }
 
         // render target currently being rendered to (these are null if default framebuffer is active)
-        var renderTarget = this.renderTarget;
-        var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+        const renderTarget = this.renderTarget;
+        const resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
 
-        var grabPassTexture = this.grabPassTexture;
-        var width = this.width;
-        var height = this.height;
+        const grabPassTexture = this.grabPassTexture;
+        const width = this.width;
+        const height = this.height;
 
         // #if _DEBUG
         this.pushMarker("grabPass");
@@ -1116,12 +1115,12 @@ class GraphicsDevice extends EventHandler {
             }
 
             // these are null if rendering to default framebuffer
-            var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
-            var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
+            const currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
+            const resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
 
             // init grab pass framebuffer (only does it once)
             this.initRenderTarget(this.grabPassRenderTarget);
-            var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
+            const grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
 
             // blit from currently used render target (or default framebuffer if null)
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
@@ -1142,7 +1141,7 @@ class GraphicsDevice extends EventHandler {
             }
 
             // this allocates texture (grabPassTexture was already bound to gl)
-            var format = grabPassTexture._glFormat;
+            const format = grabPassTexture._glFormat;
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
             grabPassTexture._width = width;
             grabPassTexture._height = height;
@@ -1244,8 +1243,8 @@ class GraphicsDevice extends EventHandler {
 
     _checkFbo() {
         // Ensure all is well
-        var gl = this.gl;
-        var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        const gl = this.gl;
+        const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
         switch (status) {
             case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
                 console.error("ERROR: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
@@ -1277,7 +1276,7 @@ class GraphicsDevice extends EventHandler {
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copyRenderTarget(source, dest, color, depth) {
-        var gl = this.gl;
+        const gl = this.gl;
 
         if (!this.webgl2 && depth) {
             // #if _DEBUG
@@ -1326,13 +1325,13 @@ class GraphicsDevice extends EventHandler {
         }
 
         if (this.webgl2 && dest) {
-            var prevRt = this.renderTarget;
+            const prevRt = this.renderTarget;
             this.renderTarget = dest;
             this.updateBegin();
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, source ? source._glFrameBuffer : null);
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dest._glFrameBuffer);
-            var w = source ? source.width : dest.width;
-            var h = source ? source.height : dest.height;
+            const w = source ? source.width : dest.width;
+            const h = source ? source.height : dest.height;
             gl.blitFramebuffer(0, 0, w, h,
                                0, 0, w, h,
                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
@@ -1340,7 +1339,7 @@ class GraphicsDevice extends EventHandler {
             this.renderTarget = prevRt;
             gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
         } else {
-            var shader = this.getCopyShader();
+            const shader = this.getCopyShader();
             this.constantTexSource.setValue(source._colorBuffer);
             drawQuadWithShader(this, dest, shader);
         }
@@ -1360,7 +1359,7 @@ class GraphicsDevice extends EventHandler {
         if (target._glFrameBuffer) return;
 
         // #if _PROFILER
-        var startTime = now();
+        const startTime = now();
         this.fire('fbo:create', {
             timestamp: startTime,
             target: this
@@ -1369,14 +1368,14 @@ class GraphicsDevice extends EventHandler {
 
         // Set RT's device
         target._device = this;
-        var gl = this.gl;
+        const gl = this.gl;
 
         // ##### Create main FBO #####
         target._glFrameBuffer = gl.createFramebuffer();
         this.setFramebuffer(target._glFrameBuffer);
 
         // --- Init the provided color buffer (optional) ---
-        var colorBuffer = target._colorBuffer;
+        const colorBuffer = target._colorBuffer;
         if (colorBuffer) {
             if (!colorBuffer._glTexture) {
                 // Clamp the render buffer size to the maximum supported by the device
@@ -1394,7 +1393,7 @@ class GraphicsDevice extends EventHandler {
             );
         }
 
-        var depthBuffer = target._depthBuffer;
+        const depthBuffer = target._depthBuffer;
         if (depthBuffer && this.webgl2) {
             // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
             if (!depthBuffer._glTexture) {
@@ -1416,7 +1415,7 @@ class GraphicsDevice extends EventHandler {
         } else if (target._depth) {
             // --- Init a new depth/stencil buffer (optional) ---
             // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
-            var willRenderMsaa = target._samples > 1 && this.webgl2;
+            const willRenderMsaa = target._samples > 1 && this.webgl2;
             if (!willRenderMsaa) {
                 if (!target._glDepthBuffer) {
                     target._glDepthBuffer = gl.createRenderbuffer();
@@ -1513,15 +1512,15 @@ class GraphicsDevice extends EventHandler {
 
         // clear texture units once a frame on desktop safari
         if (this._tempEnableSafariTextureUnitWorkaround) {
-            for (var unit = 0; unit < this.textureUnits.length; ++unit) {
-                for (var slot = 0; slot < 3; ++slot) {
+            for (let unit = 0; unit < this.textureUnits.length; ++unit) {
+                for (let slot = 0; slot < 3; ++slot) {
                     this.textureUnits[unit][slot] = null;
                 }
             }
         }
 
         // Set the render target
-        var target = this.renderTarget;
+        const target = this.renderTarget;
         if (target) {
             // Create a new WebGL frame buffer object
             if (!target._glFrameBuffer) {
@@ -1543,17 +1542,17 @@ class GraphicsDevice extends EventHandler {
      * and {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateEnd() {
-        var gl = this.gl;
+        const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
         this.boundVao = null;
         this.gl.bindVertexArray(null);
 
         // Unset the render target
-        var target = this.renderTarget;
+        const target = this.renderTarget;
         if (target) {
             // If the active render target is auto-mipmapped, generate its mip chain
-            var colorBuffer = target._colorBuffer;
+            const colorBuffer = target._colorBuffer;
             if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
                 // FIXME: if colorBuffer is a cubemap currently we're re-generating mipmaps after
                 // updating each face!
@@ -1570,8 +1569,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeTexture(texture) {
-        var gl = this.gl;
-        var ext;
+        const gl = this.gl;
+        let ext;
 
         texture._glTexture = gl.createTexture();
 
@@ -1775,7 +1774,7 @@ class GraphicsDevice extends EventHandler {
     destroyTexture(texture) {
         if (texture._glTexture) {
             // Remove texture from device's texture cache
-            var idx = this.textures.indexOf(texture);
+            const idx = this.textures.indexOf(texture);
             if (idx !== -1) {
                 this.textures.splice(idx, 1);
             }
@@ -1784,9 +1783,9 @@ class GraphicsDevice extends EventHandler {
             this.scope.removeValue(texture);
 
             // Update shadowed texture unit state to remove texture from any units
-            for (var i = 0; i < this.textureUnits.length; i++) {
-                var textureUnit = this.textureUnits[i];
-                for (var j = 0; j < textureUnit.length; j++) {
+            for (let i = 0; i < this.textureUnits.length; i++) {
+                const textureUnit = this.textureUnits[i];
+                for (let j = 0; j < textureUnit.length; j++) {
                     if (textureUnit[j] === texture._glTexture) {
                         textureUnit[j] = null;
                     }
@@ -1794,7 +1793,7 @@ class GraphicsDevice extends EventHandler {
             }
 
             // Blow away WebGL texture resource
-            var gl = this.gl;
+            const gl = this.gl;
             gl.deleteTexture(texture._glTexture);
             delete texture._glTexture;
             delete texture._glTarget;
@@ -1822,7 +1821,7 @@ class GraphicsDevice extends EventHandler {
 
             // Note: the WebGL spec states that UNPACK_FLIP_Y_WEBGL only affects
             // texImage2D and texSubImage2D, not compressedTexImage2D
-            var gl = this.gl;
+            const gl = this.gl;
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
         }
     }
@@ -1833,7 +1832,7 @@ class GraphicsDevice extends EventHandler {
 
             // Note: the WebGL spec states that UNPACK_PREMULTIPLY_ALPHA_WEBGL only affects
             // texImage2D and texSubImage2D, not compressedTexImage2D
-            var gl = this.gl;
+            const gl = this.gl;
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha);
         }
     }
@@ -1855,16 +1854,16 @@ class GraphicsDevice extends EventHandler {
         }
         // #endif
 
-        var gl = this.gl;
+        const gl = this.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
             return;
 
-        var mipLevel = 0;
-        var mipObject;
-        var resMult;
+        let mipLevel = 0;
+        let mipObject;
+        let resMult;
 
-        var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+        const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
 
         while (texture._levels[mipLevel] || mipLevel === 0) {
             // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -1888,7 +1887,7 @@ class GraphicsDevice extends EventHandler {
 
             if (texture._cubemap) {
                 // ----- CUBEMAP -----
-                var face;
+                let face;
 
                 if (this._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
@@ -1896,11 +1895,11 @@ class GraphicsDevice extends EventHandler {
                         if (!texture._levelsUpdated[0][face])
                             continue;
 
-                        var src = mipObject[face];
+                        let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
                         if (src instanceof HTMLImageElement) {
                             if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
-                                src = _downsampleImage(src, this.maxCubeMapSize);
+                                src = downsampleImage(src, this.maxCubeMapSize);
                                 if (mipLevel === 0) {
                                     texture._width = src.width;
                                     texture._height = src.height;
@@ -1926,7 +1925,7 @@ class GraphicsDevice extends EventHandler {
                         if (!texture._levelsUpdated[0][face])
                             continue;
 
-                        var texData = mipObject[face];
+                        const texData = mipObject[face];
                         if (texture._compressed) {
                             gl.compressedTexImage2D(
                                 gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
@@ -1988,7 +1987,7 @@ class GraphicsDevice extends EventHandler {
                     // Downsize images that are too large to be used as textures
                     if (mipObject instanceof HTMLImageElement) {
                         if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
-                            mipObject = _downsampleImage(mipObject, this.maxTextureSize);
+                            mipObject = downsampleImage(mipObject, this.maxTextureSize);
                             if (mipLevel === 0) {
                                 texture._width = mipObject.width;
                                 texture._height = mipObject.height;
@@ -2048,7 +2047,7 @@ class GraphicsDevice extends EventHandler {
 
         if (texture._needsUpload) {
             if (texture._cubemap) {
-                for (var i = 0; i < 6; i++)
+                for (let i = 0; i < 6; i++)
                     texture._levelsUpdated[0][i] = false;
             } else {
                 texture._levelsUpdated[0] = false;
@@ -2097,10 +2096,10 @@ class GraphicsDevice extends EventHandler {
     // If the texture is not already bound on the currently active texture
     // unit, bind it
     bindTexture(texture) {
-        var textureTarget = texture._glTarget;
-        var textureObject = texture._glTexture;
-        var textureUnit = this.textureUnit;
-        var slot = this.targetToSlot[textureTarget];
+        const textureTarget = texture._glTarget;
+        const textureObject = texture._glTexture;
+        const textureUnit = this.textureUnit;
+        const slot = this.targetToSlot[textureTarget];
         if (this.textureUnits[textureUnit][slot] !== textureObject) {
             this.gl.bindTexture(textureTarget, textureObject);
             this.textureUnits[textureUnit][slot] = textureObject;
@@ -2110,9 +2109,9 @@ class GraphicsDevice extends EventHandler {
     // If the texture is not bound on the specified texture unit, active the
     // texture unit and bind the texture to it
     bindTextureOnUnit(texture, textureUnit) {
-        var textureTarget = texture._glTarget;
-        var textureObject = texture._glTexture;
-        var slot = this.targetToSlot[textureTarget];
+        const textureTarget = texture._glTarget;
+        const textureObject = texture._glTexture;
+        const slot = this.targetToSlot[textureTarget];
         if (this.textureUnits[textureUnit][slot] !== textureObject) {
             this.activeTexture(textureUnit);
             this.gl.bindTexture(textureTarget, textureObject);
@@ -2121,12 +2120,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     setTextureParameters(texture) {
-        var gl = this.gl;
-        var flags = texture._parameterFlags;
-        var target = texture._glTarget;
+        const gl = this.gl;
+        const flags = texture._parameterFlags;
+        const target = texture._glTarget;
 
         if (flags & 1) {
-            var filter = texture._minFilter;
+            let filter = texture._minFilter;
             if ((!texture.pot && !this.webgl2) || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                 if (filter === FILTER_NEAREST_MIPMAP_NEAREST || filter === FILTER_NEAREST_MIPMAP_LINEAR) {
                     filter = FILTER_NEAREST;
@@ -2171,7 +2170,7 @@ class GraphicsDevice extends EventHandler {
             }
         }
         if (flags & 128) {
-            var ext = this.extTextureFilterAnisotropic;
+            const ext = this.extTextureFilterAnisotropic;
             if (ext) {
                 gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
             }
@@ -2195,7 +2194,7 @@ class GraphicsDevice extends EventHandler {
 
             // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
             // (for example when rendering to shadow map), in which case previous content is used
-            var processed = (texture === this.grabPassTexture) && this.updateGrabPass();
+            const processed = (texture === this.grabPassTexture) && this.updateGrabPass();
 
             if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
                 this.uploadTexture(texture);
@@ -2214,17 +2213,16 @@ class GraphicsDevice extends EventHandler {
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
 
-        var i, vertexBuffer, key;
-        var vao;
+        let key, vao;
 
         // only use cache when more than 1 vertex buffer, otherwise it's unique
-        var useCache = vertexBuffers.length > 1;
+        const useCache = vertexBuffers.length > 1;
         if (useCache) {
 
             // generate unique key for the vertex buffers
             key = "";
-            for (i = 0; i < vertexBuffers.length; i++) {
-                vertexBuffer = vertexBuffers[i];
+            for (let i = 0; i < vertexBuffers.length; i++) {
+                const vertexBuffer = vertexBuffers[i];
                 key += vertexBuffer.id + vertexBuffer.format.renderingingHash;
             }
 
@@ -2236,7 +2234,7 @@ class GraphicsDevice extends EventHandler {
         if (!vao) {
 
             // create VA object
-            var gl = this.gl;
+            const gl = this.gl;
             vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
@@ -2244,21 +2242,20 @@ class GraphicsDevice extends EventHandler {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
             // #if _DEBUG
-            var locZero = false;
+            let locZero = false;
             // #endif
 
-            var e, elements;
-            for (i = 0; i < vertexBuffers.length; i++) {
+            for (let i = 0; i < vertexBuffers.length; i++) {
 
                 // bind buffer
-                vertexBuffer = vertexBuffers[i];
+                const vertexBuffer = vertexBuffers[i];
                 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
 
                 // for each attribute
-                elements = vertexBuffer.format.elements;
-                for (var j = 0; j < elements.length; j++) {
-                    e = elements[j];
-                    var loc = semanticToLocation[e.name];
+                const elements = vertexBuffer.format.elements;
+                for (let j = 0; j < elements.length; j++) {
+                    const e = elements[j];
+                    const loc = semanticToLocation[e.name];
 
                     // #if _DEBUG
                     if (loc === 0) {
@@ -2297,14 +2294,14 @@ class GraphicsDevice extends EventHandler {
     }
 
     setBuffers() {
-        var gl = this.gl;
-        var vertexBuffer, vao;
+        const gl = this.gl;
+        let vao;
 
         // create VAO for specified vertex buffers
         if (this.vertexBuffers.length === 1) {
 
             // single VB keeps its VAO
-            vertexBuffer = this.vertexBuffers[0];
+            const vertexBuffer = this.vertexBuffers[0];
             if (!vertexBuffer._vao) {
                 vertexBuffer._vao = this.createVertexArray(this.vertexBuffers);
             }
@@ -2326,7 +2323,7 @@ class GraphicsDevice extends EventHandler {
         // Set the active index buffer object
         // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
         // and so we don't know what VAO sets it to.
-        var bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
+        const bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
@@ -2359,14 +2356,13 @@ class GraphicsDevice extends EventHandler {
      * });
      */
     draw(primitive, numInstances, keepBuffers) {
-        var gl = this.gl;
+        const gl = this.gl;
 
-        var i, j, len; // Loop counting
-        var sampler, samplerValue, texture, numTextures; // Samplers
-        var uniform, scopeId, uniformVersion, programVersion; // Uniforms
-        var shader = this.shader;
-        var samplers = shader.samplers;
-        var uniforms = shader.uniforms;
+        let sampler, samplerValue, texture, numTextures; // Samplers
+        let uniform, scopeId, uniformVersion, programVersion; // Uniforms
+        const shader = this.shader;
+        const samplers = shader.samplers;
+        const uniforms = shader.uniforms;
 
         // vertex buffers
         if (!keepBuffers) {
@@ -2374,9 +2370,9 @@ class GraphicsDevice extends EventHandler {
         }
 
         // Commit the shader program variables
-        var textureUnit = 0;
+        let textureUnit = 0;
 
-        for (i = 0, len = samplers.length; i < len; i++) {
+        for (let i = 0, len = samplers.length; i < len; i++) {
             sampler = samplers[i];
             samplerValue = sampler.scopeId.value;
             if (!samplerValue) {
@@ -2408,7 +2404,7 @@ class GraphicsDevice extends EventHandler {
             } else { // Array
                 sampler.array.length = 0;
                 numTextures = samplerValue.length;
-                for (j = 0; j < numTextures; j++) {
+                for (let j = 0; j < numTextures; j++) {
                     texture = samplerValue[j];
                     this.setTexture(texture, textureUnit);
 
@@ -2420,7 +2416,7 @@ class GraphicsDevice extends EventHandler {
         }
 
         // Commit any updated uniforms
-        for (i = 0, len = uniforms.length; i < len; i++) {
+        for (let i = 0, len = uniforms.length; i < len; i++) {
             uniform = uniforms[i];
             scopeId = uniform.scopeId;
             uniformVersion = uniform.version;
@@ -2444,13 +2440,13 @@ class GraphicsDevice extends EventHandler {
             gl.beginTransformFeedback(gl.POINTS);
         }
 
-        var mode = this.glPrimitive[primitive.type];
-        var count = primitive.count;
+        const mode = this.glPrimitive[primitive.type];
+        const count = primitive.count;
 
         if (primitive.indexed) {
-            var indexBuffer = this.indexBuffer;
-            var format = indexBuffer.glFormat;
-            var offset = primitive.base * indexBuffer.bytesPerIndex;
+            const indexBuffer = this.indexBuffer;
+            const format = indexBuffer.glFormat;
+            const offset = primitive.base * indexBuffer.bytesPerIndex;
 
             if (numInstances > 0) {
                 gl.drawElementsInstanced(mode, count, format, offset, numInstances);
@@ -2458,7 +2454,7 @@ class GraphicsDevice extends EventHandler {
                 gl.drawElements(mode, count, format, offset);
             }
         } else {
-            var first = primitive.base;
+            const first = primitive.base;
 
             if (numInstances > 0) {
                 gl.drawArraysInstanced(mode, first, count, numInstances);
@@ -2511,22 +2507,22 @@ class GraphicsDevice extends EventHandler {
      * });
      */
     clear(options) {
-        var defaultOptions = this.defaultClearOptions;
+        const defaultOptions = this.defaultClearOptions;
         options = options || defaultOptions;
 
-        var flags = (options.flags == undefined) ? defaultOptions.flags : options.flags;
+        const flags = (options.flags == undefined) ? defaultOptions.flags : options.flags;
         if (flags !== 0) {
-            var gl = this.gl;
+            const gl = this.gl;
 
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
-                var color = (options.color == undefined) ? defaultOptions.color : options.color;
+                const color = (options.color == undefined) ? defaultOptions.color : options.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
-                var depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
+                const depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
                 this.setClearDepth(depth);
                 if (!this.depthWrite) {
                     gl.depthMask(true);
@@ -2535,7 +2531,7 @@ class GraphicsDevice extends EventHandler {
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
-                var stencil = (options.stencil == undefined) ? defaultOptions.stencil : options.stencil;
+                const stencil = (options.stencil == undefined) ? defaultOptions.stencil : options.stencil;
                 this.setClearStencil(stencil);
             }
 
@@ -2551,7 +2547,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     readPixels(x, y, w, h, pixels) {
-        var gl = this.gl;
+        const gl = this.gl;
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     }
 
@@ -2634,7 +2630,7 @@ class GraphicsDevice extends EventHandler {
      */
     setDepthTest(depthTest) {
         if (this.depthTest !== depthTest) {
-            var gl = this.gl;
+            const gl = this.gl;
             if (depthTest) {
                 gl.enable(gl.DEPTH_TEST);
             } else {
@@ -2753,7 +2749,7 @@ class GraphicsDevice extends EventHandler {
         this.transformFeedbackBuffer = tf;
 
         if (this.webgl2) {
-            var gl = this.gl;
+            const gl = this.gl;
             if (tf) {
                 if (!this.feedback) {
                     this.feedback = gl.createTransformFeedback();
@@ -2820,7 +2816,7 @@ class GraphicsDevice extends EventHandler {
      */
     setBlending(blending) {
         if (this.blending !== blending) {
-            var gl = this.gl;
+            const gl = this.gl;
             if (blending) {
                 gl.enable(gl.BLEND);
             } else {
@@ -2838,7 +2834,7 @@ class GraphicsDevice extends EventHandler {
      */
     setStencilTest(enable) {
         if (this.stencil !== enable) {
-            var gl = this.gl;
+            const gl = this.gl;
             if (enable) {
                 gl.enable(gl.STENCIL_TEST);
             } else {
@@ -2868,7 +2864,7 @@ class GraphicsDevice extends EventHandler {
     setStencilFunc(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
             this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
-            var gl = this.gl;
+            const gl = this.gl;
             gl.stencilFunc(this.glComparison[func], ref, mask);
             this.stencilFuncFront = this.stencilFuncBack = func;
             this.stencilRefFront = this.stencilRefBack = ref;
@@ -2895,7 +2891,7 @@ class GraphicsDevice extends EventHandler {
      */
     setStencilFuncFront(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
-            var gl = this.gl;
+            const gl = this.gl;
             gl.stencilFuncSeparate(gl.FRONT, this.glComparison[func], ref, mask);
             this.stencilFuncFront = func;
             this.stencilRefFront = ref;
@@ -2922,7 +2918,7 @@ class GraphicsDevice extends EventHandler {
      */
     setStencilFuncBack(func, ref, mask) {
         if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
-            var gl = this.gl;
+            const gl = this.gl;
             gl.stencilFuncSeparate(gl.BACK, this.glComparison[func], ref, mask);
             this.stencilFuncBack = func;
             this.stencilRefBack = ref;
@@ -3155,7 +3151,7 @@ class GraphicsDevice extends EventHandler {
                     this.gl.enable(this.gl.CULL_FACE);
                 }
 
-                var mode = this.glCull[cullMode];
+                const mode = this.glCull[cullMode];
                 if (this.cullFace !== mode) {
                     this.gl.cullFace(mode);
                     this.cullFace = mode;
@@ -3197,13 +3193,13 @@ class GraphicsDevice extends EventHandler {
     }
 
     compileShaderSource(src, isVertexShader) {
-        var gl = this.gl;
+        const gl = this.gl;
 
-        var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
+        let glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
 
         if (!glShader) {
             // #if _PROFILER
-            var startTime = now();
+            const startTime = now();
             this.fire('shader:compile:start', {
                 timestamp: startTime,
                 target: this
@@ -3216,7 +3212,7 @@ class GraphicsDevice extends EventHandler {
             gl.compileShader(glShader);
 
             // #if _PROFILER
-            var endTime = now();
+            const endTime = now();
             this.fire('shader:compile:end', {
                 timestamp: endTime,
                 target: this
@@ -3241,22 +3237,22 @@ class GraphicsDevice extends EventHandler {
     }
 
     compileAndLinkShader(shader) {
-        var gl = this.gl;
+        const gl = this.gl;
 
-        var definition = shader.definition;
-        var attr, attrs = definition.attributes;
-        var glVertexShader = this.compileShaderSource(definition.vshader, true);
-        var glFragmentShader = this.compileShaderSource(definition.fshader, false);
+        const definition = shader.definition;
+        const attrs = definition.attributes;
+        const glVertexShader = this.compileShaderSource(definition.vshader, true);
+        const glFragmentShader = this.compileShaderSource(definition.fshader, false);
 
-        var glProgram = gl.createProgram();
+        const glProgram = gl.createProgram();
 
         gl.attachShader(glProgram, glVertexShader);
         gl.attachShader(glProgram, glFragmentShader);
 
         if (this.webgl2 && definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
-            var outNames = [];
-            for (attr in attrs) {
+            const outNames = [];
+            for (const attr in attrs) {
                 if (attrs.hasOwnProperty(attr)) {
                     outNames.push("out_" + attr);
                 }
@@ -3265,15 +3261,15 @@ class GraphicsDevice extends EventHandler {
         }
 
         // map all vertex input attributes to fixed locations
-        var locations = {};
-        for (attr in attrs) {
+        const locations = {};
+        for (const attr in attrs) {
             if (attrs.hasOwnProperty(attr)) {
-                var semantic = attrs[attr];
-                var loc = semanticToLocation[semantic];
+                const semantic = attrs[attr];
+                const loc = semanticToLocation[semantic];
 
                 // #if _DEBUG
                 if (locations.hasOwnProperty(loc)) {
-                    console.warn("WARNING: Two attribues are mapped to the same location in a shader: " + locations[loc] + " and " + attr);
+                    console.warn(`WARNING: Two attribues are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
                 }
                 // #endif
 
@@ -3304,7 +3300,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     destroyShader(shader) {
-        var idx = this.shaders.indexOf(shader);
+        const idx = this.shaders.indexOf(shader);
         if (idx !== -1) {
             this.shaders.splice(idx, 1);
         }
@@ -3317,10 +3313,10 @@ class GraphicsDevice extends EventHandler {
     }
 
     _addLineNumbers(src) {
-        var lines = src.split("\n");
+        const lines = src.split("\n");
 
         // Chrome reports shader errors on lines indexed from 1
-        for (var i = 0, len = lines.length; i < len; i++) {
+        for (let i = 0, len = lines.length; i < len; i++) {
             lines[i] = (i + 1) + ":\t" + lines[i];
         }
 
@@ -3328,16 +3324,16 @@ class GraphicsDevice extends EventHandler {
     }
 
     postLink(shader) {
-        var gl = this.gl;
+        const gl = this.gl;
 
-        var glVertexShader = shader._glVertexShader;
-        var glFragmentShader = shader._glFragmentShader;
-        var glProgram = shader._glProgram;
+        const glVertexShader = shader._glVertexShader;
+        const glFragmentShader = shader._glFragmentShader;
+        const glProgram = shader._glProgram;
 
-        var definition = shader.definition;
+        const definition = shader.definition;
 
         // #if _PROFILER
-        var startTime = now();
+        const startTime = now();
         this.fire('shader:link:start', {
             timestamp: startTime,
             target: this
@@ -3358,18 +3354,18 @@ class GraphicsDevice extends EventHandler {
             return false;
         }
 
-        var i, info, location, shaderInput;
+        let i, info, location, shaderInput;
 
         // Query the program for each vertex buffer input (GLSL 'attribute')
         i = 0;
-        var numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
+        const numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
         while (i < numAttributes) {
             info = gl.getActiveAttrib(glProgram, i++);
             location = gl.getAttribLocation(glProgram, info.name);
 
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
-                console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
+                console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition.`);
             }
 
             shaderInput = new ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location);
@@ -3379,7 +3375,7 @@ class GraphicsDevice extends EventHandler {
 
         // Query the program for each shader state (GLSL 'uniform')
         i = 0;
-        var numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
+        const numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
         while (i < numUniforms) {
             info = gl.getActiveUniform(glProgram, i++);
             location = gl.getUniformLocation(glProgram, info.name);
@@ -3398,7 +3394,7 @@ class GraphicsDevice extends EventHandler {
         shader.ready = true;
 
         // #if _PROFILER
-        var endTime = now();
+        const endTime = now();
         this.fire('shader:link:end', {
             timestamp: endTime,
             target: this
@@ -3492,7 +3488,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        const ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
         width *= ratio;
         height *= ratio;
 
@@ -3518,13 +3514,12 @@ class GraphicsDevice extends EventHandler {
      * @description Frees memory from all shaders ever allocated with this device.
      */
     clearShaderCache() {
-        var gl = this.gl;
-        var shaderSrc;
-        for (shaderSrc in this.fragmentShaderCache) {
+        const gl = this.gl;
+        for (const shaderSrc in this.fragmentShaderCache) {
             gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
             delete this.fragmentShaderCache[shaderSrc];
         }
-        for (shaderSrc in this.vertexShaderCache) {
+        for (const shaderSrc in this.vertexShaderCache) {
             gl.deleteShader(this.vertexShaderCache[shaderSrc]);
             delete this.vertexShaderCache[shaderSrc];
         }
@@ -3539,8 +3534,8 @@ class GraphicsDevice extends EventHandler {
      */
     clearVertexArrayObjectCache() {
 
-        var gl = this.gl;
-        this._vaoMap.forEach(function (item, key, mapObj) {
+        const gl = this.gl;
+        this._vaoMap.forEach((item, key, mapObj) => {
             gl.deleteVertexArray(item);
         });
 
@@ -3552,7 +3547,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     destroy() {
-        var gl = this.gl;
+        const gl = this.gl;
 
         this.destroyGrabPass();
 
@@ -3604,7 +3599,7 @@ class GraphicsDevice extends EventHandler {
 
     set fullscreen(fullscreen) {
         if (fullscreen) {
-            var canvas = this.gl.canvas;
+            const canvas = this.gl.canvas;
             canvas.requestFullscreen();
         } else {
             document.exitFullscreen();
