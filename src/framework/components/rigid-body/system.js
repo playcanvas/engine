@@ -179,7 +179,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
 
             if (this.dynamicsWorld.setInternalTickCallback) {
-                var checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
+                const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
                 // #if _DEBUG
@@ -233,19 +233,20 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         // create new data block for clone
+        const rigidbody = entity.rigidbody;
         const data = {
-            enabled: entity.rigidbody.enabled,
-            mass: entity.rigidbody.mass,
-            linearDamping: entity.rigidbody.linearDamping,
-            angularDamping: entity.rigidbody.angularDamping,
-            linearFactor: [entity.rigidbody.linearFactor.x, entity.rigidbody.linearFactor.y, entity.rigidbody.linearFactor.z],
-            angularFactor: [entity.rigidbody.angularFactor.x, entity.rigidbody.angularFactor.y, entity.rigidbody.angularFactor.z],
-            friction: entity.rigidbody.friction,
-            rollingFriction: entity.rigidbody.rollingFriction,
-            restitution: entity.rigidbody.restitution,
-            type: entity.rigidbody.type,
-            group: entity.rigidbody.group,
-            mask: entity.rigidbody.mask
+            enabled: rigidbody.enabled,
+            mass: rigidbody.mass,
+            linearDamping: rigidbody.linearDamping,
+            angularDamping: rigidbody.angularDamping,
+            linearFactor: [rigidbody.linearFactor.x, rigidbody.linearFactor.y, rigidbody.linearFactor.z],
+            angularFactor: [rigidbody.angularFactor.x, rigidbody.angularFactor.y, rigidbody.angularFactor.z],
+            friction: rigidbody.friction,
+            rollingFriction: rigidbody.rollingFriction,
+            restitution: rigidbody.restitution,
+            type: rigidbody.type,
+            group: rigidbody.group,
+            mask: rigidbody.mask
         };
 
         this.addComponent(clone, data);
@@ -498,7 +499,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const length = others.length;
                 let i = length;
                 while (i--) {
-                    var other = others[i];
+                    const other = others[i];
                     // if the contact does not exist in the current frame collisions then fire event
                     if (!frameCollision || frameCollision.others.indexOf(other) < 0) {
                         // remove from others list
@@ -590,15 +591,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const numContacts = manifold.getNumContacts();
             const forwardContacts = [];
             const reverseContacts = [];
-            var newCollision, e0Events, e1Events;
+            let newCollision;
 
             if (numContacts > 0) {
                 // don't fire contact events for triggers
                 if ((flags0 & BODYFLAG_NORESPONSE_OBJECT) ||
                     (flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
 
-                    e0Events = e0.collision && (e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave"));
-                    e1Events = e1.collision && (e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave"));
+                    const e0Events = e0.collision && (e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave"));
+                    const e1Events = e1.collision && (e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave"));
                     const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent("triggerenter") || e0.rigidbody.hasEvent("triggerleave"));
                     const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent("triggerenter") || e1.rigidbody.hasEvent("triggerleave"));
 
@@ -638,8 +639,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         }
                     }
                 } else {
-                    e0Events = this._hasContactEvent(e0);
-                    e1Events = this._hasContactEvent(e1);
+                    const e0Events = this._hasContactEvent(e0);
+                    const e1Events = this._hasContactEvent(e1);
                     const globalEvents = this.hasEvent("contact");
 
                     if (globalEvents || e0Events || e1Events) {
