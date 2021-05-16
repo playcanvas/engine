@@ -114,6 +114,7 @@ class Scene extends EventHandler {
 
         this._skyboxPrefiltered = [null, null, null, null, null, null];
 
+        this._skyboxEnabled = true;
         this._firstUpdateSkybox = true;
         this._skyboxCubeMap = null;
         this.skyboxModel = null;
@@ -130,9 +131,6 @@ class Scene extends EventHandler {
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
         this.lightmapMode = BAKE_COLORDIR;
-
-        // fallback to prefilter textures for the skybox
-        this.skyboxPrefilterFallback = true;
 
         this._stats = {
             meshInstances: 0,
@@ -203,6 +201,15 @@ class Scene extends EventHandler {
         }
     }
 
+    get skyboxEnabled() {
+        return this._skyboxEnabled;
+    }
+
+    set skyboxEnabled(value) {
+        this._skyboxEnabled = !!value;
+        this._resetSkyboxModel();
+    }
+
     get skybox() {
         return this._skyboxCubeMap;
     }
@@ -210,7 +217,6 @@ class Scene extends EventHandler {
     set skybox(value) {
         this._skyboxCubeMap = value;
         this._resetSkyboxModel();
-        this.updateShaders = true;
     }
 
     get skyboxIntensity() {
@@ -242,7 +248,6 @@ class Scene extends EventHandler {
     set skyboxMip(value) {
         this._skyboxMip = value;
         this._resetSkyboxModel();
-        this.updateShaders = true;
     }
 
     get skyboxPrefiltered128() {
@@ -254,6 +259,7 @@ class Scene extends EventHandler {
             return;
 
         this._skyboxPrefiltered[0] = value;
+        this._resetSkyboxModel();
         this.updateShaders = true;
     }
 
@@ -266,6 +272,7 @@ class Scene extends EventHandler {
             return;
 
         this._skyboxPrefiltered[1] = value;
+        this._resetSkyboxModel();
         this.updateShaders = true;
     }
 
@@ -278,6 +285,7 @@ class Scene extends EventHandler {
             return;
 
         this._skyboxPrefiltered[2] = value;
+        this._resetSkyboxModel();
         this.updateShaders = true;
     }
 
@@ -290,6 +298,7 @@ class Scene extends EventHandler {
             return;
 
         this._skyboxPrefiltered[3] = value;
+        this._resetSkyboxModel();
         this.updateShaders = true;
     }
 
@@ -302,6 +311,7 @@ class Scene extends EventHandler {
             return;
 
         this._skyboxPrefiltered[4] = value;
+        this._resetSkyboxModel();
         this.updateShaders = true;
     }
 
@@ -314,6 +324,7 @@ class Scene extends EventHandler {
             return;
 
         this._skyboxPrefiltered[5] = value;
+        this._resetSkyboxModel();
         this.updateShaders = true;
     }
 
@@ -377,7 +388,7 @@ class Scene extends EventHandler {
 
     _updateSkybox(device) {
         // Create skybox
-        if (!this.skyboxModel) {
+        if (this.skyboxEnabled && !this.skyboxModel) {
 
             // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
             // we can't simply fix this and map 3 to the correct level, since doing so has the potential
@@ -389,7 +400,7 @@ class Scene extends EventHandler {
             var usedTex =
                 this._skyboxMip ?
                     this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
-                    this._skyboxCubeMap || (this.skyboxPrefilterFallback && this._skyboxPrefiltered[0]);
+                    this._skyboxCubeMap || this._skyboxPrefiltered[0];
 
             if (!usedTex) {
                 return;
