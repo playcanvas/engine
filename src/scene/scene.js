@@ -386,9 +386,10 @@ class Scene extends EventHandler {
             var skyboxMapping = [0, 1, 3, 4, 5, 6];
 
             // select which texture to use for the backdrop
-            var usedTex = this._skyboxMip ?
-                this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
-                this._skyboxCubeMap || (this.skyboxPrefilterFallback && this._skyboxPrefiltered[0]);
+            var usedTex =
+                this._skyboxMip ?
+                    this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
+                    this._skyboxCubeMap || (this.skyboxPrefilterFallback && this._skyboxPrefiltered[0]);
 
             if (!usedTex) {
                 return;
