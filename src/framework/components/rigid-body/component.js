@@ -250,7 +250,7 @@ class RigidBodyComponent extends Component {
     }
 
     set mass(mass) {
-  //      if (this._mass !== mass) {
+        if (this._mass !== mass) {
             this._mass = mass;
 
             if (this._body && this._type === BODYTYPE_DYNAMIC) {
@@ -269,7 +269,7 @@ class RigidBodyComponent extends Component {
                     this.enableSimulation();
                 }
             }
-//        }
+        }
     }
 
     get restitution() {
