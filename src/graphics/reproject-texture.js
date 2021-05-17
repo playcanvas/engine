@@ -66,7 +66,6 @@ function reprojectTexture(source, target, options = {}) {
         source = arguments[1];
         target = arguments[2];
         options = {
-            device: arguments[0],
             specularPower: arguments[3] === undefined ? 1 : arguments[3],
             numSamples: arguments[4] === undefined ? 1024 : arguments[4]
         };
@@ -76,7 +75,7 @@ function reprojectTexture(source, target, options = {}) {
     }
 
     // extract options
-    const device = options.device || source.device;
+    const device = source.device;
     const specularPower = options.hasOwnProperty('specularPower') ? options.specularPower : 1;
     const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
     const face = options.hasOwnProperty('face') ? options.face : null;
