@@ -7,6 +7,7 @@ import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
+import { GraphicsDevice } from './graphics-device.js';
 
 // get a coding string for texture based on its type and pixel format.
 function getCoding(texture) {
@@ -59,6 +60,21 @@ function getProjectionName(projection) {
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  */
 function reprojectTexture(source, target, options = {}) {
+    // maintain backwards compatibility with previous function signature
+    // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
+    if (source.constructor === GraphicsDevice) {
+        source = arguments[1];
+        target = arguments[2];
+        options = {
+            device: arguments[0],
+            specularPower: arguments[3] === undefined ? 1 : arguments[3],
+            numSamples: arguments[4] === undefined ? 1024 : arguments[4]
+        };
+        // #if _DEBUG
+        console.warn('DEPRECATED: please use the updated pc.reprojectTexture API.');
+        // #endif
+    }
+
     // extract options
     const device = options.device || source.device;
     const specularPower = options.hasOwnProperty('specularPower') ? options.specularPower : 1;
