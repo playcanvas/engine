@@ -20,9 +20,36 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @name RigidBodyComponent
  * @augments Component
  * @classdesc The rigidbody component, when combined with a {@link CollisionComponent}, allows your
- * entities to be simulated using realistic physics.
- * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
- * can apply forces and impulses to rigid bodies.
+ * entities to be simulated using realistic physics. A rigidbody component will fall under gravity and
+ * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid bodies.
+ *
+ * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to a
+ * {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ~~~javascript
+ * // Create a static 1x1x1 box-shaped rigid body
+ * const entity = pc.Entity();
+ * entity.addComponent("rigidbody"); // With no options specified, this defaults to a 'static' body
+ * entity.addComponent("collision"); // With no options specified, this defaults to a 1x1x1 box shape
+ * ~~~
+ *
+ * To create a dynamic sphere with mass of 10, do:
+ *
+ * ~~~javascript
+ * const entity = pc.Entity();
+ * entity.addComponent("rigidbody", {
+ *     type: pc.BODYTYPE_DYNAMIC,
+ *     mass: 10
+ * });
+ * entity.addComponent("collision", {
+ *     type: "sphere"
+ * });
+ * ~~~
+ *
+ * Relevant 'Engine-only' examples:
+ * * [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
+ * * [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
+ *
  * @description Create a new RigidBodyComponent.
  * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
  * @param {Entity} entity - The entity this component is attached to.
@@ -35,9 +62,11 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
  * Defaults to 0.
  * @property {Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
- * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely
+ * move).
  * @property {Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
- * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely
+ * rotate).
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
  * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults
