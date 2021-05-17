@@ -78,7 +78,7 @@ class CurveEvaluator {
                 // be more efficient to perform a binary search here instead. Which is
                 // straight forward thanks to the sorted list of knots).
                 let index = 0;
-                while (time >= keys[index + 1][0]) {
+                while (keys[index + 1] && time >= keys[index + 1][0]) {
                     index++;
                 }
                 this._left = keys[index][0];
