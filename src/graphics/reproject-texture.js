@@ -62,7 +62,7 @@ function getProjectionName(projection) {
 function reprojectTexture(source, target, options = {}) {
     // maintain backwards compatibility with previous function signature
     // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
-    if (source.constructor === GraphicsDevice) {
+    if (source instanceof GraphicsDevice) {
         source = arguments[1];
         target = arguments[2];
         options = {
