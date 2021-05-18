@@ -474,7 +474,7 @@ class Application extends EventHandler {
         this.defaultLayerDepth = this.sceneDepth.layer;
 
         this.defaultLayerSkybox = new Layer({
-            enabled: false,
+            enabled: true,
             name: "Skybox",
             id: LAYERID_SKYBOX,
             opaqueSortMode: SORTMODE_NONE
