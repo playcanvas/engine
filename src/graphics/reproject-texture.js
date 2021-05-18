@@ -52,7 +52,6 @@ function getProjectionName(projection) {
  * @param {Texture} source - The source texture.
  * @param {Texture} target - The target texture.
  * @param {object} [options] - The options object.
- * @param {GraphicsDevice} [options.device] - Optional graphics device (default is the source texture device).
  * @param {number} [options.specularPower] - Optional specular power. When specular power is specified,
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
