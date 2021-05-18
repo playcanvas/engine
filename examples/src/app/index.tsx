@@ -77,9 +77,9 @@ const MainLayout = () => {
                                 document.addEventListener('mousemove', clickFullscreenListener);
                             }
                         }}/>
-                        <Button icon='E131' text='' onClick={() => {
+                        {/* <Button icon='E131' text='' onClick={() => {
                             state.emit('play');
-                        }}/>
+                        }}/> */}
                     </Container>
                     <Container id='main-view'>
                         <ExampleRoutes files={files} setFiles={setFiles.bind(this)} state={state} />

@@ -164,7 +164,7 @@ class Canvas extends React.Component<CanvasProps, CanvasState> {
         if (nextProps.executableExample.toString() === this.props.executableExample.toString() && !fileChanged && !fileError) {
             return false;
         }
-        // this.executeExample(nextProps);
+        this.executeExample(nextProps);
         return false;
     }
 
