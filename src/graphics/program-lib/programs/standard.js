@@ -1340,9 +1340,9 @@ var standard = {
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy && !options.useMetalness) {
-                        code += chunks.combineDiffuseSpecularPS; // post half-angle fresnel, this one is for spec-gloss path 
+                        code += chunks.combineDiffuseSpecularPS; // post half-angle fresnel, this one is for spec-gloss path
                     } else {
-                        code += chunks.combineDiffuseSpecularNoConservePS; // post half-angle fresnel, this one is for metalness-gloss path 
+                        code += chunks.combineDiffuseSpecularNoConservePS; // post half-angle fresnel, this one is for metalness-gloss path
                     }
                 } else {
                     code += chunks.combineDiffuseSpecularOldPS;
