@@ -1,3 +1,4 @@
 vec3 combineColor() {
-    return mix(dAlbedo * dDiffuseLight, dSpecularLight, dSpecularity) + dReflection.rgb * dReflection.a;
+    // NB energy conservation has changed with half-angle fresnel  
+    return dAlbedo * dDiffuseLight + dSpecularLight + dReflection.rgb * dReflection.a;
 }
