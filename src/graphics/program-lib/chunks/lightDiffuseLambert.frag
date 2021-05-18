@@ -1,3 +1,3 @@
 float getLightDiffuse() {
-    return float(1)*max(dot(dNormalW, -dLightDirNormW), 0.0);
+    return max(dot(dNormalW, -dLightDirNormW), 0.0);
 }

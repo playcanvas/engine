@@ -9,5 +9,5 @@ void addAmbient() {
 #ifndef RIGHT_HANDED_CUBEMAP
     fixedReflDir.x *= -1.0;
 #endif
-    dDiffuseLight += vec3(1)*processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, 5.0) ).rgb);
+    dDiffuseLight += processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, 5.0) ).rgb);
 }
