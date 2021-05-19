@@ -1401,9 +1401,11 @@ class Application extends EventHandler {
     }
 
     /**
-     * @private
+     * @function
      * @name Application#updateCanvasSize
      * @description Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document page.
+     * It is recommended to call this function when the canvas size changes (e.g on window resize and orientation change
+     * events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
         // Don't update if we are in VR
