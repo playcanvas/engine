@@ -8,7 +8,7 @@
     "build": "webpack --config webpack.config.js",
     "build:watch": "webpack --config webpack.config.js --watch",
     "serve": "serve dist",
-    "thumbnails": "node ./src/thumbnails.js"
+    "thumbnails": "node ./thumbnails.js"
   },
   "eslintConfig": {
     "root": true,
@@ -39,6 +39,8 @@
     "@babel/plugin-proposal-class-properties": "^7.13.0",
     "@babel/preset-env": "^7.13.10",
     "@babel/preset-react": "^7.12.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@babel/standalone": "^7.13.15",
     "@monaco-editor/react": "^4.1.1",
     "@playcanvas/eslint-config": "^1.0.7",
     "@playcanvas/pcui": "^1.1.19",
@@ -57,9 +59,11 @@
     "eslint": "^7.22.0",
     "html-webpack-plugin": "^5.3.1",
     "monaco-editor": "^0.23.0",
+    "monaco-editor-webpack-plugin": "^3.0.1",
     "playcanvas": "^1.40.2",
     "prop-types": "^15.7.2",
     "puppeteer": "^8.0.0",
+    "raw-loader": "^4.0.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
@@ -72,11 +76,5 @@
     "webpack-dev-server": "^3.11.2"
   },
   "author": "PlayCanvas",
-  "license": "ISC",
-  "dependencies": {
-    "@babel/preset-typescript": "^7.13.0",
-    "@babel/standalone": "^7.13.15",
-    "monaco-editor-webpack-plugin": "^3.0.1",
-    "raw-loader": "^4.0.2"
-  }
+  "license": "ISC"
 }
