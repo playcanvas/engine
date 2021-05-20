@@ -3500,12 +3500,11 @@ class GraphicsDevice extends EventHandler {
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 
-        if (this.canvas.width === width && this.canvas.height === height)
-            return;
-
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.fire(EVENT_RESIZE, width, height);
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(EVENT_RESIZE, width, height);
+        }
     }
 
     setResolution(width, height) {
