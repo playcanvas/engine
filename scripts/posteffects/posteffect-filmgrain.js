@@ -33,7 +33,6 @@ function FilmGrainEffect(graphicsDevice) {
             "",
             "varying vec2 vUv0;",
             "",
-            "uniform vec2 uResolution;",
             "uniform sampler2D uColorBuffer;",
             "uniform float uAmount;",
             "uniform float uTime;",
@@ -63,7 +62,6 @@ Object.assign(FilmGrainEffect.prototype, {
         var device = this.device;
         var scope = device.scope;
 
-        scope.resolve("uResolution").setValue([device.width, device.height]);
         scope.resolve("uAmount").setValue(this.amount);
         scope.resolve("uTime").setValue(this.time);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
