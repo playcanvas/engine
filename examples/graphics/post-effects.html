@@ -70,7 +70,11 @@
             godRays: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-godrays.js"
-            }                                 
+            },
+            pixelate: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-pixelate.js"
+            }            
         };
 
         // Load all assets and then run the example
@@ -148,7 +152,16 @@
                 attributes: {
                     amount: 2.0
                 }
-            });                    
+            });  
+            camera.script.create("pixelate", {
+                attributes: {
+                    amount: 5.0
+                }
+            });               
+
+            camera.script.filmGrain.enabled = false;
+            camera.script.pixelate.enabled = false;
+            
             camera.translate(0, 7, 24);
             camera.rotate(0, 0, 0);
 
@@ -255,9 +268,11 @@
                         camera.script.filmGrain.enabled = !camera.script.filmGrain.enabled;
                         break;
                     case pc.KEY_7:
-                    pointlight2.script.godRays.enabled = !pointlight2.script.godRays.enabled;
-                        break;                        
+                        pointlight2.script.godRays.enabled = !pointlight2.script.godRays.enabled;
                     case pc.KEY_8:
+                        camera.script.pixelate.enabled = !camera.script.pixelate.enabled;
+                        break;                        
+                    case pc.KEY_9:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                     break;                 
                 }
@@ -333,7 +348,8 @@
                         "\n[Key 5] Chromatic Aberration: " + camera.script.chromaticAberration.enabled +
                         "\n[Key 6] Film Grain: " + camera.script.filmGrain.enabled +
                         "\n[Key 7] God Rays: " + pointlight2.script.godRays.enabled +
-                        "\n[Key 8] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 8] Pixelate: " + camera.script.pixelate.enabled +
+                        "\n[Key 9] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
