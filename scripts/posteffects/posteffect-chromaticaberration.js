@@ -86,7 +86,7 @@ ChromaticAberration.attributes.add('amount', {
     min: -100,
     max: 100,
     title: 'Amount',
-    description: 'The amount of chromatic aberration applied.',
+    description: 'The amount of chromatic aberration applied.'
 });
 
 ChromaticAberration.prototype.initialize = function () {
