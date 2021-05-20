@@ -9,6 +9,10 @@ import { XrAnchor } from './xr-anchor.js';
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Anchors are supported.
  * @property {XrAnchor[]} list List of active {@link XrAnchor}'s.
+ * @example
+ * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+ *     anchors: true
+ * });
  */
 class XrAnchors extends EventHandler {
     constructor(manager) {
@@ -100,8 +104,10 @@ class XrAnchors extends EventHandler {
      * @param {Quat} [rotation] - Rotastion for an anchor
      * @param {callbacks.XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created
      * @example
-     * // image with width of 20cm (0.2m)
-     * app.xr.imageTracking.add(bookCoverImg, 0.2);
+     * app.xr.anchors.create(position, rotation, function(err, anchor) {
+     *     if (err) return;
+     *     // new anchor has been created
+     * });
      */
     create(position, rotation, callback) {
         this._creationQueue.push({
