@@ -6,9 +6,9 @@
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
- * @param {Number} motionBlurSamples - The number of samples collected per pixel to calculate the total motion blur.
+ * @param {number} motionBlurSamples - The number of samples collected per pixel to calculate the total motion blur.
  */
- function MotionBlurEffect(graphicsDevice, motionBlurSamples) {
+function MotionBlurEffect(graphicsDevice, motionBlurSamples) {
     pc.PostEffect.call(this, graphicsDevice);
 
     this.needsDepthBuffer = true;
