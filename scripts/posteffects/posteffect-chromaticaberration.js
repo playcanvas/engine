@@ -7,7 +7,7 @@
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
- function ChromaticAberrationEffect(graphicsDevice) {
+function ChromaticAberrationEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);
 
     this.shader = new pc.Shader(graphicsDevice, {
@@ -67,7 +67,7 @@ Object.assign(ChromaticAberrationEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
 
         var device = this.device;
-        var scope = device.scope;        
+        var scope = device.scope;
 
         scope.resolve("uResolution").setValue([device.width, device.height]);
         scope.resolve("uAmount").setValue(this.amount);
@@ -90,7 +90,7 @@ ChromaticAberration.attributes.add('amount', {
 });
 
 ChromaticAberration.prototype.initialize = function () {
-    
+
     this.effect = new ChromaticAberrationEffect(this.app.graphicsDevice);
     this.effect.amount = this.amount;
 
@@ -99,7 +99,7 @@ ChromaticAberration.prototype.initialize = function () {
     }, this);
 
     var queue = this.entity.camera.postEffects;
-    
+
     queue.addEffect(this.effect);
 
     this.on('state', function (enabled) {
