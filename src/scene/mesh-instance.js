@@ -1,3 +1,4 @@
+import { RefCountedCache } from '../core/ref-counted-cache.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { BoundingSphere } from '../shape/bounding-sphere.js';
 
@@ -168,33 +169,17 @@ class MeshInstance {
     static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
 
     // cache of lightmaps internally created by baking using Lightmapper
-    // the key is the lightmap (texture), the value is reference count .. when it reaches 0, the lightmap gets destroyed.
     // this allows us to automatically release realtime baked lightmaps when mesh instances using them are destroyed
-    static _lightmapCache = new Map();
+    static _lightmapCache = new RefCountedCache();
 
     // add texture reference to lightmap cache
     static incRefLightmap(texture) {
-        let refCount = MeshInstance._lightmapCache.get(texture) || 0;
-        refCount++;
-        MeshInstance._lightmapCache.set(texture, refCount);
+        this._lightmapCache.incRef(texture);
     }
 
     // remove texture reference from lightmap cache
     static decRefLightmap(texture) {
-        if (texture) {
-            let refCount = MeshInstance._lightmapCache.get(texture);
-            if (refCount) {
-                refCount--;
-                if (refCount === 0) {
-                    // destroy texture and remove it from cache
-                    MeshInstance._lightmapCache.delete(texture);
-                    texture.destroy();
-                } else {
-                    // update new ref count in the cache
-                    MeshInstance._lightmapCache.set(texture, refCount);
-                }
-            }
-        }
+        this._lightmapCache.decRef(texture);
     }
 
     get renderStyle() {

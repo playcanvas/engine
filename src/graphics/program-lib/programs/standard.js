@@ -16,7 +16,7 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
@@ -462,6 +462,10 @@ var standard = {
             lighting = true;
         }
 
+        if (LayerComposition.clusteredLightingEnabled) {
+            lighting = true;
+        }
+
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAntialias = false;
@@ -895,8 +899,8 @@ var standard = {
 
         } else if (shadowPass) {
             // ##### SHADOW PASS #####
-            var smode = options.pass - SHADER_SHADOW;
-            var numShadowModes = 5;
+            const smode = options.pass - SHADER_SHADOW;
+            const numShadowModes = SHADOW_COUNT;
             lightType = Math.floor(smode / numShadowModes);
             var shadowType = smode - lightType * numShadowModes;
 
@@ -1405,9 +1409,11 @@ var standard = {
         if (LayerComposition.clusteredLightingEnabled) {
 
             usesSpot = true;
+            hasPointLights = true;
+            usesLinearFalloff = true;
 
             const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
-            code += `#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += `\n#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
             code += chunks.clusteredLightPS;
         }
 

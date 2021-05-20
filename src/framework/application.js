@@ -23,7 +23,8 @@ import {
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
-import { ForwardRenderer } from '../scene/forward-renderer.js';
+import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
+import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/layer-composition.js';
@@ -474,7 +475,7 @@ class Application extends EventHandler {
         this.defaultLayerDepth = this.sceneDepth.layer;
 
         this.defaultLayerSkybox = new Layer({
-            enabled: false,
+            enabled: true,
             name: "Skybox",
             id: LAYERID_SKYBOX,
             opaqueSortMode: SORTMODE_NONE
@@ -525,6 +526,9 @@ class Application extends EventHandler {
                 }
             }
         });
+
+        // placeholder texture for area light LUTs
+        AreaLightLuts.createPlaceholder(this.graphicsDevice);
 
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -1536,9 +1540,9 @@ class Application extends EventHandler {
      */
     setAreaLightLuts(asset) {
         if (asset) {
-            var renderer = this.renderer;
+            const device = this.graphicsDevice;
             asset.ready(function (asset) {
-                renderer._uploadAreaLightLuts(asset.resource);
+                AreaLightLuts.set(device, asset.resource);
             });
             this.assets.load(asset);
         } else {
@@ -2068,7 +2072,9 @@ class Application extends EventHandler {
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
+        this.renderer.destroy();
         this.renderer = null;
+
         this.tick = null;
 
         this.off(); // remove all events
