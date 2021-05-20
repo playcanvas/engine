@@ -114,10 +114,54 @@ function BokehEffect(graphicsDevice) {
         ].join("\n")
     });
 
+    this.debugShader = new pc.Shader(graphicsDevice, {
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION
+        },
+        vshader: [
+            "attribute vec2 aPosition;",
+            "",
+            "varying vec2 vUv0;",
+            "",
+            "void main(void)",
+            "{",
+            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
+            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
+            "}"
+        ].join("\n"),
+        fshader: [
+            "precision " + graphicsDevice.precision + " float;",
+            (graphicsDevice.webgl2) ? "#define GL2" : "",
+            pc.shaderChunks.screenDepthPS,
+            "",
+            "varying vec2 vUv0;",
+            "",
+            "uniform sampler2D uColorBuffer;",
+            "",
+            "uniform float uMaxBlur;",  // max blur amount
+            "uniform float uAperture;", // uAperture - bigger values for shallower depth of field
+            "",
+            "uniform float uFocus;",
+            "uniform float uFocusRange;",
+            "uniform float uAspect;",
+            "",
+            "void main()",
+            "{",
+            "    vec2 aspectCorrect = vec2( 1.0, uAspect );",
+            "",
+            "    float factor = ((getLinearScreenDepth(vUv0) * -1.0) - uFocus) / camera_params.y * uFocusRange;",
+            "",
+            "    gl_FragColor = factor < 0.0 ? vec4(-factor) : vec4(factor,factor,factor,1.0);",
+            "}"
+        ].join("\n")
+    });
+
     // Uniforms
     this.maxBlur = 0.02;
     this.aperture = 1;
     this.focus = 1;
+    this.focusRange = 1;
+    this.debugView = false;
 }
 
 BokehEffect.prototype = Object.create(pc.PostEffect.prototype);
@@ -131,10 +175,12 @@ Object.assign(BokehEffect.prototype, {
         scope.resolve("uMaxBlur").setValue(this.maxBlur);
         scope.resolve("uAperture").setValue(this.aperture);
         scope.resolve("uFocus").setValue(this.focus);
+        scope.resolve("uFocusRange").setValue(1.0 / this.focusRange);
         scope.resolve("uAspect").setValue(device.width / device.height);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
 
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+        var shader = this.debugView ? this.debugShader : this.shader;
+        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, shader, rect);
     }
 });
 
@@ -163,11 +209,26 @@ Bokeh.attributes.add('focus', {
     title: 'Focus'
 });
 
+Bokeh.attributes.add('focusRange', {
+    type: 'number',
+    default: 1,
+    min: 0,
+    title: 'Focus Range'
+});
+
+Bokeh.attributes.add('debugView', {
+    type: 'boolean',
+    default: false,
+    title: 'Debug View'
+});
+
 Bokeh.prototype.initialize = function () {
     this.effect = new BokehEffect(this.app.graphicsDevice);
     this.effect.maxBlur = this.maxBlur;
     this.effect.aperture = this.aperture;
     this.effect.focus = this.focus;
+    this.effect.focusRange = this.focusRange;
+    this.effect.debugView = this.debugView;
 
     this.on('attr', function (name, value) {
         this.effect[name] = value;
