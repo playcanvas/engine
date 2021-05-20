@@ -66,7 +66,11 @@
             filmGrain: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-filmGrain.js"
-            }                        
+            },
+            godRays: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-godrays.js"
+            }                                 
         };
 
         // Load all assets and then run the example
@@ -97,7 +101,7 @@
             var blue = createMaterial({
                 diffuse: new pc.Color(0, 0, 0),
                 emissive: new pc.Color(0, 0, 1)
-            });
+            });     
 
             entity = assetManifest["statue"].asset.resource.instantiateRenderEntity({
                 castShadows: true
@@ -192,10 +196,41 @@
             });
             pointlight.model.material = blue;
 
+            // Create a point light behind the model to be used as the god rays emitter
+            var pointlight2 = new pc.Entity();
+            pointlight2.addComponent("light", {
+                type: "point",
+                color: new pc.Color(1, 1, 0),
+                range: 100,
+                intensity: 1
+            });
+
+            // Add GodRays post effect
+            pointlight2.addComponent("script");
+            pointlight2.script.create("godRays", {
+                attributes: {
+                    cameraEntity: camera,
+                    lightEntity: pointlight2,
+                    intensity: 1.5,
+                    weight: 0.1,
+                    decay: 0.005,
+                    exposure: 0.15,
+                    color: [0.8, 0.8, 0.2]
+                }
+            });            
+
+            camera.script.bloom.enabled = false;
+            camera.script.sepia.enabled = false;
+            camera.script.vignette.enabled = false;
+            camera.script.bokeh.enabled = false;
+            camera.script.chromaticAberration.enabled = false;
+            camera.script.filmGrain.enabled = false;            
+
             // Add Entities into the scene hierarchy
             app.root.addChild(camera);
             app.root.addChild(light);
             app.root.addChild(pointlight);
+            app.root.addChild(pointlight2);
             app.root.addChild(ground);
 
             // Allow user to toggle individual post effects
@@ -218,8 +253,11 @@
                         break;
                     case pc.KEY_6:
                         camera.script.filmGrain.enabled = !camera.script.filmGrain.enabled;
-                        break;                        
+                        break;
                     case pc.KEY_7:
+                    pointlight2.script.godRays.enabled = !pointlight2.script.godRays.enabled;
+                        break;                        
+                    case pc.KEY_8:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                     break;                 
                 }
@@ -278,6 +316,7 @@
                     light.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
                     
                     pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
+                    pointlight2.setLocalPosition(pointRadius * Math.sin(-3 * angle * pc.math.DEG_TO_RAD), pointRadius * Math.cos(-1 * angle * pc.math.DEG_TO_RAD) + 9.0, -3.0);
 
                     if (camera.script.bokeh) {
                         camera.script.bokeh.focus = light.getLocalPosition().z - camera.getLocalPosition().z;
@@ -293,7 +332,8 @@
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
                         "\n[Key 5] Chromatic Aberration: " + camera.script.chromaticAberration.enabled +
                         "\n[Key 6] Film Grain: " + camera.script.filmGrain.enabled +
-                        "\n[Key 7] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 7] God Rays: " + pointlight2.script.godRays.enabled +
+                        "\n[Key 8] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
