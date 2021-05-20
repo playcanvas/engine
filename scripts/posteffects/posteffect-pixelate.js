@@ -7,7 +7,7 @@
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
- function PixelateEffect(graphicsDevice) {
+function PixelateEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);
 
     this.shader = new pc.Shader(graphicsDevice, {
