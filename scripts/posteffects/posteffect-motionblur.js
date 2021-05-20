@@ -60,25 +60,22 @@ function MotionBlurEffect(graphicsDevice, motionBlurSamples) {
             "    ppos.xy = ppos.xy * 0.5 + 0.5;",
             "",
             "    vec2 velocity = (ppos.xy - uv) * 0.01 * uStrength;",
-            `
-            vec4 result = texture2D(uColorBuffer, uv);
-            float speed = length(velocity / texelSize);      
-
-            int samplesCount = int(clamp(speed, 1.0, float(SAMPLES)));
-
-            velocity = normalize(velocity) * texelSize;
-            float hlim = float(-samplesCount) * 0.5 + 0.5;
-
-            for( int i = 1; i < int(SAMPLES); ++i ) {
-                
-                if (i >= samplesCount) break;
-
-                vec2 offset = uv + velocity * (hlim + float(i));
-                result += texture2D(uColorBuffer, offset);
-            }
-
-            gl_FragColor = result / float(samplesCount);
-            `,
+            "    vec4 result = texture2D(uColorBuffer, uv);",
+            "    float speed = length(velocity / texelSize);",
+            "",
+            "    int samplesCount = int(clamp(speed, 1.0, float(SAMPLES)));",
+            "",
+            "    velocity = normalize(velocity) * texelSize;",
+            "    float hlim = float(-samplesCount) * 0.5 + 0.5;",
+            "",
+            "    for( int i = 1; i < int(SAMPLES); ++i ) {",
+            "        if (i >= samplesCount) break;",
+            "",
+            "        vec2 offset = uv + velocity * (hlim + float(i));",
+            "        result += texture2D(uColorBuffer, offset);",
+            "    }",
+            "",
+            "    gl_FragColor = result / float(samplesCount);",
             "}"
         ].join("\n")
     });
@@ -134,9 +131,9 @@ MotionBlur.attributes.add('samples', {
 
 MotionBlur.attributes.add('strength', {
     type: 'number',
-    default: 2.0,
+    default: 1.5,
     min: 0.0,
-    max: 20.0,
+    max: 10.0,
     title: 'Strength',
     description: 'Determines how intense the calculated motion blurring is.'
 });
