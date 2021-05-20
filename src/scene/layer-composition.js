@@ -1,4 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
+import { set } from '../core/set-utils.js';
+
+import { Vec3 } from '../math/vec3.js';
 
 import {
     LAYERID_DEPTH,
@@ -8,7 +11,13 @@ import {
 } from './constants.js';
 
 import { RenderAction } from './render-action.js';
-import { ShadowCasters } from './shadow-casters.js';
+import { WorldClusters } from './world-clusters.js';
+import { LightCompositionData } from './light-composition-data.js';
+
+import { getApplication } from '../framework/globals.js';
+
+const tempSet = new Set();
+const tempClusterArray = [];
 
 /**
  * @class
@@ -16,6 +25,8 @@ import { ShadowCasters } from './shadow-casters.js';
  * @augments EventHandler
  * @classdesc Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define rendering order.
  * @description Create a new layer composition.
+ * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this layer composition. If it is not provided, a device is obtained
+ * from the {@link Application}.
  * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
  * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
  * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
@@ -27,9 +38,18 @@ import { ShadowCasters } from './shadow-casters.js';
  */
 // Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
-    constructor(name = "Untitled") {
+    // temporary way to enable clustered lighting, will be removed later when this becomes default
+    static clusteredLightingEnabled = false;
+
+    constructor(graphicsDevice, name = "Untitled") {
         super();
 
+        if (typeof graphicsDevice === 'string') {
+            // handle previous constructor parameters: (name)
+            graphicsDevice = null;
+            name = graphicsDevice;
+        }
+        this.device = graphicsDevice || getApplication()?.graphicsDevice;
         this.name = name;
 
         // enable logging
@@ -58,8 +78,9 @@ class LayerComposition extends EventHandler {
         // a map of Light to index in _lights for fast lookup
         this._lightsMap = new Map();
 
-        // each entry in _lights has entry of type ShadowCasters here at the same index, storing shadow casters for the light
-        this._lightShadowCasters = [];
+        // each entry in _lights has entry of type LightCompositionData here at the same index,
+        // storing shadow casters and additional composition related data for the light
+        this._lightCompositionData = [];
 
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
@@ -69,6 +90,74 @@ class LayerComposition extends EventHandler {
 
         // the actual rendering sequence, generated based on layers and cameras
         this._renderActions = [];
+
+        // all currently created light clusters, that need to be updated before rendering
+        this._worldClusters = [];
+
+        // empty cluster with no lights
+        this._emptyWorldClusters = null;
+
+        // clustered lighting parameters
+        this._clusteredLightingCells = new Vec3(10, 3, 10);
+        this._clusteredLightingMaxLights = 64;
+    }
+
+    destroy() {
+
+        // empty light cluster
+        if (this._emptyWorldClusters) {
+            this._emptyWorldClusters.destroy();
+            this._emptyWorldClusters = null;
+        }
+
+        // all other clusters
+        this._worldClusters.forEach((cluster) => cluster.destroy());
+        this._worldClusters = null;
+    }
+
+    get clusteredLightingCells() {
+        return this._clusteredLightingCells;
+    }
+
+    set clusteredLightingCells(value) {
+        if (!this._clusteredLightingCells.equals(value)) {
+            this._clusteredLightingCells.copy(value);
+            this.updateWorldClusters();
+        }
+    }
+
+    get clusteredLightingMaxLights() {
+        return this._clusteredLightingMaxLights;
+    }
+
+    set clusteredLightingMaxLights(value) {
+        if (this._clusteredLightingMaxLights !== value) {
+            this._clusteredLightingMaxLights = value;
+            this.updateWorldClusters();
+        }
+    }
+
+    // update clusters with parameter changes
+    updateWorldClusters() {
+        this._worldClusters.forEach((cluster) => {
+            cluster.cells = this._clusteredLightingCells;
+            cluster.maxCellLightCount = this._clusteredLightingMaxLights;
+        });
+    }
+
+    // returns an empty light cluster object to be used when no lights are used
+    get emptyWorldClusters() {
+        if (!this._emptyWorldClusters) {
+
+            // create cluster structure with no lights
+            this._emptyWorldClusters = new WorldClusters(this.device, new Vec3(1, 1, 1), 4);
+            this._emptyWorldClusters.name = "ClusterEmpty";
+
+            // update it once to avoid doing it each frame
+            this._emptyWorldClusters.update([], false);
+        }
+
+        return this._emptyWorldClusters;
     }
 
     // function which splits list of lights on a a target object into separate lists of lights based on light type
@@ -149,7 +238,6 @@ class LayerComposition extends EventHandler {
                 }
 
                 layer._dirty = false;
-                layer._version++;
             }
 
             this._dirty = false;
@@ -317,6 +405,11 @@ class LayerComposition extends EventHandler {
             }
 
             this._renderActions.length = renderActionCount;
+
+            // prepare clustered lighting for render actions
+            if (LayerComposition.clusteredLightingEnabled) {
+                this.allocateLightClusters();
+            }
         }
 
         if ((result & COMPUPDATED_LIGHTS) || (result & COMPUPDATED_CAMERAS)) {
@@ -328,43 +421,40 @@ class LayerComposition extends EventHandler {
 
     updateShadowCasters() {
 
-        // adjust _lightShadowCasters to the right size, matching number of lights, and clean it up
+        // _lightCompositionData already has the right size, just clean up shadow casters
         const lightCount = this._lights.length;
-        this._lightShadowCasters.length = lightCount;
         for (let i = 0; i < lightCount; i++) {
-
-            const casters = this._lightShadowCasters[i];
-            if (casters) {
-                casters.clear();
-            } else {
-                this._lightShadowCasters[i] = new ShadowCasters();
-            }
+            this._lightCompositionData[i].clearShadowCasters();
         }
 
         // for each layer
         const len = this.layerList.length;
         for (let i = 0; i < len; i++) {
             const layer = this.layerList[i];
-            const lights = layer._lights;
 
-            // for each light of a layer
-            for (let j = 0; j < lights.length; j++) {
+            // layer can be in the list two times (opaque, transp), add casters only one time
+            if (!tempSet.has(layer)) {
+                tempSet.add(layer);
 
-                // only need casters when casting shadows
-                if (lights[j].castShadows) {
+                // for each light of a layer
+                const lights = layer._lights;
+                for (let j = 0; j < lights.length; j++) {
 
-                    // find its index in global light list, and get shadow casters for it
-                    const lightIndex = this._lightsMap.get(lights[j]);
-                    const casters = this._lightShadowCasters[lightIndex];
+                    // only need casters when casting shadows
+                    if (lights[j].castShadows) {
 
-                    // add unique meshes from the layer to casters
-                    const meshInstances = layer.shadowCasters;
-                    for (let k = 0; k < meshInstances.length; k++) {
-                        casters.add(meshInstances[k]);
+                        // find its index in global light list, and get shadow casters for it
+                        const lightIndex = this._lightsMap.get(lights[j]);
+                        const lightCompData = this._lightCompositionData[lightIndex];
+
+                        // add unique meshes from the layer to casters
+                        lightCompData.addShadowCasters(layer.shadowCasters);
                     }
                 }
             }
         }
+
+        tempSet.clear();
     }
 
     updateLights() {
@@ -376,15 +466,29 @@ class LayerComposition extends EventHandler {
         const count = this.layerList.length;
         for (let i = 0; i < count; i++) {
             const layer = this.layerList[i];
-            const lights = layer._lights;
 
-            for (let j = 0; j < lights.length; j++) {
-                const light = lights[j];
+            // layer can be in the list two times (opaque, transp), process it only one time
+            if (!tempSet.has(layer)) {
+                tempSet.add(layer);
 
-                // add new light
-                if (!this._lightsMap.has(light)) {
-                    this._lightsMap.set(light, this._lights.length);
-                    this._lights.push(light);
+                const lights = layer._lights;
+                for (let j = 0; j < lights.length; j++) {
+                    const light = lights[j];
+
+                    // add new light
+                    let lightIndex = this._lightsMap.get(light);
+                    if (lightIndex === undefined) {
+                        lightIndex = this._lights.length;
+                        this._lightsMap.set(light, lightIndex);
+                        this._lights.push(light);
+
+                        // make sure the light has composition data allocated
+                        let lightCompData = this._lightCompositionData[lightIndex];
+                        if (!lightCompData) {
+                            lightCompData = new LightCompositionData();
+                            this._lightCompositionData[lightIndex] = lightCompData;
+                        }
+                    }
                 }
             }
 
@@ -393,8 +497,95 @@ class LayerComposition extends EventHandler {
             layer._dirtyLights = false;
         }
 
+        tempSet.clear();
+
         // split light list by type
         this._splitLightsArray(this);
+
+        // adjust _lightCompositionData to the right size, matching number of lights
+        const lightCount = this._lights.length;
+        this._lightCompositionData.length = lightCount;
+    }
+
+    // find existing light cluster that is compatible with specified layer
+    findCompatibleCluster(layer, renderActionCount) {
+
+        // check already set up render actions
+        for (let i = 0; i < renderActionCount; i++) {
+            const ra = this._renderActions[i];
+            const raLayer = this.layerList[ra.layerIndex];
+
+            // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
+            if (layer === raLayer) {
+                return ra.lightClusters;
+            }
+
+            if (ra.lightClusters) {
+                // if the layer has exactly the same set of lights, use the same cluster
+                if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
+                    return ra.lightClusters;
+                }
+            }
+        }
+
+        // no match
+        return null;
+    }
+
+    // assign light clusters to render actions that need it
+    allocateLightClusters() {
+
+        // reuse previously allocated clusters
+        tempClusterArray.push(...this._worldClusters);
+
+        // start with no clusters
+        this._worldClusters.length = 0;
+
+        // process all render actions
+        const count = this._renderActions.length;
+        for (let i = 0; i < count; i++) {
+            const ra = this._renderActions[i];
+            const layer = this.layerList[ra.layerIndex];
+
+            // if the layer has lights used by clusters
+            if (layer._clusteredLightsSet.size) {
+
+                // and if the layer has meshes
+                const transparent = this.subLayerList[ra.layerIndex];
+                const meshInstances = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                if (meshInstances.length) {
+
+                    // reuse cluster that was already set up and is compatible
+                    let clusters = this.findCompatibleCluster(layer, i);
+                    if (!clusters) {
+
+                        // use already allocated cluster from before
+                        if (tempClusterArray.length) {
+                            clusters = tempClusterArray.pop();
+                        }
+
+                        // create new cluster
+                        if (!clusters) {
+                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights);
+                        }
+
+                        clusters.name = "Cluster-" + this._worldClusters.length;
+                        this._worldClusters.push(clusters);
+                    }
+
+                    ra.lightClusters = clusters;
+                }
+            }
+
+            // no clustered lights, use the cluster with no lights
+            if (!ra.lightClusters) {
+                ra.lightClusters = this.emptyWorldClusters;
+            }
+        }
+
+        // delete leftovers
+        tempClusterArray.forEach((item) => item.destroy());
+        tempClusterArray.length = 0;
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
@@ -514,6 +705,8 @@ class LayerComposition extends EventHandler {
                     " Meshes: ", (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
                     (" RT: " + (ra.renderTarget ? ra.renderTarget.name : "-")).padEnd(30, " ") +
                     " Clear: " + clear +
+                    " Lights: (" + layer._clusteredLightsSet.size + "/" + layer._lightsSet.size + ")" +
+                    " " + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : "").padEnd(10, " ") +
                     (ra.firstCameraUse ? " CAM-FIRST" : "") +
                     (ra.triggerPostprocess ? " POSTPROCESS" : "") +
                     (dirLightCount ? (" DirLights: " + dirLightCount) : "")

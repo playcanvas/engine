@@ -171,7 +171,7 @@ class Vec4 {
     /**
      * @function
      * @name Vec4#copy
-     * @description Copied the contents of a source 4-dimensional vector to a destination 4-dimensional vector.
+     * @description Copies the contents of a source 4-dimensional vector to a destination 4-dimensional vector.
      * @param {Vec4} rhs - A vector to copy to the specified vector.
      * @returns {Vec4} Self for chaining.
      * @example

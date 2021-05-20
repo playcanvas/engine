@@ -144,7 +144,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#addComponent
-     * @description Create new {@link Component} and {@link ComponentData} instances and attach them to the entity.
+     * @description Create new {@link Component} and component data instances and attach them to the entity.
      * @param {Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
      * @returns {Component} Returns a Component of type defined by the component system.
@@ -178,7 +178,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#removeComponent
-     * @description Remove the {@link Component} from the entity and delete the associated {@link ComponentData}.
+     * @description Remove the {@link Component} from the entity and delete the associated component data.
      * @param {Entity} entity - The entity to remove the component from.
      * @example
      * app.systems.model.removeComponent(entity);
@@ -198,7 +198,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#cloneComponent
-     * @description Create a clone of component. This creates a copy all ComponentData variables.
+     * @description Create a clone of component. This creates a copy of all component data variables.
      * @param {Entity} entity - The entity to clone the component from.
      * @param {Entity} clone - The entity to clone the component into.
      * @returns {Component} The newly cloned component.
@@ -213,7 +213,7 @@ class ComponentSystem extends EventHandler {
      * @private
      * @function
      * @name ComponentSystem#initializeComponentData
-     * @description Called during {@link ComponentSystem#addComponent} to initialize the {@link ComponentData} in the store
+     * @description Called during {@link ComponentSystem#addComponent} to initialize the component data in the store.
      * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely.
      * @param {Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.

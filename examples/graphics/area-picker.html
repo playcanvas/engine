@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
@@ -30,6 +31,7 @@
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
@@ -37,7 +39,33 @@
 
         var miniStats = new pcx.MiniStats(app);
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        // setup skydome
+        app.scene.skyboxMip = 2;
+
+        // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+            url: "../assets/cubemaps/helipad.dds"
+        }, {
+            type: pc.TEXTURETYPE_RGBM
+        });
+        app.assets.add(cubemapAsset);
+        app.assets.load(cubemapAsset);
+        cubemapAsset.ready(function () {
+            app.scene.setSkybox(cubemapAsset.resources);
+        });
+
+        // A list of assets that need to be loaded
+        var assetManifest = {
+            bloom: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-bloom.js"
+            }
+        };
+
+        // Load all assets and then run the example
+        loadManifestAssets(app, assetManifest, function () {
+            run();
+        });
 
         // helper function to create a primitive with shape type, position, scale
         function createPrimitive(primitiveType, position, scale) {
@@ -45,6 +73,9 @@
             // create material of random color
             var material = new pc.StandardMaterial();
             material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
+            material.shininess = 60;
+            material.metalness = 0.4;
+            material.useMetalness = true;
             material.update();
 
             // create primitive
@@ -61,36 +92,10 @@
             return primitive;
         }
 
-        // generate a box area with specified size of random primitives
-        var size = 30;
-        var halfSize = size * 0.5;
-        for (var i = 0; i < 300; i++) {
-            var shape = Math.random() < 0.5 ? "box" : "sphere";
-            var position = new pc.Vec3(Math.random() * size - halfSize, Math.random() * size - halfSize, Math.random() * size - halfSize);
-            var scale = 1 + Math.random();
-            var entity = createPrimitive(shape, position, new pc.Vec3(scale, scale, scale));
-            app.root.addChild(entity);
-        }
-
-        // Create main camera
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.1, 0.1, 0.1)
-        });
-        app.root.addChild(camera);
-
-        // Create an Entity with a omni light component
-        var light1 = new pc.Entity();
-        light1.addComponent("light", {
-            type: "omni",
-            color: new pc.Color(0.7, 0.7, 0.7),
-            range: 150
-        });
-        light1.translate(70, 60, 50);
-        app.root.addChild(light1);
-
         // function to draw a 2D rectangle in the screen space coordinates
         function drawRectangle(x, y, w, h) {
+
+            var pink = new pc.Color(1, 0.02, 0.58);
 
             // transform 4 2D screen points into world space
             var pt0 = camera.camera.screenToWorld(x, y, 1);
@@ -100,8 +105,9 @@
 
             // and connect them using white lines
             var points = [pt0, pt1,  pt1, pt2,  pt2, pt3,  pt3, pt0];
-            var colors = [pc.Color.WHITE, pc.Color.WHITE,  pc.Color.WHITE, pc.Color.WHITE,  
-                pc.Color.WHITE, pc.Color.WHITE,  pc.Color.WHITE, pc.Color.WHITE
+            var colors = [pink, pink, pink, pink, pink, pink, pink, pink
+                // var colors = [pc.Color.WHITE, pc.Color.WHITE,  pc.Color.WHITE, pc.Color.WHITE,  
+                // pc.Color.WHITE, pc.Color.WHITE,  pc.Color.WHITE, pc.Color.WHITE
             ];
             app.renderLines(points, colors);
         }
@@ -112,17 +118,52 @@
             material.update();
         }
 
-        // handle mouse move event and store current mouse position to use as a position to pick from the scene        
-        var mouseX = 0, mouseY = 0;
-        new pc.Mouse(document.body).on(pc.EVENT_MOUSEMOVE, function (event) {
-            mouseX = event.x;
-            mouseY = event.y;
-        }, this);
-
-        // Create an instance of the picker class
-        // Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
+        // use a quarter resolution for picker render target (faster but less precise - can miss small objects)
         var pickerScale = 0.25;
-        var picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+        var picker;
+        var camera;
+        var mouseX = 0, mouseY = 0;
+
+        function run() {
+
+            // generate a box area with specified size of random primitives
+            var size = 30;
+            var halfSize = size * 0.5;
+            for (var i = 0; i < 300; i++) {
+                var shape = Math.random() < 0.5 ? "cylinder" : "sphere";
+                var position = new pc.Vec3(Math.random() * size - halfSize, Math.random() * size - halfSize, Math.random() * size - halfSize);
+                var scale = 1 + Math.random();
+                var entity = createPrimitive(shape, position, new pc.Vec3(scale, scale, scale));
+                app.root.addChild(entity);
+            }
+
+            // Create main camera
+            camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.1, 0.1, 0.1)
+            });
+
+            // add bloom postprocessing (this is ignored by the picker)
+            camera.addComponent("script");
+            camera.script.create("bloom", {
+                attributes: {
+                    bloomIntensity: 1,
+                    bloomThreshold: 0.7,
+                    blurAmount: 4
+                }
+            });
+            app.root.addChild(camera);
+
+            // handle mouse move event and store current mouse position to use as a position to pick from the scene        
+            new pc.Mouse(document.body).on(pc.EVENT_MOUSEMOVE, function (event) {
+                mouseX = event.x;
+                mouseY = event.y;
+            }, this);
+
+            // Create an instance of the picker class
+            // Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
+            picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+        }
 
         // array of highlighted materials
         var highlights = [];
@@ -131,8 +172,13 @@
         var time = 0;
         app.on("update", function (dt) {
 
-            // orbit the camera around
             time += dt * 0.1;
+
+            // orbit the camera around
+            if (!camera) {
+                return;
+            }
+
             camera.setLocalPosition(40 * Math.sin(time), 0, 40 * Math.cos(time));
             camera.lookAt(pc.Vec3.ZERO);
 
@@ -143,8 +189,10 @@
             highlights.length = 0;
 
             // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
-            picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
-            picker.prepare(camera.camera, app.scene);
+            if (picker) {
+                picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+                picker.prepare(camera.camera, app.scene);
+            }
 
             // areas we want to sample - two larger rectangles, one small square, and one pixel at a mouse position
             // assign them different highlight colors as well
@@ -153,8 +201,7 @@
                     pos: new pc.Vec2(canvas.clientWidth * 0.3, canvas.clientHeight * 0.3),
                     size: new pc.Vec2(100, 200),
                     color: pc.Color.YELLOW
-                }
-                ,
+                },
                 { 
                     pos: new pc.Vec2(canvas.clientWidth * 0.6, canvas.clientHeight * 0.7),
                     size: new pc.Vec2(200, 20),

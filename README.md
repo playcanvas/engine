@@ -3,6 +3,7 @@
 <img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
 
 # PlayCanvas WebGL Game Engine
+[Docs](https://developer.playcanvas.com) | [Examples](https://playcanvas.github.io) | [Forum](https://forum.playcanvas.com) | [Blog](https://blog.playcanvas.com)
 
 PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
 
@@ -162,22 +163,6 @@ PlayCanvas uses of Karma for unit testing. There are two ways of running the tes
 | `npm run test`         | Runs unit tests on a built `playcanvas.js`                                            |
 | `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
 
-## How to get models?
-
-To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/user-manual/assets/models/) in the developer documentation.
-
-## Useful Links
-
-* [Forum](https://forum.playcanvas.com)
-* [Developer Site](https://developer.playcanvas.com)
-* [Blog](https://blog.playcanvas.com)
-
-## Contributing
-
-Want to help us make the best 3D engine on the web? Great!
-Check out [CONTRIBUTING.md](https://github.com/playcanvas/engine/blob/master/.github/CONTRIBUTING.md) that will get you started.
-And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
-
 ## PlayCanvas Editor
 
 The PlayCanvas Engine is an open source engine which you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):
@@ -185,10 +170,6 @@ The PlayCanvas Engine is an open source engine which you can use to create HTML5
 [![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 For Editor related bugs and issues, please refer to the [Editor's repo](https://github.com/playcanvas/editor).
-
-## License
-
-The PlayCanvas Engine is released under the [MIT](https://opensource.org/licenses/MIT) license. See LICENSE file.
 
 [npm-badge]: https://img.shields.io/npm/v/playcanvas
 [npm-url]: https://www.npmjs.com/package/playcanvas

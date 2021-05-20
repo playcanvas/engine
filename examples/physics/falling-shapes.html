@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <script src="../wasm-loader.js"></script>
     <style>
         body { 
@@ -19,21 +20,38 @@
 <body>
     <!-- The canvas element -->
     <canvas id="application-canvas"></canvas>
-
     <!-- The script -->
     <script>
+
+    // ***********    Initialize application   *******************
+    var canvas = document.getElementById("application-canvas");
+
+    // Create the application and start the update loop
+    var app = new pc.Application(canvas);
+
     if (wasmSupported()) {
-        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
+        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', loadAssets);
     } else {
-        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
+        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', loadAssets);
     }
 
-    function demo() {
-        // ***********    Initialize application   *******************
-        var canvas = document.getElementById("application-canvas");
+    // A list of assets that need to be loaded
+    var assetManifest = {
+        torus: {
+            type: "container",
+            url: "../assets/models/torus.glb"
+        }
+    };
 
-        // Create the application and start the update loop
-        var app = new pc.Application(canvas);
+    function loadAssets() {
+
+        // Load all assets and then run the example
+        loadManifestAssets(app, assetManifest, function () {
+            run();
+        });
+    }
+
+    function run() {
         app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -66,7 +84,7 @@
         // ***********    Create our floor   *******************
 
         var floor = new pc.Entity();
-        floor.addComponent("model", {
+        floor.addComponent("render", {
             type: "box",
             material: gray
         });
@@ -123,97 +141,72 @@
 
         // Move the camera a little further away
         camera.translate(0, 10, 15);
-        camera.lookAt(0, 0, 0);
+        camera.lookAt(0, 2, 0);
+
+        // helper function which creates a template for a collider
+        var createTemplate = function (type, collisionOptions, template) {
+
+            // add a model component (visible mesh)
+            if (!template) {
+                template = new pc.Entity();
+                template.addComponent("render", {
+                    type: type
+                });
+            }
+
+            // ...a rigidbody component of type 'dynamic' so that it is simulated by the physics engine...
+            template.addComponent("rigidbody", {
+                type: "dynamic",
+                mass: 50,
+                restitution: 0.5
+            });
+
+            // ... and a collision component
+            template.addComponent("collision", collisionOptions);
+
+            return template;
+        }
 
         // ***********    Create templates    *******************
 
         // Create a template for a falling box
-        // It will have a model component of type 'box'...
-        var boxTemplate = new pc.Entity();
-        boxTemplate.addComponent("model", {
-            type: "box",
-            castShadows: true,
-            material: gray
-        });
-
-         // ...a rigidbody component of type 'dynamic' so that it is simulated
-        // by the physics engine...
-        boxTemplate.addComponent("rigidbody", {
-            type: "dynamic",
-            mass: 50,
-            restitution: 0.5
-        });
-
-        // ... and a collision component of type 'box'
-        boxTemplate.addComponent("collision", {
-            type: "box",
-            halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
-        });
-
-        // Create other shapes too for variety...
+        var boxTemplate = createTemplate("box", {
+                type: "box",
+                halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
+            });
 
         // A sphere...
-        var sphereTemplate = new pc.Entity();
-        sphereTemplate.addComponent("model", {
-            type: "sphere",
-            castShadows: true,
-            material: gray
-        });
-
-        sphereTemplate.addComponent("rigidbody", {
-            type: "dynamic",
-            mass: 50,
-            restitution: 0.5
-        });
-
-        sphereTemplate.addComponent("collision", {
+        var sphereTemplate = createTemplate("sphere", {
             type: "sphere",
             radius: 0.5
         });
 
         // A capsule...
-        var capsuleTemplate = new pc.Entity();
-        capsuleTemplate.addComponent("model", {
-            type: "capsule",
-            castShadows: true,
-            material: gray
-        });
-
-        capsuleTemplate.addComponent("rigidbody", {
-            type: "dynamic",
-            mass: 50,
-            restitution: 0.5
-        });
-
-        capsuleTemplate.addComponent("collision", {
+        var capsuleTemplate = createTemplate("capsule", {
             type: "capsule",
             radius: 0.5,
             height: 2
         });
 
         // A cylinder...
-        var cylinderTemplate = new pc.Entity();
-        cylinderTemplate.addComponent("model", {
-            type: "cylinder",
-            castShadows: true,
-            material: gray
-        });
-
-        cylinderTemplate.addComponent("rigidbody", {
-            type: "dynamic",
-            mass: 50,
-            restitution: 0.5
-        });
-
-        cylinderTemplate.addComponent("collision", {
+        var cylinderTemplate = createTemplate("cylinder", {
             type: "cylinder",
             radius: 0.5,
             height: 1
         });
 
+        // A torus mesh...
+        var container = assetManifest["torus"].asset.resource;
+        var meshTemplate = container.instantiateRenderEntity();
+
+        createTemplate(null, {
+            type: 'mesh',
+            renderAsset: container.renders[0]
+        }, meshTemplate);
+
         // add all the templates to an array so that
         // we can randomly spawn them
-        var templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate];
+        var templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate, meshTemplate];
 
         // disable the templates because we don't want them to be visible
         // we'll just use them to clone other Entities
@@ -237,7 +230,7 @@
                     timer = 0.2;
 
                     // Clone a random template and position it above the floor
-                    var template = templates[Math.floor(pc.math.random(0, templates.length))];
+                    var template = templates[Math.floor(Math.random() * templates.length)];
                     var clone = template.clone();
                     // enable the clone because the template is disabled
                     clone.enabled = true;
@@ -245,12 +238,14 @@
                     app.root.addChild(clone);
 
                     clone.rigidbody.teleport(pc.math.random(-1, 1), 10, pc.math.random(-1, 1));
+                    clone.rigidbody.angularVelocity = new pc.Vec3(Math.random() * 10 - 5,
+                        Math.random() * 10 - 5, Math.random() * 10 - 5);
                 }
             }
 
             // Show active bodies in red and frozen bodies in gray
             app.root.findComponents('rigidbody').forEach(function (body) {
-                body.entity.model.material = body.isActive() ? red : gray;
+                body.entity.render.meshInstances[0].material = body.isActive() ? red : gray;
             });
         });
     }
