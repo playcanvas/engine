@@ -36,7 +36,6 @@ function ChromaticAberrationEffect(graphicsDevice) {
             "uniform vec2 uResolution;",
             "uniform sampler2D uColorBuffer;",
             "uniform float uAmount;",
-            "uniform float uTime;",
             "",
             "void main() {",
             "    highp vec2 uv = vUv0; // variable_vertex.xy; // interpolated at pixel's center",
