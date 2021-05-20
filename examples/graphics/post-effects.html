@@ -58,11 +58,7 @@
             vignette: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-vignette.js"
-            },
-            chromaticAberration: {
-                type: "script",
-                url: "../../scripts/posteffects/posteffect-chromaticaberration.js"
-            }            
+            }
         };
 
         // Load all assets and then run the example
@@ -131,11 +127,6 @@
                     maxBlur: 0.02
                 }
             });
-            camera.script.create("chromaticAberration", {
-                attributes: {
-                    amount: 5.0
-                }
-            });            
             camera.translate(0, 7, 24);
             camera.rotate(0, 0, 0);
 
@@ -205,11 +196,8 @@
                         camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
                         break;
                     case pc.KEY_5:
-                        camera.script.chromaticAberration.enabled = !camera.script.chromaticAberration.enabled;
-                        break;
-                    case pc.KEY_6:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
-                    break;                 
+                        break;
                 }
             }, this);
 
@@ -279,8 +267,7 @@
                         "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
                         "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
-                        "\n[Key 5] Chromatic Aberration: " + camera.script.chromaticAberration.enabled +
-                        "\n[Key 6] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 5] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
