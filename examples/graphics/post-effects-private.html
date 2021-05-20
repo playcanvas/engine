@@ -23,7 +23,9 @@
     <script>
         var canvas = document.getElementById("application-canvas");
         var app = new pc.Application(canvas, {
-            keyboard: new pc.Keyboard(window)
+            keyboard: new pc.Keyboard(window),
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body)
         });
         app.start();
 
@@ -43,6 +45,10 @@
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
+            orbitCamera: {
+                type: "script",
+                url: "../../scripts/camera/orbit-camera.js"
+            },            
             bloom: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-bloom.js"
@@ -58,7 +64,11 @@
             vignette: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-vignette.js"
-            }
+            },
+            godRays: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-godrays.js"
+            }      
         };
 
         // Load all assets and then run the example
@@ -100,9 +110,19 @@
             var camera = new pc.Entity();
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.4, 0.45, 0.5),
-                farClip: 50
+                farClip: 75
             });
             camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    distanceMin: 15,                    
+                    distanceMax: 40,
+                    inertiaFactor: 0.2 // Override default of 0 (no inertia)
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+
             camera.script.create("bloom", {
                 attributes: {
                     bloomIntensity: 1,
@@ -127,8 +147,6 @@
                     maxBlur: 0.02
                 }
             });
-            camera.translate(0, 7, 24);
-            camera.rotate(0, 0, 0);
 
             // Create an Entity for the ground
             var ground = new pc.Entity();
@@ -174,11 +192,39 @@
             });
             pointlight.model.material = blue;
 
+            // Create a point light behind the model to be used as the god rays emitter
+            var pointlight2 = new pc.Entity();
+            pointlight2.addComponent("light", {
+                type: "point",
+                color: new pc.Color(1, 1, 0),
+                range: 100,
+                intensity: 1
+            });
+
+            // Add GodRays post effect
+            pointlight2.addComponent("script");
+            pointlight2.script.create("godRays", {
+                attributes: {
+                    cameraEntity: camera,
+                    lightEntity: pointlight2,
+                    intensity: 1.5,
+                    weight: 0.1,
+                    decay: 0.005,
+                    exposure: 0.15,
+                    color: [0.8, 0.8, 0.2]
+                }
+            });   
+
             // Add Entities into the scene hierarchy
             app.root.addChild(camera);
             app.root.addChild(light);
             app.root.addChild(pointlight);
+            app.root.addChild(pointlight2);
             app.root.addChild(ground);
+
+            // Set Orbit Camera focus position
+            camera.script.orbitCamera.pivotPoint = new pc.Vec3(0,7, 0);
+            camera.script.orbitCamera.distance = 25;
 
             // Allow user to toggle individual post effects
             app.keyboard.on("keydown", function (e) {
@@ -196,6 +242,9 @@
                         camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
                         break;
                     case pc.KEY_5:
+                    pointlight2.script.godRays.enabled = !pointlight2.script.godRays.enabled;
+                        break;                           
+                    case pc.KEY_6:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                         break;
                 }
@@ -254,6 +303,7 @@
                     light.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
                     
                     pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
+                    pointlight2.setLocalPosition(pointRadius * Math.sin(-3 * angle * pc.math.DEG_TO_RAD), pointRadius * Math.cos(-1 * angle * pc.math.DEG_TO_RAD) + 9.0, -3.0);
 
                     if (camera.script.bokeh) {
                         camera.script.bokeh.focus = light.getLocalPosition().z - camera.getLocalPosition().z;
@@ -267,7 +317,8 @@
                         "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
                         "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
-                        "\n[Key 5] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 5] God Rays: " + pointlight2.script.godRays.enabled +
+                        "\n[Key 6] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
