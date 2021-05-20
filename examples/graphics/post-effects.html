@@ -23,7 +23,9 @@
     <script>
         var canvas = document.getElementById("application-canvas");
         var app = new pc.Application(canvas, {
-            keyboard: new pc.Keyboard(window)
+            keyboard: new pc.Keyboard(window),
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body)            
         });
         app.start();
 
@@ -43,6 +45,10 @@
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
+            orbitCamera: {
+                type: "script",
+                url: "../../scripts/camera/orbit-camera.js"
+            },            
             bloom: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-bloom.js"
@@ -58,7 +64,31 @@
             vignette: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-vignette.js"
-            }
+            },
+            chromaticAberration: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-chromaticaberration.js"
+            },
+            filmGrain: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-filmGrain.js"
+            },
+            godRays: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-godrays.js"
+            },
+            pixelate: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-pixelate.js"
+            },
+            sharpen: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-sharpen.js"
+            },
+            motionBlur: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-motionBlur.js"
+            }                  
         };
 
         // Load all assets and then run the example
@@ -89,7 +119,7 @@
             var blue = createMaterial({
                 diffuse: new pc.Color(0, 0, 0),
                 emissive: new pc.Color(0, 0, 1)
-            });
+            });     
 
             entity = assetManifest["statue"].asset.resource.instantiateRenderEntity({
                 castShadows: true
@@ -103,6 +133,17 @@
                 farClip: 50
             });
             camera.addComponent("script");
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    distanceMin: 15,                    
+                    distanceMax: 40,
+                    inertiaFactor: 0.2 // Override default of 0 (no inertia)
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+
             camera.script.create("bloom", {
                 attributes: {
                     bloomIntensity: 1,
@@ -127,8 +168,36 @@
                     maxBlur: 0.02
                 }
             });
-            camera.translate(0, 7, 24);
-            camera.rotate(0, 0, 0);
+            camera.script.create("chromaticAberration", {
+                attributes: {
+                    amount: 5.0
+                }
+            });
+            camera.script.create("filmGrain", {
+                attributes: {
+                    amount: 2.0
+                }
+            });  
+            camera.script.create("pixelate", {
+                attributes: {
+                    amount: 5.0
+                }
+            });
+            camera.script.create("sharpen", {
+                attributes: {
+                    amount: 0.35
+                }
+            });
+            camera.script.create("motionBlur", {
+                attributes: {
+                    samples: 32,
+                    strength: 1.5
+                }
+            });                           
+
+            camera.script.filmGrain.enabled = false;
+            camera.script.pixelate.enabled = false;
+            camera.script.sharpen.enabled = false;
 
             // Create an Entity for the ground
             var ground = new pc.Entity();
@@ -174,11 +243,39 @@
             });
             pointlight.model.material = blue;
 
+            // Create a point light behind the model to be used as the god rays emitter
+            var pointlight2 = new pc.Entity();
+            pointlight2.addComponent("light", {
+                type: "point",
+                color: new pc.Color(1, 1, 0),
+                range: 100,
+                intensity: 1
+            });
+
+            // Add GodRays post effect
+            pointlight2.addComponent("script");
+            pointlight2.script.create("godRays", {
+                attributes: {
+                    cameraEntity: camera,
+                    lightEntity: pointlight2,
+                    intensity: 1.5,
+                    weight: 0.1,
+                    decay: 0.005,
+                    exposure: 0.15,
+                    color: [0.8, 0.8, 0.2]
+                }
+            });                
+
             // Add Entities into the scene hierarchy
             app.root.addChild(camera);
             app.root.addChild(light);
             app.root.addChild(pointlight);
+            app.root.addChild(pointlight2);
             app.root.addChild(ground);
+
+            // Set Orbit Camera focus position
+            camera.script.orbitCamera.pivotPoint = new pc.Vec3(0,7, 0);
+            camera.script.orbitCamera.distance = 25;            
 
             // Allow user to toggle individual post effects
             app.keyboard.on("keydown", function (e) {
@@ -196,8 +293,28 @@
                         camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
                         break;
                     case pc.KEY_5:
-                        camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
+                        camera.script.chromaticAberration.enabled = !camera.script.chromaticAberration.enabled;
                         break;
+                    case pc.KEY_6:
+                        camera.script.filmGrain.enabled = !camera.script.filmGrain.enabled;
+                        break;
+                    case pc.KEY_7:
+                        pointlight2.script.godRays.enabled = !pointlight2.script.godRays.enabled;
+                    case pc.KEY_8:
+                        camera.script.pixelate.enabled = !camera.script.pixelate.enabled;
+                        break;
+                    case pc.KEY_9:
+                        camera.script.sharpen.enabled = !camera.script.sharpen.enabled;
+                        break;
+                    case pc.KEY_M:
+                        camera.script.motionBlur.enabled = !camera.script.motionBlur.enabled;
+                        break;     
+                    case pc.KEY_B:
+                        camera.script.bokeh.debugView = !camera.script.bokeh.debugView;
+                        break;                                                                             
+                    case pc.KEY_0:
+                        camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
+                    break;                 
                 }
             }, this);
 
@@ -254,6 +371,7 @@
                     light.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
                     
                     pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
+                    pointlight2.setLocalPosition(pointRadius * Math.sin(-3 * angle * pc.math.DEG_TO_RAD), pointRadius * Math.cos(-1 * angle * pc.math.DEG_TO_RAD) + 9.0, -3.0);
 
                     if (camera.script.bokeh) {
                         camera.script.bokeh.focus = light.getLocalPosition().z - camera.getLocalPosition().z;
@@ -267,7 +385,14 @@
                         "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
                         "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
-                        "\n[Key 5] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 5] Chromatic Aberration: " + camera.script.chromaticAberration.enabled +
+                        "\n[Key 6] Film Grain: " + camera.script.filmGrain.enabled +
+                        "\n[Key 7] God Rays: " + pointlight2.script.godRays.enabled +
+                        "\n[Key 8] Pixelate: " + camera.script.pixelate.enabled +
+                        "\n[Key 9] Sharpen: " + camera.script.sharpen.enabled +
+                        "\n[Key M] Motion Blur: " + camera.script.motionBlur.enabled +
+                        "\n[Key B] Bokeh Debug View: " + camera.script.bokeh.debugView +
+                        "\n[Key 0] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
