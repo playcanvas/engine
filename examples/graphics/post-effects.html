@@ -74,6 +74,10 @@
             pixelate: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-pixelate.js"
+            },
+            sharpen: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-sharpen.js"
             }            
         };
 
@@ -157,10 +161,16 @@
                 attributes: {
                     amount: 5.0
                 }
-            });               
+            });
+            camera.script.create("sharpen", {
+                attributes: {
+                    amount: 0.35
+                }
+            });                       
 
             camera.script.filmGrain.enabled = false;
             camera.script.pixelate.enabled = false;
+            camera.script.sharpen.enabled = false;
             
             camera.translate(0, 7, 24);
             camera.rotate(0, 0, 0);
@@ -264,8 +274,11 @@
                         pointlight2.script.godRays.enabled = !pointlight2.script.godRays.enabled;
                     case pc.KEY_8:
                         camera.script.pixelate.enabled = !camera.script.pixelate.enabled;
-                        break;                        
+                        break;
                     case pc.KEY_9:
+                        camera.script.sharpen.enabled = !camera.script.sharpen.enabled;
+                        break;                                             
+                    case pc.KEY_0:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                     break;                 
                 }
@@ -342,7 +355,8 @@
                         "\n[Key 6] Film Grain: " + camera.script.filmGrain.enabled +
                         "\n[Key 7] God Rays: " + pointlight2.script.godRays.enabled +
                         "\n[Key 8] Pixelate: " + camera.script.pixelate.enabled +
-                        "\n[Key 9] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 9] Sharpen: " + camera.script.sharpen.enabled +
+                        "\n[Key 0] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
