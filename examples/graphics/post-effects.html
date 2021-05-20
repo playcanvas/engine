@@ -62,7 +62,11 @@
             chromaticAberration: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-chromaticaberration.js"
-            }            
+            },
+            filmGrain: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-filmGrain.js"
+            }                        
         };
 
         // Load all assets and then run the example
@@ -135,7 +139,12 @@
                 attributes: {
                     amount: 5.0
                 }
-            });            
+            });
+            camera.script.create("filmGrain", {
+                attributes: {
+                    amount: 2.0
+                }
+            });                    
             camera.translate(0, 7, 24);
             camera.rotate(0, 0, 0);
 
@@ -208,6 +217,9 @@
                         camera.script.chromaticAberration.enabled = !camera.script.chromaticAberration.enabled;
                         break;
                     case pc.KEY_6:
+                        camera.script.filmGrain.enabled = !camera.script.filmGrain.enabled;
+                        break;                        
+                    case pc.KEY_7:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                     break;                 
                 }
@@ -280,7 +292,8 @@
                         "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
                         "\n[Key 5] Chromatic Aberration: " + camera.script.chromaticAberration.enabled +
-                        "\n[Key 6] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 6] Film Grain: " + camera.script.filmGrain.enabled +
+                        "\n[Key 7] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
