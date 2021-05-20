@@ -23,7 +23,9 @@
     <script>
         var canvas = document.getElementById("application-canvas");
         var app = new pc.Application(canvas, {
-            keyboard: new pc.Keyboard(window)
+            keyboard: new pc.Keyboard(window),
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body)
         });
         app.start();
 
@@ -43,6 +45,10 @@
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
+            orbitCamera: {
+                type: "script",
+                url: "../../scripts/camera/orbit-camera.js"
+            },            
             bloom: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-bloom.js"
@@ -58,7 +64,11 @@
             vignette: {
                 type: "script",
                 url: "../../scripts/posteffects/posteffect-vignette.js"
-            }
+            },
+            sharpen: {
+                type: "script",
+                url: "../../scripts/posteffects/posteffect-sharpen.js"
+            }         
         };
 
         // Load all assets and then run the example
@@ -100,9 +110,19 @@
             var camera = new pc.Entity();
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.4, 0.45, 0.5),
-                farClip: 50
+                farClip: 75
             });
             camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    distanceMin: 15,                    
+                    distanceMax: 40,
+                    inertiaFactor: 0.2 // Override default of 0 (no inertia)
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+
             camera.script.create("bloom", {
                 attributes: {
                     bloomIntensity: 1,
@@ -127,8 +147,11 @@
                     maxBlur: 0.02
                 }
             });
-            camera.translate(0, 7, 24);
-            camera.rotate(0, 0, 0);
+            camera.script.create("sharpen", {
+                attributes: {
+                    amount: 0.35
+                }
+            });
 
             // Create an Entity for the ground
             var ground = new pc.Entity();
@@ -180,6 +203,10 @@
             app.root.addChild(pointlight);
             app.root.addChild(ground);
 
+            // Set Orbit Camera focus position
+            camera.script.orbitCamera.pivotPoint = new pc.Vec3(0,7, 0);
+            camera.script.orbitCamera.distance = 25;
+
             // Allow user to toggle individual post effects
             app.keyboard.on("keydown", function (e) {
                 switch (e.key) {
@@ -196,6 +223,9 @@
                         camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
                         break;
                     case pc.KEY_5:
+                        camera.script.sharpen.enabled = !camera.script.sharpen.enabled;
+                        break;                        
+                    case pc.KEY_6:
                         camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                         break;
                 }
@@ -267,7 +297,8 @@
                         "\n[Key 2] Sepia: " + camera.script.sepia.enabled +
                         "\n[Key 3] Vignette: " + camera.script.vignette.enabled +
                         "\n[Key 4] Bokeh: " + camera.script.bokeh.enabled +
-                        "\n[Key 5] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
+                        "\n[Key 5] Sharpen: " + camera.script.sharpen.enabled +
+                        "\n[Key 6] Post-process UI: " + (camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI);
 
                 }
 
