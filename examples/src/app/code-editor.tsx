@@ -4,12 +4,15 @@ import MonacoEditor from "@monaco-editor/react";
 import { Panel, Container, Button } from '@playcanvas/pcui/pcui-react';
 import { playcanvasTypeDefs } from './helpers/raw-file-loading';
 import { File } from './helpers/types';
+import { editor } from 'monaco-editor';
 
 const FILE_TYPE_LANGUAGES: any = {
     'json': 'json',
     'shader': null
 };
 
+
+let monacoEditor: any;
 
 interface CodeEditorProps {
     files: Array<File>,
@@ -19,7 +22,6 @@ interface CodeEditorProps {
 
 const CodeEditor = (props: CodeEditorProps) => {
     const files: Array<File> = JSON.parse(JSON.stringify(props.files));
-
     const [selectedFile, setSelectedFile] = useState(0);
 
     const beforeMount = (monaco: any) => {
@@ -27,6 +29,10 @@ const CodeEditor = (props: CodeEditorProps) => {
             playcanvasTypeDefs,
             '@playcanvas/playcanvas.d.ts'
         );
+    };
+
+    const editorDidMount = (editor: any) => {
+        monacoEditor = editor;
     };
 
     const onChange = (value: string) => {
@@ -48,6 +54,7 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     const selectFile = (selectedFileIndex: number) => {
         setSelectedFile(selectedFileIndex);
+        monacoEditor?.setScrollPosition({ scrollTop: 0 });
         document.querySelectorAll('#codePane .tabs-container .pcui-button').forEach((node: HTMLElement, i: number) => {
             if (selectedFileIndex === i) {
                 node.classList.add('selected');
@@ -80,6 +87,7 @@ const CodeEditor = (props: CodeEditorProps) => {
             language={selectedFile === 0 ? "typescript" : FILE_TYPE_LANGUAGES[files[selectedFile].type]}
             value={files[selectedFile].text}
             beforeMount={beforeMount}
+            onMount={editorDidMount}
             onChange={onChange}
             onValidate={onValidate}
         />
