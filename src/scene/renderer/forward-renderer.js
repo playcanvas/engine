@@ -156,10 +156,6 @@ class ForwardRenderer {
         this.lightShadowMapId = [];
         this.lightShadowMatrixId = [];
         this.lightShadowParamsId = [];
-        this.lightShadowMatrixVsId = [];
-        this.lightShadowParamsVsId = [];
-        this.lightDirVs = [];
-        this.lightDirVsId = [];
         this.lightRadiusId = [];
         this.lightPos = [];
         this.lightPosId = [];
@@ -169,7 +165,6 @@ class ForwardRenderer {
         this.lightHeightId = [];
         this.lightInAngleId = [];
         this.lightOutAngleId = [];
-        this.lightPosVsId = [];
         this.lightCookieId = [];
         this.lightCookieIntId = [];
         this.lightCookieMatrixId = [];
@@ -507,14 +502,11 @@ class ForwardRenderer {
     }
 
     dispatchGlobalLights(scene) {
-        var i;
-        this.mainLight = -1;
-
         this.ambientColor[0] = scene.ambientLight.r;
         this.ambientColor[1] = scene.ambientLight.g;
         this.ambientColor[2] = scene.ambientLight.b;
         if (scene.gammaCorrection) {
-            for (i = 0; i < 3; i++) {
+            for (let i = 0; i < 3; i++) {
                 this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
             }
         }
@@ -531,10 +523,6 @@ class ForwardRenderer {
         this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
         this.lightShadowMatrixId[i] = scope.resolve(light + "_shadowMatrix");
         this.lightShadowParamsId[i] = scope.resolve(light + "_shadowParams");
-        this.lightShadowMatrixVsId[i] = scope.resolve(light + "_shadowMatrixVS");
-        this.lightShadowParamsVsId[i] = scope.resolve(light + "_shadowParamsVS");
-        this.lightDirVs[i] = new Float32Array(3);
-        this.lightDirVsId[i] = scope.resolve(light + "_directionVS");
         this.lightRadiusId[i] = scope.resolve(light + "_radius");
         this.lightPos[i] = new Float32Array(3);
         this.lightPosId[i] = scope.resolve(light + "_position");
@@ -544,7 +532,6 @@ class ForwardRenderer {
         this.lightHeightId[i] = scope.resolve(light + "_halfHeight");
         this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
         this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
-        this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
         this.lightCookieId[i] = scope.resolve(light + "_cookie");
         this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
         this.lightCookieMatrixId[i] = scope.resolve(light + "_cookieMatrix");
@@ -575,7 +562,6 @@ class ForwardRenderer {
         var i;
         var directional, wtm;
         var cnt = 0;
-        this.mainLight = -1;
 
         var scope = this.device.scope;
 
@@ -629,16 +615,6 @@ class ForwardRenderer {
                 params[1] = normalBias;
                 params[2] = bias;
                 this.lightShadowParamsId[cnt].setValue(params);
-                if (this.mainLight < 0) {
-                    this.lightShadowMatrixVsId[cnt].setValue(lightRenderData.shadowMatrix.data);
-                    this.lightShadowParamsVsId[cnt].setValue(params);
-                    directional._direction.normalize();
-                    this.lightDirVs[cnt][0] = directional._direction.x;
-                    this.lightDirVs[cnt][1] = directional._direction.y;
-                    this.lightDirVs[cnt][2] = directional._direction.z;
-                    this.lightDirVsId[cnt].setValue(this.lightDirVs[cnt]);
-                    this.mainLight = i;
-                }
             }
             cnt++;
         }

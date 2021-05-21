@@ -553,26 +553,6 @@ var standard = {
         // code += chunks.baseVS;
         code = this._vsAddBaseCode(code, device, chunks, options);
 
-        // Allow first shadow coords to be computed in VS
-        var mainShadowLight = -1;
-        if (!options.noShadow && !options.twoSidedLighting) {
-            for (i = 0; i < options.lights.length; i++) {
-                lightType = options.lights[i]._type;
-                if (options.lights[i].castShadows) {
-                    if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                        code += "uniform mat4 light" + i + "_shadowMatrixVS;\n";
-                        code += "uniform vec3 light" + i + "_shadowParamsVS;\n";
-                        code += "uniform vec3 light" + i + (lightType === LIGHTTYPE_DIRECTIONAL ? "_directionVS" : "_positionVS") + ";\n";
-                        mainShadowLight = i;
-                        break;
-                    }
-                }
-            }
-            if (mainShadowLight >= 0) {
-                code += chunks.shadowCoordVS;
-            }
-        }
-
         codeBody += "   vPositionW    = getWorldPosition();\n";
 
         if (options.pass === SHADER_DEPTH) {
@@ -613,17 +593,6 @@ var standard = {
             } else if (options.enableGGXSpecular) {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vObjectSpaceUpW  = getObjectSpaceUp();\n";
-            }
-
-            if (mainShadowLight >= 0) {
-                lightType = options.lights[mainShadowLight]._type;
-                if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                    codeBody += "   dLightDirNormW = light" + mainShadowLight + "_directionVS;\n";
-                } else {
-                    codeBody += "   getLightDirPoint(light" + mainShadowLight + "_positionVS);\n";
-                }
-                shadowCoordArgs = "(light" + mainShadowLight + "_shadowMatrixVS, light" + mainShadowLight + "_shadowParamsVS);\n";
-                codeBody += this._nonPointShadowMapProjection(device, options.lights[mainShadowLight], shadowCoordArgs);
             }
         }
 
@@ -1297,26 +1266,6 @@ var standard = {
 
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
-
-            if (mainShadowLight >= 0) {
-                if (shadowTypeUsed[SHADOW_PCF3]) {
-                    code += chunks.shadowStandardVSPS;
-                }
-                if (shadowTypeUsed[SHADOW_PCF5]) {
-                    code += chunks.shadowStandardGL2VSPS;
-                }
-                if (useVsm) {
-                    if (shadowTypeUsed[SHADOW_VSM8]) {
-                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "VSM8").replace(/\$/g, "8");
-                    }
-                    if (shadowTypeUsed[SHADOW_VSM16]) {
-                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "VSM16").replace(/\$/g, "16");
-                    }
-                    if (shadowTypeUsed[SHADOW_VSM32]) {
-                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "VSM32").replace(/\$/g, "32");
-                    }
-                }
-            }
         }
 
         if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
@@ -1683,12 +1632,9 @@ var standard = {
                             }
                             code += "       dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
                         } else {
-                            if (mainShadowLight === i) {
-                                shadowReadMode += "VS";
-                            } else {
-                                shadowCoordArgs = "(light" + i + "_shadowMatrix, light" + i + "_shadowParams);\n";
-                                code += this._nonPointShadowMapProjection(device, options.lights[i], shadowCoordArgs);
-                            }
+                            shadowCoordArgs = "(light" + i + "_shadowMatrix, light" + i + "_shadowParams);\n";
+                            code += this._nonPointShadowMapProjection(device, options.lights[i], shadowCoordArgs);
+
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "       dAtten *= getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
                         }
