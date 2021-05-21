@@ -3,7 +3,7 @@ const float maxCascades = 4.0;
 // shadow matrix for selected cascade
 mat4 cascadeShadowMat;
 
-// funtion which based on cascade distances select a shadow projection matrix to use
+// function which selects a shadow projection matrix based on cascade distances 
 void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], float shadowCascadeDistances[4], float shadowCascadeCount) {
 
     // depth in 0 .. far plane range
