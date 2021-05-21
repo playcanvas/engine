@@ -231,6 +231,17 @@ vec3 hemisphereSamplePhong(vec2 uv, float specPow) {
     return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
+vec3 hemisphereSampleGGX(vec2 uv, float specPow) {
+    float roughness = 1.0 - (log2(specPow) / 11.0);
+    float a = roughness * roughness;
+	
+    float phi = 2.0 * PI * uv.y;
+    float cosTheta = sqrt((1.0 - uv.x) / (1.0 + (a * a - 1.0) * uv.x));
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+	
+    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}  
+
 vec4 reproject() {
     if (NUM_SAMPLES <= 1) {
         // single sample
@@ -263,7 +274,7 @@ vec4 prefilter() {
     vec3 result = vec3(0.0);
     for (int i=0; i<NUM_SAMPLES; ++i) {
         vec2 uv = vec2(float(i) / float(NUM_SAMPLES), rnd(i));
-        vec3 dir = vecSpace * hemisphereSamplePhong(uv, specularPower());
+        vec3 dir = vecSpace * hemisphereSampleGGX(uv, specularPower()); // NB now lines up with environmental BRDF
         result += DECODE_FUNC(SOURCE_FUNC(dir));
     }
 
