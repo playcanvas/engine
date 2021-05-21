@@ -91,7 +91,7 @@ const MainLayout = () => {
                             const e = new p.example();
                             const assetsLoader = e.load;
                             const controls = e.controls;
-                            return <Route key={`/iframe${p.path}`} path={`/iframe${p.path}`}>
+                            return <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`, `${p.path}.html`]}>
                                 <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files}/>
                             </Route>;
                         })
