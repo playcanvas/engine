@@ -170,6 +170,11 @@ class ForwardRenderer {
         this.lightCookieMatrixId = [];
         this.lightCookieOffsetId = [];
 
+        // shadow cascades
+        this.shadowMatrixPaletteId = [];
+        this.shadowCascadeDistancesId = [];
+        this.shadowCascadeCountId = [];
+
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
@@ -516,7 +521,7 @@ class ForwardRenderer {
     }
 
     _resolveLight(scope, i) {
-        var light = "light" + i;
+        const light = "light" + i;
         this.lightColorId[i] = scope.resolve(light + "_color");
         this.lightDir[i] = new Float32Array(3);
         this.lightDirId[i] = scope.resolve(light + "_direction");
@@ -536,6 +541,11 @@ class ForwardRenderer {
         this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
         this.lightCookieMatrixId[i] = scope.resolve(light + "_cookieMatrix");
         this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
+
+        // shadow cascades
+        this.shadowMatrixPaletteId[i] = scope.resolve(light + "_shadowMatrixPalette[0]");
+        this.shadowCascadeDistancesId[i] = scope.resolve(light + "_shadowCascadeDistances[0]");
+        this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
     }
 
     setLTCDirectionallLight(wtm, cnt, dir, campos, far) {
@@ -593,15 +603,18 @@ class ForwardRenderer {
             if (directional.castShadows) {
 
                 const lightRenderData = directional.getRenderData(camera, 0);
-                const farClip = lightRenderData.shadowCamera._farClip;
 
                 // make bias dependent on far plane because it's not constant for direct light
-                var bias;
+                // clip distance used is based on the nearest shadow cascade
+                const farClip = lightRenderData.shadowCamera._farClip;
+                let bias;
                 if (directional._isVsm) {
                     bias = -0.00001 * 20;
                 } else {
                     bias = (directional.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) {
+                        bias *= -100;
+                    }
                 }
                 var normalBias = directional._isVsm ?
                     directional.vsmBias / (farClip / 7.0) :
@@ -609,9 +622,14 @@ class ForwardRenderer {
 
                 this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-                var params = directional._rendererParams;
+
+                this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
+                this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
+                this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
+
+                var params = directional._shadowRenderParams;
                 params.length = 3;
-                params[0] = directional._shadowResolution;
+                params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
                 params[1] = normalBias;
                 params[2] = bias;
                 this.lightShadowParamsId[cnt].setValue(params);
@@ -661,7 +679,7 @@ class ForwardRenderer {
             const lightRenderData = omni.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
-            var params = omni._rendererParams;
+            var params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
             params[1] = omni._normalOffsetBias;
@@ -724,7 +742,7 @@ class ForwardRenderer {
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
             this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-            var params = spot._rendererParams;
+            var params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
             params[1] = normalBias;
@@ -1058,7 +1076,7 @@ class ForwardRenderer {
         // #endif
 
         for (let i = 0; i < lights.length; i++) {
-            this._shadowRenderer.renderShadow(lights[i], camera);
+            this._shadowRenderer.render(lights[i], camera);
         }
 
         if (device.webgl2) {

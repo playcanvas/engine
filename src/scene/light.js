@@ -118,8 +118,11 @@ class Light {
         this._outerConeAngle = 45;
 
         // Directional properties
-        this.cascades = null;   // an array of Vec4 viewports per cascade
+        this.cascades = null;               // an array of Vec4 viewports per cascade
+        this._shadowMatrixPalette = null;   // a float array, 16 floats per cascade
+        this._shadowCascadeDistances = null;
         this.numCascades = 1;
+        this.cascadesDistribution = 0.5;
 
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
@@ -136,7 +139,7 @@ class Light {
 
         // Shadow mapping resources
         this._shadowMap = null;
-        this._rendererParams = [];
+        this._shadowRenderParams = [];
 
         // Shadow mapping properties
         this.shadowDistance = 40;
@@ -234,6 +237,7 @@ class Light {
 
         // Directional properties
         clone.numCascades = this.numCascades;
+        clone.cascadesDistribution = this.cascadesDistribution;
 
         // shape properties
         clone.shape = this._shape;
@@ -260,7 +264,11 @@ class Light {
     }
 
     set numCascades(value) {
-        this.cascades = directionalCascades[value - 1];
+        if (!this.cascades || this.numCascades != value) {
+            this.cascades = directionalCascades[value - 1];
+            this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
+            this._shadowCascadeDistances = new Float32Array(4);     // always 4
+        }
     }
 
     get shadowMap() {

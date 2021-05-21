@@ -357,7 +357,27 @@ var standard = {
         return subCode.replace(/\$/g, "");
     },
 
-    _nonPointShadowMapProjection: function (device, light, shadowCoordArgs) {
+    // handles directional map shadow coordinate generation, including cascaded shadows
+    _directionalShadowMapProjection: function (light, shadowCoordArgs, shadowParamArg, lightIndex, coordsFunctioName) {
+
+        // for shadow cascades
+        let code = "";
+        if (light.numCascades > 1) {
+            // compute which cascade matrix needs to be used
+            code += `getShadowCascadeMatrix(light${lightIndex}_shadowMatrixPalette, light${lightIndex}_shadowCascadeDistances, light${lightIndex}_shadowCascadeCount);\n`;
+            shadowCoordArgs = `(cascadeShadowMat, ${shadowParamArg});\n`;
+        }
+
+        // shadow coordinate generation
+        code += coordsFunctioName + shadowCoordArgs;
+
+        // stop shadow at the far distance
+        code += `FadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
+        return code;
+    },
+
+    _nonPointShadowMapProjection: function (device, light, shadowMatArg, shadowParamArg, lightIndex) {
+        const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
@@ -365,7 +385,7 @@ var standard = {
                 }
                 return "       getShadowCoordPersp" + shadowCoordArgs;
             }
-            return "       getShadowCoordOrtho" + shadowCoordArgs;
+            return this._directionalShadowMapProjection(light, shadowCoordArgs, shadowParamArg, lightIndex, "getShadowCoordOrtho");
         }
         if (light._type === LIGHTTYPE_SPOT) {
             if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
@@ -373,7 +393,7 @@ var standard = {
             }
             return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
         }
-        return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
+        return this._directionalShadowMapProjection(light, shadowCoordArgs, shadowParamArg, lightIndex, "getShadowCoordOrthoNormalOffset");
     },
 
     _addVaryingIfNeeded: function (code, type, name) {
@@ -985,6 +1005,7 @@ var standard = {
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
         var shadowTypeUsed = [];
+        var shadowedDirectionalLightUsed = false;
         var useVsm = false;
         var usePerspZbufferShadow = false;
         var light;
@@ -1040,9 +1061,16 @@ var standard = {
             }
             if (light.castShadows && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+
+                // directional (cascaded) shadows
+                code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
+                code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
+                code += "uniform float light" + i + "_shadowCascadeCount;\n";
+
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
                 } else {
+                    shadowedDirectionalLightUsed = true;
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
                 if (lightType === LIGHTTYPE_OMNI) {
@@ -1240,6 +1268,9 @@ var standard = {
         }
 
         if (numShadowLights > 0) {
+            if (shadowedDirectionalLightUsed) {
+                code += shaderChunks.shadowCascadesPS;
+            }
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
             }
@@ -1632,8 +1663,9 @@ var standard = {
                             }
                             code += "       dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
                         } else {
-                            shadowCoordArgs = "(light" + i + "_shadowMatrix, light" + i + "_shadowParams);\n";
-                            code += this._nonPointShadowMapProjection(device, options.lights[i], shadowCoordArgs);
+                            const shadowMatArg = `light${i}_shadowMatrix`;
+                            const shadowParamArg = `light${i}_shadowParams`;
+                            code += this._nonPointShadowMapProjection(device, options.lights[i], shadowMatArg, shadowParamArg, i);
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "       dAtten *= getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";

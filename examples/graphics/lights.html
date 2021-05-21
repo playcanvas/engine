@@ -130,10 +130,11 @@
             });
 
             var cone = new pc.Entity();
-            cone.addComponent("model", {
-                type: "cone"
+            cone.addComponent("render", {
+                type: "cone",
+                castShadows: false,
+                material: createMaterial({ emissive: pc.Color.WHITE })
             });
-            cone.model.material = createMaterial({ emissive: pc.Color.WHITE });
             spotlight.addChild(cone);
             app.root.addChild(spotlight);
 
@@ -146,10 +147,11 @@
                 castShadows: true,
                 intensity: 0.6
             });
-            omnilight.addComponent("model", {
-                type: "sphere"
+            omnilight.addComponent("render", {
+                type: "sphere",
+                castShadows: false,
+                material: createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: pc.Color.YELLOW })
             });
-            omnilight.model.material = createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: pc.Color.YELLOW });
             app.root.addChild(omnilight);
 
             // Create a directional light

@@ -60,6 +60,7 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
+            "shadow-cascades",
             "texture-basis",
             "transform-feedback",
             "video-texture"
