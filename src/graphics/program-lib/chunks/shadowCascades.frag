@@ -51,4 +51,3 @@ void FadeShadow(float shadowCascadeDistances[4]) {
         dShadowCoord.z = -9999999.0;
     }
 }
-           
