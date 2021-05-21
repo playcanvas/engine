@@ -1,4 +1,4 @@
-import React, { createRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ControlPanel from './control-panel';
 // @ts-ignore: library file import
 import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
@@ -9,6 +9,9 @@ import * as Babel from '@babel/standalone';
 import { Observer } from '@playcanvas/pcui/pcui-binding';
 import * as javascriptErrorOverlay from '../../lib/javascriptErrorOverlay';
 import { File } from './helpers/types';
+import { Loader } from './helpers/loader';
+
+import { wasmSupported, loadWasmModuleAsync } from '../wasm-loader';
 
 const APP_STATE = {
     LOADING: 'STATE_LOADING',
@@ -23,8 +26,12 @@ interface ExampleIframeProps {
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
+    // expose PlayCanvas as a global in the iframe
+    (window as any).pc = pc;
+
     const [appState, setAppState] = useState(APP_STATE.LOADING);
     const [appError, setAppError] = useState(null);
+
     let files: Array<File>;
     // Try to retrieve a set of B64 encoded files from the URL's query params.
     // If not present then use the default files passed in the props
@@ -34,72 +41,30 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         files = props.files;
     }
 
-    // asset loader function allowing to load multiple assets
-    const loadManifestAssets = (app: pc.Application, manifest: any, onLoadedAssets: (assetManifest: any) => any) => {
-        // count of assets to load
-        let count = 0;
-        let key;
-        for (key in manifest) {
-            if (manifest.hasOwnProperty(key)) {
-                count++;
-            }
-        }
-
-        function onLoadedAsset(key: string, asset: pc.Asset) {
-            count--;
-            manifest[key] = asset;
-            if (count === 0) {
-                if (onLoadedAssets) {
-                    onLoadedAssets(manifest);
-                }
-            }
-        }
-
-        // load all assets in the manifest
-        Object.keys(manifest).forEach(function (key) {
-            if (manifest.hasOwnProperty(key)) {
-                const entry = manifest[key];
-                if (entry.data) {
-                    const asset = new pc.Asset(key, entry.type, entry.url, entry.data);
-                    asset.on('load', function (asset) {
-                        onLoadedAsset(key, asset);
-                    });
-                    app.assets.add(asset);
-                    app.assets.load(asset);
-                } else {
-                    app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
-                        if (!err && asset) {
-                            onLoadedAsset(key, asset);
-                        }
-                    });
-                }
-            }
-        });
-    };
+    const fullscreen = location.hash.includes('fullscreen=true');
 
     const loadChildAssets = (children: any, app: pc.Application, onLoadedAssets: any) => {
         if (!children) {
-            onLoadedAssets({});
+            onLoadedAssets({}, '');
             return;
         }
         if (!Array.isArray(children)) {
             children = [children];
         }
-        const assetManifest: any = {};
-        children.forEach((child: any) => {
-            if (child.props.data || child.props.url) {
-                assetManifest[child.props.name] = {
-                    type: child.props.type,
-                    data: child.props.data,
-                    url: child.props.url
-                };
-            }
+        children = children.map((child: any) => {
+            (window.top as any).child = child;
+            const childProperties = { ...child.props };
+            // looks for updates to any of the assets in files supplied to the example iframe
+            files.forEach((file: File, i: number) => {
+                if (i === 0) return;
+                if (file.name === child.props.name) {
+                    childProperties.data = file.type === 'json' ? JSON.parse(file.text) : file.text;
+                }
+            });
+            childProperties.load = child.type.load;
+            return childProperties;
         });
-        files.forEach((file: File, i: number) => {
-            if (i === 0) return;
-            assetManifest[file.name].data = file.type === 'json' ? JSON.parse(file.text) : file.text;
-        });
-        loadManifestAssets(app, assetManifest, onLoadedAssets);
+        Loader.load(app, children, onLoadedAssets);
     };
 
     const executeScript = (script: string, pc: any, app: pc.Application, assetManifest: any, exampleData: any) => {
@@ -115,7 +80,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         transformedScript = transformedScript.replace(appCall, '');
 
         // @ts-ignore: abstract class function
-        return Function('pc', 'app', 'assets', 'data', transformedScript)(pc, app, assetManifest, exampleData);
+        Function('pc', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', transformedScript).bind(window)(pc, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync);
     };
 
 
@@ -175,6 +140,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
                         stackFrames
                     });
                     console.error(e);
+                    app.destroy();
                 };
                 // @ts-ignore
                 javascriptErrorOverlay.default.getStackFramesFast(e)
@@ -185,11 +151,13 @@ const ExampleIframe = (props: ExampleIframeProps) => {
     };
     const observer = new Observer({});
     const controls  = props.controls ? props.controls(observer).props.children : null;
+
     useEffect(() => {
         if (!(window as any).hasBuilt && files[0].text.length > 0) {
             build(document.getElementById('application-canvas'), files[0].text, props.assets, observer);
         }
     });
+
     // @ts-ignore
     const overlay = <javascriptErrorOverlay.default.RuntimeError
         errorRecord={appError}
@@ -197,7 +165,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
     />;
     return <>
         <canvas id="application-canvas"></canvas>
-        <ControlPanel controls={controls} files={files}/>
+        { !fullscreen && <ControlPanel controls={controls} files={files}/> }
         {
             appState === APP_STATE.LOADING && <Spinner size={50} />
         }

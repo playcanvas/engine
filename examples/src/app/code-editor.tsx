@@ -4,7 +4,6 @@ import MonacoEditor from "@monaco-editor/react";
 import { Panel, Container, Button } from '@playcanvas/pcui/pcui-react';
 import { playcanvasTypeDefs } from './helpers/raw-file-loading';
 import { File } from './helpers/types';
-import { editor } from 'monaco-editor';
 
 const FILE_TYPE_LANGUAGES: any = {
     'json': 'json',

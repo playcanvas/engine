@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 
 // check for wasm module support
-function wasmSupported() {
+export function wasmSupported() {
     try {
         if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
             const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
@@ -13,7 +13,7 @@ function wasmSupported() {
 }
 
 // load a script
-function loadScriptAsync(url, doneCallback) {
+export function loadScriptAsync(url, doneCallback) {
     var tag = document.createElement('script');
     tag.onload = function () {
         doneCallback();
@@ -27,7 +27,7 @@ function loadScriptAsync(url, doneCallback) {
 }
 
 // load and initialize a wasm module
-function loadWasmModuleAsync(moduleName, jsUrl, binaryUrl, doneCallback) {
+export function loadWasmModuleAsync(moduleName, jsUrl, binaryUrl, doneCallback) {
     loadScriptAsync(jsUrl, function () {
         var lib = window[moduleName];
         window[moduleName + 'Lib'] = lib;

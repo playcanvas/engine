@@ -1,6 +1,6 @@
 import React from 'react';
 import * as pc from 'playcanvas';
-import AssetLoader from '../../app/helpers/asset-loader';
+import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
 import { Button } from '@playcanvas/pcui/pcui-react';

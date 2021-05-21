@@ -95,7 +95,9 @@ const config = {
         new CopyWebpackPlugin({
             patterns: [
                 { from: 'src/wasm-loader.js', to: '' },
-                { from: 'src/assets', to: 'assets' }
+                { from: 'src/assets', to: 'assets' },
+                { from: 'src/lib', to: 'lib' },
+                { from: '../scripts', to: 'scripts' }
             ]
         }),
         new webpack.DefinePlugin({

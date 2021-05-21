@@ -33,11 +33,11 @@ fs.readdir(`${__dirname}/src/examples/`, function (err, categories) {
                 (async () => {
                     const browser = await puppeteer.launch();
                     const page = await browser.newPage();
-                    await page.goto(`http://localhost:5000/#/${category}/${example}?fullscreen=true`);
+                    await page.goto(`http://localhost:5000/#/iframe/${category}/${example}?fullscreen=true`);
                     setTimeout(async () => {
                         await page.screenshot({ path: `dist/thumbnails/${category}/${example}.png` });
                         await browser.close();
-                    }, 500);
+                    }, 2000);
                 })();
             });
         });
