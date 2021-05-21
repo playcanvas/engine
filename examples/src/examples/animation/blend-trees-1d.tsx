@@ -77,7 +77,7 @@ class BlendTrees1DExample extends Example {
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { model: pc.Asset, idleAnim: pc.Asset, danceAnim: pc.Asset, animStateGraph: pc.Asset }, data: Observer): void {
+    example(canvas: HTMLCanvasElement, assets: { model: pc.Asset, idleAnim: pc.Asset, danceAnim: pc.Asset, animStateGraph: pc.Asset }, data: any): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

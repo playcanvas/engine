@@ -42,7 +42,7 @@ const ControlPanel = (props: any) => {
         document.getElementById('codeButton').classList.toggle('selected');
     };
 
-    return <Panel id='controlPanel' class={!props.controls ? 'empty' : 'null'} resizable='top' headerText='CONTROLS' collapsible={true} collapsed={state.collapsed}>
+    return <Panel id='controlPanel' class={[!props.controls ? 'empty' : 'null', window.top.innerWidth < 601 ? 'mobile' : null]} resizable='top' headerText='CONTROLS' collapsible={true} collapsed={state.collapsed}>
         <Container id= 'controlPanel-tabs' class='tabs-container'>
             {props.controls && <Button text='PARAMETERS' class={state.showParameters ? 'selected' : null} id='paramButton' onClick={onClickParametersTab} /> }
             <Button text='CODE' id='codeButton' class={state.showCode ? 'selected' : null} onClick={onClickCodeTab}/>

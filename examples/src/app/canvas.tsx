@@ -2,40 +2,73 @@ import React, { createRef } from 'react';
 import * as pc from 'playcanvas';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/pcui/pcui-binding';
+// @ts-ignore: library file import
+import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
 import * as javascriptErrorOverlay from '../../lib/javascriptErrorOverlay';
 import ControlPanel from './control-panel';
 import { File } from './helpers/types';
+// @ts-ignore: library file import
+import * as Babel from '@babel/standalone';
+
+const APP_STATE = {
+    LOADING: 'STATE_LOADING',
+    PLAYING: 'STATE_PLAYING',
+    ERROR: 'STATE_ERROR'
+};
+
+
+const filesHaveChanged = (a: Array<File>, b: Array<File>) => {
+    if (a && !b) return true;
+    if (a.length !== b.length) {
+        return true;
+    }
+    for (let i = 0; i < a.length; i++) {
+        if (a[i].text !== b[i].text) {
+            return true;
+        }
+    }
+    return false;
+};
+
 
 interface CanvasProps {
-    setCodeError: any,
+    defaultFiles: Array<File>,
     files: Array<File>,
-    executableExample: any,
     controls: any,
     exampleData: any,
-    state: Observer
+    path: string,
+    events: pc.EventHandler,
+    setPlayFunction: any
 }
 
 interface CanvasState {
     showParameters: boolean,
-    showCode: boolean
+    showCode: boolean,
+    appState: string,
+    codeError: any
 }
 
 class Canvas extends React.Component<CanvasProps, CanvasState> {
     canvasRef: any;
-    app: pc.Application;
     assetManifest: any;
     canvasHasLoaded: boolean;
+    playEvent: any;
 
     constructor(props: any) {
         super(props);
         this.canvasRef = createRef();
         this.state = {
             showParameters: true,
-            showCode: false
+            showCode: false,
+            appState: APP_STATE.LOADING,
+            codeError: null
         };
-        props.state.on('play', () => {
-            this.executeExample(this.props);
-        });
+    }
+
+    playExample() {
+        if (location.hash.includes(this.props.path)) {
+            this.build();
+        }
     }
 
     // asset loader function allowing to load multiple assets
@@ -103,32 +136,72 @@ class Canvas extends React.Component<CanvasProps, CanvasState> {
     }
 
     componentDidMount() {
-        this.canvasLoaded(this.canvasRef.current);
+        this.props.setPlayFunction({ f: this.playExample.bind(this) });
+        this.playExample();
     }
 
-    componentWillUnmount() {
-        if (this.app) {
-            this.app.destroy();
+    get app() {
+        return (window as any).pcapp;
+    }
+
+    set app(value: any) {
+        (window as any).pcapp = value;
+    }
+
+    // componentWillUnmount() {
+    //     if (this.app) {
+    //         this.app.destroy();
+    //     }
+    // }
+
+    get files() {
+        if (this.props.files.length > 0 && this.props.files[0]?.text?.length > 0) {
+            return this.props.files;
         }
+        return this.props.defaultFiles;
     }
 
-    executeExample(props: any) {
+    get executableExample() {
+        let editableString = this.files[0].text;
+
+        // strip the function closure
+        editableString = editableString.substring(editableString.indexOf("\n") + 1);
+        editableString = editableString.substring(editableString.lastIndexOf("\n") + 1, -1);
+        // transform the code using babel
+        let transformedCode = Babel.transform(editableString, { filename: `transformedCode.tsx`, presets: ["typescript"] }).code;
+        // // strip the PlayCanvas app initialisation
+        const indexOfAppCallStart = transformedCode.indexOf('const app');
+        const indexOfAppCallEnd = indexOfAppCallStart + transformedCode.substring(indexOfAppCallStart, transformedCode.length - 1).indexOf(';');
+        const appCall = transformedCode.substring(indexOfAppCallStart, indexOfAppCallEnd + 1);
+        transformedCode = transformedCode.replace(appCall, '');
+
+        // @ts-ignore: abstract class function
+        return Function('pc', 'app', 'assets', 'data', transformedCode);
+    }
+
+    executeExample(exampleData: any) {
         try {
-            while (this.app.root.children.length > 0) {
+            while (this.app.root?.children?.length > 0) {
                 this.app.root.children.forEach((c: any) => c.destroy());
             }
-            props.executableExample(pc, this.app, this.assetManifest, props.exampleData);
-            props.setCodeError(null);
+            this.executableExample(pc, this.app, this.assetManifest, exampleData);
+            this.setState({
+                appState: APP_STATE.PLAYING
+            });
+            // props.setCodeError(null);
         } catch (e) {
             const _crashInner = (stackFrames: any) => {
                 if (stackFrames == null) {
                     return;
                 }
-                props.setCodeError({
-                    error: e,
-                    unhandledRejection: false,
-                    contextSize: 3,
-                    stackFrames
+                this.setState({
+                    codeError: {
+                        error: e,
+                        unhandledRejection: false,
+                        contextSize: 3,
+                        stackFrames
+                    },
+                    appState: APP_STATE.ERROR
                 });
                 console.error(e);
             };
@@ -139,38 +212,16 @@ class Canvas extends React.Component<CanvasProps, CanvasState> {
         }
     }
 
-    shouldComponentUpdate(nextProps: any) {
-        let fileChanged = false;
-        let fileError = false;
-        if (nextProps.files && nextProps.files.length > 1) {
-            for (let i = 1; i < nextProps.files.length; i++) {
-                if (this.props.files.length > i && this.props.files[i].text !== nextProps.files[i].text || this.props.files.length < i + 1) {
-                    fileChanged = true;
-                    const file = nextProps.files[i];
-                    let assetData = file.text;
-                    if (file.type === 'json') {
-                        try {
-                            assetData = JSON.parse(assetData);
-                        } catch (e) {
-                            fileError = true;
-                            continue;
-                        }
-                    }
-                    this.app.assets.find(file.name).data = assetData;
-                    this.app.assets.find(file.name).resource = assetData;
-                }
-            }
-        }
-        if (nextProps.executableExample.toString() === this.props.executableExample.toString() && !fileChanged && !fileError) {
-            return false;
-        }
-        this.executeExample(nextProps);
-        return false;
-    }
-
-    canvasLoaded(canvas: HTMLCanvasElement) {
-        if (this.app) {
-            this.app.destroy();
+    build() {
+        if (!this.canvasRef.current) return;
+        const canvas = this.canvasRef.current;
+        // @ts-ignore
+        const app = pc.app;
+        if (app) {
+            // app.graphicsDevice.loseContext();
+            app.destroy();
+            // @ts-ignore
+            pc.app = null;
         }
         // Create the application and start the update loop
         this.app = new pc.Application(canvas, {
@@ -179,7 +230,7 @@ class Canvas extends React.Component<CanvasProps, CanvasState> {
             elementInput: new pc.ElementInput(canvas),
             gamepads: new pc.GamePads()
         });
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        // // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         const canvasContainerElement = canvas.parentElement;
@@ -205,35 +256,29 @@ class Canvas extends React.Component<CanvasProps, CanvasState> {
             }
         }).observe(canvasContainerElement);
 
-        this.loadChildAssets(this.props.children, this.app, (assetManifest: any) => {
+        // @ts-ignore
+        this.loadChildAssets(this.props.children, pc.app, (assetManifest: any) => {
             this.assetManifest = assetManifest;
-            try {
-                this.props.executableExample(pc, this.app, this.assetManifest, this.props.exampleData);
-                this.props.setCodeError(null);
-            } catch (e) {
-                const _crashInner = (stackFrames: any) => {
-                    if (stackFrames == null) {
-                        return;
-                    }
-                    this.props.setCodeError({
-                        error: e,
-                        unhandledRejection: false,
-                        contextSize: 3,
-                        stackFrames
-                    });
-                    console.error(e);
-                };
-                // @ts-ignore
-                javascriptErrorOverlay.default.getStackFramesFast(e)
-                    .then(_crashInner);
-            }
+            this.executeExample(this.props.exampleData);
         });
     }
 
     render() {
+        // @ts-ignore
+        const overlay = <javascriptErrorOverlay.default.RuntimeError
+            errorRecord={this.state.codeError}
+            editorHandler={null}
+        />;
         return <>
-            <canvas id="application-canvas" ref={this.canvasRef}></canvas>
-            <ControlPanel controls={this.props.controls} files={this.props.files}/>
+            <iframe src={`/#/iframe/${this.props.path}?files=${btoa(JSON.stringify(this.props.files))}`}></iframe>
+            {
+                this.state.appState === APP_STATE.LOADING && <Spinner size={50} />
+            }
+            {
+                this.state.appState === APP_STATE.ERROR && <Container id='errorContainer'>
+                    { overlay }
+                </Container>
+            }
         </>;
     }
 }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.config.js",
+    "build": "ENVIRONMENT=production webpack --config webpack.config.js",
     "build:watch": "webpack --config webpack.config.js --watch",
     "local": "cross-env ENGINE_PATH=../build/playcanvas.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others \"npm run build:watch\"",
     "local:dbg": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others \"npm run build:watch\"",

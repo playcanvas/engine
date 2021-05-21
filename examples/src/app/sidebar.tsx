@@ -4,7 +4,11 @@ import { Container, Panel, TextInput, Label } from '@playcanvas/pcui/pcui-react'
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
 
-const SideBar = (props: any) => {
+interface SideBarProps {
+    categories: any
+}
+
+const SideBar = (props: SideBarProps) => {
     const categories = props.categories;
     const [filteredCategories, setFilteredCategories] = useState(categories);
     const [hash, setHash] = useState(location.hash);
@@ -20,8 +24,9 @@ const SideBar = (props: any) => {
             setHash(location.hash);
         });
     });
+
     return (
-        <Container id='sideBar' class={props.fullscreen ? 'fullscreen' : null}>
+        <Container id='sideBar'>
             <div className='panel-toggle' />
             <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} id='sideBar-panel' collapsed={document.body.offsetWidth < 601}>
                 <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(filter: string) => {

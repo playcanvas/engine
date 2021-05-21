@@ -72,15 +72,40 @@ export const examples = (() => {
                 })
                 .join('\n');
 
+            const files: Array<File> = [
+                {
+                    name: 'example.ts',
+                    text: functionCall
+                }
+            ];
+            // @ts-ignore
+            if (example.load) {
+                // @ts-ignore
+                let children = example.load().props.children;
+                if (!Array.isArray(children)) {
+                    children = [children];
+                }
+                children.forEach((child: any) => {
+                    if (child.props.type === 'shader') {
+                        files.push({
+                            name: child.props.name,
+                            text: child.props.data,
+                            type: 'shader'
+                        });
+                    } else if (child.props.type === 'json') {
+                        files.push({
+                            name: child.props.name,
+                            text: JSON.stringify(child.props.data, null, 4),
+                            type: 'json'
+                        });
+                    }
+                });
+            }
+
             paths.push({
                 path: `/${categorySlug}/${nameSlug}`,
                 example: exampleFiles[key].default,
-                files: [
-                    {
-                        name: 'example.ts',
-                        text: functionCall
-                    }
-                ]
+                files: files
             });
         }
     });

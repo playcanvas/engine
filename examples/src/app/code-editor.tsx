@@ -10,7 +10,14 @@ const FILE_TYPE_LANGUAGES: any = {
     'shader': null
 };
 
-const CodeEditor = (props: { setFiles: (value: Array<File>) => void, files: Array<File> }) => {
+
+interface CodeEditorProps {
+    files: Array<File>,
+    setFiles: (value: Array<File>) => void,
+    setLintErrors: (value: boolean) => void,
+}
+
+const CodeEditor = (props: CodeEditorProps) => {
     const files: Array<File> = JSON.parse(JSON.stringify(props.files));
 
     const [selectedFile, setSelectedFile] = useState(0);
@@ -26,12 +33,16 @@ const CodeEditor = (props: { setFiles: (value: Array<File>) => void, files: Arra
         files[selectedFile].text = value;
         if (selectedFile !== 0) {
             props.setFiles(files);
+            props.setLintErrors(false);
         }
     };
 
     const onValidate = (markers: Array<any>) => {
         if (markers.length === 0) {
             props.setFiles(files);
+            props.setLintErrors(false);
+        } else {
+            props.setLintErrors(true);
         }
     };
 

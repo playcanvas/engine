@@ -209,11 +209,36 @@ body {
     overflow: hidden;
     flex-grow: 1;
 }
+
+#canvas-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 @media only screen and (max-width: 600px) {
     #canvas-container {
         margin: 0px;
         border-radius: 0px;
     }
+}
+
+@keyframes animation-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#canvas-container > .pcui-spinner,
+#appInner > .pcui-spinner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
 }
 
 #errorContainer {
@@ -260,37 +285,37 @@ body {
     opacity: 1;
 }
 
-@media only screen and (min-width: 601px) {
-    #controlPanel.empty {
-        display: none;
-    }
+/* @media only screen and (min-width: 601px) { */
+#controlPanel.empty {
+    display: none;
+}
+/* } */
+
+/* @media only screen and (max-width: 600px) { */
+#controlPanel.mobile {
+    bottom: 64px;
+    left: 8px;
+    width: calc(100% - 16px);
+    top: inherit;
+    background-color: rgba(54, 67, 70, 1);
 }
 
-@media only screen and (max-width: 600px) {
-    #controlPanel {
-        bottom: 64px;
-        left: 8px;
-        width: calc(100% - 16px);
-        top: inherit;
-        background-color: rgba(54, 67, 70, 1);
-    }
-
-    #controlPanel > .pcui-panel-content {
-        min-height: 250px;
-    }
-    #controlPanel > .pcui-panel-content > section {
-        height: calc(400px - 52px) !important;
-        width: calc(100% - 16px) !important;
-        margin: 8px;
-        border-radius: 6px;
-    }
+#controlPanel.mobile > .pcui-panel-content {
+    min-height: 250px;
 }
+#controlPanel.mobile > .pcui-panel-content > section {
+    height: calc(400px - 52px) !important;
+    width: calc(100% - 16px) !important;
+    margin: 8px;
+    border-radius: 6px;
+}
+/* } */
 
-#controlPanel .pcui-label-group .pcui-label {
+#controlPanel.mobile .pcui-label-group .pcui-label {
     font-size: 14px;
 }
 
-#controlPanel .pcui-slider .pcui-numeric-input {
+#controlPanel.mobile .pcui-slider .pcui-numeric-input {
     min-width: 47px;
 }
 
@@ -392,7 +417,7 @@ body {
     padding: 8px;
     background-color: rgba(54, 67, 70, 0.64);
     border-radius: 6px;
-    z-index: 9999;
+    z-index: 99999;
     transition: opacity 500ms;
     opacity: 1;
 }
@@ -416,6 +441,12 @@ body {
     left: 5px;
     top: 2px;
     font-size: 20px;
+}
+
+@media only screen and (max-width: 600px) {
+    #menu #play-button {
+        display: none;
+    }
 }
 
 @media only screen and (max-width: 600px) {
