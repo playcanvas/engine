@@ -1,16 +1,12 @@
 import React, { useEffect, useState, createRef } from 'react';
 import ReactDOM from 'react-dom';
 // @ts-ignore: library file import
-import { Container, Button } from '@playcanvas/pcui/pcui-react';
-// @ts-ignore: library file import
-import { Observer } from '@playcanvas/pcui/pcui-binding';
-// @ts-ignore: library file import
-import * as pc from 'playcanvas';
+import { Container } from '@playcanvas/pcui/pcui-react';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route } from "react-router-dom";
 import SideBar from './sidebar';
 import CodeEditor from './code-editor';
-import ExampleIframe from './example-launch';
+import ExampleIframe from './example-iframe';
 import Menu from './menu';
 import { examples } from './helpers/raw-file-loading';
 import { File } from './helpers/types';
