@@ -172,7 +172,9 @@ class Light {
     // need to be recreated
     _destroyShadowMap() {
 
-        this._renderData.length = 0;
+        if (this._renderData) {
+            this._renderData.length = 0;
+        }
 
         if (this._shadowMap) {
             if (!this._shadowMap.cached) {
@@ -268,6 +270,8 @@ class Light {
             this.cascades = directionalCascades[value - 1];
             this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
             this._shadowCascadeDistances = new Float32Array(4);     // always 4
+            this._destroyShadowMap();
+            this.updateKey();
         }
     }
 
@@ -401,7 +405,8 @@ class Light {
         // 16 - 17 : cookie channel G
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
-        //  9 - 11 : light source shape
+        // 10 - 11 : light source shape
+        //  7 -  9 : light num cascades
         var key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -412,7 +417,8 @@ class Light {
                ((this._cookieFalloff ? 1 : 0)             << 20) |
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
-               ((this._shape)                             <<  9);
+               ((this._shape)                             << 10) |
+               (this.numCascades                          <<  7);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
