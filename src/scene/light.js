@@ -122,7 +122,7 @@ class Light {
         this._shadowMatrixPalette = null;   // a float array, 16 floats per cascade
         this._shadowCascadeDistances = null;
         this.numCascades = 1;
-        this.cascadesDistribution = 0.5;
+        this.cascadeDistribution = 0.5;
 
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
@@ -237,7 +237,7 @@ class Light {
 
         // Directional properties
         clone.numCascades = this.numCascades;
-        clone.cascadesDistribution = this.cascadesDistribution;
+        clone.cascadeDistribution = this.cascadeDistribution;
 
         // shape properties
         clone.shape = this._shape;

@@ -263,7 +263,7 @@ class ShadowRenderer {
             const fraction = i / light.numCascades;
             const linearDist = nearDist + (farDist - nearDist) * fraction;
             const logDist = nearDist * (farDist / nearDist) ** fraction;
-            const dist = math.lerp(linearDist, logDist, light.cascadesDistribution);
+            const dist = math.lerp(linearDist, logDist, light.cascadeDistribution);
             light._shadowCascadeDistances[i - 1] = dist;
         }
     }
