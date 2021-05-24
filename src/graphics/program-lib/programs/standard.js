@@ -578,7 +578,7 @@ var standard = {
 
         if (needsNormal) {
             attributes.vertex_normal = SEMANTIC_NORMAL;
-            codeBody += "   vNormalW    = dNormalW = getNormal();\n";
+            codeBody += "   vNormalW = getNormal();\n";
 
             if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
                 code += chunks.viewNormalVS;
