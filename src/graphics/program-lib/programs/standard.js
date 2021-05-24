@@ -1280,7 +1280,7 @@ var standard = {
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
 
-            // used for energy conservation and to modulate specular with half-angle fresnel 
+            // used for energy conservation and to modulate specular with half-angle fresnel
             code += "vec3 dLightFresnel;\n";
             code += "vec3 ccLightFresnel;\n\n";
 
