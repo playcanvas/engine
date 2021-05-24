@@ -83,7 +83,7 @@ export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
 export { WorldClusters } from './scene/world-clusters.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
-export { ForwardRenderer } from './scene/forward-renderer.js';
+export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/layer-composition.js';

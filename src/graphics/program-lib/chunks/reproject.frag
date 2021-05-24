@@ -232,7 +232,7 @@ vec3 hemisphereSamplePhong(vec2 uv, float specPow) {
 }
 
 vec3 hemisphereSampleGGX(vec2 uv, float specPow) {
-    float roughness = 1.0-(log2(specPow)/11.0);
+    float roughness = 1.0 - (log2(specPow) / 11.0);
     float a = roughness * roughness;
 	
     float phi = 2.0 * PI * uv.y;

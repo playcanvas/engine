@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../assets/scripts/asset-loader.js"></script>
     <style>
         body { 
             margin: 0;
@@ -20,14 +21,6 @@
     <canvas id="application-canvas"></canvas>
 
     <script>
-        function createMaterial(colors) {
-            var material = new pc.StandardMaterial();
-            for (var param in colors) {
-                material[param] = colors[param];
-            }
-            material.update();
-            return material;
-        }
     </script>
 
     <!-- The script -->
@@ -38,136 +31,161 @@
         var app = new pc.Application(canvas, {
             keyboard: new pc.Keyboard(window)
         });
-        app.start();
 
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        // A list of assets that need to be loaded
+        var assetManifest = {
+            statue: {
+                type: "container",
+                url: "../assets/models/statue.glb"
+            },
+            font: {
+                type: "font",
+                url: "../assets/fonts/arial.json"
+            },
+            heart: {
+                type: "texture",
+                url: "../assets/textures/heart.png"
+            },
+        };
 
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
+        // Load all assets and then run the example
+        loadManifestAssets(app, assetManifest, function () {
+            run();
         });
 
-        var miniStats = new pcx.MiniStats(app);
+        var spotlight, omnilight, directionallight, statue, text;
 
-        app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+        function run() {
 
-        var entity, light, camera;
+            app.start();
 
-        // Load a model file and create a Entity with a model component
-        var url = "../assets/models/statue.glb";
-        app.assets.loadFromUrl(url, "container", function (err, asset) {
-            entity = new pc.Entity();
-            entity.addComponent("model", {
-                type: "asset",
-                asset: asset.resource.model,
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+
+            var miniStats = new pcx.MiniStats(app);
+
+            app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+
+            // add an instance of the statue to the hierarchy
+            statue = assetManifest["statue"].asset.resource.instantiateRenderEntity({
                 castShadows: true
             });
-            app.root.addChild(entity);
-        });
+            app.root.addChild(statue);
 
-        // Create an Entity with a camera component
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
-        });
-        camera.translate(0, 7, 24);
-        camera.rotate(0, 0, 0);
-        app.root.addChild(camera);
+            function createMaterial(colors) {
+                var material = new pc.StandardMaterial();
+                for (var param in colors) {
+                    material[param] = colors[param];
+                }
+                material.update();
+                return material;
+            }
 
-        // Create an Entity for the ground
-        var ground = new pc.Entity();
-        ground.addComponent("model", {
-            type: "box"
-        });
-        ground.setLocalScale(50, 1, 50);
-        ground.setLocalPosition(0, -0.5, 0);
+            // Create an Entity with a camera component
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.4, 0.45, 0.5)
+            });
+            camera.translate(0, 12, 45);
+            camera.rotate(-10, 0, 0);
+            app.root.addChild(camera);
 
-        var material = createMaterial({
-            ambient: pc.Color.GRAY,
-            diffuse: pc.Color.GRAY
-        });
-        ground.model.material = material;
-        app.root.addChild(ground);
+            // Create an Entity for the ground
+            var ground = new pc.Entity();
+            ground.addComponent("model", {
+                type: "box"
+            });
+            ground.setLocalScale(50, 1, 50);
+            ground.setLocalPosition(0, -0.5, 0);
 
-        // Create an spot light
-        var spotlight = new pc.Entity();
-        spotlight.addComponent("light", {
-            type: "spot",
-            color: pc.Color.WHITE,
-            outerConeAngle: 60,
-            innerConeAngle: 40,
-            range: 100,
-            intensity: 0.6,
-            castShadows: true,
-            shadowBias: 0.005,
-            normalOffsetBias: 0.01,
-            shadowResolution: 2048
-        });
+            var material = createMaterial({
+                ambient: pc.Color.GRAY,
+                diffuse: pc.Color.GRAY
+            });
+            ground.model.material = material;
+            app.root.addChild(ground);
 
-        var cone = new pc.Entity();
-        cone.addComponent("model", {
-            type: "cone"
-        });
-        cone.model.material = createMaterial({ emissive: pc.Color.WHITE });
-        spotlight.addChild(cone);
-        app.root.addChild(spotlight);
+            // Create an spot light
+            spotlight = new pc.Entity();
+            spotlight.addComponent("light", {
+                type: "spot",
+                color: pc.Color.WHITE,
+                outerConeAngle: 25,
+                innerConeAngle: 20,
+                range: 100,
+                intensity: 0.6,
+                castShadows: true,
+                shadowBias: 0.005,
+                normalOffsetBias: 0.01,
+                shadowResolution: 2048,
+                
+                // heart texture's alpha channel as a cookie texture
+                cookie: assetManifest["heart"].asset.resource,
+                cookieChannel: "a"
+            });
 
-        // Create a omni light
-        var omnilight = new pc.Entity();
-        omnilight.addComponent("light", {
-            type: "omni",
-            color: pc.Color.YELLOW,
-            range: 100,
-            castShadows: true,
-            intensity: 0.6
-        });
-        omnilight.addComponent("model", {
-            type: "sphere"
-        });
-        omnilight.model.material = createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: pc.Color.YELLOW });
-        app.root.addChild(omnilight);
+            var cone = new pc.Entity();
+            cone.addComponent("model", {
+                type: "cone"
+            });
+            cone.model.material = createMaterial({ emissive: pc.Color.WHITE });
+            spotlight.addChild(cone);
+            app.root.addChild(spotlight);
 
-        // Create a directional light
-        var directionallight = new pc.Entity();
-        directionallight.addComponent("light", {
-            type: "directional",
-            color: pc.Color.CYAN,
-            range: 100,
-            castShadows: true,
-            shadowBias: 0.05,
-            normalOffsetBias: 0.1,
-            intensity: 0.6
-        });
-        app.root.addChild(directionallight);
+            // Create a omni light
+            omnilight = new pc.Entity();
+            omnilight.addComponent("light", {
+                type: "omni",
+                color: pc.Color.YELLOW,
+                range: 100,
+                castShadows: true,
+                intensity: 0.6
+            });
+            omnilight.addComponent("model", {
+                type: "sphere"
+            });
+            omnilight.model.material = createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: pc.Color.YELLOW });
+            app.root.addChild(omnilight);
+
+            // Create a directional light
+            directionallight = new pc.Entity();
+            directionallight.addComponent("light", {
+                type: "directional",
+                color: pc.Color.CYAN,
+                range: 100,
+                castShadows: true,
+                shadowDistance: 100,
+                shadowBias: 0.2,
+                normalOffsetBias: 0.1,
+                intensity: 0.6,
+
+                // soft shadow
+                shadowType: pc.SHADOW_VSM16,
+                vsmBlurSize: 16
+            });
+            app.root.addChild(directionallight);
 
 
-        // Create a 2D screen for text rendering
-        var screen = new pc.Entity();
-        screen.addComponent("screen", {
-            referenceResolution: new pc.Vec2(1280, 720),
-            scaleBlend: 0.5,
-            scaleMode: pc.SCALEMODE_BLEND,
-            screenSpace: true
-        });
-        app.root.addChild(screen);
+            // Create a 2D screen for text rendering
+            var screen = new pc.Entity();
+            screen.addComponent("screen", {
+                referenceResolution: new pc.Vec2(1280, 720),
+                scaleBlend: 0.5,
+                scaleMode: pc.SCALEMODE_BLEND,
+                screenSpace: true
+            });
+            app.root.addChild(screen);
 
-        // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {
-            url: "../assets/fonts/arial.json"
-        });
-        fontAsset.on('load', onFontLoaded);
-        app.assets.add(fontAsset);
-        app.assets.load(fontAsset);
-
-        // When the font is loaded, create text to show which lights are enabled
-        var text;
-        function onFontLoaded() {
             // Create a basic text element
             text = new pc.Entity();
             text.addComponent("element", {
                 anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
-                fontAsset: fontAsset,
+                fontAsset: assetManifest["font"].asset,
                 fontSize: 28,
                 pivot: new pc.Vec2(0.5, 0.1),
                 type: pc.ELEMENTTYPE_TEXT,
@@ -192,22 +210,21 @@
         }, this);
 
         // Simple update loop to rotate the light
-        var angleRad = 0;
+        var angleRad = 1;
         app.on("update", function (dt) {
             angleRad += 0.3 * dt;
-            if (entity) {
 
-                spotlight.lookAt(entity.getPosition());
+            if (statue) {
+
+                spotlight.lookAt(statue.getPosition());
                 spotlight.rotateLocal(90, 0, 0);
-                spotlight.setLocalPosition(20 * Math.sin(angleRad), 5, 20 * Math.cos(angleRad));
+                spotlight.setLocalPosition(20 * Math.sin(angleRad * 0.5), 25, 20 * Math.cos(angleRad * 0.5));
 
-                omnilight.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                omnilight.setLocalPosition(5 * Math.sin(-2 * angleRad), 15, 5 * Math.cos(-2 * angleRad));
 
                 directionallight.setLocalEulerAngles(45, 60 * angleRad, 0);
-            }
 
-            // update text showing which lights are enabled
-            if (text) {
+                // update text showing which lights are enabled
                 text.element.text = 
                     "[Key 1] Omni light: " + omnilight.enabled +
                     "\n[Key 2] Spot light: " + spotlight.enabled +

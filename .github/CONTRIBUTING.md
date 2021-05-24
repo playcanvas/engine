@@ -42,6 +42,7 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 * [Default parameters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
 * [Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
 * [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+* [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
 
 ### Opening braces should be on the same line as the statement
 

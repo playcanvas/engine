@@ -1,6 +1,8 @@
 #ifndef PMREM4
 #define PMREM4
+#ifndef GL2
 #extension GL_EXT_shader_texture_lod : enable
+#endif
 uniform samplerCube texture_prefilteredCubeMap128;
 #endif
 uniform float material_reflectivity;

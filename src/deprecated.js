@@ -55,7 +55,7 @@ import { calculateTangents, createBox, createCapsule, createCone, createCylinder
 import { partitionSkin } from './scene/skin-partition.js';
 import { BasicMaterial } from './scene/materials/basic-material.js';
 import { DepthMaterial } from './scene/materials/depth-material.js';
-import { ForwardRenderer } from './scene/forward-renderer.js';
+import { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 import { GraphNode } from './scene/graph-node.js';
 import { Material } from './scene/materials/material.js';
 import { Mesh } from './scene/mesh.js';

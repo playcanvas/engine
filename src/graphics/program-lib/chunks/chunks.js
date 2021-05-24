@@ -152,7 +152,6 @@ import rgbmPS from './rgbm.frag';
 import screenDepthPS from './screenDepth.frag';
 import shadowCommonPS from './shadowCommon.frag';
 import shadowCoordPS from './shadowCoord.frag';
-import shadowCoordVS from './shadowCoord.vert';
 import shadowCoordPerspZbufferPS from './shadowCoordPerspZbuffer.frag';
 import shadowEVSMPS from './shadowEVSM.frag';
 import shadowEVSMnPS from './shadowEVSMn.frag';
@@ -361,7 +360,6 @@ var shaderChunks = {
     screenDepthPS: screenDepthPS,
     shadowCommonPS: shadowCommonPS,
     shadowCoordPS: shadowCoordPS,
-    shadowCoordVS: shadowCoordVS,
     shadowCoordPerspZbufferPS: shadowCoordPerspZbufferPS,
     shadowEVSMPS: shadowEVSMPS,
     shadowEVSMnPS: shadowEVSMnPS,
