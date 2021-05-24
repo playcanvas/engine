@@ -372,7 +372,7 @@ var standard = {
         code += coordsFunctioName + shadowCoordArgs;
 
         // stop shadow at the far distance
-        code += `FadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
+        code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
         return code;
     },
 

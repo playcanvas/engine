@@ -41,7 +41,7 @@ void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], float shadowCascadeDist
     #endif
 }
 
-void FadeShadow(float shadowCascadeDistances[4]) {                  
+void fadeShadow(float shadowCascadeDistances[4]) {                  
 
     // if the pixel is past the shadow distance, remove shadow
     // this enforces straight line instead of corner of shadow which moves when camera rotates  
