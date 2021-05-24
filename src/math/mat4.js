@@ -751,8 +751,8 @@ class Mat4 {
      * @param {number} height - The height of the viewport (in 0..1 range).
      * @returns {Mat4} Self for chaining.
      * @example
-     * // Create a 4x4 scale matrix
-     * var sm = new pc.Mat4().setScale(10, 10, 10);
+     * // Create a 4x4 viewport matrix which scales normalized view volume to full texture viewport.
+     * var vm = new pc.Mat4().setViewport(0, 0, 1, 1);
      */
     setViewport(x, y, width, height) {
         const m = this.data;
