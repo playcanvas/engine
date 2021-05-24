@@ -340,7 +340,7 @@ function _defineProps() {
         this.light.shadowBias = -0.01 * newValue;
     });
     _defineProperty("shadowCascades", 1, function (newValue, oldValue) {
-        this.light.numCascades = newValue;
+        this.light.numCascades = math.clamp(Math.floor(newValue), 1, 4);
     });
     _defineProperty("cascadesDistribution", 0.5, function (newValue, oldValue) {
         this.light.cascadesDistribution = newValue;
