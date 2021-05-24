@@ -12,8 +12,7 @@ void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], float shadowCascadeDist
     // find cascade index based on the depth (loop as there is no per component vec compare operator in webgl)
     float cascadeIndex = 0.0;
     for (float i = 0.0; i < maxCascades; i++) {
-        if (depth < shadowCascadeDistances[int(i)])
-        {
+        if (depth < shadowCascadeDistances[int(i)]) {
             cascadeIndex = i;
             break;
         }
