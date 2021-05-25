@@ -406,7 +406,7 @@ class Light {
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
         // 10 - 11 : light source shape
-        //  7 -  9 : light num cascades
+        //  8 -  9 : light num cascades
         var key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -418,7 +418,7 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               (this.numCascades                          <<  7);
+               ((this.numCascades - 1)                    <<  8);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
