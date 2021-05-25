@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
-    <script src="../assets/scripts/asset-loader.js"></script>
     <style>
         body { 
             margin: 0;
@@ -30,208 +29,102 @@
             keyboard: new pc.Keyboard(window)
         });
 
-        // A list of assets that need to be loaded
-        var assetManifest = {
-            torus: {
-                type: "container",
-                url: "../assets/models/torus.glb"
-            }
-        };
+        app.start();
 
-        // Load all assets and then run the example
-        loadManifestAssets(app, assetManifest, function () {
-            run();
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        function run() {
-            app.start();
+        var miniStats = new pcx.MiniStats(app);
 
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
 
-            window.addEventListener("resize", function () {
-                app.resizeCanvas(canvas.width, canvas.height);
-            });
+        function createPrimitive(primitiveType, position, scale, color) {
 
-            var miniStats = new pcx.MiniStats(app);
+            // create a material
+            var material = new pc.StandardMaterial();
 
-            app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
-
-            function createMaterial(colors) {
-                var material = new pc.StandardMaterial();
-                for (var param in colors) {
-                    material[param] = colors[param];
-                }
-                material.update();
-                return material;
+            if (primitiveType === "capsule") {
+                material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
+                material.shininess = 70;
+                material.metalness = 0.4;
+                material.useMetalness = true;
             }
+            material.update();
 
-            function createPrimitive(primitiveType, position, scale, color) {
+            // create the primitive using the material
+            var primitive = new pc.Entity();
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
+            });                    
 
-                // create material of specified color
-                var material = new pc.StandardMaterial();
-                material.diffuse = color;
-                material.update();
-
-                var primitive;
-                if (primitiveType === "torus") {
-                    var container = assetManifest["torus"].asset.resource;
-                    primitive = container.instantiateRenderEntity();
-                    primitive.rotate(90, Math.random() * 360, 0);
-                } else {
-                    primitive = new pc.Entity();
-                    primitive.addComponent('render', {
-                        type: primitiveType
-                    });                    
-                }
-                primitive.render.material = material;
-
-                // set position and scale and add it to scene
-                primitive.setLocalPosition(position);
-                primitive.setLocalScale(scale);
-                app.root.addChild(primitive);
-
-                return primitive;
-            }
-
-            // create ground plane
-            var limit = 100;
-            createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(3 * limit, 3 * limit, 3 * limit), new pc.Color(0.6, 0.6, 0.6));
-
-            for (var x = -limit; x <= limit; x += 50) {
-                for (var z = -limit; z <= limit; z += 50) {
-                    createPrimitive("torus", new pc.Vec3(x, 15, z), new pc.Vec3(12, 12, 12), new pc.Color(0.6, 0.6, 0.6));
-                }
-            }
-
-
-            // Create an Entity with a camera component
-            var camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.4, 0.45, 0.5),
-                farClip: 1000
-            });
-            app.root.addChild(camera);
-
-            camera.setLocalPosition(160, 50, 150);
-            camera.lookAt(0, -20, 0);
-
-            // add the fly camera script to the camera
-            app.assets.loadFromUrl('../../scripts/camera/fly-camera.js', 'script', function (err, asset) {
-                camera.addComponent("script");
-                camera.script.create("flyCamera");
-                camera.script.flyCamera.speed = 60;
-            });
-
-
-
-
-            // Create a directional light
-            var dirLight = new pc.Entity();
-            dirLight.addComponent("light", {
-                type: "directional",
-                color: pc.Color.CYAN,
-                shadowDistance: 500,
-                shadowResolution: 2048,
-                castShadows: true,
-                shadowBias: 0.3,
-                normalOffsetBias: 0.2,
-                intensity: 0.6,
-
-                shadowType: pc.SHADOW_PCF3,
-
-                // soft shadow
-                // shadowType: pc.SHADOW_VSM32,
-                // vsmBlurSize: 6,
-
-                numCascades : 4,
-                cascadeDistribution: 0.5
-            });
-            app.root.addChild(dirLight);
-            dirLight.setLocalEulerAngles(65, 50, 30);
-
-
-            // Create a 2D screen for text rendering
-            var screen = new pc.Entity();
-            screen.addComponent("screen", {
-                referenceResolution: new pc.Vec2(1280, 720),
-                scaleBlend: 0.5,
-                scaleMode: pc.SCALEMODE_BLEND,
-                screenSpace: true
-            });
-            app.root.addChild(screen);
-
-            // // Load a font
-            // var fontAsset = new pc.Asset('arial.json', "font", {
-            //     url: "../assets/fonts/arial.json"
-            // });
-            // fontAsset.on('load', onFontLoaded);
-            // app.assets.add(fontAsset);
-            // app.assets.load(fontAsset);
+            // set position and scale and add it to scene
+            primitive.setLocalPosition(position);
+            primitive.setLocalScale(scale);
+            app.root.addChild(primitive);
         }
 
-        // When the font is loaded, create text to show which lights are enabled
-        // var text;
-        // function onFontLoaded() {
-        //     // Create a basic text element
-        //     text = new pc.Entity();
-        //     text.addComponent("element", {
-        //         anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
-        //         fontAsset: fontAsset,
-        //         fontSize: 28,
-        //         pivot: new pc.Vec2(0.5, 0.1),
-        //         type: pc.ELEMENTTYPE_TEXT,
-        //         alignment: pc.Vec2.ZERO
-        //     });
-        //     screen.addChild(text);
-        // }
+        // create ground plane
+        var limit = 200;
+        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(3 * limit, 3 * limit, 3 * limit), new pc.Color(1, 1, 1));
 
-        // Allow user to toggle individual lights
-        // app.keyboard.on("keydown", function (e) {
-        //     switch (e.key) {
-        //         case pc.KEY_1:
-        //             omnilight.enabled = !omnilight.enabled
-        //             break;
-        //         case pc.KEY_2:
-        //             spotlight.enabled = !spotlight.enabled;
-        //             break;
-        //         case pc.KEY_3:
-        //             directionallight.enabled = !directionallight.enabled;
-        //             break;
-        //     }
-        // }, this);
+        // populate it with capsules
+        for (var x = -limit; x <= limit; x += 50) {
+            for (var z = -limit; z <= limit; z += 50) {
+                createPrimitive("capsule", new pc.Vec3(x, 15, z), new pc.Vec3(12, 22, 12), new pc.Color(1.2, 0.3, 0.1));
+            }
+        }
 
-        // app._initImmediate();
-        // var shadowMapMaterial = new Material();
-        // shadowMapMaterial.shader = app._immediateData.getDepthTextureShader();
-        // shadowMapMaterial.update();
-
-
-        // Simple update loop to rotate the light
-        var time = 0;
-        app.on("update", function (dt) {
-            time += dt;
-
-//            dirLight.setLocalEulerAngles(75, 2 * time, 0);
-            // dirLight.setLocalEulerAngles(65, 50, 30);
-
-            // // orbit camera around
-            // camera.setLocalPosition(150 * Math.sin(0.2 * time), 20, 70 * Math.cos(0.2 * time));
-            // //camera.setLocalPosition(100, 20, 0);
-            // camera.lookAt(0, 20, 0);
-
-
-            // update text showing which lights are enabled
-            // if (text) {
-            //     text.element.text = 
-            //         "[Key 1] Omni light: " + omnilight.enabled +
-            //         "\n[Key 2] Spot light: " + spotlight.enabled +
-            //         "\n[Key 3] Directional light: " + directionallight.enabled;
-            // }
-
-
+        // create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.9, 0.9, 0.9),
+            farClip: 1000
         });
+        app.root.addChild(camera);
+
+        // and position it in the world
+        camera.setLocalPosition(20, 80, 250);
+        camera.lookAt(-30, -50, 0);
+
+        // add the fly camera script to the camera, to allow mouse / keyboard movement
+        app.assets.loadFromUrl('../../scripts/camera/fly-camera.js', 'script', function (err, asset) {
+            camera.addComponent("script");
+            camera.script.create("flyCamera");
+            camera.script.flyCamera.speed = 60;
+        });
+
+        // Create a directional light casting cascaded shadows
+        var dirLight = new pc.Entity();
+        dirLight.addComponent("light", {
+            type: "directional",
+            color: pc.Color.WHITE,
+            shadowBias: 0.3,
+            normalOffsetBias: 0.2,
+            intensity: 1.0,
+
+            // enable shadow casting 
+            castShadows: true,
+            shadowDistance: 1000,
+
+            // shadow map resolution storing 4 cascades
+            shadowResolution: 2048,
+            numCascades : 4,
+
+            // distribution of cascade distances to prefer sharpness closer to the camera
+            cascadeDistribution: 0.7,
+
+            // shadow filtering
+            shadowType: pc.SHADOW_PCF3
+        });
+        app.root.addChild(dirLight);
+        dirLight.setLocalEulerAngles(45, -20, 20);
+
     </script>
 </body>
 </html>
