@@ -1,7 +1,6 @@
 // --------------- POST EFFECT DEFINITION --------------- //
 /**
  * @class
- * @param samples
  * @name GodRaysEffect
  * @classdesc Implements the GodRaysEffect post processing effect.
  * @description Creates new instance of the post effect.
