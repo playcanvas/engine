@@ -366,7 +366,7 @@ class ShadowRenderer {
             const depthRange = getDepthRange(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax());
 
             // adjust shadow camera's near and far plane to the depth range of casters to maximize precision
-            // of values stores in the shadow map
+            // of values stored in the shadow map
             shadowCamNode.translateLocal(0, 0, depthRange.max);
             shadowCam.farClip = depthRange.max - depthRange.min;
         }
