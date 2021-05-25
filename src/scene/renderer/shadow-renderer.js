@@ -336,7 +336,7 @@ class ShadowRenderer {
             const scaledDir = lightDir.mulScalar(dot);
             center.add2(scaledUp, scaledRight).add(scaledDir);
 
-            // look at the center from war away to include all casters during culling
+            // look at the center from far away to include all casters during culling
             shadowCamNode.setPosition(center);
             shadowCamNode.translateLocal(0, 0, 1000000);
             shadowCam.nearClip = 0;
