@@ -343,7 +343,7 @@ function _defineProps() {
         this.light.numCascades = math.clamp(Math.floor(newValue), 1, 4);
     });
     _defineProperty("cascadeDistribution", 0.5, function (newValue, oldValue) {
-        this.light.cascadeDistribution = newValue;
+        this.light.cascadeDistribution = math.clamp(newValue, 0, 1);
     });
     _defineProperty("normalOffsetBias", 0, function (newValue, oldValue) {
         this.light.normalOffsetBias = newValue;
