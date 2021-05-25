@@ -7,6 +7,7 @@
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {number} samples - The number of samples accumulated for ray distribution.
  */
 function GodRaysEffect(graphicsDevice, samples) {
     pc.PostEffect.call(this, graphicsDevice);
