@@ -56,7 +56,7 @@ function GodRaysEffect(graphicsDevice) {
             "    sunPos.x *= uAspect;",
             "    float light = sun(coords, sunPos);",
             "",
-            "    float occluders = 1.0 - linearizeDepth(texture2D(uDepthMap, uv).r);",
+            "    float occluders = 1.0 - getLinearScreenDepth(uv) / camera_params.y;",
             "",
             "    float col = step(occluders, 0.0) * (light - occluders) * uIntensity;",
             "    gl_FragColor = vec4(col * uLightPosition.z,occluders,0.0,0.0);",
