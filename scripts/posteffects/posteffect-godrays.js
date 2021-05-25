@@ -1,13 +1,14 @@
 // --------------- POST EFFECT DEFINITION --------------- //
 /**
  * @class
+ * @param samples
  * @name GodRaysEffect
  * @classdesc Implements the GodRaysEffect post processing effect.
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
-function GodRaysEffect(graphicsDevice) {
+function GodRaysEffect(graphicsDevice, samples) {
     pc.PostEffect.call(this, graphicsDevice);
 
     this.needsDepthBuffer = true;
@@ -90,7 +91,7 @@ function GodRaysEffect(graphicsDevice) {
             "uniform sampler2D uColorBuffer;",
             "uniform sampler2D uLightScatterBuffer;",
             "#define DITHER",
-            "#define SAMPLES 32",
+            "#define SAMPLES " + samples.toFixed(0),
             "#define DENSITY .95",
             "#define WEIGHT .25",
             "uniform vec4 uLightPosition;",
@@ -223,6 +224,14 @@ GodRays.attributes.add('lightEntity', {
     description: 'Drag and drop any entity (not necessarily a light), its world position will be used to calculate the center of the effect on screen.'
 });
 
+GodRays.attributes.add('samples', {
+    type: 'number',
+    default: 32,
+    precision: 1,
+    title: 'Samples',
+    description: 'The number of iterations executed for rays distribution.'
+});
+
 GodRays.attributes.add('intensity', {
     type: 'number',
     default: 1.5,
@@ -270,20 +279,23 @@ GodRays.attributes.add('color', {
 GodRays.prototype.initialize = function () {
     if (!this.cameraEntity) return;
 
-    this.effect = new GodRaysEffect(this.app.graphicsDevice);
-    this.effect.cameraEntity = this.cameraEntity;
-    this.effect.lightEntity = this.lightEntity;
-    this.effect.intensity = this.intensity;
-    this.effect.weight = this.weight;
-    this.effect.decay = this.decay;
-    this.effect.exposure = this.exposure;
-    this.effect.color = this.color;
+    var queue = this.cameraEntity.camera.postEffects;
+
+    this.effect = this.createEffect();
 
     this.on('attr', function (name, value) {
         this.effect[name] = value;
-    }, this);
 
-    var queue = this.cameraEntity.camera.postEffects;
+        if (name === 'samples') {
+            queue.removeEffect(this.effect);
+
+            this.effect = this.createEffect();
+
+            if (this.lightEntity.enabled) {
+                queue.addEffect(this.effect);
+            }
+        }
+    }, this);
 
     if (this.lightEntity.enabled) {
         queue.addEffect(this.effect);
@@ -300,4 +312,18 @@ GodRays.prototype.initialize = function () {
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
     });
+};
+
+GodRays.prototype.createEffect = function () {
+
+    var effect = new GodRaysEffect(this.app.graphicsDevice, this.samples);
+    effect.cameraEntity = this.cameraEntity;
+    effect.lightEntity = this.lightEntity;
+    effect.intensity = this.intensity;
+    effect.weight = this.weight;
+    effect.decay = this.decay;
+    effect.exposure = this.exposure;
+    effect.color = this.color;
+
+    return effect;
 };
