@@ -1687,8 +1687,8 @@ var standard = {
 
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
-                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
-                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
+                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));\n";
+                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight + ccReflection.rgb * ccReflection.a, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
                 code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
             }
             code += "dAlpha *= material_alphaFade;\n";
