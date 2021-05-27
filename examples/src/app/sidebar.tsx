@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 // @ts-ignore: library file import
-import { Container, Panel, TextInput, Label } from '@playcanvas/pcui/pcui-react';
+import { Container, Panel, TextInput, Label, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
+// @ts-ignore: library file import
+import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
 
 interface SideBarProps {
     categories: any
@@ -12,6 +14,7 @@ const SideBar = (props: SideBarProps) => {
     const categories = props.categories;
     const [filteredCategories, setFilteredCategories] = useState(categories);
     const [hash, setHash] = useState(location.hash);
+    const observer = new Observer({ largeThumbnails: false });
     useEffect(() => {
         // set up the control panel toggle button
         const sideBar = document.getElementById('sideBar');
@@ -23,10 +26,14 @@ const SideBar = (props: SideBarProps) => {
         window.addEventListener('hashchange', () => {
             setHash(location.hash);
         });
+
+        observer.on('largeThumbnails:set', () => {
+            sideBar.classList.toggle('small-thumbnails');
+        });
     });
 
     return (
-        <Container id='sideBar'>
+        <Container id='sideBar' class='small-thumbnails'>
             <div className='panel-toggle' />
             <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} id='sideBar-panel' collapsed={document.body.offsetWidth < 601}>
                 <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(filter: string) => {
@@ -58,6 +65,9 @@ const SideBar = (props: SideBarProps) => {
                     });
                     setFilteredCategories(updatedCategories);
                 }}/>
+                <LabelGroup text='Large thumbnails:'>
+                    <BooleanInput type='toggle'  binding={new BindingTwoWay()} link={{ observer, path: 'largeThumbnails' }} />
+                </LabelGroup>
                 <Container class='sideBar-contents'>
                     {
                         Object.keys(filteredCategories).sort((a: string, b:string) => (a > b ? 1 : -1)).map((category: string) => {
@@ -65,7 +75,8 @@ const SideBar = (props: SideBarProps) => {
                                 <ul className="category-nav">
                                     {
                                         Object.keys(filteredCategories[category].examples).sort((a: string, b:string) => (a > b ? 1 : -1)).map((example: string) => {
-                                            const className = `nav-item ${hash.includes(`${category}/${example}`) ? 'selected' : ''}`;
+                                            const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
+                                            const className = `nav-item ${isSelected ? 'selected' : ''}`;
                                             return <Link key={example} to={`/${category}/${example}`}>
                                                 <div className={className}>
                                                     <img src={`./thumbnails/${category}/${example}.png`} />

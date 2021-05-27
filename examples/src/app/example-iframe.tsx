@@ -36,7 +36,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
     // Try to retrieve a set of B64 encoded files from the URL's query params.
     // If not present then use the default files passed in the props
     try {
-        files = JSON.parse(atob(location.hash.split('files=')[1]));
+        files = JSON.parse(decodeURIComponent(atob(location.hash.split('files=')[1])));
     } catch (e) {
         files = props.files;
     }
@@ -67,7 +67,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         Loader.load(app, children, onLoadedAssets);
     };
 
-    const executeScript = (script: string, pc: any, app: pc.Application, assetManifest: any, exampleData: any) => {
+    const executeScript = (script: string, pc: any, canvas: HTMLCanvasElement, app: pc.Application, assetManifest: any, exampleData: any) => {
         // strip the function closure
         script = script.substring(script.indexOf("\n") + 1);
         script = script.substring(script.lastIndexOf("\n") + 1, -1);
@@ -80,19 +80,22 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         transformedScript = transformedScript.replace(appCall, '');
 
         // @ts-ignore: abstract class function
-        Function('pc', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', transformedScript).bind(window)(pc, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync);
+        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', transformedScript).bind(window)(pc, canvas, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync);
     };
 
 
-    const build = (canvas: HTMLElement, script: string, assets: any = null, exampleData: any = null) => {
+    const build = (canvas: HTMLCanvasElement, script: string, assets: any = null, exampleData: any = null) => {
         (window as any).hasBuilt = true;
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
             elementInput: new pc.ElementInput(canvas),
-            gamepads: new pc.GamePads()
+            gamepads: new pc.GamePads(),
+            keyboard: new pc.Keyboard(window),
+            graphicsDeviceOptions: { alpha: true }
         });
+        (window as any).app = app;
 
         // // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -125,7 +128,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         // @ts-ignore
         loadChildAssets(assets, pc.app, (assetManifest: any) => {
             try {
-                executeScript(script, pc, app, assetManifest, exampleData);
+                executeScript(script, pc, canvas, app, assetManifest, exampleData);
                 setAppState(APP_STATE.PLAYING);
             } catch (e) {
                 const _crashInner = (stackFrames: any) => {
@@ -149,12 +152,38 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             }
         });
     };
+
+    const hasBasisAssets = () => {
+        if (props.assets) {
+            for (let i = 0; i < props.assets.length; i++) {
+                if (props.assets[i].props.url && props.assets[i].props.url.includes('.basis')) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
     const observer = new Observer({});
     const controls  = props.controls ? props.controls(observer).props.children : null;
 
     useEffect(() => {
         if (!(window as any).hasBuilt && files[0].text.length > 0) {
-            build(document.getElementById('application-canvas'), files[0].text, props.assets, observer);
+            // @ts-ignore
+            if (hasBasisAssets()) {
+                // @ts-ignore
+                pc.basisDownload(
+                    'static/lib/basis/basis.wasm.js',
+                    'static/lib/basis/basis.wasm.wasm',
+                    'static/lib/basis/basis.js',
+                    function () {
+                        build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
+                    }
+                );
+            } else {
+
+                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
+            }
         }
     });
 

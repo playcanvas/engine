@@ -12,7 +12,7 @@ class AssetLoader extends React.Component <AssetLoaderProps, any>  {
     static ctor: any;
     static load(resource: AssetLoaderProps, app: pc.Application, onLoad: any) {
         if (resource.data) {
-            const asset = new pc.Asset(resource.name, resource.type, resource.url, resource.data);
+            const asset = new pc.Asset(resource.name, resource.type, resource.type === 'cubemap' ? { url: resource.url } : null, resource.data);
             asset.on('load', function (asset) {
                 onLoad(resource.name, asset);
             });

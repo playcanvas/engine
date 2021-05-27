@@ -38,7 +38,7 @@ class Example extends Component <ExampleProps, ExampleState> {
     }
 
     get iframePath() {
-        return `/#/iframe${this.props.path}?files=${btoa(JSON.stringify(this.files))}`;
+        return `/#/iframe${this.props.path}?files=${btoa(encodeURIComponent(JSON.stringify(this.files)))}`;
     }
 
     render() {

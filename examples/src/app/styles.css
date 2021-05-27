@@ -88,7 +88,7 @@ body {
 }
 
 .sideBar-contents {
-    height: calc(100% - 68px);
+    height: calc(100% - 88px);
     overflow: auto;
     margin-top: 8px;
 }
@@ -128,6 +128,10 @@ body {
     user-select: none;
 }
 
+#sideBar.small-thumbnails .nav-item-text {
+    margin-left: 47px;
+}
+
 #sideBar .nav-item-text a {
     text-decoration: none;
     color: rgb(177, 184, 186) !important;
@@ -143,9 +147,25 @@ body {
     object-fit: cover;
 }
 
+#sideBar.small-thumbnails img {
+    position: absolute;
+    width: 47px;
+    height: 100%;
+}
+
+
 #sideBar .pcui-text-input[placeholder]:after {
     left: 0;
     right: inherit;
+}
+
+#sideBar .pcui-label-group {
+    margin: 12px;
+}
+
+#sideBar .pcui-label-group > .pcui-label {
+    width: 112px;
+    font-size: 14px;
 }
 
 #sideBar a {
@@ -173,6 +193,7 @@ body {
     overflow: auto;
     border-radius: 4px;
     background-color: #2C393C;
+    position: relative;
 }
 
 .nav-item:last-child {
@@ -532,4 +553,14 @@ body {
 #appInner.fullscreen #fullscreen-button {
     background-color: #F60;
     color: white;
+}
+
+.message {
+    position: absolute;
+    padding: 8px 16px;
+    left: 20px;
+    bottom: 20px;
+    color: #ccc;
+    background-color: rgba(0, 0, 0, .5);
+    font-family: "Proxima Nova", Arial, sans-serif;
 }
