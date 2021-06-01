@@ -1208,36 +1208,29 @@ var standard = {
             }
         }
 
-        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+        var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
 
-            if (options.useMetalness) {
-                code += chunks.envBrdfApproxPS;
-            } else {
-                code += chunks.envBrdfNonePS;
-            }
+        if (options.sphereMap) {
+            var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+            code += scode;
+        } else if (cubemapReflection) {
+            if (options.prefilteredCubemap) {
+                if (useTexCubeLod) {
+                    code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
 
-            var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
-
-            if (options.sphereMap) {
-                var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-                scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-                code += scode;
-            } else if (cubemapReflection) {
-                if (options.prefilteredCubemap) {
-                    if (useTexCubeLod) {
-                        code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-
-                    } else {
-                        code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                    }
                 } else {
-                    code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                                                            options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
+                    code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
                 }
-            } else if (options.dpAtlas) {
-                code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+            } else {
+                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
+                                                        options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
             }
+        } else if (options.dpAtlas) {
+            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+        }
 
+        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
@@ -1279,24 +1272,18 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-
-            // used for energy conservation and to modulate specular with half-angle fresnel
-            code += "vec3 dLightFresnel;\n";
-            code += "vec3 ccLightFresnel;\n\n";
-
             if (hasAreaLights) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
-            if (lighting) {
-                code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
-            }
+            if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy && !options.useMetalness) {
-                        code += chunks.combineDiffuseSpecularPS; // post half-angle fresnel, this one is for spec-gloss path
+                    if (options.conserveEnergy && !hasAreaLights) {
+                        // NB if there are area lights, energy conservation is done differently
+                        code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                     } else {
-                        code += chunks.combineDiffuseSpecularNoConservePS; // post half-angle fresnel, this one is for metalness-gloss path
+                        code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
                     }
                 } else {
                     code += chunks.combineDiffuseSpecularOldPS;
@@ -1465,7 +1452,17 @@ var standard = {
             code += "   getSpecularity();\n";
             if (!getGlossinessCalled) code += "   getGlossiness();\n";
 
-            // NB switched to more correct half-angle fresnel
+            // this is needed to allow custom area light fresnel calculations
+            if (hasAreaLights) {
+                code += "   #ifdef AREA_LIGHTS\n";
+                code += "   dSpecularityNoFres = dSpecularity;\n";
+                code += "   #ifdef CLEARCOAT\n";
+                code += "   ccSpecularityNoFres = ccSpecularity;\n";
+                code += "   #endif\n";
+                code += "   #endif\n";
+            }
+
+            if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
         if (addAmbient) {
@@ -1489,9 +1486,12 @@ var standard = {
                 code += "   addReflection();\n";
             }
 
-            // NB switched to more correct half-angle fresnel
-
             if (hasAreaLights) {
+                // specular has to be accumulated differently if we want area lights to look correct
+                code += "   ccReflection.rgb *= ccSpecularity;\n";
+                code += "   dReflection.rgb *= dSpecularity;\n";
+                code += "   dSpecularLight *= dSpecularity;\n";
+
                 code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
             }
 
@@ -1641,25 +1641,34 @@ var standard = {
                     }
                 }
 
-                // NB specular lighting moved here for legacy energy conservation
-                if (options.clearCoat > 0) code += "       ccSpecularLight += get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                if (options.useSpecular) code += "       dSpecularLight += get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-
                 // non-punctual lights do not mix diffuse lighting into specular attenuation
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
-                    if (options.conserveEnergy && options.useSpecular && !options.useMetalness) {
-                        code += "       dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLightFresnel * dSpecularity);\n";
+                    if (options.conserveEnergy && options.useSpecular) {
+                        code += "       dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
                     } else {
                         code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 } else {
-                    if (options.conserveEnergy && options.useSpecular && !options.useMetalness) {
-                        code += "       dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLightFresnel * dSpecularity);\n";
+                    if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
+                        code += "       dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
                     } else {
                         code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 }
 
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (options.clearCoat > 0) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useSpecular) code += "       dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                } else {
+                    if (hasAreaLights) {
+                        // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
+                        if (options.clearCoat > 0) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    } else {
+                        if (options.clearCoat > 0) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    }
+                }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "   }\n"; // BRANCH END
@@ -1668,7 +1677,15 @@ var standard = {
                 code += "\n";
             }
 
-            // NB using half-angle fresnel accumulates specular consistenetly accross all punctual, area and image-based lights
+            if (hasAreaLights) {
+                // specular has to be accumulated differently if we want area lights to look correct
+                if (options.clearCoat > 0) {
+                    code += "   ccSpecularity = 1.0;\n";
+                }
+                if (options.useSpecular) {
+                    code += "   dSpecularity = vec3(1);\n";
+                }
+            }
 
             if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
                 code += "   addRefraction();\n";
@@ -1687,8 +1704,8 @@ var standard = {
 
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
-                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));\n";
-                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight + ccReflection.rgb * ccReflection.a, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
+                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
+                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
                 code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
             }
             code += "dAlpha *= material_alphaFade;\n";
@@ -1744,6 +1761,7 @@ var standard = {
         if (code.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
         if (code.includes("dNormalMap")) structCode += "vec3 dNormalMap;\n";
         if (code.includes("dSpecularity")) structCode += "vec3 dSpecularity;\n";
+        if (code.includes("dSpecularityNoFres")) structCode += "vec3 dSpecularityNoFres;\n";
         if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
         if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
         if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
@@ -1757,6 +1775,7 @@ var standard = {
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
         if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
+        if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
         if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
         code = codeBegin + structCode + code;
