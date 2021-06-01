@@ -1,15 +1,18 @@
 // Schlick's approximation
+uniform float material_fresnelFactor; // unused
 
-vec3 calcFresnel(float cosTheta, vec3 F0)
-{
-    return F0 + (1.0 - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
-}
-
-vec3 calcFresnel(float cosTheta, vec3 F0, float glossiness)
-{
-    float fresnel = 1.0 - cosTheta;
+void getFresnel() {
+    float fresnel = 1.0 - max(dot(dNormalW, dViewDirW), 0.0);
     float fresnel2 = fresnel * fresnel;
     fresnel *= fresnel2 * fresnel2;
-    fresnel *= glossiness * glossiness;
-    return F0 + (1.0 - F0) * fresnel;
+    fresnel *= dGlossiness * dGlossiness;
+    dSpecularity = dSpecularity + (1.0 - dSpecularity) * fresnel;
+
+    #ifdef CLEARCOAT
+    fresnel = 1.0 - max(dot(ccNormalW, dViewDirW), 0.0);
+    fresnel2 = fresnel * fresnel;
+    fresnel *= fresnel2 * fresnel2;
+    fresnel *= ccGlossiness * ccGlossiness;
+    ccSpecularity = ccSpecularity + (1.0 - ccSpecularity) * fresnel;
+    #endif
 }

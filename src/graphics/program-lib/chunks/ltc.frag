@@ -125,6 +125,11 @@ vec2 getLTCLightUV(float tGlossiness, vec3 tNormalW)
 	return LTC_Uv( tNormalW, dViewDirW, roughness );
 }
 
+//used for energy conservation and to modulate specular
+vec3 dLTCSpecFres;
+#ifdef CLEARCOAT
+vec3 ccLTCSpecFres;
+#endif
 vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
 {
 	vec4 t2 = texture2D( areaLightsLutTex2, uv );
@@ -140,11 +145,11 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
 void calcLTCLightValues()
 {
 	dLTCUV = getLTCLightUV(dGlossiness, dNormalW);
-	dLightFresnel = getLTCLightSpecFres(dLTCUV, dSpecularity); 
+	dLTCSpecFres = getLTCLightSpecFres(dLTCUV, dSpecularityNoFres); 
 
 #ifdef CLEARCOAT
 	ccLTCUV = getLTCLightUV(ccGlossiness, ccNormalW);
-	ccLightFresnel = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularity));
+	ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularityNoFres));
 #endif
 }
 
@@ -408,12 +413,12 @@ float calcRectLightSpecular(vec3 tNormalW, vec2 uv) {
 }
 
 float getRectLightSpecular() {
-    return dLightFresnel * calcRectLightSpecular(dNormalW, dLTCUV);
+    return calcRectLightSpecular(dNormalW, dLTCUV);
 }
 
 #ifdef CLEARCOAT
 float getRectLightSpecularCC() {
-    return ccLightFresnel * calcRectLightSpecular(ccNormalW, ccLTCUV);
+    return calcRectLightSpecular(ccNormalW, ccLTCUV);
 }
 #endif
 
@@ -423,21 +428,21 @@ float calcDiskLightSpecular(vec3 tNormalW, vec2 uv) {
 }
 
 float getDiskLightSpecular() {
-    return dLightFresnel * calcDiskLightSpecular(dNormalW, dLTCUV);
+    return calcDiskLightSpecular(dNormalW, dLTCUV);
 }
 
 #ifdef CLEARCOAT
 float getDiskLightSpecularCC() {
-    return ccLightFresnel * calcDiskLightSpecular(ccNormalW, ccLTCUV);
+    return calcDiskLightSpecular(ccNormalW, ccLTCUV);
 }
 #endif
 
 float getSphereLightSpecular() {
-    return dLightFresnel * calcDiskLightSpecular(dNormalW, dLTCUV);
+    return calcDiskLightSpecular(dNormalW, dLTCUV);
 }
 
 #ifdef CLEARCOAT
 float getSphereLightSpecularCC() {
-    return ccLightFresnel * calcDiskLightSpecular(ccNormalW, ccLTCUV);
+    return calcDiskLightSpecular(ccNormalW, ccLTCUV);
 }
 #endif

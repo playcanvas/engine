@@ -1,3 +1,3 @@
 vec3 combineColor() {
-    return dAlbedo * dDiffuseLight + dSpecularLight;
+    return dAlbedo * dDiffuseLight + dSpecularLight * dSpecularity;
 }

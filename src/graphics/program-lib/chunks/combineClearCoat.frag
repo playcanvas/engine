@@ -1,3 +1,3 @@
 vec3 combineColorCC() {
-    return combineColor() + (ccSpecularLight + ccReflection.rgb * ccReflection.a);
+    return combineColor() + (ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a);
 }
