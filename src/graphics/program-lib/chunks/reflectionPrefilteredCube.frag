@@ -50,6 +50,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return processEnvironment($DECODE(cubeFinal).rgb);
 }
 
-void addReflection() {
-    dReflection += vec4(envBrdf(dSpecularity, dGlossiness, dNormalW) * calcReflection(dReflDirW, dGlossiness), material_reflectivity);
+void addReflection() {   
+    dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }
