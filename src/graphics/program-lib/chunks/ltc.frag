@@ -407,12 +407,12 @@ float calcRectLightSpecular(vec3 tNormalW, vec2 uv) {
 	return LTC_EvaluateRect( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-vec3 getRectLightSpecular() {
+float getRectLightSpecular() {
     return dLightFresnel * calcRectLightSpecular(dNormalW, dLTCUV);
 }
 
 #ifdef CLEARCOAT
-vec3 getRectLightSpecularCC() {
+float getRectLightSpecularCC() {
     return ccLightFresnel * calcRectLightSpecular(ccNormalW, ccLTCUV);
 }
 #endif
@@ -422,22 +422,22 @@ float calcDiskLightSpecular(vec3 tNormalW, vec2 uv) {
 	return LTC_EvaluateDisk( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-vec3 getDiskLightSpecular() {
+float getDiskLightSpecular() {
     return dLightFresnel * calcDiskLightSpecular(dNormalW, dLTCUV);
 }
 
 #ifdef CLEARCOAT
-vec3 getDiskLightSpecularCC() {
+float getDiskLightSpecularCC() {
     return ccLightFresnel * calcDiskLightSpecular(ccNormalW, ccLTCUV);
 }
 #endif
 
-vec3 getSphereLightSpecular() {
+float getSphereLightSpecular() {
     return dLightFresnel * calcDiskLightSpecular(dNormalW, dLTCUV);
 }
 
 #ifdef CLEARCOAT
-vec3 getSphereLightSpecularCC() {
+float getSphereLightSpecularCC() {
     return ccLightFresnel * calcDiskLightSpecular(ccNormalW, ccLTCUV);
 }
 #endif
