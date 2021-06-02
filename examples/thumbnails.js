@@ -2,15 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
-function ensureDirectoryExistence(filePath) {
-    var dirname = path.dirname(filePath);
-    if (fs.existsSync(dirname)) {
-        return true;
-    }
-    ensureDirectoryExistence(dirname);
-    fs.mkdirSync(dirname);
-}
-
 const pathData = [];
 
 let categoriesCounter = 0;

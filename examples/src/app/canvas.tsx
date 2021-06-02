@@ -1,5 +1,5 @@
 import React, { createRef } from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/pcui/pcui-binding';
 // @ts-ignore: library file import

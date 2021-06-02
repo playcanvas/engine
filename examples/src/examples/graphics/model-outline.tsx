@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 
@@ -57,7 +57,7 @@ class ModelOutlineExample extends Example {
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
-        const renderTarget = new pc.RenderTarget({
+        let renderTarget = new pc.RenderTarget({
             colorBuffer: texture,
             depth: true
         });

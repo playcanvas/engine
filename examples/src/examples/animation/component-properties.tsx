@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
@@ -200,7 +200,6 @@ const animStateGraphData = {
     }
 };
 
-// class ComponentPropertiesExample extends Example {
 class ComponentPropertiesExample extends Example {
     static CATEGORY = 'Animation';
     static NAME = 'Component Properties';

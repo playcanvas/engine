@@ -5,6 +5,9 @@ const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
+// build out the directory structure for the examples so the SPA can be accessed via non hashed paths
+require('./example-directory.js');
+
 const config = {
     mode: process.env.ENVIRONMENT || 'development',
     entry: './src/app/index.tsx',

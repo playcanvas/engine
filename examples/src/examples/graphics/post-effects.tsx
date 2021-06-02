@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 
@@ -253,10 +253,10 @@ class PostEffectsExample extends Example {
             // update text showing which post effects are enabled
             if (text) {
                 text.element.text = `[Key 1] Bloom: ${camera.script.bloom.enabled}
-[Key 2] Sepia: ${camera.script.sepia.enabled}
-[Key 3] Vignette: ${camera.script.vignette.enabled}
-[Key 4] Bokeh: ${camera.script.bokeh.enabled}
-[Key 5] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}`;
+    [Key 2] Sepia: ${camera.script.sepia.enabled}
+    [Key 3] Vignette: ${camera.script.vignette.enabled}
+    [Key 4] Bokeh: ${camera.script.bokeh.enabled}
+    [Key 5] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}`;
             }
 
             // display the depth texture

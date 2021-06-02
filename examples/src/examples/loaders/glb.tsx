@@ -1,8 +1,8 @@
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 
 class GLBExample extends Example {
-    static CATEGORY = 'Misc';
+    static CATEGORY = 'Loaders';
     static NAME = 'GLB';
 
     // @ts-ignore: override class function

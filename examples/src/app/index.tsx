@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 // @ts-ignore: library file import
 import { Container } from '@playcanvas/pcui/pcui-react';
 // @ts-ignore: library file import
-import { HashRouter as Router, Switch, Route } from "react-router-dom";
+import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
 import SideBar from './sidebar';
 import CodeEditor from './code-editor';
 import ExampleIframe from './example-iframe';
@@ -86,6 +86,9 @@ const MainLayout = () => {
         <div id='appInner'>
             <Router>
                 <Switch>
+                    <Route exact path="/">
+                        <Redirect to="/misc/hello-world" />
+                    </Route>
                     {
                         examples.paths.map((p) => {
                             const e = new p.example();

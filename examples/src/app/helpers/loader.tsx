@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 
 interface AssetLoaderProps {
  name: string,

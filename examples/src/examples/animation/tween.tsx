@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader, ScriptLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 

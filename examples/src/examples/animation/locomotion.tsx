@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
@@ -122,7 +122,7 @@ const animStateGraphData = {
                             "value": 2
                         }
                     ]
-                },
+                }
             ]
         }
     ],
@@ -159,43 +159,6 @@ class LocomotionExample extends Example {
 
     // @ts-ignore: override class function
     controls(data: Observer) {
-        // // create a control panel using PCUI https://playcanvas.github.io/pcui/getting-started/
-        // const controlPanel = new pcui.Panel({
-        //     headerText: 'Controls',
-        //     collapsible: true,
-        //     collapsed: false
-        // });
-        // controlPanel.dom.setAttribute('style', 'position: fixed; right: 24px; top: 24px; width: 201px; z-index: 9999;');
-        // controlPanel.content.dom.setAttribute('style', 'display: flex; align-items: center; flex-wrap: wrap;')
-        // var jumpButton = new pcui.Button({
-        //     text: 'Jump'
-        // });
-        // jumpButton.dom.setAttribute('style', 'width: 100%;')
-        // jumpButton.on('click', function() {
-        //     var isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
-        //     if (!isJumping) {
-        //         characterEntity.anim.setTrigger('jump');
-        //     }
-        // });
-        // controlPanel.append(jumpButton);
-        // var jogToggleLabel = new pcui.Label({
-        //     text: 'Run:'
-        // });
-        // controlPanel.append(jogToggleLabel);
-        // var jogToggle = new pcui.BooleanInput({
-        //     type: 'toggle'
-        // });
-        // jogToggle.on('change', function(value) {
-        //     if (value) {
-        //         characterEntity.anim.setInteger('speed', 2);
-        //     } else {
-        //         characterEntity.anim.setInteger('speed', 1);
-        //     }
-        // });
-        // controlPanel.append(jogToggle);
-
-        // document.body.appendChild(controlPanel.dom);
-
         return <>
             <Button text='Jump' onClick={() => data.emit('jump')}/>
             <LabelGroup text='Run: '>

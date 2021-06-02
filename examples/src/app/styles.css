@@ -117,9 +117,13 @@ body {
     }
 
     .sideBar-contents {
-        height: calc(100% - 52px);
+        height: calc(100% - 108px);
         overflow: auto;
         margin-top: 8px;
+    }
+
+    #sideBar-panel .pcui-panel-content {
+        overflow: hidden;
     }
 }
 
@@ -432,6 +436,7 @@ body {
 
 #menu {
     display: flex;
+    flex-direction: column;
     position: absolute;
     top: 16px;
     left: 8px;
@@ -475,6 +480,7 @@ body {
         bottom: 8px;
         top: inherit;
         width: calc(100% - 32px);
+        background-color: rgba(54, 67, 70, 1);
     }
 
     #menu img {
@@ -489,6 +495,32 @@ body {
         left: 50%;
         transform: translateX(-50%);
     }
+}
+
+#menu-buttons {
+    display: flex;
+}
+
+#menu #menu-embed-container {
+    display: flex;
+    flex-direction: column;
+}
+
+#menu #menu-embed-container .pcui-label {
+    font-size: 12px;
+    margin-top: 8px;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+#menu #menu-embed-container textarea {
+    font-size: 10px;
+}
+
+@media only screen and (min-width: 601px) {
+#menu #menu-embed-container {
+    max-width: 232px;
+}
 }
 
 .tabs-container {
@@ -508,13 +540,19 @@ body {
     box-shadow: none !important;
 }
 
+.tabs-container > .pcui-button.selected {
+    color: #fff;
+    background-color: #2c393c;
+}
+
 .tabs-container > .pcui-button:focus {
     outline: none;
     box-shadow: none !important;
 }
 
-.tabs-container > .pcui-button.selected {
-    background-color: #2c393c;
+#embed-button.selected {
+    background-color: #f60;
+    color: white;
 }
 
 @media only screen and (min-width: 601px) {

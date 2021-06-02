@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ControlPanel from './control-panel';
 // @ts-ignore: library file import
 import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
 // @ts-ignore: library file import

@@ -1,4 +1,4 @@
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 
 class XRPickingExample extends Example {
