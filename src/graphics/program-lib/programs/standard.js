@@ -1213,7 +1213,7 @@ var standard = {
             if (options.useMetalness) {
                 code += chunks.envBrdfApproxPS;
             } else {
-                code += chunks.envBrdfNonePS;
+                code += options.shadingModel === SPECULAR_PHONG ? chunks.envBrdfNonePS : chunks.envBrdfOldPS;
             }
 
             var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");

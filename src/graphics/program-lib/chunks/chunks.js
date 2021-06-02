@@ -43,6 +43,7 @@ import endPS from './end.frag';
 import endVS from './end.vert';
 import envBrdfNonePS from './envBrdfNone.frag';
 import envBrdfApproxPS from './envBrdfApprox.frag';
+import envBrdfOldPS from './envBrdfOld.frag';
 import envConstPS from './envConst.frag';
 import envMultiplyPS from './envMultiply.frag';
 import extensionPS from './extension.frag';
@@ -249,6 +250,7 @@ var shaderChunks = {
     emissivePS: emissivePS,
     endPS: endPS,
     endVS: endVS,
+    envBrdfOldPS: envBrdfOldPS,
     envBrdfApproxPS: envBrdfApproxPS,
     envBrdfNonePS: envBrdfNonePS,
     envConstPS: envConstPS,
