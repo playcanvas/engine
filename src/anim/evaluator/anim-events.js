@@ -5,7 +5,7 @@
  * @description Create a new collection of animation events.
  * - @param {object[]}  events- An array of animation events.
  * @example
- * const events = new AnimEvents([
+ * const events = new pc.AnimEvents([
  *     {
  *         name: 'my_event',
  *         time: 1.3 // given in seconds
