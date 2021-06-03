@@ -106,6 +106,7 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneDepth } from './scene-depth.js';
+import { XRTYPE_VR } from "../xr/constants";
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
@@ -1394,16 +1395,34 @@ class Application extends EventHandler {
         this.graphicsDevice.canvas.style.width = width + 'px';
         this.graphicsDevice.canvas.style.height = height + 'px';
 
-        // In AUTO mode the resolution is changed to match the canvas size
-        if (this._resolutionMode === RESOLUTION_AUTO) {
-            this.setCanvasResolution(RESOLUTION_AUTO);
-        }
+        this.updateCanvasSize();
 
         // return the final values calculated for width and height
         return {
             width: width,
             height: height
         };
+    }
+
+    /**
+     * @function
+     * @name Application#updateCanvasSize
+     * @description Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document page.
+     * It is recommended to call this function when the canvas size changes (e.g on window resize and orientation change
+     * events) so that the canvas resolution is immediately updated.
+     */
+    updateCanvasSize() {
+        // Don't update if we are in VR
+        if ((this.vr && this.vr.display) || (this.xr.active && this.xr.type === XRTYPE_VR)) {
+            return;
+        }
+
+        // In AUTO mode the resolution is changed to match the canvas size
+        if (this._resolutionMode === RESOLUTION_AUTO) {
+            // Check if the canvas DOM has changed size
+            const canvas = this.graphicsDevice.canvas;
+            this.graphicsDevice.resizeCanvas(canvas.clientWidth, canvas.clientHeight);
+        }
     }
 
     /**
@@ -2152,6 +2171,7 @@ var makeTick = function (_app) {
         application.fire("framerender");
 
         if (application.autoRender || application.renderNextFrame) {
+            application.updateCanvasSize();
             application.render();
             application.renderNextFrame = false;
         }
