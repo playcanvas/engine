@@ -1,5 +1,11 @@
+![PlayCanvas](http://static.playcanvas.com/images/logo/Playcanvas_LOGOSET_SMALL-06.png)
 
-# Examples Browser
+# Examples
+
+A selection of simple examples to get you up and running
+
+See them <a href="https://playcanvas.github.io/">running live</a>
+
 ## Local development
 Ensure you have Node.js installed. Then, install all of the required Node.js dependencies:
 ```
@@ -20,12 +26,12 @@ To create the side bar thumbnails run the following script:
 npm run thumbnails
 ```
 
-## Contributing an example
+## Creating an example
 
-The available examples are written in TypeScript as React component class under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.
-To create a new example you can copy any of the existing examples as a template and update their path.
+The available examples are written as classes in TypeScript under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.
+To create a new example you can copy any of the existing examples as a template and update it's path.
 
-Each example class extends the `Example` parent class and can implement three methods to define it's functionality:
+Each example extends the `Example` parent class and can implement three methods to define it's functionality:
 
 ### `example` function
 ```tsx
@@ -48,10 +54,10 @@ load() {
     <>;
 }
 ```
-As assets are loaded using React, be sure to import it into any example that is loading assets.
+As assets are loaded using React, be sure to import React it into any example that is loading assets.
 
 Assets and scripts present in the `./assets` and `../scripts` directories will be available to examples under the `static/` path.
-Each asset you load will be made available to the `example` function you write as the second parameter and will be in the loaded state.
+Each asset you load will be made available to the `example` function you write as the second parameter and will be.
 ```tsx
 example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, firstPersonCamScript: pc.Asset }) {
     const app = new pc.Application(canvas, {});
