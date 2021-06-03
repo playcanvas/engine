@@ -5,12 +5,8 @@ const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
-// build out the directory structure for the examples so the SPA can be accessed via non hashed paths
-require('./example-directory.js');
-
 const config = {
-    mode: process.env.ENVIRONMENT || 'development',
-    entry: './src/app/index.tsx',
+    mode: process.env.ENVIRONMENT || 'development',    entry: './src/app/index.tsx',
     output: {
         path: path.resolve(__dirname, 'dist/static'),
         publicPath: process.env.PUBLIC_PATH || undefined,
@@ -98,7 +94,7 @@ const config = {
         new CopyWebpackPlugin({
             patterns: [
                 { from: 'src/wasm-loader.js', to: '' },
-                { from: 'src/assets', to: 'assets' },
+                { from: 'assets', to: 'assets' },
                 { from: 'src/lib', to: 'lib' },
                 { from: '../scripts', to: 'scripts' }
             ]
