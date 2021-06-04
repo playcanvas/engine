@@ -77,6 +77,6 @@
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2"
   },
-  "author": "PlayCanvas",
-  "license": "ISC"
+  "author": "PlayCanvas <support@playcanvas.com>",
+  "license": "MIT"
 }
