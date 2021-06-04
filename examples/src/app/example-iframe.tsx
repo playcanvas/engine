@@ -97,7 +97,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         });
         (window as any).app = app;
 
-        // // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         const canvasContainerElement = canvas.parentElement;
