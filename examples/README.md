@@ -54,7 +54,7 @@ load() {
     <>;
 }
 ```
-As assets are loaded using React, be sure to import React it into any example that is loading assets.
+As assets are loaded using React, be sure to import React into any example that is loading assets.
 
 Assets and scripts present in the `./assets` and `../scripts` directories will be available to examples under the `static/` path.
 Each asset you load will be made available to the `example` function you write as the second parameter and will be.
