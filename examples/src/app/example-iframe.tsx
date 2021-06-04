@@ -73,7 +73,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         script = script.substring(script.lastIndexOf("\n") + 1, -1);
         // transform the code using babel
         let transformedScript = Babel.transform(script, { filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
-        // // strip the PlayCanvas app initialisation
+        // strip the PlayCanvas app initialization
         const indexOfAppCallStart = transformedScript.indexOf('const app');
         const indexOfAppCallEnd = indexOfAppCallStart + transformedScript.substring(indexOfAppCallStart, transformedScript.length - 1).indexOf(';');
         const appCall = transformedScript.substring(indexOfAppCallStart, indexOfAppCallEnd + 1);
