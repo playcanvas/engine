@@ -98,7 +98,7 @@ controls(data: any) {
     </>;
 }
 ```
-The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as it's parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
+The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as its parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
 
 The data observer used in the controls function will be made available as the third parameter in the example function:
 ```tsx
