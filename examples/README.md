@@ -31,7 +31,7 @@ npm run thumbnails
 The available examples are written as classes in TypeScript under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.
 To create a new example you can copy any of the existing examples as a template and update its path.
 
-Each example extends the `Example` parent class and can implement three methods to define it's functionality:
+Each example extends the `Example` parent class and can implement three methods to define its functionality:
 
 ### `example` function
 ```tsx
@@ -107,4 +107,3 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
     console.log(data.get('flash'));
 }
 ```
-
