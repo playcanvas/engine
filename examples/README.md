@@ -57,7 +57,7 @@ load() {
 As assets are loaded using React, be sure to import React into any example that is loading assets.
 
 Assets and scripts present in the `./assets` and `../scripts` directories will be available to examples under the `static/` path.
-Each asset you load will be made available to the `example` function you write as the second parameter and will be.
+Each asset you load will be made available to the `example` function you write as the second parameter and will already be in the loaded state.
 ```tsx
 example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, firstPersonCamScript: pc.Asset }) {
     const app = new pc.Application(canvas, {});
