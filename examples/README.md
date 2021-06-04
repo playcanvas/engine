@@ -40,7 +40,7 @@ example(canvas: HTMLCanvasElement) {
     const app = new pc.Application(canvas, {});
 }
 ```
-This is the only function that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element as it's first argument and usually begins by creating a new PlayCanvas application using that canvas.
+This is the only function that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element as its first argument and usually begins by creating a new PlayCanvas application using that canvas.
 
 ### `load` function
 You can define a set of PlayCanvas assets to load into your application using this function. The function should return a set of Loader React components:
