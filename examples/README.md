@@ -78,7 +78,7 @@ load() {
     <>;
 }
 ```
-Each script will be made available as a parameter of the example function as an esModule using the name it was given and therefore any scripts should be define in the examples function signature as follows:
+Each script will be made available as a parameter of the example function as an esModule using the name it was given and therefore any scripts should be defined in the examples function signature as follows:
 ```tsx
 example(canvas: HTMLCanvasElement, TWEEN: any) {
     const app = new pc.Application(canvas, {});
