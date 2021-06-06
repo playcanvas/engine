@@ -466,7 +466,7 @@ class RigidBodyComponent extends Component {
                 }
 
                 if (entity.collision.type === 'compound') {
-                    this.system._compounds.push(this.entity.collision);
+                    this.system._compounds.push(entity.collision);
                 }
 
                 body.activate();
