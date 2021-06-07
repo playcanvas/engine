@@ -171,18 +171,18 @@ var depthLayer;
  *
  * @property {Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
  * @property {CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
- * @property {CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
+ * @property {CurveSet} localVelocityGraph2 Particles pick random values between localVelocityGraph and localVelocityGraph2.
  * @property {CurveSet} velocityGraph World-space velocity over lifetime.
- * @property {CurveSet} velocityGraph2 If not null, particles pick random values between velocityGraph and velocityGraph2.
+ * @property {CurveSet} velocityGraph2 Particles pick random values between velocityGraph and velocityGraph2.
  * @property {CurveSet} colorGraph Color over lifetime.
  * @property {Curve} rotationSpeedGraph Rotation speed over lifetime.
- * @property {Curve} rotationSpeedGraph2 If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+ * @property {Curve} rotationSpeedGraph2 Particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
  * @property {Curve} radialSpeedGraph Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
- * @property {Curve} radialSpeedGraph2 If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
+ * @property {Curve} radialSpeedGraph2 Particles pick random values between radialSpeedGraph and radialSpeedGraph2.
  * @property {Curve} scaleGraph Scale over lifetime.
- * @property {Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
+ * @property {Curve} scaleGraph2 Particles pick random values between scaleGraph and scaleGraph2.
  * @property {Curve} alphaGraph Alpha over lifetime.
- * @property {Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
+ * @property {Curve} alphaGraph2 Particles pick random values between alphaGraph and alphaGraph2.
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this particle system should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
