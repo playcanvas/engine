@@ -494,10 +494,12 @@ class ModelComponent extends Component {
         this._aabb = value;
 
         // set it on meshInstances
-        var mi = this._model.meshInstances;
-        if (mi) {
-            for (var i = 0; i < mi.length; i++) {
-                mi[i].setOverrideAabb(this._aabb);
+        if (this._model) {
+            var mi = this._model.meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setOverrideAabb(this._aabb);
+                }
             }
         }
     }
