@@ -50,7 +50,7 @@ class SkinInstanceCachedObject extends RefCountedObject {
  * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark meshes as non-movable (optimization).
- * @property {BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * @property {BoundingBox} aabb If set, the object space bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
  * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
