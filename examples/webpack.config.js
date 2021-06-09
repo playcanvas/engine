@@ -10,7 +10,7 @@ const config = {
     output: {
         path: path.resolve(__dirname, 'dist/static'),
         publicPath: process.env.PUBLIC_PATH || undefined,
-        filename: 'bundle.[contenthash].js'
+        filename: process.env.ENVIRONMENT === 'production' ? 'bundle.[contenthash].js' : 'bundle.js'
     },
     module: {
         rules: [

@@ -49,6 +49,9 @@ async function takeScreenshots() {
         const promise = new Promise((resolve, reject) => {
             setTimeout(async () => {
 
+                if (!fs.existsSync(`dist/thumbnails`)) {
+                    fs.mkdirSync(`dist/thumbnails`);
+                }
                 var dir = `dist/thumbnails/${category}`;
                 if (!fs.existsSync(dir)) {
                     fs.mkdirSync(dir);
