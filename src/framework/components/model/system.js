@@ -71,7 +71,7 @@ class ModelComponentSystem extends ComponentSystem {
         }
 
         if (_data.aabbCenter && _data.aabbHalfExtents) {
-            component.aabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
+            component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
         super.initializeComponentData(component, _data, ['enabled']);
@@ -134,8 +134,8 @@ class ModelComponentSystem extends ComponentSystem {
             }
         }
 
-        if (entity.model.aabb) {
-            component.aabb = entity.model.aabb.clone();
+        if (entity.model.customAabb) {
+            component.customAabb = entity.model.aabb.clone();
         }
     }
 

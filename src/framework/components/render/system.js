@@ -70,7 +70,7 @@ class RenderComponentSystem extends ComponentSystem {
         }
 
         if (_data.aabbCenter && _data.aabbHalfExtents) {
-            component.aabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
+            component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
         super.initializeComponentData(component, _data, _schema);
@@ -100,8 +100,8 @@ class RenderComponentSystem extends ComponentSystem {
             component.meshInstances[m].material = srcMeshInstances[m].material;
         }
 
-        if (entity.render.aabb) {
-            component.aabb = entity.render.aabb.clone();
+        if (entity.render.customAabb) {
+            component.customAabb = entity.render.customAabb.clone();
         }
     }
 

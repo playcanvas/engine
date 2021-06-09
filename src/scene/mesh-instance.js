@@ -148,7 +148,7 @@ class MeshInstance {
         this.instancingData = null;
 
         // override local space AABB
-        this._overrideAabb = null;
+        this._customAabb = null;
 
         // World space AABB
         this.aabb = new BoundingBox();
@@ -248,7 +248,7 @@ class MeshInstance {
         }
 
         // use local space override aabb if specified
-        let localAabb = this._overrideAabb;
+        let localAabb = this._customAabb;
         let toWorldSpace = !!localAabb;
 
         // otherwise evaluate local aabb
@@ -682,18 +682,18 @@ class MeshInstance {
         }
     }
 
-    setOverrideAabb(aabb) {
+    setCustomAabb(aabb) {
 
         if (aabb) {
             // store the override aabb
-            if (this._overrideAabb) {
-                this._overrideAabb.copy(aabb);
+            if (this._customAabb) {
+                this._customAabb.copy(aabb);
             } else {
-                this._overrideAabb = aabb.clone();
+                this._customAabb = aabb.clone();
             }
         } else {
             // no override, force refresh the actual one
-            this._overrideAabb = null;
+            this._customAabb = null;
             this._aabbVer = -1;
         }
 
@@ -704,7 +704,7 @@ class MeshInstance {
 
         // set if bones need to be updated before culling
         if (this._skinInstance) {
-            this._skinInstance._updateBeforeCull = !this._overrideAabb;
+            this._skinInstance._updateBeforeCull = !this._customAabb;
         }
     }
 }
