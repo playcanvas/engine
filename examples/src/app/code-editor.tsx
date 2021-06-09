@@ -53,7 +53,7 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     const selectFile = (selectedFileIndex: number) => {
         setSelectedFile(selectedFileIndex);
-        monacoEditor?.setScrollPosition({ scrollTop: 0 });
+        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
         document.querySelectorAll('#codePane .tabs-container .pcui-button').forEach((node: HTMLElement, i: number) => {
             if (selectedFileIndex === i) {
                 node.classList.add('selected');
@@ -64,6 +64,8 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     useEffect(() => {
+        monacoEditor?.setScrollPosition({ scrollTop: 0 });
+        if (!files[selectedFile]) setSelectedFile(0);
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
         const codePane = document.getElementById('codePane');
@@ -83,8 +85,8 @@ const CodeEditor = (props: CodeEditorProps) => {
         </Container>
         }
         <MonacoEditor
-            language={selectedFile === 0 ? "typescript" : FILE_TYPE_LANGUAGES[files[selectedFile].type]}
-            value={files[selectedFile].text}
+            language={selectedFile === 0 ? "typescript" : FILE_TYPE_LANGUAGES[files[selectedFile]?.type]}
+            value={files[selectedFile]?.text}
             beforeMount={beforeMount}
             onMount={editorDidMount}
             onChange={onChange}

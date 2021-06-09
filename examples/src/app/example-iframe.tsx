@@ -4,6 +4,8 @@ import ControlPanel from './control-panel';
 import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
+import * as pcx from 'playcanvas/build/playcanvas-extras.js';
+// @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/pcui/pcui-binding';
@@ -39,6 +41,13 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         files = JSON.parse(decodeURIComponent(atob(location.hash.split('files=')[1])));
     } catch (e) {
         files = props.files;
+    }
+    let showMiniStats = false;
+    // Try to retrieve a set of B64 encoded files from the URL's query params.
+    // If not present then use the default files passed in the props
+    try {
+        showMiniStats = location.hash.split('showMiniStats=')[1].split('&')[0] === 'true';
+    } catch (e) {
     }
 
     const fullscreen = location.hash.includes('fullscreen=true');
@@ -95,6 +104,11 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             keyboard: new pc.Keyboard(window),
             graphicsDeviceOptions: { alpha: true }
         });
+
+        if (showMiniStats) {
+            const miniStats = new pcx.MiniStats(app);
+        }
+
         (window as any).app = app;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size

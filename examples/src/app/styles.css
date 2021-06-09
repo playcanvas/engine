@@ -207,6 +207,9 @@ body {
 .nav-item.selected {
     background-color: #20292B;
 }
+#sideBar .nav-item.selected .nav-item-text {
+    color: #F60 !important;
+}
 
 .nav-item:hover {
     background-color: #20292B;
@@ -521,6 +524,11 @@ body {
 #menu #menu-embed-container {
     max-width: 232px;
 }
+}
+
+#menu #showMiniStatsButton.selected {
+    color: white;
+    background-color: #F60;
 }
 
 .tabs-container {

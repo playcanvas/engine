@@ -6,7 +6,9 @@ import { Container, Button, Label, TextAreaInput } from '@playcanvas/pcui/pcui-r
 interface MenuProps {
     lintErrors: boolean,
     hasEditedFiles: boolean,
-    playButtonRef: any
+    playButtonRef: any,
+    showMiniStats: boolean,
+    setShowMiniStats: (value: boolean) => void
 }
 const Menu = (props: MenuProps) => {
 
@@ -49,6 +51,10 @@ const Menu = (props: MenuProps) => {
                     console.log(clickFullscreenListener);
                     document.querySelector('iframe').contentDocument.addEventListener('mousemove', clickFullscreenListener);
                 }
+            }}/>
+            <Button icon='E149' id='showMiniStatsButton' text='' onClick={() => {
+                document.getElementById('showMiniStatsButton').classList.toggle('selected');
+                props.setShowMiniStats(document.getElementById('showMiniStatsButton').classList.contains('selected'));
             }}/>
             <Button id='play-button' enabled={!props.lintErrors && props.hasEditedFiles} icon='E131' text='' ref={props.playButtonRef} />
         </Container>

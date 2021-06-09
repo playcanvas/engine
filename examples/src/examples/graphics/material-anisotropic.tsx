@@ -5,7 +5,7 @@ import { AssetLoader } from '../../app/helpers/loader';
 
 class LightsExample extends Example {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lights';
+    static NAME = 'Material Anisotropic';
 
     load() {
         return <>
