@@ -154,7 +154,6 @@ var depthLayer;
  * * {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
  *
  * @property {Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
- * @property {Render} render Render used to get the mesh from.
  * @property {number} blend Controls how particles are blended when being written to the currently active render target.
  * Can be:
  *
@@ -198,7 +197,6 @@ class ParticleSystemComponent extends Component {
         this.on("set_meshAsset", this.onSetMeshAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_renderAsset", this.onSetRenderAsset, this);
-        this.on("set_render", this.onSetRender, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
         this.on("set_depthSoftening", this.onSetDepthSoftening, this);
@@ -482,12 +480,6 @@ class ParticleSystemComponent extends Component {
             asset = assets.get(newValue);
             if (asset) {
                 this._bindMeshAsset(asset);
-
-                if (asset.resource) {
-                    this._onMeshChanged(asset.resource);
-                } else {
-                    assets.load(asset);
-                }
             }
         } else {
             this._onMeshChanged(null);
@@ -544,12 +536,6 @@ class ParticleSystemComponent extends Component {
             asset = assets.get(newValue);
             if (asset) {
                 this._bindRenderAsset(asset);
-
-                if (asset.resource) {
-                    this._onRenderChanged(asset.resource);
-                } else {
-                    assets.load(asset);
-                }
             }
         } else {
             this._onRenderChanged(null);
@@ -574,6 +560,10 @@ class ParticleSystemComponent extends Component {
         asset.off('load', this._onRenderAssetLoad, this);
         asset.off('unload', this._onRenderAssetUnload, this);
         asset.off('remove', this._onRenderAssetRemove, this);
+
+        if (asset.resource) {
+            asset.resource.off('set:meshes', this._onRenderSetMeshes, this);
+        }
     }
 
     _onRenderAssetLoad(asset) {
@@ -581,21 +571,11 @@ class ParticleSystemComponent extends Component {
     }
 
     _onRenderAssetUnload(asset) {
-        this.render = null;
+        this._onRenderChanged(null);
     }
 
     _onRenderAssetRemove(asset) {
         this._onRenderAssetUnload(asset);
-    }
-
-    onSetRender(name, oldValue, newValue) {
-        if (newValue === oldValue) return;
-
-        if (oldValue) {
-            oldValue.off('set:meshes', this._onRenderSetMeshes, this);
-        }
-
-        this._onRenderChanged(newValue);
     }
 
     _onRenderChanged(render) {
@@ -604,10 +584,11 @@ class ParticleSystemComponent extends Component {
             return;
         }
 
+        render.off('set:meshes', this._onRenderSetMeshes, this);
+        render.on('set:meshes', this._onRenderSetMeshes, this);
+
         if (render.meshes) {
             this._onRenderSetMeshes(render.meshes);
-        } else {
-            render.once('set:meshes', this._onRenderSetMeshes, this);
         }
     }
 
