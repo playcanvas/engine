@@ -1,4 +1,9 @@
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
+import { AnimTransition } from '../../../anim/controller/anim-transition.js';
+import {
+    ANIM_INTERRUPTION_NONE
+} from '../../../anim/controller/constants.js';
+
 
 /**
  * @class
@@ -87,6 +92,23 @@ class AnimComponentLayer {
         if (this._controller.removeNodeAnimations(nodeName)) {
             this._component.playing = false;
         }
+    }
+
+    /**
+     * @function
+     * @name AnimComponentLayer#transition
+     * @description Transitions to a new state based on the provided AnimTransition
+     * @param {string} to - The state that this transition will transition to.
+     * @param {number} [time=0] - The duration of the transition in seconds.
+     * @param {number} [transitionOffset=null] - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.
+     */
+    transition(to, time = 0, transitionOffset = null) {
+        this._controller.updateStateFromTransition(new AnimTransition({
+            from: this._controller.activeStateName,
+            to,
+            time,
+            transitionOffset
+        }));
     }
 
     /**

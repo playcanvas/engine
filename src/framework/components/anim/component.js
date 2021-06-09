@@ -195,15 +195,40 @@ class AnimComponent extends Component {
      * @function
      * @name AnimComponent#assignAnimation
      * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodeName parameter.
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
      */
     assignAnimation(nodeName, animTrack, layerName) {
         if (!this.data.stateGraph) {
-            // #if _DEBUG
-            console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
-            // #endif
+            this.loadStateGraph(new AnimStateGraph({
+                "layers": [
+                    {
+                        "name": "Base",
+                        "states": [
+                            {
+                                "name": "START",
+                                "speed": 1
+                            },
+                            {
+                                "name": nodeName,
+                                "speed": 1,
+                                "loop": true,
+                                "defaultState": true
+                            }
+                        ],
+                        "transitions": [
+                            {
+                                "from": 'START',
+                                "to": nodeName
+                            }
+                        ]
+                    }
+                ],
+                "parameters": {}
+            }));
+            this.baseLayer.assignAnimation(nodeName, animTrack);
             return;
         }
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;

@@ -2,8 +2,8 @@ import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
 import { AnimTransition } from './anim-transition.js';
-
 import {
+    ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
@@ -38,19 +38,11 @@ class AnimController {
             );
             this._stateNames.push(states[i].name);
         }
-        this._transitions = transitions.map(function (transition) {
-            return new AnimTransition(
-                this,
-                transition.from,
-                transition.to,
-                transition.time,
-                transition.priority,
-                transition.conditions,
-                transition.exitTime,
-                transition.transitionOffset,
-                transition.interruptionSource
-            );
-        }.bind(this));
+        this._transitions = transitions.map((transition) => {
+            return new AnimTransition({
+                ...transition
+            });
+        });
         this._findTransitionsFromStateCache = {};
         this._findTransitionsBetweenStatesCache = {};
         this._parameters = parameters;
@@ -217,6 +209,38 @@ class AnimController {
         return transitions;
     }
 
+    _transitionHasConditionsMet(transition) {
+        var conditionsMet = true;
+        var i;
+        for (i = 0; i < transition.conditions.length; i++) {
+            var condition = transition.conditions[i];
+            var parameter = this.findParameter(condition.parameterName);
+            switch (condition.predicate) {
+                case ANIM_GREATER_THAN:
+                    conditionsMet = conditionsMet && parameter.value > condition.value;
+                    break;
+                case ANIM_LESS_THAN:
+                    conditionsMet = conditionsMet && parameter.value < condition.value;
+                    break;
+                case ANIM_GREATER_THAN_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value >= condition.value;
+                    break;
+                case ANIM_LESS_THAN_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value <= condition.value;
+                    break;
+                case ANIM_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value === condition.value;
+                    break;
+                case ANIM_NOT_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value !== condition.value;
+                    break;
+            }
+            if (!conditionsMet)
+                return conditionsMet;
+        }
+        return conditionsMet;
+    }
+
     _findTransition(from, to) {
         var transitions = [];
 
@@ -277,7 +301,7 @@ class AnimController {
                 }
             }
             // if the exitTime condition has been met or is not present, check condition parameters
-            return transition.hasConditionsMet;
+            return this._transitionHasConditionsMet(transition);
         }.bind(this));
 
         // return the highest priority transition to use
@@ -292,7 +316,7 @@ class AnimController {
         return null;
     }
 
-    _updateStateFromTransition(transition) {
+    updateStateFromTransition(transition) {
         var i;
         var j;
         var state;
@@ -406,19 +430,18 @@ class AnimController {
         var transition = this._findTransition(this._activeStateName, newStateName);
         if (!transition) {
             this._animEvaluator.removeClips();
-            transition = new AnimTransition(this, null, newStateName, 0, 0);
+            transition = new AnimTransition({ from: null, to: newStateName });
         }
-        this._updateStateFromTransition(transition);
+        this.updateStateFromTransition(transition);
     }
 
     assignAnimation(pathString, animTrack) {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
-            // #if _DEBUG
-            console.error('Attempting to assign an animation track to an animation state that does not exist.');
-            // #endif
-            return;
+            state = new AnimState(this, path[0], 1.0);
+            this._states[path[0]] = state;
+            this._stateNames.push(path[0]);
         }
         state.addAnimation(path, animTrack);
 
@@ -485,7 +508,7 @@ class AnimController {
         // transition between states if a transition is available from the active state
         var transition = this._findTransition(this._activeStateName);
         if (transition)
-            this._updateStateFromTransition(transition);
+            this.updateStateFromTransition(transition);
 
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
