@@ -1119,6 +1119,21 @@ class Application extends EventHandler {
         this.tick();
     }
 
+    inputUpdate(dt) {
+        if (this.controller) {
+            this.controller.update(dt);
+        }
+        if (this.mouse) {
+            this.mouse.update(dt);
+        }
+        if (this.keyboard) {
+            this.keyboard.update(dt);
+        }
+        if (this.gamepads) {
+            this.gamepads.update(dt);
+        }
+    }
+
     /**
      * @function
      * @name Application#update
@@ -1140,6 +1155,9 @@ class Application extends EventHandler {
         this.stats.frame.updateStart = now();
         // #endif
 
+        // update input devices
+        this.inputUpdate(dt);
+
         // Perform ComponentSystem update
         if (script.legacy)
             ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
@@ -1150,19 +1168,6 @@ class Application extends EventHandler {
 
         // fire update event
         this.fire("update", dt);
-
-        if (this.controller) {
-            this.controller.update(dt);
-        }
-        if (this.mouse) {
-            this.mouse.update(dt);
-        }
-        if (this.keyboard) {
-            this.keyboard.update(dt);
-        }
-        if (this.gamepads) {
-            this.gamepads.update(dt);
-        }
 
         // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
