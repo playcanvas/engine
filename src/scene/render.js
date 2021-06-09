@@ -1,5 +1,13 @@
 import { EventHandler } from '../core/event-handler.js';
 
+/**
+ * @class
+ * @name Render
+ * @augments EventHandler
+ * @classdesc A render contains an array of meshes that come from a GLB model. The render is the resource of a Render Asset.
+ * @description Create a new Render. These are usually created by the GLB loader and not created by hand.
+ * @property {Mesh[]} meshes The meshes that the render contains
+ */
 class Render extends EventHandler {
     constructor() {
         super();
@@ -15,5 +23,12 @@ class Render extends EventHandler {
         this.fire('set:meshes', value);
     }
 }
+
+/**
+ * @event
+ * @name Render#set:meshes
+ * @description Fired when the meshes are set
+ * @param {Mesh[]} meshes - The meshes
+ */
 
 export { Render };
