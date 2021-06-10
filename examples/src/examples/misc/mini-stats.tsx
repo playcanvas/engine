@@ -35,7 +35,7 @@ class MiniStatsExample extends Example {
         options.startSizeIndex = 2;
 
         // display additional counters
-        // Note: for most of thees to report values, either debug or profiling engine build needs to be used.
+        // Note: for most of these to report values, either debug or profiling engine build needs to be used.
         options.stats = [
 
             // frame update time in ms
