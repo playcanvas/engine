@@ -3,7 +3,7 @@
  * @name AnimEvents
  * @classdesc AnimEvents stores a sorted array of animation events which should fire sequentially during the playback of an pc.AnimTrack.
  * @description Create a new collection of animation events.
- * - @param {object[]}  events- An array of animation events.
+ * - @param {object[]} events An array of animation events.
  * @example
  * const events = new pc.AnimEvents([
  *     {
