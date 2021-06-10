@@ -44,7 +44,7 @@ class AnimTrack {
     }
 
     get events() {
-        return this._animEvents?.events || [];
+        return this._animEvents.events;
     }
 
     set events(animEvents) {
