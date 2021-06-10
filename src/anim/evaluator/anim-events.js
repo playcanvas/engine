@@ -8,9 +8,9 @@
  * const events = new pc.AnimEvents([
  *     {
  *         name: 'my_event',
- *         time: 1.3 // given in seconds,
- *         my_property: 'test', // any additional properties added here will be available in the EventHandler callback's event object
- *         my_other_property: true
+ *         time: 1.3, // given in seconds
+ *         myProperty: 'test', // any additional properties added here will be available in the EventHandler callback's event object
+ *         myOtherProperty: true
  *     }
  * ]);
  * animTrack.events = events;
