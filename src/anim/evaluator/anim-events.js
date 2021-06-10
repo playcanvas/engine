@@ -9,7 +9,8 @@
  *     {
  *         name: 'my_event',
  *         time: 1.3, // given in seconds
- *         myProperty: 'test', // any additional properties added here will be available in the EventHandler callback's event object
+ *         // any additional properties added are optional and will be available in the EventHandler callback's event object
+ *         myProperty: 'test', 
  *         myOtherProperty: true
  *     }
  * ]);
