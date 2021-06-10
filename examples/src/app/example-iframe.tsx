@@ -89,7 +89,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         transformedScript = transformedScript.replace(appCall, '');
 
         // @ts-ignore: abstract class function
-        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', transformedScript).bind(window)(pc, canvas, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync);
+        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', 'pcx', transformedScript).bind(window)(pc, canvas, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync, pcx);
     };
 
 

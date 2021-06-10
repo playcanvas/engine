@@ -1,6 +1,6 @@
 const fs = require('fs');
-const path = require('path');
 const puppeteer = require('puppeteer');
+const sharp = require('sharp');
 
 const pathData = [];
 
@@ -52,17 +52,20 @@ async function takeScreenshots() {
                 if (!fs.existsSync(`dist/thumbnails`)) {
                     fs.mkdirSync(`dist/thumbnails`);
                 }
-                var dir = `dist/thumbnails/${category}`;
-                if (!fs.existsSync(dir)) {
-                    fs.mkdirSync(dir);
+                if (!fs.existsSync(`dist/temp`)) {
+                    fs.mkdirSync(`dist/temp`);
                 }
 
-                await page.screenshot({ path: `dist/thumbnails/${category}/${example}.png` });
-                console.log('screenshot taken for: ', `http://localhost:5000/#/iframe/${category}/${example}?fullscreen=true`)
+                await page.screenshot({ path: `dist/temp/${category}_${example}.png` });
+                await sharp(`dist/temp/${category}_${example}.png`)
+                    .resize(320, 240)
+                    .toFile(`dist/thumbnails/${category}_${example}.png`);
+                console.log('screenshot taken for: ', `http://localhost:5000/#/iframe/${category}/${example}?fullscreen=true`);
                 await browser.close();
                 resolve();
             }, 5000);
         });
         await promise;
     }
+    fs.rmdirSync('dist/temp', { recursive: true });
 }

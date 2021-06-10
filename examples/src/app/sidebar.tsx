@@ -79,7 +79,7 @@ const SideBar = (props: SideBarProps) => {
                                             const className = `nav-item ${isSelected ? 'selected' : ''}`;
                                             return <Link key={example} to={`/${category}/${example}`}>
                                                 <div className={className}>
-                                                    <img src={`./thumbnails/${category}/${example}.png`} />
+                                                    <img src={`./thumbnails/${category}_${example}.png`} />
                                                     <div className='nav-item-text'>{filteredCategories[category].examples[example].constructor.NAME.toUpperCase()}</div>
                                                 </div>
                                             </Link>;

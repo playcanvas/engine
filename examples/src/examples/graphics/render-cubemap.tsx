@@ -146,7 +146,7 @@ class RenderCubemapExample extends Example {
         shinyMat.update();
 
         // create few random primitives in the world layer
-        const entities: { rotate: (arg0: number, arg1: number, arg2: number) => void; }[] | pc.Entity[] = [];
+        const entities: pc.Entity[] = [];
         const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
         for (let i = 0; i < 6; i++) {
             const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
@@ -224,26 +224,34 @@ class RenderCubemapExample extends Example {
             const srcCube = shinyBall.script.cubemapRenderer.cubeMap;
 
             // cube -> equi1
-            pc.reprojectTexture(device, srcCube, textureEqui, undefined, 1);
+            pc.reprojectTexture(srcCube, textureEqui, {
+                numSamples: 1
+            });
             // @ts-ignore engine-tsd
             app.renderTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
 
             // cube -> octa1
-            pc.reprojectTexture(device, srcCube, textureOcta, undefined, 1);
+            pc.reprojectTexture(srcCube, textureOcta, {
+                numSamples: 1
+            });
             // @ts-ignore engine-tsd
             app.renderTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
 
             // equi1 -> octa2
-            pc.reprojectTexture(device, textureEqui, textureOcta2, 32, 1024);
+            pc.reprojectTexture(textureEqui, textureOcta2, {
+                specularPower: 32,
+                numSamples: 1024
+            });
             // @ts-ignore engine-tsd
             app.renderTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
 
             // octa1 -> equi2
-            pc.reprojectTexture(device, textureOcta, textureEqui2, 16, 512);
+            pc.reprojectTexture(textureOcta, textureEqui2, {
+                specularPower: 16,
+                numSamples: 512
+            });
             // @ts-ignore engine-tsd
             app.renderTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
-
-
         });
     }
 }

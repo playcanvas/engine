@@ -29,6 +29,7 @@ export const examples = (() => {
             const categorySlug = splitPath[1];
             const nameSlug = splitPath[2].replace('.tsx', '');
             const example = new exampleFiles[key].default();
+            if (example.constructor.HIDDEN) return;
             if (!categories[categorySlug]) {
                 categories[categorySlug] = {
                     name: example.constructor.CATEGORY,

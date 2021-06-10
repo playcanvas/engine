@@ -4,6 +4,7 @@ import Example from '../../app/example';
 class LightsBakedAOExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
+    static HIDDEN = true;
 
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
