@@ -1962,13 +1962,11 @@ class Application extends EventHandler {
      * this.app.destroy();
      */
     destroy() {
-        this._destroyThisFrame = true;
-        if (!this._inFrameUpdate) {
-            this._destroy();
+        if (this._inFrameUpdate) {
+            this._destroyThisFrame = true;
+            return;
         }
-    }
 
-    _destroy() {
         var i, l;
         var canvasId = this.graphicsDevice.canvas.id;
 
@@ -2136,8 +2134,6 @@ var makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        this._inFrameUpdate = true;
-
         setApplication(application);
 
         if (frameRequest) {
@@ -2174,6 +2170,7 @@ var makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
+        this._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         if (frame) {
@@ -2207,7 +2204,7 @@ var makeTick = function (_app) {
         this._inFrameUpdate = false;
 
         if (application._destroyThisFrame) {
-            application._destroy();
+            application.destroy();
         }
     };
 };
