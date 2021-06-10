@@ -14,13 +14,13 @@ import { AnimEvents } from "./anim-events";
  * @param {AnimEvents} animEvents - A sequence of animation events.
  */
 class AnimTrack {
-    constructor(name, duration, inputs, outputs, curves, animEvents) {
+    constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
         this._duration = duration;
         this._inputs = inputs;
         this._outputs = outputs;
         this._curves = curves;
-        this._animEvents = animEvents || new AnimEvents([]);
+        this._animEvents = animEvents;
     }
 
     get name() {
