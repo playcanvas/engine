@@ -47,6 +47,7 @@ const _schema = [
     'normalMapAsset',
     'mesh',
     'meshAsset',
+    'renderAsset',
     'orientation',
     'particleNormal',
     'localVelocityGraph',
