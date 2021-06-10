@@ -1956,13 +1956,16 @@ class Application extends EventHandler {
     /**
      * @function
      * @name Application#destroy
-     * @description Destroys application and removes all event listeners at the end of the current frame update.
-     * The application is not destroyed immediately on the calling this function.
+     * @description Destroys application and removes all event listeners at the end of the current engine frame update.
+     * However, if called outside of the engine frame update, calling destroy() will destroy the application immediately.
      * @example
      * this.app.destroy();
      */
     destroy() {
         this._destroyThisFrame = true;
+        if (!this._inFrameUpdate) {
+            this._destroy();
+        }
     }
 
     _destroy() {
@@ -2133,6 +2136,8 @@ var makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
+        this._inFrameUpdate = true;
+
         setApplication(application);
 
         if (frameRequest) {
@@ -2198,6 +2203,8 @@ var makeTick = function (_app) {
         if (application.vr && application.vr.display && application.vr.display.presenting) {
             application.vr.display.submitFrame();
         }
+
+        this._inFrameUpdate = false;
 
         if (application._destroyThisFrame) {
             application._destroy();
