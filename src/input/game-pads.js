@@ -203,6 +203,27 @@ class GamePads {
 
     /**
      * @function
+     * @name GamePads#wasReleased
+     * @description Returns true if the button was released since the last frame.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
+     * @returns {boolean} True if the button was released since the last frame.
+     */
+    wasReleased(index, button) {
+        if (!this.current[index]) {
+            return false;
+        }
+
+        var key = this.current[index].map.buttons[button];
+        var i = pc[key];
+
+        // Previous pad buttons may not have been populated yet
+        // If this is the first time frame a pad has been detected
+        return !this.current[index].pad.buttons[i].pressed && (this.previous[index] && this.previous[index][i]);
+    }
+
+    /**
+     * @function
      * @name GamePads#getAxis
      * @description Get the value of one of the analogue axes of the pad.
      * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.

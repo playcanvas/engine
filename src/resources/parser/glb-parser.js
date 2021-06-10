@@ -38,6 +38,7 @@ import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
+import { Render } from '../../scene/render.js';
 
 import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
 import { AnimData } from '../../anim/evaluator/anim-data.js';
@@ -1525,6 +1526,13 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const meshes = createMeshes(device, gltf, bufferViews, callback, disableFlipV);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
+    // create renders to wrap meshes
+    const renders = [];
+    for (let i = 0; i < meshes.length; i++) {
+        renders[i] = new Render();
+        renders[i].meshes = meshes[i];
+    }
+
     const result = {
         'gltf': gltf,
         'nodes': nodes,
@@ -1532,7 +1540,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
         'animations': animations,
         'textures': textureAssets,
         'materials': materials,
-        'meshes': meshes,
+        'renders': renders,
         'skins': skins
     };
 
@@ -2102,8 +2110,8 @@ class GlbParser {
             if (node.root === model.graph) {
                 const gltfNode = glb.gltf.nodes[i];
                 if (gltfNode.hasOwnProperty('mesh')) {
-                    const meshGroup = glb.meshes[gltfNode.mesh];
-                    for (let mi = 0; mi < meshGroup.length; mi++) {
+                    const meshGroup = glb.renders[gltfNode.mesh].meshes;
+                    for (var mi = 0; mi < meshGroup.length; mi++) {
                         const mesh = meshGroup[mi];
                         if (mesh) {
                             createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);

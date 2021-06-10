@@ -1,8 +1,6 @@
-import { Entity } from '../../framework/entity.js';
-
 import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
-
+import { Entity } from '../../framework/entity.js';
 /**
  * @private
  * @class

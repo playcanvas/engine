@@ -1,6 +1,7 @@
 import { hashCode } from '../core/hash.js';
 
 import {
+    LIGHTTYPE_DIRECTIONAL,
     BLEND_NONE,
     LAYER_FX,
     SHADER_FORWARD,
@@ -238,7 +239,14 @@ class Layer {
         this.customSortCallback = null;
         this.customCalculateSortValues = null;
 
+        // array and set of all lights of type Light (not a LightComponent)
         this._lights = [];
+        this._lightsSet = new Set();
+
+        // set of light used by clustered lighting (omni and spot, but no directional)
+        this._clusteredLightsSet = new Set();
+
+        // lights separated by light type
         this._splitLights = [[], [], []];
 
         // array of CameraComponent
@@ -263,7 +271,6 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
-        this._version = 0;
         this._lightCube = null;
     }
 
@@ -494,8 +501,17 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
-        if (this._lights.indexOf(light.light) < 0) {
-            this._lights.push(light.light);
+
+        // if the light is not in the layer already
+        const l = light.light;
+        if (!this._lightsSet.has(l)) {
+            this._lightsSet.add(l);
+
+            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+                this._clusteredLightsSet.add(l);
+            }
+
+            this._lights.push(l);
             this._dirtyLights = true;
             this._generateLightHash();
         }
@@ -508,10 +524,16 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
-        const id = this._lights.indexOf(light.light);
-        if (id >= 0) {
-            this._lights.splice(id, 1);
 
+        const l = light.light;
+        if (this._lightsSet.has(l)) {
+            this._lightsSet.delete(l);
+
+            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+                this._clusteredLightsSet.delete(l);
+            }
+
+            this._lights.splice(this._lights.indexOf(l), 1);
             this._dirtyLights = true;
             this._generateLightHash();
         }
@@ -523,8 +545,15 @@ class Layer {
      * @description Removes all lights from this layer.
      */
     clearLights() {
+        this._lightsSet.clear();
+        this._clusteredLightsSet.clear();
         this._lights.length = 0;
         this._dirtyLights = true;
+    }
+
+    // returns lights used by clustered lighting in a set
+    get clusteredLightsSet() {
+        return this._clusteredLightsSet;
     }
 
     /**

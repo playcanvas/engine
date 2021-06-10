@@ -230,11 +230,16 @@ class Asset extends EventHandler {
      * @private
      * @function
      * @name Asset#getAbsoluteUrl
-     * @description Construct an asset URL from this asset's location and a relative path.
+     * @description Construct an asset URL from this asset's location and a relative path. If the relativePath is a
+     * blob or Base64 URI, then return that instead.
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url.
      * @returns {string} Resulting URL of the asset.
      */
     getAbsoluteUrl(relativePath) {
+        if (relativePath.startsWith('blob:') || relativePath.startsWith('data:')) {
+            return relativePath;
+        }
+
         var base = path.getDirectory(this.file.url);
         return path.join(base, relativePath);
     }

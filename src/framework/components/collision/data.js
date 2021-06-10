@@ -9,10 +9,12 @@ class CollisionComponentData {
         this.axis = 1;
         this.height = 2;
         this.asset = null;
+        this.renderAsset = null;
 
         // Non-serialized properties
         this.shape = null;
         this.model = null;
+        this.render = null;
         this.initialized = false;
     }
 }

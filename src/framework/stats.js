@@ -35,6 +35,9 @@ class ApplicationStats {
             depthMapTime: 0, // deprecated
             forwardTime: 0,
 
+            lightClustersTime: 0,
+            lightClusters: 0,
+
             _timeToCountFrames: 0,
             _fpsAccum: 0
         };

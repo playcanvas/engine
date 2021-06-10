@@ -55,7 +55,7 @@ import { calculateTangents, createBox, createCapsule, createCone, createCylinder
 import { partitionSkin } from './scene/skin-partition.js';
 import { BasicMaterial } from './scene/materials/basic-material.js';
 import { DepthMaterial } from './scene/materials/depth-material.js';
-import { ForwardRenderer } from './scene/forward-renderer.js';
+import { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 import { GraphNode } from './scene/graph-node.js';
 import { Material } from './scene/materials/material.js';
 import { Mesh } from './scene/mesh.js';
@@ -95,7 +95,6 @@ import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_A
 import { Application } from './framework/application.js';
 import { CameraComponent } from './framework/components/camera/component.js';
 import { Component } from './framework/components/component.js';
-import { ComponentData } from './framework/components/data.js';
 import { ComponentSystem } from './framework/components/system.js';
 import { Entity } from './framework/entity.js';
 import { LightComponent } from './framework/components/light/component.js';
@@ -861,7 +860,6 @@ export var RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
 export var fw = {
     Application: Application,
     Component: Component,
-    ComponentData: ComponentData,
     ComponentSystem: ComponentSystem,
     Entity: Entity,
     FillMode: {

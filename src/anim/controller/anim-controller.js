@@ -267,7 +267,7 @@ class AnimController {
                 var progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
                 var progress = this._getActiveStateProgressForTime(this._timeInState);
                 // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
-                if (transition.exitTime < 1.0 && this.activeState.looping) {
+                if (transition.exitTime < 1.0 && this.activeState.loop) {
                     progressBefore -= Math.floor(progressBefore);
                     progress -= Math.floor(progress);
                 }
