@@ -531,9 +531,11 @@ class Http {
             } else if (this._isBinaryContentType(contentType)) {
                 response = xhr.response;
             } else {
+                // #if _DEBUG
                 if (contentType) {
                     console.warn("responseType: " + xhr.responseType + " being served with Content-Type: " + contentType);
                 }
+                // #endif
 
                 if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
                     response = xhr.response;
