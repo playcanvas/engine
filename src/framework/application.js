@@ -408,6 +408,8 @@ class Application extends EventHandler {
 
         app = this;
 
+        this._destroyThisFrame = false;
+
         this._time = 0;
         this.timeScale = 1;
         this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
@@ -1954,11 +1956,16 @@ class Application extends EventHandler {
     /**
      * @function
      * @name Application#destroy
-     * @description Destroys application and removes all event listeners.
+     * @description Destroys application and removes all event listeners at the end of the current frame update.
+     * The application is not destroyed immediately on the calling this function.
      * @example
      * this.app.destroy();
      */
     destroy() {
+        this._destroyThisFrame = true;
+    }
+
+    _destroy() {
         var i, l;
         var canvasId = this.graphicsDevice.canvas.id;
 
@@ -2190,6 +2197,10 @@ var makeTick = function (_app) {
 
         if (application.vr && application.vr.display && application.vr.display.presenting) {
             application.vr.display.submitFrame();
+        }
+
+        if (application._destroyThisFrame) {
+            application._destroy();
         }
     };
 };
