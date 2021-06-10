@@ -1,3 +1,5 @@
+import { AnimEvents } from "./anim-events";
+
 /**
  * @private
  * @class
@@ -18,7 +20,7 @@ class AnimTrack {
         this._inputs = inputs;
         this._outputs = outputs;
         this._curves = curves;
-        this._animEvents = animEvents;
+        this._animEvents = animEvents || new AnimEvents([]);
     }
 
     get name() {

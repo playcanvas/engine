@@ -28,7 +28,7 @@ class AnimClip {
         this._eventHandler = eventHandler;
         this._eventCursor = 0;
         // move the event cursor to an event that should fire after the starting time
-        while (this._track.events[this._eventCursor]?.time < this.time) {
+        while (this._track.events[this._eventCursor] && this._track.events[this._eventCursor].time < this.time) {
             this._eventCursor++;
         }
     }
@@ -101,7 +101,6 @@ class AnimClip {
         if (frameStartTime === 0) {
             this.eventCursor = 0;
         }
-        var events = [];
         var clippedFrameDuration;
         // if this frame overlaps with the end of the track, we should clip off the end of the frame time then check that clipped time later
         if (frameEndTime > this.track.duration) {
@@ -110,16 +109,16 @@ class AnimClip {
         }
 
         // check whether the next event occurs during the current frame. If the frame end time is at the end of the track then test that inclusively too
-        while (this.track.events[this.eventCursor]?.time >= frameStartTime && (frameEndTime === this.track.duration ? this.track.events[this.eventCursor]?.time <= frameEndTime : this.track.events[this.eventCursor]?.time < frameEndTime)) {
-            events.push(this.track.events[this.eventCursor]);
+        while (this.track.events[this.eventCursor] && this.track.events[this.eventCursor].time >= frameStartTime && (frameEndTime === this.track.duration ? this.track.events[this.eventCursor].time <= frameEndTime : this.track.events[this.eventCursor].time < frameEndTime)) {
+            const event = this.track.events[this.eventCursor];
+            this._eventHandler.fire(event.name, { track: this.track, ...event });
             this.eventCursor++;
         }
 
         // if we had to clip the current frame, then we should check the start of the track for events during that clipped duration
         if (Number.isFinite(clippedFrameDuration)) {
-            events = [...events, ...this.activeEventsForFrame(0, clippedFrameDuration)];
+            this.activeEventsForFrame(0, clippedFrameDuration);
         }
-        return events;
     }
 
     _update(deltaTime) {
@@ -130,10 +129,7 @@ class AnimClip {
             var loop = this._loop;
 
             // check for events that should fire during this frame
-            this.activeEventsForFrame(time, time + speed * deltaTime)
-                .forEach((event) => {
-                    this._eventHandler.fire(event.name, { track: this.track, ...event });
-                });
+            this.activeEventsForFrame(time, time + speed * deltaTime);
 
             // update time
             time += speed * deltaTime;
