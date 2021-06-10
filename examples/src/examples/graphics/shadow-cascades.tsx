@@ -92,13 +92,13 @@ class ShadowCascadesExample extends Example {
             normalOffsetBias: 0.2,
             intensity: 1.0,
 
-            // enable shadow casting 
+            // enable shadow casting
             castShadows: true,
             shadowDistance: 1000,
 
             // shadow map resolution storing 4 cascades
             shadowResolution: 2048,
-            numCascades : 4,
+            numCascades: 4,
 
             // distribution of cascade distances to prefer sharpness closer to the camera
             cascadeDistribution: 0.7,
