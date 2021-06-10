@@ -84,7 +84,7 @@
     "build:debug": "rollup -c --environment target:debug", 
     "build:profiler": "rollup -c --environment target:profiler", 
     "docs": "jsdoc -c conf-api.json", 
-    "lint": "eslint --ext .js examples extras scripts src rollup.config.js", 
+    "lint": "eslint --ext .js extras scripts src rollup.config.js", 
     "serve": "http-server build -a localhost -p 51000", 
     "test": "karma start tests/karma.conf.js -- --single-run --release", 
     "test:watch": "karma start tests/karma.conf.js", 
