@@ -80,7 +80,8 @@ const GRAPH_PROPERTIES = [
 const ASSET_PROPERTIES = [
     'colorMapAsset',
     'normalMapAsset',
-    'meshAsset'
+    'meshAsset',
+    'renderAsset'
 ];
 
 var depthLayer;
@@ -137,6 +138,7 @@ var depthLayer;
  * @property {Asset} colorMapAsset The {@link Asset} used to set the colorMap.
  * @property {Asset} normalMapAsset The {@link Asset} used to set the normalMap.
  * @property {Asset} meshAsset The {@link Asset} used to set the mesh.
+ * @property {Asset} renderAsset The Render {@link Asset} used to set the mesh.
  * @property {Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
  * @property {Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
  * @property {number} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
@@ -194,6 +196,7 @@ class ParticleSystemComponent extends Component {
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_meshAsset", this.onSetMeshAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
+        this.on("set_renderAsset", this.onSetRenderAsset, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
         this.on("set_depthSoftening", this.onSetDepthSoftening, this);
@@ -477,12 +480,6 @@ class ParticleSystemComponent extends Component {
             asset = assets.get(newValue);
             if (asset) {
                 this._bindMeshAsset(asset);
-
-                if (asset.resource) {
-                    this._onMeshChanged(asset.resource);
-                } else {
-                    assets.load(asset);
-                }
             }
         } else {
             this._onMeshChanged(null);
@@ -517,6 +514,86 @@ class ParticleSystemComponent extends Component {
             this.emitter.resetMaterial();
             this.rebuild();
         }
+    }
+
+    onSetRenderAsset(name, oldValue, newValue) {
+        var asset;
+        var assets = this.system.app.assets;
+
+        if (oldValue) {
+            asset = assets.get(oldValue);
+            if (asset) {
+                this._unbindRenderAsset(asset);
+            }
+        }
+
+        if (newValue) {
+            if (newValue instanceof Asset) {
+                this.data.renderAsset = newValue.id;
+                newValue = newValue.id;
+            }
+
+            asset = assets.get(newValue);
+            if (asset) {
+                this._bindRenderAsset(asset);
+            }
+        } else {
+            this._onRenderChanged(null);
+        }
+    }
+
+    _bindRenderAsset(asset) {
+        asset.on('load', this._onRenderAssetLoad, this);
+        asset.on('unload', this._onRenderAssetUnload, this);
+        asset.on('remove', this._onRenderAssetRemove, this);
+
+        if (asset.resource) {
+            this._onRenderAssetLoad(asset);
+        } else {
+            // don't trigger an asset load unless the component is enabled
+            if (!this.enabled || !this.entity.enabled) return;
+            this.system.app.assets.load(asset);
+        }
+    }
+
+    _unbindRenderAsset(asset) {
+        asset.off('load', this._onRenderAssetLoad, this);
+        asset.off('unload', this._onRenderAssetUnload, this);
+        asset.off('remove', this._onRenderAssetRemove, this);
+
+        if (asset.resource) {
+            asset.resource.off('set:meshes', this._onRenderSetMeshes, this);
+        }
+    }
+
+    _onRenderAssetLoad(asset) {
+        this._onRenderChanged(asset.resource);
+    }
+
+    _onRenderAssetUnload(asset) {
+        this._onRenderChanged(null);
+    }
+
+    _onRenderAssetRemove(asset) {
+        this._onRenderAssetUnload(asset);
+    }
+
+    _onRenderChanged(render) {
+        if (!render) {
+            this._onMeshChanged(null);
+            return;
+        }
+
+        render.off('set:meshes', this._onRenderSetMeshes, this);
+        render.on('set:meshes', this._onRenderSetMeshes, this);
+
+        if (render.meshes) {
+            this._onRenderSetMeshes(render.meshes);
+        }
+    }
+
+    _onRenderSetMeshes(meshes)  {
+        this._onMeshChanged(meshes && meshes[0]);
     }
 
     onSetLoop(name, oldValue, newValue) {

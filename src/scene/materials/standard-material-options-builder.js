@@ -39,8 +39,6 @@ StandardMaterialOptionsBuilder.prototype.updateRef = function (options, device, 
     options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & SHADERDEF_TANGENTS) !== 0);
     this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
     this._updateUVOptions(options, stdMat, objDefs, false);
-    options.clearCoat = stdMat.clearCoat;
-    options.clearCoatGlossiness = stdMat.clearCoatGlossiness;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (options, stdMat, objDefs, pass) {
@@ -149,7 +147,9 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.normalDetail = !!stdMat.normalMap;
     options.diffuseDetailMode = stdMat.diffuseDetailMode;
     options.detailModes = !!options.diffuseDetail;
+    options.clearCoat = !!stdMat.clearCoat;
     options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+    options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
     options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 };
 
