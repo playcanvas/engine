@@ -532,7 +532,9 @@ class Http {
                 response = xhr.response;
             } else {
                 if (contentType) {
+                    // #if _DEBUG
                     console.warn("responseType: " + xhr.responseType + " being served with Content-Type: " + contentType);
+                    // #endif
                 }
 
                 if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
