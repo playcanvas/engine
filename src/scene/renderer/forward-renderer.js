@@ -467,6 +467,9 @@ class ForwardRenderer {
         var h = Math.floor(scissorRect.w * pixelHeight);
         device.setScissor(x, y, w, h);
 
+        // Note: this is not atlas friendly !!!! needs to adjust x, y, w and h instead !!!
+
+        
         if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
     }
 
@@ -2154,11 +2157,8 @@ class ForwardRenderer {
         this.gpuUpdate(comp._meshInstances);
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
-        if (!LayerComposition.clusteredLightingEnabled) {
-            this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
-            this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
-        }
+        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
 
         // Rendering
         let sortTime, drawTime;

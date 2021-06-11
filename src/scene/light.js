@@ -45,7 +45,11 @@ class LightRenderData {
         // camera used to cull / render the shadow map
         this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
 
+        // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
+
+        // viewport for the shadow rendering to the texture (x, y, width, height)
+        this.shadowViewport = new Vec4(0, 0, 1, 1);
 
         // face index, value is based on light type:
         // - spot: always 0
@@ -284,6 +288,18 @@ class Light {
             this._destroyShadowMap();
             this._shadowMap = shadowMap;
         }
+    }
+
+    // returns number of render targets to render the shadow map
+    get numShadowFaces() {
+        const type = this._type;
+        if (type === LIGHTTYPE_DIRECTIONAL) {
+            return this.numCascades;
+        } else if (type === LIGHTTYPE_OMNI) {
+            return 6;
+        }
+
+        return 1;
     }
 
     getColor() {

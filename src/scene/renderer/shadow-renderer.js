@@ -1,5 +1,6 @@
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
+import { Vec4 } from '../../math/vec4.js';
 import { Quat } from '../../math/quat.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Color } from '../../math/color.js';
@@ -13,10 +14,12 @@ import {
     SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32, SHADOW_COUNT,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    SORTKEY_DEPTH
+    SORTKEY_DEPTH,
+    ASPECT_MANUAL
 } from '../constants.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
+import { LayerComposition } from '../layer-composition.js';
 
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
@@ -152,6 +155,7 @@ class ShadowRenderer {
         const shadowCam = new Camera();
         shadowCam.node = new GraphNode("ShadowCamera");
         shadowCam.aspectRatio = 1;
+        shadowCam.aspectRatioMode = ASPECT_MANUAL;
 
         // set up constant settings based on light type
         switch (type) {
@@ -216,8 +220,11 @@ class ShadowRenderer {
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
 
-        if (!light._shadowMap) {
-            light._shadowMap = ShadowMap.create(this.device, light);
+        // allocate shadow map unless in clustered lighting mode
+        if (!LayerComposition.clusteredLightingEnabled) {
+            if (!light._shadowMap) {
+                light._shadowMap = ShadowMap.create(this.device, light);
+            }
         }
 
         const type = light._type;
@@ -244,8 +251,8 @@ class ShadowRenderer {
                 shadowCamNode.rotateLocal(-90, 0, 0);
             }
 
-            // assign render target for the face
-            shadowCam.renderTarget = light._shadowMap.renderTargets[face];
+            // // assign render target for the face
+            // shadowCam.renderTarget = light._shadowMap.renderTargets[face];
 
             // cull shadow casters
             this.forwardRenderer.updateCameraFrustum(shadowCam);
@@ -287,8 +294,11 @@ class ShadowRenderer {
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
 
-            // assign render target
-            shadowCam.renderTarget = light._shadowMap.renderTargets[0];
+            // // assign render target
+            // shadowCam.renderTarget = light._shadowMap.renderTargets[0];
+
+            // viewport
+            lightRenderData.shadowViewport.copy(light.cascades[cascade]);
 
             const shadowCamNode = shadowCam._node;
             const lightNode = light._node;
@@ -417,30 +427,21 @@ class ShadowRenderer {
             this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
         }
 
-        // view-projection matrices
-        if (light._type !== LIGHTTYPE_OMNI) {
-            shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-            shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+        // view-projection shadow matrix
+        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
+        shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
 
-            // viewport handling
-            if (light._type === LIGHTTYPE_DIRECTIONAL) {
+        // viewport handling
+        const rect = lightRenderData.shadowViewport;
+        shadowCam.rect = rect;
+        shadowCam.scissorRect = rect;
 
-                // cascade viewport
-                const rect = light.cascades[face];
-                shadowCam.rect = rect;
-                shadowCam.scissorRect = rect;
+        viewportMatrix.setViewport(rect.x, rect.y, rect.z, rect.w);
+        lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
 
-                // append viewport transform
-                viewportMatrix.setViewport(rect.x, rect.y, rect.z, rect.w);
-                lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
-
-                // copy matrix to shadow cascade palette
-                light._shadowMatrixPalette.set(lightRenderData.shadowMatrix.data, face * 16);
-
-            } else {
-                // append viewport transform for spot light (to whole texture)
-                lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
-            }
+        if (light._type === LIGHTTYPE_DIRECTIONAL) {
+            // copy matrix to shadow cascade palette
+            light._shadowMatrixPalette.set(lightRenderData.shadowMatrix.data, face * 16);
         }
     }
 
@@ -512,13 +513,8 @@ class ShadowRenderer {
                 light.shadowUpdateMode = SHADOWUPDATE_NONE;
             }
 
-            let faceCount = 1;
             const type = light._type;
-            if (type === LIGHTTYPE_DIRECTIONAL) {
-                faceCount = light.numCascades;
-            } else if (type === LIGHTTYPE_OMNI) {
-                faceCount = 6;
-            }
+            const faceCount = light.numShadowFaces;
 
             const forwardRenderer = this.forwardRenderer;
             forwardRenderer._shadowMapUpdates += faceCount;
@@ -541,8 +537,14 @@ class ShadowRenderer {
                 const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
                 const shadowCam = lightRenderData.shadowCamera;
 
+                // assign render target for the face
+                shadowCam.renderTarget = light._shadowMap.renderTargets[face];
+
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
-                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, faceCount === 1);
+
+                //const border = faceCount === 1;
+                const border = false;
+                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, border);
 
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);

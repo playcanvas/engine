@@ -4,6 +4,7 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT } from './constants.js';
+import { LightTextureAtlas } from './lighting/light-texture-atlas.js'
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -109,6 +110,9 @@ class WorldClusters {
 
         // allocate textures to store lights
         this.initLightsTexture();
+
+        // texture atlas managing shadow map / cookie texture atlassing
+        this.lightTextureAtlas = new LightTextureAtlas(device);
     }
 
     destroy() {
@@ -517,6 +521,10 @@ class WorldClusters {
         usedLights.length = lightIndex;
     }
 
+    updateTextureAtlas() {
+        this.lightTextureAtlas.update(this._usedLights);
+    }
+
     // evaluate the area all lights cover
     evaluateBounds() {
 
@@ -642,6 +650,7 @@ class WorldClusters {
     update(lights, gammaCorrection) {
         this.updateCells();
         this.collectLights(lights);
+        this.updateTextureAtlas();
         this.evaluateBounds();
         this.evaluateCompressionLimits(gammaCorrection);
         this.updateClusters(gammaCorrection);
