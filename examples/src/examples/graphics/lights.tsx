@@ -11,11 +11,12 @@ class LightsExample extends Example {
         return <>
             <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
             <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
         </>;
     }
 
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, font: pc.Asset }): void {
+    // @ts-ignore: override class function$
+    example(canvas: HTMLCanvasElement, assets: any): void {
         function createMaterial(colors: any) {
             const material: any = new pc.StandardMaterial();
             for (const param in colors) {
@@ -51,8 +52,8 @@ class LightsExample extends Example {
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-        camera.translate(0, 7, 24);
-        camera.rotate(0, 0, 0);
+        camera.translate(0, 15, 35);
+        camera.rotate(-14, 0, 0);
         app.root.addChild(camera);
 
         // Create an Entity for the ground
@@ -60,7 +61,7 @@ class LightsExample extends Example {
         ground.addComponent("model", {
             type: "box"
         });
-        ground.setLocalScale(50, 1, 50);
+        ground.setLocalScale(70, 1, 70);
         ground.setLocalPosition(0, -0.5, 0);
 
         const material = createMaterial({
@@ -75,14 +76,19 @@ class LightsExample extends Example {
         spotlight.addComponent("light", {
             type: "spot",
             color: pc.Color.WHITE,
-            outerConeAngle: 60,
-            innerConeAngle: 40,
+            innerConeAngle: 30,
+            outerConeAngle: 31,
             range: 100,
             intensity: 0.6,
             castShadows: true,
-            shadowBias: 0.005,
-            normalOffsetBias: 0.01,
-            shadowResolution: 2048
+            shadowBias: 0.05,
+            normalOffsetBias: 0.03,
+            shadowResolution: 2048,
+
+            // heart texture's alpha channel as a cookie texture
+            cookie: assets.heart.resource,
+            // cookie: assets.heart.asset.resource,
+            cookieChannel: "a"
         });
 
         const cone = new pc.Entity();
@@ -117,8 +123,8 @@ class LightsExample extends Example {
             color: pc.Color.CYAN,
             range: 100,
             castShadows: true,
-            shadowBias: 0.05,
-            normalOffsetBias: 0.1,
+            shadowBias: 0.1,
+            normalOffsetBias: 0.2,
             intensity: 0.6
         });
         app.root.addChild(directionallight);
@@ -164,18 +170,18 @@ class LightsExample extends Example {
         }, this);
 
         // Simple update loop to rotate the light
-        let angleRad = 0;
+        let angleRad = 1;
         app.on("update", function (dt) {
             angleRad += 0.3 * dt;
             if (entity) {
 
-                spotlight.lookAt(entity.getPosition());
+                spotlight.lookAt(new pc.Vec3(0, -5, 0));
                 spotlight.rotateLocal(90, 0, 0);
-                spotlight.setLocalPosition(20 * Math.sin(angleRad), 5, 20 * Math.cos(angleRad));
+                spotlight.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
 
                 omnilight.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
 
-                directionallight.setLocalEulerAngles(45, 60 * angleRad, 0);
+                directionallight.setLocalEulerAngles(45, -60 * angleRad, 0);
             }
 
             // update text showing which lights are enabled
