@@ -408,7 +408,8 @@ class Application extends EventHandler {
 
         app = this;
 
-        this._destroyThisFrame = false;
+        this._destroyRequested = false;
+        this._inFrameUpdate = false;
 
         this._time = 0;
         this.timeScale = 1;
@@ -1963,7 +1964,7 @@ class Application extends EventHandler {
      */
     destroy() {
         if (this._inFrameUpdate) {
-            this._destroyThisFrame = true;
+            this._destroyRequested = true;
             return;
         }
 
@@ -2170,7 +2171,7 @@ var makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
-        this._inFrameUpdate = true;
+        application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         if (frame) {
@@ -2201,9 +2202,9 @@ var makeTick = function (_app) {
             application.vr.display.submitFrame();
         }
 
-        this._inFrameUpdate = false;
+        application._inFrameUpdate = false;
 
-        if (application._destroyThisFrame) {
+        if (application._destroyRequested) {
             application.destroy();
         }
     };
