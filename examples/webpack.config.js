@@ -114,7 +114,7 @@ const config = {
 if (process.env.ENGINE_PATH) {
     config.plugins.push(
         new webpack.NormalModuleReplacementPlugin(
-            /^playcanvas$/,
+            /^playcanvas\/build\/playcanvas\.js$/,
             path.resolve(__dirname, process.env.ENGINE_PATH)
         )
     );
