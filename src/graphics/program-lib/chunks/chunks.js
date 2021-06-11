@@ -148,6 +148,7 @@ import refractionPS from './refraction.frag';
 import reprojectPS from './reproject.frag';
 import rgbmPS from './rgbm.frag';
 import screenDepthPS from './screenDepth.frag';
+import shadowCascadesPS from './shadowCascades.frag';
 import shadowCommonPS from './shadowCommon.frag';
 import shadowCoordPS from './shadowCoord.frag';
 import shadowCoordPerspZbufferPS from './shadowCoordPerspZbuffer.frag';
@@ -354,6 +355,7 @@ var shaderChunks = {
     reprojectPS: reprojectPS,
     rgbmPS: rgbmPS,
     screenDepthPS: screenDepthPS,
+    shadowCascadesPS: shadowCascadesPS,
     shadowCommonPS: shadowCommonPS,
     shadowCoordPS: shadowCoordPS,
     shadowCoordPerspZbufferPS: shadowCoordPerspZbufferPS,

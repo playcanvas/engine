@@ -1157,9 +1157,6 @@ class Application extends EventHandler {
         this.stats.frame.updateStart = now();
         // #endif
 
-        // update input devices
-        this.inputUpdate(dt);
-
         // Perform ComponentSystem update
         if (script.legacy)
             ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
@@ -1170,6 +1167,9 @@ class Application extends EventHandler {
 
         // fire update event
         this.fire("update", dt);
+
+        // update input devices
+        this.inputUpdate(dt);
 
         // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
