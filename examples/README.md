@@ -26,6 +26,9 @@ To create the side bar thumbnails run the following script:
 npm run thumbnails
 ```
 
+### Local engine development
+By default, the local build uses whichever version of PlayCanvas is listed in the package.json file. If you'd like to use the locally built version of PlayCanvas in the engines build directory you can replace the `npm run build:watch` script above with `npm run local` or `npm run local:dbg` for the debug version.
+
 ## Creating an example
 
 The available examples are written as classes in TypeScript under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.
