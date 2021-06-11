@@ -161,8 +161,8 @@ class ClusteredLightingExample extends Example {
             type: "directional",
             color: pc.Color.WHITE,
             intensity: 0.2,
-            range: 200,
-            shadowDistance: 200,
+            range: 300,
+            shadowDistance: 300,
             castShadows: true,
             shadowBias: 0.2,
             normalOffsetBias: 0.05

@@ -1,3 +1,4 @@
+import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Quat } from '../../math/quat.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -22,7 +23,9 @@ import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
+import { Frustum } from '../../shape/frustum.js';
 
+// camera rotation angles used when rendering cubemap faces
 const pointLightRotations = [
     new Quat().setFromEulerAngles(0, 90, 180),
     new Quat().setFromEulerAngles(0, -90, 180),
@@ -32,83 +35,34 @@ const pointLightRotations = [
     new Quat().setFromEulerAngles(0, 0, 180)
 ];
 
-const _sceneAABB_LS = [
+const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),
     new Vec3(), new Vec3(), new Vec3(), new Vec3()
 ];
 
-function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
-    _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
-    _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
-    _sceneAABB_LS[2].z = _sceneAABB_LS[3].z = _sceneAABB_LS[6].z = _sceneAABB_LS[7].z = aabbMin.z;
-    _sceneAABB_LS[4].x = _sceneAABB_LS[5].x = _sceneAABB_LS[6].x = _sceneAABB_LS[7].x = aabbMax.x;
-    _sceneAABB_LS[0].y = _sceneAABB_LS[2].y = _sceneAABB_LS[4].y = _sceneAABB_LS[6].y = aabbMax.y;
-    _sceneAABB_LS[0].z = _sceneAABB_LS[1].z = _sceneAABB_LS[4].z = _sceneAABB_LS[5].z = aabbMax.z;
+// evaluate depth range the aabb takes in the space of the camera
+const _depthRange = { min: 0, max: 0 };
+function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
+    aabbPoints[0].x = aabbPoints[1].x = aabbPoints[2].x = aabbPoints[3].x = aabbMin.x;
+    aabbPoints[1].y = aabbPoints[3].y = aabbPoints[7].y = aabbPoints[5].y = aabbMin.y;
+    aabbPoints[2].z = aabbPoints[3].z = aabbPoints[6].z = aabbPoints[7].z = aabbMin.z;
+    aabbPoints[4].x = aabbPoints[5].x = aabbPoints[6].x = aabbPoints[7].x = aabbMax.x;
+    aabbPoints[0].y = aabbPoints[2].y = aabbPoints[4].y = aabbPoints[6].y = aabbMax.y;
+    aabbPoints[0].z = aabbPoints[1].z = aabbPoints[4].z = aabbPoints[5].z = aabbMax.z;
 
     let minz = 9999999999;
     let maxz = -9999999999;
 
     for (let i = 0; i < 8; ++i) {
-        w2sc.transformPoint(_sceneAABB_LS[i], _sceneAABB_LS[i]);
-        const z = _sceneAABB_LS[i].z;
+        cameraViewMatrix.transformPoint(aabbPoints[i], aabbPoints[i]);
+        const z = aabbPoints[i].z;
         if (z < minz) minz = z;
         if (z > maxz) maxz = z;
     }
 
-    return { min: minz, max: maxz };
-}
-
-// The 8 points of the camera frustum transformed to light space
-const frustumPoints = [];
-for (let fp = 0; fp < 8; fp++) {
-    frustumPoints.push(new Vec3());
-}
-
-function _getFrustumPoints(camera, farClip, points) {
-    const nearClip = camera._nearClip;
-    const fov = camera._fov * Math.PI / 180.0;
-    const aspect = camera._aspectRatio;
-    const projection = camera._projection;
-
-    let x, y;
-    if (projection === PROJECTION_PERSPECTIVE) {
-        y = Math.tan(fov / 2.0) * nearClip;
-    } else {
-        y = camera._orthoHeight;
-    }
-    x = y * aspect;
-
-    points[0].x = x;
-    points[0].y = -y;
-    points[0].z = -nearClip;
-    points[1].x = x;
-    points[1].y = y;
-    points[1].z = -nearClip;
-    points[2].x = -x;
-    points[2].y = y;
-    points[2].z = -nearClip;
-    points[3].x = -x;
-    points[3].y = -y;
-    points[3].z = -nearClip;
-
-    if (projection === PROJECTION_PERSPECTIVE) {
-        y = Math.tan(fov / 2.0) * farClip;
-        x = y * aspect;
-    }
-    points[4].x = x;
-    points[4].y = -y;
-    points[4].z = -farClip;
-    points[5].x = x;
-    points[5].y = y;
-    points[5].z = -farClip;
-    points[6].x = -x;
-    points[6].y = y;
-    points[6].z = -farClip;
-    points[7].x = -x;
-    points[7].y = -y;
-    points[7].z = -farClip;
-
-    return points;
+    _depthRange.min = minz;
+    _depthRange.max = maxz;
+    return _depthRange;
 }
 
 function gauss(x, sigma) {
@@ -117,7 +71,9 @@ function gauss(x, sigma) {
 
 const maxBlurSize = 25;
 function gaussWeights(kernelSize) {
-    if (kernelSize > maxBlurSize) kernelSize = maxBlurSize;
+    if (kernelSize > maxBlurSize) {
+        kernelSize = maxBlurSize;
+    }
     const sigma = (kernelSize - 1) / (2 * 3);
 
     const halfWidth = (kernelSize - 1) * 0.5;
@@ -134,15 +90,14 @@ function gaussWeights(kernelSize) {
     return values;
 }
 
-const frustumDiagonal = new Vec3();
 const visibleSceneAabb = new BoundingBox();
-const c2sc = new Mat4();
-const directionalShadowEpsilon = 0.01;
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
 const blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
 const opChanId = { r: 1, g: 2, b: 3, a: 4 };
+const center = new Vec3();
+const viewportMatrix = new Mat4();
 
 function getDepthKey(meshInstance) {
     const material = meshInstance.material;
@@ -189,11 +144,9 @@ class ShadowRenderer {
         this.shadowMapCache = null;
     }
 
-    static scaleShiftMatrix = new Mat4().mul2(
-        new Mat4().setTranslate(0.5, 0.5, 0.5),
-        new Mat4().setScale(0.5, 0.5, 0.5)
-    );
+    static scaleShiftMatrix = new Mat4().setViewport(0, 0, 1, 1);
 
+    // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(device, shadowType, type, face) {
 
         const shadowCam = new Camera();
@@ -201,21 +154,23 @@ class ShadowRenderer {
         shadowCam.aspectRatio = 1;
 
         // set up constant settings based on light type
-        if (type === LIGHTTYPE_OMNI) {
-            shadowCam.node.setRotation(pointLightRotations[face]);
-            shadowCam.fov = 90;
-            shadowCam.projection = PROJECTION_PERSPECTIVE;
+        switch (type) {
+            case LIGHTTYPE_OMNI:
+                shadowCam.node.setRotation(pointLightRotations[face]);
+                shadowCam.fov = 90;
+                shadowCam.projection = PROJECTION_PERSPECTIVE;
+                break;
+
+            case LIGHTTYPE_SPOT:
+                shadowCam.projection = PROJECTION_PERSPECTIVE;
+                break;
+
+            case LIGHTTYPE_DIRECTIONAL:
+                shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
+                break;
         }
 
-        if (type === LIGHTTYPE_SPOT) {
-            shadowCam.projection = PROJECTION_PERSPECTIVE;
-        }
-
-        if (type === LIGHTTYPE_DIRECTIONAL) {
-            shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
-        }
-
-        // We don't need to clear the color buffer if we're rendering a depth map
+        // don't clear the color buffer if rendering a depth map
         let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
         if (type === LIGHTTYPE_OMNI) {
             hwPcf = false;
@@ -234,6 +189,28 @@ class ShadowRenderer {
         return shadowCam;
     }
 
+    // culls the list of meshes instances by the camera, storing visible mesh instances in the speficied array
+    cullShadowCasters(meshInstances, visible, camera) {
+
+        let count = 0;
+        const numInstances = meshInstances.length;
+        for (let i = 0; i < numInstances; i++) {
+            const meshInstance = meshInstances[i];
+
+            if (!meshInstance.cull || meshInstance._isVisible(camera)) {
+                meshInstance.visibleThisFrame = true;
+                visible[count] = meshInstance;
+                count++;
+            }
+        }
+
+        visible.length = count;
+
+        // TODO: we should probably sort shadow meshes by shader and not depth
+        visible.sort(this.forwardRenderer.depthSortCompare);
+    }
+
+    // cull local shadow map
     cullLocal(light, drawCalls) {
 
         // force light visibility if function was manually called
@@ -270,32 +247,28 @@ class ShadowRenderer {
             // assign render target for the face
             shadowCam.renderTarget = light._shadowMap.renderTargets[face];
 
+            // cull shadow casters
             this.forwardRenderer.updateCameraFrustum(shadowCam);
-
-            const visibleCasters = lightRenderData.visibleCasters;
-            let count = 0;
-
-            const numInstances = drawCalls.length;
-            for (let i = 0; i < numInstances; i++) {
-                const meshInstance = drawCalls[i];
-                let visible = true;
-                if (meshInstance.cull) {
-                    visible = meshInstance._isVisible(shadowCam);
-                }
-                if (visible) {
-                    meshInstance.visibleThisFrame = true;
-                    visibleCasters[count] = meshInstance;
-                    count++;
-                }
-            }
-
-            visibleCasters.length = count;
-
-            // TODO: we should probably sort shadow meshes by shader and not depth
-            visibleCasters.sort(this.forwardRenderer.depthSortCompare); // sort shadowmap drawcalls here, not in render
+            this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
         }
     }
 
+    // function to generate frustum split distances
+    generateSplitDistances(light, nearDist, farDist) {
+
+        light._shadowCascadeDistances.fill(farDist);
+        for (let i = 1; i < light.numCascades; i++) {
+
+            //  lerp between linear and logaritmic distance, called practical split distance
+            const fraction = i / light.numCascades;
+            const linearDist = nearDist + (farDist - nearDist) * fraction;
+            const logDist = nearDist * (farDist / nearDist) ** fraction;
+            const dist = math.lerp(linearDist, logDist, light.cascadeDistribution);
+            light._shadowCascadeDistances[i - 1] = dist;
+        }
+    }
+
+    // cull directional shadow map
     cullDirectional(light, drawCalls, camera) {
 
         // force light visibility if function was manually called
@@ -305,11 +278,16 @@ class ShadowRenderer {
             light._shadowMap = ShadowMap.create(this.device, light);
         }
 
+        // generate splits for the cascades
+        const nearDist = camera._nearClip;
+        this.generateSplitDistances(light, nearDist, light.shadowDistance);
+
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
 
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
 
+            // assign render target
             shadowCam.renderTarget = light._shadowMap.renderTargets[0];
 
             const shadowCamNode = shadowCam._node;
@@ -321,118 +299,218 @@ class ShadowRenderer {
             shadowCamNode.setRotation(lightNode.getRotation());
             shadowCamNode.rotateLocal(-90, 0, 0);
 
-            // Positioning directional light frustum I
-            // Construct light's orthographic frustum around camera frustum
-            // Use very large near/far planes this time
-
-            // 1. Get the frustum of the camera
-            _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
-
-            // 2. Figure out the maximum diagonal of the frustum in light's projected space.
-            let frustumSize = frustumDiagonal.sub2(frustumPoints[0], frustumPoints[6]).length();
-            frustumSize = Math.max(frustumSize, frustumDiagonal.sub2(frustumPoints[4], frustumPoints[6]).length());
-
-            // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
-            shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
-            c2sc.copy(shadowCamView).mul(camera._node.getWorldTransform());
+            // get camera's frustum corners for the cascade, convert them to world space and find their center
+            const frustumNearDist = cascade === 0 ? nearDist : light._shadowCascadeDistances[cascade - 1];
+            const frustumFarDist = light._shadowCascadeDistances[cascade];
+            const frustumPoints = Frustum.getPoints(camera, frustumNearDist, frustumFarDist);
+            center.set(0, 0, 0);
+            const cameraWorldMat = camera.node.getWorldTransform();
             for (let i = 0; i < 8; i++) {
-                c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
+                cameraWorldMat.transformPoint(frustumPoints[i], frustumPoints[i]);
+                center.add(frustumPoints[i]);
+            }
+            center.mulScalar(1 / 8);
+
+            // radius of the world space bounding sphere for the frustum slice
+            let radius = 0;
+            for (let i = 0; i < 8; i++) {
+                const dist = frustumPoints[i].sub(center).length();
+                if (dist > radius)
+                    radius = dist;
             }
 
-            // 4. Come up with a bounding box (in light-space) by calculating the min
-            // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-            let minx, miny, minz, maxx, maxy, maxz;
-            minx = miny = minz = 1000000;
-            maxx = maxy = maxz = -1000000;
-            for (let i = 0; i < 8; i++) {
-                const p = frustumPoints[i];
-                if (p.x < minx) minx = p.x;
-                if (p.x > maxx) maxx = p.x;
-                if (p.y < miny) miny = p.y;
-                if (p.y > maxy) maxy = p.y;
-                if (p.z < minz) minz = p.z;
-                if (p.z > maxz) maxz = p.z;
-            }
+            // axis of light coordinate system
+            const right = shadowCamNode.right;
+            const up = shadowCamNode.up;
+            const lightDir = shadowCamNode.forward;
 
-            // 5. Enlarge the light's frustum so that the frustum will be the same size
-            // no matter how the view frustum moves.
-            // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
-            const unitPerTexel = frustumSize / light._shadowResolution;
-            let delta = (frustumSize - (maxx - minx)) * 0.5;
-            minx = Math.floor((minx - delta) / unitPerTexel) * unitPerTexel;
-            delta = (frustumSize - (maxy - miny)) * 0.5;
-            miny = Math.floor((miny - delta) / unitPerTexel) * unitPerTexel;
-            maxx = minx + frustumSize;
-            maxy = miny + frustumSize;
+            // transform the sphere's center into the center of the shadpw map, pixel aligned.
+            // this makes the shadow map stable and avoids shimmering on the edges when the camera moves
+            const sizeRatio = 0.25 * light._shadowResolution / radius;
+            const x = Math.ceil(center.dot(up) * sizeRatio) / sizeRatio;
+            const y = Math.ceil(center.dot(right) * sizeRatio) / sizeRatio;
 
-            // 6. Use your min and max values to create an off-center orthographic projection.
-            const centerx = (maxx + minx) * 0.5;
-            const centery = (maxy + miny) * 0.5;
-            shadowCamNode.translateLocal(centerx, centery, 100000);
+            const scaledUp = up.mulScalar(x);
+            const scaledRight = right.mulScalar(y);
+            const dot = center.dot(lightDir);
+            const scaledDir = lightDir.mulScalar(dot);
+            center.add2(scaledUp, scaledRight).add(scaledDir);
 
+            // look at the center from far away to include all casters during culling
+            shadowCamNode.setPosition(center);
+            shadowCamNode.translateLocal(0, 0, 1000000);
             shadowCam.nearClip = 0;
-            shadowCam.farClip = 200000;
-            shadowCam.orthoHeight = frustumSize * 0.5;
+            shadowCam.farClip = 2000000;
+            shadowCam.orthoHeight = radius;
 
+            // cull shadow casters
             this.forwardRenderer.updateCameraFrustum(shadowCam);
+            this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
 
-            // Cull shadow casters and find their AABB
+            // find out AABB of visible shadow casters
             let emptyAabb = true;
-
             const visibleCasters = lightRenderData.visibleCasters;
-            let count = 0;
+            for (let i = 0; i < visibleCasters.length; i++) {
+                const meshInstance = visibleCasters[i];
 
-            const numInstances = drawCalls.length;
-            for (let i = 0; i < numInstances; i++) {
-                const meshInstance = drawCalls[i];
-                let visible = true;
-                if (meshInstance.cull) {
-                    visible = meshInstance._isVisible(shadowCam);
-                }
-                if (visible) {
-                    meshInstance.visibleThisFrame = true;
-                    visibleCasters[count] = meshInstance;
-                    count++;
-
-                    // update bounds
-                    const drawCallAabb = meshInstance.aabb;
-                    if (emptyAabb) {
-                        visibleSceneAabb.copy(drawCallAabb);
-                        emptyAabb = false;
-                    } else {
-                        visibleSceneAabb.add(drawCallAabb);
-                    }
+                if (emptyAabb) {
+                    emptyAabb = false;
+                    visibleSceneAabb.copy(meshInstance.aabb);
+                } else {
+                    visibleSceneAabb.add(meshInstance.aabb);
                 }
             }
 
-            visibleCasters.length = count;
+            // calculate depth range of the caster's AABB from the point of view of the shadow camera
+            shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
+            const depthRange = getDepthRange(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax());
 
-            // TODO: we should probably sort shadow meshes by shader and not depth
-            visibleCasters.sort(this.forwardRenderer.depthSortCompare); // sort shadowmap drawcalls here, not in render
-
-            // Positioning directional light frustum II
-            // Fit clipping planes tightly around visible shadow casters
-
-            // 1. Calculate minz/maxz based on casters' AABB
-            const z = _getZFromAABBSimple(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy);
-
-            // Always use the scene's aabb's Z value
-            // Otherwise object between the light and the frustum won't cast shadow.
-            maxz = z.max;
-            if (z.min > minz) minz = z.min;
-
-            // 2. Fix projection
-            shadowCamNode.setPosition(lightNode.getPosition());
-            shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
-            shadowCam.farClip = maxz - minz;
+            // adjust shadow camera's near and far plane to the depth range of casters to maximize precision
+            // of values stored in the shadow map
+            shadowCamNode.translateLocal(0, 0, depthRange.max);
+            shadowCam.farClip = depthRange.max - depthRange.min;
         }
     }
 
-    renderShadow(light, camera) {
+    setupRenderState(device, light) {
+
+        // depth bias
+        if (device.webgl2) {
+            if (light._type === LIGHTTYPE_OMNI) {
+                device.setDepthBias(false);
+            } else {
+                device.setDepthBias(true);
+                device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
+            }
+        } else if (device.extStandardDerivatives) {
+            const forwardRenderer = this.forwardRenderer;
+
+            if (light._type === LIGHTTYPE_OMNI) {
+                forwardRenderer.polygonOffset[0] = 0;
+                forwardRenderer.polygonOffset[1] = 0;
+                forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
+            } else {
+                forwardRenderer.polygonOffset[0] = light.shadowBias * -1000.0;
+                forwardRenderer.polygonOffset[1] = light.shadowBias * -1000.0;
+                forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
+            }
+        }
+
+        // Set standard shadowmap states
+        device.setBlending(false);
+        device.setDepthWrite(true);
+        device.setDepthTest(true);
+        if (light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI) {
+            device.setColorWrite(false, false, false, false);
+        } else {
+            device.setColorWrite(true, true, true, true);
+        }
+    }
+
+    dispatchUniforms(light, shadowCam, lightRenderData, face) {
+
+        const shadowCamNode = shadowCam._node;
+
+        // position / range
+        if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+            this.forwardRenderer.dispatchViewPos(shadowCamNode.getPosition());
+            this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
+        }
+
+        // view-projection matrices
+        if (light._type !== LIGHTTYPE_OMNI) {
+            shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
+            shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+
+            // viewport handling
+            if (light._type === LIGHTTYPE_DIRECTIONAL) {
+
+                // cascade viewport
+                const rect = light.cascades[face];
+                shadowCam.rect = rect;
+                shadowCam.scissorRect = rect;
+
+                // append viewport transform
+                viewportMatrix.setViewport(rect.x, rect.y, rect.z, rect.w);
+                lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
+
+                // copy matrix to shadow cascade palette
+                light._shadowMatrixPalette.set(lightRenderData.shadowMatrix.data, face * 16);
+
+            } else {
+                // append viewport transform for spot light (to whole texture)
+                lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+            }
+        }
+    }
+
+    submitCasters(visibleCasters, light) {
+
+        const device = this.device;
+        const forwardRenderer = this.forwardRenderer;
+        const shadowPass = 1 << SHADER_SHADOW;
+
+        // Sort shadow casters
+        const shadowType = light._shadowType;
+        const smode = shadowType + light._type * SHADOW_COUNT;
+
+        // Render
+        const count = visibleCasters.length;
+        for (let i = 0; i < count; i++) {
+            const meshInstance = visibleCasters[i];
+            const mesh = meshInstance.mesh;
+            const material = meshInstance.material;
+
+            // set basic material states/parameters
+            forwardRenderer.setBaseConstants(device, material);
+            forwardRenderer.setSkinning(device, meshInstance, material);
+
+            if (material.dirty) {
+                material.updateUniforms();
+                material.dirty = false;
+            }
+
+            if (material.chunks) {
+
+                forwardRenderer.setCullMode(true, false, meshInstance);
+
+                // Uniforms I (shadow): material
+                material.setParameters(device);
+
+                // Uniforms II (shadow): meshInstance overrides
+                meshInstance.setParameters(device, shadowPass);
+            }
+
+            // set shader
+            let shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
+            if (!shadowShader) {
+                forwardRenderer.updateShader(meshInstance, meshInstance._shaderDefs, null, SHADER_SHADOW + smode);
+                shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
+                meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
+            }
+            device.setShader(shadowShader);
+
+            // set buffers
+            forwardRenderer.setVertexBuffers(device, mesh);
+            forwardRenderer.setMorphing(device, meshInstance.morphInstance);
+
+            const style = meshInstance.renderStyle;
+            device.setIndexBuffer(mesh.indexBuffer[style]);
+
+            // draw
+            i += forwardRenderer.drawInstance(device, meshInstance, mesh, style);
+            forwardRenderer._shadowDrawCalls++;
+        }
+    }
+
+    render(light, camera) {
 
         if (light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame) {
             const device = this.device;
-            const shadowPass = 1 << SHADER_SHADOW;
+
+            if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                light.shadowUpdateMode = SHADOWUPDATE_NONE;
+            }
 
             let faceCount = 1;
             const type = light._type;
@@ -449,132 +527,30 @@ class ShadowRenderer {
             this.device.pushMarker("SHADOW " + light._node.name);
             // #endif
 
-            if (device.webgl2) {
-                if (type === LIGHTTYPE_OMNI) {
-                    device.setDepthBias(false);
-                } else {
-                    device.setDepthBias(true);
-                    device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
-                }
-            } else if (device.extStandardDerivatives) {
-                if (type === LIGHTTYPE_OMNI) {
-                    forwardRenderer.polygonOffset[0] = 0;
-                    forwardRenderer.polygonOffset[1] = 0;
-                    forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
-                } else {
-                    forwardRenderer.polygonOffset[0] = light.shadowBias * -1000.0;
-                    forwardRenderer.polygonOffset[1] = light.shadowBias * -1000.0;
-                    forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
-                }
-            }
-
-            if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-                light.shadowUpdateMode = SHADOWUPDATE_NONE;
-            }
-
-            // Set standard shadowmap states
-            device.setBlending(false);
-            device.setDepthWrite(true);
-            device.setDepthTest(true);
-            if (light._isPcf && device.webgl2 && type !== LIGHTTYPE_OMNI) {
-                device.setColorWrite(false, false, false, false);
-            } else {
-                device.setColorWrite(true, true, true, true);
-            }
+            this.setupRenderState(device, light);
 
             for (let face = 0; face < faceCount; face++) {
 
                 // #if _DEBUG
-                let doPopMarker = false;
                 if (faceCount > 1) {
                     this.device.pushMarker("FACE " + face);
-                    doPopMarker = true;
                 }
                 // #endif
 
                 // directional shadows are per camera, so get appropriate render data
                 const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
                 const shadowCam = lightRenderData.shadowCamera;
-                const shadowCamNode = shadowCam._node;
 
-                // assign render target for the face
-                shadowCam.renderTarget = light._shadowMap.renderTargets[face];
-
-                if (type === LIGHTTYPE_DIRECTIONAL) {
-                    // cascade viewport
-                    const rect = light.cascades[face];
-                    shadowCam.rect = rect;
-                    shadowCam.scissorRect = rect;
-                } else {
-                    forwardRenderer.dispatchViewPos(shadowCamNode.getPosition());
-                    this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
-                }
-
-                if (type !== LIGHTTYPE_OMNI) {
-                    shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                    shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
-                    lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
-                }
-
+                this.dispatchUniforms(light, shadowCam, lightRenderData, face);
                 forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, faceCount === 1);
 
-                const visibleCasters = lightRenderData.visibleCasters;
-                const visibleLength = visibleCasters.length;
-
-                // Sort shadow casters
-                const shadowType = light._shadowType;
-                const smode = shadowType + type * SHADOW_COUNT;
-
-                // Render
-                for (let j = 0; j < visibleLength; j++) {
-                    const meshInstance = visibleCasters[j];
-                    const mesh = meshInstance.mesh;
-                    const material = meshInstance.material;
-
-                    // set basic material states/parameters
-                    forwardRenderer.setBaseConstants(device, material);
-                    forwardRenderer.setSkinning(device, meshInstance, material);
-
-                    if (material.dirty) {
-                        material.updateUniforms();
-                        material.dirty = false;
-                    }
-
-                    if (material.chunks) {
-
-                        forwardRenderer.setCullMode(true, false, meshInstance);
-
-                        // Uniforms I (shadow): material
-                        material.setParameters(device);
-
-                        // Uniforms II (shadow): meshInstance overrides
-                        meshInstance.setParameters(device, shadowPass);
-                    }
-
-                    // set shader
-                    let shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
-                    if (!shadowShader) {
-                        forwardRenderer.updateShader(meshInstance, meshInstance._shaderDefs, null, SHADER_SHADOW + smode);
-                        shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
-                        meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
-                    }
-                    device.setShader(shadowShader);
-
-                    // set buffers
-                    forwardRenderer.setVertexBuffers(device, mesh);
-                    forwardRenderer.setMorphing(device, meshInstance.morphInstance);
-
-                    const style = meshInstance.renderStyle;
-                    device.setIndexBuffer(mesh.indexBuffer[style]);
-
-                    // draw
-                    j += forwardRenderer.drawInstance(device, meshInstance, mesh, style);
-                    forwardRenderer._shadowDrawCalls++;
-                }
+                // render mesh instances
+                this.submitCasters(lightRenderData.visibleCasters, light);
 
                 // #if _DEBUG
-                if (doPopMarker)
+                if (faceCount > 1) {
                     this.device.popMarker();
+                }
                 // #endif
             }
 

@@ -739,6 +739,45 @@ class Mat4 {
     }
 
     /**
+     * @private
+     * @function
+     * @name Mat4#setViewport
+     * @description Sets the specified matrix to a matrix transforming a normalized view volume (in range of -1 .. 1)
+     * to their position inside a viewport (in range of 0 .. 1). This encapsulates a scaling to the size of the viewport
+     * and a translation to the position of the viewport.
+     * @param {number} x - The x-component of the position of the viewport (in 0..1 range).
+     * @param {number} y - The y-component of the position of the viewport (in 0..1 range).
+     * @param {number} width - The width of the viewport (in 0..1 range).
+     * @param {number} height - The height of the viewport (in 0..1 range).
+     * @returns {Mat4} Self for chaining.
+     * @example
+     * // Create a 4x4 viewport matrix which scales normalized view volume to full texture viewport.
+     * var vm = new pc.Mat4().setViewport(0, 0, 1, 1);
+     */
+    setViewport(x, y, width, height) {
+        const m = this.data;
+
+        m[0] = width * 0.5;
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = height * 0.5;
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+        m[9] = 0;
+        m[10] = 0.5;
+        m[11] = 0;
+        m[12] = x + width * 0.5;
+        m[13] = y + height * 0.5;
+        m[14] = 0.5;
+        m[15] = 1;
+
+        return this;
+    }
+
+    /**
      * @function
      * @name Mat4#invert
      * @description Sets the specified matrix to its inverse.
