@@ -1,3 +1,5 @@
+import { AnimEvents } from "./anim-events";
+
 /**
  * @private
  * @class
@@ -12,7 +14,7 @@
  * @param {AnimEvents} animEvents - A sequence of animation events.
  */
 class AnimTrack {
-    constructor(name, duration, inputs, outputs, curves, animEvents) {
+    constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
         this._duration = duration;
         this._inputs = inputs;
@@ -42,7 +44,7 @@ class AnimTrack {
     }
 
     get events() {
-        return this._animEvents?.events || [];
+        return this._animEvents.events;
     }
 
     set events(animEvents) {
