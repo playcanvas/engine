@@ -20,6 +20,8 @@ import blurVSMPS from './blurVSM.frag';
 import clearCoatPS from './clearCoat.frag';
 import clearCoatGlossPS from './clearCoatGloss.frag';
 import clearCoatNormalPS from './clearCoatNormal.frag';
+import clusteredLightLoopPS from './clusteredLightLoop.frag';
+import clusteredLightPS from './clusteredLight.frag';
 import combineClearCoatPS from './combineClearCoat.frag';
 import combineDiffusePS from './combineDiffuse.frag';
 import combineDiffuseSpecularPS from './combineDiffuseSpecular.frag';
@@ -148,7 +150,6 @@ import rgbmPS from './rgbm.frag';
 import screenDepthPS from './screenDepth.frag';
 import shadowCommonPS from './shadowCommon.frag';
 import shadowCoordPS from './shadowCoord.frag';
-import shadowCoordVS from './shadowCoord.vert';
 import shadowCoordPerspZbufferPS from './shadowCoordPerspZbuffer.frag';
 import shadowEVSMPS from './shadowEVSM.frag';
 import shadowEVSMnPS from './shadowEVSMn.frag';
@@ -225,6 +226,8 @@ var shaderChunks = {
     clearCoatPS: clearCoatPS,
     clearCoatGlossPS: clearCoatGlossPS,
     clearCoatNormalPS: clearCoatNormalPS,
+    clusteredLightLoopPS: clusteredLightLoopPS,
+    clusteredLightPS: clusteredLightPS,
     combineClearCoatPS: combineClearCoatPS,
     combineDiffusePS: combineDiffusePS,
     combineDiffuseSpecularPS: combineDiffuseSpecularPS,
@@ -353,7 +356,6 @@ var shaderChunks = {
     screenDepthPS: screenDepthPS,
     shadowCommonPS: shadowCommonPS,
     shadowCoordPS: shadowCoordPS,
-    shadowCoordVS: shadowCoordVS,
     shadowCoordPerspZbufferPS: shadowCoordPerspZbufferPS,
     shadowEVSMPS: shadowEVSMPS,
     shadowEVSMnPS: shadowEVSMnPS,

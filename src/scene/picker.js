@@ -1,19 +1,28 @@
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
+import { Color } from "../math/color.js";
+
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
 import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 
-import { ASPECT_MANUAL, SHADER_PICK, SORTMODE_NONE } from './constants.js';
+import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
 import { Camera } from './camera.js';
 import { Command } from './mesh-instance.js';
 import { Layer } from './layer.js';
 import { LayerComposition } from './layer-composition.js';
 
 import { getApplication } from '../framework/globals.js';
+import { Entity } from '../framework/entity.js';
 
-var _deviceDeprecationWarning = false;
-var _getSelectionDeprecationWarning = false;
-var _prepareDeprecationWarning = false;
+let _deviceDeprecationWarning = false;
+let _getSelectionDeprecationWarning = false;
+let _prepareDeprecationWarning = false;
+const tempSet = new Set();
+
+const clearDepthOptions = {
+    depth: 1.0,
+    flags: CLEARFLAG_DEPTH
+};
 
 /**
  * @class
@@ -41,37 +50,32 @@ class Picker {
 
         this.app = app;
         this.device = app.graphicsDevice;
-        var device = this.device;
 
+        // uniform for the mesh index encoded into rgba
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;
 
         // mapping table from ids to meshInstances
         this.mapping = [];
 
-        this.scene = null;
-        this.drawCalls = [];
+        // create layer composition with the layer and camera
+        this.cameraEntity = null;
         this.layer = null;
         this.layerComp = null;
+        this.initLayerComposition();
 
-        this.clearOptions = {
-            color: [1, 1, 1, 1],
-            depth: 1,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
+        // internal render target
+        this._renderTarget = null;
 
-        var self = this;
-        this._clearDepthOptions = {
-            depth: 1.0,
-            flags: CLEARFLAG_DEPTH
-        };
+        // clear command user to simulate layer clearing, required due to storing meshes from multiple layers on a singe layer
+        const device = this.device;
         this.clearDepthCommand = new Command(0, 0, function () {
-            device.clear(self._clearDepthOptions);
+            device.clear(clearDepthOptions);
         });
 
+        this.width = 0;
+        this.height = 0;
         this.resize(width, height);
-
-        this._ignoreOpacityFor = null; // meshInstance
     }
 
     /**
@@ -92,7 +96,7 @@ class Picker {
      * var selection = picker.getSelection(10, 20, 10, 20);
      */
     getSelection(x, y, width, height) {
-        var device = this.device;
+        const device = this.device;
 
         if (typeof x === 'object') {
             // #if _DEBUG
@@ -102,13 +106,13 @@ class Picker {
             }
             // #endif
 
-            var rect = x;
+            const rect = x;
             x = rect.x;
             y = rect.y;
             width = rect.width;
             height = rect.height;
         } else {
-            y = this.layer.renderTarget.height - (y + (height || 1));
+            y = this.renderTarget.height - (y + (height || 1));
         }
 
         // make sure we have nice numbers to work with
@@ -117,41 +121,107 @@ class Picker {
         width = Math.floor(Math.max(width || 1, 1));
         height = Math.floor(Math.max(height || 1, 1));
 
-        // Cache active render target
-        var prevRenderTarget = device.renderTarget;
+        // backup active render target
+        const origRenderTarget = device.renderTarget;
 
         // Ready the device for rendering to the pick buffer
-        device.setRenderTarget(this.layer.renderTarget);
+        device.setRenderTarget(this.renderTarget);
         device.updateBegin();
 
-        var pixels = new Uint8Array(4 * width * height);
+        const pixels = new Uint8Array(4 * width * height);
         device.readPixels(x, y, width, height, pixels);
 
         device.updateEnd();
 
         // Restore render target
-        device.setRenderTarget(prevRenderTarget);
+        device.setRenderTarget(origRenderTarget);
 
-        var selection = [];
-        var mapping = this.mapping;
+        const mapping = this.mapping;
+        for (let i = 0; i < width * height; i++) {
+            const r = pixels[4 * i + 0];
+            const g = pixels[4 * i + 1];
+            const b = pixels[4 * i + 2];
+            const index = r << 16 | g << 8 | b;
 
-        var r, g, b, index;
-        for (var i = 0; i < width * height; i++) {
-            r = pixels[4 * i + 0];
-            g = pixels[4 * i + 1];
-            b = pixels[4 * i + 2];
-            index = r << 16 | g << 8 | b;
             // White is 'no selection'
             if (index !== 0xffffff) {
-                // TODO: optimize search using set instead of array
-                var selectedMeshInstance = mapping[index];
-                if (selection.indexOf(selectedMeshInstance) === -1) {
-                    selection.push(selectedMeshInstance);
-                }
+                tempSet.add(mapping[index]);
             }
         }
 
+        // return the content of the set as an array
+        const selection = [];
+        tempSet.forEach((meshInstance) => selection.push(meshInstance));
+        tempSet.clear();
+
         return selection;
+    }
+
+    allocateRenderTarget() {
+
+        const colorBuffer = new Texture(this.device, {
+            format: PIXELFORMAT_R8_G8_B8_A8,
+            width: this.width,
+            height: this.height,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+        colorBuffer.name = 'pick';
+
+        this.renderTarget = new RenderTarget({
+            colorBuffer: colorBuffer,
+            depth: true
+        });
+    }
+
+    releaseRenderTarget() {
+
+        // unset it from the camera
+        this.cameraEntity.camera.renderTarget = null;
+
+        if (this._renderTarget) {
+            this._renderTarget._colorBuffer.destroy();
+            this._renderTarget.destroy();
+            this._renderTarget = null;
+        }
+    }
+
+    initLayerComposition() {
+
+        const device = this.device;
+        const self = this;
+        const pickColorId = device.scope.resolve('uColor');
+
+        // camera
+        this.cameraEntity = new Entity();
+        this.cameraEntity.addComponent("camera");
+
+        // layer all meshes rendered for picking at added to
+        this.layer = new Layer({
+            name: "Picker",
+            shaderPass: SHADER_PICK,
+            opaqueSortMode: SORTMODE_NONE,
+
+            // executes just before the mesh is rendered. And index encoded in rgb is assigned to it
+            onDrawCall: function (meshInstance, index) {
+                self.pickColor[0] = ((index >> 16) & 0xff) / 255;
+                self.pickColor[1] = ((index >> 8) & 0xff) / 255;
+                self.pickColor[2] = (index & 0xff) / 255;
+                pickColorId.setValue(self.pickColor);
+                device.setBlending(false);
+
+                // keep the index -> meshInstance index mapping
+                self.mapping[index] = meshInstance;
+            }
+        });
+        this.layer.addCamera(this.cameraEntity.camera);
+
+        // composition
+        this.layerComp = new LayerComposition("picker");
+        this.layerComp.pushOpaque(this.layer);
     }
 
     /**
@@ -163,14 +233,11 @@ class Picker {
      * in any way, {@link Picker#prepare} does not need to be called again.
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
-     * @param {Layer|RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
-     * If not supplied, all layers rendering to backbuffer before this layer will be used.
+     * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
      */
-    prepare(camera, scene, arg) {
-        var device = this.device;
-        var i, j;
-        var self = this;
+    prepare(camera, scene, layers) {
 
+        // handle deprecated arguments
         if (camera instanceof Camera) {
             // #if _DEBUG
             if (!_getSelectionDeprecationWarning) {
@@ -183,176 +250,89 @@ class Picker {
             camera = camera.node.camera;
         }
 
-        this.scene = scene;
-        var sourceLayer = null;
-        var sourceRt = null;
-
-        if (arg instanceof Layer) {
-            sourceLayer = arg;
-        } else {
-            sourceRt = arg;
+        if (layers instanceof Layer) {
+            layers = [layers];
         }
 
-        // Setup picker rendering once
-        if (!this.layer) {
-            var pickColorId = device.scope.resolve('uColor');
+        // populate the layer with meshes and depth clear commands
+        this.layer.clearMeshInstances();
+        const destMeshInstances = this.layer.opaqueMeshInstances;
 
-            this.layer = new Layer({
-                name: "Picker",
-                shaderPass: SHADER_PICK,
-                opaqueSortMode: SORTMODE_NONE,
+        // source mesh instances
+        const srcLayers = scene.layers.layerList;
+        const subLayerEnabled = scene.layers.subLayerEnabled;
+        const isTransparent = scene.layers.subLayerList;
 
-                onEnable: function () {
-                    if (this.renderTarget) return;
-                    var colorBuffer = new Texture(device, {
-                        format: PIXELFORMAT_R8_G8_B8_A8,
-                        width: self.width,
-                        height: self.height,
-                        mipmaps: false
-                    });
-                    colorBuffer.name = 'pick';
-                    colorBuffer.minFilter = FILTER_NEAREST;
-                    colorBuffer.magFilter = FILTER_NEAREST;
-                    colorBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new RenderTarget(device, colorBuffer, {
-                        depth: true
-                    });
-                },
+        for (let i = 0; i < srcLayers.length; i++) {
+            const srcLayer = srcLayers[i];
 
-                onDisable: function () {
-                    if (!this.renderTarget) return;
-                    this.renderTarget._colorBuffer.destroy();
-                    this.renderTarget.destroy();
-                    this.renderTarget = null;
-                },
-
-                onDrawCall: function (meshInstance, index) {
-                    self.pickColor[0] = ((index >> 16) & 0xff) / 255;
-                    self.pickColor[1] = ((index >> 8) & 0xff) / 255;
-                    self.pickColor[2] = (index & 0xff) / 255;
-                    pickColorId.setValue(self.pickColor);
-                    device.setBlending(false);
-                    self.mapping[index] = meshInstance;
-                }
-            });
-
-            this.layerComp = new LayerComposition("picker");
-            this.layerComp.pushOpaque(this.layer);
-
-            this.meshInstances = this.layer.opaqueMeshInstances;
-            this._instancesVersion = -1;
-        }
-
-        // Collect pickable mesh instances
-        var instanceList, instanceListLength, drawCall;
-        if (!sourceLayer) {
-            this.layer.clearMeshInstances();
-            var layers = scene.layers.layerList;
-            var subLayerEnabled = scene.layers.subLayerEnabled;
-            var isTransparent = scene.layers.subLayerList;
-            var layer;
-            var layerCamId, transparent;
-            for (i = 0; i < layers.length; i++) {
-                if (layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
+            // skip the layer if it does not match the provided ones
+            if (layers && layers.indexOf(srcLayer) < 0) {
+                continue;
             }
-            for (i = 0; i < layers.length; i++) {
-                layer = layers[i];
-                if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
-                layerCamId = layer.cameras.indexOf(camera);
-                if (layerCamId < 0) continue;
-                if (layer._clearDepthBuffer && !layer._pickerCleared) {
-                    this.meshInstances.push(this.clearDepthCommand);
-                    layer._pickerCleared = true;
-                }
-                transparent = isTransparent[i];
-                instanceList = transparent ? layer.instances.transparentMeshInstances : layer.instances.opaqueMeshInstances;
-                instanceListLength = instanceList.length;
-                for (j = 0; j < instanceListLength; j++) {
-                    drawCall = instanceList[j];
-                    if (drawCall.pick) {
-                        this.meshInstances.push(drawCall);
+
+            if (srcLayer.enabled && subLayerEnabled[i]) {
+
+                // if the layer is rendered by the camera
+                const layerCamId = srcLayer.cameras.indexOf(camera);
+                if (layerCamId >= 0) {
+
+                    // if the layer clears the depth, add command to clear it
+                    if (srcLayer._clearDepthBuffer) {
+                        destMeshInstances.push(this.clearDepthCommand);
+                    }
+
+                    // copy all pickable mesh instances
+                    const meshInstances = isTransparent[i] ? srcLayer.instances.transparentMeshInstances : srcLayer.instances.opaqueMeshInstances;
+                    for (let j = 0; j < meshInstances.length; j++) {
+                        const meshInstance = meshInstances[j];
+                        if (meshInstance.pick) {
+                            destMeshInstances.push(meshInstance);
+                        }
                     }
                 }
             }
-        } else {
-            if (this._instancesVersion !== sourceLayer._version) {
-                this.layer.clearMeshInstances();
-                instanceList = sourceLayer.instances.opaqueMeshInstances;
-                instanceListLength = instanceList.length;
-                for (j = 0; j < instanceListLength; j++) {
-                    drawCall = instanceList[j];
-                    if (drawCall.pick) {
-                        this.meshInstances.push(drawCall);
-                    }
-                }
-                instanceList = sourceLayer.instances.transparentMeshInstances;
-                instanceListLength = instanceList.length;
-                for (j = 0; j < instanceListLength; j++) {
-                    drawCall = instanceList[j];
-                    if (drawCall.pick) {
-                        this.meshInstances.push(drawCall);
-                    }
-                }
-                this._instancesVersion = sourceLayer._version;
-            }
         }
 
-        // Setup picker camera if changed
-        if (this.layer.cameras[0] !== camera) {
-            this.layer.clearCameras();
-            this.layer.addCamera(camera);
+        // make the render target the right size
+        if (!this.renderTarget || (this.width !== this.renderTarget.width || this.height !== this.renderTarget.height)) {
+            this.releaseRenderTarget();
+            this.allocateRenderTarget();
         }
 
-        // save old camera state
-        const originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
+        // prepare the rendering camera
+        this.updateCamera(camera);
 
-        // clear registered meshes, rendering will register them again
-        self.mapping.length = 0;
+        // clear registered meshes mapping
+        this.mapping.length = 0;
 
-        // Render
+        // render
         this.app.renderer.renderComposition(this.layerComp);
-
-        // restore old camera state
-        this.onLayerPostRender(this.layer, camera, originalLayers);
     }
 
-    onLayerPreRender(layer, sourceLayer, sourceRt, camera) {
-        if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
-            layer.onDisable();
-            layer.onEnable();
-        }
+    updateCamera(srcCamera) {
 
-        // back up original settings
-        layer.oldClear = layer.cameras[0].camera._clearOptions;
-        layer.oldAspectMode = layer.cameras[0].aspectRatioMode;
-        layer.oldAspect = layer.cameras[0].aspectRatio;
+        // copy transform
+        this.cameraEntity.copy(srcCamera.entity);
+        this.cameraEntity.name = "PickerCamera";
 
-        // set up new settings
-        layer.cameras[0].camera._clearOptions = this.clearOptions;
-        layer.cameras[0].aspectRatioMode = ASPECT_MANUAL;
-        var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
-        layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
-        this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
+        // copy camera component properties - which overwrites few properties we change to what is needed later
+        const destCamera = this.cameraEntity.camera;
+        destCamera.copy(srcCamera);
 
-        // add layer to be rendered by the camera
-        const originalLayers = camera.layers.slice();
-        const cameraLayers = camera.layers;
-        cameraLayers.push(this.layer.id);
-        camera.layers = cameraLayers;
+        // set up clears
+        destCamera.clearColorBuffer = true;
+        destCamera.clearDepthBuffer = true;
+        destCamera.clearStencilBuffer = true;
+        destCamera.clearColor = Color.WHITE;
 
-        return originalLayers;
-    }
+        // render target
+        destCamera.renderTarget = this.renderTarget;
 
-    onLayerPostRender(layer, camera, originalLayers) {
-
-        // restore original settings
-        layer.cameras[0].camera._clearOptions = layer.oldClear;
-        layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
-        layer.cameras[0].aspectRatio = layer.oldAspect;
-
-        // restore camera layers to original condition
-        camera.layers = originalLayers;
+        // layers
+        this.layer.clearCameras();
+        this.layer.addCamera(destCamera);
+        destCamera.layers = [this.layer.id];
     }
 
     /**
@@ -367,12 +347,8 @@ class Picker {
      * @param {number} height - The height of the pick buffer in pixels.
      */
     resize(width, height) {
-        this.width = width;
-        this.height = height;
-    }
-
-    get renderTarget() {
-        return this.layer.renderTarget;
+        this.width = Math.floor(width);
+        this.height = Math.floor(height);
     }
 }
 

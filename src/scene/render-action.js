@@ -19,6 +19,9 @@ class RenderAction {
         // render target this render action renders to (taken from either camera or layer)
         this.renderTarget = null;
 
+        // light clusters (type WorldClusters)
+        this.lightClusters = null;
+
         // clear flags
         this.clearColor = false;
         this.clearDepth = false;
@@ -42,6 +45,7 @@ class RenderAction {
 
     // prepares render action for re-use
     reset() {
+        this.lightClusters = null;
         this.directionalLightsSet.clear();
         this.directionalLights.length = 0;
         this.directionalLightsIndices.length = 0;
@@ -56,18 +60,22 @@ class RenderAction {
 
         for (let i = 0; i < dirLights.length; i++) {
             const light = dirLights[i];
-            for (let l = 0; l < cameraLayers.length; l++) {
 
-                // if layer has the light
-                if (cameraLayers[l]._splitLights[LIGHTTYPE_DIRECTIONAL].indexOf(light) >= 0) {
-                    if (!this.directionalLightsSet.has(light)) {
-                        this.directionalLightsSet.add(light);
+            // only shadow casting lights
+            if (light.castShadows) {
+                for (let l = 0; l < cameraLayers.length; l++) {
 
-                        this.directionalLights.push(light);
+                    // if layer has the light
+                    if (cameraLayers[l]._splitLights[LIGHTTYPE_DIRECTIONAL].indexOf(light) >= 0) {
+                        if (!this.directionalLightsSet.has(light)) {
+                            this.directionalLightsSet.add(light);
 
-                        // store index into all lights
-                        const lightIndex = allLights.indexOf(light);
-                        this.directionalLightsIndices.push(lightIndex);
+                            this.directionalLights.push(light);
+
+                            // store index into all lights
+                            const lightIndex = allLights.indexOf(light);
+                            this.directionalLightsIndices.push(lightIndex);
+                        }
                     }
                 }
             }

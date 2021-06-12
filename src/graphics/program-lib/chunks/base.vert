@@ -12,6 +12,3 @@ uniform mat3 matrix_normal;
 vec3 dPositionW;
 mat4 dModelMatrix;
 mat3 dNormalMatrix;
-vec3 dLightPosW;
-vec3 dLightDirNormW;
-vec3 dNormalW;
