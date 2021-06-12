@@ -72,11 +72,12 @@ const CodeEditor = (props: CodeEditorProps) => {
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
+            localStorage.setItem('codePane-collapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
         });
         (window as any).toggleEvent = true;
     });
 
-    return <Panel headerText='CODE' id='codePane'>
+    return <Panel headerText='CODE' id='codePane' class={['true', null].includes(localStorage.getItem('codePane-collapsed')) ? 'collapsed' : null}>
         <div className='panel-toggle' id='codePane-panel-toggle'/>
         { props.files && props.files.length > 1 && <Container class='tabs-container'>
             {props.files.map((file: File, index: number) => {
