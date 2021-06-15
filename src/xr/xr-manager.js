@@ -557,7 +557,7 @@ class XrManager extends EventHandler {
 
             if (this.anchors.supported)
                 this.anchors.update(frame);
-          
+
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);
         }
