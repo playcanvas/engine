@@ -435,7 +435,7 @@ class AnimController {
         this.updateStateFromTransition(transition);
     }
 
-    assignAnimation(pathString, animTrack) {
+    assignAnimation(pathString, animTrack, speed, loop) {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
@@ -444,6 +444,12 @@ class AnimController {
             this._stateNames.push(path[0]);
         }
         state.addAnimation(path, animTrack);
+        if (speed !== undefined) {
+            state.speed = speed;
+        }
+        if (loop !== undefined) {
+            state.loop = loop;
+        }
 
         if (!this._playing && this._activate && this.playable) {
             this.play();

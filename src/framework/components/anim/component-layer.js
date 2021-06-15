@@ -68,15 +68,17 @@ class AnimComponentLayer {
      * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
+     * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
+     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. 
      */
-    assignAnimation(nodeName, animTrack) {
+    assignAnimation(nodeName, animTrack, speed, loop) {
         if (animTrack.constructor !== AnimTrack) {
             // #if _DEBUG
             console.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             // #endif
             return;
         }
-        this._controller.assignAnimation(nodeName, animTrack);
+        this._controller.assignAnimation(nodeName, animTrack, speed, loop);
         if (this._component.activate && this._component.playable) {
             this._component.playing = true;
         }

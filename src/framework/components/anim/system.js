@@ -6,9 +6,6 @@ import { AnimComponentData } from './data.js';
 
 const _schema = [
     'enabled',
-    'speed',
-    'activate',
-    'playing'
 ];
 
 /**
@@ -35,13 +32,16 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        properties = ['activate', 'enabled', 'speed', 'playing'];
-        super.initializeComponentData(component, data, properties);
+        properties = ['activate', 'speed', 'playing'];
+        super.initializeComponentData(component, data, _schema);
+        properties.forEach(property => {
+            component[property] = data[property];
+        })
         if (data.stateGraphAsset) {
             component.stateGraphAsset = data.stateGraphAsset;
         }
         if (data.animationAssets) {
-            component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
+            component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
         }
         if (data.rootBone) {
             component.rootBone = data.rootBone;
@@ -53,16 +53,20 @@ class AnimComponentSystem extends ComponentSystem {
 
         for (var id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
+                var component = components[id].entity.anim;
                 var componentData = component.data;
 
-                if (componentData.enabled && component.entity.enabled && componentData.playing) {
-                    for (var i = 0; i < componentData.layers.length; i++) {
-                        componentData.layers[i].update(dt * componentData.speed);
+                if (componentData.enabled && component.entity.enabled && component.playing) {
+                    for (var i = 0; i < component.layers.length; i++) {
+                        component.layers[i].update(dt * component.speed);
                     }
                 }
             }
         }
+    }
+
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 }
 
