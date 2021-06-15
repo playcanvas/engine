@@ -9,7 +9,7 @@ import { XrPlane } from './xr-plane.js';
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Plane Detection is supported.
  * @property {boolean} available True if Plane Detection is available. This property can be set to true only during running session.
- * @property {XrPlane[]|null} planes List of {@link XrPlane} that contain individual plane information, or null if plane detection isn't available.
+ * @property {XrPlane[]|null} planes Array of {@link XrPlane} instances that contain individual plane information, or null if plane detection is not available.
  * @example
  * // start session with plane detection enabled
  * app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
