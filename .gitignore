@@ -6,3 +6,5 @@ node_modules/
 npm-debug.log
 .java-version
 release.py
+examples/node_modules
+examples/dist

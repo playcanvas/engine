@@ -119,6 +119,7 @@ export { AnimData } from './anim/evaluator/anim-data.js';
 export { AnimEvaluator } from './anim/evaluator/anim-evaluator.js';
 export { AnimSnapshot } from './anim/evaluator/anim-snapshot.js';
 export { AnimTarget } from './anim/evaluator/anim-target.js';
+export { AnimEvents } from './anim/evaluator/anim-events.js';
 export { AnimTrack } from './anim/evaluator/anim-track.js';
 export { DefaultAnimBinder } from './anim/binder/default-anim-binder.js';
 export * from './anim/controller/constants.js';
@@ -301,6 +302,8 @@ export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
 export { XrAnchors } from './xr/xr-anchors.js';
 export { XrAnchor } from './xr/xr-anchor.js';
+export { XrPlaneDetection } from './xr/xr-plane-detection.js';
+export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';

@@ -594,6 +594,8 @@ class CameraComponent extends Component {
      *
      * @param {object} [options] - Object with options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
+     * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
      * session started successfully.
