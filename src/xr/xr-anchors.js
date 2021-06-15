@@ -100,7 +100,7 @@ class XrAnchors extends EventHandler {
      * @name XrAnchors#create
      * @description Create anchor with position, rotation and a callback.
      * @param {Vec3} position - Position for an anchor
-     * @param {Quat} [rotation] - Rotastion for an anchor
+     * @param {Quat} [rotation] - Rotation for an anchor
      * @param {callbacks.XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created
      * @example
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
