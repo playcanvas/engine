@@ -102,7 +102,7 @@ class XrPlane extends EventHandler {
     /**
      * @name XrPlane#points
      * @type {object[]}
-     * @description List of DOMPointReadOnly objects that is an object with `x y z` properties that define local point of a planes polygon.
+     * @description Array of DOMPointReadOnly objects. DOMPointReadOnly is an object with `x y z` properties that defines a local point of a plane's polygon.
      * @example
      * // prepare reusable objects
      * var vecA = new pc.Vec3();
