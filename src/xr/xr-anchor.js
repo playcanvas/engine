@@ -9,7 +9,7 @@ import { Quat } from '../math/quat.js';
  * @classdesc Anchor provides position and rotation, that is updated by underlying AR system, that tries to better persist an anchor relative to evolving understanding of a real world.
  * @description Anchor provides position and rotation, that is updated by underlying AR system, that tries to better persist an anchor relative to evolving understanding of a real world.
  * @param {XrAnchors} anchors - Anchor manager.
- * @property {object} xrAndhor native XRAnchor object that is provided by WebXR API.
+ * @property {object} xrAnchor native XRAnchor object that is provided by the WebXR API.
  */
 class XrAnchor extends EventHandler {
     constructor(anchors, xrAnchor) {
