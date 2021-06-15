@@ -1,3 +1,5 @@
+import { AnimEvents } from "./anim-events";
+
 /**
  * @private
  * @class
@@ -9,14 +11,16 @@
  * @param {AnimData[]} inputs - List of curve key data.
  * @param {AnimData[]} outputs - List of curve value data.
  * @param {AnimCurve[]} curves - The list of curves.
+ * @param {AnimEvents} animEvents - A sequence of animation events.
  */
 class AnimTrack {
-    constructor(name, duration, inputs, outputs, curves) {
+    constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
         this._duration = duration;
         this._inputs = inputs;
         this._outputs = outputs;
         this._curves = curves;
+        this._animEvents = animEvents;
     }
 
     get name() {
@@ -37,6 +41,14 @@ class AnimTrack {
 
     get curves() {
         return this._curves;
+    }
+
+    get events() {
+        return this._animEvents.events;
+    }
+
+    set events(animEvents) {
+        this._animEvents = animEvents;
     }
 
     // evaluate all track curves at the specified time and store results

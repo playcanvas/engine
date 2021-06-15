@@ -11,6 +11,7 @@ import {
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
+import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
 
 /**
  * @component
@@ -62,7 +63,8 @@ class AnimComponent extends Component {
                 states,
                 transitions,
                 data.parameters,
-                data.activate
+                data.activate,
+                this
             );
             data.layers.push(new AnimComponentLayer(name, controller, this));
             data.layerIndices[name] = order;
@@ -110,7 +112,11 @@ class AnimComponent extends Component {
                 // check whether assigned animation asset still exists
                 if (asset) {
                     if (asset.resource) {
-                        this.assignAnimation(stateName, asset.resource, layer.name);
+                        const animTrack = asset.resource;
+                        if (asset.data.events) {
+                            animTrack.events = new AnimEvents(Object.values(asset.data.events));
+                        }
+                        this.assignAnimation(stateName, animTrack, layer.name);
                     } else {
                         asset.once('load', function (layerName, stateName) {
                             return function (asset) {
