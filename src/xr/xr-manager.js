@@ -6,7 +6,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
-import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
@@ -155,7 +155,7 @@ class XrManager extends EventHandler {
     /**
      * @function
      * @name XrManager#start
-     * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create.
+     * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create. Integrated XR APIs need to be enabled by providing relevant options.
      * @param {CameraComponent} camera - It will be used to render XR session and manipulated based on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
      *
@@ -175,12 +175,21 @@ class XrManager extends EventHandler {
      * button.on('click', function () {
      *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR);
      * });
+     * @example
+     * button.on('click', function () {
+     *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+     *         depthSensing: { }
+     *     });
+     * });
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.depthSensing] - Set to true to attempt to enable {@link XrDepthSensing}.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
+     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing system.
+     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying depth sensing system.
      */
     start(camera, type, spaceType, options) {
         let callback = options;
@@ -233,9 +242,33 @@ class XrManager extends EventHandler {
                     opts.optionalFeatures.push('plane-detection');
             }
 
-            if (this.domOverlay.root) {
+            if (this.domOverlay.supported && this.domOverlay.root) {
                 opts.optionalFeatures.push('dom-overlay');
                 opts.domOverlay = { root: this.domOverlay.root };
+            }
+
+            if (options && options.depthSensing && this.depthSensing.supported) {
+                opts.optionalFeatures.push('depth-sensing');
+
+                const usagePreference = [XRDEPTHSENSINGUSAGE_CPU];
+                const dataFormatPreference = [XRDEPTHSENSINGFORMAT_L8A8];
+
+                if (options.depthSensing.usagePreference) {
+                    const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
+                    if (ind !== -1) usagePreference.splice(ind, 1);
+                    usagePreference.unshift(options.depthSensing.usagePreference);
+                }
+
+                if (options.depthSensing.dataFormatPreference) {
+                    const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
+                    if (ind !== -1) dataFormatPreference.splice(ind, 1);
+                    dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                }
+
+                opts.depthSensing = {
+                    usagePreference: usagePreference,
+                    dataFormatPreference: dataFormatPreference
+                };
             }
         } else if (type === XRTYPE_VR) {
             opts.optionalFeatures.push('hand-tracking');
@@ -244,7 +277,7 @@ class XrManager extends EventHandler {
         if (options && options.optionalFeatures)
             opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
 
-        if (this.imageTracking.images.length) {
+        if (this.imageTracking.supported && this.imageTracking.images.length) {
             this.imageTracking.prepareImages((err, trackedImages) => {
                 if (err) {
                     if (callback) callback(err);

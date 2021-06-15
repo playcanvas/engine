@@ -58,6 +58,7 @@ class ProgramLibrary {
             if (options.lights) {
                 lights = options.lights;
                 options.lights = lights.map(function (l) {
+                    // TODO: refactor this to avoid creating a clone of the light.
                     var lcopy = l.clone ? l.clone() : l;
                     lcopy.key = l.key;
                     return lcopy;

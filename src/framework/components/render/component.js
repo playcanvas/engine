@@ -50,7 +50,7 @@ class SkinInstanceCachedObject extends RefCountedObject {
  * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark meshes as non-movable (optimization).
- * @property {BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * @property {BoundingBox} customAabb If set, the object space bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
  * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
@@ -80,7 +80,7 @@ class RenderComponent extends Component {
         this._renderStyle = RENDERSTYLE_SOLID;
 
         // bounding box which can be set to override bounding box based on mesh
-        this._aabb = null;
+        this._customAabb = null;
 
         // area - used by lightmapper
         this._area = null;
@@ -242,9 +242,9 @@ class RenderComponent extends Component {
     }
 
     addToLayers() {
-        var layer, layers = this.system.app.scene.layers;
+        const layers = this.system.app.scene.layers;
         for (var i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
+            const layer = layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addMeshInstances(this._meshInstances);
             }
@@ -556,18 +556,18 @@ class RenderComponent extends Component {
         }
     }
 
-    get aabb() {
-        return this._aabb;
+    get customAabb() {
+        return this._customAabb;
     }
 
-    set aabb(value) {
-        this._aabb = value;
+    set customAabb(value) {
+        this._customAabb = value;
 
         // set it on meshInstances
         var mi = this._meshInstances;
         if (mi) {
             for (var i = 0; i < mi.length; i++) {
-                mi[i].setOverrideAabb(this._aabb);
+                mi[i].setCustomAabb(this._customAabb);
             }
         }
     }
@@ -624,7 +624,7 @@ class RenderComponent extends Component {
                 mi[i].isStatic = this._isStatic;
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
-                mi[i].setOverrideAabb(this._aabb);
+                mi[i].setCustomAabb(this._customAabb);
             }
 
             if (this.enabled && this.entity.enabled) {

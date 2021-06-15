@@ -20,9 +20,36 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @name RigidBodyComponent
  * @augments Component
  * @classdesc The rigidbody component, when combined with a {@link CollisionComponent}, allows your
- * entities to be simulated using realistic physics.
- * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
- * can apply forces and impulses to rigid bodies.
+ * entities to be simulated using realistic physics. A rigidbody component will fall under gravity and
+ * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid bodies.
+ *
+ * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to a
+ * {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ~~~javascript
+ * // Create a static 1x1x1 box-shaped rigid body
+ * const entity = pc.Entity();
+ * entity.addComponent("rigidbody"); // With no options specified, this defaults to a 'static' body
+ * entity.addComponent("collision"); // With no options specified, this defaults to a 1x1x1 box shape
+ * ~~~
+ *
+ * To create a dynamic sphere with mass of 10, do:
+ *
+ * ~~~javascript
+ * const entity = pc.Entity();
+ * entity.addComponent("rigidbody", {
+ *     type: pc.BODYTYPE_DYNAMIC,
+ *     mass: 10
+ * });
+ * entity.addComponent("collision", {
+ *     type: "sphere"
+ * });
+ * ~~~
+ *
+ * Relevant 'Engine-only' examples:
+ * * [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
+ * * [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
+ *
  * @description Create a new RigidBodyComponent.
  * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
  * @param {Entity} entity - The entity this component is attached to.
@@ -35,9 +62,11 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
  * Defaults to 0.
  * @property {Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
- * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely
+ * move).
  * @property {Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
- * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely
+ * rotate).
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
  * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults
@@ -72,99 +101,263 @@ class RigidBodyComponent extends Component {
             ammoOrigin = new Ammo.btVector3(0, 0, 0);
         }
 
-        this.on('set_mass', this.onSetMass, this);
-        this.on('set_linearDamping', this.onSetLinearDamping, this);
-        this.on('set_angularDamping', this.onSetAngularDamping, this);
-        this.on('set_linearFactor', this.onSetLinearFactor, this);
-        this.on('set_angularFactor', this.onSetAngularFactor, this);
-        this.on('set_friction', this.onSetFriction, this);
-        this.on('set_rollingFriction', this.onSetRollingFriction, this);
-        this.on('set_restitution', this.onSetRestitution, this);
-        this.on('set_type', this.onSetType, this);
-        this.on('set_group', this.onSetGroupOrMask, this);
-        this.on('set_mask', this.onSetGroupOrMask, this);
-
-        this.on('set_body', this.onSetBody, this);
-
-        this._linearVelocity = new Vec3(0, 0, 0);
-        this._angularVelocity = new Vec3(0, 0, 0);
+        this._angularDamping = 0;
+        this._angularFactor = new Vec3(1, 1, 1);
+        this._angularVelocity = new Vec3();
+        this._body = null;
+        this._friction = 0.5;
+        this._group = BODYGROUP_STATIC;
+        this._linearDamping = 0;
+        this._linearFactor = new Vec3(1, 1, 1);
+        this._linearVelocity = new Vec3();
+        this._mask = BODYMASK_NOT_STATIC;
+        this._mass = 1;
+        this._restitution = 0;
+        this._rollingFriction = 0;
+        this._simulationEnabled = false;
+        this._type = BODYTYPE_STATIC;
     }
 
-    // Events Documentation
-    /**
-     * @event
-     * @name RigidBodyComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
-     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
-     */
+    get angularDamping() {
+        return this._angularDamping;
+    }
 
-    /**
-     * @event
-     * @name RigidBodyComponent#collisionstart
-     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
-     */
+    set angularDamping(damping) {
+        if (this._angularDamping !== damping) {
+            this._angularDamping = damping;
 
-    /**
-     * @event
-     * @name RigidBodyComponent#collisionend
-     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
-     */
-
-    /**
-     * @event
-     * @name RigidBodyComponent#triggerenter
-     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
-     */
-
-    /**
-     * @event
-     * @name RigidBodyComponent#triggerleave
-     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
-     */
-
-    get linearVelocity() {
-        var body = this.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            var vel = body.getLinearVelocity();
-            this._linearVelocity.set(vel.x(), vel.y(), vel.z());
+            if (this._body) {
+                this._body.setDamping(this._linearDamping, damping);
+            }
         }
-        return this._linearVelocity;
     }
 
-    set linearVelocity(lv) {
-        var body = this.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            body.activate();
+    get angularFactor() {
+        return this._angularFactor;
+    }
 
-            ammoVec1.setValue(lv.x, lv.y, lv.z);
-            body.setLinearVelocity(ammoVec1);
+    set angularFactor(factor) {
+        if (!this._angularFactor.equals(factor)) {
+            this._angularFactor.copy(factor);
 
-            this._linearVelocity.copy(lv);
+            if (this._body && this._type === BODYTYPE_DYNAMIC) {
+                ammoVec1.setValue(factor.x, factor.y, factor.z);
+                this._body.setAngularFactor(ammoVec1);
+            }
         }
     }
 
     get angularVelocity() {
-        var body = this.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            var vel = body.getAngularVelocity();
-            this._angularVelocity.set(vel.x(), vel.y(), vel.z());
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            const velocity = this._body.getAngularVelocity();
+            this._angularVelocity.set(velocity.x(), velocity.y(), velocity.z());
         }
         return this._angularVelocity;
     }
 
-    set angularVelocity(av) {
-        var body = this.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            body.activate();
+    set angularVelocity(velocity) {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            this._body.activate();
 
-            ammoVec1.setValue(av.x, av.y, av.z);
-            body.setAngularVelocity(ammoVec1);
+            ammoVec1.setValue(velocity.x, velocity.y, velocity.z);
+            this._body.setAngularVelocity(ammoVec1);
 
-            this._angularVelocity.copy(av);
+            this._angularVelocity.copy(velocity);
+        }
+    }
+
+    get body() {
+        return this._body;
+    }
+
+    set body(body) {
+        if (this._body !== body) {
+            this._body = body;
+
+            if (body && this._simulationEnabled) {
+                body.activate();
+            }
+        }
+    }
+
+    get friction() {
+        return this._friction;
+    }
+
+    set friction(friction) {
+        if (this._friction !== friction) {
+            this._friction = friction;
+
+            if (this._body) {
+                this._body.setFriction(friction);
+            }
+        }
+    }
+
+    get group() {
+        return this._group;
+    }
+
+    set group(group) {
+        if (this._group !== group) {
+            this._group = group;
+
+            // re-enabling simulation adds rigidbody back into world with new masks
+            if (this.enabled && this.entity.enabled) {
+                this.disableSimulation();
+                this.enableSimulation();
+            }
+        }
+    }
+
+    get linearDamping() {
+        return this._linearDamping;
+    }
+
+    set linearDamping(damping) {
+        if (this._linearDamping !== damping) {
+            this._linearDamping = damping;
+
+            if (this._body) {
+                this._body.setDamping(damping, this._angularDamping);
+            }
+        }
+    }
+
+    get linearFactor() {
+        return this._linearFactor;
+    }
+
+    set linearFactor(factor) {
+        if (!this._linearFactor.equals(factor)) {
+            this._linearFactor.copy(factor);
+
+            if (this._body && this._type === BODYTYPE_DYNAMIC) {
+                ammoVec1.setValue(factor.x, factor.y, factor.z);
+                this._body.setLinearFactor(ammoVec1);
+            }
+        }
+    }
+
+    get linearVelocity() {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            const velocity = this._body.getLinearVelocity();
+            this._linearVelocity.set(velocity.x(), velocity.y(), velocity.z());
+        }
+        return this._linearVelocity;
+    }
+
+    set linearVelocity(velocity) {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            this._body.activate();
+
+            ammoVec1.setValue(velocity.x, velocity.y, velocity.z);
+            this._body.setLinearVelocity(ammoVec1);
+
+            this._linearVelocity.copy(velocity);
+        }
+    }
+
+    get mask() {
+        return this._mask;
+    }
+
+    set mask(mask) {
+        if (this._mask !== mask) {
+            this._mask = mask;
+
+            // re-enabling simulation adds rigidbody back into world with new masks
+            if (this.enabled && this.entity.enabled) {
+                this.disableSimulation();
+                this.enableSimulation();
+            }
+        }
+    }
+
+    get mass() {
+        return this._mass;
+    }
+
+    set mass(mass) {
+        if (this._mass !== mass) {
+            this._mass = mass;
+
+            if (this._body && this._type === BODYTYPE_DYNAMIC) {
+                const enabled = this.enabled && this.entity.enabled;
+                if (enabled) {
+                    this.disableSimulation();
+                }
+
+                // calculateLocalInertia writes local inertia to ammoVec1 here...
+                this._body.getCollisionShape().calculateLocalInertia(mass, ammoVec1);
+                // ...and then writes the calculated local inertia to the body
+                this._body.setMassProps(mass, ammoVec1);
+                this._body.updateInertiaTensor();
+
+                if (enabled) {
+                    this.enableSimulation();
+                }
+            }
+        }
+    }
+
+    get restitution() {
+        return this._restitution;
+    }
+
+    set restitution(restitution) {
+        if (this._restitution !== restitution) {
+            this._restitution = restitution;
+
+            if (this._body) {
+                this._body.setRestitution(restitution);
+            }
+        }
+    }
+
+    get rollingFriction() {
+        return this._rollingFriction;
+    }
+
+    set rollingFriction(friction) {
+        if (this._rollingFriction !== friction) {
+            this._rollingFriction = friction;
+
+            if (this._body) {
+                this._body.setRollingFriction(friction);
+            }
+        }
+    }
+
+    get type() {
+        return this._type;
+    }
+
+    set type(type) {
+        if (this._type !== type) {
+            this._type = type;
+
+            this.disableSimulation();
+
+            // set group and mask to defaults for type
+            switch (type) {
+                case BODYTYPE_DYNAMIC:
+                    this._group = BODYGROUP_DYNAMIC;
+                    this._mask = BODYMASK_ALL;
+                    break;
+                case BODYTYPE_KINEMATIC:
+                    this._group = BODYGROUP_KINEMATIC;
+                    this._mask = BODYMASK_ALL;
+                    break;
+                case BODYTYPE_STATIC:
+                default:
+                    this._group = BODYGROUP_STATIC;
+                    this._mask = BODYMASK_NOT_STATIC;
+                    break;
+            }
+
+            // Create a new body
+            this.createBody();
         }
     }
 
@@ -175,8 +368,8 @@ class RigidBodyComponent extends Component {
      * @description If the Entity has a Collision shape attached then create a rigid body using this shape. This method destroys the existing body.
      */
     createBody() {
-        var entity = this.entity;
-        var shape;
+        const entity = this.entity;
+        let shape;
 
         if (entity.collision) {
             shape = entity.collision.shape;
@@ -190,38 +383,38 @@ class RigidBodyComponent extends Component {
         }
 
         if (shape) {
-            if (this.body)
-                this.system.onRemove(this.entity, this);
+            if (this._body)
+                this.system.onRemove(entity, this);
 
-            var mass = this.type === BODYTYPE_DYNAMIC ? this.mass : 0;
+            const mass = this._type === BODYTYPE_DYNAMIC ? this._mass : 0;
 
             this._getEntityTransform(ammoTransform);
 
-            var body = this.system.createBody(mass, shape, ammoTransform);
+            const body = this.system.createBody(mass, shape, ammoTransform);
 
-            body.setRestitution(this.restitution);
-            body.setFriction(this.friction);
-            body.setRollingFriction(this.rollingFriction);
-            body.setDamping(this.linearDamping, this.angularDamping);
+            body.setRestitution(this._restitution);
+            body.setFriction(this._friction);
+            body.setRollingFriction(this._rollingFriction);
+            body.setDamping(this._linearDamping, this._angularDamping);
 
-            if (this.type === BODYTYPE_DYNAMIC) {
-                var linearFactor = this.linearFactor;
+            if (this._type === BODYTYPE_DYNAMIC) {
+                const linearFactor = this._linearFactor;
                 ammoVec1.setValue(linearFactor.x, linearFactor.y, linearFactor.z);
                 body.setLinearFactor(ammoVec1);
 
-                var angularFactor = this.angularFactor;
+                const angularFactor = this._angularFactor;
                 ammoVec1.setValue(angularFactor.x, angularFactor.y, angularFactor.z);
                 body.setAngularFactor(ammoVec1);
-            } else if (this.type === BODYTYPE_KINEMATIC) {
+            } else if (this._type === BODYTYPE_KINEMATIC) {
                 body.setCollisionFlags(body.getCollisionFlags() | BODYFLAG_KINEMATIC_OBJECT);
                 body.setActivationState(BODYSTATE_DISABLE_DEACTIVATION);
             }
 
             body.entity = entity;
 
-            entity.rigidbody.body = body;
+            this.body = body;
 
-            if (this.enabled && this.entity.enabled) {
+            if (this.enabled && entity.enabled) {
                 this.enableSimulation();
             }
         }
@@ -234,8 +427,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if the body is active.
      */
     isActive() {
-        var body = this.body;
-        return body ? body.isActive() : false;
+        return this._body ? this._body.isActive() : false;
     }
 
     /**
@@ -245,19 +437,19 @@ class RigidBodyComponent extends Component {
      * type {@link BODYTYPE_DYNAMIC}.
      */
     activate() {
-        var body = this.body;
-        if (body) {
-            body.activate();
+        if (this._body) {
+            this._body.activate();
         }
     }
 
     enableSimulation() {
-        if (this.entity.collision && this.entity.collision.enabled && !this.data.simulationEnabled) {
-            var body = this.body;
+        const entity = this.entity;
+        if (entity.collision && entity.collision.enabled && !this._simulationEnabled) {
+            const body = this._body;
             if (body) {
-                this.system.addBody(body, this.group, this.mask);
+                this.system.addBody(body, this._group, this._mask);
 
-                switch (this.type) {
+                switch (this._type) {
                     case BODYTYPE_DYNAMIC:
                         this.system._dynamic.push(this);
                         body.forceActivationState(BODYSTATE_ACTIVE_TAG);
@@ -273,44 +465,44 @@ class RigidBodyComponent extends Component {
                         break;
                 }
 
-                if (this.entity.collision.type === 'compound') {
-                    this.system._compounds.push(this.entity.collision);
+                if (entity.collision.type === 'compound') {
+                    this.system._compounds.push(entity.collision);
                 }
 
                 body.activate();
 
-                this.data.simulationEnabled = true;
+                this._simulationEnabled = true;
             }
         }
     }
 
     disableSimulation() {
-        var body = this.body;
-        if (body && this.data.simulationEnabled) {
-            var idx;
+        const body = this._body;
+        if (body && this._simulationEnabled) {
+            const system = this.system;
 
-            idx = this.system._compounds.indexOf(this.entity.collision);
+            let idx = system._compounds.indexOf(this.entity.collision);
             if (idx > -1) {
-                this.system._compounds.splice(idx, 1);
+                system._compounds.splice(idx, 1);
             }
 
-            idx = this.system._dynamic.indexOf(this);
+            idx = system._dynamic.indexOf(this);
             if (idx > -1) {
-                this.system._dynamic.splice(idx, 1);
+                system._dynamic.splice(idx, 1);
             }
 
-            idx = this.system._kinematic.indexOf(this);
+            idx = system._kinematic.indexOf(this);
             if (idx > -1) {
-                this.system._kinematic.splice(idx, 1);
+                system._kinematic.splice(idx, 1);
             }
 
-            this.system.removeBody(body);
+            system.removeBody(body);
 
             // set activation state to disable simulation to avoid body.isActive() to return
             // true even if it's not in the dynamics world
             body.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
 
-            this.data.simulationEnabled = false;
+            this._simulationEnabled = false;
         }
     }
 
@@ -356,8 +548,8 @@ class RigidBodyComponent extends Component {
      * this.entity.rigidbody.applyForce(force, relativePos);
      */
     applyForce() {
-        var x, y, z;
-        var px, py, pz;
+        let x, y, z;
+        let px, py, pz;
         switch (arguments.length) {
             case 1:
                 x = arguments[0].x;
@@ -386,7 +578,7 @@ class RigidBodyComponent extends Component {
                 pz = arguments[5];
                 break;
         }
-        var body = this.body;
+        const body = this._body;
         if (body) {
             body.activate();
             ammoVec1.setValue(x, y, z);
@@ -396,7 +588,6 @@ class RigidBodyComponent extends Component {
             } else {
                 body.applyForce(ammoVec1, ammoOrigin);
             }
-
         }
     }
 
@@ -418,7 +609,7 @@ class RigidBodyComponent extends Component {
      * entity.rigidbody.applyTorque(0, 10, 0);
      */
     applyTorque() {
-        var x, y, z;
+        let x, y, z;
         switch (arguments.length) {
             case 1:
                 x = arguments[0].x;
@@ -436,7 +627,7 @@ class RigidBodyComponent extends Component {
                 // #endif
                 return;
         }
-        var body = this.body;
+        const body = this._body;
         if (body) {
             body.activate();
             ammoVec1.setValue(x, y, z);
@@ -478,8 +669,8 @@ class RigidBodyComponent extends Component {
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
     applyImpulse() {
-        var x, y, z;
-        var px, py, pz;
+        let x, y, z;
+        let px, py, pz;
         switch (arguments.length) {
             case 1:
                 x = arguments[0].x;
@@ -513,7 +704,7 @@ class RigidBodyComponent extends Component {
                 // #endif
                 return;
         }
-        var body = this.body;
+        const body = this._body;
         if (body) {
             body.activate();
             ammoVec1.setValue(x, y, z);
@@ -545,7 +736,7 @@ class RigidBodyComponent extends Component {
      * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
      */
     applyTorqueImpulse() {
-        var x, y, z;
+        let x, y, z;
         switch (arguments.length) {
             case 1:
                 x = arguments[0].x;
@@ -563,7 +754,7 @@ class RigidBodyComponent extends Component {
                 // #endif
                 return;
         }
-        var body = this.body;
+        const body = this._body;
         if (body) {
             body.activate();
             ammoVec1.setValue(x, y, z);
@@ -578,7 +769,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if static.
      */
     isStatic() {
-        return (this.type === BODYTYPE_STATIC);
+        return (this._type === BODYTYPE_STATIC);
     }
 
     /**
@@ -588,7 +779,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if static or kinematic.
      */
     isStaticOrKinematic() {
-        return (this.type === BODYTYPE_STATIC || this.type === BODYTYPE_KINEMATIC);
+        return (this._type === BODYTYPE_STATIC || this._type === BODYTYPE_KINEMATIC);
     }
 
     /**
@@ -598,7 +789,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if kinematic.
      */
     isKinematic() {
-        return (this.type === BODYTYPE_KINEMATIC);
+        return (this._type === BODYTYPE_KINEMATIC);
     }
 
     /**
@@ -609,8 +800,9 @@ class RigidBodyComponent extends Component {
      * @param {object} transform - The ammo transform to write the entity transform to.
      */
     _getEntityTransform(transform) {
-        var pos = this.entity.getPosition();
-        var rot = this.entity.getRotation();
+        const entity = this.entity;
+        const pos = entity.getPosition();
+        const rot = entity.getRotation();
 
         ammoVec1.setValue(pos.x, pos.y, pos.z);
         ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
@@ -628,14 +820,14 @@ class RigidBodyComponent extends Component {
      * in order to update the rigid body to match the Entity.
      */
     syncEntityToBody() {
-        var body = this.data.body;
+        const body = this._body;
         if (body) {
             this._getEntityTransform(ammoTransform);
 
             body.setWorldTransform(ammoTransform);
 
-            if (this.type === BODYTYPE_KINEMATIC) {
-                var motionState = body.getMotionState();
+            if (this._type === BODYTYPE_KINEMATIC) {
+                const motionState = body.getMotionState();
                 if (motionState) {
                     motionState.setWorldTransform(ammoTransform);
                 }
@@ -652,19 +844,19 @@ class RigidBodyComponent extends Component {
      * matrix of a dynamic rigid body's motion state.
      */
     _updateDynamic() {
-        var body = this.data.body;
+        const body = this._body;
 
         // If a dynamic body is frozen, we can assume its motion state transform is
         // the same is the entity world transform
         if (body.isActive()) {
             // Update the motion state. Note that the test for the presence of the motion
             // state is technically redundant since the engine creates one for all bodies.
-            var motionState = body.getMotionState();
+            const motionState = body.getMotionState();
             if (motionState) {
                 motionState.getWorldTransform(ammoTransform);
 
-                var p = ammoTransform.getOrigin();
-                var q = ammoTransform.getRotation();
+                const p = ammoTransform.getOrigin();
+                const q = ammoTransform.getRotation();
                 this.entity.setPosition(p.x(), p.y(), p.z());
                 this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
             }
@@ -679,8 +871,7 @@ class RigidBodyComponent extends Component {
      * of a kinematic body.
      */
     _updateKinematic() {
-        var body = this.data.body;
-        var motionState = body.getMotionState();
+        const motionState = this._body.getMotionState();
         if (motionState) {
             this._getEntityTransform(ammoTransform);
             motionState.setWorldTransform(ammoTransform);
@@ -739,7 +930,7 @@ class RigidBodyComponent extends Component {
     }
 
     onEnable() {
-        if (!this.body) {
+        if (!this._body) {
             this.createBody();
         }
 
@@ -749,115 +940,42 @@ class RigidBodyComponent extends Component {
     onDisable() {
         this.disableSimulation();
     }
-
-    onSetMass(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            var enabled = this.enabled && this.entity.enabled;
-            if (enabled) {
-                this.disableSimulation();
-            }
-
-            // calculateLocalInertia writes local inertia to ammoVec1 here...
-            body.getCollisionShape().calculateLocalInertia(newValue, ammoVec1);
-            // ...and then writes the calculated local inertia to the body
-            body.setMassProps(newValue, ammoVec1);
-            body.updateInertiaTensor();
-
-            if (enabled) {
-                this.enableSimulation();
-            }
-        }
-    }
-
-    onSetLinearDamping(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body) {
-            body.setDamping(newValue, this.data.angularDamping);
-        }
-    }
-
-    onSetAngularDamping(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body) {
-            body.setDamping(this.data.linearDamping, newValue);
-        }
-    }
-
-    onSetLinearFactor(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
-            body.setLinearFactor(ammoVec1);
-        }
-    }
-
-    onSetAngularFactor(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body && this.type === BODYTYPE_DYNAMIC) {
-            ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
-            body.setAngularFactor(ammoVec1);
-        }
-    }
-
-    onSetFriction(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body) {
-            body.setFriction(newValue);
-        }
-    }
-
-    onSetRollingFriction(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body) {
-            body.setRollingFriction(newValue);
-        }
-    }
-
-    onSetRestitution(name, oldValue, newValue) {
-        var body = this.data.body;
-        if (body) {
-            body.setRestitution(newValue);
-        }
-    }
-
-    onSetType(name, oldValue, newValue) {
-        if (newValue !== oldValue) {
-            this.disableSimulation();
-
-            // set group and mask to defaults for type
-            if (newValue === BODYTYPE_DYNAMIC) {
-                this.data.group = BODYGROUP_DYNAMIC;
-                this.data.mask = BODYMASK_ALL;
-            } else if (newValue === BODYTYPE_KINEMATIC) {
-                this.data.group = BODYGROUP_KINEMATIC;
-                this.data.mask = BODYMASK_ALL;
-            } else {
-                this.data.group = BODYGROUP_STATIC;
-                this.data.mask = BODYMASK_NOT_STATIC;
-            }
-
-            // Create a new body
-            this.createBody();
-        }
-    }
-
-    onSetGroupOrMask(name, oldValue, newValue) {
-        if (newValue !== oldValue) {
-            // re-enabling simulation adds rigidbody back into world with new masks
-            var isEnabled = this.enabled && this.entity.enabled;
-            if (isEnabled) {
-                this.disableSimulation();
-                this.enableSimulation();
-            }
-        }
-    }
-
-    onSetBody(name, oldValue, newValue) {
-        if (this.body && this.data.simulationEnabled) {
-            this.body.activate();
-        }
-    }
 }
+
+// Events Documentation
+/**
+ * @event
+ * @name RigidBodyComponent#contact
+ * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+ * @param {ContactResult} result - Details of the contact between the two rigid bodies.
+ */
+
+/**
+ * @event
+ * @name RigidBodyComponent#collisionstart
+ * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+ * @param {ContactResult} result - Details of the contact between the two rigid bodies.
+ */
+
+/**
+ * @event
+ * @name RigidBodyComponent#collisionend
+ * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+ * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
+ */
+
+/**
+ * @event
+ * @name RigidBodyComponent#triggerenter
+ * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+ * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
+ */
+
+/**
+ * @event
+ * @name RigidBodyComponent#triggerleave
+ * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+ * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
+ */
 
 export { RigidBodyComponent };
