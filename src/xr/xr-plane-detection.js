@@ -4,8 +4,8 @@ import { XrPlane } from './xr-plane.js';
 /**
  * @class
  * @name XrPlaneDetection
- * @classdesc Plane Detection provides the ability to detect real world surfaces based on estimations of underlying AR system.
- * @description Plane Detection provides the ability to detect real world surfaces based on estimations of underlying AR system.
+ * @classdesc Plane Detection provides the ability to detect real world surfaces based on estimations of the underlying AR system.
+ * @description Plane Detection provides the ability to detect real world surfaces based on estimations of the underlying AR system.
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Plane Detection is supported.
  * @property {boolean} available True if Plane Detection is available. This property can be set to true only during running session.
