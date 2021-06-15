@@ -65,7 +65,7 @@ class XrPlaneDetection extends EventHandler {
     /**
      * @event
      * @name XrPlaneDetection#remove
-     * @description Fired when a {@link XrPlane} is removed to the list.
+     * @description Fired when a {@link XrPlane} is removed from the list.
      * @param {XrPlane} plane - Plane that has been removed.
      * @example
      * app.xr.planeDetection.on('remove', function (plane) {
