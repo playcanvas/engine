@@ -29,9 +29,8 @@ class XrAnchors extends EventHandler {
         this._index = new Map();
         this._list = null;
 
-        // map of callbacks to XRAnchor's,
-        // so that we can call callback
-        // once anchor is first time updated with a pose
+        // map of callbacks to XRAnchors so that we can call its callback once an anchor is updated
+        // with a pose for the first time
         //
         // key - XRAnchor
         // value - function
