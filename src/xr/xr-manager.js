@@ -183,7 +183,6 @@ class XrManager extends EventHandler {
      * });
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
-     * @param {boolean} [options.depthSensing] - Set to true to attempt to enable {@link XrDepthSensing}.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
@@ -232,10 +231,7 @@ class XrManager extends EventHandler {
             opts.optionalFeatures.push('hit-test');
 
             if (options) {
-                if (options.depthSensing)
-                    opts.optionalFeatures.push('depth-sensing');
-
-                if (options.imageTracking)
+                if (options.imageTracking && this.imageTracking.supported)
                     opts.optionalFeatures.push('image-tracking');
 
                 if (options.planeDetection)
