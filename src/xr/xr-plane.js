@@ -44,7 +44,7 @@ class XrPlane extends EventHandler {
     /**
      * @event
      * @name XrPlane#change
-     * @description Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed. Position and Rotation can change at any time without triggering `change` event.
+     * @description Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed. Position and rotation can change at any time without triggering a `change` event.
      * @example
      * plane.on('change', function () {
      *     // plane has been changed
