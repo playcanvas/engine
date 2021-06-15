@@ -63,7 +63,7 @@ class XrAnchors extends EventHandler {
     /**
      * @event
      * @name XrAnchors#remove
-     * @description Fired when {@link XrAnchor} is removed.
+     * @description Fired when an {@link XrAnchor} is removed.
      * @param {XrAnchor} anchor - Anchor that has been removed.
      * @example
      * app.xr.anchors.on('remove', function (anchor) {
