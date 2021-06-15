@@ -12,7 +12,7 @@ let ids = 0;
  * @param {XrPlaneDetection} planeDetection - Plane detection system.
  * @param {object} xrPlane - XRPlane that is instantiated by WebXR system.
  * @property {number} id Unique identifier of a plane.
- * @property {string|null} orientation Plane's pecific orientation (horizontal or vertical) or null if orientation is anything else.
+ * @property {string|null} orientation Plane's specific orientation (horizontal or vertical) or null if orientation is anything else.
  */
 class XrPlane extends EventHandler {
     constructor(planeDetection, xrPlane) {
