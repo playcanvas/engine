@@ -37,7 +37,7 @@ class XrAnchor extends EventHandler {
     /**
      * @event
      * @name XrAnchor#change
-     * @description Fired when {@link XrAnchor}'s position and/or rotation is changed.
+     * @description Fired when an {@link XrAnchor}'s position and/or rotation is changed.
      * @example
      * anchor.on('change', function () {
      *     // anchor has been updated
