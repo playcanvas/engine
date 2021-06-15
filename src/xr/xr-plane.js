@@ -85,7 +85,7 @@ class XrPlane extends EventHandler {
      * @function
      * @name XrPlane#getRotation
      * @description Get the world space rotation of a plane.
-     * @returns {Vec3} The world space rotation of a plane.
+     * @returns {Quat} The world space rotation of a plane.
      */
     getRotation() {
         return this._rotation;
