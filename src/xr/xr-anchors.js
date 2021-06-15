@@ -52,7 +52,7 @@ class XrAnchors extends EventHandler {
     /**
      * @event
      * @name XrAnchors#add
-     * @description Fired when new {@link XrAnchor} is added.
+     * @description Fired when a new {@link XrAnchor} is added.
      * @param {XrAnchor} anchor - Anchor that has been added.
      * @example
      * app.xr.anchors.on('add', function (anchor) {
