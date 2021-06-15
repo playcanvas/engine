@@ -24,7 +24,7 @@ class XrAnchors extends EventHandler {
         // list of anchor creation requests
         this._creationQueue = [];
 
-        // key - XRAnchor (native anchor does not have ID's)
+        // key - XRAnchor (native anchor does not have an ID)
         // value - XrAnchor
         this._index = new Map();
         this._list = null;
