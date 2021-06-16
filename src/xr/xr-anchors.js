@@ -62,12 +62,12 @@ class XrAnchors extends EventHandler {
 
     /**
      * @event
-     * @name XrAnchors#remove
-     * @description Fired when an {@link XrAnchor} is removed.
-     * @param {XrAnchor} anchor - Anchor that has been removed.
+     * @name XrAnchors#destroy
+     * @description Fired when an {@link XrAnchor} is destroyed.
+     * @param {XrAnchor} anchor - Anchor that has been destroyed.
      * @example
-     * app.xr.anchors.on('remove', function (anchor) {
-     *     // anchor that is removed
+     * app.xr.anchors.on('destroy', function (anchor) {
+     *     // anchor that is destroyed
      * });
      */
 
@@ -85,11 +85,11 @@ class XrAnchors extends EventHandler {
         }
         this._creationQueue.length = 0;
 
-        // remove all anchors
+        // destroy all anchors
         if (this._list) {
             let i = this._list.length;
             while (i--) {
-                this._list[i].remove();
+                this._list[i].destroy();
             }
             this._list = null;
         }
@@ -138,12 +138,12 @@ class XrAnchors extends EventHandler {
             this._creationQueue.length = 0;
         }
 
-        // check if removed
+        // check if destroyed
         for (const [xrAnchor, anchor] of this._index) {
             if (frame.trackedAnchors.has(xrAnchor))
                 continue;
 
-            anchor.remove();
+            anchor.destroy();
         }
 
         // update existing anchors
