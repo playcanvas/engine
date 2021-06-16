@@ -914,6 +914,14 @@ class ForwardRenderer {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
+                    } else {
+                        // if shadow casting light does not have shadow map allocated, mark it visible to allocate shadow map
+                        // Note: This won't be needed when clustered shadows are used, but at the moment even culled out lights
+                        // are used for rendering, and need shadow map to be allocated
+                        // TODO: delete this code when clusteredLightingEnabled is being removed and is on by default.
+                        if (light.castShadows && !light.shadowMap) {
+                            light.visibleThisFrame = true;
+                        }
                     }
                 }
             }
