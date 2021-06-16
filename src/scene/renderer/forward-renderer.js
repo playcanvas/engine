@@ -156,10 +156,6 @@ class ForwardRenderer {
         this.lightShadowMapId = [];
         this.lightShadowMatrixId = [];
         this.lightShadowParamsId = [];
-        this.lightShadowMatrixVsId = [];
-        this.lightShadowParamsVsId = [];
-        this.lightDirVs = [];
-        this.lightDirVsId = [];
         this.lightRadiusId = [];
         this.lightPos = [];
         this.lightPosId = [];
@@ -169,11 +165,15 @@ class ForwardRenderer {
         this.lightHeightId = [];
         this.lightInAngleId = [];
         this.lightOutAngleId = [];
-        this.lightPosVsId = [];
         this.lightCookieId = [];
         this.lightCookieIntId = [];
         this.lightCookieMatrixId = [];
         this.lightCookieOffsetId = [];
+
+        // shadow cascades
+        this.shadowMatrixPaletteId = [];
+        this.shadowCascadeDistancesId = [];
+        this.shadowCascadeCountId = [];
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -507,14 +507,11 @@ class ForwardRenderer {
     }
 
     dispatchGlobalLights(scene) {
-        var i;
-        this.mainLight = -1;
-
         this.ambientColor[0] = scene.ambientLight.r;
         this.ambientColor[1] = scene.ambientLight.g;
         this.ambientColor[2] = scene.ambientLight.b;
         if (scene.gammaCorrection) {
-            for (i = 0; i < 3; i++) {
+            for (let i = 0; i < 3; i++) {
                 this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
             }
         }
@@ -524,17 +521,13 @@ class ForwardRenderer {
     }
 
     _resolveLight(scope, i) {
-        var light = "light" + i;
+        const light = "light" + i;
         this.lightColorId[i] = scope.resolve(light + "_color");
         this.lightDir[i] = new Float32Array(3);
         this.lightDirId[i] = scope.resolve(light + "_direction");
         this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
         this.lightShadowMatrixId[i] = scope.resolve(light + "_shadowMatrix");
         this.lightShadowParamsId[i] = scope.resolve(light + "_shadowParams");
-        this.lightShadowMatrixVsId[i] = scope.resolve(light + "_shadowMatrixVS");
-        this.lightShadowParamsVsId[i] = scope.resolve(light + "_shadowParamsVS");
-        this.lightDirVs[i] = new Float32Array(3);
-        this.lightDirVsId[i] = scope.resolve(light + "_directionVS");
         this.lightRadiusId[i] = scope.resolve(light + "_radius");
         this.lightPos[i] = new Float32Array(3);
         this.lightPosId[i] = scope.resolve(light + "_position");
@@ -544,11 +537,15 @@ class ForwardRenderer {
         this.lightHeightId[i] = scope.resolve(light + "_halfHeight");
         this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
         this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
-        this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
         this.lightCookieId[i] = scope.resolve(light + "_cookie");
         this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
         this.lightCookieMatrixId[i] = scope.resolve(light + "_cookieMatrix");
         this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
+
+        // shadow cascades
+        this.shadowMatrixPaletteId[i] = scope.resolve(light + "_shadowMatrixPalette[0]");
+        this.shadowCascadeDistancesId[i] = scope.resolve(light + "_shadowCascadeDistances[0]");
+        this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
     }
 
     setLTCDirectionallLight(wtm, cnt, dir, campos, far) {
@@ -575,7 +572,6 @@ class ForwardRenderer {
         var i;
         var directional, wtm;
         var cnt = 0;
-        this.mainLight = -1;
 
         var scope = this.device.scope;
 
@@ -607,15 +603,18 @@ class ForwardRenderer {
             if (directional.castShadows) {
 
                 const lightRenderData = directional.getRenderData(camera, 0);
-                const farClip = lightRenderData.shadowCamera._farClip;
 
                 // make bias dependent on far plane because it's not constant for direct light
-                var bias;
+                // clip distance used is based on the nearest shadow cascade
+                const farClip = lightRenderData.shadowCamera._farClip;
+                let bias;
                 if (directional._isVsm) {
                     bias = -0.00001 * 20;
                 } else {
                     bias = (directional.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) {
+                        bias *= -100;
+                    }
                 }
                 var normalBias = directional._isVsm ?
                     directional.vsmBias / (farClip / 7.0) :
@@ -623,22 +622,17 @@ class ForwardRenderer {
 
                 this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-                var params = directional._rendererParams;
+
+                this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
+                this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
+                this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
+
+                var params = directional._shadowRenderParams;
                 params.length = 3;
-                params[0] = directional._shadowResolution;
+                params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
                 params[1] = normalBias;
                 params[2] = bias;
                 this.lightShadowParamsId[cnt].setValue(params);
-                if (this.mainLight < 0) {
-                    this.lightShadowMatrixVsId[cnt].setValue(lightRenderData.shadowMatrix.data);
-                    this.lightShadowParamsVsId[cnt].setValue(params);
-                    directional._direction.normalize();
-                    this.lightDirVs[cnt][0] = directional._direction.x;
-                    this.lightDirVs[cnt][1] = directional._direction.y;
-                    this.lightDirVs[cnt][2] = directional._direction.z;
-                    this.lightDirVsId[cnt].setValue(this.lightDirVs[cnt]);
-                    this.mainLight = i;
-                }
             }
             cnt++;
         }
@@ -685,7 +679,7 @@ class ForwardRenderer {
             const lightRenderData = omni.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
-            var params = omni._rendererParams;
+            var params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
             params[1] = omni._normalOffsetBias;
@@ -748,7 +742,7 @@ class ForwardRenderer {
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
             this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-            var params = spot._rendererParams;
+            var params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
             params[1] = normalBias;
@@ -1082,7 +1076,7 @@ class ForwardRenderer {
         // #endif
 
         for (let i = 0; i < lights.length; i++) {
-            this._shadowRenderer.renderShadow(lights[i], camera);
+            this._shadowRenderer.render(lights[i], camera);
         }
 
         if (device.webgl2) {

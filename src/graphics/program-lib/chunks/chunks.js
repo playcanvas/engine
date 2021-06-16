@@ -148,18 +148,15 @@ import refractionPS from './refraction.frag';
 import reprojectPS from './reproject.frag';
 import rgbmPS from './rgbm.frag';
 import screenDepthPS from './screenDepth.frag';
+import shadowCascadesPS from './shadowCascades.frag';
 import shadowCommonPS from './shadowCommon.frag';
 import shadowCoordPS from './shadowCoord.frag';
-import shadowCoordVS from './shadowCoord.vert';
 import shadowCoordPerspZbufferPS from './shadowCoordPerspZbuffer.frag';
 import shadowEVSMPS from './shadowEVSM.frag';
 import shadowEVSMnPS from './shadowEVSMn.frag';
 import shadowStandardPS from './shadowStandard.frag';
 import shadowStandardGL2PS from './shadowStandardGL2.frag';
-import shadowStandardGL2VSPS from './shadowStandardGL2VS.frag';
-import shadowStandardVSPS from './shadowStandardVS.frag';
 import shadowVSM8PS from './shadowVSM8.frag';
-import shadowVSMVSPS from './shadowVSMVS.frag';
 import shadowVSM_commonPS from './shadowVSM_common.frag';
 import skinBatchConstVS from './skinBatchConst.vert';
 import skinBatchTexVS from './skinBatchTex.vert';
@@ -355,18 +352,15 @@ var shaderChunks = {
     reprojectPS: reprojectPS,
     rgbmPS: rgbmPS,
     screenDepthPS: screenDepthPS,
+    shadowCascadesPS: shadowCascadesPS,
     shadowCommonPS: shadowCommonPS,
     shadowCoordPS: shadowCoordPS,
-    shadowCoordVS: shadowCoordVS,
     shadowCoordPerspZbufferPS: shadowCoordPerspZbufferPS,
     shadowEVSMPS: shadowEVSMPS,
     shadowEVSMnPS: shadowEVSMnPS,
     shadowStandardPS: shadowStandardPS,
     shadowStandardGL2PS: shadowStandardGL2PS,
-    shadowStandardGL2VSPS: shadowStandardGL2VSPS,
-    shadowStandardVSPS: shadowStandardVSPS,
     shadowVSM8PS: shadowVSM8PS,
-    shadowVSMVSPS: shadowVSMVSPS,
     shadowVSM_commonPS: shadowVSM_commonPS,
     skinBatchConstVS: skinBatchConstVS,
     skinBatchTexVS: skinBatchTexVS,
