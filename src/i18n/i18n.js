@@ -44,7 +44,7 @@ class I18n extends EventHandler {
     /**
      * @static
      * @function
-     * @name I18n#findAvailableLocale
+     * @name I18n.findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
      * @param {string} desiredLocale - The desired locale e.g. En-US.
