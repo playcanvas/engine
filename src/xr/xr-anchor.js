@@ -24,11 +24,11 @@ class XrAnchor extends EventHandler {
 
     /**
      * @event
-     * @name XrAnchor#remove
-     * @description Fired when an {@link XrAnchor} is removed.
+     * @name XrAnchor#destroy
+     * @description Fired when an {@link XrAnchor} is destroyed.
      * @example
-     * // once anchor is removed
-     * anchor.once('remove', function () {
+     * // once anchor is destroyed
+     * anchor.once('destroy', function () {
      *     // destroy its related entity
      *     entity.destroy();
      * });
@@ -48,10 +48,10 @@ class XrAnchor extends EventHandler {
 
     /**
      * @function
-     * @name XrAnchor#remove
-     * @description Remove an anchor from tracking.
+     * @name XrAnchor#destroy
+     * @description Destroy an anchor.
      */
-    remove() {
+    destroy() {
         this._anchors._index.delete(this._xrAnchor);
 
         const ind = this._anchors._list.indexOf(this);
@@ -61,8 +61,8 @@ class XrAnchor extends EventHandler {
 
         this._xrAnchor = null;
 
-        this.fire('remove');
-        this._anchors.fire('remove', this);
+        this.fire('destroy');
+        this._anchors.fire('destroy', this);
     }
 
     update(frame) {
