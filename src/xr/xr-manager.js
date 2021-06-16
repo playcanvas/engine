@@ -13,6 +13,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrImageTracking } from './xr-image-tracking.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
+import { XrPlaneDetection } from './xr-plane-detection.js';
 
 /**
  * @class
@@ -57,6 +58,7 @@ class XrManager extends EventHandler {
         this.domOverlay = new XrDomOverlay(this);
         this.hitTest = new XrHitTest(this);
         this.imageTracking = new XrImageTracking(this);
+        this.planeDetection = new XrPlaneDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
 
@@ -171,7 +173,7 @@ class XrManager extends EventHandler {
      *
      * @example
      * button.on('click', function () {
-     *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
+     *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR);
      * });
      * @example
      * button.on('click', function () {
@@ -181,6 +183,8 @@ class XrManager extends EventHandler {
      * });
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
+     * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing system.
@@ -226,8 +230,12 @@ class XrManager extends EventHandler {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
 
-            if (options && options.imageTracking && this.imageTracking.supported) {
-                opts.optionalFeatures.push('image-tracking');
+            if (options) {
+                if (options.imageTracking && this.imageTracking.supported)
+                    opts.optionalFeatures.push('image-tracking');
+
+                if (options.planeDetection)
+                    opts.optionalFeatures.push('plane-detection');
             }
 
             if (this.domOverlay.supported && this.domOverlay.root) {
@@ -537,6 +545,9 @@ class XrManager extends EventHandler {
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
+
+            if (this.planeDetection.supported)
+                this.planeDetection.update(frame);
         }
 
         this.fire('update', frame);

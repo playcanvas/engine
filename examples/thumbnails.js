@@ -38,7 +38,7 @@ async function takeScreenshots() {
     for (let i = 0; i < pathData.length; i++) {
         const { example, category } = pathData[i];
 
-        if (fs.existsSync(`dist/thumbnails/${category}/${example}.png`)) {
+        if (fs.existsSync(`dist/thumbnails/${category}_${example}.png`)) {
             console.log('skipped: ', `http://localhost:5000/#/iframe/${category}/${example}?fullscreen=true`)
             continue;
         }

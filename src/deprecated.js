@@ -99,6 +99,7 @@ import { ComponentSystem } from './framework/components/system.js';
 import { Entity } from './framework/entity.js';
 import { LightComponent } from './framework/components/light/component.js';
 import { ModelComponent } from './framework/components/model/component.js';
+import { RenderComponent } from './framework/components/render/component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
@@ -995,6 +996,34 @@ ModelComponent.prototype.setVisible = function (visible) {
     // #endif
     this.enabled = visible;
 };
+
+Object.defineProperty(ModelComponent.prototype, "aabb", {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+        return null;
+    },
+    set: function (type) {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+    }
+});
+
+Object.defineProperty(RenderComponent.prototype, "aabb", {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+        return null;
+    },
+    set: function (type) {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+    }
+});
 
 Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {

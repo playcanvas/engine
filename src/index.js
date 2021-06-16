@@ -300,6 +300,8 @@ export { XrHitTestSource } from './xr/xr-hit-test-source.js';
 export { XrImageTracking } from './xr/xr-image-tracking.js';
 export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
+export { XrPlaneDetection } from './xr/xr-plane-detection.js';
+export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';
