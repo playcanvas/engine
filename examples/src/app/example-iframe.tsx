@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import ControlPanel from './control-panel';
 // @ts-ignore: library file import
 import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as playcanvas from 'playcanvas/build/playcanvas.js';
+// @ts-ignore: library file import
+import * as playcanvasDebug from 'playcanvas/build/playcanvas.dbg.js';
 // @ts-ignore: library file import
 import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 // @ts-ignore: library file import
@@ -24,10 +26,15 @@ const APP_STATE = {
 interface ExampleIframeProps {
     controls: any,
     assets: any,
-    files: Array<File>
+    files: Array<File>,
+    debug?: boolean
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
+    let pc = playcanvas;
+    if (props.debug) {
+        pc = playcanvasDebug;
+    }
     // expose PlayCanvas as a global in the iframe
     (window as any).pc = pc;
 

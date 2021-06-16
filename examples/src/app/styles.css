@@ -157,12 +157,6 @@ body {
     height: 100%;
 }
 
-
-#sideBar .pcui-text-input[placeholder]:after {
-    left: 0;
-    right: inherit;
-}
-
 #sideBar .pcui-label-group {
     margin: 12px;
 }

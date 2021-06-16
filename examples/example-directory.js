@@ -35,6 +35,12 @@ fs.readdir(`${__dirname}/src/examples/`, function (err, categories) {
 <html>
   <head>
     <meta http-equiv="refresh" content="0; url='/#/${category}/${example}'" />
+    <meta name="twitter:card" content="photo" />
+    <meta name="twitter:site" content="@playcanvas" />
+    <meta name="twitter:title" content="${example.split('-').join(' ')}" />
+    <meta name="twitter:description" content="A PlayCanvas engine example" />
+    <meta name="twitter:image" content="https://playcanvas.github.io/thumbnails/${category}_${example}.png" />
+    <meta name="twitter:url" content="https://playcanvas.github.io/${category}/${example}" />
   </head>
   <body>
     <p>Please follow <a href="/#/${category}/${example}">this link</a>.</p>
