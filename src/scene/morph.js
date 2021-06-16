@@ -222,6 +222,16 @@ class Morph extends RefCountedObject {
     }
 
     /**
+     * @readonly
+     * @name Morph#numTargets
+     * @type {number}
+     * @description Read-only property that returns number of targets of this morph. Access targets using {@link Morph#getTarget}.
+     */
+    get numTargets() {
+        return this._targets ? this._targets.length : 0;
+    }
+
+    /**
      * @function
      * @name Morph#getTarget
      * @description Gets the morph target by index.
