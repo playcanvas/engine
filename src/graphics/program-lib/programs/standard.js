@@ -784,7 +784,6 @@ var standard = {
 
         var oldVars = varyings;
         varyings = "";
-        varyings += this._addVaryingIfNeeded(code, "vec4", "vMainShadowUv");
         varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
