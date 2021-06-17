@@ -156,10 +156,7 @@ import shadowEVSMPS from './shadowEVSM.frag';
 import shadowEVSMnPS from './shadowEVSMn.frag';
 import shadowStandardPS from './shadowStandard.frag';
 import shadowStandardGL2PS from './shadowStandardGL2.frag';
-import shadowStandardGL2VSPS from './shadowStandardGL2VS.frag';
-import shadowStandardVSPS from './shadowStandardVS.frag';
 import shadowVSM8PS from './shadowVSM8.frag';
-import shadowVSMVSPS from './shadowVSMVS.frag';
 import shadowVSM_commonPS from './shadowVSM_common.frag';
 import skinBatchConstVS from './skinBatchConst.vert';
 import skinBatchTexVS from './skinBatchTex.vert';
@@ -363,10 +360,7 @@ var shaderChunks = {
     shadowEVSMnPS: shadowEVSMnPS,
     shadowStandardPS: shadowStandardPS,
     shadowStandardGL2PS: shadowStandardGL2PS,
-    shadowStandardGL2VSPS: shadowStandardGL2VSPS,
-    shadowStandardVSPS: shadowStandardVSPS,
     shadowVSM8PS: shadowVSM8PS,
-    shadowVSMVSPS: shadowVSMVSPS,
     shadowVSM_commonPS: shadowVSM_commonPS,
     skinBatchConstVS: skinBatchConstVS,
     skinBatchTexVS: skinBatchTexVS,

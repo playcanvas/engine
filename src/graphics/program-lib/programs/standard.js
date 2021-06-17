@@ -784,7 +784,6 @@ var standard = {
 
         var oldVars = varyings;
         varyings = "";
-        varyings += this._addVaryingIfNeeded(code, "vec4", "vMainShadowUv");
         varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
@@ -1063,9 +1062,11 @@ var standard = {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
 
                 // directional (cascaded) shadows
-                code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
-                code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
-                code += "uniform float light" + i + "_shadowCascadeCount;\n";
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeCount;\n";
+                }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
