@@ -129,7 +129,7 @@ class AnimClip {
             var loop = this._loop;
 
             // check for events that should fire during this frame
-            this.activeEventsForFrame(time, time + speed * deltaTime);
+            this._track.events.length > 0 && duration > 0 && this.activeEventsForFrame(time, time + speed * deltaTime);
 
             // update time
             time += speed * deltaTime;
