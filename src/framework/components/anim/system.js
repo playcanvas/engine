@@ -5,7 +5,7 @@ import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
 
 const _schema = [
-    'enabled',
+    'enabled'
 ];
 
 /**
@@ -34,9 +34,9 @@ class AnimComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
-        properties.forEach(property => {
+        properties.forEach((property) => {
             component[property] = data[property];
-        })
+        });
         if (data.stateGraphAsset) {
             component.stateGraphAsset = data.stateGraphAsset;
         }
@@ -63,6 +63,21 @@ class AnimComponentSystem extends ComponentSystem {
                 }
             }
         }
+    }
+    cloneComponent(entity, clone) {
+        var data = {
+            stateGraphAsset: entity.anim.stateGraphAsset,
+            animationAssets: entity.anim.animationAssets,
+            speed: entity.anim.speed,
+            activate: entity.anim.activate,
+            playing: entity.anim.playing,
+            rootBone: entity.anim.rootBone,
+            stateGraph: entity.anim.stateGraph,
+            layers: entity.anim.layers,
+            layerIndices: entity.anim.layerIndices,
+            parameters: entity.anim.parameters
+        }
+        this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {

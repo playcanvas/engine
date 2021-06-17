@@ -1,8 +1,5 @@
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
-import {
-    ANIM_INTERRUPTION_NONE
-} from '../../../anim/controller/constants.js';
 
 
 /**
@@ -65,11 +62,11 @@ class AnimComponentLayer {
     /**
      * @function
      * @name AnimComponentLayer#assignAnimation
-     * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * @description Assigns an animation track to a state in the current graph. If a state for the given nodeName doesn't exist, it will be created. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
-     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. 
+     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to.
      */
     assignAnimation(nodeName, animTrack, speed, loop) {
         if (animTrack.constructor !== AnimTrack) {
@@ -99,7 +96,7 @@ class AnimComponentLayer {
     /**
      * @function
      * @name AnimComponentLayer#transition
-     * @description Transitions to a new state based on the provided AnimTransition
+     * @description Transition to any state in the current layers graph. Transitions can be instant or take an optional blend time.
      * @param {string} to - The state that this transition will transition to.
      * @param {number} [time=0] - The duration of the transition in seconds.
      * @param {number} [transitionOffset=null] - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.

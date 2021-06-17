@@ -54,7 +54,7 @@ class AnimComponent extends Component {
         }
 
         // remove event from previous asset
-        this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
+        this._stateGraphAsset && this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
 
         let _id;
         let _asset;
