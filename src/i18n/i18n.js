@@ -65,7 +65,8 @@ class I18n extends EventHandler {
      * @function
      * @name I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
-     * tries to find the desired locale and then tries to find an alternative locale based on the language.
+     * tries to find the desired locale in the loaded translations and then tries to find an alternative
+     * locale based on the language.
      * @param {string} desiredLocale - The desired locale e.g. en-US.
      * @returns {string} The locale found or if no locale is available returns the default en-US locale.
      * @example
