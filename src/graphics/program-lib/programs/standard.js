@@ -1062,9 +1062,11 @@ var standard = {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
 
                 // directional (cascaded) shadows
-                code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
-                code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
-                code += "uniform float light" + i + "_shadowCascadeCount;\n";
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeCount;\n";
+                }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
