@@ -103,7 +103,7 @@ class EventsExample extends Example {
         const jumpTrack = assets.jumpAnim.resource.animations[0].resource;
 
         // @ts-ignore engine-tsd
-        // add two events to the jump animation track. One for when the bitmoji's feel touch the ground and another when the
+        // add two events to the jump animation track. One for when the bitmoji's feet touch the ground and another when the
         // bitmoji should transition back to the idle state
         jumpTrack.events = new pc.AnimEvents([
             {
