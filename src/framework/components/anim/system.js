@@ -66,6 +66,7 @@ class AnimComponentSystem extends ComponentSystem {
             }
         }
     }
+
     cloneComponent(entity, clone) {
         var data = {
             stateGraphAsset: entity.anim.stateGraphAsset,
@@ -78,7 +79,7 @@ class AnimComponentSystem extends ComponentSystem {
             layers: entity.anim.layers,
             layerIndices: entity.anim.layerIndices,
             parameters: entity.anim.parameters
-        }
+        };
         this.addComponent(clone, data);
     }
 

@@ -27,7 +27,6 @@ import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
  * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
-
     constructor(system, entity) {
         super(system, entity);
 
@@ -54,7 +53,7 @@ class AnimComponent extends Component {
         }
 
         // remove event from previous asset
-        this._stateGraphAsset && this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
+        if (this._stateGraphAsset) this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
 
         let _id;
         let _asset;
@@ -237,12 +236,12 @@ class AnimComponent extends Component {
 
     /**
      * @name AnimComponent#addLayer
-     * @return {AnimComponentLayer}
+     * @returns {AnimComponentLayer} - The created anim component layer
      * @description Adds a new anim component layer to the anim component.
      * @param {string} layerName - The name of the layer to create.
      */
     addLayer(layerName) {
-        let layer = this.findAnimationLayer(layerName);
+        const layer = this.findAnimationLayer(layerName);
         if (layer) return layer;
         const states = [
             {
@@ -260,33 +259,32 @@ class AnimComponent extends Component {
      * @description Initialises component animation controllers using the provided state graph.
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
      * @example
-     *      entity.anim.loadStateGraph({
-     *          "layers": [
-     *              {
-     *                  "name": layerName,
-     *                  "states": [
-     *                      {
-     *                          "name": "START",
-     *                          "speed": 1
-     *                      },
-     *                      {
-     *                          "name": "Initial State",
-     *                          "speed": speed,
-     *                          "loop": loop,
-     *                          "defaultState": true
-     *                      }
-     *                  ],
-     *                  "transitions": [
-     *                      {
-     *                          "from": "START",
-     *                          "to": "Initial State" 
-     *                      }
-     *                  ]
-     *              }
-     *          ],
-     *          "parameters": {}
-     *      });
-     *  }
+     * entity.anim.loadStateGraph({
+     *     "layers": [
+     *         {
+     *             "name": layerName,
+     *             "states": [
+     *                 {
+     *                     "name": "START",
+     *                     "speed": 1
+     *                 },
+     *                 {
+     *                     "name": "Initial State",
+     *                     "speed": speed,
+     *                     "loop": loop,
+     *                     "defaultState": true
+     *                 }
+     *             ],
+     *             "transitions": [
+     *                 {
+     *                     "from": "START",
+     *                     "to": "Initial State"
+     *                 }
+     *             ]
+     *         }
+     *     ],
+     *     "parameters": {}
+     * });
      */
     loadStateGraph(stateGraph) {
         let i;
@@ -422,7 +420,7 @@ class AnimComponent extends Component {
         const layerIndex = this._layerIndices[layerName];
         return this._layers[layerIndex] || null;
     }
-    
+
     addAnimationState(nodeName, animTrack, speed = 1, loop = true, layerName = 'Base') {
         if (!this._stateGraph) {
             this.loadStateGraph(new AnimStateGraph({
@@ -452,7 +450,7 @@ class AnimComponent extends Component {
                 "parameters": {}
             }));
         }
-        let layer = this.findAnimationLayer(layerName);
+        const layer = this.findAnimationLayer(layerName);
         if (layer) {
             layer.assignAnimation(nodeName, animTrack, speed, loop);
         } else {
