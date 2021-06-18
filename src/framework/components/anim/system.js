@@ -35,7 +35,9 @@ class AnimComponentSystem extends ComponentSystem {
         properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
         properties.forEach((property) => {
-            component[property] = data[property];
+            if (data[property] !== undefined) {
+                component[property] = data[property];
+            }
         });
         if (data.stateGraphAsset) {
             component.stateGraphAsset = data.stateGraphAsset;
