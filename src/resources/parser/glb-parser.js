@@ -1377,7 +1377,7 @@ const createLight = function (gltfLight, node) {
         type: gltfLight.type === "point" ? "omni" : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : Number.MAX_VALUE,
-        falloffMode: LIGHTFALLOFF_INVERSESQUARED,
+        falloffMode: LIGHTFALLOFF_INVERSESQUARED
     };
 
     // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
