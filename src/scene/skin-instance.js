@@ -90,7 +90,9 @@ class SkinInstance {
             var bone = rootBone.findByName(boneName);
 
             if (!bone) {
-                console.error("Failed to find bone [" + boneName + "] in the entity hierarchy, RenderComponent on " + entity.name + ", rootBone: " + rootBone.entity.name);
+                // #if _DEBUG
+                console.error(`Failed to find bone [${boneName}] in the entity hierarchy, RenderComponent on ${entity.name}, rootBone: ${rootBone.entity.name}`);
+                // #endif
                 bone = entity;
             }
 
