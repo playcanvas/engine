@@ -16,6 +16,7 @@ import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FI
  * @param {MorphTarget[]} targets - A list of morph targets.
  * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
  * from the {@link Application}.
+ * @property {MorphTarget} targets Gets an array of morph targets.
  */
 class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
@@ -221,25 +222,8 @@ class Morph extends RefCountedObject {
         this._targets.length = 0;
     }
 
-    /**
-     * @readonly
-     * @name Morph#numTargets
-     * @type {number}
-     * @description Read-only property that returns number of targets of this morph. Access targets using {@link Morph#getTarget}.
-     */
-    get numTargets() {
-        return this._targets ? this._targets.length : 0;
-    }
-
-    /**
-     * @function
-     * @name Morph#getTarget
-     * @description Gets the morph target by index.
-     * @param {number} index - An index of morph target.
-     * @returns {MorphTarget} A morph target object.
-     */
-    getTarget(index) {
-        return this._targets[index];
+    get targets() {
+        return this._targets;
     }
 
     _updateMorphFlags() {
