@@ -1377,16 +1377,14 @@ const createLight = function (gltfLight, node) {
         type: gltfLight.type === "point" ? "omni" : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : Number.MAX_VALUE,
-        falloffMode: LIGHTFALLOFF_INVERSESQUARED
-    };
+        falloffMode: LIGHTFALLOFF_INVERSESQUARED,
 
-    // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
-    // - Omni and spot lights use luminous intensity in candela (lm/sr)
-    // - Directional lights use illuminance in lux (lm/m2).
-    lightProps.intensity = 1;
-    if (gltfLight.hasOwnProperty('intensity')) {
-        lightProps.intensity = gltfLight.intensity > 0 ? 1 : 0;
-    }
+        // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
+        // - Omni and spot lights use luminous intensity in candela (lm/sr)
+        // - Directional lights use illuminance in lux (lm/m2).
+        // Current implementation: clapms specified intensity to 0..2 range
+        intensity: gltfLight.hasOwnProperty('intensity') ? math.clamp(gltfLight.intensity, 0, 2) : 1
+    };
 
     if (gltfLight.hasOwnProperty('spot')) {
         lightProps.innerConeAngle = gltfLight.spot.hasOwnProperty('innerConeAngle') ? gltfLight.spot.innerConeAngle * math.RAD_TO_DEG : 0;
