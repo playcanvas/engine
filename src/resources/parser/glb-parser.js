@@ -1772,7 +1772,7 @@ const loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, option
                     applySampler(textureAsset.resource, (gltf.samplers || [])[gltf.textures[textureIndex].sampler]);
                     result[textureIndex] = textureAsset;
                     if (postprocess) {
-                        postprocess(gltf.textures[index], textureAsset);
+                        postprocess(gltf.textures[textureIndex], textureAsset);
                     }
                 });
             });
