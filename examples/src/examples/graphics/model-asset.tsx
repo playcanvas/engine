@@ -28,7 +28,7 @@ class ModelAssetExample extends Example {
         app.start();
 
         // create an entity with render assets
-        const entity = assets.statue.resource.instantiateRenderEntity({
+        const entity = assets.statue.resource.instantiateModelEntity({
             castShadows: true
         });
 
