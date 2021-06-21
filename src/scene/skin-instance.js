@@ -77,7 +77,7 @@ class SkinInstance {
     }
 
     // resolved skin bones to a hierarchy with the rootBone at its root.
-    // entity parameter specifies the entity used if the bone match is not found in the hierarhy - usually the entity the render component is attached to
+    // entity parameter specifies the entity used if the bone match is not found in the hierarchy - usually the entity the render component is attached to
     resolve(rootBone, entity) {
 
         this.rootBone = rootBone;
