@@ -27,8 +27,7 @@ class AnimController {
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
-        let i;
-        for (i = 0; i < states.length; i++) {
+        for (let i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
                 states[i].name,
@@ -499,8 +498,6 @@ class AnimController {
         if (!this._playing) {
             return;
         }
-        let i;
-        let j;
         let state;
         let animation;
         let clip;
@@ -517,10 +514,10 @@ class AnimController {
             if (this._currTransitionTime <= this._totalTransitionTime) {
                 const interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
-                for (i = 0; i < this._transitionPreviousStates.length; i++) {
+                for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);
                     const stateWeight = this._transitionPreviousStates[i].weight;
-                    for (j = 0; j < state.animations.length; j++) {
+                    for (let j = 0; j < state.animations.length; j++) {
                         animation = state.animations[j];
                         clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
                         if (clip) {
@@ -530,7 +527,7 @@ class AnimController {
                 }
                 // while transitioning, set active state animations to be weighted by (interpolationTime).
                 state = this.activeState;
-                for (i = 0; i < state.animations.length; i++) {
+                for (let i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
                     this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.normalizedWeight;
                 }
@@ -539,13 +536,13 @@ class AnimController {
                 // when a transition ends, remove all previous state clips from the evaluator
                 const activeClips = this.activeStateAnimations.length;
                 const totalClips = this._animEvaluator.clips.length;
-                for (i = 0; i < totalClips - activeClips; i++) {
+                for (let i = 0; i < totalClips - activeClips; i++) {
                     this._animEvaluator.removeClip(0);
                 }
                 this._transitionPreviousStates = [];
                 // when a transition ends, set the active state clip weights so they sum to 1
                 state = this.activeState;
-                for (i = 0; i < state.animations.length; i++) {
+                for (let i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
                     clip = this._animEvaluator.findClip(animation.name);
                     if (clip) {
@@ -556,7 +553,7 @@ class AnimController {
         } else {
             if (this.activeState._blendTree.constructor !== AnimNode) {
                 state = this.activeState;
-                for (i = 0; i < state.animations.length; i++) {
+                for (let i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
                     clip = this._animEvaluator.findClip(animation.name);
                     if (clip) {

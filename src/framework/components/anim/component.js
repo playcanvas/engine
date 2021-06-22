@@ -287,11 +287,10 @@ class AnimComponent extends Component {
      * });
      */
     loadStateGraph(stateGraph) {
-        let i;
         this._stateGraph = stateGraph;
         this._parameters = {};
         const paramKeys = Object.keys(stateGraph.parameters);
-        for (i = 0; i < paramKeys.length; i++) {
+        for (let i = 0; i < paramKeys.length; i++) {
             const paramKey = paramKeys[i];
             this._parameters[paramKey] = {
                 type: stateGraph.parameters[paramKey].type,
@@ -300,7 +299,7 @@ class AnimComponent extends Component {
         }
         this._layers = [];
 
-        for (i = 0; i < stateGraph.layers.length; i++) {
+        for (let i = 0; i < stateGraph.layers.length; i++) {
             const layer = stateGraph.layers[i];
             this._addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
         }
@@ -466,8 +465,10 @@ class AnimComponent extends Component {
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
+     * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
+     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
-    assignAnimation(nodeName, animTrack, layerName) {
+    assignAnimation(nodeName, animTrack, layerName, speed=1,  loop=true) {
         if (!this._stateGraph) {
             this.loadStateGraph(new AnimStateGraph({
                 "layers": [
@@ -480,8 +481,8 @@ class AnimComponent extends Component {
                             },
                             {
                                 "name": nodeName,
-                                "speed": 1,
-                                "loop": true,
+                                "speed": speed,
+                                "loop": loop,
                                 "defaultState": true
                             }
                         ],
@@ -505,7 +506,7 @@ class AnimComponent extends Component {
             // #endif
             return;
         }
-        layer.assignAnimation(nodeName, animTrack);
+        layer.assignAnimation(nodeName, animTrack, speed, loop);
     }
 
     /**
