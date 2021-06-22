@@ -507,6 +507,10 @@ export var scene = {
 };
 
 Morph.prototype.getTarget = function (index) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
+    // #endif
+
     return this.targets[index];
 };
 
