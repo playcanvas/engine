@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+let categoriesList = [];
 let categoriesString = '';
 let categoriesCounter = 0;
 let examplesCounter = 0;
@@ -14,20 +15,24 @@ fs.readdir(`${__dirname}/src/examples/`, function (err, categories) {
             fs.mkdirSync(dir);
         }
         fs.readdir(`${__dirname}/src/examples/${category}`, (err, examples) => {
+            examples = examples.map((example) => example.replace('.tsx', ''));
+            categoriesList.push({
+                name: category,
+                examples
+            });
             if (err) {
                 return console.log('Unable to scan directory: ' + err);
             }
             categoriesString += `<h2>${category}</h2>`;
             examplesCounter += examples.length;
-            examples.forEach((e) => {
-                const example = e.replace('.tsx', '');
+            examples.forEach((example) => {
                 categoriesString += `<li><a href='/#/iframe/${category}/${example}'>${example}</a></li>`;
                 examplesCounter--;
                 if (examplesCounter === 0) {
-                    // categoriesString += '</ul>';
                     categoriesCounter--;
                     if (categoriesCounter === 0) {
                         createIframeDirectory();
+                        createCategoriesListFile();
                     }
                 }
                 const content = `
@@ -78,6 +83,17 @@ function createIframeDirectory() {
         fs.mkdirSync(dir);
     }
     fs.writeFile(`dist/iframes/index.html`, iframeDirectoryHtml, (err) => {
+        if (err) {
+            console.error(err);
+            return null;
+        }
+    });
+}
+
+function createCategoriesListFile() {
+    const text = `/* eslint-disable no-unused-vars */
+var categories = ${JSON.stringify(categoriesList)};`;
+    fs.writeFile(`dist/examples.js`, text, (err) => {
         if (err) {
             console.error(err);
             return null;
