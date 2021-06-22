@@ -245,7 +245,7 @@ class PostEffectsExample extends Example {
 
                 // @ts-ignore engine-tsd
                 if (camera.script.bokeh) {
-            // @ts-ignore engine-tsd
+                    // @ts-ignore engine-tsd
                     camera.script.bokeh.focus = light.getLocalPosition().z - camera.getLocalPosition().z;
                 }
             }

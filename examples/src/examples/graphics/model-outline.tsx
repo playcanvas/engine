@@ -66,7 +66,7 @@ class ModelOutlineExample extends Example {
         app.scene.layers.insert(outlineLayer, 0);
 
         // set up layer to render to the render targer
-            // @ts-ignore engine-tsd
+        // @ts-ignore engine-tsd
         outlineLayer.renderTarget = renderTarget;
 
         // get world layer
@@ -95,7 +95,7 @@ class ModelOutlineExample extends Example {
         });
         app.root.addChild(outlineCamera);
 
-            // @ts-ignore engine-tsd
+        // @ts-ignore engine-tsd
         const outline = new OutlineEffect(app.graphicsDevice, 3);
         outline.color = new pc.Color(0, 0.5, 1, 1);
         outline.texture = texture;
@@ -133,7 +133,6 @@ class ModelOutlineExample extends Example {
                 magFilter: pc.FILTER_LINEAR
             });
             renderTarget.destroy();
-            // @ts-ignore engine-tsd
             renderTarget = new pc.RenderTarget({
                 colorBuffer: texture,
                 depth: true

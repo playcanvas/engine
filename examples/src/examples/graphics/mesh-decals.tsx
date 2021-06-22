@@ -168,7 +168,6 @@ class MeshDecalsExample extends Example {
 
         // Create Entity with a render component to render the mesh instance
         const entity = new pc.Entity();
-        // @ts-ignore engine-tsd
         entity.addComponent("render", {
             type: 'asset',
             meshInstances: [meshInstance],
