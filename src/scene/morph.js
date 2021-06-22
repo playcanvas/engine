@@ -16,7 +16,6 @@ import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FI
  * @param {MorphTarget[]} targets - A list of morph targets.
  * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
  * from the {@link Application}.
- * @property {MorphTarget} targets Gets an array of morph targets.
  */
 class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
