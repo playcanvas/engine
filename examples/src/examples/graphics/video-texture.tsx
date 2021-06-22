@@ -33,7 +33,7 @@ class VideoTextureExample extends Example {
         });
         camera.translate(0, 0, 15);
 
-        // Create an Entity with a omni light component and a sphere model component.
+        // Create an Entity with a omni light
         const light = new pc.Entity();
         light.addComponent("light", {
             type: "omni",
@@ -48,12 +48,12 @@ class VideoTextureExample extends Example {
         // Create a texture to hold the video frame data
         const videoTexture = new pc.Texture(app.graphicsDevice, {
             format: pc.PIXELFORMAT_R5_G6_B5,
-            mipmaps: false
+            mipmaps: false,
+            minFilter: pc.FILTER_LINEAR,
+            magFilter: pc.FILTER_LINEAR,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
-        videoTexture.minFilter = pc.FILTER_LINEAR;
-        videoTexture.magFilter = pc.FILTER_LINEAR;
-        videoTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        videoTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
         // Grab our HTML element with the video
         const video: HTMLVideoElement = document.createElement('video');
@@ -73,47 +73,36 @@ class VideoTextureExample extends Example {
             videoTexture.setSource(video);
         });
 
+        // create an entity to render the tv mesh
+        const entity = assets.tv.resource.instantiateRenderEntity();
+        app.root.addChild(entity);
+
         // Create a material that will use our video texture
         const material = new pc.StandardMaterial();
         material.useLighting = false;
         material.emissiveMap = videoTexture;
+        material.update();
 
-        let upload = false;
-        let ready = false;
-        const entity = new pc.Entity();
-        entity.setLocalEulerAngles(0, -75, 0);
-        app.root.addChild(entity);
+        // set the material on the screen mesh
+        entity.render.meshInstances[1].material = material;
 
-        const modelComponent = entity.addComponent("model", {
-            type: "asset",
-            asset: assets.tv.resource.model
-        });
-        // @ts-ignore engine-tsd
-        const model = modelComponent.model;
-        model.meshInstances[1].material = material;
         video.load();
         // video.play();
-        ready = true;
 
         const mouse = new pc.Mouse(document.body);
-        let x = 0;
-        const y = 0;
-
-        mouse.on('mousemove', function (event) {
-            if (entity && event.buttons[pc.MOUSEBUTTON_LEFT]) {
-                x += event.dx;
-                entity.setLocalEulerAngles(0, 0.2 * x - 75, 0);
-            }
-        });
-
         mouse.on('mousedown', function (event) {
             if (entity && event.buttons[pc.MOUSEBUTTON_LEFT]) {
                 video.muted = !video.muted;
             }
         });
 
+        let upload = false;
+        let time = 0;
         app.on('update', function (dt) {
-            if (!ready) return;
+            time += dt;
+
+            // rotate the tv object
+            entity.setLocalEulerAngles(100 + Math.sin(time) * 50, 0, -90);
 
             // Upload the video data to the texture every other frame
             upload = !upload;
