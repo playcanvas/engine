@@ -47,10 +47,10 @@ class AnimComponentSystem extends ComponentSystem {
         if (data.layers) {
             data.layers.forEach((layer, i) => {
                 layer._controller.states.forEach((stateKey) => {
-                    layer._controller._states[stateKey]._animationList.forEach(node => {
+                    layer._controller._states[stateKey]._animationList.forEach((node) => {
                         component.layers[i].assignAnimation(node.name, node.animTrack);
-                    })
-                })
+                    });
+                });
             });
         } else if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
