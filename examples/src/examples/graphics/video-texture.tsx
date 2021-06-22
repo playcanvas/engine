@@ -48,8 +48,7 @@ class VideoTextureExample extends Example {
         // Create a texture to hold the video frame data
         const videoTexture = new pc.Texture(app.graphicsDevice, {
             format: pc.PIXELFORMAT_R5_G6_B5,
-            // @ts-ignore engine-tsd
-            autoMipmap: false
+            mipmaps: false
         });
         videoTexture.minFilter = pc.FILTER_LINEAR;
         videoTexture.magFilter = pc.FILTER_LINEAR;

@@ -52,8 +52,7 @@ class ModelOutlineExample extends Example {
             width: app.graphicsDevice.width,
             height: app.graphicsDevice.height,
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            // @ts-ignore engine-tsd
-            autoMipmap: true,
+            mipmaps: true,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
@@ -129,8 +128,7 @@ class ModelOutlineExample extends Example {
                 width: app.graphicsDevice.width,
                 height: app.graphicsDevice.height,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                // @ts-ignore engine-tsd
-                autoMipmap: true,
+                mipmaps: true,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR
             });

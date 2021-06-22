@@ -43,8 +43,7 @@ class PainterExample extends Example {
             width: 1024,
             height: 1024,
             format: pc.PIXELFORMAT_R8_G8_B8,
-            // @ts-ignore engine-tsd
-            autoMipmap: false,
+            mipmaps: false,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
