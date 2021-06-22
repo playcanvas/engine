@@ -95,8 +95,7 @@ class AnimController {
 
     get playable() {
         let playable = true;
-        let i;
-        for (i = 0; i < this._stateNames.length; i++) {
+        for (let i = 0; i < this._stateNames.length; i++) {
             if (!this._states[this._stateNames[i]].playable) {
                 playable = false;
             }
