@@ -71,6 +71,9 @@ class RenderCubemapExample extends Example {
             // create material of specified color
             const material = new pc.StandardMaterial();
             material.diffuse = color;
+            material.shininess = 60;
+            material.metalness = 0.7;
+            material.useMetalness = true;
             material.update();
 
             // create primitive
@@ -174,8 +177,9 @@ class RenderCubemapExample extends Example {
             castShadows: true,
             layers: [worldLayer.id],
             shadowBias: 0.2,
+            shadowResolution: 1024,
             normalOffsetBias: 0.05,
-            shadowDistance: 25
+            shadowDistance: 40
         });
         app.root.addChild(light);
 

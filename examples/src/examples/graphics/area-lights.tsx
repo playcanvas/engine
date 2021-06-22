@@ -48,10 +48,10 @@ class AreaLightsExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
-                type: primitiveType
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
@@ -95,7 +95,7 @@ class AreaLightsExample extends Example {
 
             const brightShape = new pc.Entity();
             // primitive shape that matches light source shape
-            brightShape.addComponent("model", {
+            brightShape.addComponent("render", {
                 type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: brightMaterial,
                 castShadows: (type === "directional") ? false : true
@@ -113,7 +113,7 @@ class AreaLightsExample extends Example {
                 blackMaterial.update();
 
                 const blackShape = new pc.Entity();
-                blackShape.addComponent("model", {
+                blackShape.addComponent("render", {
                     type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                     material: blackMaterial
                 });

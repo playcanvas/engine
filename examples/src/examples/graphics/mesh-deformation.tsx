@@ -44,35 +44,32 @@ class MeshDeformationExample extends Example {
         light.translate(5, 0, 15);
         app.root.addChild(light);
 
-        // collected info about meshes to modify
-        const allMeshes: any = [];
-
-        const entity = new pc.Entity();
-        entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model,
-            castShadows: true
-        });
+        // create a hierarchy of entities with render components, representing the statue model
+        const entity = assets.statue.resource.instantiateRenderEntity();
         app.root.addChild(entity);
 
         // collect positions from all mesh instances to work on
-        let i;
-        const meshInstances = entity.model.model.meshInstances;
-        for (i = 0; i < meshInstances.length; i++) {
+        const allMeshes: any = [];
+        const renders: Array<pc.RenderComponent> = entity.findComponents("render");
+        renders.forEach((render) => {
 
-            const meshInstance = meshInstances[i];
+            // collect positions from all mesh instances on this render component
+            const meshInstances = render.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
+                const meshInstance = meshInstances[i];
 
-            // get positions from the mesh
-            const mesh = meshInstance.mesh;
-            const srcPositions: any = [];
-            mesh.getPositions(srcPositions);
+                // get positions from the mesh
+                const mesh = meshInstance.mesh;
+                const srcPositions: any = [];
+                mesh.getPositions(srcPositions);
 
-            // store it
-            allMeshes.push({
-                mesh: mesh,
-                srcPositions: srcPositions
-            });
-        }
+                // store it
+                allMeshes.push({
+                    mesh: mesh,
+                    srcPositions: srcPositions
+                });
+            }
+        });
 
         // start the application when all is set up
         app.start();
@@ -80,7 +77,7 @@ class MeshDeformationExample extends Example {
         // temporary work array of positions to avoid per frame allocations
         const tempPositions: any = [];
 
-        let k, time = 0;
+        let time = 0;
         app.on("update", function (dt) {
             time += dt;
 
@@ -91,13 +88,13 @@ class MeshDeformationExample extends Example {
                 const strength = 50;
 
                 // modify mesh positions on each frame
-                for (i = 0; i < allMeshes.length; i++) {
+                for (let i = 0; i < allMeshes.length; i++) {
                     tempPositions.length = 0;
                     const srcPositions = allMeshes[i].srcPositions;
 
                     // loop over all positions, and fill up tempPositions array with waved version of positions from srcPositions array
                     // modify .x and .z components based on sin function, which uses .y component
-                    for (k = 0; k < srcPositions.length; k += 3) {
+                    for (let k = 0; k < srcPositions.length; k += 3) {
                         tempPositions[k] = srcPositions[k] + strength * Math.sin(time + srcPositions[k + 1] * 0.01);
                         tempPositions[k + 1] = srcPositions[k + 1];
                         tempPositions[k + 2] = srcPositions[k + 2] + strength * Math.sin(time + srcPositions[k + 1] * 0.01);

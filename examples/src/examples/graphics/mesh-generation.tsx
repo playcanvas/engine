@@ -128,25 +128,23 @@ class MeshGenerationExample extends Example {
         mesh.clear(true, false);
         updateMesh(mesh, true);
 
-        // Create Entity and add it to the scene
-        const entity = new pc.Entity();
+        // create material
+        const material = new pc.StandardMaterial();
+        material.diffuseMap = assets.playcanvasGrey.resource;
+        material.shininess = 50;
+        material.metalness = 0.3;
+        material.useMetalness = true;
+        material.update();
 
         // Create the mesh instance
-        let material = new pc.StandardMaterial();
         const meshInstance = new pc.MeshInstance(mesh, material);
 
         // Create the entity with render component using meshInstances
+        const entity = new pc.Entity();
         entity.addComponent("render", {
             meshInstances: [meshInstance]
         });
         app.root.addChild(entity);
-
-        material = new pc.StandardMaterial();
-        material.diffuseMap = assets.playcanvasGrey.resource;
-        material.update();
-
-        entity.render.meshInstances[0].material = material;
-
 
         // Set an update function on the app's update event
         let time = 0;
