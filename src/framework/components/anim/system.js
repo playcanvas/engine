@@ -1,7 +1,5 @@
-import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-import { AnimComponentLayer } from './component-layer.js';
 
 import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
