@@ -507,7 +507,7 @@ export var scene = {
 };
 
 Morph.prototype.getTarget = function (index) {
-    return this._targets[index];
+    return this.targets[index];
 };
 
 GraphNode.prototype._dirtify = function (local) {
