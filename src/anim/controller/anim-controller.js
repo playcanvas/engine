@@ -210,8 +210,7 @@ class AnimController {
 
     _transitionHasConditionsMet(transition) {
         let conditionsMet = true;
-        let i;
-        for (i = 0; i < transition.conditions.length; i++) {
+        for (let i = 0; i < transition.conditions.length; i++) {
             const condition = transition.conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             switch (condition.predicate) {
@@ -316,8 +315,6 @@ class AnimController {
     }
 
     updateStateFromTransition(transition) {
-        let i;
-        let j;
         let state;
         let animation;
         let clip;
@@ -325,7 +322,7 @@ class AnimController {
         this.activeState = transition.to;
 
         // turn off any triggers which were required to activate this transition
-        for (i = 0; i < transition.conditions.length; i++) {
+        for (let i = 0; i < transition.conditions.length; i++) {
             const condition = transition.conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
@@ -347,7 +344,7 @@ class AnimController {
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
             const interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
-            for (i = 0; i < this._transitionPreviousStates.length; i++) {
+            for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (!this._isTransitioning) {
                     this._transitionPreviousStates[i].weight = 1.0;
@@ -359,7 +356,7 @@ class AnimController {
                 state = this._findState(this._transitionPreviousStates[i].name);
                 // update the animations of previous states, set their name to include their position in the previous state array
                 // to uniquely identify animations from the same state that were added during different transitions
-                for (j = 0; j < state.animations.length; j++) {
+                for (let j = 0; j < state.animations.length; j++) {
                     animation = state.animations[j];
                     clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
                     if (!clip) {
@@ -395,7 +392,7 @@ class AnimController {
         this._timeInStateBefore = timeInStateBefore;
 
         // Add clips to the evaluator for each animation in the new state.
-        for (i = 0; i < activeState.animations.length; i++) {
+        for (let i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
                 const speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
