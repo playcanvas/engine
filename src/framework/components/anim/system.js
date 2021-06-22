@@ -1,5 +1,7 @@
+import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
+import { AnimComponentLayer } from './component-layer.js';
 
 import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
@@ -34,19 +36,24 @@ class AnimComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
-        properties.forEach((property) => {
-            if (data[property] !== undefined) {
-                component[property] = data[property];
-            }
+        Object.keys(data).forEach((key) => {
+            if (['animationAssets', 'stateGraph', 'layers'].includes(key)) return;
+            component[key] = data[key];
         });
-        if (data.stateGraphAsset) {
-            component.stateGraphAsset = data.stateGraphAsset;
+        if (data.stateGraph) {
+            component.stateGraph = data.stateGraph;
+            component.loadStateGraph(component.stateGraph);
         }
-        if (data.animationAssets) {
+        if (data.layers) {
+            data.layers.forEach((layer, i) => {
+                layer._controller.states.forEach((stateKey) => {
+                    layer._controller._states[stateKey]._animationList.forEach(node => {
+                        component.layers[i].assignAnimation(node.name, node.animTrack);
+                    })
+                })
+            });
+        } else if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
-        }
-        if (data.rootBone) {
-            component.rootBone = data.rootBone;
         }
     }
 

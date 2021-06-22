@@ -27,7 +27,7 @@ class AnimController {
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
-        var i;
+        let i;
         for (i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
@@ -94,8 +94,8 @@ class AnimController {
     }
 
     get playable() {
-        var playable = true;
-        var i;
+        let playable = true;
+        let i;
         for (i = 0; i < this._stateNames.length; i++) {
             if (!this._states[this._stateNames[i]].playable) {
                 playable = false;
@@ -120,9 +120,9 @@ class AnimController {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
             return 0.0;
 
-        var maxDuration = 0.0;
-        for (var i = 0; i < this.activeStateAnimations.length; i++) {
-            var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
+        let maxDuration = 0.0;
+        for (let i = 0; i < this.activeStateAnimations.length; i++) {
+            const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
             if (activeClip) {
                 maxDuration = Math.max(maxDuration, activeClip.track.duration);
             }
@@ -137,8 +137,8 @@ class AnimController {
     set activeStateCurrentTime(time) {
         this._timeInStateBefore = time;
         this._timeInState = time;
-        for (var i = 0; i < this.activeStateAnimations.length; i++) {
-            var clip = this.animEvaluator.findClip(this.activeStateAnimations[i].name);
+        for (let i = 0; i < this.activeStateAnimations.length; i++) {
+            const clip = this.animEvaluator.findClip(this.activeStateAnimations[i].name);
             if (clip) {
                 clip.time = time;
             }
@@ -165,7 +165,7 @@ class AnimController {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY)
             return 1.0;
 
-        var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
+        const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
             return time / activeClip.track.duration;
         }
@@ -175,7 +175,7 @@ class AnimController {
 
     // return all the transitions that have the given stateName as their source state
     _findTransitionsFromState(stateName) {
-        var transitions = this._findTransitionsFromStateCache[stateName];
+        let transitions = this._findTransitionsFromStateCache[stateName];
         if (!transitions) {
             transitions = this._transitions.filter(function (transition) {
                 return transition.from === stateName;
@@ -193,7 +193,7 @@ class AnimController {
 
     // return all the transitions that contain the given source and destination states
     _findTransitionsBetweenStates(sourceStateName, destinationStateName) {
-        var transitions = this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName];
+        let transitions = this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName];
         if (!transitions) {
             transitions = this._transitions.filter(function (transition) {
                 return transition.from === sourceStateName && transition.to === destinationStateName;
@@ -210,11 +210,11 @@ class AnimController {
     }
 
     _transitionHasConditionsMet(transition) {
-        var conditionsMet = true;
-        var i;
+        let conditionsMet = true;
+        let i;
         for (i = 0; i < transition.conditions.length; i++) {
-            var condition = transition.conditions[i];
-            var parameter = this.findParameter(condition.parameterName);
+            const condition = transition.conditions[i];
+            const parameter = this.findParameter(condition.parameterName);
             switch (condition.predicate) {
                 case ANIM_GREATER_THAN:
                     conditionsMet = conditionsMet && parameter.value > condition.value;
@@ -242,7 +242,7 @@ class AnimController {
     }
 
     _findTransition(from, to) {
-        var transitions = [];
+        let transitions = [];
 
         // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
@@ -288,8 +288,8 @@ class AnimController {
             }
             // when an exit time is present, we should only exit if it falls within the current frame delta time
             if (transition.hasExitTime) {
-                var progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
-                var progress = this._getActiveStateProgressForTime(this._timeInState);
+                let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
+                let progress = this._getActiveStateProgressForTime(this._timeInState);
                 // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
                 if (transition.exitTime < 1.0 && this.activeState.loop) {
                     progressBefore -= Math.floor(progressBefore);
@@ -306,9 +306,9 @@ class AnimController {
 
         // return the highest priority transition to use
         if (transitions.length > 0) {
-            var transition = transitions[0];
+            const transition = transitions[0];
             if (transition.to === ANIM_STATE_END) {
-                var startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
+                const startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
                 transition.to = startTransition.to;
             }
             return transition;
@@ -317,18 +317,18 @@ class AnimController {
     }
 
     updateStateFromTransition(transition) {
-        var i;
-        var j;
-        var state;
-        var animation;
-        var clip;
+        let i;
+        let j;
+        let state;
+        let animation;
+        let clip;
         this.previousState = transition.from;
         this.activeState = transition.to;
 
         // turn off any triggers which were required to activate this transition
         for (i = 0; i < transition.conditions.length; i++) {
-            var condition = transition.conditions[i];
-            var parameter = this.findParameter(condition.parameterName);
+            const condition = transition.conditions[i];
+            const parameter = this.findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
                 parameter.value = false;
             }
@@ -347,7 +347,7 @@ class AnimController {
 
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
-            var interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
+            const interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
             for (i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (!this._isTransitioning) {
@@ -381,14 +381,14 @@ class AnimController {
         this._transitionInterruptionSource = transition.interruptionSource;
 
 
-        var activeState = this.activeState;
-        var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
+        const activeState = this.activeState;
+        const hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
 
         // set the time in the new state to 0 or to a value based on transitionOffset if one was given
-        var timeInState = 0;
-        var timeInStateBefore = 0;
+        let timeInState = 0;
+        let timeInStateBefore = 0;
         if (hasTransitionOffset) {
-            var offsetTime = activeState.timelineDuration * transition.transitionOffset;
+            const offsetTime = activeState.timelineDuration * transition.transitionOffset;
             timeInState = offsetTime;
             timeInStateBefore = offsetTime;
         }
@@ -399,7 +399,7 @@ class AnimController {
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
-                var speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
+                const speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
                 clip = new AnimClip(activeState.animations[i].animTrack, this._timeInState, speed, true, activeState.loop, this._eventHandler);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
@@ -415,7 +415,7 @@ class AnimController {
             if (hasTransitionOffset) {
                 clip.time = activeState.timelineDuration * transition.transitionOffset;
             } else {
-                var startTime = activeState.speed >= 0 ? 0 : this.activeStateDuration;
+                const startTime = activeState.speed >= 0 ? 0 : this.activeStateDuration;
                 clip.time = startTime;
             }
         }
@@ -427,7 +427,7 @@ class AnimController {
         }
 
         // move to the given state, if a transition is present in the state graph use it. Otherwise move instantly to it.
-        var transition = this._findTransition(this._activeStateName, newStateName);
+        let transition = this._findTransition(this._activeStateName, newStateName);
         if (!transition) {
             this._animEvaluator.removeClips();
             transition = new AnimTransition({ from: null, to: newStateName });
@@ -436,8 +436,8 @@ class AnimController {
     }
 
     assignAnimation(pathString, animTrack, speed, loop) {
-        var path = pathString.split('.');
-        var state = this._findState(path[0]);
+        const path = pathString.split('.');
+        let state = this._findState(path[0]);
         if (!state) {
             state = new AnimState(this, path[0], 1.0);
             this._states[path[0]] = state;
@@ -460,7 +460,7 @@ class AnimController {
         if (ANIM_CONTROL_STATES.indexOf(nodeName) !== -1) {
             return;
         }
-        var state = this._findState(nodeName);
+        const state = this._findState(nodeName);
         if (!state) {
             // #if _DEBUG
             console.error('Attempting to unassign animation tracks from a state that does not exist.');
@@ -503,27 +503,27 @@ class AnimController {
         if (!this._playing) {
             return;
         }
-        var i;
-        var j;
-        var state;
-        var animation;
-        var clip;
+        let i;
+        let j;
+        let state;
+        let animation;
+        let clip;
         this._timeInStateBefore = this._timeInState;
         this._timeInState += dt;
 
         // transition between states if a transition is available from the active state
-        var transition = this._findTransition(this._activeStateName);
+        const transition = this._findTransition(this._activeStateName);
         if (transition)
             this.updateStateFromTransition(transition);
 
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+                const interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);
-                    var stateWeight = this._transitionPreviousStates[i].weight;
+                    const stateWeight = this._transitionPreviousStates[i].weight;
                     for (j = 0; j < state.animations.length; j++) {
                         animation = state.animations[j];
                         clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
@@ -541,8 +541,8 @@ class AnimController {
             } else {
                 this._isTransitioning = false;
                 // when a transition ends, remove all previous state clips from the evaluator
-                var activeClips = this.activeStateAnimations.length;
-                var totalClips = this._animEvaluator.clips.length;
+                const activeClips = this.activeStateAnimations.length;
+                const totalClips = this._animEvaluator.clips.length;
                 for (i = 0; i < totalClips - activeClips; i++) {
                     this._animEvaluator.removeClip(0);
                 }

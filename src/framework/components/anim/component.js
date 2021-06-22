@@ -651,7 +651,7 @@ class AnimComponent extends Component {
     }
 
     onBeforeRemove() {
-        if (this._stateGraphAsset !== undefined) {
+        if (Number.isFinite(this._stateGraphAsset)) {
             this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
         }
     }
