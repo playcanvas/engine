@@ -222,6 +222,12 @@ class Morph extends RefCountedObject {
         this._targets.length = 0;
     }
 
+    /**
+     * @readonly
+     * @name Morph#targets
+     * @type {MorphTarget[]}
+     * @description The array of morph targets.
+     */
     get targets() {
         return this._targets;
     }
