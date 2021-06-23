@@ -10,11 +10,12 @@ class MeshDeformationExample extends Example {
     load() {
         return <>
             <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset }): void {
+    example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, 'helipad.dds': pc.Asset }): void {
 
         // Create the app
         const app = new pc.Application(canvas, {});
@@ -23,7 +24,10 @@ class MeshDeformationExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        // setup skydome
+        app.scene.skyboxMip = 2;
+        app.scene.exposure = 2;
+        app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Create an Entity with a camera component
         const camera = new pc.Entity();
@@ -32,17 +36,6 @@ class MeshDeformationExample extends Example {
         });
         camera.translate(0, 7, 24);
         app.root.addChild(camera);
-
-        // Create an Entity with a omni light component
-        const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "omni",
-            color: new pc.Color(1, 1, 1),
-            range: 100,
-            castShadows: true
-        });
-        light.translate(5, 0, 15);
-        app.root.addChild(light);
 
         // create a hierarchy of entities with render components, representing the statue model
         const entity = assets.statue.resource.instantiateRenderEntity();
@@ -82,8 +75,10 @@ class MeshDeformationExample extends Example {
             time += dt;
 
             if (entity) {
-                // rotate the model around
-                entity.rotate(0, 5 * dt, 0);
+
+                // orbit the camera
+                camera.setLocalPosition(25 * Math.sin(time * 0.2), 15, 25 * Math.cos(time * 0.2));
+                camera.lookAt(new pc.Vec3(0, 7, 0));
 
                 const strength = 50;
 
