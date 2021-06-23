@@ -55,7 +55,7 @@ class FlyExample extends Example {
         // ***********    Create Boxes    *******************
 
         // create a few boxes in our scene
-        const red = createMaterial(new pc.Color(1, 0, 0));
+        const red = createMaterial(pc.Color.RED);
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 2; j++) {
                 createBox(new pc.Vec3(i * 2, 0, j * 4), pc.Vec3.ONE, red);
