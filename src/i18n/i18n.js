@@ -73,7 +73,12 @@ class I18n extends EventHandler {
      * var locale = this.app.i18n.getText('en-US');
      */
     findAvailableLocale(desiredLocale) {
-        return findAvailableLocale(desiredLocale, this._translations);
+        if (this._translations[desiredLocale]) {
+            return desiredLocale;
+        }
+
+        const lang = getLang(desiredLocale);
+        return this._findFallbackLocale(desiredLocale, lang);
     }
 
     /**
