@@ -192,78 +192,6 @@ function BasisWorker() {
     let basis = null;
     const queue = [];
 
-    const workerInit = (urls) => {
-        const instantiate = (module) => {
-            const instantiateWasmFunc = (imports, successCallback) => {
-                WebAssembly.instantiate(module, imports)
-                    .then((result) => {
-                        successCallback(result);
-                    })
-                    .catch((reason) => {
-                        console.error('instantiate failed + ' + reason);
-                    });
-                return {};
-            };
-
-            self.BASIS(module ? { instantiateWasm: instantiateWasmFunc } : null)
-                .then((instance) => {
-                    basis = instance;
-                    basis.initializeBasis();
-                    for (let i = 0; i < queue.length; ++i) {
-                        workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
-                    }
-                    queue.length = 0;
-                })
-                .catch((reason) => {
-                    console.error('instantiate failed ' + reason);
-                });
-        };
-
-        // check for wasm module support
-        const wasmSupported = () => {
-            try {
-                if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-                    const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-                    if (module instanceof WebAssembly.Module)
-                        return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-                }
-            } catch (e) { }
-            return false;
-        };
-
-        if (urls.glue && urls.wasm && wasmSupported()) {
-            // load the glue code
-            self.importScripts(urls.glue);
-
-            const compileManual = () => {
-                fetch(urls.wasm)
-                    .then((response) => response.arrayBuffer())
-                    .then((bytes) => WebAssembly.compile(bytes))
-                    .then((module) => instantiate(module))
-                    .catch((reason) => {
-                        console.error('compile failed ' + reason);
-                    });
-            };
-
-            // download and compile wasm module
-            if (WebAssembly.compileStreaming) {
-                WebAssembly.compileStreaming(fetch(urls.wasm))
-                    .then((module) => instantiate(module))
-                    .catch((reason) => {
-                        console.error(reason);
-                        console.warn('compileStreaming() failed for ' + urls.wasm + ', falling back to arraybuffer download...');
-                        compileManual();
-                    });
-            } else {
-                compileManual();
-            }
-        } else {
-            // load fallback transcoder
-            self.importScripts(urls.fallback);
-            instantiate();
-        }
-    };
-
     // download and transcode the file given the basis module and
     // file url
     const workerTranscode = (url, format, data, options) => {
@@ -279,12 +207,42 @@ function BasisWorker() {
         }
     };
 
+    const workerInit = (config) => {
+        // load the basis file (this is asynchronous)
+        self.importScripts(config.basisUrl);
+
+        // initialize the wasm module
+        const instantiateWasmFunc = (imports, successCallback) => {
+            WebAssembly.instantiate(config.module, imports)
+                .then((result) => {
+                    successCallback(result);
+                })
+                .catch((reason) => {
+                    console.error('instantiate failed + ' + reason);
+                });
+            return {};
+        };
+
+        self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
+            .then((instance) => {
+                basis = instance;
+                basis.initializeBasis();
+                for (let i = 0; i < queue.length; ++i) {
+                    workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
+                }
+                queue.length = 0;
+            })
+            .catch((reason) => {
+                console.error('instantiate failed ' + reason);
+            });
+    };
+
     // handle incoming worker requests
     self.onmessage = function (message) {
         const data = message.data;
         switch (data.type) {
             case 'init':
-                workerInit(data.urls);
+                workerInit(data.config);
                 break;
             case 'transcode':
                 if (basis) {

@@ -1,17 +1,102 @@
 import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/constants.js';
 import { getApplication } from '../framework/globals.js';
 import { BasisWorker } from './basis-worker.js';
+import { http } from '../net/http.js';
+
+// download basis code and compile the wasm module for use in workers
+const prepareWorkerModules = (urls, callback) => {
+    const getWorkerBlob = () => {
+        const code = '(' + BasisWorker.toString() + ')()\n\n';
+        return new File([code], 'basis_worker.js', { type: 'application/javascript' });
+    };
+
+    const wasmSupported = () => {
+        try {
+            if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+                const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+                if (module instanceof WebAssembly.Module)
+                    return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+            }
+        } catch (e) { }
+        return false;
+    };
+
+    const sendResponse = (basisCode, module) => {
+        callback(null, {
+            workerUrl: URL.createObjectURL(getWorkerBlob()),
+            basisUrl: URL.createObjectURL(basisCode),
+            module: module
+        });
+    };
+
+    if (urls.glue && urls.wasm && wasmSupported()) {
+        let basisCode = null;
+        let module = null;
+
+        // download glue script
+        http.get(urls.glue, { responseType: 'blob' }, (err, response) => {
+            if (err) {
+                callback(err);
+            } else {
+                if (module) {
+                    sendResponse(response, module);
+                } else {
+                    basisCode = response;
+                }
+            }
+        });
+
+        const fetchPromise = fetch(urls.wasm);
+
+        const compileManual = () => {
+            fetchPromise
+                .then((result) => result.arrayBuffer())
+                .then((buffer) => WebAssembly.compile(buffer))
+                .then((module_) => {
+                    if (basisCode) {
+                        sendResponse(basisCode, module_);
+                    } else {
+                        module = module_;
+                    }
+                })
+                .catch((err) => {
+                    callback(err, null);
+                });
+        };
+
+        // download and compile wasm module
+        if (WebAssembly.compileStreaming) {
+            WebAssembly.compileStreaming(fetchPromise)
+                .then((module_) => {
+                    if (basisCode) {
+                        sendResponse(basisCode, module_);
+                    } else {
+                        module = module_;
+                    }
+                })
+                .catch((err) => {
+                    console.warn('compileStreaming() failed for ' + urls.wasm + '(' + err + '), falling back to arraybuffer download.');
+                    compileManual();
+                });
+        } else {
+            compileManual();
+        }
+    } else {
+        http.get(urls.fallback, { responseType: 'blob' }, (err, response) => {
+            if (err) {
+                callback(err, null);
+            } else {
+                sendResponse(response, null);
+            }
+        });
+    }
+};
 
 class BasisClient {
-    constructor(urls) {
-        const code = '(' + BasisWorker.toString() + ')()\n\n';
-        const blob = new File([code], 'basis_worker.js', { type: 'application/javascript' });
-        const url = URL.createObjectURL(blob);
-
-        this.worker = new Worker(url);
+    constructor(config) {
+        this.worker = new Worker(config.workerUrl);
         this.worker.addEventListener('message', this.handleWorkerResponse.bind(this));
-        this.worker.postMessage({ type: 'init', urls: urls });
-
+        this.worker.postMessage({ type: 'init', config: config });
         this.callbacks = { };
     }
 
@@ -96,10 +181,9 @@ function chooseTargetFormat(device) {
 }
 
 // global state
-let downloadConfig = null;
-let clients = null;
+let queue = null;
+let client = null;
 let format = null;
-let client = 0;
 
 function basisTargetFormat() {
     if (!format) {
@@ -108,44 +192,38 @@ function basisTargetFormat() {
     return format;
 }
 
-// set the wasm url config to be used if basisDownloadFromConfig is invoked
-function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
-    downloadConfig = {
-        glue: glueUrl,
-        wasm: wasmUrl,
-        fallback: fallbackUrl
-    };
-}
-
-function basisGetDownloadConfig() {
-    if (downloadConfig) {
-        return downloadConfig;
+// initialize basis
+function basisInitialize(config) {
+    if (queue !== null) {
+        // already initializing
+        return;
     }
 
-    // get config from global PC config structure
-    const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-    const wasmModule = modules.find(function (m) {
-        return m.moduleName === 'BASIS';
+    queue = [];
+
+    if (!config) {
+        // get config from global PC config structure
+        const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
+        const wasmModule = modules.find(function (m) {
+            return m.moduleName === 'BASIS';
+        });
+        if (wasmModule) {
+            const urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
+            config = {
+                glue: urlBase + wasmModule.glueUrl,
+                wasm: urlBase + wasmModule.wasmUrl,
+                fallback: urlBase + wasmModule.fallbackUrl
+            };
+        }
+    }
+
+    prepareWorkerModules(config, (err, config) => {
+        client = new BasisClient(config);
+        queue.forEach((t) => {
+            client.transcode(t.url, t.data, basisTargetFormat(), t.callback, t.options);
+        });
+        queue = null;
     });
-    if (wasmModule) {
-        const urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
-        return {
-            glue: urlBase + wasmModule.glueUrl,
-            wasm: urlBase + wasmModule.wasmUrl,
-            fallback: urlBase + wasmModule.fallbackUrl
-        };
-    }
-
-    return null;
-}
-
-function basisInitialize() {
-    if (!clients) {
-        clients = [
-            new BasisClient(basisGetDownloadConfig()),
-            new BasisClient(basisGetDownloadConfig())
-        ];
-    }
 }
 
 // transcode a basis file
@@ -156,19 +234,22 @@ function basisInitialize() {
 //                   quality issues on apple devices.
 // returns true if a transcode module is found
 function basisTranscode(url, data, callback, options) {
-    if (!clients) {
+    if (client) {
+        client.transcode(url, data, basisTargetFormat(), callback, options);
+    } else {
         basisInitialize();
+        queue.push({
+            url: url,
+            data: data,
+            callback: callback,
+            options: options
+        });
     }
-
-    clients[client++].transcode(url, data, basisTargetFormat(), callback, options);
-    client %= clients.length;
-
     return true;
 }
 
 export {
     basisTargetFormat,
-    basisSetDownloadConfig,
     basisInitialize,
     basisTranscode
 };
