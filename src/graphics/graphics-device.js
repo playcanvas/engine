@@ -768,11 +768,17 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
         let ext;
 
-        const supportedExtensions = gl.getSupportedExtensions();
+        const supportedExtensions = () => {
+            const result = { };
+            gl.getSupportedExtensions().forEach((e) => {
+                result[e] = true;
+            });
+            return result;
+        };
 
         const getExtension = function () {
             for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
+                if (supportedExtensions.hasOwnProperty(arguments[i])) {
                     return gl.getExtension(arguments[i]);
                 }
             }
