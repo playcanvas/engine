@@ -63,7 +63,7 @@ class FlyExample extends Example {
         }
 
         // create a floor
-        const white = createMaterial(new pc.Color(1, 1, 1));
+        const white = createMaterial(pc.Color.WHITE);
         createBox(new pc.Vec3(0, -0.5, 0), new pc.Vec3(10, 0.1, 10), white);
 
         // ***********    Create lights   *******************
