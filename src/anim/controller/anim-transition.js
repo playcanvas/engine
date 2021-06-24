@@ -1,5 +1,4 @@
 import {
-    ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE
 } from './constants.js';
 
@@ -9,26 +8,24 @@ import {
  * @name AnimTransition
  * @classdesc AnimTransitions represent connections in the controllers state graph between AnimStates. During each frame, the controller tests to see if any of the AnimTransitions have the current AnimState as their source (from) state. If so and the AnimTransitions parameter based conditions are met, the controller will transition to the destination state.
  * @description Create a new AnimTransition.
- * @param {AnimController} controller - The controller this AnimTransition is associated with.
  * @param {string} from - The state that this transition will exit from.
  * @param {string} to - The state that this transition will transition to.
- * @param {number} time - The duration of the transition in seconds.
- * @param {number} priority - Used to sort all matching transitions in ascending order. The first transition in the list will be selected.
- * @param {object[]} conditions - A list of conditions which must pass for this transition to be used.
- * @param {number} exitTime - If provided, this transition will only be active for the exact frame during which the source states progress passes the time specified. Given as a normalised value of the source states duration. Values less than 1 will be checked every animation loop.
- * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.
- * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of ANIM_INTERRUPTION_*.
+ * @param {number} time - The duration of the transition in seconds. Defaults to 0.
+ * @param {number} priority - Used to sort all matching transitions in ascending order. The first transition in the list will be selected. Defaults to 0.
+ * @param {object[]} conditions - A list of conditions which must pass for this transition to be used. Defaults to [].
+ * @param {number} exitTime - If provided, this transition will only be active for the exact frame during which the source states progress passes the time specified. Given as a normalised value of the source states duration. Values less than 1 will be checked every animation loop. Defaults to null.
+ * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1. Defaults to null.
+ * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of pc.ANIM_INTERRUPTION_*. Defaults to pc.ANIM_INTERRUPTION_NONE.
  */
 class AnimTransition {
-    constructor(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource = ANIM_INTERRUPTION_NONE) {
-        this._controller = controller;
+    constructor({ from, to, time = 0, priority = 0, conditions = [], exitTime = null, transitionOffset = null, interruptionSource = ANIM_INTERRUPTION_NONE }) {
         this._from = from;
         this._to = to;
         this._time = time;
         this._priority = priority;
-        this._conditions = conditions || [];
-        this._exitTime = exitTime || null;
-        this._transitionOffset = transitionOffset || null;
+        this._conditions = conditions;
+        this._exitTime = exitTime;
+        this._transitionOffset = transitionOffset;
         this._interruptionSource = interruptionSource;
     }
 
@@ -70,38 +67,6 @@ class AnimTransition {
 
     get hasExitTime() {
         return !!this.exitTime;
-    }
-
-    get hasConditionsMet() {
-        var conditionsMet = true;
-        var i;
-        for (i = 0; i < this.conditions.length; i++) {
-            var condition = this.conditions[i];
-            var parameter = this._controller.findParameter(condition.parameterName);
-            switch (condition.predicate) {
-                case ANIM_GREATER_THAN:
-                    conditionsMet = conditionsMet && parameter.value > condition.value;
-                    break;
-                case ANIM_LESS_THAN:
-                    conditionsMet = conditionsMet && parameter.value < condition.value;
-                    break;
-                case ANIM_GREATER_THAN_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value >= condition.value;
-                    break;
-                case ANIM_LESS_THAN_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value <= condition.value;
-                    break;
-                case ANIM_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value === condition.value;
-                    break;
-                case ANIM_NOT_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value !== condition.value;
-                    break;
-            }
-            if (!conditionsMet)
-                return conditionsMet;
-        }
-        return conditionsMet;
     }
 }
 
