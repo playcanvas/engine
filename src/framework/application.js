@@ -1420,8 +1420,8 @@ class Application extends EventHandler {
      * events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
-        // Don't update if we are in VR
-        if ((this.vr && this.vr.display) || (this.xr.active && this.xr.type === XRTYPE_VR)) {
+        // Don't update if we are in VR or XR
+        if ((!this._allowResize) || (this.xr.active)) {
             return;
         }
 
