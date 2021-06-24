@@ -1,4 +1,5 @@
 import { Material } from '../../scene/materials/material.js';
+import { ContainerResource } from '../container.js';
 import { GlbParser } from './glb-parser.js';
 
 class GlbModelParser {
@@ -11,7 +12,7 @@ class GlbModelParser {
         if (!glb) {
             return null;
         }
-        return GlbParser.createModel(glb, Material.defaultMaterial);
+        return ContainerResource.createModel(glb, Material.defaultMaterial);
     }
 }
 

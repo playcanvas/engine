@@ -5,14 +5,19 @@ import { http, Http } from '../net/http.js';
 import { Asset } from '../asset/asset.js';
 
 import { GlbParser } from './parser/glb-parser.js';
+
 import { Entity } from '../framework/entity.js';
+
 import { MeshInstance } from '../scene/mesh-instance.js';
+import { MorphInstance } from '../scene/morph-instance.js';
 import { SkinInstance } from '../scene/skin-instance.js';
+import { SkinInstanceCache } from '../scene/skin-instance-cache.js';
+import { Model } from '../scene/model.js';
 
 /**
  * @class
  * @name ContainerResource
- * @classdesc Container for a list of animations, textures, materials and a model.
+ * @classdesc Container for a list of animations, textures, materials, renders and a model.
  * @param {object} data - The loaded GLB data.
  * @property {Asset[]} animations - Array of assets of animations in the GLB container.
  * @property {Asset[]} textures - Array of assets of textures in the GLB container.
@@ -22,12 +27,35 @@ import { SkinInstance } from '../scene/skin-instance.js';
 class ContainerResource {
     constructor(data) {
         this.data = data;
-        this.model = null;
+        this._model = null;
         this.renders = [];
         this.materials = [];
         this.textures = [];
         this.animations = [];
         this.registry = null;
+        this._defaultMaterial = null;
+        this._assetName = null;
+        this._assets = null;
+    }
+
+    get model() {
+        if (!this._model) {
+            // create model only when needed
+            const model = ContainerResource.createModel(this.data, this._defaultMaterial);
+            const modelAsset = ContainerResource.createAsset(this._assetName, 'model', model, 0);
+            this._assets.add(modelAsset);
+            this._model = modelAsset;
+        }
+        return this._model;
+    }
+
+    static createAsset(assetName, type, resource, index) {
+        const subAsset = new Asset(assetName + '/' + type + '/' + index, type, {
+            url: ''
+        });
+        subAsset.resource = resource;
+        subAsset.loaded = true;
+        return subAsset;
     }
 
     /**
@@ -67,87 +95,187 @@ class ContainerResource {
      * });
      */
     instantiateRenderEntity(options) {
-        // helper function to recursively clone a hierarchy while converting ModelComponent to RenderComponents
-        const cloneToEntity = function (skinInstances, model, node) {
 
-            if (node) {
-                const entity = new Entity();
-                node._cloneInternal(entity);
+        const defaultMaterial = this._defaultMaterial;
+        const skinedMeshInstances = [];
 
-                // find all mesh instances attached to this node
-                let attachedMi = null;
-                for (let m = 0; m < model.meshInstances.length; m++) {
-                    const mi = model.meshInstances[m];
-                    if (mi.node === node) {
+        const createMeshInstance = function (root, entity, mesh, materials, skins, gltfNode) {
 
-                        // clone mesh instance
-                        const cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
+            // clone mesh instance
+            const material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+            const meshInstance = new MeshInstance(mesh, material);
 
-                        // clone morph instance
-                        if (mi.morphInstance) {
-                            cloneMi.morphInstance = mi.morphInstance.clone();
-                        }
-
-                        // skin instance - store info to clone later after the hierarchy is created
-                        if (mi.skinInstance) {
-                            skinInstances.push({
-                                src: mi.skinInstance,
-                                dst: cloneMi
-                            });
-                        }
-
-                        // add it to list
-                        if (!attachedMi) {
-                            attachedMi = [];
-                        }
-                        attachedMi.push(cloneMi);
-                    }
-                }
-
-                // create render components for mesh instances
-                if (attachedMi) {
-                    entity.addComponent("render", Object.assign({ type: "asset" }, options));
-                    entity.render.meshInstances = attachedMi;
-                }
-
-                // recursivelly clone children
-                const children = node.children;
-                for (let i = 0; i < children.length; i++) {
-                    const childClone = cloneToEntity(skinInstances, model, children[i]);
-                    entity.addChild(childClone);
-                }
-
-                return entity;
+            // create morph instance
+            if (mesh.morph) {
+                meshInstance.morphInstance = new MorphInstance(mesh.morph);
             }
 
-            return null;
+            // store data to create skin instance after the hierarchy is created
+            if (gltfNode.hasOwnProperty('skin')) {
+                skinedMeshInstances.push({
+                    meshInstance: meshInstance,
+                    skin: skins[gltfNode.skin],
+                    rootBone: root,
+                    entity: entity
+                });
+            }
+
+            return meshInstance;
         };
 
-        // clone GraphNode hierarchy from model to Entity hierarchy
-        const skinInstances = [];
-        const entity = cloneToEntity(skinInstances, this.model.resource, this.model.resource.graph);
+        // helper function to recursively clone a hierarchy of GraphNodes to Entities
+        const cloneHierarchy = function (root, node, glb) {
 
-        // clone skin instances - now that all entities (bones) are created
-        for (let i = 0; i < skinInstances.length; i++) {
-            const srcSkinInstance = skinInstances[i].src;
-            const dstMeshInstance = skinInstances[i].dst;
+            const entity = new Entity();
+            node._cloneInternal(entity);
 
-            const skin = srcSkinInstance.skin;
-            const cloneSkinInstance = new SkinInstance(skin);
+            // first entity becomes the root
+            if (!root) root = entity;
 
-            // Resolve bone IDs to cloned entities
-            const bones = [];
-            for (let j = 0; j < skin.boneNames.length; j++) {
-                const boneName = skin.boneNames[j];
-                const bone = entity.findByName(boneName);
-                bones.push(bone);
+            // find all components needed for this node
+            let attachedMi = null;
+            for (let i = 0; i < glb.nodes.length; i++) {
+                const glbNode = glb.nodes[i];
+                if (glbNode === node) {
+                    const gltfNode = glb.gltf.nodes[i];
+
+                    // mesh
+                    if (gltfNode.hasOwnProperty('mesh')) {
+                        const meshGroup = glb.renders[gltfNode.mesh].meshes;
+                        for (var mi = 0; mi < meshGroup.length; mi++) {
+                            const mesh = meshGroup[mi];
+                            if (mesh) {
+                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.skins, gltfNode);
+
+                                // add it to list
+                                if (!attachedMi) {
+                                    attachedMi = [];
+                                }
+                                attachedMi.push(cloneMi);
+                            }
+                        }
+                    }
+
+                    // light - clone (additional child) entity with the light component
+                    if (glb.lights) {
+                        const lightEntity = glb.lights.get(gltfNode);
+                        if (lightEntity) {
+                            entity.addChild(lightEntity.clone());
+                        }
+                    }
+                }
             }
 
-            cloneSkinInstance.bones = bones;
-            dstMeshInstance.skinInstance = cloneSkinInstance;
+            // create render components for mesh instances
+            if (attachedMi) {
+                entity.addComponent("render", Object.assign({
+                    type: "asset",
+                    meshInstances: attachedMi
+                }, options));
+            }
+
+            // recursivelly clone children
+            const children = node.children;
+            for (let i = 0; i < children.length; i++) {
+                const childClone = cloneHierarchy(root, children[i], glb);
+                entity.addChild(childClone);
+            }
+
+            return entity;
+        };
+
+        // clone scenes hierarchies
+        const sceneClones = [];
+        for (const scene of this.data.scenes) {
+            sceneClones.push(cloneHierarchy(null, scene, this.data));
         }
 
-        return entity;
+        // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
+        skinedMeshInstances.forEach((data) => {
+            data.meshInstance.mesh.skin = data.skin;
+            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.skin, data.rootBone, data.entity);
+        });
+
+        // return the scene hierarachy created from scene clones
+        return ContainerResource.createSceneHierarchy(sceneClones, "Entity");
+    }
+
+    // helper function to create a single hierarchy from an array of nodes
+    static createSceneHierarchy(sceneNodes, nodeType) {
+
+        // create a single root of the hierarchy - either the single scene, or a new Entity parent if multiple scenes
+        let root = null;
+        if (sceneNodes.length === 1) {
+            // use scene if only one
+            root = sceneNodes[0];
+        } else {
+            // create group node for all scenes
+            root = new nodeType('SceneGroup');
+            for (const scene of sceneNodes) {
+                root.addChild(scene);
+            }
+        }
+
+        return root;
+    }
+
+    // create a pc.Model from the parsed GLB data structures
+    static createModel(glb, defaultMaterial) {
+
+        const createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
+            const material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+            const meshInstance = new MeshInstance(mesh, material, node);
+
+            if (mesh.morph) {
+                const morphInstance = new MorphInstance(mesh.morph);
+                meshInstance.morphInstance = morphInstance;
+                model.morphInstances.push(morphInstance);
+            }
+
+            if (gltfNode.hasOwnProperty('skin')) {
+                const skinIndex = gltfNode.skin;
+                const skin = skins[skinIndex];
+                mesh.skin = skin;
+
+                const skinInstance = skinInstances[skinIndex];
+                meshInstance.skinInstance = skinInstance;
+                model.skinInstances.push(skinInstance);
+            }
+
+            model.meshInstances.push(meshInstance);
+        };
+
+        const model = new Model();
+
+        // create skinInstance for each skin
+        const skinInstances = [];
+        for (const skin of glb.skins) {
+            const skinInstance = new SkinInstance(skin);
+            skinInstance.bones = skin.bones;
+            skinInstances.push(skinInstance);
+        }
+
+        // node hierarchy for the model
+        model.graph = ContainerResource.createSceneHierarchy(glb.scenes, "GraphNode");
+
+        // create mesh instance for meshes on nodes that are part of hierarchy
+        for (let i = 0; i < glb.nodes.length; i++) {
+            const node = glb.nodes[i];
+            if (node.root === model.graph) {
+                const gltfNode = glb.gltf.nodes[i];
+                if (gltfNode.hasOwnProperty('mesh')) {
+                    const meshGroup = glb.renders[gltfNode.mesh].meshes;
+                    for (var mi = 0; mi < meshGroup.length; mi++) {
+                        const mesh = meshGroup[mi];
+                        if (mesh) {
+                            createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);
+                        }
+                    }
+                }
+            }
+        }
+
+        return model;
     }
 
     destroy() {
@@ -185,9 +313,9 @@ class ContainerResource {
             this.renders = null;
         }
 
-        if (this.model) {
-            destroyAsset(this.model);
-            this.model = null;
+        if (this._model) {
+            destroyAsset(this._model);
+            this._model = null;
         }
 
         this.data = null;
@@ -210,6 +338,7 @@ class ContainerResource {
  * |-------------+-------------+-------------+-------------+-------------|
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
+ * | light       |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | image       |      x      |             |      x      |      x      |
@@ -303,19 +432,12 @@ class ContainerHandler {
 
         if (data) {
             const createAsset = function (type, resource, index) {
-                const subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
-                    url: ''
-                });
-                subAsset.resource = resource;
-                subAsset.loaded = true;
+                const subAsset = ContainerResource.createAsset(asset.name, type, resource, index);
                 assets.add(subAsset);
                 return subAsset;
             };
 
             let i;
-
-            // create model asset
-            const model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
             // render assets
             const renders = [];
@@ -335,13 +457,14 @@ class ContainerHandler {
                 animations.push(createAsset('animation', data.animations[i], i));
             }
 
-            container.data = null;              // since assets are created, release GLB data
-            container.model = model;
+            container._assetName = asset.name;
+            container._assets = assets;
             container.renders = renders;
             container.materials = materials;
             container.textures = data.textures; // texture assets are created directly
             container.animations = animations;
             container.registry = assets;
+            container._defaultMaterial = this._defaultMaterial;
         }
     }
 }
