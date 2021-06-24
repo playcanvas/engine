@@ -751,7 +751,8 @@ class TextElement {
                 const isLineBreak = LINE_BREAK_CHAR.test(char);
                 if (isLineBreak) {
                     numBreaksThisLine++;
-                    if (this._maxLines < 0 || lines < this._maxLines) {
+                    // If we are not line wrapping then we should be ignoring maxlines
+                    if (!this._wrapLines || this._maxLines < 0 || lines < this._maxLines) {
                         breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                         wordStartIndex = i + 1;
                         lineStartIndex = i + 1;

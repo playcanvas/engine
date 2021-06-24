@@ -23,13 +23,11 @@ class OrbitExample extends Example {
             touch: new pc.TouchDevice(document.body)
         });
 
-        // Create a model entity and assign the statue model
-        const model = new pc.Entity();
-        model.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
-        app.root.addChild(model);
+        // Create an entity hierarchy representing the statue
+        const statueEntity = assets.statue.resource.instantiateRenderEntity();
+        statueEntity.setLocalScale(0.07, 0.07, 0.07);
+        statueEntity.setLocalPosition(0, -0.5, 0);
+        app.root.addChild(statueEntity);
 
         // Create a camera with an orbit camera script
         const camera = new pc.Entity();

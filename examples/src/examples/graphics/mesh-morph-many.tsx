@@ -1,16 +1,28 @@
+import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
+import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 
 class MeshMorphManyExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Morph Many';
 
+    load() {
+        return <>
+            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+        </>;
+    }
+
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, assets: { 'helipad.dds': pc.Asset}): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
+
+        // setup skydome
+        app.scene.skyboxMip = 2;
+        app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -22,8 +34,8 @@ class MeshMorphManyExample extends Example {
             type: "directional",
             castShadows: true,
             shadowBias: 0.5,
-            shadowDistance: 16,
-            color: new pc.Color(1, 0.3, 0.5)
+            shadowDistance: 25,
+            color: new pc.Color(0.5, 0.5, 0.5)
         });
         app.root.addChild(light);
         light.setLocalEulerAngles(45, 45, 0);
@@ -113,33 +125,29 @@ class MeshMorphManyExample extends Example {
         // create a morph using these targets
         mesh.morph = new pc.Morph(targets, app.graphicsDevice);
 
-        // Create the mesh instance
-        const node = new pc.GraphNode();
+        // material
         const material = new pc.StandardMaterial();
-        const meshInstance = new pc.MeshInstance(mesh, material, node);
+        material.shininess = 50;
+        material.metalness = 0.3;
+        material.useMetalness = true;
+        material.update();
 
-        // Create a model and add the mesh instance to it
-        const model = new pc.Model();
-        model.graph = node;
-        model.meshInstances = [meshInstance];
+        // Create the mesh instance
+        const meshInstance = new pc.MeshInstance(mesh, material);
 
         // add morph instance - this is where currently set weights are stored
         const morphInstance = new pc.MorphInstance(mesh.morph);
         // @ts-ignore engine-tsd
         meshInstance.morphInstance = morphInstance;
-        model.morphInstances.push(morphInstance);
 
         // Create Entity and add it to the scene
         const entity = new pc.Entity();
+        entity.addComponent("render", {
+            material: material,
+            meshInstances: [meshInstance]
+        });
         entity.setLocalPosition(0, 0, 0);
         app.root.addChild(entity);
-
-        // Add a model compoonent
-        // @ts-ignore engine-tsd
-        app.systems.model.addComponent(entity, {
-            type: 'asset'
-        });
-        entity.model.model = model;
 
         // update function called once per frame
         let time = 0;
