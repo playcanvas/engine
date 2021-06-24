@@ -5,6 +5,8 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { basisTargetFormat, basisTranscode } from '../../basis.js';
 
+const appStartTime = performance.now();
+
 /**
  * @private
  * @class
@@ -24,6 +26,7 @@ class BasisParser {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
+        const startTime = performance.now();
         http.get(
             url.load,
             options,
@@ -43,7 +46,21 @@ class BasisParser {
                         // remove the swizzled flag from the asset
                         asset.file.variants.basis.opt &= ~8;
                     }
-                    const basisModuleFound = basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
+                    const downloadTime = performance.now();
+                    const basisModuleFound = basisTranscode(
+                        url.load,
+                        result,
+                        // callback,
+                        (err, result) => {
+                            const finishedTime = performance.now();
+                            console.log('start=' + Math.floor(startTime - appStartTime) +
+                                        ' download=' + Math.floor(downloadTime - startTime) +
+                                        ' transcode=' + Math.floor(finishedTime - downloadTime) +
+                                        ' url=' + url.load);
+                            callback(err, result);
+                        },
+                        { unswizzleGGGR: unswizzleGGGR }
+                    );
 
                     if (!basisModuleFound) {
                         callback('Basis module not found. Asset "' + asset.name + '" basis texture variant will not be loaded.');
