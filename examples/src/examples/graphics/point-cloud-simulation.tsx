@@ -125,26 +125,17 @@ class PointCloudSimulationExample extends Example {
         material.depthWrite = false;
 
         // Create the mesh instance
-        const node = new pc.GraphNode();
-        const meshInstance = new pc.MeshInstance(mesh, material, node);
+        const meshInstance = new pc.MeshInstance(mesh, material);
 
-        // Create a model and add the mesh instance to it
-        const model = new pc.Model();
-        model.graph = node;
-        model.meshInstances = [meshInstance];
-
-        // Create Entity and add it to the scene
+        // Create Entity to render the mesh instances using a render component
         const entity = new pc.Entity();
-        app.root.addChild(entity);
-
-        // Add a model compoonent
-        // @ts-ignore engine-tsd
-        app.systems.model.addComponent(entity, {
+        entity.addComponent("render", {
             type: 'asset',
+            meshInstances: [meshInstance],
+            material: material,
             castShadows: false
         });
-        entity.model.model = model;
-
+        app.root.addChild(entity);
 
         // Set an update function on the app's update event
         let time = 0, previousTime;
@@ -180,7 +171,7 @@ class PointCloudSimulationExample extends Example {
 
             // once a second change how many points are visible
             if (Math.round(time) !== Math.round(previousTime))
-                visiblePoints = Math.floor(10000 + Math.random() * maxNumPoints - 10000);
+                visiblePoints = Math.floor(50000 + Math.random() * maxNumPoints - 50000);
 
             // update mesh vertices
             updateMesh(mesh);

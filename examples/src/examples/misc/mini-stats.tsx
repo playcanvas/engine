@@ -189,8 +189,7 @@ class MiniStatsExample extends Example {
                         width: 64,
                         height: 64,
                         format: pc.PIXELFORMAT_R8_G8_B8,
-                        // @ts-ignore engine-tsd
-                        autoMipmap: false
+                        mipmaps: false
                     });
                     textures.push(texture);
 

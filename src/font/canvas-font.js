@@ -56,7 +56,7 @@ class CanvasFont extends EventHandler {
 
         var texture = new Texture(this.app.graphicsDevice, {
             format: PIXELFORMAT_R8_G8_B8_A8,
-            autoMipmap: true
+            mipmaps: true
         });
 
         texture.name = 'font';
@@ -280,7 +280,7 @@ class CanvasFont extends EventHandler {
 
                         var texture = new Texture(this.app.graphicsDevice, {
                             format: PIXELFORMAT_R8_G8_B8_A8,
-                            autoMipmap: true
+                            mipmaps: true
                         });
                         texture.name = 'font-atlas';
                         texture.setSource(canvas);

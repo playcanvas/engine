@@ -85,21 +85,6 @@ class ShaderBurnExample extends Example {
 
         app.start();
 
-        // Create a new Entity
-        const entity = new pc.Entity();
-
-        // Add a model component, with the new asset
-        const modelComponent = entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
-        app.root.addChild(entity);
-
-        // @ts-ignore
-        const model = modelComponent.model;
-
-        const gd = app.graphicsDevice;
-
         // Create the shader definition and shader from the vertex and fragment shaders
         const shaderDefinition = {
             attributes: {
@@ -109,36 +94,48 @@ class ShaderBurnExample extends Example {
             vshader: assets['shader.vert'].data,
             fshader: assets['shader.frag'].data
         };
-        const shader = new pc.Shader(gd, shaderDefinition);
-
-        const oldMaterial = model.meshInstances[0].material;
+        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
         // Create a new material with the new shader
         const material = new pc.Material();
         material.shader = shader;
-        material.setParameter('uTime', 0);
+        material.setParameter('uHeightMap', assets.clouds.resource);
 
-        // Set the new material on all meshes in the model
-        model.meshInstances.forEach(function (meshInstance: any) {
-            meshInstance.material = material;
+        // create a hierarchy of entities with render components, representing the statue model
+        const entity = assets.statue.resource.instantiateRenderEntity();
+        app.root.addChild(entity);
+
+        // Set the new material on all meshes in the model, and use original texture from the model on the new material
+        let originalTexture:pc.Texture = null;
+        const renders: Array<pc.RenderComponent> = entity.findComponents("render");
+        renders.forEach((render) => {
+            const meshInstances = render.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
+                const meshInstance = meshInstances[i];
+                // @ts-ignore
+                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                meshInstance.material = material;
+            }
         });
+
+        // material is set up, update it
+        material.setParameter('uDiffuseMap', originalTexture);
+        material.update();
 
         let time = 0;
         app.on("update", function (dt) {
             time += 0.2 * dt;
 
-            let t = time % 2;
-
             // reverse time
+            let t = time % 2;
             if (t > 1) {
                 t = 1 - (t - 1);
             }
 
+            // set time parameter for the shader
             material.setParameter('uTime', t);
-            material.setParameter('uHeightMap', assets.clouds.resource);
-            material.setParameter('uDiffuseMap', oldMaterial.diffuseMap);
+            material.update();
         });
-
     }
 }
 

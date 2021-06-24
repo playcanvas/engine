@@ -209,25 +209,16 @@ class TransformFeedbackExample extends Example {
             const node = new pc.GraphNode();
             const meshInstance = new pc.MeshInstance(mesh, material, node);
 
-            // Create a model and add the mesh instance to it
-            const model = new pc.Model();
-            model.graph = node;
-            model.meshInstances = [meshInstance];
-
-            // Create Entity and add it to the scene
+            // create an entity used to render the mesh instance using a render component
             const entity = new pc.Entity();
-            app.root.addChild(entity);
-
-            // Add a model compoonent
-            // @ts-ignore engine-tsd
-            app.systems.model.addComponent(entity, {
-                type: 'asset'
+            entity.addComponent("render", {
+                type: 'asset',
+                meshInstances: [meshInstance]
             });
-            entity.model.model = model;
+            app.root.addChild(entity);
 
             // set up transform feedback. This creates a clone of the vertex buffer, and sets up rendering to ping pong between them
             tf = new pc.TransformFeedback(mesh.vertexBuffer);
-            // @ts-ignore engine-tsd
             shader = pc.TransformFeedback.createShader(app.graphicsDevice, assets.vshaderFeedback.data, "transformShaderExample");
         }
 

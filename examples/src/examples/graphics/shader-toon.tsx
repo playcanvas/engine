@@ -101,21 +101,6 @@ class ShaderToonExample extends Example {
 
         app.start();
 
-        // Create a new Entity
-        const entity = new pc.Entity();
-
-        // Add a model component, with the new asset
-        const modelComponent = entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
-        app.root.addChild(entity);
-
-        // @ts-ignore
-        const model = modelComponent.model;
-
-        const gd = app.graphicsDevice;
-
         // Create the shader definition and shader from the vertex and fragment shaders
         const shaderDefinition = {
             attributes: {
@@ -126,28 +111,39 @@ class ShaderToonExample extends Example {
             vshader: assets['shader.vert'].data,
             fshader: assets['shader.frag'].data
         };
-        const shader = new pc.Shader(gd, shaderDefinition);
-
-        // Save the old diffuseMap
-        const diffuseMap = model.getMaterials()[0].diffuseMap;
+        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
         // Create a new material with the new shader
         const material = new pc.Material();
         material.shader = shader;
 
-        // Set the new material on all meshes in the model
-        model.meshInstances.forEach(function (meshInstance: any) {
-            meshInstance.material = material;
+        // create a hierarchy of entities with render components, representing the statue model
+        const entity = assets.statue.resource.instantiateRenderEntity();
+        app.root.addChild(entity);
+
+        // Set the new material on all meshes in the model, and use original texture from the model on the new material
+        let originalTexture:pc.Texture = null;
+        const renders: Array<pc.RenderComponent> = entity.findComponents("render");
+        renders.forEach((render) => {
+            const meshInstances = render.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
+                const meshInstance = meshInstances[i];
+                // @ts-ignore
+                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                meshInstance.material = material;
+            }
         });
 
-        app.on("update", function (dt) {
-            material.setParameter('uTexture', diffuseMap);
-            // @ts-ignore
-            material.setParameter('uLightPos', light.getPosition().data);
+        // material parameters
+        const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
+        material.setParameter('uLightPos', lightPosArray);
+        material.setParameter('uTexture', originalTexture);
+        material.update();
 
+        // rotate the statue
+        app.on("update", function (dt) {
             entity.rotate(0, 60 * dt, 0);
         });
-
     }
 }
 
