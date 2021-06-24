@@ -193,7 +193,7 @@ class PostEffectsExample extends Example {
             const focusPosition = new pc.Vec3(0, 10, Math.abs(Math.sin(angle * 0.1)) * 400);
             focusPrimitive.setPosition(focusPosition);
 
-            // set the focus distance to the bohek effect
+            // set the focus distance to the bokeh effect
             // - it's a negative distance between the camera and the focus sphere
             camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
