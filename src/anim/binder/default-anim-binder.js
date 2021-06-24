@@ -15,6 +15,8 @@ class DefaultAnimBinder {
 
         if (!graph) return;
 
+        this._mask = null;
+
         var nodes = { };
         // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {
@@ -128,6 +130,24 @@ class DefaultAnimBinder {
     }
 
     findNode(path) {
+        if (this._mask) {
+            var shouldAnimateNode = false;
+            const entityPath = path.entityPath.join('/');
+            for (var i = 0; i < this._mask.length; i++) {
+                var maskItem = this._mask[i];
+                if (maskItem.children) {
+                    if (entityPath.indexOf(maskItem.path) !== -1) {
+                        shouldAnimateNode = true;
+                        break;
+                    }
+                } else if (maskItem.path === entityPath) {
+                    shouldAnimateNode = true;
+                    break;
+                }
+            }
+            if (!shouldAnimateNode) return null;
+        }
+
         var node;
         if (this.graph) {
             node = this.graph.findByPath(path.entityPath);

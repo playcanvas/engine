@@ -316,7 +316,22 @@ class AnimEvaluator {
         for (var path in targets) {
             if (targets.hasOwnProperty(path)) {
                 var target = targets[path];
-                target.target.func(target.value);
+                if (this._binder.animComponent) {
+                    var targetData = this._binder.animComponent.targets[path];
+                    if (!targetData) {
+                        targetData = {
+                            setter: target.target.func,
+                            values: [target.value],
+                            layers: [this._binder.layerName]
+                        };
+                    } else {
+                        targetData.values.push(target.value);
+                        targetData.layers.push(this._binder.layerName);
+                    }
+                    this._binder.animComponent.targets[path] = targetData;
+                } else {
+                    target.target.func(target.value);
+                }
                 target.blendCounter = 0;
             }
         }
