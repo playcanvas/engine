@@ -98,6 +98,7 @@ class BasisClient {
         this.worker.addEventListener('message', this.handleWorkerResponse.bind(this));
         this.worker.postMessage({ type: 'init', config: config });
         this.callbacks = { };
+        this.queueLength = 0;
     }
 
     // post a transcode job to the web worker
@@ -105,6 +106,7 @@ class BasisClient {
         if (!this.callbacks.hasOwnProperty(url)) {
             // store url and kick off worker job
             this.callbacks[url] = [callback];
+            this.queueLength++;
             this.worker.postMessage({
                 type: 'transcode',
                 url: url,
@@ -159,6 +161,7 @@ class BasisClient {
         }
 
         delete this.callbacks[url];
+        this.queueLength--;
     }
 }
 
@@ -181,8 +184,9 @@ function chooseTargetFormat(device) {
 }
 
 // global state
+const defaultNumClients = 1;
+const clients = [];
 let queue = null;
-let client = null;
 let format = null;
 
 function basisTargetFormat() {
@@ -198,8 +202,6 @@ function basisInitialize(config) {
         // already initializing
         return;
     }
-
-    queue = [];
 
     if (!config) {
         // get config from global PC config structure
@@ -217,24 +219,41 @@ function basisInitialize(config) {
         }
     }
 
-    prepareWorkerModules(config, (err, config) => {
-        client = new BasisClient(config);
-        queue.forEach((t) => {
-            client.transcode(t.url, t.data, basisTargetFormat(), t.callback, t.options);
+    if (config) {
+        queue = [];
+        prepareWorkerModules(config, (err, clientConfig) => {
+            const numClients = config.numClients || defaultNumClients;
+            for (let i = 0; i < numClients; ++i) {
+                clients.push(new BasisClient(clientConfig));
+            }
+
+            const todo = queue;
+            queue = null;
+            todo.forEach((t) => {
+                basisTranscode(t.url, t.data, t.callback, t.options);
+            });
         });
-        queue = null;
-    });
+    }
 }
 
-// transcode a basis file
+// queue a basis file for transcoding
 //
 // options supports the following members:
 //   unswizzleGGGR - convert the two-component GGGR normal data to RGB
 //                   and pack into 565 format. this is used to overcome
 //                   quality issues on apple devices.
-// returns true if a transcode module is found
 function basisTranscode(url, data, callback, options) {
-    if (client) {
+    if (clients.length > 0) {
+        // find the client with shortest queue
+        let client = clients[0];
+        if (client.queueLength > 0) {
+            for (let i = 1; i < clients.length; ++i) {
+                const c = clients[i];
+                if (c.queueLength < client.queueLength) {
+                    client = c;
+                }
+            }
+        }
         client.transcode(url, data, basisTargetFormat(), callback, options);
     } else {
         basisInitialize();
