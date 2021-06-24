@@ -77,7 +77,7 @@ class CompoundCollisionExample extends Example {
                                     scl: [0.5, 0.05, 0.5],
                                     components: [
                                         {
-                                            type: 'model',
+                                            type: 'render',
                                             options: {
                                                 type: 'box',
                                                 material: gray
@@ -104,7 +104,7 @@ class CompoundCollisionExample extends Example {
                                     scl: [0.5, 0.4, 0.05],
                                     components: [
                                         {
-                                            type: 'model',
+                                            type: 'render',
                                             options: {
                                                 type: 'box',
                                                 material: gray
@@ -132,7 +132,7 @@ class CompoundCollisionExample extends Example {
                                     scl: [0.05, 0.5, 0.05],
                                     components: [
                                         {
-                                            type: 'model',
+                                            type: 'render',
                                             options: {
                                                 type: 'cylinder',
                                                 material: gray
@@ -160,7 +160,7 @@ class CompoundCollisionExample extends Example {
                                     scl: [0.05, 0.5, 0.05],
                                     components: [
                                         {
-                                            type: 'model',
+                                            type: 'render',
                                             options: {
                                                 type: 'cylinder',
                                                 material: gray
@@ -188,7 +188,7 @@ class CompoundCollisionExample extends Example {
                                     scl: [0.05, 1, 0.05],
                                     components: [
                                         {
-                                            type: 'model',
+                                            type: 'render',
                                             options: {
                                                 type: 'cylinder',
                                                 material: gray
@@ -216,7 +216,7 @@ class CompoundCollisionExample extends Example {
                                     scl: [0.05, 1, 0.05],
                                     components: [
                                         {
-                                            type: 'model',
+                                            type: 'render',
                                             options: {
                                                 type: 'cylinder',
                                                 material: gray
@@ -251,7 +251,7 @@ class CompoundCollisionExample extends Example {
                             scl: [10, 1, 10],
                             components: [
                                 {
-                                    type: 'model',
+                                    type: 'render',
                                     options: {
                                         type: 'box',
                                         material: gray
@@ -351,8 +351,8 @@ class CompoundCollisionExample extends Example {
 
                 // Show active bodies in red and frozen bodies in gray
                 app.root.findComponents('rigidbody').forEach(function (body: pc.RigidBodyComponent) {
-                    body.entity.findComponents('model').forEach(function (model: pc.ModelComponent) {
-                        model.material = body.isActive() ? red : gray;
+                    body.entity.findComponents('render').forEach(function (render: pc.RenderComponent) {
+                        render.material = body.isActive() ? red : gray;
                     });
                 });
             });

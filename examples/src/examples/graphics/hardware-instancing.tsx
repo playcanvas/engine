@@ -1,17 +1,29 @@
+import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
+import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 
 class HardwareInstancingExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Hardware Instancing';
 
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement): void {
+    load() {
+        return <>
+            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+        </>;
+    }
 
+    // @ts-ignore: override class function
+    example(canvas: HTMLCanvasElement, assets: {'helipad.dds': pc.Asset}): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
+
+        // setup skydome
+        app.scene.skyboxMip = 2;
+        app.scene.exposure = 0.7;
+        app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -19,31 +31,10 @@ class HardwareInstancingExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
-        // Create an Entity with a omni light component, which is casting shadows (using rendering to cubemap)
-        const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "omni",
-            color: new pc.Color(2, 3, 1),
-            radius: 10,
-            castShadows: true
-        });
-
-        // add sphere at the position of light
-        light.addComponent("model", {
-            type: "sphere"
-        });
-
-        // Scale the sphere down to 0.1m
-        light.setLocalScale(0.1, 0.1, 0.1);
-
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-
-        // Add the new Entities to the hierarchy
-        app.root.addChild(light);
         app.root.addChild(camera);
 
         // Move the camera back to see the cubes
@@ -55,13 +46,16 @@ class HardwareInstancingExample extends Example {
             options.useInstancing = true;
             return options;
         };
+        material.shininess = 60;
+        material.metalness = 0.7;
+        material.useMetalness = true;
         material.update();
 
-        // Create a Entity with a Box model component and the instancing material
+        // Create a Entity with a cylinder render component and the instancing material
         const box = new pc.Entity();
-        box.addComponent("model", {
+        box.addComponent("render", {
             material: material,
-            type: "box"
+            type: "cylinder"
         });
 
         // add the box entity to the hierarchy
@@ -97,20 +91,16 @@ class HardwareInstancingExample extends Example {
             const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
 
             // initialise instancing using the vertex buffer on meshInstance of the created box
-            const boxMeshInst = box.model.meshInstances[0];
+            const boxMeshInst = box.render.meshInstances[0];
             boxMeshInst.setInstancing(vertexBuffer);
         }
 
         // Set an update function on the app's update event
         let angle = 0;
         app.on("update", function (dt) {
-            angle += dt * 0.2;
-
-            // Move the light in a circle
-            light.setLocalPosition(7 * Math.sin(angle), 7 * Math.cos(angle), 0);
-
             // orbit camera around
-            camera.setLocalPosition(10 * Math.sin(angle), 0, 10 * Math.cos(angle));
+            angle += dt * 0.2;
+            camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));
             camera.lookAt(pc.Vec3.ZERO);
         });
     }

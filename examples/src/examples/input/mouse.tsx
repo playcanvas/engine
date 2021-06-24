@@ -39,20 +39,13 @@ class MouseExample extends Example {
         light.translate(5, 5, 10);
         app.root.addChild(light);
 
-        const entity = new pc.Entity();
-
-        entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
-
+        const entity = assets.statue.resource.instantiateRenderEntity();
         app.root.addChild(entity);
-
 
         const mouse = new pc.Mouse(document.body);
 
         let x = 0;
-        let y = 0;
+        const y = 0;
 
         mouse.on('mousemove', function (event) {
             if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
