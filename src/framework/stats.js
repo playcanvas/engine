@@ -35,6 +35,9 @@ class ApplicationStats {
             depthMapTime: 0, // deprecated
             forwardTime: 0,
 
+            lightClustersTime: 0,
+            lightClusters: 0,
+
             _timeToCountFrames: 0,
             _fpsAccum: 0
         };
@@ -59,8 +62,10 @@ class ApplicationStats {
         };
 
         this.particles = {
-            updatesPerFrame: 0, _updatesPerFrame: 0,
-            frameTime: 0, _frameTime: 0
+            updatesPerFrame: 0,
+            _updatesPerFrame: 0,
+            frameTime: 0,
+            _frameTime: 0
         };
 
         this.shaders = device._shaderStats;

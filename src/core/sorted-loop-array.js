@@ -39,12 +39,12 @@ class SortedLoopArray {
      * @returns {number} The index where to insert the item.
      */
     _binarySearch(item) {
-        var left = 0;
-        var right = this.items.length - 1;
-        var search = item[this._sortBy];
+        let left = 0;
+        let right = this.items.length - 1;
+        const search = item[this._sortBy];
 
-        var middle;
-        var current;
+        let middle;
+        let current;
         while (left <= right) {
             middle = Math.floor((left + right) / 2);
             current = this.items[middle][this._sortBy];
@@ -59,7 +59,7 @@ class SortedLoopArray {
     }
 
     _doSort(a, b) {
-        var sortBy = this._sortBy;
+        const sortBy = this._sortBy;
         return a[sortBy] - b[sortBy];
     }
 
@@ -73,7 +73,7 @@ class SortedLoopArray {
      * @param {object} item - The item to insert.
      */
     insert(item) {
-        var index = this._binarySearch(item);
+        const index = this._binarySearch(item);
         this.items.splice(index, 0, item);
         this.length++;
         if (this.loopIndex >= index) {
@@ -103,7 +103,7 @@ class SortedLoopArray {
      * @param {object} item - The item to remove.
      */
     remove(item) {
-        var idx = this.items.indexOf(item);
+        const idx = this.items.indexOf(item);
         if (idx < 0) return;
 
         this.items.splice(idx, 1);
@@ -126,7 +126,7 @@ class SortedLoopArray {
      */
     sort() {
         // get current item pointed to by loopIndex
-        var current = (this.loopIndex >= 0 ? this.items[this.loopIndex] : null);
+        const current = (this.loopIndex >= 0 ? this.items[this.loopIndex] : null);
         // sort
         this.items.sort(this._sortHandler);
         // find new loopIndex

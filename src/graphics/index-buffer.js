@@ -182,7 +182,7 @@ class IndexBuffer {
 
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
             // #endif
             return false;
@@ -196,7 +196,7 @@ class IndexBuffer {
     _lockTypedArray() {
         var lock = this.lock();
         var indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
-            (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock) );
+            (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock));
         return indices;
     }
 

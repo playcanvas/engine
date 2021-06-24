@@ -23,10 +23,10 @@ class JsonStandardMaterialParser {
     }
 
     parse(input) {
-        var migrated = this.migrate(input);
-        var validated = this._validate(migrated);
+        const migrated = this.migrate(input);
+        const validated = this._validate(migrated);
 
-        var material = new StandardMaterial();
+        const material = new StandardMaterial();
         this.initialize(material, validated);
 
         return material;
@@ -44,10 +44,7 @@ class JsonStandardMaterialParser {
         // usual flow is that data is validated in resource loader
         // but if not, validate here.
         if (!data.validated) {
-            if (!this._validator) {
-                this._validator = new StandardMaterialValidator();
-            }
-            this._validator.validate(data);
+            data = this._validate(data);
         }
 
         if (data.chunks) {
@@ -55,9 +52,9 @@ class JsonStandardMaterialParser {
         }
 
         // initialize material values from the input data
-        for (var key in data) {
-            var type = standardMaterialParameterTypes[key];
-            var value = data[key];
+        for (const key in data) {
+            const type = standardMaterialParameterTypes[key];
+            const value = data[key];
 
             if (type === 'vec2') {
                 material[key] = new Vec2(value[0], value[1]);
@@ -80,8 +77,8 @@ class JsonStandardMaterialParser {
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
                 // leave current texture (probably a placeholder) until the asset is loaded
             } else if (type === 'boundingbox') {
-                var center = new Vec3(value.center[0], value.center[1], value.center[2]);
-                var halfExtents = new Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
+                const center = new Vec3(value.center[0], value.center[1], value.center[2]);
+                const halfExtents = new Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
                 material[key] = new BoundingBox(center, halfExtents);
             } else {
                 // number, boolean and enum types don't require type creation
@@ -111,10 +108,10 @@ class JsonStandardMaterialParser {
             delete data.mapping_format;
         }
 
-        var i;
+        let i;
         // list of properties that have been renamed in StandardMaterial
         // but may still exists in data in old format
-        var RENAMED_PROPERTIES = [
+        const RENAMED_PROPERTIES = [
             ["bumpMapFactor", "bumpiness"],
 
             ["aoUvSet", "aoMapUv"],
@@ -137,8 +134,8 @@ class JsonStandardMaterialParser {
         // if an old property name exists without a new one,
         // move property into new name and delete old one.
         for (i = 0; i < RENAMED_PROPERTIES.length; i++) {
-            var _old = RENAMED_PROPERTIES[i][0];
-            var _new = RENAMED_PROPERTIES[i][1];
+            const _old = RENAMED_PROPERTIES[i][0];
+            const _new = RENAMED_PROPERTIES[i][1];
 
             if (data[_old] !== undefined && !(data[_new] !== undefined)) {
                 data[_new] = data[_old];
@@ -147,13 +144,13 @@ class JsonStandardMaterialParser {
         }
 
         // Properties that may exist in input data, but are now ignored
-        var DEPRECATED_PROPERTIES = [
+        const DEPRECATED_PROPERTIES = [
             'fresnelFactor',
             'shadowSampleType'
         ];
 
         for (i = 0; i < DEPRECATED_PROPERTIES.length; i++) {
-            var name = DEPRECATED_PROPERTIES[i];
+            const name = DEPRECATED_PROPERTIES[i];
             if (data.hasOwnProperty(name)) {
                 delete data[name];
             }
@@ -164,11 +161,12 @@ class JsonStandardMaterialParser {
 
     // check for invalid properties
     _validate(data) {
-        if (!this._validator) {
-            this._validator = new StandardMaterialValidator();
+        if (!data.validated) {
+            if (!this._validator) {
+                this._validator = new StandardMaterialValidator();
+            }
+            this._validator.validate(data);
         }
-        this._validator.validate(data);
-
         return data;
     }
 }

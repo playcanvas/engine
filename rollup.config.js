@@ -1,9 +1,9 @@
 import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
-import { terser } from "rollup-plugin-terser";
+import jscc from 'rollup-plugin-jscc';
+import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
-import Preprocessor from 'preprocessor';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -34,22 +34,6 @@ function spacesToTabs() {
     };
 }
 
-function preprocessor(options) {
-    const filter = createFilter([
-        '**/*.js'
-    ], []);
-
-    return {
-        transform(code, id) {
-            if (!filter(id)) return;
-            return {
-                code: new Preprocessor(code).process(options),
-                map: { mappings: '' }
-            };
-        }
-    };
-}
-
 function shaderChunks(removeComments) {
     const filter = createFilter([
         '**/*.vert',
@@ -71,7 +55,7 @@ function shaderChunks(removeComments) {
                 code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
                 // Trim all whitespace from line endings
-                code = code.split('\n').map(line => line.trimEnd()).join('\n');
+                code = code.split('\n').map((line) => line.trimEnd()).join('\n');
 
                 // Restore final new line
                 code += '\n';
@@ -151,15 +135,16 @@ const target_release_es5 = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: false,
-            DEBUG: false,
-            RELEASE: true
+        jscc({
+            values: {}
         }),
         shaderChunks(true),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         spacesToTabs()
@@ -176,15 +161,16 @@ const target_release_es5min = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: false,
-            DEBUG: false,
-            RELEASE: true
+        jscc({
+            values: {}
         }),
         shaderChunks(true),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         terser()
@@ -201,15 +187,16 @@ const target_release_es6 = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: false,
-            DEBUG: false,
-            RELEASE: true
+        jscc({
+            values: {}
         }),
         shaderChunks(true),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(moduleOptions),
         spacesToTabs()
@@ -226,15 +213,19 @@ const target_debug = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: true,
-            DEBUG: true,
-            RELEASE: false
+        jscc({
+            values: {
+                _DEBUG: 1,
+                _PROFILER: 1
+            }
         }),
         shaderChunks(false),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         spacesToTabs()
@@ -251,15 +242,18 @@ const target_profiler = {
         name: 'pc'
     },
     plugins: [
-        preprocessor({
-            PROFILER: true,
-            DEBUG: false,
-            RELEASE: false
+        jscc({
+            values: {
+                _PROFILER: 1
+            }
         }),
         shaderChunks(false),
         replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
+            values: {
+                __REVISION__: revision,
+                __CURRENT_SDK_VERSION__: version
+            },
+            preventAssignment: true
         }),
         babel(es5Options),
         spacesToTabs()

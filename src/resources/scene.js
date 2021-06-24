@@ -1,5 +1,5 @@
 import { SceneParser } from './parser/scene.js';
-import { SceneUtils } from "./scene-utils";
+import { SceneUtils } from "./scene-utils.js";
 
 /**
  * @class
@@ -22,11 +22,11 @@ class SceneHandler {
         // prevent script initialization until entire scene is open
         this._app.systems.script.preloading = true;
 
-        var parser = new SceneParser(this._app, false);
-        var parent = parser.parse(data);
+        const parser = new SceneParser(this._app, false);
+        const parent = parser.parse(data);
 
         // set scene root
-        var scene = this._app.scene;
+        const scene = this._app.scene;
         scene.root = parent;
 
         this._app.applySceneSettings(data.settings);

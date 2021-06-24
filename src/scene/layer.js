@@ -1,6 +1,7 @@
 import { hashCode } from '../core/hash.js';
 
 import {
+    LIGHTTYPE_DIRECTIONAL,
     BLEND_NONE,
     LAYER_FX,
     SHADER_FORWARD,
@@ -55,20 +56,35 @@ class InstanceList {
         this.transparentMeshInstances = [];
         this.shadowCasters = [];
 
-        // arrays of VisibleInstanceList for each camera
+        // arrays of VisibleInstanceList for each camera of this layer
         this.visibleOpaque = [];
         this.visibleTransparent = [];
     }
 
-    clearVisibleLists(cameraPass) {
-        if (this.visibleOpaque[cameraPass]) {
-            this.visibleOpaque[cameraPass].length = 0;
-            this.visibleOpaque[cameraPass].list.length = 0;
+    // prepare for culling of camera with specified index
+    prepare(index) {
+
+        // make sure visibility lists are allocated
+        if (!this.visibleOpaque[index]) {
+            this.visibleOpaque[index] = new VisibleInstanceList();
         }
 
-        if (this.visibleTransparent[cameraPass]) {
-            this.visibleTransparent[cameraPass].length = 0;
-            this.visibleTransparent[cameraPass].list.length = 0;
+        if (!this.visibleTransparent[index]) {
+            this.visibleTransparent[index] = new VisibleInstanceList();
+        }
+
+        // mark them as not processed yet
+        this.visibleOpaque[index].done = false;
+        this.visibleTransparent[index].done = false;
+    }
+
+    // delete entry for a camera with specified index
+    delete(index) {
+        if (index < this.visibleOpaque.length) {
+            this.visibleOpaque.splice(index, 1);
+        }
+        if (index < this.visibleTransparent.length) {
+            this.visibleTransparent.splice(index, 1);
         }
     }
 }
@@ -223,8 +239,14 @@ class Layer {
         this.customSortCallback = null;
         this.customCalculateSortValues = null;
 
-        this._lightComponents = [];
+        // array and set of all lights of type Light (not a LightComponent)
         this._lights = [];
+        this._lightsSet = new Set();
+
+        // set of light used by clustered lighting (omni and spot, but no directional)
+        this._clusteredLightsSet = new Set();
+
+        // lights separated by light type
         this._splitLights = [[], [], []];
 
         // array of CameraComponent
@@ -239,17 +261,16 @@ class Layer {
         this._needsStaticPrepare = true;
         this._staticPrepareDone = false;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
         this._skipRenderCounter = 0;
 
         this._renderTime = 0;
         this._forwardDrawCalls = 0;
-        this._shadowDrawCalls = 0;
+        this._shadowDrawCalls = 0;  // deprecated, not useful on a layer anymore, could be moved to camera
         // #endif
 
         this._shaderVersion = -1;
-        this._version = 0;
         this._lightCube = null;
     }
 
@@ -347,7 +368,7 @@ class Layer {
             if (this.onDisable) this.onDisable();
 
         } else if (this._refCounter === 0) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("Trying to decrement layer counter below 0");
             // #endif
             return;
@@ -480,11 +501,20 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
-        if (this._lightComponents.indexOf(light) >= 0) return;
-        this._lightComponents.push(light);
-        this._lights.push(light.light);
-        this._dirtyLights = true;
-        this._generateLightHash();
+
+        // if the light is not in the layer already
+        const l = light.light;
+        if (!this._lightsSet.has(l)) {
+            this._lightsSet.add(l);
+
+            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+                this._clusteredLightsSet.add(l);
+            }
+
+            this._lights.push(l);
+            this._dirtyLights = true;
+            this._generateLightHash();
+        }
     }
 
     /**
@@ -494,15 +524,19 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
-        var id = this._lightComponents.indexOf(light);
-        if (id < 0) return;
-        this._lightComponents.splice(id, 1);
 
-        id = this._lights.indexOf(light.light);
-        this._lights.splice(id, 1);
+        const l = light.light;
+        if (this._lightsSet.has(l)) {
+            this._lightsSet.delete(l);
 
-        this._dirtyLights = true;
-        this._generateLightHash();
+            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+                this._clusteredLightsSet.delete(l);
+            }
+
+            this._lights.splice(this._lights.indexOf(l), 1);
+            this._dirtyLights = true;
+            this._generateLightHash();
+        }
     }
 
     /**
@@ -511,9 +545,15 @@ class Layer {
      * @description Removes all lights from this layer.
      */
     clearLights() {
-        this._lightComponents.length = 0;
+        this._lightsSet.clear();
+        this._clusteredLightsSet.clear();
         this._lights.length = 0;
         this._dirtyLights = true;
+    }
+
+    // returns lights used by clustered lighting in a set
+    get clusteredLightsSet() {
+        return this._clusteredLightsSet;
     }
 
     /**
@@ -602,14 +642,14 @@ class Layer {
      * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
-        var id = this.cameras.indexOf(camera);
-        if (id < 0) return;
-        this.cameras.splice(id, 1);
-        this._dirtyCameras = true;
+        var index = this.cameras.indexOf(camera);
+        if (index >= 0) {
+            this.cameras.splice(index, 1);
+            this._dirtyCameras = true;
 
-        // visible lists in layer are not updated after camera is removed
-        // so clear out any remaining mesh instances
-        this.instances.clearVisibleLists(id);
+            // delete the visible list for this camera
+            this.instances.delete(index);
+        }
     }
 
     /**

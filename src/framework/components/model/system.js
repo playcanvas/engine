@@ -8,6 +8,9 @@ import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
 
+import { BoundingBox } from '../../../shape/bounding-box';
+import { Vec3 } from '../../../math/vec3';
+
 const _schema = ['enabled'];
 
 /**
@@ -65,6 +68,10 @@ class ModelComponentSystem extends ComponentSystem {
             if (_data.hasOwnProperty(properties[i])) {
                 component[properties[i]] = _data[properties[i]];
             }
+        }
+
+        if (_data.aabbCenter && _data.aabbHalfExtents) {
+            component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
         super.initializeComponentData(component, _data, ['enabled']);
@@ -125,6 +132,10 @@ class ModelComponentSystem extends ComponentSystem {
                 meshInstancesClone[i].layer = meshInstances[i].layer;
                 meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
             }
+        }
+
+        if (entity.model.customAabb) {
+            component.customAabb = entity.model.aabb.clone();
         }
     }
 

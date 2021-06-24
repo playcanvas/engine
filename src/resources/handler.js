@@ -4,8 +4,6 @@
  * @description Interface for ResourceHandlers used by {@link ResourceLoader}.
  */
 class ResourceHandler {
-    constructor() {}
-
     /**
      * @function
      * @name ResourceHandler#load

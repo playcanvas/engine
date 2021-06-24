@@ -76,6 +76,31 @@ class SkinInstance {
         this._rootBone = rootBone;
     }
 
+    // resolved skin bones to a hierarchy with the rootBone at its root.
+    // entity parameter specifies the entity used if the bone match is not found in the hierarchy - usually the entity the render component is attached to
+    resolve(rootBone, entity) {
+
+        this.rootBone = rootBone;
+
+        // Resolve bone IDs to actual graph nodes of the hierarchy
+        const skin = this.skin;
+        const  bones = [];
+        for (let j = 0; j < skin.boneNames.length; j++) {
+            var boneName = skin.boneNames[j];
+            var bone = rootBone.findByName(boneName);
+
+            if (!bone) {
+                // #if _DEBUG
+                console.error(`Failed to find bone [${boneName}] in the entity hierarchy, RenderComponent on ${entity.name}, rootBone: ${rootBone.entity.name}`);
+                // #endif
+                bone = entity;
+            }
+
+            bones.push(bone);
+        }
+        this.bones = bones;
+    }
+
     initSkin(skin) {
 
         this.skin = skin;

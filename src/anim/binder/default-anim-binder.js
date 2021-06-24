@@ -1,8 +1,6 @@
-import { Entity } from '../../framework/entity.js';
-
 import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
-
+import { Entity } from '../../framework/entity.js';
 /**
  * @private
  * @class
@@ -28,7 +26,7 @@ class DefaultAnimBinder {
         flatten(graph);
         this.nodes = nodes;
         this.targetCache = {};
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.visitedFallbackGraphPaths = {};
         // #endif
 
@@ -58,7 +56,7 @@ class DefaultAnimBinder {
             'localPosition': function (node) {
                 var object = node.localPosition;
                 var func = function (value) {
-                    object.set.apply(object, value);
+                    object.set(...value);
                 };
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localPosition');
             },
@@ -66,7 +64,7 @@ class DefaultAnimBinder {
             'localRotation': function (node) {
                 var object = node.localRotation;
                 var func = function (value) {
-                    object.set.apply(object, value);
+                    object.set(...value);
                 };
                 return DefaultAnimBinder.createAnimTarget(func, 'quaternion', 4, node, 'localRotation');
             },
@@ -74,7 +72,7 @@ class DefaultAnimBinder {
             'localScale': function (node) {
                 var object = node.localScale;
                 var func = function (value) {
-                    object.set.apply(object, value);
+                    object.set(...value);
                 };
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localScale');
             },
@@ -82,20 +80,21 @@ class DefaultAnimBinder {
             'weights': function (node) {
                 var meshInstances = findMeshInstances(node);
                 if (meshInstances) {
-                    var morphInstance;
+                    var morphInstances = [];
                     for (var i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
-                            morphInstance = meshInstances[i].morphInstance;
-                            break;
+                            morphInstances.push(meshInstances[i].morphInstance);
                         }
                     }
-                    if (morphInstance) {
+                    if (morphInstances.length > 0) {
                         var func = function (value) {
                             for (var i = 0; i < value.length; ++i) {
-                                morphInstance.setWeight(i, value[i]);
+                                for (var j = 0; j < morphInstances.length; j++) {
+                                    morphInstances[j].setWeight(i, value[i]);
+                                }
                             }
                         };
-                        return DefaultAnimBinder.createAnimTarget(func, 'vector', morphInstance.morph._targets.length, node, 'weights');
+                        return DefaultAnimBinder.createAnimTarget(func, 'vector', morphInstances[0].morph._targets.length, node, 'weights');
                     }
                 }
 
@@ -136,7 +135,7 @@ class DefaultAnimBinder {
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
 
-            // #ifdef DEBUG
+            // #if _DEBUG
             var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
                 console.warn('Anim Binder: Multiple animation curves with the path ' + fallbackGraphPath + ' are present in the ' + this.graph.path + ' graph which may result in the incorrect binding of animations');

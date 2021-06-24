@@ -54,7 +54,7 @@ class ScriptType extends EventHandler {
     initScriptType(args) {
         var script = this.constructor; // get script type, i.e. function (class)
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (!args || !args.app || !args.entity) {
             console.warn('script \'' + script.__name + '\' has missing arguments in constructor');
         }
@@ -99,7 +99,7 @@ class ScriptType extends EventHandler {
      * @readonly
      * @name ScriptType.scriptName
      * @type {string|null}
-     * @description Name of a Script Type
+     * @description Name of a Script Type.
      */
     static get scriptName() {
         return this.__name;

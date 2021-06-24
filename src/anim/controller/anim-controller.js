@@ -22,10 +22,11 @@ import {
  * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
  */
 class AnimController {
-    constructor(animEvaluator, states, transitions, parameters, activate) {
+    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
+        this._eventHandler = eventHandler;
         var i;
         for (i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
@@ -219,7 +220,7 @@ class AnimController {
     _findTransition(from, to) {
         var transitions = [];
 
-        // If from and to is supplied, find transitions that include the required source and destination states
+        // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
             transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
@@ -266,7 +267,7 @@ class AnimController {
                 var progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
                 var progress = this._getActiveStateProgressForTime(this._timeInState);
                 // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
-                if (transition.exitTime < 1.0 && this.activeState.looping) {
+                if (transition.exitTime < 1.0 && this.activeState.loop) {
                     progressBefore -= Math.floor(progressBefore);
                     progress -= Math.floor(progress);
                 }
@@ -281,7 +282,12 @@ class AnimController {
 
         // return the highest priority transition to use
         if (transitions.length > 0) {
-            return transitions[0];
+            var transition = transitions[0];
+            if (transition.to === ANIM_STATE_END) {
+                var startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
+                transition.to = startTransition.to;
+            }
+            return transition;
         }
         return null;
     }
@@ -350,14 +356,27 @@ class AnimController {
         this._currTransitionTime = 0;
         this._transitionInterruptionSource = transition.interruptionSource;
 
-        var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
+
         var activeState = this.activeState;
+        var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
+
+        // set the time in the new state to 0 or to a value based on transitionOffset if one was given
+        var timeInState = 0;
+        var timeInStateBefore = 0;
+        if (hasTransitionOffset) {
+            var offsetTime = activeState.timelineDuration * transition.transitionOffset;
+            timeInState = offsetTime;
+            timeInStateBefore = offsetTime;
+        }
+        this._timeInState = timeInState;
+        this._timeInStateBefore = timeInStateBefore;
+
         // Add clips to the evaluator for each animation in the new state.
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
                 var speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
-                clip = new AnimClip(activeState.animations[i].animTrack, 0, speed, true, activeState.loop);
+                clip = new AnimClip(activeState.animations[i].animTrack, this._timeInState, speed, true, activeState.loop, this._eventHandler);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             } else {
@@ -376,17 +395,6 @@ class AnimController {
                 clip.time = startTime;
             }
         }
-
-        // set the time in the new state to 0 or to a value based on transitionOffset if one was given
-        var timeInState = 0;
-        var timeInStateBefore = 0;
-        if (hasTransitionOffset) {
-            var offsetTime = activeState.timelineDuration * transition.transitionOffset;
-            timeInState = offsetTime;
-            timeInStateBefore = offsetTime;
-        }
-        this._timeInState = timeInState;
-        this._timeInStateBefore = timeInStateBefore;
     }
 
     _transitionToState(newStateName) {
@@ -407,7 +415,7 @@ class AnimController {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to assign an animation track to an animation state that does not exist.');
             // #endif
             return;
@@ -425,7 +433,7 @@ class AnimController {
         }
         var state = this._findState(nodeName);
         if (!state) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error('Attempting to unassign animation tracks from a state that does not exist.');
             // #endif
             return;

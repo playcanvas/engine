@@ -117,7 +117,7 @@ class GraphNode extends EventHandler {
         if (!this._forward) {
             this._forward = new Vec3();
         }
-        return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
+        return this.getWorldTransform().getZ(this._forward).normalize().mulScalar(-1);
     }
 
     /**
@@ -240,6 +240,7 @@ class GraphNode extends EventHandler {
         clone.name = this.name;
 
         var tags = this.tags._list;
+        clone.tags.clear();
         for (var i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
 
@@ -274,6 +275,12 @@ class GraphNode extends EventHandler {
         var clone = new GraphNode();
         this._cloneInternal(clone);
         return clone;
+    }
+
+    // copies properties from source to this
+    copy(source) {
+        source._cloneInternal(this);
+        return this;
     }
 
     /**
@@ -467,7 +474,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#findByPath
      * @description Get the first node found in the graph by its full path in the graph.
      * The full path has this form 'parent/child/sub-child'. The search is depth first.
-     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or array of {@link GraphNode} names
+     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or array of {@link GraphNode} names.
      * @returns {GraphNode} The first node to be found matching the supplied path.
      * @example
      * var path = this.entity.findByPath('child/another_child');
@@ -492,7 +499,7 @@ class GraphNode extends EventHandler {
             // check all the children
             var children = currentParent._children;
             for (var j = 0, jmax = children.length; j < jmax; j++) {
-                if (children[j].name == part) {
+                if (children[j].name === part) {
                     result = children[j];
                     break;
                 }
@@ -1032,7 +1039,7 @@ class GraphNode extends EventHandler {
         if (node._parent !== null)
             throw new Error("GraphNode is already parented");
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._debugInsertChild(node);
         // #endif
 
@@ -1041,7 +1048,7 @@ class GraphNode extends EventHandler {
     }
 
     addChildAndSaveTransform(node) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._debugInsertChild(node);
         // #endif
 
@@ -1073,7 +1080,7 @@ class GraphNode extends EventHandler {
         if (node._parent !== null)
             throw new Error("GraphNode is already parented");
 
-        // #ifdef DEBUG
+        // #if _DEBUG
         this._debugInsertChild(node);
         // #endif
 
@@ -1081,7 +1088,7 @@ class GraphNode extends EventHandler {
         this._onInsertChild(node);
     }
 
-    // #ifdef DEBUG
+    // #if _DEBUG
     _debugInsertChild(node) {
         if (this === node)
             throw new Error("GraphNode cannot be a child of itself");

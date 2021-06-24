@@ -260,12 +260,14 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
     rebind() {
         this.targetCache = {};
-        // #ifdef DEBUG
+        // #if _DEBUG
         this.visitedFallbackGraphPaths = {};
         // #endif
 
-        if (this.animComponent.entity.model?.model?.graph) {
-            this.graph = this.animComponent.entity.model?.model?.graph;
+        if (this.animComponent.rootBone) {
+            this.graph = this.animComponent.rootBone;
+        } else {
+            this.graph = this.animComponent.entity;
         }
 
         var nodes = { };

@@ -53,7 +53,7 @@ const reservedScriptNames = new Set([
 /* eslint-enable jsdoc/no-undefined-types */
 function createScript(name, app) {
     if (script.legacy) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
         // #endif
         return null;
@@ -126,7 +126,7 @@ createScript.reservedAttributes = reservedAttributes;
 /* eslint-enable jsdoc/no-undefined-types */
 function registerScript(script, name, app) {
     if (script.legacy) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("This project is using the legacy script system. You cannot call pc.registerScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
         // #endif
         return;

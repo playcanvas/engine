@@ -700,11 +700,12 @@ if (hasAudioContext()) {
             if (value < 0) return;
 
             if (this._state === STATE_PLAYING) {
+                const suspend = this._suspendInstanceEvents;
+                this._suspendInstanceEvents = true;
+
                 // stop first which will set _startOffset to null
                 this.stop();
 
-                const suspend = this._suspendInstanceEvents;
-                this._suspendInstanceEvents = true;
                 // set _startOffset and play
                 this._startOffset = value;
                 this.play();

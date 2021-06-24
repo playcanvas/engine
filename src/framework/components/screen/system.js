@@ -48,7 +48,7 @@ class ScreenComponentSystem extends ComponentSystem {
         if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
         if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
         if (data.resolution !== undefined) {
-            if (data.resolution instanceof Vec2){
+            if (data.resolution instanceof Vec2) {
                 component._resolution.copy(data.resolution);
             } else {
                 component._resolution.set(data.resolution[0], data.resolution[1]);
@@ -56,7 +56,7 @@ class ScreenComponentSystem extends ComponentSystem {
             component.resolution = component._resolution;
         }
         if (data.referenceResolution !== undefined) {
-            if (data.referenceResolution instanceof Vec2){
+            if (data.referenceResolution instanceof Vec2) {
                 component._referenceResolution.copy(data.referenceResolution);
             } else {
                 component._referenceResolution.set(data.referenceResolution[0], data.referenceResolution[1]);

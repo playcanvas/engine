@@ -131,7 +131,7 @@ class Vec2 {
     /**
      * @function
      * @name Vec2#copy
-     * @description Copied the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
+     * @description Copies the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
      * @param {Vec2} rhs - A vector to copy to the specified vector.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -180,8 +180,8 @@ class Vec2 {
      * console.log("The between v1 and v2 is: " + d);
      */
     distance(rhs) {
-        var x = this.x - rhs.x;
-        var y = this.y - rhs.y;
+        const x = this.x - rhs.x;
+        const y = this.y - rhs.y;
         return Math.sqrt(x * x + y * y);
     }
 
@@ -422,13 +422,75 @@ class Vec2 {
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
-        var lengthSq = this.x * this.x + this.y * this.y;
+        const lengthSq = this.x * this.x + this.y * this.y;
         if (lengthSq > 0) {
-            var invLength = 1 / Math.sqrt(lengthSq);
+            const invLength = 1 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
         }
 
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#floor
+     * @description Each element is set to the largest integer less than or equal to its value.
+     * @returns {Vec2} Self for chaining.
+     */
+    floor() {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#ceil
+     * @description Each element is rounded up to the next largest integer.
+     * @returns {Vec2} Self for chaining.
+     */
+    ceil() {
+        this.x = Math.ceil(this.x);
+        this.y = Math.ceil(this.y);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#round
+     * @description Each element is rounded up or down to the nearest integer.
+     * @returns {Vec2} Self for chaining.
+     */
+    round() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#min
+     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec2} Self for chaining.
+     */
+    min(rhs) {
+        if (rhs.x < this.x) this.x = rhs.x;
+        if (rhs.y < this.y) this.y = rhs.y;
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#max
+     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec2} Self for chaining.
+     */
+    max(rhs) {
+        if (rhs.x > this.x) this.x = rhs.x;
+        if (rhs.y > this.y) this.y = rhs.y;
         return this;
     }
 

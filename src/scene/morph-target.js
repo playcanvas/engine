@@ -22,15 +22,15 @@ class MorphTarget {
     constructor(options) {
 
         if (arguments.length === 2) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
             // #endif
             options = arguments[1];
         }
 
         this.options = options;
-        this.name = options.name;
-        this.defaultWeight = options.defaultWeight || 0;
+        this._name = options.name;
+        this._defaultWeight = options.defaultWeight || 0;
 
         // bounds
         this.aabb = options.aabb;
@@ -42,6 +42,26 @@ class MorphTarget {
 
         // store delta positions, used by aabb evaluation
         this.deltaPositions = options.deltaPositions;
+    }
+
+    /**
+     * @name MorphTarget#name
+     * @type {string}
+     * @readonly
+     * @description The name of the morph target.
+     */
+    get name() {
+        return this._name;
+    }
+
+    /**
+     * @name MorphTarget#defaultWeight
+     * @type {number}
+     * @readonly
+     * @description The default weight of the morph target.
+     */
+    get defaultWeight() {
+        return this._defaultWeight;
     }
 
     get morphPositions() {

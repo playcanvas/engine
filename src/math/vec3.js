@@ -148,7 +148,7 @@ class Vec3 {
     /**
      * @function
      * @name Vec3#copy
-     * @description Copied the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
+     * @description Copies the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
      * @param {Vec3} rhs - A vector to copy to the specified vector.
      * @returns {Vec3} Self for chaining.
      * @example
@@ -182,12 +182,12 @@ class Vec3 {
      */
     cross(lhs, rhs) {
         // Create temporary variables in case lhs or rhs are 'this'
-        var lx = lhs.x;
-        var ly = lhs.y;
-        var lz = lhs.z;
-        var rx = rhs.x;
-        var ry = rhs.y;
-        var rz = rhs.z;
+        const lx = lhs.x;
+        const ly = lhs.y;
+        const lz = lhs.z;
+        const rx = rhs.x;
+        const ry = rhs.y;
+        const rz = rhs.z;
 
         this.x = ly * rz - ry * lz;
         this.y = lz * rx - rz * lx;
@@ -209,9 +209,9 @@ class Vec3 {
      * console.log("The between v1 and v2 is: " + d);
      */
     distance(rhs) {
-        var x = this.x - rhs.x;
-        var y = this.y - rhs.y;
-        var z = this.z - rhs.z;
+        const x = this.x - rhs.x;
+        const y = this.y - rhs.y;
+        const z = this.z - rhs.z;
         return Math.sqrt(x * x + y * y + z * z);
     }
 
@@ -459,14 +459,81 @@ class Vec3 {
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize() {
-        var lengthSq = this.x * this.x + this.y * this.y + this.z * this.z;
+        const lengthSq = this.x * this.x + this.y * this.y + this.z * this.z;
         if (lengthSq > 0) {
-            var invLength = 1 / Math.sqrt(lengthSq);
+            const invLength = 1 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
             this.z *= invLength;
         }
 
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#floor
+     * @description Each element is set to the largest integer less than or equal to its value.
+     * @returns {Vec3} Self for chaining.
+     */
+    floor() {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        this.z = Math.floor(this.z);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#ceil
+     * @description Each element is rounded up to the next largest integer.
+     * @returns {Vec3} Self for chaining.
+     */
+    ceil() {
+        this.x = Math.ceil(this.x);
+        this.y = Math.ceil(this.y);
+        this.z = Math.ceil(this.z);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#round
+     * @description Each element is rounded up or down to the nearest integer.
+     * @returns {Vec3} Self for chaining.
+     */
+    round() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        this.z = Math.round(this.z);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#min
+     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec3} Self for chaining.
+     */
+    min(rhs) {
+        if (rhs.x < this.x) this.x = rhs.x;
+        if (rhs.y < this.y) this.y = rhs.y;
+        if (rhs.z < this.z) this.z = rhs.z;
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#max
+     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec3} Self for chaining.
+     */
+    max(rhs) {
+        if (rhs.x > this.x) this.x = rhs.x;
+        if (rhs.y > this.y) this.y = rhs.y;
+        if (rhs.z > this.z) this.z = rhs.z;
         return this;
     }
 
@@ -486,9 +553,9 @@ class Vec3 {
      * console.log("The result of the vector projection is: " + v.toString());
      */
     project(rhs) {
-        var a_dot_b = this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
-        var b_dot_b = rhs.x * rhs.x + rhs.y * rhs.y + rhs.z * rhs.z;
-        var s = a_dot_b / b_dot_b;
+        const a_dot_b = this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
+        const b_dot_b = rhs.x * rhs.x + rhs.y * rhs.y + rhs.z * rhs.z;
+        const s = a_dot_b / b_dot_b;
         this.x = rhs.x * s;
         this.y = rhs.y * s;
         this.z = rhs.z * s;

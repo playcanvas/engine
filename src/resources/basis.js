@@ -9,7 +9,7 @@ function BasisWorker() {
 
     // Basis compression format enums
     // Note: these must match definitions in the BASIS module
-    var BASIS_FORMAT = {
+    const BASIS_FORMAT = {
         cTFETC1: 0,                         // etc1
         cTFETC2: 1,                         // etc2
         cTFBC1: 2,                          // dxt1
@@ -26,7 +26,7 @@ function BasisWorker() {
     };
 
     // Map GPU to basis format for textures without alpha
-    var opaqueMapping = {
+    const opaqueMapping = {
         astc: BASIS_FORMAT.cTFASTC_4x4,
         dxt: BASIS_FORMAT.cTFBC1,
         etc2: BASIS_FORMAT.cTFETC1,
@@ -37,7 +37,7 @@ function BasisWorker() {
     };
 
     // Map GPU to basis format for textures with alpha
-    var alphaMapping = {
+    const alphaMapping = {
         astc: BASIS_FORMAT.cTFASTC_4x4,
         dxt: BASIS_FORMAT.cTFBC3,
         etc2: BASIS_FORMAT.cTFETC2,
@@ -48,7 +48,7 @@ function BasisWorker() {
     };
 
     // Map basis format to engine pixel format
-    var basisToEngineMapping = { };
+    const basisToEngineMapping = { };
     // Note that we don't specify the enum constants directly because they're not
     // available in the worker. And if they are specified in the worker code string,
     // they unfortunately get mangled by Terser on minification. So let's write in
@@ -66,21 +66,21 @@ function BasisWorker() {
     basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = 3;  // PIXELFORMAT_R5_G6_B5
     basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = 5;  // PIXELFORMAT_R4_G4_B4_A4
 
-    var hasPerformance = typeof performance !== 'undefined';
+    const hasPerformance = typeof performance !== 'undefined';
 
     // unswizzle two-component gggr8888 normal data into rgba8888
-    var unswizzleGGGR = function (data) {
+    const unswizzleGGGR = function (data) {
         // given R and G generate B
-        var genB = function (R, G) {
-            var r = R * (2.0 / 255.0) - 1.0;
-            var g = G * (2.0 / 255.0) - 1.0;
-            var b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
+        const genB = function (R, G) {
+            const r = R * (2.0 / 255.0) - 1.0;
+            const g = G * (2.0 / 255.0) - 1.0;
+            const b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
             return Math.max(0, Math.min(255, Math.floor(((b + 1.0) * 0.5) * 255.0)));
         };
 
-        for (var offset = 0; offset < data.length; offset += 4) {
-            var R = data[offset + 3];
-            var G = data[offset + 1];
+        for (let offset = 0; offset < data.length; offset += 4) {
+            const R = data[offset + 3];
+            const G = data[offset + 1];
             data[offset + 0] = R;
             data[offset + 2] = genB(R, G);
             data[offset + 3] = 255;
@@ -90,13 +90,13 @@ function BasisWorker() {
     };
 
     // pack rgba8888 data into rgb565
-    var pack565 = function (data) {
-        var result = new Uint16Array(data.length / 4);
+    const pack565 = function (data) {
+        const result = new Uint16Array(data.length / 4);
 
-        for (var offset = 0; offset < data.length; offset += 4) {
-            var R = data[offset + 0];
-            var G = data[offset + 1];
-            var B = data[offset + 2];
+        for (let offset = 0; offset < data.length; offset += 4) {
+            const R = data[offset + 0];
+            const G = data[offset + 1];
+            const B = data[offset + 2];
             result[offset / 4] = ((R & 0xf8) << 8) |  // 5
                                  ((G & 0xfc) << 3) |  // 6
                                  ((B >> 3));          // 5
@@ -106,15 +106,15 @@ function BasisWorker() {
     };
 
     // transcode the basis super-compressed data into one of the runtime gpu native formats
-    var transcode = function (basis, url, format, data, options) {
-        var funcStart = hasPerformance ? performance.now() : 0;
-        var basisFile = new basis.BasisFile(new Uint8Array(data));
+    const transcode = function (basis, url, format, data, options) {
+        const funcStart = hasPerformance ? performance.now() : 0;
+        const basisFile = new basis.BasisFile(new Uint8Array(data));
 
-        var width = basisFile.getImageWidth(0, 0);
-        var height = basisFile.getImageHeight(0, 0);
-        var images = basisFile.getNumImages();
-        var levels = basisFile.getNumLevels(0);
-        var hasAlpha = !!basisFile.getHasAlpha();
+        const width = basisFile.getImageWidth(0, 0);
+        const height = basisFile.getImageHeight(0, 0);
+        const images = basisFile.getNumImages();
+        const levels = basisFile.getNumLevels(0);
+        const hasAlpha = !!basisFile.getHasAlpha();
 
         if (!width || !height || !images || !levels) {
             basisFile.close();
@@ -123,7 +123,7 @@ function BasisWorker() {
         }
 
         // select format based on supported formats
-        var basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+        let basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
         // PVR does not support non-square or non-pot textures. In these cases we
         // transcode to an uncompressed format.
@@ -147,12 +147,12 @@ function BasisWorker() {
             throw new Error('Failed to start transcoding url=' + url);
         }
 
-        var i;
+        let i;
 
-        var levelData = [];
-        for (var mip = 0; mip < levels; ++mip) {
-            var dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
-            var dst = new Uint8Array(dstSize);
+        const levelData = [];
+        for (let mip = 0; mip < levels; ++mip) {
+            const dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
+            let dst = new Uint8Array(dstSize);
 
             if (!basisFile.transcodeImage(dst, 0, mip, basisFormat, 1, 0)) {
                 basisFile.close();
@@ -162,7 +162,7 @@ function BasisWorker() {
 
             if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
                 // 16 bit formats require Uint16 typed array
-                var dst16 = new Uint16Array(dstSize / 2);
+                const dst16 = new Uint16Array(dstSize / 2);
                 for (i = 0; i < dstSize / 2; ++i) {
                     dst16[i] = dst[i * 2] + dst[i * 2 + 1] * 256;
                 }
@@ -195,48 +195,48 @@ function BasisWorker() {
         };
     };
 
-    var basis = null;
-    var queue = [];
+    let basis = null;
+    let queue = [];
 
     // download and transcode the file given the basis module and
     // file url
-    var workerTranscode = function (url, format, data, options) {
+    const workerTranscode = function (url, format, data, options) {
         try {
             // texture data has been provided
-            var result = transcode(basis, url, format, data, options);
+            const result = transcode(basis, url, format, data, options);
             result.levels = result.levels.map(function (v) {
                 return v.buffer;
             });
-            self.postMessage( { url: url, data: result }, result.levels);
+            self.postMessage({ url: url, data: result }, result.levels);
         } catch (err) {
-            self.postMessage( { url: url.toString(), err: err.toString() } );
+            self.postMessage({ url: url.toString(), err: err.toString() });
         }
     };
 
     // Initialize the web worker's BASIS interface.
     // basisModule is the optional wasm binary.
-    var workerInit = function (basisModule) {
-        var instantiateWasmFunc = function (imports, successCallback) {
+    const workerInit = function (basisModule) {
+        const instantiateWasmFunc = function (imports, successCallback) {
             WebAssembly.instantiate(basisModule, imports)
-                .then( function (result) {
+                .then(function (result) {
                     successCallback(result);
                 });
             return {};
         };
 
-        self.BASIS(basisModule ? { instantiateWasm: instantiateWasmFunc } : null).then( function (instance) {
+        self.BASIS(basisModule ? { instantiateWasm: instantiateWasmFunc } : null).then(function (instance) {
             basis = instance;
             basis.initializeBasis();
-            for (var i = 0; i < queue.length; ++i) {
+            for (let i = 0; i < queue.length; ++i) {
                 workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
             }
             queue = [];
-        } );
+        });
     };
 
     // handle incoming worker requests
     self.onmessage = function (message) {
-        var data = message.data;
+        const data = message.data;
         switch (data.type) {
             case 'init':
                 workerInit(data.module);
@@ -253,10 +253,10 @@ function BasisWorker() {
 }
 
 // check for wasm module support
-var wasmSupported = (function () {
+const wasmSupported = (function () {
     try {
         if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-            var module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+            const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
             if (module instanceof WebAssembly.Module)
                 return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
         }
@@ -283,12 +283,13 @@ function chooseTargetFormat(device) {
 }
 
 // global state
-var downloadInitiated = false;
-var worker = null;
-var callbacks = { };
-var format = null;
-var transcodeQueue = [];
-var downloadConfig = null;
+let downloadInitiated = false;
+let downloadConfig = null;
+let worker = null;
+let format = null;
+
+const callbacks = { };
+const transcodeQueue = [];
 
 function basisTargetFormat() {
     if (!format) {
@@ -298,17 +299,17 @@ function basisTargetFormat() {
 }
 
 function handleWorkerResponse(message) {
-    var url = message.data.url;
-    var err = message.data.err;
-    var data = message.data.data;
-    var callback = callbacks[url];
+    const url = message.data.url;
+    const err = message.data.err;
+    const data = message.data.data;
+    const callback = callbacks[url];
 
     if (!callback) {
         console.error('internal logical error encountered in basis transcoder');
         return;
     }
 
-    var i;
+    let i;
     if (err) {
         for (i = 0; i < callback.length; ++i) {
             (callback[i])(err);
@@ -353,15 +354,15 @@ function transcode(url, data, callback, options) {
 // initialize the basis worker given the basis module script (glue or fallback)
 // and the optional accompanying wasm binary.
 function basisInitialize(basisCode, basisModule, callback) {
-    var code = [
+    const code = [
         "/* basis.js */",
         basisCode,
         "",
         "/* worker */",
         '(' + BasisWorker.toString() + ')()\n\n'
     ].join('\n');
-    var blob = new Blob([code], { type: 'application/javascript' });
-    var url = URL.createObjectURL(blob);
+    const blob = new Blob([code], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
     worker = new Worker(url);
     worker.addEventListener('message', handleWorkerResponse);
     worker.postMessage({ type: 'init', module: basisModule });
@@ -369,8 +370,8 @@ function basisInitialize(basisCode, basisModule, callback) {
         callback();
     }
     // module is initialized, initiate queued jobs
-    for (var i = 0; i < transcodeQueue.length; ++i) {
-        var entry = transcodeQueue[i];
+    for (let i = 0; i < transcodeQueue.length; ++i) {
+        const entry = transcodeQueue[i];
         transcode(entry.url, entry.data, entry.callback, entry.options);
     }
 }
@@ -382,10 +383,10 @@ function basisDownload(glueUrl, wasmUrl, fallbackUrl, callback) {
     }
     downloadInitiated = true;
     if (wasmSupported) {
-        var glueCode = null;
-        var compiledModule = null;
+        let glueCode = null;
+        let compiledModule = null;
 
-        var downloadCompleted = function () {
+        const downloadCompleted = function () {
             if (glueCode && compiledModule) {
                 basisInitialize(glueCode, compiledModule, callback);
             }
@@ -393,7 +394,7 @@ function basisDownload(glueUrl, wasmUrl, fallbackUrl, callback) {
 
         // perform the fallback http download if compileStreaming isn't
         // available or fails
-        var performHttpDownload = function () {
+        const performHttpDownload = function () {
             http.get(
                 wasmUrl,
                 { cache: true, responseType: "arraybuffer", retry: false },
@@ -466,18 +467,18 @@ function basisDownloadFromConfig(callback) {
                       callback);
     } else {
         // get config from global PC config structure
-        var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-        var wasmModule = modules.find(function (m) {
+        const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
+        const wasmModule = modules.find(function (m) {
             return m.moduleName === 'BASIS';
         });
         if (wasmModule) {
-            var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
+            const urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
             basisDownload(urlBase + wasmModule.glueUrl,
                           urlBase + wasmModule.wasmUrl,
                           urlBase + wasmModule.fallbackUrl,
                           callback);
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("WARNING: unable to load basis wasm module - no config was specified");
             // #endif
             return false;

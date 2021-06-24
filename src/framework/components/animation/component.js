@@ -57,7 +57,7 @@ class AnimationComponent extends Component {
         var data = this.data;
 
         if (!data.animations[name]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("Trying to play animation '" + name + "' which doesn't exist");
             // #endif
             return;
@@ -181,7 +181,7 @@ class AnimationComponent extends Component {
             data.skeleton.looping = data.loop;
             data.skeleton.setGraph(graph);
         } else if (hasGlb) {
-            data.animEvaluator = new AnimEvaluator(new DefaultAnimBinder(graph));
+            data.animEvaluator = new AnimEvaluator(new DefaultAnimBinder(this.entity));
         }
     }
 

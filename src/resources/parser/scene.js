@@ -11,19 +11,19 @@ class SceneParser {
     }
 
     parse(data) {
-        var entities = {};
-        var id, i, curEnt;
-        var parent = null;
+        const entities = {};
+        let parent = null;
 
-        var compressed = data.compressedFormat;
-        if (compressed) {
+        const compressed = data.compressedFormat;
+        if (compressed && !data.entDecompressed) {
+            data.entDecompressed = true;
             data.entities = new Decompress(data.entities, compressed).run();
         }
 
         // instantiate entities
-        for (id in data.entities) {
-            var curData = data.entities[id];
-            curEnt = this._createEntity(curData, compressed);
+        for (const id in data.entities) {
+            const curData = data.entities[id];
+            const curEnt = this._createEntity(curData, compressed);
             entities[id] = curEnt;
             if (curData.parent === null) {
                 parent = curEnt;
@@ -31,12 +31,12 @@ class SceneParser {
         }
 
         // put entities into hierarchy
-        for (id in data.entities) {
-            curEnt = entities[id];
-            var children = data.entities[id].children;
-            var len = children.length;
-            for (i = 0; i < len; i++) {
-                var childEnt = entities[children[i]];
+        for (const id in data.entities) {
+            const curEnt = entities[id];
+            const children = data.entities[id].children;
+            const len = children.length;
+            for (let i = 0; i < len; i++) {
+                const childEnt = entities[children[i]];
                 if (childEnt) {
                     curEnt.addChild(childEnt);
                 }
@@ -45,13 +45,11 @@ class SceneParser {
 
         this._openComponentData(parent, data.entities);
 
-        delete data.compressedFormat;
-
         return parent;
     }
 
     _createEntity(data, compressed) {
-        var entity = new Entity();
+        const entity = new Entity();
 
         entity.name = data.name;
         entity.setGuid(data.resource_id);
@@ -67,7 +65,7 @@ class SceneParser {
         entity.template = data.template;
 
         if (data.tags) {
-            for (var i = 0; i < data.tags.length; i++) {
+            for (let i = 0; i < data.tags.length; i++) {
                 entity.tags.add(data.tags[i]);
             }
         }
@@ -86,9 +84,9 @@ class SceneParser {
             CompressUtils.setCompressedPRS(entity, data, compressed);
 
         } else {
-            var p = data.position;
-            var r = data.rotation;
-            var s = data.scale;
+            const p = data.position;
+            const r = data.rotation;
+            const s = data.scale;
 
             entity.setLocalPosition(p[0], p[1], p[2]);
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
@@ -98,13 +96,13 @@ class SceneParser {
 
     _openComponentData(entity, entities) {
         // Create components in order
-        var systemsList = this._app.systems.list;
+        const systemsList = this._app.systems.list;
 
-        var i, len = systemsList.length;
-        var entityData = entities[entity.getGuid()];
-        for (i = 0; i < len; i++) {
-            var system = systemsList[i];
-            var componentData = entityData.components[system.id];
+        let len = systemsList.length;
+        const entityData = entities[entity.getGuid()];
+        for (let i = 0; i < len; i++) {
+            const system = systemsList[i];
+            const componentData = entityData.components[system.id];
             if (componentData) {
                 system.addComponent(entity, componentData);
             }
@@ -112,8 +110,8 @@ class SceneParser {
 
         // Open all children and add them to the node
         len = entityData.children.length;
-        var children = entity._children;
-        for (i = 0; i < len; i++) {
+        const children = entity._children;
+        for (let i = 0; i < len; i++) {
             children[i] = this._openComponentData(children[i], entities);
         }
 

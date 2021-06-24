@@ -1,5 +1,4 @@
 import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -14,7 +13,7 @@ import { Texture } from './texture.js';
 
 function syncToCpu(device, targ, face) {
     var tex = targ._colorBuffer;
-    if (tex.format != PIXELFORMAT_R8_G8_B8_A8) return;
+    if (tex.format !== PIXELFORMAT_R8_G8_B8_A8) return;
     var pixels = new Uint8Array(tex.width * tex.height * 4);
     var gl = device.gl;
     device.setFramebuffer(targ._glFrameBuffer);
@@ -39,7 +38,7 @@ function prefilterCubemap(options) {
     var cpuSync = options.cpuSync;
 
     if (cpuSync && !sourceCubemap._levels[0]) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: prefilter: cubemap must have _levels");
         // #endif
         return;
@@ -60,7 +59,7 @@ function prefilterCubemap(options) {
                                        "outputCubemap");
     var constantTexSource = device.scope.resolve("source");
     var constantParams = device.scope.resolve("params");
-    var params = new Vec4();
+    var params = new Float32Array(4);
     var size = sourceCubemap.width;
     var format = sourceCubemap.format;
 
@@ -90,14 +89,15 @@ function prefilterCubemap(options) {
         });
         nextCubemap.name = 'prefiltered-cube';
         for (face = 0; face < 6; face++) {
-            targ = new RenderTarget(device, nextCubemap, {
+            targ = new RenderTarget({
+                colorBuffer: nextCubemap,
                 face: face,
                 depth: false
             });
-            params.x = face;
-            params.y = 0;
+            params[0] = face;
+            params[1] = 0;
             constantTexSource.setValue(sourceCubemap);
-            constantParams.setValue(params.data);
+            constantParams.setValue(params);
 
             drawQuadWithShader(device, targ, shader2);
             syncToCpu(device, targ, face);
@@ -123,16 +123,17 @@ function prefilterCubemap(options) {
             });
             nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
-                targ = new RenderTarget(device, nextCubemap, {
+                targ = new RenderTarget({
+                    colorBuffer: nextCubemap,
                     face: face,
                     depth: false
                 });
-                params.x = face;
-                params.y = sampleGloss;
-                params.z = size;
-                params.w = rgbmSource ? 3 : 0;
+                params[0] = face;
+                params[1] = sampleGloss;
+                params[2] = size;
+                params[3] = rgbmSource ? 3 : 0;
                 constantTexSource.setValue(sourceCubemap);
-                constantParams.setValue(params.data);
+                constantParams.setValue(params);
 
                 drawQuadWithShader(device, targ, shader2);
                 if (i === steps - 1 && cpuSync) {
@@ -156,14 +157,15 @@ function prefilterCubemap(options) {
         });
         nextCubemap.name = 'prefiltered-cube';
         for (face = 0; face < 6; face++) {
-            targ = new RenderTarget(device, nextCubemap, {
+            targ = new RenderTarget({
+                colorBuffer: nextCubemap,
                 face: face,
                 depth: false
             });
-            params.x = face;
-            params.w = 2;
+            params[0] = face;
+            params[3] = 2;
             constantTexSource.setValue(sourceCubemap);
-            constantParams.setValue(params.data);
+            constantParams.setValue(params);
 
             drawQuadWithShader(device, targ, shader2);
             syncToCpu(device, targ, face);
@@ -208,17 +210,18 @@ function prefilterCubemap(options) {
             }
             for (i = 0; i < numMips; i++) {
                 for (face = 0; face < 6; face++) {
-                    targ = new RenderTarget(device, cmapsList[pass][i], { // TODO: less excessive allocations
+                    targ = new RenderTarget({ // TODO: less excessive allocations
+                        colorBuffer: cmapsList[pass][i],
                         face: face,
                         depth: false
                     });
-                    params.x = face;
-                    params.y = pass < 0 ? unblurredGloss : gloss[i];
-                    params.z = mipSize[i];
-                    params.w = rgbmSource ? 3 : pass;
+                    params[0] = face;
+                    params[1] = pass < 0 ? unblurredGloss : gloss[i];
+                    params[2] = mipSize[i];
+                    params[3] = rgbmSource ? 3 : pass;
                     constantTexSource.setValue(i === 0 ? sourceCubemap :
                         method === 0 ? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
-                    constantParams.setValue(params.data);
+                    constantParams.setValue(params);
 
                     drawQuadWithShader(device, targ, shader);
                     if (cpuSync) syncToCpu(device, targ, face);
@@ -277,8 +280,8 @@ function areaElement(x, y) {
 }
 function texelCoordSolidAngle(u, v, size) {
     // Scale up to [-1, 1] range (inclusive), offset by 0.5 to point to texel center.
-    var _u = (2.0 * (u + 0.5) / size ) - 1.0;
-    var _v = (2.0 * (v + 0.5) / size ) - 1.0;
+    var _u = (2.0 * (u + 0.5) / size) - 1.0;
+    var _v = (2.0 * (v + 0.5) / size) - 1.0;
 
     // fixSeams
     _u *= 1.0 - 1.0 / size;
@@ -310,13 +313,13 @@ function shFromCubemap(device, source, dontFlipX) {
     var x, y;
 
     if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: SH: cubemap must be RGBA8");
         // #endif
         return;
     }
     if (!source._levels[0]) {
-        // #ifdef DEBUG
+        // #if _DEBUG
         console.error("ERROR: SH: cubemap must be synced to CPU");
         // #endif
         return;
@@ -356,7 +359,8 @@ function shFromCubemap(device, source, dontFlipX) {
                 });
                 tex2.name = 'prefiltered-cube';
 
-                var targ = new RenderTarget(device, tex2, {
+                var targ = new RenderTarget({
+                    colorBuffer: tex2,
                     depth: false
                 });
                 constantTexSource.setValue(tex);
@@ -369,7 +373,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("ERROR: SH: cubemap must be composed of arrays or images");
             // #endif
             return;
@@ -426,23 +430,23 @@ function shFromCubemap(device, source, dontFlipX) {
                     dx = dir.z;
                     dy = -dir.y;
                     dz = -dir.x;
-                } else if (face == px) {
+                } else if (face === px) {
                     dx = -dir.z;
                     dy = -dir.y;
                     dz = dir.x;
-                } else if (face == ny) {
+                } else if (face === ny) {
                     dx = dir.x;
                     dy = dir.z;
                     dz = dir.y;
-                } else if (face == py) {
+                } else if (face === py) {
                     dx = dir.x;
                     dy = -dir.z;
                     dz = -dir.y;
-                } else if (face == nz) {
+                } else if (face === nz) {
                     dx = dir.x;
                     dy = -dir.y;
                     dz = dir.z;
-                } else if (face == pz) {
+                } else if (face === pz) {
                     dx = -dir.x;
                     dy = -dir.y;
                     dz = -dir.z;

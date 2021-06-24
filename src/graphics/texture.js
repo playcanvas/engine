@@ -63,16 +63,16 @@ var _blockSizeTable = null;
  * * {@link TEXTUREPROJECTION_EQUIRECT}
  * * {@link TEXTUREPROJECTION_OCTAHEDRAL}
  * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is specified, otherwise {@link TEXTUREPROJECTION_NONE}.
- * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
- * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
- * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
- * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link ADDRESS_REPEAT}
- * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link ADDRESS_REPEAT}
- * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link ADDRESS_REPEAT}
- * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
+ * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}.
+ * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}.
+ * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1.
+ * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link ADDRESS_REPEAT}.
+ * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link ADDRESS_REPEAT}.
+ * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link ADDRESS_REPEAT}.
+ * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true.
  * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
  * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
- * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}
+ * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}.
  * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
  * seam fixing shader code to look right. Defaults to false.
  * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
@@ -145,7 +145,7 @@ class Texture {
         this._compareOnRead = false;
         this._compareFunc = FUNC_LESS;
 
-        // #ifdef PROFILER
+        // #if _PROFILER
         this.profilerHint = 0;
         // #endif
 
@@ -161,12 +161,12 @@ class Texture {
             if (options.hasOwnProperty('type')) {
                 this.type = options.type;
             } else if (options.hasOwnProperty('rgbm')) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
                 // #endif
                 this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
             } else if (options.hasOwnProperty('swizzleGGGR')) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
                 // #endif
                 this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
@@ -207,7 +207,7 @@ class Texture {
                 this._addressW = (options.addressW !== undefined) ? options.addressW : this._addressW;
             }
 
-            // #ifdef PROFILER
+            // #if _PROFILER
             this.profilerHint = (options.profilerHint !== undefined) ? options.profilerHint : this.profilerHint;
             // #endif
         }
@@ -322,7 +322,7 @@ class Texture {
     set addressW(addressW) {
         if (!this.device.webgl2) return;
         if (!this._volume) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             // #endif
             return;
@@ -849,7 +849,7 @@ class Texture {
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this._lockedLevel === -1) {
             console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
         }
@@ -874,7 +874,7 @@ class Texture {
     }
 
     getDds() {
-        // #ifdef DEBUG
+        // #if _DEBUG
         if (this.format !== PIXELFORMAT_R8_G8_B8_A8)
             console.error("This format is not implemented yet");
         // #endif
@@ -888,7 +888,7 @@ class Texture {
             if (!this.cubemap) {
                 mipSize = this._levels[i].length;
                 if (!mipSize) {
-                    // #ifdef DEBUG
+                    // #if _DEBUG
                     console.error("No byte array for mip " + i);
                     // #endif
                     return;
@@ -897,14 +897,14 @@ class Texture {
             } else {
                 for (face = 0; face < 6; face++) {
                     if (!this._levels[i][face]) {
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         console.error('No level data for mip ' + i + ', face ' + face);
                         // #endif
                         return;
                     }
                     mipSize = this._levels[i][face].length;
                     if (!mipSize) {
-                        // #ifdef DEBUG
+                        // #if _DEBUG
                         console.error("No byte array for mip " + i + ", face " + face);
                         // #endif
                         return;

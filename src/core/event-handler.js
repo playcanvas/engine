@@ -85,7 +85,7 @@ class EventHandler {
             if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
                 this._callbackActive[name] = this._callbackActive[name].slice();
         } else {
-            for (var key in this._callbackActive) {
+            for (const key in this._callbackActive) {
                 if (!this._callbacks[key])
                     continue;
 
@@ -102,13 +102,13 @@ class EventHandler {
             if (this._callbacks[name])
                 this._callbacks[name] = [];
         } else {
-            var events = this._callbacks[name];
+            const events = this._callbacks[name];
             if (!events)
                 return this;
 
-            var count = events.length;
+            let count = events.length;
 
-            for (var i = 0; i < count; i++) {
+            for (let i = 0; i < count; i++) {
                 if (events[i].callback !== callback)
                     continue;
 
@@ -148,7 +148,7 @@ class EventHandler {
         if (!name || !this._callbacks[name])
             return this;
 
-        var callbacks;
+        let callbacks;
 
         if (!this._callbackActive[name]) {
             this._callbackActive[name] = this._callbacks[name];
@@ -163,14 +163,18 @@ class EventHandler {
         // In particular this condition check looks wrong: (i < (callbacks || this._callbackActive[name]).length)
         // Because callbacks is not an integer
         // eslint-disable-next-line no-unmodified-loop-condition
-        for (var i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
-            var evt = (callbacks || this._callbackActive[name])[i];
+        for (let i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
+            const evt = (callbacks || this._callbackActive[name])[i];
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
             if (evt.once) {
-                var ind = this._callbacks[name].indexOf(evt);
+                // check that callback still exists because user may have unsubscribed
+                // in the event handler
+                const existingCallback = this._callbacks[name];
+                const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
+
                 if (ind !== -1) {
-                    if (this._callbackActive[name] === this._callbacks[name])
+                    if (this._callbackActive[name] === existingCallback)
                         this._callbackActive[name] = this._callbackActive[name].slice();
 
                     this._callbacks[name].splice(ind, 1);

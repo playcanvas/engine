@@ -12,7 +12,6 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeDirectional2D extends AnimBlendTree {
-
     static _p = new Vec2();
 
     static _pip = new Vec2();
@@ -51,14 +50,15 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
             child.weight = minj;
             weightSum += minj;
             if (this._syncAnimations) {
-                weightedDurationSum += child.animTrack.duration / child.absoluteSpeed * child.weight;
+                weightedDurationSum += (child.animTrack.duration / child.absoluteSpeed) * child.weight;
             }
         }
         for (i = 0; i < this._children.length; i++) {
             const child = this._children[i];
             child.weight = child._weight / weightSum;
             if (this._syncAnimations) {
-                child.weightedSpeed = child.animTrack.duration / child.absoluteSpeed / weightedDurationSum;
+                const weightedChildDuration = (child.animTrack.duration / weightedDurationSum) * weightSum;
+                child.weightedSpeed =  child.absoluteSpeed * weightedChildDuration;
             }
         }
     }

@@ -1,3 +1,57 @@
+let desktop = false;
+let mobile = false;
+let windows = false;
+let xbox = false;
+let android = false;
+let ios = false;
+let touch = false;
+let gamepads = false;
+let workers = false;
+let passiveEvents = false;
+
+if (typeof navigator !== 'undefined') {
+    const ua = navigator.userAgent;
+
+    if (/(windows|mac os|linux|cros)/i.test(ua))
+        desktop = true;
+
+    if (/xbox/i.test(ua))
+        xbox = true;
+
+    if (/(windows phone|iemobile|wpdesktop)/i.test(ua)) {
+        desktop = false;
+        mobile = true;
+        windows = true;
+    } else if (/android/i.test(ua)) {
+        desktop = false;
+        mobile = true;
+        android = true;
+    } else if (/ip([ao]d|hone)/i.test(ua)) {
+        desktop = false;
+        mobile = true;
+        ios = true;
+    }
+
+    if (typeof window !== 'undefined') {
+        touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
+    }
+
+    gamepads = 'getGamepads' in navigator;
+
+    workers = (typeof(Worker) !== 'undefined');
+
+    try {
+        const opts = Object.defineProperty({}, 'passive', {
+            get: function () {
+                passiveEvents = true;
+                return false;
+            }
+        });
+        window.addEventListener("testpassive", null, opts);
+        window.removeEventListener("testpassive", null, opts);
+    } catch (e) {}
+}
+
 /**
  * @namespace
  * @name platform
@@ -7,7 +61,7 @@
  *     // touch is supported
  * }
  */
-var platform = {
+const platform = {
     /**
      * @static
      * @readonly
@@ -15,7 +69,7 @@ var platform = {
      * @name platform.desktop
      * @description Is it a desktop or laptop device.
      */
-    desktop: false,
+    desktop: desktop,
 
     /**
      * @static
@@ -24,7 +78,7 @@ var platform = {
      * @name platform.mobile
      * @description Is it a mobile or tablet device.
      */
-    mobile: false,
+    mobile: mobile,
 
     /**
      * @static
@@ -33,7 +87,7 @@ var platform = {
      * @name platform.ios
      * @description If it is iOS.
      */
-    ios: false,
+    ios: ios,
 
     /**
      * @static
@@ -42,7 +96,7 @@ var platform = {
      * @name platform.android
      * @description If it is Android.
      */
-    android: false,
+    android: android,
 
     /**
      * @static
@@ -51,7 +105,7 @@ var platform = {
      * @name platform.windows
      * @description If it is Windows.
      */
-    windows: false,
+    windows: windows,
 
     /**
      * @static
@@ -60,7 +114,7 @@ var platform = {
      * @name platform.xbox
      * @description If it is Xbox.
      */
-    xbox: false,
+    xbox: xbox,
 
     /**
      * @static
@@ -69,7 +123,7 @@ var platform = {
      * @name platform.gamepads
      * @description If platform supports gamepads.
      */
-    gamepads: false,
+    gamepads: gamepads,
 
     /**
      * @static
@@ -78,7 +132,7 @@ var platform = {
      * @name platform.touch
      * @description If platform supports touch input.
      */
-    touch: false,
+    touch: touch,
 
     /**
      * @static
@@ -87,7 +141,7 @@ var platform = {
      * @name platform.workers
      * @description If the platform supports Web Workers.
      */
-    workers: false,
+    workers: workers,
 
     /**
      * @private
@@ -98,50 +152,7 @@ var platform = {
      * @description If the platform supports an options object as the third parameter
      * to `EventTarget.addEventListener()` and the passive property is supported.
      */
-    passiveEvents: false
+    passiveEvents: passiveEvents
 };
-
-if (typeof navigator !== 'undefined') {
-    var ua = navigator.userAgent;
-
-    if (/(windows|mac os|linux|cros)/i.test(ua))
-        platform.desktop = true;
-
-    if (/xbox/i.test(ua))
-        platform.xbox = true;
-
-    if (/(windows phone|iemobile|wpdesktop)/i.test(ua)) {
-        platform.desktop = false;
-        platform.mobile = true;
-        platform.windows = true;
-    } else if (/android/i.test(ua)) {
-        platform.desktop = false;
-        platform.mobile = true;
-        platform.android = true;
-    } else if (/ip([ao]d|hone)/i.test(ua)) {
-        platform.desktop = false;
-        platform.mobile = true;
-        platform.ios = true;
-    }
-
-    if (typeof window !== 'undefined') {
-        platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
-    }
-
-    platform.gamepads = 'getGamepads' in navigator;
-
-    platform.workers = (typeof(Worker) !== 'undefined');
-
-    try {
-        var opts = Object.defineProperty({}, 'passive', {
-            get: function () {
-                platform.passiveEvents = true;
-                return false;
-            }
-        });
-        window.addEventListener("testpassive", null, opts);
-        window.removeEventListener("testpassive", null, opts);
-    } catch (e) {}
-}
 
 export { platform };

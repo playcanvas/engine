@@ -22,7 +22,7 @@ class IndexedList {
         if (this._index[key]) {
             throw Error("Key already in index " + key);
         }
-        var location = this._list.push(item) - 1;
+        const location = this._list.push(item) - 1;
         this._index[key] = location;
     }
 
@@ -47,7 +47,7 @@ class IndexedList {
      * @returns {object} The item stored at key.
      */
     get(key) {
-        var location = this._index[key];
+        const location = this._index[key];
         if (location !== undefined) {
             return this._list[location];
         }
@@ -63,14 +63,14 @@ class IndexedList {
      * @returns {boolean} Returns true if the key exists and an item was removed, returns false if no item was removed.
      */
     remove(key) {
-        var location = this._index[key];
+        const location = this._index[key];
         if (location !== undefined) {
             this._list.splice(location, 1);
             delete this._index[key];
 
             // update index
             for (key in this._index) {
-                var idx = this._index[key];
+                const idx = this._index[key];
                 if (idx > location) {
                     this._index[key] = idx - 1;
                 }
@@ -101,7 +101,7 @@ class IndexedList {
     clear() {
         this._list.length = 0;
 
-        for (var prop in this._index) {
+        for (const prop in this._index) {
             delete this._index[prop];
         }
     }

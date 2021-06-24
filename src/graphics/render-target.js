@@ -45,8 +45,14 @@ var defaultOptions = {
  *     depth: true
  * });
  *
- * // Set the render target on a layer
- * layer.renderTarget = renderTarget;
+ * // Set the render target on a camera component
+ * camera.renderTarget = renderTarget;
+ *
+ * // Destroy render target at a later stage. Note that the color buffer needs
+ * // to be destroyed separately.
+ * renderTarget.colorBuffer.destroy();
+ * renderTarget.destroy();
+ * camera.renderTarget = null;
  */
 class RenderTarget {
     constructor(options) {
@@ -57,6 +63,11 @@ class RenderTarget {
             // old constructor
             this._colorBuffer = _arg2;
             options = _arg3;
+
+            // #if _DEBUG
+            console.warn('DEPRECATED: pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+            // #endif
+
         } else {
             // new constructor
             this._colorBuffer = options.colorBuffer;
@@ -66,6 +77,9 @@ class RenderTarget {
         if (this._colorBuffer) {
             this._colorBuffer._isRenderTarget = true;
         }
+
+        // device, gets assigned when the framebuffer is created during the rendering
+        this._device = null;
 
         this._glFrameBuffer = null;
         this._glDepthBuffer = null;
@@ -84,7 +98,7 @@ class RenderTarget {
                 this._depth = true;
                 this._stencil = true;
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
                 // #endif
                 this._depth = false;
@@ -122,37 +136,58 @@ class RenderTarget {
     destroy() {
 
         var device = this._device;
-        if (!device) return;
+        if (device) {
+            var idx = device.targets.indexOf(this);
+            if (idx !== -1) {
+                device.targets.splice(idx, 1);
+            }
 
-        var idx = device.targets.indexOf(this);
-        if (idx !== -1) {
-            device.targets.splice(idx, 1);
+            this.destroyFrameBuffers();
+        }
+    }
+
+    destroyFrameBuffers() {
+
+        var device = this._device;
+        if (device) {
+            var gl = device.gl;
+            if (this._glFrameBuffer) {
+                gl.deleteFramebuffer(this._glFrameBuffer);
+                this._glFrameBuffer = null;
+            }
+
+            if (this._glDepthBuffer) {
+                gl.deleteRenderbuffer(this._glDepthBuffer);
+                this._glDepthBuffer = null;
+            }
+
+            if (this._glResolveFrameBuffer) {
+                gl.deleteFramebuffer(this._glResolveFrameBuffer);
+                this._glResolveFrameBuffer = null;
+            }
+
+            if (this._glMsaaColorBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaColorBuffer);
+                this._glMsaaColorBuffer = null;
+            }
+
+            if (this._glMsaaDepthBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
+                this._glMsaaDepthBuffer = null;
+            }
+        }
+    }
+
+    destroyTextureBuffers() {
+
+        if (this._depthBuffer) {
+            this._depthBuffer.destroy();
+            this._depthBuffer = null;
         }
 
-        var gl = device.gl;
-        if (this._glFrameBuffer) {
-            gl.deleteFramebuffer(this._glFrameBuffer);
-            this._glFrameBuffer = null;
-        }
-
-        if (this._glDepthBuffer) {
-            gl.deleteRenderbuffer(this._glDepthBuffer);
-            this._glDepthBuffer = null;
-        }
-
-        if (this._glResolveFrameBuffer) {
-            gl.deleteFramebuffer(this._glResolveFrameBuffer);
-            this._glResolveFrameBuffer = null;
-        }
-
-        if (this._glMsaaColorBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaColorBuffer);
-            this._glMsaaColorBuffer = null;
-        }
-
-        if (this._glMsaaDepthBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
-            this._glMsaaDepthBuffer = null;
+        if (this._colorBuffer) {
+            this._colorBuffer.destroy();
+            this._colorBuffer = null;
         }
     }
 
@@ -185,10 +220,10 @@ class RenderTarget {
         var gl = this._device.gl;
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
-        gl.blitFramebuffer( 0, 0, this.width, this.height,
-                            0, 0, this.width, this.height,
-                            (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                            gl.NEAREST);
+        gl.blitFramebuffer(0, 0, this.width, this.height,
+                           0, 0, this.width, this.height,
+                           (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                           gl.NEAREST);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
     }
 
@@ -207,7 +242,7 @@ class RenderTarget {
             if (source._device) {
                 this._device = source._device;
             } else {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.error("Render targets are not initialized");
                 // #endif
                 return false;

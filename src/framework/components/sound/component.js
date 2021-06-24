@@ -200,7 +200,7 @@ class SoundComponent extends Component {
     addSlot(name, options) {
         var slots = this._slots;
         if (slots[name]) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.path);
             // #endif
             return null;
@@ -270,7 +270,7 @@ class SoundComponent extends Component {
 
         var slot = this._slots[name];
         if (!slot) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.warn('Trying to play sound slot with name ' + name + ' which does not exist');
             // #endif
             return null;
@@ -297,7 +297,7 @@ class SoundComponent extends Component {
         if (name) {
             slot = slots[name];
             if (!slot) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn('Trying to pause sound slot with name ' + name + ' which does not exist');
                 // #endif
                 return;
@@ -329,7 +329,7 @@ class SoundComponent extends Component {
         if (name) {
             var slot = slots[name];
             if (!slot) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn('Trying to resume sound slot with name ' + name + ' which does not exist');
                 // #endif
                 return;
@@ -363,7 +363,7 @@ class SoundComponent extends Component {
         if (name) {
             var slot = slots[name];
             if (!slot) {
-                // #ifdef DEBUG
+                // #if _DEBUG
                 console.warn('Trying to stop sound slot with name ' + name + ' which does not exist');
                 // #endif
                 return;

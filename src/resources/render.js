@@ -2,20 +2,20 @@ import { Render } from '../scene/render.js';
 
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {
-    var renderAsset = this;
+    const renderAsset = this;
     if (!renderAsset.resource) return;
 
-    var containerResource = containerAsset.resource;
+    const containerResource = containerAsset.resource;
 
-    var render = containerResource.renders && containerResource.renders[renderAsset.data.renderIndex];
+    const render = containerResource.renders && containerResource.renders[renderAsset.data.renderIndex];
     if (render) {
-        renderAsset.resource.meshes = render.resource;
+        renderAsset.resource.meshes = render.resource.meshes;
     }
 }
 
 // The scope of this function is the render asset
 function onContainerAssetAdded(containerAsset) {
-    var renderAsset = this;
+    const renderAsset = this;
 
     renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
     renderAsset.registry.on('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
@@ -30,7 +30,7 @@ function onContainerAssetAdded(containerAsset) {
 }
 
 function onContainerAssetRemoved(containerAsset) {
-    var renderAsset = this;
+    const renderAsset = this;
 
     renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
 
@@ -63,7 +63,7 @@ class RenderHandler {
         if (!asset.data.containerAsset)
             return;
 
-        var containerAsset = registry.get(asset.data.containerAsset);
+        const containerAsset = registry.get(asset.data.containerAsset);
         if (!containerAsset) {
             registry.once('add:' + asset.data.containerAsset, onContainerAssetAdded, asset);
             return;

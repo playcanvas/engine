@@ -23,7 +23,7 @@ class LegacyDdsParser {
     }
 
     load(url, callback, asset) {
-        var options = {
+        const options = {
             cache: true,
             responseType: "arraybuffer",
             retry: this.maxRetries > 0,
@@ -33,35 +33,35 @@ class LegacyDdsParser {
     }
 
     open(url, data, device) {
-        var header = new Uint32Array(data, 0, 128 / 4);
+        const header = new Uint32Array(data, 0, 128 / 4);
 
-        var width = header[4];
-        var height = header[3];
-        var mips = Math.max(header[7], 1);
-        var isFourCc = header[20] === 4;
-        var fcc = header[21];
-        var bpp = header[22];
-        var isCubemap = header[28] === 65024; // TODO: check by bitflag
+        const width = header[4];
+        const height = header[3];
+        const mips = Math.max(header[7], 1);
+        const isFourCc = header[20] === 4;
+        const fcc = header[21];
+        const bpp = header[22];
+        const isCubemap = header[28] === 65024; // TODO: check by bitflag
 
-        var FCC_DXT1 = 827611204; // DXT1
-        var FCC_DXT5 = 894720068; // DXT5
-        var FCC_FP32 = 116; // RGBA32f
+        const FCC_DXT1 = 827611204; // DXT1
+        const FCC_DXT5 = 894720068; // DXT5
+        const FCC_FP32 = 116; // RGBA32f
 
         // non standard
-        var FCC_ETC1 = 826496069;
-        var FCC_PVRTC_2BPP_RGB_1 = 825438800;
-        var FCC_PVRTC_2BPP_RGBA_1 = 825504336;
-        var FCC_PVRTC_4BPP_RGB_1 = 825439312;
-        var FCC_PVRTC_4BPP_RGBA_1 = 825504848;
+        const FCC_ETC1 = 826496069;
+        const FCC_PVRTC_2BPP_RGB_1 = 825438800;
+        const FCC_PVRTC_2BPP_RGBA_1 = 825504336;
+        const FCC_PVRTC_4BPP_RGB_1 = 825439312;
+        const FCC_PVRTC_4BPP_RGBA_1 = 825504848;
 
-        var compressed = false;
-        var floating = false;
-        var etc1 = false;
-        var pvrtc2 = false;
-        var pvrtc4 = false;
-        var format = null;
+        let compressed = false;
+        let floating = false;
+        let etc1 = false;
+        let pvrtc2 = false;
+        let pvrtc4 = false;
+        let format = null;
 
-        var texture;
+        let texture;
 
         if (isFourCc) {
             if (fcc === FCC_DXT1) {
@@ -93,7 +93,7 @@ class LegacyDdsParser {
         }
 
         if (!format) {
-            // #ifdef DEBUG
+            // #if _DEBUG
             console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
             // #endif
             texture = new Texture(device, {
@@ -107,7 +107,7 @@ class LegacyDdsParser {
 
         texture = new Texture(device, {
             name: url,
-            // #ifdef PROFILER
+            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
             // #endif
             addressU: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
@@ -118,17 +118,17 @@ class LegacyDdsParser {
             cubemap: isCubemap
         });
 
-        var offset = 128;
-        var faces = isCubemap ? 6 : 1;
-        var mipSize;
-        var DXT_BLOCK_WIDTH = 4;
-        var DXT_BLOCK_HEIGHT = 4;
-        var blockSize = fcc === FCC_DXT1 ? 8 : 16;
-        var numBlocksAcross, numBlocksDown, numBlocks;
-        for (var face = 0; face < faces; face++) {
-            var mipWidth = width;
-            var mipHeight = height;
-            for (var i = 0; i < mips; i++) {
+        let offset = 128;
+        const faces = isCubemap ? 6 : 1;
+        let mipSize;
+        const DXT_BLOCK_WIDTH = 4;
+        const DXT_BLOCK_HEIGHT = 4;
+        const blockSize = fcc === FCC_DXT1 ? 8 : 16;
+        let numBlocksAcross, numBlocksDown, numBlocks;
+        for (let face = 0; face < faces; face++) {
+            let mipWidth = width;
+            let mipHeight = height;
+            for (let i = 0; i < mips; i++) {
                 if (compressed) {
                     if (etc1) {
                         mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
@@ -146,7 +146,7 @@ class LegacyDdsParser {
                     mipSize = mipWidth * mipHeight * 4;
                 }
 
-                var mipBuff = floating ? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
+                const mipBuff = floating ? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
                 if (!isCubemap) {
                     texture._levels[i] = mipBuff;
                 } else {

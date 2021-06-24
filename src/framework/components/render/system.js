@@ -4,6 +4,9 @@ import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
+import { BoundingBox } from '../../../shape/bounding-box';
+import { Vec3 } from '../../../math/vec3';
+
 const _schema = [
     { name: 'rootBone', type: 'entity' },
     'enabled'
@@ -28,7 +31,6 @@ const _properties = [
 ];
 
 /**
- * @private
  * @class
  * @name RenderComponentSystem
  * @augments ComponentSystem
@@ -67,6 +69,10 @@ class RenderComponentSystem extends ComponentSystem {
             }
         }
 
+        if (_data.aabbCenter && _data.aabbHalfExtents) {
+            component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
+        }
+
         super.initializeComponentData(component, _data, _schema);
     }
 
@@ -86,12 +92,16 @@ class RenderComponentSystem extends ComponentSystem {
 
         // clone mesh instances
         const srcMeshInstances = entity.render.meshInstances;
-        const meshes = srcMeshInstances.map(mi => mi.mesh);
+        const meshes = srcMeshInstances.map((mi) => mi.mesh);
         component._onSetMeshes(meshes);
 
         // assign materials
         for (let m = 0; m < srcMeshInstances.length; m++) {
             component.meshInstances[m].material = srcMeshInstances[m].material;
+        }
+
+        if (entity.render.customAabb) {
+            component.customAabb = entity.render.customAabb.clone();
         }
     }
 

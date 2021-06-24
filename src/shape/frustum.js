@@ -1,3 +1,8 @@
+import { Vec3 } from "../math/vec3";
+import { PROJECTION_PERSPECTIVE } from "../scene/constants";
+
+const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+
 /**
  * @class
  * @name Frustum
@@ -11,7 +16,7 @@
 class Frustum {
     constructor() {
         this.planes = [];
-        for (var i = 0; i < 6; i++)
+        for (let i = 0; i < 6; i++)
             this.planes[i] = [];
     }
 
@@ -30,10 +35,10 @@ class Frustum {
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {
-        var vpm = matrix.data;
+        const vpm = matrix.data;
 
-        var plane;
-        var planes = this.planes;
+        let plane;
+        const planes = this.planes;
 
         // Extract the numbers for the RIGHT plane
         plane = planes[0];
@@ -42,7 +47,7 @@ class Frustum {
         plane[2] = vpm[11] - vpm[8];
         plane[3] = vpm[15] - vpm[12];
         // Normalize the result
-        var t = Math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
+        let t = Math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
         plane[0] /= t;
         plane[1] /= t;
         plane[2] /= t;
@@ -123,7 +128,7 @@ class Frustum {
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
     containsPoint(point) {
-        var p, plane;
+        let p, plane;
         for (p = 0; p < 6; p++) {
             plane = this.planes[p];
             if (plane[0] * point.x + plane[1] * point.y + plane[2] * point.z + plane[3] <= 0) {
@@ -145,17 +150,17 @@ class Frustum {
      * it is contained by the frustum.
      */
     containsSphere(sphere) {
-        var c = 0;
-        var d;
-        var p;
+        let c = 0;
+        let d;
+        let p;
 
-        var sr = sphere.radius;
-        var sc = sphere.center;
-        var scx = sc.x;
-        var scy = sc.y;
-        var scz = sc.z;
-        var planes = this.planes;
-        var plane;
+        const sr = sphere.radius;
+        const sc = sphere.center;
+        const scx = sc.x;
+        const scy = sc.y;
+        const scz = sc.z;
+        const planes = this.planes;
+        let plane;
 
         for (p = 0; p < 6; p++) {
             plane = planes[p];
@@ -167,6 +172,51 @@ class Frustum {
         }
 
         return (c === 6) ? 2 : 1;
+    }
+
+    // returns an array of corners of the frustum of the camera, using specified near and far distance
+    // the points are in the local coordinate system of the camera (object space)
+    static getPoints(camera, near, far) {
+
+        near = near || camera._nearClip;
+        far = far || camera._farClip;
+
+        const fov = camera._fov * Math.PI / 180.0;
+        let y = camera._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : camera._orthoHeight;
+        let x = y * camera._aspectRatio;
+
+        const points = _frustumPoints;
+        points[0].x = x;
+        points[0].y = -y;
+        points[0].z = -near;
+        points[1].x = x;
+        points[1].y = y;
+        points[1].z = -near;
+        points[2].x = -x;
+        points[2].y = y;
+        points[2].z = -near;
+        points[3].x = -x;
+        points[3].y = -y;
+        points[3].z = -near;
+
+        if (camera._projection === PROJECTION_PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * far;
+            x = y * camera._aspectRatio;
+        }
+        points[4].x = x;
+        points[4].y = -y;
+        points[4].z = -far;
+        points[5].x = x;
+        points[5].y = y;
+        points[5].z = -far;
+        points[6].x = -x;
+        points[6].y = y;
+        points[6].z = -far;
+        points[7].x = -x;
+        points[7].y = -y;
+        points[7].z = -far;
+
+        return points;
     }
 }
 

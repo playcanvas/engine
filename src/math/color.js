@@ -16,7 +16,7 @@ import { math } from '../math/math.js';
  */
 class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
-        var length = r.length;
+        const length = r.length;
         if (length === 3 || length === 4) {
             this.r = r[0];
             this.g = r[1];
@@ -134,8 +134,8 @@ class Color {
      * @returns {Color} Self for chaining.
      */
     fromString(hex) {
-        var i = parseInt(hex.replace('#', '0x'), 16);
-        var bytes;
+        const i = parseInt(hex.replace('#', '0x'), 16);
+        let bytes;
         if (hex.length > 7) {
             bytes = math.intToBytes32(i);
         } else {
@@ -162,9 +162,9 @@ class Color {
      * console.log(c.toString());
      */
     toString(alpha) {
-        var s = "#" + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
+        let s = "#" + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
         if (alpha === true) {
-            var a = Math.round(this.a * 255).toString(16);
+            const a = Math.round(this.a * 255).toString(16);
             if (this.a < 16 / 255) {
                 s += '0' + a;
             } else {

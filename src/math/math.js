@@ -3,7 +3,7 @@
  * @namespace
  * @description Math API.
  */
-var math = {
+const math = {
     /**
      * @constant
      * @type {number}
@@ -52,11 +52,9 @@ var math = {
      * var bytes = pc.math.intToBytes24(0x112233);
      */
     intToBytes24: function (i) {
-        var r, g, b;
-
-        r = (i >> 16) & 0xff;
-        g = (i >> 8) & 0xff;
-        b = (i) & 0xff;
+        const r = (i >> 16) & 0xff;
+        const g = (i >> 8) & 0xff;
+        const b = (i) & 0xff;
 
         return [r, g, b];
     },
@@ -72,12 +70,10 @@ var math = {
      * var bytes = pc.math.intToBytes32(0x11223344);
      */
     intToBytes32: function (i) {
-        var r, g, b, a;
-
-        r = (i >> 24) & 0xff;
-        g = (i >> 16) & 0xff;
-        b = (i >> 8) & 0xff;
-        a = (i) & 0xff;
+        const r = (i >> 24) & 0xff;
+        const g = (i >> 16) & 0xff;
+        const b = (i >> 8) & 0xff;
+        const a = (i) & 0xff;
 
         return [r, g, b, a];
     },
@@ -164,10 +160,10 @@ var math = {
      * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerpAngle: function (a, b, alpha) {
-        if (b - a > 180 ) {
+        if (b - a > 180) {
             b -= 360;
         }
-        if (b - a < -180 ) {
+        if (b - a < -180) {
             b += 360;
         }
         return math.lerp(a, b, math.clamp(alpha, 0, 1));
@@ -178,7 +174,7 @@ var math = {
      * @name math.powerOfTwo
      * @description Returns true if argument is a power-of-two and false otherwise.
      * @param {number} x - Number to check for power-of-two property.
-     * @returns {boolean} True if power-of-two and false otherwise.
+     * @returns {boolean} true if power-of-two and false otherwise.
      */
     powerOfTwo: function (x) {
         return ((x !== 0) && !(x & (x - 1)));
@@ -212,7 +208,7 @@ var math = {
      * @returns {number} Pseudo-random number between the supplied range.
      */
     random: function (min, max) {
-        var diff = max - min;
+        const diff = max - min;
         return Math.random() * diff + min;
     },
 
@@ -284,8 +280,8 @@ var math = {
     float2Half: (function () {
 
         // based on based on https://esdiscuss.org/topic/float16array
-        var floatView = new Float32Array(1);
-        var int32View = new Int32Array(floatView.buffer);
+        const floatView = new Float32Array(1);
+        const int32View = new Int32Array(floatView.buffer);
 
         // This method is faster than the OpenEXR implementation (very often
         // used, eg. in Ogre), with the additional benefit of rounding, inspired
@@ -293,11 +289,11 @@ var math = {
         return function (val) {
 
             floatView[0] = val;
-            var x = int32View[0];
+            const x = int32View[0];
 
-            var bits = (x >> 16) & 0x8000; // Get the sign
-            var m = (x >> 12) & 0x07ff; // Keep one extra bit for rounding
-            var e = (x >> 23) & 0xff; // Using int is faster here
+            let bits = (x >> 16) & 0x8000; // Get the sign
+            let m = (x >> 12) & 0x07ff; // Keep one extra bit for rounding
+            const e = (x >> 23) & 0xff; // Using int is faster here
 
             // If zero, or denormal, or exponent underflows too much for a denormal half, return signed zero.
             if (e < 103) {
@@ -310,7 +306,7 @@ var math = {
 
                 // If exponent was 0xff and one mantissa bit was set, it means NaN,
                 // not Inf, so make sure we set one mantissa bit too.
-                bits |= ((e == 255) ? 0 : 1) && (x & 0x007fffff);
+                bits |= ((e === 255) ? 0 : 1) && (x & 0x007fffff);
                 return bits;
             }
 
@@ -337,15 +333,15 @@ var math = {
      * @private
      * @name math.between
      * @description Checks whether a given number resides between two other given numbers.
-     * @returns {boolean} true if between or false otherwise.
      * @param {number} num - The number to check the position of.
      * @param {number} a - The first upper or lower threshold to check between.
      * @param {number} b - The second upper or lower threshold to check between.
      * @param {boolean} inclusive - If true, a num param which is equal to a or b will return true.
+     * @returns {boolean} true if between or false otherwise.
      */
     between: function (num, a, b, inclusive) {
-        var min = Math.min(a, b),
-            max = Math.max(a, b);
+        const min = Math.min(a, b);
+        const max = Math.max(a, b);
         return inclusive ? num >= min && num <= max : num > min && num < max;
     }
 };
