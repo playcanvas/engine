@@ -208,7 +208,9 @@ function BasisWorker() {
     };
 
     const workerInit = (config) => {
-        // load the basis file (this is asynchronous)
+        console.log('starting basis worker');
+
+        // load the basis file (this is synchronous)
         self.importScripts(config.basisUrl);
 
         // initialize the wasm module
