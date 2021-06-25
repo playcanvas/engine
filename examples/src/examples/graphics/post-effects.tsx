@@ -14,6 +14,7 @@ class PostEffectsExample extends Example {
             <AssetLoader name='sepia' type='script' url='static/scripts/posteffects/posteffect-sepia.js' />
             <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-vignette.js' />
             <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-ssao.js' />
+            <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-godrays.js' />
             <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
@@ -36,7 +37,7 @@ class PostEffectsExample extends Example {
         app.scene.exposure = 1.6;
 
         // helper function to create a 3d primitive including its material
-        function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, brightness: number, allowEmissive = true) {
+        function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, brightness: number, emissiveLimit = 1) {
 
             // create a material
             const material = new pc.StandardMaterial();
@@ -46,7 +47,7 @@ class PostEffectsExample extends Example {
 
             // random diffuse and emissive color
             material.diffuse = new pc.Color(brightness, brightness, brightness);
-            if (allowEmissive && Math.random() < 0.15) {
+            if (Math.random() < emissiveLimit) {
                 material.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
             }
             material.update();
@@ -69,7 +70,7 @@ class PostEffectsExample extends Example {
         // create the ground plane from the boxes
         for (let x = -2; x <= 2; x += 0.5) {
             for (let z = 0; z <= 10; z += 0.5) {
-                createPrimitive("box", new pc.Vec3(x * 40, -5, z * 40), new pc.Vec3(18, 2, 18), Math.random());
+                createPrimitive("box", new pc.Vec3(x * 40, -5, z * 40), new pc.Vec3(18, 2, 18), Math.random(), 0.15);
             }
         }
 
@@ -78,7 +79,7 @@ class PostEffectsExample extends Example {
         for (let y = 0; y <= 7; y++) {
             for (let x = -1; x <= 1; x += 2) {
                 for (let z = 0; z <= 10; z += 2) {
-                    const prim = createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random());
+                    const prim = createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random(), 0.15);
                     prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
                 }
             }
@@ -86,7 +87,7 @@ class PostEffectsExample extends Example {
         }
 
         // create a sphere which represents the point of focus for the bokeh filter
-        const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 2.8, false);
+        const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 2.8, 0);
 
         // add an omni light as a child of this sphere
         const light = new pc.Entity();
@@ -143,6 +144,24 @@ class PostEffectsExample extends Example {
         camera.lookAt(0, 0, 100);
         app.root.addChild(camera);
 
+        // create a sphere which represents the source of the godray effect
+        const godraysPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), 2.8);
+        godraysPrimitive.render.material.emissive = pc.Color.YELLOW;
+
+        // and connect the godray effect to it
+        godraysPrimitive.addComponent("script");
+        godraysPrimitive.script.create("godrays", {
+            attributes: {
+                cameraEntity: camera,
+                lightEntity: godraysPrimitive,
+                intensity: 0.1,
+                weight: 0.1,
+                decay: 0.005,
+                exposure: 0.1,
+                color: pc.Color.YELLOW
+            }
+        });
+
         // Allow user to toggle individual post effects
         app.keyboard.on("keydown", function (e) {
             switch (e.key) {
@@ -167,6 +186,10 @@ class PostEffectsExample extends Example {
                     camera.script.ssao.enabled = !camera.script.ssao.enabled;
                     break;
                 case pc.KEY_6:
+                    // @ts-ignore engine-tsd
+                    godraysPrimitive.script.godrays.enabled = !godraysPrimitive.script.godrays.enabled;
+                    break;
+                case pc.KEY_7:
                     camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                     break;
             }
@@ -210,6 +233,9 @@ class PostEffectsExample extends Example {
             // - it's a negative distance between the camera and the focus sphere
             camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
+            // move the godray point position
+            godraysPrimitive.setPosition(new pc.Vec3(Math.sin(angle * 0.3) * 200, 60, 400));
+
             // update text showing which post effects are enabled
             text.element.text =
                 `[Key 1] Bloom: ${camera.script.bloom.enabled}\n` +
@@ -217,7 +243,8 @@ class PostEffectsExample extends Example {
                 `[Key 3] Vignette: ${camera.script.vignette.enabled}\n` +
                 `[Key 4] Bokeh: ${camera.script.bokeh.enabled}\n` +
                 `[Key 5] SSAO: ${camera.script.ssao.enabled}\n` +
-                `[Key 6] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}\n`;
+                `[Key 6] Godrays: ${godraysPrimitive.script.godrays.enabled}\n` +
+                `[Key 7] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}\n`;
 
             // display the depth textur if bokeh is enabled
             if (camera.script.bokeh.enabled) {
