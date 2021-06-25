@@ -999,7 +999,7 @@ class Lightmapper {
                     this.setupLightArray(lightArray, bakeLight.light);
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
+                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
 
                     // Store original materials
                     this.backupMaterials(rcv);
