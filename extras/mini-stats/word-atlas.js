@@ -43,8 +43,14 @@ class WordAtlas {
             context.fillText(words[i], x - l, y + a);
 
             placements.push({
-                l: l, r: r, a: a, d: d,
-                x: x, y: y, w: w, h: h
+                l: l,
+                r: r,
+                a: a,
+                d: d,
+                x: x,
+                y: y,
+                w: w,
+                h: h
             });
 
             x += w + padding;

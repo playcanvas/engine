@@ -240,6 +240,7 @@ class GraphNode extends EventHandler {
         clone.name = this.name;
 
         var tags = this.tags._list;
+        clone.tags.clear();
         for (var i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
 
@@ -274,6 +275,12 @@ class GraphNode extends EventHandler {
         var clone = new GraphNode();
         this._cloneInternal(clone);
         return clone;
+    }
+
+    // copies properties from source to this
+    copy(source) {
+        source._cloneInternal(this);
+        return this;
     }
 
     /**
@@ -467,7 +474,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#findByPath
      * @description Get the first node found in the graph by its full path in the graph.
      * The full path has this form 'parent/child/sub-child'. The search is depth first.
-     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or array of {@link GraphNode} names
+     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or array of {@link GraphNode} names.
      * @returns {GraphNode} The first node to be found matching the supplied path.
      * @example
      * var path = this.entity.findByPath('child/another_child');
@@ -492,7 +499,7 @@ class GraphNode extends EventHandler {
             // check all the children
             var children = currentParent._children;
             for (var j = 0, jmax = children.length; j < jmax; j++) {
-                if (children[j].name == part) {
+                if (children[j].name === part) {
                     result = children[j];
                     break;
                 }

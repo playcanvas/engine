@@ -1,6 +1,4 @@
 class FolderHandler {
-    constructor() {}
-
     load(url, callback) {
         callback(null, null);
     }

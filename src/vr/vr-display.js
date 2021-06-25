@@ -204,7 +204,7 @@ class VrDisplay extends EventHandler {
             var b = Math.PI * 0.5;
             var c = maxFov * 0.5;
             var a = Math.PI - (b + c);
-            var offset = dist * 0.5 * ( Math.sin(a) );// / Math.sin(b) ); // equals 1
+            var offset = dist * 0.5 * (Math.sin(a));// / Math.sin(b) ); // equals 1
             var fwdX = view.data[8];
             var fwdY = view.data[9];
             var fwdZ = view.data[10];

@@ -109,7 +109,7 @@ if (hasAudioContext()) {
     // Taken from https://developer.mozilla.org/en-US/docs/Web/API/PannerNode/distanceModel
     const fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
         offset = offset.sub2(posOne, posTwo);
-        let distance = offset.length();
+        const distance = offset.length();
 
         if (distance < refDistance) {
             return 1;

@@ -339,7 +339,6 @@ class Chunks {
  * material.update();
  */
 class StandardMaterial extends Material {
-
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
@@ -486,7 +485,7 @@ class StandardMaterial extends Material {
             }
         }
 
-        if (this.enableGGXSpecular){
+        if (this.enableGGXSpecular) {
             this._setParameter('material_anisotropy', this.anisotropy);
         }
 
@@ -526,7 +525,7 @@ class StandardMaterial extends Material {
             this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
         }
 
-        for (let p in _matTex2D) {
+        for (const p in _matTex2D) {
             this._updateMap(p);
         }
 
@@ -706,7 +705,7 @@ class StandardMaterial extends Material {
         }
 
         // Minimal options for Depth and Shadow passes
-        let minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
+        const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
@@ -727,6 +726,22 @@ class StandardMaterial extends Material {
         }
 
         this.dirtyShader = false;
+    }
+
+    /**
+     * @function
+     * @name StandardMaterial#destroy
+     * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
+     */
+    destroy() {
+        // unbind (texture) asset references
+        for (const asset in this._assetReferences) {
+            this._assetReferences[asset]._unbind();
+        }
+        this._assetReferences = null;
+        this._validator = null;
+
+        super.destroy();
     }
 }
 

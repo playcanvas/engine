@@ -19,6 +19,8 @@ var textureMorphVertexShader =
  * @name MorphInstance
  * @classdesc An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages selection of active morph targets.
  * @param {Morph} morph - The {@link Morph} to instance.
+ * @property {MeshInstance} meshInstance The mesh instance this morph instance controls the morphing of.
+ * @property {Morph} morph The morph with its targets, which is being instanced.
  */
 class MorphInstance {
     constructor(morph) {
@@ -108,7 +110,7 @@ class MorphInstance {
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
-        let morph = this.morph;
+        const morph = this.morph;
         if (morph) {
 
             // decrease ref count

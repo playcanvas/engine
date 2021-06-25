@@ -35,13 +35,13 @@ class ScriptHandler {
             };
         }
 
-        var self = this;
+        const self = this;
         script.app = this._app;
 
         this._loadScript(url.load, function (err, url, extra) {
             if (!err) {
                 if (script.legacy) {
-                    var Type = null;
+                    let Type = null;
                     // pop the type from the loading stack
                     if (ScriptHandler._types.length) {
                         Type = ScriptHandler._types.pop();
@@ -57,9 +57,9 @@ class ScriptHandler {
                     // return the resource
                     callback(null, Type, extra);
                 } else {
-                    var obj = { };
+                    const obj = { };
 
-                    for (var i = 0; i < ScriptHandler._types.length; i++)
+                    for (let i = 0; i < ScriptHandler._types.length; i++)
                         obj[ScriptHandler._types[i].name] = ScriptHandler._types[i];
 
                     ScriptHandler._types.length = 0;
@@ -82,8 +82,8 @@ class ScriptHandler {
     patch(asset, assets) { }
 
     _loadScript(url, callback) {
-        var head = document.head;
-        var element = document.createElement('script');
+        const head = document.head;
+        const element = document.createElement('script');
         this._cache[url] = element;
 
         // use async=false to force scripts to execute in order
@@ -93,9 +93,9 @@ class ScriptHandler {
             callback("Script: " + e.target.src + " failed to load");
         }, false);
 
-        var done = false;
+        let done = false;
         element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
+            if (!done && (!this.readyState || (this.readyState === "loaded" || this.readyState === "complete"))) {
                 done = true; // prevent double event firing
                 callback(null, url, element);
             }

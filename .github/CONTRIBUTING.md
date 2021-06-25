@@ -32,7 +32,9 @@ Simple code is always better. Modular (horizontal dependencies) code is easier t
 
 For example, use "Initialize" instead of "Initialise", and "color" instead of "colour".
 
-### Whitelisted ES6+ features:
+### Permitted ES6+ features:
+
+You may use the following JavaScript language features in the engine codebase:
 
 * [`let`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let)
 * [`const`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const)
@@ -42,6 +44,8 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 * [Default parameters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
 * [Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
 * [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+* [Static keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static)
+* [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
 
 ### Opening braces should be on the same line as the statement
 

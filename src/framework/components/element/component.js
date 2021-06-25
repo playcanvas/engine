@@ -716,7 +716,7 @@ class ElementComponent extends Component {
     }
 
     onLayersChanged(oldComp, newComp) {
-        this.addModelToLayers(this._image ? this._image._model : this._text._model);
+        this.addModelToLayers(this._image ? this._image._renderable.model : this._text._model);
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
@@ -727,7 +727,7 @@ class ElementComponent extends Component {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         if (this._image) {
-            layer.addMeshInstances(this._image._model.meshInstances);
+            layer.addMeshInstances(this._image._renderable.model.meshInstances);
         } else if (this._text) {
             layer.addMeshInstances(this._text._model.meshInstances);
         }
@@ -737,7 +737,7 @@ class ElementComponent extends Component {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         if (this._image) {
-            layer.removeMeshInstances(this._image._model.meshInstances);
+            layer.removeMeshInstances(this._image._renderable.model.meshInstances);
         } else if (this._text) {
             layer.removeMeshInstances(this._text._model.meshInstances);
         }

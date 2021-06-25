@@ -39,8 +39,6 @@ StandardMaterialOptionsBuilder.prototype.updateRef = function (options, device, 
     options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & SHADERDEF_TANGENTS) !== 0);
     this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
     this._updateUVOptions(options, stdMat, objDefs, false);
-    options.clearCoat = stdMat.clearCoat;
-    options.clearCoatGlossiness = stdMat.clearCoatGlossiness;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (options, stdMat, objDefs, pass) {
@@ -149,7 +147,9 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.normalDetail = !!stdMat.normalMap;
     options.diffuseDetailMode = stdMat.diffuseDetailMode;
     options.detailModes = !!options.diffuseDetail;
+    options.clearCoat = !!stdMat.clearCoat;
     options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+    options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
     options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 };
 
@@ -315,19 +315,19 @@ StandardMaterialOptionsBuilder.prototype._getMapTransformID = function (xform, u
     var i, same;
     for (i = 0; i < this._mapXForms[uv].length; i++) {
         same = true;
-        if (this._mapXForms[uv][i][0] != xform.x) {
+        if (this._mapXForms[uv][i][0] !== xform.x) {
             same = false;
             break;
         }
-        if (this._mapXForms[uv][i][1] != xform.y) {
+        if (this._mapXForms[uv][i][1] !== xform.y) {
             same = false;
             break;
         }
-        if (this._mapXForms[uv][i][2] != xform.z) {
+        if (this._mapXForms[uv][i][2] !== xform.z) {
             same = false;
             break;
         }
-        if (this._mapXForms[uv][i][3] != xform.w) {
+        if (this._mapXForms[uv][i][3] !== xform.w) {
             same = false;
             break;
         }

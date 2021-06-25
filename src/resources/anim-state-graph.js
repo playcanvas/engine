@@ -22,7 +22,7 @@ class AnimStateGraphHandler {
         }
 
         // we need to specify JSON for blob URLs
-        var options = {
+        const options = {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };

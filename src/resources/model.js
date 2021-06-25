@@ -37,7 +37,7 @@ class ModelHandler {
         }
 
         // we need to specify JSON for blob URLs
-        var options = {
+        const options = {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
@@ -63,8 +63,8 @@ class ModelHandler {
     }
 
     open(url, data) {
-        for (var i = 0; i < this._parsers.length; i++) {
-            var p = this._parsers[i];
+        for (let i = 0; i < this._parsers.length; i++) {
+            const p = this._parsers[i];
 
             if (p.decider(url, data)) {
                 return p.parser.parse(data);
@@ -80,12 +80,12 @@ class ModelHandler {
         if (!asset.resource)
             return;
 
-        var data = asset.data;
+        const data = asset.data;
 
-        var self = this;
+        const self = this;
         asset.resource.meshInstances.forEach(function (meshInstance, i) {
             if (data.mapping) {
-                var handleMaterial = function (asset) {
+                const handleMaterial = function (asset) {
                     if (asset.resource) {
                         meshInstance.material = asset.resource;
                     } else {
@@ -105,9 +105,9 @@ class ModelHandler {
                     return;
                 }
 
-                var id = data.mapping[i].material;
-                var url = data.mapping[i].path;
-                var material;
+                const id = data.mapping[i].material;
+                const url = data.mapping[i].path;
+                let material;
 
                 if (id !== undefined) { // id mapping
                     if (!id) {
@@ -122,7 +122,7 @@ class ModelHandler {
                     }
                 } else if (url) {
                     // url mapping
-                    var path = asset.getAbsoluteUrl(data.mapping[i].path);
+                    const path = asset.getAbsoluteUrl(data.mapping[i].path);
                     material = assets.getByUrl(path);
 
                     if (material) {

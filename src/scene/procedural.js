@@ -102,6 +102,9 @@ function calculateNormals(positions, indices) {
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
 function calculateTangents(positions, normals, uvs, indices) {
+
+    // Lengyel’s Method
+    // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
     var triangleCount = indices.length / 3;
     var vertexCount   = positions.length / 3;
     var i1, i2, i3;
@@ -148,8 +151,8 @@ function calculateTangents(positions, normals, uvs, indices) {
 
         area = s1 * t2 - s2 * t1;
 
-        // Area can 0.0 for degenerate triangles or bad uv coordinates
-        if (area == 0.0) {
+        // Area can be 0 for degenerate triangles or bad uv coordinates
+        if (area === 0) {
             // Fallback to default values
             sdir.set(0.0, 1.0, 0.0);
             tdir.set(1.0, 0.0, 0.0);
@@ -891,14 +894,14 @@ function createBox(device, opts) {
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var corners = [
-        new Vec3(-he.x, -he.y,  he.z),
-        new Vec3( he.x, -he.y,  he.z),
-        new Vec3( he.x,  he.y,  he.z),
-        new Vec3(-he.x,  he.y,  he.z),
-        new Vec3( he.x, -he.y, -he.z),
+        new Vec3(-he.x, -he.y, he.z),
+        new Vec3(he.x, -he.y, he.z),
+        new Vec3(he.x, he.y, he.z),
+        new Vec3(-he.x, he.y, he.z),
+        new Vec3(he.x, -he.y, -he.z),
         new Vec3(-he.x, -he.y, -he.z),
-        new Vec3(-he.x,  he.y, -he.z),
-        new Vec3( he.x,  he.y, -he.z)
+        new Vec3(-he.x, he.y, -he.z),
+        new Vec3(he.x, he.y, -he.z)
     ];
 
     var faceAxes = [

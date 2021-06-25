@@ -39,7 +39,7 @@ function constructPngUrl(data, width, height) {
             var block = data.slice(i, i + 65535);
             var len = block.length;
             compressed += String.fromCharCode(
-                ((i += block.length) == data.length) << 0,
+                ((i += block.length) === data.length) << 0,
                 len & 255, len >>> 8, ~len & 255, (~len >>> 8) & 255);
             compressed += block;
         } while (i < data.length);
@@ -49,7 +49,7 @@ function constructPngUrl(data, width, height) {
     var crc32 = function (data) {
         var c = ~0;
         for (var i = 0; i < data.length; i++)
-            for (var b = data.charCodeAt(i) | 0x100; b != 1; b >>>= 1)
+            for (var b = data.charCodeAt(i) | 0x100; b !== 1; b >>>= 1)
                 c = (c >>> 1) ^ ((c ^ b) & 1 ? 0xedb88320 : 0);
         return ~c;
     };

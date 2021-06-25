@@ -408,7 +408,7 @@ function resolveMarkupTags(tags, numSymbols) {
     var tagStack = [];
 
     function removeTags(tags) {
-        tagStack = tagStack.filter( function (tag) {
+        tagStack = tagStack.filter(function (tag) {
             return tags.find(function (t) {
                 return t === tag;
             }) === undefined;
@@ -421,7 +421,7 @@ function resolveMarkupTags(tags, numSymbols) {
         }
     }
 
-    var edgeKeys = Object.keys(edges).sort( function (a, b) {
+    var edgeKeys = Object.keys(edges).sort(function (a, b) {
         return a - b;
     });
 
@@ -440,10 +440,10 @@ function resolveMarkupTags(tags, numSymbols) {
         }
 
         // store the resolved tags
-        resolvedTags.push( {
+        resolvedTags.push({
             start: edgeKeys[index],
             tags: combineTags(tagStack)
-        } );
+        });
     }
 
     // assign the resolved tags per-character
@@ -504,8 +504,6 @@ function evaluateMarkup(symbols) {
 }
 
 class Markup {
-    constructor() {}
-
     static evaluate(symbols) {
         return evaluateMarkup(symbols);
     }

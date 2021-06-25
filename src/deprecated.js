@@ -55,10 +55,11 @@ import { calculateTangents, createBox, createCapsule, createCone, createCylinder
 import { partitionSkin } from './scene/skin-partition.js';
 import { BasicMaterial } from './scene/materials/basic-material.js';
 import { DepthMaterial } from './scene/materials/depth-material.js';
-import { ForwardRenderer } from './scene/forward-renderer.js';
+import { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 import { GraphNode } from './scene/graph-node.js';
 import { Material } from './scene/materials/material.js';
 import { Mesh } from './scene/mesh.js';
+import { Morph } from './scene/morph.js';
 import { MeshInstance, Command } from './scene/mesh-instance.js';
 import { Model } from './scene/model.js';
 import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
@@ -95,11 +96,11 @@ import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_A
 import { Application } from './framework/application.js';
 import { CameraComponent } from './framework/components/camera/component.js';
 import { Component } from './framework/components/component.js';
-import { ComponentData } from './framework/components/data.js';
 import { ComponentSystem } from './framework/components/system.js';
 import { Entity } from './framework/entity.js';
 import { LightComponent } from './framework/components/light/component.js';
 import { ModelComponent } from './framework/components/model/component.js';
+import { RenderComponent } from './framework/components/render/component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
@@ -505,6 +506,14 @@ export var scene = {
     SkinInstance: SkinInstance
 };
 
+Morph.prototype.getTarget = function (index) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
+    // #endif
+
+    return this.targets[index];
+};
+
 GraphNode.prototype._dirtify = function (local) {
     // #if _DEBUG
     console.warn('DEPRECATED: pc.GraphNode#_dirtify is deprecated. Use pc.GraphNode#_dirtifyLocal or _dirtifyWorld respectively instead.');
@@ -861,7 +870,6 @@ export var RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
 export var fw = {
     Application: Application,
     Component: Component,
-    ComponentData: ComponentData,
     ComponentSystem: ComponentSystem,
     Entity: Entity,
     FillMode: {
@@ -997,6 +1005,34 @@ ModelComponent.prototype.setVisible = function (visible) {
     // #endif
     this.enabled = visible;
 };
+
+Object.defineProperty(ModelComponent.prototype, "aabb", {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+        return null;
+    },
+    set: function (type) {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+    }
+});
+
+Object.defineProperty(RenderComponent.prototype, "aabb", {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+        return null;
+    },
+    set: function (type) {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        // #endif
+    }
+});
 
 Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {

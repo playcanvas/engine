@@ -107,11 +107,11 @@ class Morph extends RefCountedObject {
             target = this._targets[i];
             if (target.options.deltaPositions) {
                 deltaArrays.push(target.options.deltaPositions);
-                deltaInfos.push( { target: target, name: 'texturePositions' } );
+                deltaInfos.push({ target: target, name: 'texturePositions' });
             }
             if (target.options.deltaNormals) {
                 deltaArrays.push(target.options.deltaNormals);
-                deltaInfos.push( { target: target, name: 'textureNormals' } );
+                deltaInfos.push({ target: target, name: 'textureNormals' });
             }
         }
 
@@ -222,14 +222,13 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Morph#getTarget
-     * @description Gets the morph target by index.
-     * @param {number} index - An index of morph target.
-     * @returns {MorphTarget} A morph target object.
+     * @readonly
+     * @name Morph#targets
+     * @type {MorphTarget[]}
+     * @description The array of morph targets.
      */
-    getTarget(index) {
-        return this._targets[index];
+    get targets() {
+        return this._targets;
     }
 
     _updateMorphFlags() {

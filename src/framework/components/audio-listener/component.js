@@ -11,10 +11,6 @@ import { Component } from '../component.js';
  * @param {Entity} entity - The Entity that this Component is attached to.
  */
 class AudioListenerComponent extends Component {
-    constructor(system, entity) {
-        super(system, entity);
-    }
-
     setCurrentListener() {
         if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
             this.system.current = this.entity;
