@@ -834,13 +834,13 @@ class Lightmapper {
     postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 4; // 8 dilates
-        let pixelOffset = this.pixelOffset;
-        let sigmas = this.sigmas;
-        let dilateShader = this.dilateShader;
-        let bilateralDeNoiseShader = this.bilateralDeNoiseShader;
-        let constantTexSource = this.constantTexSource;
-        let constantPixelOffset = this.constantPixelOffset;
-        let constantSigmas = this.constantSigmas;
+        const pixelOffset = this.pixelOffset;
+        const sigmas = this.sigmas;
+        const dilateShader = this.dilateShader;
+        const bilateralDeNoiseShader = this.bilateralDeNoiseShader;
+        const constantTexSource = this.constantTexSource;
+        const constantPixelOffset = this.constantPixelOffset;
+        const constantSigmas = this.constantSigmas;
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
@@ -988,7 +988,7 @@ class Lightmapper {
 
                 for (node = 0; node < bakeNodes.length; node++) {
 
-                    let bakeNode = bakeNodes[node];
+                    const bakeNode = bakeNodes[node];
                     rcv = bakeNode.meshInstances;
 
                     const lightAffectsNode = this.lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam, casterBounds);
@@ -1007,12 +1007,12 @@ class Lightmapper {
                     for (pass = 0; pass < passCount; pass++) {
 
                         // lightmap size
-                        let nodeRT = bakeNode.renderTargets[pass];
-                        let lightmapSize = bakeNode.renderTargets[pass].colorBuffer.width;
+                        const nodeRT = bakeNode.renderTargets[pass];
+                        const lightmapSize = bakeNode.renderTargets[pass].colorBuffer.width;
 
                         // get matching temp render target to render to
-                        let tempRT = this.renderTargets.get(lightmapSize);
-                        let tempTex = tempRT.colorBuffer;
+                        const tempRT = this.renderTargets.get(lightmapSize);
+                        const tempTex = tempRT.colorBuffer;
 
                         if (pass === 0) {
                             shadersUpdatedOn1stPass = scene.updateShaders;
