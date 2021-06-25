@@ -7,6 +7,8 @@ import { basisTargetFormat, basisTranscode } from '../../basis.js';
 
 const appStartTime = performance.now();
 
+console.log('start,download,transcode,url');
+
 /**
  * @private
  * @class
@@ -53,10 +55,10 @@ class BasisParser {
                         // callback,
                         (err, result) => {
                             const finishedTime = performance.now();
-                            console.log('start=' + Math.floor(startTime - appStartTime) +
-                                        ' download=' + Math.floor(downloadTime - startTime) +
-                                        ' transcode=' + Math.floor(finishedTime - downloadTime) +
-                                        ' url=' + url.load);
+                            console.log(Math.floor(startTime - appStartTime) +
+                                        ',' + Math.floor(downloadTime - startTime) +
+                                        ',' + Math.floor(finishedTime - downloadTime) +
+                                        ',' + url.load);
                             callback(err, result);
                         },
                         { unswizzleGGGR: unswizzleGGGR }
