@@ -92,76 +92,106 @@ const prepareWorkerModules = (urls, callback) => {
     }
 };
 
-class BasisClient {
-    constructor(config) {
-        this.worker = new Worker(config.workerUrl);
-        this.worker.addEventListener('message', this.handleWorkerResponse.bind(this));
-        this.worker.postMessage({ type: 'init', config: config });
-        this.callbacks = { };
-        this.queueLength = 0;
+// queue of transcode jobs and clients ready to run them
+class BasisQueue {
+    constructor() {
+        this.callbacks = {};
+        this.queue = [];
+        this.clients = [];
     }
 
-    // post a transcode job to the web worker
-    transcode(url, data, format, callback, options) {
-        if (!this.callbacks.hasOwnProperty(url)) {
-            // store url and kick off worker job
+    enqueueJob(url, data, format, callback, options) {
+        if (this.callbacks.hasOwnProperty(url)) {
+            // duplicate URL request
+            this.callbacks[url].push(callback);
+        } else {
+            // new URL request
             this.callbacks[url] = [callback];
-            this.queueLength++;
-            this.worker.postMessage({
-                type: 'transcode',
+
+            const job = {
                 url: url,
                 format: format,
                 data: data,
                 options: options
-            }, [
-                data
-            ]);
-        } else {
-            // the basis worker is already busy processing this url, store callback
-            // (this shouldn't really happen since the asset system only requests
-            // a resource once)
-            this.callbacks[url].push(callback);
+            };
+
+            if (this.clients.length > 0) {
+                this.clients.shift().run(job);
+            } else {
+                this.queue.push(job);
+            }
         }
     }
 
-    handleWorkerResponse(message) {
-        const url = message.data.url;
-        const err = message.data.err;
-        const data = message.data.data;
+    enqueueClient(client) {
+        if (this.queue.length > 0) {
+            client.run(this.queue.shift());
+        } else {
+            this.clients.push(client);
+        }
+    }
+
+    handleResponse(url, err, data) {
         const callback = this.callbacks[url];
 
-        if (!callback) {
-            console.error('internal logical error encountered in basis transcoder');
-            return;
-        }
-
-        let i;
         if (err) {
-            for (i = 0; i < callback.length; ++i) {
+            for (let i = 0; i < callback.length; ++i) {
                 (callback[i])(err);
             }
-            return;
-        }
-
-        // (re)create typed array from the returned array buffers
-        if (data.format === PIXELFORMAT_R5_G6_B5 || data.format === PIXELFORMAT_R4_G4_B4_A4) {
-            // handle 16 bit formats
-            data.levels = data.levels.map(function (v) {
-                return new Uint16Array(v);
-            });
         } else {
-            // all other
-            data.levels = data.levels.map(function (v) {
-                return new Uint8Array(v);
-            });
-        }
+            // (re)create typed array from the returned array buffers
+            if (data.format === PIXELFORMAT_R5_G6_B5 || data.format === PIXELFORMAT_R4_G4_B4_A4) {
+                // handle 16 bit formats
+                data.levels = data.levels.map(function (v) {
+                    return new Uint16Array(v);
+                });
+            } else {
+                // all other
+                data.levels = data.levels.map(function (v) {
+                    return new Uint8Array(v);
+                });
+            }
 
-        for (i = 0; i < callback.length; ++i) {
-            (callback[i])(null, data);
+            for (let i = 0; i < callback.length; ++i) {
+                (callback[i])(null, data);
+            }
         }
-
         delete this.callbacks[url];
-        this.queueLength--;
+    }
+}
+
+class BasisClient {
+    constructor(queue, config, eager) {
+        this.queue = queue;
+        this.worker = new Worker(config.workerUrl);
+        this.worker.addEventListener('message', (message) => {
+            const data = message.data;
+            this.queue.handleResponse(data.url, data.err, data.data);
+            if (!this.eager) {
+                this.queue.enqueueClient(this);
+            }
+        });
+        this.worker.postMessage({ type: 'init', config: config });
+
+        // an eager client will enqueue itself while a job is running. a
+        // non-eager client will only enqueue itself once the current job
+        // has finished running.
+        this.eager = eager;
+    }
+
+    run(job) {
+        this.worker.postMessage({
+            type: 'transcode',
+            url: job.url,
+            format: job.format,
+            data: job.data,
+            options: job.options
+        }, [
+            job.data
+        ]);
+        if (this.eager) {
+            this.queue.enqueueClient(this);
+        }
     }
 }
 
@@ -184,9 +214,9 @@ function chooseTargetFormat(device) {
 }
 
 // global state
-const defaultNumClients = 1;
-const clients = [];
-let queue = null;
+const defaultNumWorkers = 1;
+const queue = new BasisQueue();
+let initializing = false;
 let format = null;
 
 function basisTargetFormat() {
@@ -198,7 +228,7 @@ function basisTargetFormat() {
 
 // initialize basis
 function basisInitialize(config) {
-    if (queue !== null) {
+    if (initializing) {
         // already initializing
         return;
     }
@@ -220,18 +250,12 @@ function basisInitialize(config) {
     }
 
     if (config) {
-        queue = [];
+        initializing = true;
         prepareWorkerModules(config, (err, clientConfig) => {
-            const numClients = config.numClients || defaultNumClients;
-            for (let i = 0; i < numClients; ++i) {
-                clients.push(new BasisClient(clientConfig));
+            const numWorkers = config.numWorkers || defaultNumWorkers;
+            for (let i = 0; i < numWorkers; ++i) {
+                queue.enqueueClient(new BasisClient(queue, clientConfig, (numWorkers === 1) || config.eagerWorkers));
             }
-
-            const todo = queue;
-            queue = null;
-            todo.forEach((t) => {
-                basisTranscode(t.url, t.data, t.callback, t.options);
-            });
         });
     }
 }
@@ -243,28 +267,9 @@ function basisInitialize(config) {
 //                   and pack into 565 format. this is used to overcome
 //                   quality issues on apple devices.
 function basisTranscode(url, data, callback, options) {
-    if (clients.length > 0) {
-        // find the client with shortest queue
-        let client = clients[0];
-        if (client.queueLength > 0) {
-            for (let i = 1; i < clients.length; ++i) {
-                const c = clients[i];
-                if (c.queueLength < client.queueLength) {
-                    client = c;
-                }
-            }
-        }
-        client.transcode(url, data, basisTargetFormat(), callback, options);
-    } else {
-        basisInitialize();
-        queue.push({
-            url: url,
-            data: data,
-            callback: callback,
-            options: options
-        });
-    }
-    return true;
+    basisInitialize();
+    queue.enqueueJob(url, data, format, callback, options);
+    return initializing;
 }
 
 export {
