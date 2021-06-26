@@ -55,7 +55,8 @@ class BasisParser {
                         // callback,
                         (err, result) => {
                             const finishedTime = performance.now();
-                            console.log(Math.floor(startTime - appStartTime) +
+                            console.log(Math.floor(finishedTime - appStartTime) +
+                                        ',' + Math.floor(startTime - appStartTime) +
                                         ',' + Math.floor(downloadTime - startTime) +
                                         ',' + Math.floor(finishedTime - downloadTime) +
                                         ',' + url.load);
