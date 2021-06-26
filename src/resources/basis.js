@@ -25,7 +25,8 @@ const prepareWorkerModules = (urls, callback) => {
         callback(null, {
             workerUrl: URL.createObjectURL(getWorkerBlob()),
             basisUrl: URL.createObjectURL(basisCode),
-            module: module
+            module: module,
+            webgl2Device: getApplication().graphicsDevice.webgl2
         });
     };
 

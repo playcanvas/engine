@@ -1,6 +1,5 @@
 // Basis worker
 function BasisWorker() {
-
     // Basis compression format enums
     // Note: these must match definitions in the BASIS module
     const BASIS_FORMAT = {
@@ -47,20 +46,21 @@ function BasisWorker() {
     // available in the worker. And if they are specified in the worker code string,
     // they unfortunately get mangled by Terser on minification. So let's write in
     // the actual values directly.
-    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = 21; // PIXELFORMAT_ETC1
-    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = 23; // PIXELFORMAT_ETC2_RGBA
-    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = 8;  // PIXELFORMAT_DXT1
-    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = 10; // PIXELFORMAT_DXT5
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = 26; // PIXELFORMAT_PVRTC_4BPP_RGB_1
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = 27; // PIXELFORMAT_PVRTC_4BPP_RGBA_1
-    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = 28; // PIXELFORMAT_ASTC_4x4
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = 29; // PIXELFORMAT_ATC_RGB
+    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = 21;               // PIXELFORMAT_ETC1
+    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = 23;               // PIXELFORMAT_ETC2_RGBA
+    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = 8;                // PIXELFORMAT_DXT1
+    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = 10;               // PIXELFORMAT_DXT5
+    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = 26;               // PIXELFORMAT_PVRTC_4BPP_RGB_1
+    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = 27;               // PIXELFORMAT_PVRTC_4BPP_RGBA_1
+    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = 28;               // PIXELFORMAT_ASTC_4x4
+    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = 29;               // PIXELFORMAT_ATC_RGB
     basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = 30; // PIXELFORMAT_ATC_RGBA
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = 7;  // PIXELFORMAT_R8_G8_B8_A8
-    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = 3;  // PIXELFORMAT_R5_G6_B5
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = 5;  // PIXELFORMAT_R4_G4_B4_A4
+    basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = 7;                // PIXELFORMAT_R8_G8_B8_A8
+    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = 3;                // PIXELFORMAT_R5_G6_B5
+    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = 5;                // PIXELFORMAT_R4_G4_B4_A4
 
     const hasPerformance = typeof performance !== 'undefined';
+    let webgl2Device;
 
     // unswizzle two-component gggr8888 normal data into rgba8888
     const unswizzleGGGR = (data) => {
@@ -116,22 +116,19 @@ function BasisWorker() {
             throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' images=' + images + ' levels=' + levels);
         }
 
-        // select format based on supported formats
+        // select output format based on supported formats
         let basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-        // PVR does not support non-square or non-pot textures. In these cases we
-        // transcode to an uncompressed format.
-        if ((basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB ||
-             basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA)) {
-            // if not power-of-two or not square
-            if (((width & (width - 1)) !== 0) || (width !== height)) {
-                basisFormat = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB) ?
-                    BASIS_FORMAT.cTFRGB565 : BASIS_FORMAT.cTFRGBA32;
-            }
+        // transcode to uncompressed format if the texture is PVRTC or webgl1, and has invalid dimensions
+        const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
+        const notPOT = (width & (width - 1)) !== 0;
+        const notSquare = (width !== height);
+        if ((isPVRTC && (notPOT || notSquare)) || (!webgl2Device && notPOT)) {
+            basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
         }
 
         if (options && options.unswizzleGGGR) {
-            // in order unswizzle we need gggr8888
+            // in order to unswizzle we need gggr8888
             basisFormat = BASIS_FORMAT.cTFRGBA32;
         }
 
@@ -156,11 +153,7 @@ function BasisWorker() {
 
             if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
                 // 16 bit formats require Uint16 typed array
-                const dst16 = new Uint16Array(dstSize / 2);
-                for (i = 0; i < dstSize / 2; ++i) {
-                    dst16[i] = dst[i * 2] + dst[i * 2 + 1] * 256;
-                }
-                dst = dst16;
+                dst = new Uint16Array(dst.buffer);
             }
 
             levelData.push(dst);
@@ -208,10 +201,10 @@ function BasisWorker() {
     };
 
     const workerInit = (config) => {
-        console.log('starting basis worker');
-
         // load the basis file (this is synchronous)
         self.importScripts(config.basisUrl);
+
+        webgl2Device = config.webgl2Device;
 
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
