@@ -13,8 +13,8 @@ class PostEffectsExample extends Example {
             <AssetLoader name='bokeh' type='script' url='static/scripts/posteffects/posteffect-bokeh.js' />
             <AssetLoader name='sepia' type='script' url='static/scripts/posteffects/posteffect-sepia.js' />
             <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-vignette.js' />
-            <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-ssao.js' />
-            <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-godrays.js' />
+            <AssetLoader name='ssao' type='script' url='static/scripts/posteffects/posteffect-ssao.js' />
+            <AssetLoader name='godrays' type='script' url='static/scripts/posteffects/posteffect-godrays.js' />
             <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
@@ -146,6 +146,7 @@ class PostEffectsExample extends Example {
 
         // create a sphere which represents the source of the godray effect
         const godraysPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), 2.8);
+        // @ts-ignore engine-tsd
         godraysPrimitive.render.material.emissive = pc.Color.YELLOW;
 
         // and connect the godray effect to it
@@ -243,6 +244,7 @@ class PostEffectsExample extends Example {
                 `[Key 3] Vignette: ${camera.script.vignette.enabled}\n` +
                 `[Key 4] Bokeh: ${camera.script.bokeh.enabled}\n` +
                 `[Key 5] SSAO: ${camera.script.ssao.enabled}\n` +
+                // @ts-ignore engine-tsd
                 `[Key 6] Godrays: ${godraysPrimitive.script.godrays.enabled}\n` +
                 `[Key 7] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}\n`;
 

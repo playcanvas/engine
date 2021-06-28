@@ -268,7 +268,7 @@ class AnimEvaluator {
 
         var i, j;
 
-        for (i = 0; i < clips.length; ++i) {
+        for (i = 0; i < order.length; ++i) {
             var index = order[i];
             var clip = clips[index];
             var inputs = this._inputs[index];

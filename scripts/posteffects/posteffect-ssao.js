@@ -9,7 +9,7 @@
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
- * @param {any}  ssaoScript - The script using the effect.
+ * @param {any} ssaoScript - The script using the effect.
  */
 function SSAOEffect(graphicsDevice, ssaoScript) {
     pc.PostEffect.call(this, graphicsDevice);
@@ -23,6 +23,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         },
         vshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
+            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
             "attribute vec2 aPosition;",
             "",
             "varying vec2 vUv0;",
@@ -35,6 +36,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         ].join("\n"),
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
+            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
             "precision " + graphicsDevice.precision + " float;",
             pc.shaderChunks.screenDepthPS,
             "",
@@ -52,32 +54,6 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "",
             "const float kSSCTLog2LodRate = 3.0;",
             "",
-            "struct ConeTraceSetup {",
-            "   // fragment info",
-            "    highp vec2 ssStartPos;",
-            "    highp vec3 vsStartPos;",
-            "    vec3 vsNormal;",
-            "",
-            "   // light (cone) info",
-            "    vec3 vsConeDirection;",
-            "    float shadowDistance;",
-            "    float coneAngleTangeant;",
-            "    float contactDistanceMaxInv;",
-            "    vec2 jitterOffset;          // (x = direction offset, y = step offset)",
-            "",
-            "   // scene infos",
-            "    highp mat4 screenFromViewMatrix;",
-            "    float projectionScale;",
-            "    vec4 resolution;",
-            "    float maxLevel;",
-            "",
-            "   // artistic/quality parameters",
-            "    float intensity;",
-            "    float depthBias;",
-            "    float slopeScaledDepthBias;",
-            "    int sampleCount;",
-            "};",
-            "",
             "highp float getWFromProjectionMatrix(const mat4 p, const vec3 v) {",
             "    // this essentially returns (p * vec4(v, 1.0)).w, but we make some assumptions",
             "    // this assumes a perspective projection",
@@ -93,75 +69,6 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "   // return (w - p[3][3]) / p[2][3];",
             "}",
             "",
-            "float coneTraceOcclusion(in ConeTraceSetup setup) {",
-            "// skip fragments that are back-facing trace direction",
-            "// (avoid overshadowing of translucent surfaces)",
-            "    float NoL = dot(setup.vsNormal, setup.vsConeDirection);",
-            "    if (NoL < 0.0) {",
-            "        return 0.0;",
-            "    }",
-            "",
-            "// start position of cone trace",
-            "    highp vec2 ssStartPos = setup.ssStartPos;",
-            "    highp vec3 vsStartPos = setup.vsStartPos;",
-            "    highp float ssStartPosW = getWFromProjectionMatrix(setup.screenFromViewMatrix, vsStartPos);",
-            "    highp float ssStartPosWInv = 1.0 / ssStartPosW;",
-            "",
-            "// end position of cone trace",
-            "    highp vec3 vsEndPos = setup.vsConeDirection * setup.shadowDistance + vsStartPos;",
-            "    highp float ssEndPosW = getWFromProjectionMatrix(setup.screenFromViewMatrix, vsEndPos);",
-            "    highp float ssEndPosWInv = 1.0 / ssEndPosW;",
-            "    highp vec2 ssEndPos = (setup.screenFromViewMatrix * vec4(vsEndPos, 1.0)).xy * ssEndPosWInv;",
-            "",
-            "// cone trace direction in screen-space",
-            "    float ssConeLength = length(ssEndPos - ssStartPos);",     // do the math in highp
-            "    vec2 ssConeVector = ssEndPos - ssStartPos;",
-            "",
-            "// direction perpendicular to cone trace direction",
-            "    vec2 perpConeDir = normalize(vec2(ssConeVector.y, -ssConeVector.x));",
-            "    float vsEndRadius = setup.coneAngleTangeant * setup.shadowDistance;",
-            "",
-            "// normalized step",
-            "    highp float dt = 1.0 / float(setup.sampleCount);",
-            "",
-            "// normalized (0 to 1) screen-space postion on the ray",
-            "    highp float t = dt * setup.jitterOffset.y;",
-            "",
-            "// calculate depth bias",
-            "    float vsDepthBias = saturate(1.0 - NoL) * setup.slopeScaledDepthBias + setup.depthBias;",
-            "",
-            "    float occlusion = 0.0;",
-            "    for (int i = 0; i < setup.sampleCount; i++, t += dt) {",
-            "        float ssTracedDistance = ssConeLength * t;",
-            "        float ssSliceRadius = setup.jitterOffset.x * (setup.coneAngleTangeant * ssTracedDistance);",
-            "        highp vec2 ssSamplePos = perpConeDir * ssSliceRadius + ssConeVector * t + ssStartPos;",
-            "",
-            "        float level = clamp(floor(log2(ssSliceRadius)) - kSSCTLog2LodRate, 0.0, float(setup.maxLevel));",
-            "        float vsSampleDepthLinear = -getLinearScreenDepth(ssSamplePos * setup.resolution.zw);",
-            "",
-            "        // calculate depth range of cone slice",
-            "        float vsSliceRadius = vsEndRadius * t;",
-            "",
-            "        // calculate depth of cone center",
-            "        float vsConeAxisDepth = -getViewSpaceZFromW(setup.screenFromViewMatrix, 1.0 / mix(ssStartPosWInv, ssEndPosWInv, t));",
-            "        float vsJitteredSampleRadius = vsSliceRadius * setup.jitterOffset.x;",
-            "        float vsSliceHalfRange = sqrt(vsSliceRadius * vsSliceRadius - vsJitteredSampleRadius * vsJitteredSampleRadius);",
-            "        float vsSampleDepthMax = vsConeAxisDepth + vsSliceHalfRange;",
-            "",
-            "        // calculate overlap of depth buffer height-field with trace cone",
-            "        float vsDepthDifference = vsSampleDepthMax - vsSampleDepthLinear;",
-            "        float overlap = saturate((vsDepthDifference - vsDepthBias) / (vsSliceHalfRange * 2.0));",
-            "",
-            "        // attenuate by distance to avoid false occlusion",
-            "        float attenuation = saturate(1.0 - (vsDepthDifference * setup.contactDistanceMaxInv));",
-            "        occlusion = max(occlusion, overlap * attenuation);",
-            "        if (occlusion >= 1.0) {  // note: this can't get > 1.0 by construction",
-            "                                  // fully occluded, early exit",
-            "            break;",
-            "        }",
-            "    }",
-            "    return occlusion * setup.intensity;",
-            "}",
             "",
             "const float kLog2LodRate = 3.0;",
             "",
@@ -286,7 +193,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    w = w*w;",
             "",
             "    // discard samples that are too close to the horizon to reduce shadows cast by geometry",
-            "    // not sufficently tessellated. The goal is to discard samples that form an angle 'beta'",
+            "    // not sufficiently tessellated. The goal is to discard samples that form an angle 'beta'",
             "    // smaller than 'epsilon' with the horizon. We already have dot(v,n) which is equal to the",
             "    // sin(beta) * |v|. So the test simplifies to vn^2 < vv * sin(epsilon)^2.",
             "    w *= step(vv * uMinHorizonAngleSineSquared, vn * vn);",
@@ -307,7 +214,16 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    float ssDiskRadius = -(uProjectionScaleRadius / origin.z);",
             "",
             "    float occlusion = 0.0;",
-            "    for (float i = 0.0; i < uSampleCount.x; i += 1.0) {",
+
+            // webgl1 does not handle non-constant loop, work around it
+            graphicsDevice.webgl2 ? (
+                "    for (float i = 0.0; i < uSampleCount.x; i += 1.0) {"
+            ) : (
+                "   const float maxSampleCount = 256.0;" +
+                "   for (float i = 0.0; i < maxSampleCount; i += 1.0) {" +
+                "       if (i >= uSampleCount.x) break;"
+            ),
+
             "        computeAmbientOcclusionSAO(occlusion, i, ssDiskRadius, uv, origin, normal, tapPosition, noise);",
             "        tapPosition = angleStep * tapPosition;",
             "    }",
@@ -355,6 +271,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         },
         vshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
+            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
             "attribute vec2 aPosition;",
             "",
             "varying vec2 vUv0;",
@@ -367,6 +284,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         ].join("\n"),
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
+            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
             "precision " + graphicsDevice.precision + " float;",
             pc.shaderChunks.screenDepthPS,
             "",
@@ -414,8 +332,16 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    float ssao = texture2D( uSSAOBuffer, vUv0 ).r;",
             "    float sum = ssao * totalWeight;",
             "",
-            "    for (int x = -uBilatSampleCount; x <= uBilatSampleCount; x++) {",
-            "       for (int y = -uBilatSampleCount; y < uBilatSampleCount; y++) {",
+
+            // webgl1 does not handle non-constant loop, work around it
+            graphicsDevice.webgl2 ? (
+                "    for (int x = -uBilatSampleCount; x <= uBilatSampleCount; x++) {" +
+                "       for (int y = -uBilatSampleCount; y < uBilatSampleCount; y++) {"
+            ) : (
+                "    for (int x = -4; x <= 4; x++) {" +
+                "       for (int y = -4; y < 4; y++) {"
+            ),
+
             "           float weight = 1.0;",
             "           vec2 offset = vec2(x,y)*uResolution.zw;",
             "           tap(sum, totalWeight, weight, depth, uv + offset);",
@@ -440,23 +366,18 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     // Render targets
     var width = graphicsDevice.width;
     var height = graphicsDevice.height;
-    this.targets = [];
-    for (var i = 0; i < 1; i++) {
-        var colorBuffer = new pc.Texture(graphicsDevice, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: width,
-            height: height,
-            mipmaps: false
-        });
-        colorBuffer.minFilter = pc.FILTER_LINEAR;
-        colorBuffer.magFilter = pc.FILTER_LINEAR;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.name = 'ssao_' + i;
-        var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
-
-        this.targets.push(target);
-    }
+    var colorBuffer = new pc.Texture(graphicsDevice, {
+        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        minFilter: pc.FILTER_LINEAR,
+        magFilter: pc.FILTER_LINEAR,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        width: width,
+        height: height,
+        mipmaps: false
+    });
+    colorBuffer.name = 'ssao';
+    this.target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
     // Uniforms
     this.radius = 4;
@@ -501,9 +422,9 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uPower").setValue(1.0);
         scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
 
-        pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.ssaoShader, rect);
+        pc.drawFullscreenQuad(device, this.target, this.vertexBuffer, this.ssaoShader, rect);
 
-        scope.resolve("uSSAOBuffer").setValue(this.targets[0].colorBuffer);
+        scope.resolve("uSSAOBuffer").setValue(this.target.colorBuffer);
 
         // scope.resolve("uFarPlaneOverEdgeDistance").setValue(cameraFarClip / bilateralThreshold);
         scope.resolve("uFarPlaneOverEdgeDistance").setValue(1);
