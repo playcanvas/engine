@@ -9,7 +9,7 @@
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
- * @param {any}  ssaoScript - The script using the effect.
+ * @param {any} ssaoScript - The script using the effect.
  */
 function SSAOEffect(graphicsDevice, ssaoScript) {
     pc.PostEffect.call(this, graphicsDevice);
