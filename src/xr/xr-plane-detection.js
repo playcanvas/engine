@@ -74,9 +74,12 @@ class XrPlaneDetection extends EventHandler {
      */
 
     _onSessionEnd() {
-        for (let i = 0; i < this._planes.length; i++) {
-            this._planes[i].destroy();
+        if (this._planes) {
+            for (let i = 0; i < this._planes.length; i++) {
+                this._planes[i].destroy();
+            }
         }
+
         this._planesIndex.clear();
         this._planes = null;
 
