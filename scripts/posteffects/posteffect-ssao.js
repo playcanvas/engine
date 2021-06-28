@@ -440,23 +440,18 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     // Render targets
     var width = graphicsDevice.width;
     var height = graphicsDevice.height;
-    this.targets = [];
-    for (var i = 0; i < 1; i++) {
-        var colorBuffer = new pc.Texture(graphicsDevice, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            minFilter: pc.FILTER_LINEAR,
-            magFilter: pc.FILTER_LINEAR,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-            width: width,
-            height: height,
-            mipmaps: false
-        });
-        colorBuffer.name = 'ssao_' + i;
-        var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
-
-        this.targets.push(target);
-    }
+    var colorBuffer = new pc.Texture(graphicsDevice, {
+        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        minFilter: pc.FILTER_LINEAR,
+        magFilter: pc.FILTER_LINEAR,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        width: width,
+        height: height,
+        mipmaps: false
+    });
+    colorBuffer.name = 'ssao';
+    this.target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
     // Uniforms
     this.radius = 4;
@@ -501,9 +496,9 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uPower").setValue(1.0);
         scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
 
-        pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.ssaoShader, rect);
+        pc.drawFullscreenQuad(device, this.target, this.vertexBuffer, this.ssaoShader, rect);
 
-        scope.resolve("uSSAOBuffer").setValue(this.targets[0].colorBuffer);
+        scope.resolve("uSSAOBuffer").setValue(this.target.colorBuffer);
 
         // scope.resolve("uFarPlaneOverEdgeDistance").setValue(cameraFarClip / bilateralThreshold);
         scope.resolve("uFarPlaneOverEdgeDistance").setValue(1);
