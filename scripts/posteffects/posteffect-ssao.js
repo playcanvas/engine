@@ -53,7 +53,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "const float kSSCTLog2LodRate = 3.0;",
             "",
             "struct ConeTraceSetup {",
-            "   // fragment info",
+            "    // fragment info",
             "    highp vec2 ssStartPos;",
             "    highp vec3 vsStartPos;",
             "    vec3 vsNormal;",
