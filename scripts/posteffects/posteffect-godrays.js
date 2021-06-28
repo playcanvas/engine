@@ -138,23 +138,18 @@ function GodRaysEffect(graphicsDevice, samples) {
     // Render targets
     var width = graphicsDevice.width;
     var height = graphicsDevice.height;
-    this.targets = [];
-    for (var i = 0; i < 1; i++) {
-        var colorBuffer = new pc.Texture(graphicsDevice, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: width,
-            height: height,
-            mipmaps: false
-        });
-        colorBuffer.minFilter = pc.FILTER_LINEAR;
-        colorBuffer.magFilter = pc.FILTER_LINEAR;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.name = 'lightScatter_' + i;
-        var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
-
-        this.targets.push(target);
-    }
+    var colorBuffer = new pc.Texture(graphicsDevice, {
+        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        width: width,
+        height: height,
+        mipmaps: false
+    });
+    colorBuffer.minFilter = pc.FILTER_LINEAR;
+    colorBuffer.magFilter = pc.FILTER_LINEAR;
+    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+    colorBuffer.name = 'lightScatter';
+    this.target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
     // Uniforms
     this.cameraEntity = undefined;
@@ -202,9 +197,9 @@ Object.assign(GodRaysEffect.prototype, {
         scope.resolve("uAspect").setValue(device.width / device.height);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
 
-        pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.lightScatterShader, rect);
+        pc.drawFullscreenQuad(device, this.target, this.vertexBuffer, this.lightScatterShader, rect);
 
-        scope.resolve("uLightScatterBuffer").setValue(this.targets[0].colorBuffer);
+        scope.resolve("uLightScatterBuffer").setValue(this.target.colorBuffer);
 
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.blurShader, rect);
     }
