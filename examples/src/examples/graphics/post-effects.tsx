@@ -13,6 +13,7 @@ class PostEffectsExample extends Example {
             <AssetLoader name='bokeh' type='script' url='static/scripts/posteffects/posteffect-bokeh.js' />
             <AssetLoader name='sepia' type='script' url='static/scripts/posteffects/posteffect-sepia.js' />
             <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-vignette.js' />
+            <AssetLoader name='ssao' type='script' url='static/scripts/posteffects/posteffect-ssao.js' />
             <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
@@ -74,13 +75,14 @@ class PostEffectsExample extends Example {
 
         // create the towers from the boxes
         let scale = 16;
-        for (let y = 0; y <= 6; y++) {
+        for (let y = 0; y <= 7; y++) {
             for (let x = -1; x <= 1; x += 2) {
                 for (let z = 0; z <= 10; z += 2) {
-                    createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random());
+                    const prim = createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random());
+                    prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
                 }
             }
-            scale -= 2;
+            scale -= 1.5;
         }
 
         // create a sphere which represents the point of focus for the bokeh filter
@@ -104,6 +106,13 @@ class PostEffectsExample extends Example {
             farClip: 500
         });
         camera.addComponent("script");
+        camera.script.create("ssao", {
+            attributes: {
+                radius: 5,
+                samples: 16,
+                brightness: 0
+            }
+        });
         camera.script.create("bloom", {
             attributes: {
                 bloomIntensity: 0.8,
@@ -154,6 +163,10 @@ class PostEffectsExample extends Example {
                     camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
                     break;
                 case pc.KEY_5:
+                    // @ts-ignore engine-tsd
+                    camera.script.ssao.enabled = !camera.script.ssao.enabled;
+                    break;
+                case pc.KEY_6:
                     camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
                     break;
             }
@@ -203,7 +216,8 @@ class PostEffectsExample extends Example {
                 `[Key 2] Sepia: ${camera.script.sepia.enabled}\n` +
                 `[Key 3] Vignette: ${camera.script.vignette.enabled}\n` +
                 `[Key 4] Bokeh: ${camera.script.bokeh.enabled}\n` +
-                `[Key 5] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}\n`;
+                `[Key 5] SSAO: ${camera.script.ssao.enabled}\n` +
+                `[Key 6] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}\n`;
 
             // display the depth textur if bokeh is enabled
             if (camera.script.bokeh.enabled) {
