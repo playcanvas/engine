@@ -3,8 +3,20 @@ import { getApplication } from '../framework/globals.js';
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../net/http.js';
 
+// get the list of the device's supported compression formats
+const getCompressionFormats = (device) => {
+    return {
+        astc: !!device.extCompressedTextureASTC,
+        atc: !!device.extCompressedTextureATC,
+        dxt: !!device.extCompressedTextureS3TC,
+        etc1: !!device.extCompressedTextureETC1,
+        etc2: !!device.extCompressedTextureETC,
+        pvr: !!device.extCompressedTexturePVRTC
+    };
+};
+
 // download basis code and compile the wasm module for use in workers
-const prepareWorkerModules = (urls, callback) => {
+const prepareWorkerModules = (config, callback) => {
     const getWorkerBlob = () => {
         const code = '(' + BasisWorker.toString() + ')()\n\n';
         return new File([code], 'basis_worker.js', { type: 'application/javascript' });
@@ -22,20 +34,26 @@ const prepareWorkerModules = (urls, callback) => {
     };
 
     const sendResponse = (basisCode, module) => {
+        const device = getApplication().graphicsDevice;
         callback(null, {
             workerUrl: URL.createObjectURL(getWorkerBlob()),
             basisUrl: URL.createObjectURL(basisCode),
             module: module,
-            webgl2Device: getApplication().graphicsDevice.webgl2
+            deviceDetails: {
+                webgl2: device.webgl2,
+                formats: getCompressionFormats(device),
+                rgbPriority: config.rgbPriority || ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'],
+                rgbaPriority: config.rgbaPriority || ['astc', 'dxt', 'etc2', 'pvr', 'atc']
+            }
         });
     };
 
-    if (urls.glue && urls.wasm && wasmSupported()) {
+    if (config.glueUrl && config.wasmUrl && wasmSupported()) {
         let basisCode = null;
         let module = null;
 
         // download glue script
-        http.get(urls.glue, { responseType: 'blob' }, (err, response) => {
+        http.get(config.glueUrl, { responseType: 'blob' }, (err, response) => {
             if (err) {
                 callback(err);
             } else {
@@ -47,7 +65,7 @@ const prepareWorkerModules = (urls, callback) => {
             }
         });
 
-        const fetchPromise = fetch(urls.wasm);
+        const fetchPromise = fetch(config.wasmUrl);
 
         const compileManual = () => {
             fetchPromise
@@ -76,14 +94,14 @@ const prepareWorkerModules = (urls, callback) => {
                     }
                 })
                 .catch((err) => {
-                    console.warn('compileStreaming() failed for ' + urls.wasm + '(' + err + '), falling back to arraybuffer download.');
+                    console.warn('compileStreaming() failed for ' + config.wasmUrl + '(' + err + '), falling back to arraybuffer download.');
                     compileManual();
                 });
         } else {
             compileManual();
         }
     } else {
-        http.get(urls.fallback, { responseType: 'blob' }, (err, response) => {
+        http.get(config.fallbackUrl, { responseType: 'blob' }, (err, response) => {
             if (err) {
                 callback(err, null);
             } else {
@@ -101,7 +119,7 @@ class BasisQueue {
         this.clients = [];
     }
 
-    enqueueJob(url, data, format, callback, options) {
+    enqueueJob(url, data, callback, options) {
         if (this.callbacks.hasOwnProperty(url)) {
             // duplicate URL request
             this.callbacks[url].push(callback);
@@ -111,7 +129,6 @@ class BasisQueue {
 
             const job = {
                 url: url,
-                format: format,
                 data: data,
                 options: options
             };
@@ -196,38 +213,20 @@ class BasisClient {
     }
 }
 
-// select the most desirable gpu texture compression format given the device's capabilities
-function chooseTargetFormat(device) {
-    if (device.extCompressedTextureASTC) {
-        return 'astc';
-    } else if (device.extCompressedTextureS3TC) {
-        return 'dxt';
-    } else if (device.extCompressedTextureETC) {
-        return 'etc2';
-    } else if (device.extCompressedTextureETC1) {
-        return 'etc1';
-    } else if (device.extCompressedTexturePVRTC) {
-        return 'pvr';
-    } else if (device.extCompressedTextureATC) {
-        return 'atc';
-    }
-    return 'none';
-}
-
 // global state
 const defaultNumWorkers = 1;
 const queue = new BasisQueue();
 let initializing = false;
-let format = null;
-
-function basisTargetFormat() {
-    if (!format) {
-        format = chooseTargetFormat(getApplication().graphicsDevice);
-    }
-    return format;
-}
 
 // initialize basis
+// config supports the following parameters:
+// glueUrl: url of glue code
+// wasmUrl: url of wasm module
+// fallbackUrl: fallback URL when wasm isn't supported
+// rgbPriority: array of texture compression formats in priority order for textures sans alpha
+// rgbaPriority: array of texture compression formats in priority order for textures with alpha
+// numWorkers: number of transcode workers to create (default is 1)
+// eagerWorkers: whether workers are eager or not (default is true for workers === 1)
 function basisInitialize(config) {
     if (initializing) {
         // already initializing
@@ -243,9 +242,9 @@ function basisInitialize(config) {
         if (wasmModule) {
             const urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
             config = {
-                glue: urlBase + wasmModule.glueUrl,
-                wasm: urlBase + wasmModule.wasmUrl,
-                fallback: urlBase + wasmModule.fallbackUrl
+                glueUrl: urlBase + wasmModule.glueUrl,
+                wasmUrl: urlBase + wasmModule.wasmUrl,
+                fallbackUrl: urlBase + wasmModule.fallbackUrl
             };
         }
     }
@@ -264,17 +263,15 @@ function basisInitialize(config) {
 // queue a basis file for transcoding
 //
 // options supports the following members:
-//   unswizzleGGGR - convert the two-component GGGR normal data to RGB
-//                   and pack into 565 format. this is used to overcome
-//                   quality issues on apple devices.
+//   isGGGR - indicates this is a GGGR swizzled texture. under some
+//            circumstances the texture will be unswizzled during compression
 function basisTranscode(url, data, callback, options) {
     basisInitialize();
-    queue.enqueueJob(url, data, format, callback, options);
+    queue.enqueueJob(url, data, callback, options);
     return initializing;
 }
 
 export {
-    basisTargetFormat,
     basisInitialize,
     basisTranscode
 };

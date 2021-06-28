@@ -1,7 +1,6 @@
 // Basis worker
 function BasisWorker() {
-    // Basis compression format enums
-    // Note: these must match definitions in the BASIS module
+    // basis compression format enums, reproduced here
     const BASIS_FORMAT = {
         cTFETC1: 0,                         // etc1
         cTFETC2: 1,                         // etc2
@@ -18,49 +17,59 @@ function BasisWorker() {
         cTFRGBA4444: 16                     // rgba 4444
     };
 
-    // Map GPU to basis format for textures without alpha
+    // engine pixel format constants, reproduced here
+    const PIXEL_FORMAT = {
+        ETC1: 21,
+        ETC2_RGBA: 23,
+        DXT1: 8,
+        DXT5: 10,
+        PVRTC_4BPP_RGB_1: 26,
+        PVRTC_4BPP_RGBA_1: 27,
+        ASTC_4x4: 28,
+        ATC_RGB: 29,
+        ATC_RGBA: 30,
+        R8_G8_B8_A8: 7,
+        R5_G6_B5: 3,
+        R4_G4_B4_A4: 5
+    };
+
+    // map of GPU to basis format for textures without alpha
     const opaqueMapping = {
         astc: BASIS_FORMAT.cTFASTC_4x4,
         dxt: BASIS_FORMAT.cTFBC1,
-        etc2: BASIS_FORMAT.cTFETC1,
         etc1: BASIS_FORMAT.cTFETC1,
+        etc2: BASIS_FORMAT.cTFETC1,
         pvr: BASIS_FORMAT.cTFPVRTC1_4_RGB,
         atc: BASIS_FORMAT.cTFATC_RGB,
         none: BASIS_FORMAT.cTFRGB565
     };
 
-    // Map GPU to basis format for textures with alpha
+    // map of GPU to basis format for textures with alpha
     const alphaMapping = {
         astc: BASIS_FORMAT.cTFASTC_4x4,
         dxt: BASIS_FORMAT.cTFBC3,
-        etc2: BASIS_FORMAT.cTFETC2,
         etc1: BASIS_FORMAT.cTFRGBA4444,
+        etc2: BASIS_FORMAT.cTFETC2,
         pvr: BASIS_FORMAT.cTFPVRTC1_4_RGBA,
         atc: BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA,
         none: BASIS_FORMAT.cTFRGBA4444
     };
 
-    // Map basis format to engine pixel format
-    const basisToEngineMapping = { };
-    // Note that we don't specify the enum constants directly because they're not
-    // available in the worker. And if they are specified in the worker code string,
-    // they unfortunately get mangled by Terser on minification. So let's write in
-    // the actual values directly.
-    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = 21;               // PIXELFORMAT_ETC1
-    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = 23;               // PIXELFORMAT_ETC2_RGBA
-    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = 8;                // PIXELFORMAT_DXT1
-    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = 10;               // PIXELFORMAT_DXT5
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = 26;               // PIXELFORMAT_PVRTC_4BPP_RGB_1
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = 27;               // PIXELFORMAT_PVRTC_4BPP_RGBA_1
-    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = 28;               // PIXELFORMAT_ASTC_4x4
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = 29;               // PIXELFORMAT_ATC_RGB
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = 30; // PIXELFORMAT_ATC_RGBA
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = 7;                // PIXELFORMAT_R8_G8_B8_A8
-    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = 3;                // PIXELFORMAT_R5_G6_B5
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = 5;                // PIXELFORMAT_R4_G4_B4_A4
-
-    const hasPerformance = typeof performance !== 'undefined';
-    let webgl2Device;
+    // map of basis format to engine pixel format
+    const basisToEngineMapping = {
+        [BASIS_FORMAT.cTFETC1]: PIXEL_FORMAT.ETC1,
+        [BASIS_FORMAT.cTFETC2]: PIXEL_FORMAT.ETC2_RGBA,
+        [BASIS_FORMAT.cTFBC1]: PIXEL_FORMAT.DXT1,
+        [BASIS_FORMAT.cTFBC3]: PIXEL_FORMAT.DXT5,
+        [BASIS_FORMAT.cTFPVRTC1_4_RGB]: PIXEL_FORMAT.PVRTC_4BPP_RGB_1,
+        [BASIS_FORMAT.cTFPVRTC1_4_RGBA]: PIXEL_FORMAT.PVRTC_4BPP_RGBA_1,
+        [BASIS_FORMAT.cTFASTC_4x4]: PIXEL_FORMAT.ASTC_4x4,
+        [BASIS_FORMAT.cTFATC_RGB]: PIXEL_FORMAT.ATC_RGB,
+        [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA]: PIXEL_FORMAT.ATC_RGBA,
+        [BASIS_FORMAT.cTFRGBA32]: PIXEL_FORMAT.R8_G8_B8_A8,
+        [BASIS_FORMAT.cTFRGB565]: PIXEL_FORMAT.R5_G6_B5,
+        [BASIS_FORMAT.cTFRGBA4444]: PIXEL_FORMAT.R4_G4_B4_A4
+    };
 
     // unswizzle two-component gggr8888 normal data into rgba8888
     const unswizzleGGGR = (data) => {
@@ -99,9 +108,48 @@ function BasisWorker() {
         return result;
     };
 
+    const performanceNow = () => {
+        return (typeof performance !== 'undefined') ? performance.now() : 0;
+    };
+
+    // globals, set on worker init
+    let basis;
+    let deviceDetails;
+
+    const chooseTargetFormat = (hasAlpha, isUASTC) => {
+        // attempt to match file compression scheme with runtime compression
+        if (isUASTC) {
+            if (deviceDetails.formats.astc) {
+                return 'astc';
+            }
+        } else {
+            if (hasAlpha) {
+                if (deviceDetails.formats.etc2) {
+                    return 'etc2';
+                }
+            } else {
+                if (deviceDetails.formats.etc1) {
+                    return 'etc1';
+                }
+            }
+        }
+
+        const testInOrder = (priority) => {
+            for (let i = 0; i < priority.length; ++i) {
+                const format = priority[i];
+                if (deviceDetails.formats[format]) {
+                    return format;
+                }
+            }
+            return 'none';
+        };
+
+        return testInOrder(hasAlpha ? deviceDetails.rgbaPriority : deviceDetails.rgbPriority);
+    };
+
     // transcode the basis super-compressed data into one of the runtime gpu native formats
-    const transcode = (basis, url, format, data, options) => {
-        const funcStart = hasPerformance ? performance.now() : 0;
+    const transcode = (url, data, options) => {
+        const funcStart = performanceNow();
         const basisFile = new basis.BasisFile(new Uint8Array(data));
 
         const width = basisFile.getImageWidth(0, 0);
@@ -109,6 +157,7 @@ function BasisWorker() {
         const images = basisFile.getNumImages();
         const levels = basisFile.getNumLevels(0);
         const hasAlpha = !!basisFile.getHasAlpha();
+        const isUASTC = basisFile.isUASTC();
 
         if (!width || !height || !images || !levels) {
             basisFile.close();
@@ -116,20 +165,28 @@ function BasisWorker() {
             throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' images=' + images + ' levels=' + levels);
         }
 
-        // select output format based on supported formats
-        let basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+        // choose the target format
+        const format = chooseTargetFormat(hasAlpha, isUASTC);
 
-        // transcode to uncompressed format if the texture is PVRTC or webgl1, and has invalid dimensions
-        const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
-        const notPOT = (width & (width - 1)) !== 0;
-        const notSquare = (width !== height);
-        if ((isPVRTC && (notPOT || notSquare)) || (!webgl2Device && notPOT)) {
-            basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
-        }
+        // unswizzle gggr textures under pvr compression
+        const unswizzle = !!options.isGGGR && format === 'pvr';
 
-        if (options && options.unswizzleGGGR) {
+        // convert to basis format taking into consideration platform restrictions
+        let basisFormat;
+        if (unswizzle) {
             // in order to unswizzle we need gggr8888
             basisFormat = BASIS_FORMAT.cTFRGBA32;
+        } else {
+            // select output format based on supported formats
+            basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+
+            // transcode to uncompressed format if the texture is PVRTC or webgl1, and has invalid dimensions
+            const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
+            const notPOT = ((width & (width - 1)) !== 0) || ((height & (height - 1)) !== 0);
+            const notSquare = (width !== height);
+            if ((isPVRTC && (notPOT || notSquare)) || (!deviceDetails.webgl2 && notPOT)) {
+                basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
+            }
         }
 
         if (!basisFile.startTranscoding()) {
@@ -143,7 +200,7 @@ function BasisWorker() {
         const levelData = [];
         for (let mip = 0; mip < levels; ++mip) {
             const dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
-            let dst = new Uint8Array(dstSize);
+            const dst = new Uint8Array(dstSize);
 
             if (!basisFile.transcodeImage(dst, 0, mip, basisFormat, 1, 0)) {
                 basisFile.close();
@@ -151,19 +208,16 @@ function BasisWorker() {
                 throw new Error('Failed to transcode image url=' + url);
             }
 
-            if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
-                // 16 bit formats require Uint16 typed array
-                dst = new Uint16Array(dst.buffer);
-            }
+            const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
 
-            levelData.push(dst);
+            levelData.push(is16BitFormat ? new Uint16Array(dst.buffer) : dst);
         }
 
         basisFile.close();
         basisFile.delete();
 
         // handle unswizzle option
-        if (options && options.unswizzleGGGR) {
+        if (unswizzle) {
             basisFormat = BASIS_FORMAT.cTFRGB565;
             for (i = 0; i < levelData.length; ++i) {
                 levelData[i] = pack565(unswizzleGGGR(levelData[i]));
@@ -177,34 +231,30 @@ function BasisWorker() {
             levels: levelData,
             cubemap: false,
             mipmaps: true,
-            transcodeTime: hasPerformance ? (performance.now() - funcStart) : 0,
-            url: url
+            transcodeTime: performanceNow() - funcStart,
+            url: url,
+            unswizzledGGGR: unswizzle
         };
     };
 
-    let basis = null;
-    const queue = [];
-
     // download and transcode the file given the basis module and
     // file url
-    const workerTranscode = (url, format, data, options) => {
+    const workerTranscode = (url, data, options) => {
         try {
             // texture data has been provided
-            const result = transcode(basis, url, format, data, options);
+            const result = transcode(url, data, options);
             result.levels = result.levels.map(function (v) {
                 return v.buffer;
             });
             self.postMessage({ url: url, data: result }, result.levels);
         } catch (err) {
-            self.postMessage({ url: url.toString(), err: err.toString() });
+            self.postMessage({ url: url, err: err });
         }
     };
 
-    const workerInit = (config) => {
+    const workerInit = (config, callback) => {
         // load the basis file (this is synchronous)
         self.importScripts(config.basisUrl);
-
-        webgl2Device = config.webgl2Device;
 
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
@@ -220,12 +270,13 @@ function BasisWorker() {
 
         self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
             .then((instance) => {
+                instance.initializeBasis();
+
+                // set globals
                 basis = instance;
-                basis.initializeBasis();
-                for (let i = 0; i < queue.length; ++i) {
-                    workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
-                }
-                queue.length = 0;
+                deviceDetails = config.deviceDetails;
+
+                callback(null);
             })
             .catch((reason) => {
                 console.error('instantiate failed ' + reason);
@@ -233,15 +284,21 @@ function BasisWorker() {
     };
 
     // handle incoming worker requests
+    const queue = [];
     self.onmessage = function (message) {
         const data = message.data;
         switch (data.type) {
             case 'init':
-                workerInit(data.config);
+                workerInit(data.config, () => {
+                    for (let i = 0; i < queue.length; ++i) {
+                        workerTranscode(queue[i].url, queue[i].data, queue[i].options);
+                    }
+                    queue.length = 0;
+                });
                 break;
             case 'transcode':
                 if (basis) {
-                    workerTranscode(data.url, data.format, data.data, data.options);
+                    workerTranscode(data.url, data.data, data.options);
                 } else {
                     queue.push(data);
                 }
