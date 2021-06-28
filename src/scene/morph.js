@@ -222,14 +222,13 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Morph#getTarget
-     * @description Gets the morph target by index.
-     * @param {number} index - An index of morph target.
-     * @returns {MorphTarget} A morph target object.
+     * @readonly
+     * @name Morph#targets
+     * @type {MorphTarget[]}
+     * @description The array of morph targets.
      */
-    getTarget(index) {
-        return this._targets[index];
+    get targets() {
+        return this._targets;
     }
 
     _updateMorphFlags() {

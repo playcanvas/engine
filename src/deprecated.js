@@ -59,6 +59,7 @@ import { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 import { GraphNode } from './scene/graph-node.js';
 import { Material } from './scene/materials/material.js';
 import { Mesh } from './scene/mesh.js';
+import { Morph } from './scene/morph.js';
 import { MeshInstance, Command } from './scene/mesh-instance.js';
 import { Model } from './scene/model.js';
 import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
@@ -503,6 +504,14 @@ export var scene = {
     Scene: Scene,
     Skin: Skin,
     SkinInstance: SkinInstance
+};
+
+Morph.prototype.getTarget = function (index) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
+    // #endif
+
+    return this.targets[index];
 };
 
 GraphNode.prototype._dirtify = function (local) {

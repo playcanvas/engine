@@ -61,8 +61,7 @@ class RenderToTextureExample extends Example {
             width: 512,
             height: 256,
             format: pc.PIXELFORMAT_R8_G8_B8,
-            // @ts-ignore engine-tsd
-            autoMipmap: true,
+            mipmaps: true,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,

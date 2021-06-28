@@ -35,12 +35,28 @@ class TextureBasisExample extends Example {
 
                 app.scene.ambientLight = new pc.Color(1, 1, 1);
 
-                // Create a Entity with a Box model component
+                // material using basis texture
+                const material1 = new pc.StandardMaterial();
+                material1.diffuseMap = assets.seaBasis.resource;
+                material1.update();
+
+                // Create a Entity with a Box render component
                 const box1 = new pc.Entity();
-                box1.addComponent("model", { type: "box" });
+                box1.addComponent("render", {
+                    type: "box",
+                    material: material1
+                });
+
+                // another material using basis texture
+                const material2 = new pc.StandardMaterial();
+                material2.diffuseMap = assets.playcanvasBasis.resource;
+                material2.update();
 
                 const box2 = new pc.Entity();
-                box2.addComponent("model", { type: "box" });
+                box2.addComponent("render", {
+                    type: "box",
+                    material: material2
+                });
 
                 // Create an Entity with a camera component
                 const camera = new pc.Entity();
@@ -48,16 +64,16 @@ class TextureBasisExample extends Example {
                     clearColor: new pc.Color(0.4, 0.45, 0.5)
                 });
 
+                // Adjust the camera position
+                camera.translate(0, 0, 5);
+
                 // Add the new Entities to the hierarchy
                 app.root.addChild(box1);
                 app.root.addChild(box2);
                 app.root.addChild(camera);
 
-                box1.setPosition(-1, 0, 0);
-                box2.setPosition(1, 0, 0);
-
-                // Move the camera 10m along the z-axis
-                camera.translate(0, 0, 4);
+                box1.setPosition(0, -1, 0);
+                box2.setPosition(0, 1, 0);
 
                 // Set an update function on the app's update event
                 let angle = 0;
@@ -71,16 +87,6 @@ class TextureBasisExample extends Example {
                     box1.setEulerAngles(angle * 2, angle * 4, angle * 8);
                     box2.setEulerAngles(90 - angle * 12, 120 - angle * 8, 150 - angle * 10);
                 });
-
-                let material = new pc.StandardMaterial();
-                material.diffuseMap = assets.seaBasis.resource;
-                material.update();
-                box1.model.meshInstances[0].material = material;
-
-                material = new pc.StandardMaterial();
-                material.diffuseMap = assets.playcanvasBasis.resource;
-                material.update();
-                box2.model.meshInstances[0].material = material;
             }
         );
     }
