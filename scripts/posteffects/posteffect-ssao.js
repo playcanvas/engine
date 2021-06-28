@@ -58,20 +58,20 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    highp vec3 vsStartPos;",
             "    vec3 vsNormal;",
             "",
-            "   // light (cone) info",
+            "    // light (cone) info",
             "    vec3 vsConeDirection;",
             "    float shadowDistance;",
             "    float coneAngleTangeant;",
             "    float contactDistanceMaxInv;",
             "    vec2 jitterOffset;          // (x = direction offset, y = step offset)",
             "",
-            "   // scene infos",
+            "    // scene infos",
             "    highp mat4 screenFromViewMatrix;",
             "    float projectionScale;",
             "    vec4 resolution;",
             "    float maxLevel;",
             "",
-            "   // artistic/quality parameters",
+            "    // artistic/quality parameters",
             "    float intensity;",
             "    float depthBias;",
             "    float slopeScaledDepthBias;",
@@ -286,7 +286,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    w = w*w;",
             "",
             "    // discard samples that are too close to the horizon to reduce shadows cast by geometry",
-            "    // not sufficently tessellated. The goal is to discard samples that form an angle 'beta'",
+            "    // not sufficiently tessellated. The goal is to discard samples that form an angle 'beta'",
             "    // smaller than 'epsilon' with the horizon. We already have dot(v,n) which is equal to the",
             "    // sin(beta) * |v|. So the test simplifies to vn^2 < vv * sin(epsilon)^2.",
             "    w *= step(vv * uMinHorizonAngleSineSquared, vn * vn);",
@@ -444,14 +444,14 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     for (var i = 0; i < 1; i++) {
         var colorBuffer = new pc.Texture(graphicsDevice, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            minFilter: pc.FILTER_LINEAR,
+            magFilter: pc.FILTER_LINEAR,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
             width: width,
             height: height,
             mipmaps: false
         });
-        colorBuffer.minFilter = pc.FILTER_LINEAR;
-        colorBuffer.magFilter = pc.FILTER_LINEAR;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.name = 'ssao_' + i;
         var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
