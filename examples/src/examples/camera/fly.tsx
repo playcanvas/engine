@@ -39,11 +39,10 @@ class FlyExample extends Example {
         function createBox(position: pc.Vec3, size: pc.Vec3, material: pc.Material) {
             // create an entity and add a model component of type 'box'
             const box = new pc.Entity();
-            box.addComponent("model", {
-                type: "box"
+            box.addComponent("render", {
+                type: "box",
+                material: material
             });
-
-            box.model.material = material;
 
             // move the box
             box.setLocalPosition(position);
@@ -53,14 +52,10 @@ class FlyExample extends Example {
             app.root.addChild(box);
         }
 
-
         // ***********    Create Boxes    *******************
 
-        // create a few materials for our boxes
-        const red = createMaterial(new pc.Color(1, 0, 0));
-        const white = createMaterial(new pc.Color(1, 1, 1));
-
         // create a few boxes in our scene
+        const red = createMaterial(pc.Color.RED);
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 2; j++) {
                 createBox(new pc.Vec3(i * 2, 0, j * 4), pc.Vec3.ONE, red);
@@ -68,6 +63,7 @@ class FlyExample extends Example {
         }
 
         // create a floor
+        const white = createMaterial(pc.Color.WHITE);
         createBox(new pc.Vec3(0, -0.5, 0), new pc.Vec3(10, 0.1, 10), white);
 
         // ***********    Create lights   *******************
@@ -102,7 +98,7 @@ class FlyExample extends Example {
         app.root.addChild(camera);
 
         // Move the camera a little further away
-        camera.translate(0, 0, 2);
+        camera.translate(2, 0.8, 9);
     }
 }
 

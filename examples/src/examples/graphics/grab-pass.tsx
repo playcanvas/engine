@@ -91,10 +91,10 @@ class GrabPassExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
-                type: primitiveType
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
@@ -135,8 +135,8 @@ class GrabPassExample extends Example {
 
         // create a primitive which uses refraction shader to distort the view behind it
         const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 6, 3), new pc.Color(1, 1, 1));
-        glass.model.castShadows = false;
-        glass.model.receiveShadows = false;
+        glass.render.castShadows = false;
+        glass.render.receiveShadows = false;
 
         // create shader using vertex and fragment shaders
         const shaderDefinition = {
@@ -151,7 +151,7 @@ class GrabPassExample extends Example {
         // reflection material using the shader
         const refractionMaterial = new pc.Material();
         refractionMaterial.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
-        glass.model.material = refractionMaterial;
+        glass.render.material = refractionMaterial;
 
         // set up front to back sorting on opaque world layer - so when we get to render the glass,
         // object behind it would be rendered already

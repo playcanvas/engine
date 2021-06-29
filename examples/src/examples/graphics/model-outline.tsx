@@ -33,11 +33,11 @@ class ModelOutlineExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
+            primitive.addComponent('render', {
                 type: primitiveType,
-                layers: layer
+                layers: layer,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
@@ -52,8 +52,7 @@ class ModelOutlineExample extends Example {
             width: app.graphicsDevice.width,
             height: app.graphicsDevice.height,
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            // @ts-ignore engine-tsd
-            autoMipmap: true,
+            mipmaps: true,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
@@ -67,7 +66,7 @@ class ModelOutlineExample extends Example {
         app.scene.layers.insert(outlineLayer, 0);
 
         // set up layer to render to the render targer
-            // @ts-ignore engine-tsd
+        // @ts-ignore engine-tsd
         outlineLayer.renderTarget = renderTarget;
 
         // get world layer
@@ -96,7 +95,7 @@ class ModelOutlineExample extends Example {
         });
         app.root.addChild(outlineCamera);
 
-            // @ts-ignore engine-tsd
+        // @ts-ignore engine-tsd
         const outline = new OutlineEffect(app.graphicsDevice, 3);
         outline.color = new pc.Color(0, 0.5, 1, 1);
         outline.texture = texture;
@@ -129,13 +128,11 @@ class ModelOutlineExample extends Example {
                 width: app.graphicsDevice.width,
                 height: app.graphicsDevice.height,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                // @ts-ignore engine-tsd
-                autoMipmap: true,
+                mipmaps: true,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR
             });
             renderTarget.destroy();
-            // @ts-ignore engine-tsd
             renderTarget = new pc.RenderTarget({
                 colorBuffer: texture,
                 depth: true

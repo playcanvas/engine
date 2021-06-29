@@ -64,7 +64,6 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     useEffect(() => {
-        monacoEditor?.setScrollPosition({ scrollTop: 0 });
         if (!files[selectedFile]) setSelectedFile(0);
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
@@ -72,11 +71,12 @@ const CodeEditor = (props: CodeEditorProps) => {
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
+            localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
         });
         (window as any).toggleEvent = true;
     });
 
-    return <Panel headerText='CODE' id='codePane'>
+    return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') !== 'false' ? 'collapsed' : null}>
         <div className='panel-toggle' id='codePane-panel-toggle'/>
         { props.files && props.files.length > 1 && <Container class='tabs-container'>
             {props.files.map((file: File, index: number) => {

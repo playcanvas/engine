@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "ENVIRONMENT=production webpack --config webpack.config.js",
+    "build": "cross-env ENVIRONMENT=production webpack --config webpack.config.js",
     "build:watch": "webpack --config webpack.config.js --watch",
     "local": "cross-env ENGINE_PATH=../build/playcanvas.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others \"npm run build:watch\"",
     "local:dbg": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others \"npm run build:watch\"",
@@ -62,7 +62,7 @@
     "html-webpack-plugin": "^5.3.1",
     "monaco-editor": "^0.23.0",
     "monaco-editor-webpack-plugin": "^3.0.1",
-    "playcanvas": "^1.42.0",
+    "playcanvas": "^1.43.0",
     "prop-types": "^15.7.2",
     "puppeteer": "^8.0.0",
     "raw-loader": "^4.0.2",

@@ -39,13 +39,7 @@ class GamepadExample extends Example {
         light.translate(5, 5, 10);
         app.root.addChild(light);
 
-        const entity = new pc.Entity();
-
-        entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
-
+        const entity = assets.statue.resource.instantiateRenderEntity();
         app.root.addChild(entity);
 
         const gamepads = new pc.GamePads();

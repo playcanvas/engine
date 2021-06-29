@@ -124,7 +124,7 @@ class FirstPersonExample extends Example {
                 color: new pc.Color(1, 1, 1),
                 normalOffsetBias: 0.05,
                 shadowBias: 0.2,
-                shadowDistance: 16,
+                shadowDistance: 40,
                 type: "directional",
                 shadowResolution: 2048
             });

@@ -17,6 +17,7 @@ void main(void)
 {
     vec4 pos = matrix_model * vec4(aPosition, 1.0);
     pos.x += sin(uTime + pos.y * 4.0) * 0.1;
+    pos.y += cos(uTime + pos.x * 4.0) * 0.1;
     vUv0 = aUv0;
     gl_Position = matrix_viewProjection * pos;
 }
@@ -79,19 +80,8 @@ class ShaderWobbleExample extends Example {
         // Add entities into scene hierarchy
         app.root.addChild(camera);
         app.root.addChild(light);
-        const entity = new pc.Entity();
 
-        const modelComponent = entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
-        app.root.addChild(entity);
-
-        // @ts-ignore engine-tsd
-        const model = modelComponent.model;
-
-        const gd = app.graphicsDevice;
-
+        // Create the shader definition and shader from the vertex and fragment shaders
         const shaderDefinition = {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION,
@@ -101,23 +91,39 @@ class ShaderWobbleExample extends Example {
             fshader: assets['shader.frag'].data
         };
 
-        const shader = new pc.Shader(gd, shaderDefinition);
+        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
-        const diffuseMap = model.getMaterials()[0].diffuseMap;
-
+        // Create a new material with the new shader
         const material = new pc.Material();
-
         material.shader = shader;
-        material.setParameter('uTime', 0);
-        material.setParameter('uDiffuseMap', diffuseMap);
 
-        model.meshInstances.forEach(function (meshInstance: pc.MeshInstance) {
-            meshInstance.material = material;
+        // create a hierarchy of entities with render components, representing the statue model
+        const entity = assets.statue.resource.instantiateRenderEntity();
+        app.root.addChild(entity);
+
+        // Set the new material on all meshes in the model, and use original texture from the model on the new material
+        let originalTexture:pc.Texture = null;
+        const renders: Array<pc.RenderComponent> = entity.findComponents("render");
+        renders.forEach((render) => {
+            const meshInstances = render.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
+                const meshInstance = meshInstances[i];
+                // @ts-ignore
+                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                meshInstance.material = material;
+            }
         });
+
+        // material is set up, update it
+        material.setParameter('uDiffuseMap', originalTexture);
+        material.update();
 
         app.on("update", function (dt) {
             time += dt;
+
+            // set time parameter for the shader
             material.setParameter('uTime', time);
+            material.update();
         });
 
         app.start();

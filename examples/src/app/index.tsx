@@ -22,7 +22,7 @@ const ExampleRoutes = (props: ExampleRoutesProps) => {
         <Switch>
             {
                 examples.paths.map((p) => {
-                    return <Route key={p.path} path={p.path}>
+                    return <Route key={p.path} path={[p.path, `${p.path}.html`]}>
                         <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} showMiniStats={props.showMiniStats} />
                     </Route>;
                 })
@@ -96,8 +96,8 @@ const MainLayout = () => {
                             const e = new p.example();
                             const assetsLoader = e.load;
                             const controls = e.controls;
-                            return <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`, `${p.path}.html`]}>
-                                <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files}/>
+                            return <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`]}>
+                                <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files} debug={p.path.includes('mini-stats')} />
                             </Route>;
                         })
                     }

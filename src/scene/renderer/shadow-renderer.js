@@ -324,7 +324,7 @@ class ShadowRenderer {
             const up = shadowCamNode.up;
             const lightDir = shadowCamNode.forward;
 
-            // transform the sphere's center into the center of the shadpw map, pixel aligned.
+            // transform the sphere's center into the center of the shadow map, pixel aligned.
             // this makes the shadow map stable and avoids shimmering on the edges when the camera moves
             const sizeRatio = 0.25 * light._shadowResolution / radius;
             const x = Math.ceil(center.dot(up) * sizeRatio) / sizeRatio;
@@ -366,9 +366,9 @@ class ShadowRenderer {
             const depthRange = getDepthRange(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax());
 
             // adjust shadow camera's near and far plane to the depth range of casters to maximize precision
-            // of values stored in the shadow map
-            shadowCamNode.translateLocal(0, 0, depthRange.max);
-            shadowCam.farClip = depthRange.max - depthRange.min;
+            // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.
+            shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
+            shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
         }
     }
 

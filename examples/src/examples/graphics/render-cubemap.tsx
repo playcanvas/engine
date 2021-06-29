@@ -71,6 +71,9 @@ class RenderCubemapExample extends Example {
             // create material of specified color
             const material = new pc.StandardMaterial();
             material.diffuse = color;
+            material.shininess = 60;
+            material.metalness = 0.7;
+            material.useMetalness = true;
             material.update();
 
             // create primitive
@@ -174,8 +177,9 @@ class RenderCubemapExample extends Example {
             castShadows: true,
             layers: [worldLayer.id],
             shadowBias: 0.2,
+            shadowResolution: 1024,
             normalOffsetBias: 0.05,
-            shadowDistance: 25
+            shadowDistance: 40
         });
         app.root.addChild(light);
 
@@ -210,7 +214,7 @@ class RenderCubemapExample extends Example {
             for (let e = 0; e < entities.length; e++) {
                 const scale = (e + 1) / entities.length;
                 const offset = time + e * 200;
-            // @ts-ignore engine-tsd
+                // @ts-ignore engine-tsd
                 entities[e].setLocalPosition(7 * Math.sin(offset), 2 * (e - 3), 7 * Math.cos(offset));
                 entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
             }
