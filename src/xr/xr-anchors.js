@@ -8,7 +8,7 @@ import { XrAnchor } from './xr-anchor.js';
  * @description Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Anchors are supported.
- * @property {XrAnchor[]} list List of active {@link XrAnchor}'s.
+ * @property {XrAnchor[]} list Array of active {@link XrAnchor}s.
  * @example
  * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
  *     anchors: true
@@ -24,14 +24,13 @@ class XrAnchors extends EventHandler {
         // list of anchor creation requests
         this._creationQueue = [];
 
-        // key - XRAnchor (native anchor does not have ID's)
+        // key - XRAnchor (native anchor does not have an ID)
         // value - XrAnchor
         this._index = new Map();
         this._list = null;
 
-        // map of callbacks to XRAnchor's,
-        // so that we can call callback
-        // once anchor is first time updated with a pose
+        // map of callbacks to XRAnchors so that we can call its callback once an anchor is updated
+        // with a pose for the first time
         //
         // key - XRAnchor
         // value - function
@@ -53,7 +52,7 @@ class XrAnchors extends EventHandler {
     /**
      * @event
      * @name XrAnchors#add
-     * @description Fired when new {@link XrAnchor} is added.
+     * @description Fired when a new {@link XrAnchor} is added.
      * @param {XrAnchor} anchor - Anchor that has been added.
      * @example
      * app.xr.anchors.on('add', function (anchor) {
@@ -63,12 +62,12 @@ class XrAnchors extends EventHandler {
 
     /**
      * @event
-     * @name XrAnchors#remove
-     * @description Fired when {@link XrAnchor} is removed.
-     * @param {XrAnchor} anchor - Anchor that has been removed.
+     * @name XrAnchors#destroy
+     * @description Fired when an {@link XrAnchor} is destroyed.
+     * @param {XrAnchor} anchor - Anchor that has been destroyed.
      * @example
-     * app.xr.anchors.on('remove', function (anchor) {
-     *     // anchor that is removed
+     * app.xr.anchors.on('destroy', function (anchor) {
+     *     // anchor that is destroyed
      * });
      */
 
@@ -86,11 +85,11 @@ class XrAnchors extends EventHandler {
         }
         this._creationQueue.length = 0;
 
-        // remove all anchors
+        // destroy all anchors
         if (this._list) {
             let i = this._list.length;
             while (i--) {
-                this._list[i].remove();
+                this._list[i].destroy();
             }
             this._list = null;
         }
@@ -99,9 +98,9 @@ class XrAnchors extends EventHandler {
     /**
      * @function
      * @name XrAnchors#create
-     * @description Create anchor with position and rotation, with a callback.
+     * @description Create anchor with position, rotation and a callback.
      * @param {Vec3} position - Position for an anchor
-     * @param {Quat} [rotation] - Rotastion for an anchor
+     * @param {Quat} [rotation] - Rotation for an anchor
      * @param {callbacks.XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created
      * @example
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
@@ -139,12 +138,12 @@ class XrAnchors extends EventHandler {
             this._creationQueue.length = 0;
         }
 
-        // check if removed
+        // check if destroyed
         for (const [xrAnchor, anchor] of this._index) {
             if (frame.trackedAnchors.has(xrAnchor))
                 continue;
 
-            anchor.remove();
+            anchor.destroy();
         }
 
         // update existing anchors

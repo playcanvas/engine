@@ -6,10 +6,10 @@ import { Quat } from '../math/quat.js';
 /**
  * @class
  * @name XrAnchor
- * @classdesc Anchor provides position and rotation, that is updated by underlying AR system, that tries to better persist an anchor relative to evolving understanding of a real world.
- * @description Anchor provides position and rotation, that is updated by underlying AR system, that tries to better persist an anchor relative to evolving understanding of a real world.
- * @param {XrAnchors} anchors - Anchors manager.
- * @property {object} xrAndhor native XRAnchor object that is provided by WebXR API.
+ * @classdesc An anchor keeps track of a position and rotation that is fixed relative to the real world. This allows the application to adjust the location of the virtual objects placed in the scene in a way that helps with maintaining the illusion that the placed objects are really present in the user’s environment.
+ * @description Creates an XrAnchor.
+ * @param {XrAnchors} anchors - Anchor manager.
+ * @property {object} xrAnchor native XRAnchor object that is provided by the WebXR API.
  */
 class XrAnchor extends EventHandler {
     constructor(anchors, xrAnchor) {
@@ -24,11 +24,11 @@ class XrAnchor extends EventHandler {
 
     /**
      * @event
-     * @name XrAnchor#remove
-     * @description Fired when {@link XrAnchor} is removed.
+     * @name XrAnchor#destroy
+     * @description Fired when an {@link XrAnchor} is destroyed.
      * @example
-     * // once anchor is removed
-     * anchor.once('remove', function () {
+     * // once anchor is destroyed
+     * anchor.once('destroy', function () {
      *     // destroy its related entity
      *     entity.destroy();
      * });
@@ -37,7 +37,7 @@ class XrAnchor extends EventHandler {
     /**
      * @event
      * @name XrAnchor#change
-     * @description Fired when {@link XrAnchor}'s position and/or rotation is changed.
+     * @description Fired when an {@link XrAnchor}'s position and/or rotation is changed.
      * @example
      * anchor.on('change', function () {
      *     // anchor has been updated
@@ -48,10 +48,10 @@ class XrAnchor extends EventHandler {
 
     /**
      * @function
-     * @name XrAnchor#remove
-     * @description Remove an anchor from tracking.
+     * @name XrAnchor#destroy
+     * @description Destroy an anchor.
      */
-    remove() {
+    destroy() {
         this._anchors._index.delete(this._xrAnchor);
 
         const ind = this._anchors._list.indexOf(this);
@@ -61,8 +61,8 @@ class XrAnchor extends EventHandler {
 
         this._xrAnchor = null;
 
-        this.fire('remove');
-        this._anchors.fire('remove', this);
+        this.fire('destroy');
+        this._anchors.fire('destroy', this);
     }
 
     update(frame) {
