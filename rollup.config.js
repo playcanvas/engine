@@ -10,7 +10,7 @@ let revision;
 try {
     revision = execSync('git rev-parse --short HEAD').toString().trim();
 } catch (e) {
-    revision = 'engine-master.zip';
+    revision = 'unknown';
 }
 
 function getBanner(config) {
