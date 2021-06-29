@@ -775,7 +775,7 @@ class Lightmapper {
         }
 
         // per meshInstance culling for spot light only
-        // (point lights cull per face later, directional lights don't cull)
+        // (omno lights cull per face later, directional lights don't cull)
         if (light.type === LIGHTTYPE_SPOT) {
             let nodeVisible = false;
 
