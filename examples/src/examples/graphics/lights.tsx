@@ -39,10 +39,7 @@ class LightsExample extends Example {
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
         // Load a model file and create a Entity with a model component
-        const entity = new pc.Entity();
-        entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model,
+        const entity = assets.statue.resource.instantiateRenderEntity({
             castShadows: true
         });
         app.root.addChild(entity);

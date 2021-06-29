@@ -26,7 +26,9 @@ class FirstPersonExample extends Example {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
-            touch: new pc.TouchDevice(document.body)
+            touch: new pc.TouchDevice(document.body),
+            gamepads: new pc.GamePads(),
+            keyboard: new pc.Keyboard(window)
         });
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -57,13 +59,11 @@ class FirstPersonExample extends Example {
             floor.addChild(floorModel);
 
             // Create a model entity and assign the statue model
-            const model = new pc.Entity();
+            const model = assets.statue.resource.instantiateRenderEntity({
+                castShadows: true
+            });
             model.addComponent("collision", {
                 type: "mesh",
-                asset: assets.statue.resource.model
-            });
-            model.addComponent("model", {
-                type: "asset",
                 asset: assets.statue.resource.model
             });
             model.addComponent("rigidbody", {
