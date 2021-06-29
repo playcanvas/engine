@@ -983,6 +983,8 @@ class GraphicsDevice extends EventHandler {
 
         this.unpackPremultiplyAlpha = false;
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
     initializeContextCaches() {

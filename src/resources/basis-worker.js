@@ -92,6 +92,12 @@ function BasisWorker() {
         return data;
     };
 
+    const isCompressedFormat = (basisFormat) => {
+        return basisFormat !== BASIS_FORMAT.cTFRGBA32 &&
+               basisFormat !== BASIS_FORMAT.cTFRGB565 &&
+               basisFormat !== BASIS_FORMAT.cTFRGBA4444;
+    };
+
     // pack rgba8888 data into rgb565
     const pack565 = (data) => {
         const result = new Uint16Array(data.length / 4);
@@ -224,10 +230,12 @@ function BasisWorker() {
             }
         }
 
+        const compressedFormat = isCompressedFormat(basisFormat);
+
         return {
             format: basisToEngineMapping[basisFormat],
-            width: (width + 3) & ~3,
-            height: (height + 3) & ~3,
+            width: compressedFormat ? ((width + 3) & ~3) : width,
+            height: compressedFormat ? ((height + 3) & ~3) : height,
             levels: levelData,
             cubemap: false,
             mipmaps: true,
