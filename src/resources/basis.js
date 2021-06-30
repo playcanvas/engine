@@ -94,7 +94,9 @@ const prepareWorkerModules = (config, callback) => {
                     }
                 })
                 .catch((err) => {
-                    console.warn('compileStreaming() failed for ' + config.wasmUrl + '(' + err + '), falling back to arraybuffer download.');
+                    // #if _DEBUG
+                    console.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
+                    // #endif
                     compileManual();
                 });
         } else {
@@ -226,8 +228,8 @@ let initializing = false;
 /**
  * @name basisInitialize
  * @function
- * @description Initialize the basis transcode worker.
- * @param {object} [config] - The basis configuration.
+ * @description Initialize the Basis transcode worker.
+ * @param {object} [config] - The Basis configuration.
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
@@ -242,7 +244,7 @@ let initializing = false;
  * completed. This will result in balanced workloads across workers, however workers can be idle for a short time between jobs.
  * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order for textures without alpha.
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
- * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.Math
+* @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
  */
 function basisInitialize(config) {
