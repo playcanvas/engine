@@ -235,7 +235,7 @@ let initializing = false;
  * @param {boolean} [config.eagerWorkers] - True if workers should be eager (enabled when numWorkers is 1).
  * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order for textures without alpha.
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
- * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.Math
+* @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
  */
 function basisInitialize(config) {
