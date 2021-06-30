@@ -94,7 +94,9 @@ const prepareWorkerModules = (config, callback) => {
                     }
                 })
                 .catch((err) => {
-                    console.warn('compileStreaming() failed for ' + config.wasmUrl + '(' + err + '), falling back to arraybuffer download.');
+                    // #if _DEBUG
+                    console.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
+                    // #endif
                     compileManual();
                 });
         } else {
