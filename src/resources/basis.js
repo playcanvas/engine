@@ -231,8 +231,15 @@ let initializing = false;
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
- * @param {number} [config.numWorkers] - Number of transcode workers to create (default is 1).
- * @param {boolean} [config.eagerWorkers] - True if workers should be eager (enabled when numWorkers is 1).
+ * @param {number} [config.numWorkers] - Number of workers to use for transcoding (default is 1). While it is
+ * possible to improve transcode performance using multiple workers, this will likely depend on the runtime
+ * platform. For example, desktop will likely benefit from more workers compared to mobile. Also
+ * keep in mind that it takes time to initialize workers and increasing this value could impact application
+ * startup time. Make sure to test your application performance on all target platforms when changing this parameter.
+ * @param {boolean} [config.eagerWorkers] - Use eager workers (default is true). When enabled, jobs are assigned
+ * to workers immediately, independent of their work load. This can result in unbalanced workloads, however there
+ * is no delay between jobs. If disabled, new jobs are assigned to workers only when their previous job has
+ * completed. This will result in balanced workloads across workers, however workers can be idle for a short time between jobs.
  * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order for textures without alpha.
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
  * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.Math
@@ -270,7 +277,7 @@ function basisInitialize(config) {
         initializing = true;
 
         config.numWorkers = config.numWorkers || defaultNumWorkers;
-        config.eagerWorkers = (config.numWorkers === 1) || !!config.eagerWorkers;
+        config.eagerWorkers = (config.numWorkers === 1) || (config.hasOwnProperty('eagerWorkers') ? config.eagerWorkers : true);
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
 
