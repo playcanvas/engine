@@ -22,9 +22,9 @@ class TextureBasisExample extends Example {
 
         // @ts-ignore engine-tsd
         pc.basisDownload(
-            'lib/basis/basis.wasm.js',
-            'lib/basis/basis.wasm.wasm',
-            'lib/basis/basis.js',
+            'static/lib/basis/basis.wasm.js',
+            'static/lib/basis/basis.wasm.wasm',
+            'static/lib/basis/basis.js',
             function () {
 
                 app.start();
