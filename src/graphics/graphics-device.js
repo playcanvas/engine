@@ -2361,6 +2361,8 @@ class GraphicsDevice extends EventHandler {
         let sampler, samplerValue, texture, numTextures; // Samplers
         let uniform, scopeId, uniformVersion, programVersion; // Uniforms
         const shader = this.shader;
+        if (!shader)
+            return;
         const samplers = shader.samplers;
         const uniforms = shader.uniforms;
 
@@ -3241,6 +3243,16 @@ class GraphicsDevice extends EventHandler {
 
         const definition = shader.definition;
         const attrs = definition.attributes;
+
+        // #if _DEBUG
+        if (!definition.vshader) {
+            console.error('No vertex shader has been specified when creating a shader.');
+        }
+        if (!definition.fshader) {
+            console.error('No fragment shader has been specified when creating a shader.');
+        }
+        // #endif
+
         const glVertexShader = this.compileShaderSource(definition.vshader, true);
         const glFragmentShader = this.compileShaderSource(definition.fshader, false);
 
@@ -3313,6 +3325,9 @@ class GraphicsDevice extends EventHandler {
     }
 
     _addLineNumbers(src) {
+        if (!src)
+            return "";
+
         const lines = src.split("\n");
 
         // Chrome reports shader errors on lines indexed from 1
