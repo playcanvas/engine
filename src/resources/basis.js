@@ -227,7 +227,7 @@ let initializing = false;
  * @name basisInitialize
  * @function
  * @description Initialize the Basis transcode worker.
- * @param {object} [config] - The basis configuration.
+ * @param {object} [config] - The Basis configuration.
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
