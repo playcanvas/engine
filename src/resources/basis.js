@@ -15,11 +15,6 @@ const getCompressionFormats = (device) => {
     };
 };
 
-// defaults
-const defaultNumWorkers = 1;
-const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
-const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
-
 // download basis code and compile the wasm module for use in workers
 const prepareWorkerModules = (config, callback) => {
     const getWorkerBlob = () => {
@@ -47,8 +42,8 @@ const prepareWorkerModules = (config, callback) => {
             deviceDetails: {
                 webgl2: device.webgl2,
                 formats: getCompressionFormats(device),
-                rgbPriority: config.rgbPriority || defaultRgbPriority,
-                rgbaPriority: config.rgbaPriority || defaultRgbaPriority
+                rgbPriority: config.rgbPriority,
+                rgbaPriority: config.rgbaPriority
             }
         });
     };
@@ -219,6 +214,11 @@ class BasisClient {
     }
 }
 
+// defaults
+const defaultNumWorkers = 1;
+const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
+const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
+
 // global state
 const queue = new BasisQueue();
 let initializing = false;
@@ -231,12 +231,12 @@ let initializing = false;
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
+ * @param {number} [config.numWorkers] - Number of transcode workers to create (default is 1).
+ * @param {boolean} [config.eagerWorkers] - True if workers should be eager (enabled when numWorkers is 1).
  * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order for textures without alpha.
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
  * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.Math
  * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
- * @param {number} [config.numWorkers] - Number of transcode workers to create (default is 1).
- * @param {boolean} [config.eagerWorkers] - True if workers should be eager (enabled when numWorkers is 1).
  */
 function basisInitialize(config) {
     if (initializing) {
@@ -244,31 +244,42 @@ function basisInitialize(config) {
         return;
     }
 
-    if (!config) {
-        // get config from global PC config structure
+    config = config || {};
+
+    // if any URLs are not specified in the config, search for them in the global PC config structure
+    if (!config.glueUrl || !config.wasmUrl || !config.fallbackUrl) {
         const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
         const wasmModule = modules.find(function (m) {
             return m.moduleName === 'BASIS';
         });
         if (wasmModule) {
-            const urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
-            config = {
-                glueUrl: urlBase + wasmModule.glueUrl,
-                wasmUrl: urlBase + wasmModule.wasmUrl,
-                fallbackUrl: urlBase + wasmModule.fallbackUrl
-            };
+            const urlBase = window.ASSET_PREFIX || "";
+            if (!config.glueUrl) {
+                config.glueUrl = urlBase + wasmModule.glueUrl;
+            }
+            if (!config.wasmUrl) {
+                config.wasmUrl = urlBase + wasmModule.wasmUrl;
+            }
+            if (!config.fallbackUrl) {
+                config.fallbackUrl = urlBase + wasmModule.fallbackUrl;
+            }
         }
     }
 
-    if (config) {
+    if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
         initializing = true;
+
+        config.numWorkers = config.numWorkers || defaultNumWorkers;
+        config.eagerWorkers = (config.numWorkers === 1) || !!config.eagerWorkers;
+        config.rgbPriority = config.rgbPriority || defaultRgbPriority;
+        config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
+
         prepareWorkerModules(config, (err, clientConfig) => {
             if (err) {
                 console.error(`failed to initialize basis worker: ${err}`);
             } else {
-                const numWorkers = config.numWorkers || defaultNumWorkers;
-                for (let i = 0; i < numWorkers; ++i) {
-                    queue.enqueueClient(new BasisClient(queue, clientConfig, (numWorkers === 1) || config.eagerWorkers));
+                for (let i = 0; i < config.numWorkers; ++i) {
+                    queue.enqueueClient(new BasisClient(queue, clientConfig, config.eagerWorkers));
                 }
             }
         });
