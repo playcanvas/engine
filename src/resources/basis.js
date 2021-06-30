@@ -278,7 +278,7 @@ function basisInitialize(config) {
     if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
         initializing = true;
 
-        config.numWorkers = config.numWorkers || defaultNumWorkers;
+        config.numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
         config.eagerWorkers = (config.numWorkers === 1) || (config.hasOwnProperty('eagerWorkers') ? config.eagerWorkers : true);
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
