@@ -15,6 +15,11 @@ const getCompressionFormats = (device) => {
     };
 };
 
+// defaults
+const defaultNumWorkers = 1;
+const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
+const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
+
 // download basis code and compile the wasm module for use in workers
 const prepareWorkerModules = (config, callback) => {
     const getWorkerBlob = () => {
@@ -42,8 +47,8 @@ const prepareWorkerModules = (config, callback) => {
             deviceDetails: {
                 webgl2: device.webgl2,
                 formats: getCompressionFormats(device),
-                rgbPriority: config.rgbPriority || ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'],
-                rgbaPriority: config.rgbaPriority || ['astc', 'dxt', 'etc2', 'pvr', 'atc']
+                rgbPriority: config.rgbPriority || defaultRgbPriority,
+                rgbaPriority: config.rgbaPriority || defaultRgbaPriority
             }
         });
     };
@@ -178,6 +183,7 @@ class BasisQueue {
     }
 }
 
+// client interface to a basis transcoder instance running on a web worker
 class BasisClient {
     constructor(queue, config, eager) {
         this.queue = queue;
@@ -214,19 +220,24 @@ class BasisClient {
 }
 
 // global state
-const defaultNumWorkers = 1;
 const queue = new BasisQueue();
 let initializing = false;
 
-// initialize basis
-// config supports the following parameters:
-// glueUrl: url of glue code
-// wasmUrl: url of wasm module
-// fallbackUrl: fallback URL when wasm isn't supported
-// rgbPriority: array of texture compression formats in priority order for textures sans alpha
-// rgbaPriority: array of texture compression formats in priority order for textures with alpha
-// numWorkers: number of transcode workers to create (default is 1)
-// eagerWorkers: whether workers are eager or not (default is true for workers === 1)
+/**
+ * @name basisInitialize
+ * @function
+ * @description Initialize the basis transcode worker.
+ * @param {object} [config] - The basis configuration.
+ * @param {string} [config.glueUrl] - URL of glue script.
+ * @param {string} [config.wasmUrl] - URL of the wasm module.
+ * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
+ * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order for textures without alpha.
+ * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
+ * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.Math
+ * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
+ * @param {number} [config.numWorkers] - Number of transcode workers to create (default is 1).
+ * @param {boolean} [config.eagerWorkers] - True if workers should be eager (enabled when numWorkers is 1).
+ */
 function basisInitialize(config) {
     if (initializing) {
         // already initializing
@@ -252,19 +263,31 @@ function basisInitialize(config) {
     if (config) {
         initializing = true;
         prepareWorkerModules(config, (err, clientConfig) => {
-            const numWorkers = config.numWorkers || defaultNumWorkers;
-            for (let i = 0; i < numWorkers; ++i) {
-                queue.enqueueClient(new BasisClient(queue, clientConfig, (numWorkers === 1) || config.eagerWorkers));
+            if (err) {
+                console.error(`failed to initialize basis worker: ${err}`);
+            } else {
+                const numWorkers = config.numWorkers || defaultNumWorkers;
+                for (let i = 0; i < numWorkers; ++i) {
+                    queue.enqueueClient(new BasisClient(queue, clientConfig, (numWorkers === 1) || config.eagerWorkers));
+                }
             }
         });
     }
 }
 
-// queue a basis file for transcoding
-//
-// options supports the following members:
-//   isGGGR - indicates this is a GGGR swizzled texture. under some
-//            circumstances the texture will be unswizzled during compression
+/**
+ * @private
+ * @name basisTranscode
+ * @function
+ * @description Enqueue a blob of basis data for transcoding.
+ * @param {string} url - URL of the basis file.
+ * @param {object} data - The file data to transcode.
+ * @param {Function} callback - Callback function to receive transcode result.
+ * @param {object} [options] - Options structure
+ * @param {boolean} [options.isGGGR] - Indicates this is a GGGR swizzled texture. Under some
+ * circumstances the texture will be unswizzled during transcoding.
+ * @returns {boolean} True if the basis worker was initialized and false otherwise.
+ */
 function basisTranscode(url, data, callback, options) {
     basisInitialize();
     queue.enqueueJob(url, data, callback, options);
