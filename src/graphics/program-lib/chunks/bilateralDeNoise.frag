@@ -1,4 +1,5 @@
-// bilateral filter, based on https://www.shadertoy.com/view/4dfGDH#
+// bilateral filter, based on https://www.shadertoy.com/view/4dfGDH# and
+// http://people.csail.mit.edu/sparis/bf_course/course_notes.pdf
 
 // A bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter for images.
 // It replaces the intensity of each pixel with a weighted average of intensity values from nearby pixels.
