@@ -5,7 +5,6 @@ import { Color } from '../../math/color.js';
 import { Vec3 } from '../../math/vec3.js';
 
 import { BoundingBox } from '../../shape/bounding-box.js';
-import { BoundingSphere } from '../../shape/bounding-sphere.js';
 
 import {
     CULLFACE_NONE,
@@ -36,13 +35,14 @@ import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
 import { StandardMaterial } from '../materials/standard-material.js';
 
+import { BakeLight } from './bake-light.js';
+
 const MAX_LIGHTMAP_SIZE = 2048;
 
 const PASS_COLOR = 0;
 const PASS_DIR = 1;
 
 const tempVec = new Vec3();
-const tempSphere = new BoundingSphere();
 
 // helper class to wrap node including its meshInstances
 class MeshNode {
@@ -65,50 +65,6 @@ class MeshNode {
 
         // render target with attached color buffer for each render pass
         this.renderTargets = [];
-    }
-}
-
-// helper class to store all lights including their original state
-class LightInfo {
-    constructor(light) {
-        this.light = light;
-
-        // original light properties
-        this.store();
-
-        // don't use cascades
-        light.numCascades = 1;
-
-        // bounds for non-directional light
-        if (light.type !== LIGHTTYPE_DIRECTIONAL) {
-
-            // world sphere
-            light._node.getWorldTransform();
-            light.getBoundingSphere(tempSphere);
-
-            // world aabb
-            this.lightBounds = new BoundingBox();
-            this.lightBounds.center.copy(tempSphere.center);
-            this.lightBounds.halfExtents.set(tempSphere.radius, tempSphere.radius, tempSphere.radius);
-        }
-    }
-
-    store() {
-        this.mask = this.light.mask;
-        this.shadowUpdateMode = this.light.shadowUpdateMode;
-        this.enabled = this.light.enabled;
-        this.intensity = this.light.intensity;
-        this.rotation = this.light._node.getLocalRotation().clone();
-        this.numCascades = this.light.numCascades;
-    }
-
-    restore() {
-        this.light.mask = this.mask;
-        this.light.shadowUpdateMode = this.shadowUpdateMode;
-        this.light.enabled = this.enabled;
-        this.light.intensity = this.intensity;
-        this.light._node.setLocalRotation(this.rotation);
-        this.light.numCascades = this.numCascades;
     }
 }
 
@@ -626,8 +582,8 @@ class Lightmapper {
             const light = sceneLights[i];
 
             // store all lights and their original settings we need to temporariy modify
-            const lightInfo = new LightInfo(light);
-            allLights.push(lightInfo);
+            const bakeLight = new BakeLight(light);
+            allLights.push(bakeLight);
 
             // bake light
             if (light.enabled && (light.mask & MASK_LIGHTMAP) !== 0) {
@@ -637,7 +593,7 @@ class Lightmapper {
 
                 light.mask = 0xFFFFFFFF;
                 light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
-                bakeLights.push(lightInfo);
+                bakeLights.push(bakeLight);
             }
         }
 
