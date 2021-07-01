@@ -77,10 +77,10 @@ var _skinUpdateIndex = 0;
 var _tempMaterialSet = new Set();
 
 /**
- * @private
  * @class
  * @name ForwardRenderer
  * @classdesc The forward renderer render scene objects.
+ * @hideconstructor
  * @description Creates a new forward renderer object.
  * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
  */
