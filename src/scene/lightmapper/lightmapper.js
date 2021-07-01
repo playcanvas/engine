@@ -1,11 +1,11 @@
-import { now } from '../core/time.js';
+import { now } from '../../core/time.js';
 
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Vec3 } from '../math/vec3.js';
+import { math } from '../../math/math.js';
+import { Color } from '../../math/color.js';
+import { Vec3 } from '../../math/vec3.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
+import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingSphere } from '../../shape/bounding-sphere.js';
 
 import {
     CULLFACE_NONE,
@@ -13,14 +13,14 @@ import {
     PIXELFORMAT_R8_G8_B8_A8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from '../graphics/constants.js';
-import { createShaderFromCode } from '../graphics/program-lib/utils.js';
-import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
-import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { Texture } from '../graphics/texture.js';
+} from '../../graphics/constants.js';
+import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
+import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { RenderTarget } from '../../graphics/render-target.js';
+import { Texture } from '../../graphics/texture.js';
 
-import { MeshInstance } from './mesh-instance.js';
+import { MeshInstance } from '../mesh-instance.js';
 
 import {
     BAKE_COLORDIR,
@@ -31,10 +31,10 @@ import {
     SHADERDEF_DIRLM, SHADERDEF_LM,
     MASK_LIGHTMAP, MASK_BAKED,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
-} from '../scene/constants.js';
-import { Camera } from '../scene/camera.js';
-import { GraphNode } from '../scene/graph-node.js';
-import { StandardMaterial } from '../scene/materials/standard-material.js';
+} from '../constants.js';
+import { Camera } from '../camera.js';
+import { GraphNode } from '../graph-node.js';
+import { StandardMaterial } from '../materials/standard-material.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
