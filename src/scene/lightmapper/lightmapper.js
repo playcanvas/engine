@@ -900,41 +900,12 @@ class Lightmapper {
             const bakeLight = bakeLights[i];
 
             // directional light can be baked using many virtual lights to create soft effect
-            const numVirtualLights = bakeLight.light.type === LIGHTTYPE_DIRECTIONAL ? 100 : 1;
+            const numVirtualLights = bakeLight.numVirtualLights;
             for (let s = 0; s < numVirtualLights; s++) {
 
                 // prepare virtual light
                 if (numVirtualLights > 1) {
-
-                    // bake type factor (0..1)
-                    // - more skylight: smaller value
-                    // - more directional: larger values
-                    const directionalFactor = 0.6;
-                    if (s < numVirtualLights * directionalFactor) {
-
-                        // soft directional
-                        // TODO: diferent distribution? Perhaps 2d loop in the plane of light direction to get more uniform and predictable pattern
-                        const directionalSpreadAngle = 20;
-                        const angle1 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
-                        const angle2 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
-
-                        // set to original rotation and add adjustement
-                        bakeLight.light._node.setLocalRotation(bakeLight.rotation);
-                        bakeLight.light._node.rotateLocal(angle1, 0, angle2);
-
-                    } else {
-
-                        // skylight - random direction from hemisphere
-                        // TODO: better distribution, perhaps Halton sequence, cosine weighted
-                        const angle = 90;
-                        bakeLight.light._node.setLocalEulerAngles(Math.random() * angle - (angle * 0.5), 10, Math.random() * angle - (angle * 0.5));
-                    }
-
-                    // update transform
-                    bakeLight.light._node.getWorldTransform();
-
-                    // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
-                    bakeLight.light.intensity = bakeLight.intensity / numVirtualLights;
+                    bakeLight.prepareVirtualLight(s, numVirtualLights);
                 }
 
                 bakeLight.light.enabled = true; // enable next light
