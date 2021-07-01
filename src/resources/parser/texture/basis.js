@@ -3,7 +3,7 @@ import { http } from '../../../net/http.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
-import { basisTargetFormat, basisTranscode } from '../../basis.js';
+import { basisTranscode } from '../../basis.js';
 
 /**
  * @private
@@ -13,11 +13,13 @@ import { basisTargetFormat, basisTranscode } from '../../basis.js';
  * @classdesc Parser for basis files.
  */
 class BasisParser {
-    constructor(registry) {
+    constructor(registry, device) {
+        this.device = device;
         this.maxRetries = 0;
     }
 
     load(url, callback, asset) {
+        const device = this.device;
         const options = {
             cache: true,
             responseType: "arraybuffer",
@@ -31,19 +33,13 @@ class BasisParser {
                 if (err) {
                     callback(err, result);
                 } else {
-                    // massive hack for pvr textures (i.e. apple devices)
-                    // the quality of GGGR normal maps under PVR compression is still terrible
-                    // so here we instruct the basis transcoder to unswizzle the normal map data
-                    // and pack to 565
-                    const unswizzleGGGR = basisTargetFormat() === 'pvr' &&
-                                        asset && asset.file && asset.file.variants &&
-                                        asset.file.variants.basis &&
-                                        ((asset.file.variants.basis.opt & 8) !== 0);
-                    if (unswizzleGGGR) {
-                        // remove the swizzled flag from the asset
-                        asset.file.variants.basis.opt &= ~8;
-                    }
-                    const basisModuleFound = basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
+                    const basisModuleFound = basisTranscode(
+                        device,
+                        url.load,
+                        result,
+                        callback,
+                        { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
+                    );
 
                     if (!basisModuleFound) {
                         callback('Basis module not found. Asset "' + asset.name + '" basis texture variant will not be loaded.');

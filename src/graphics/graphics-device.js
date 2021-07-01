@@ -768,11 +768,14 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
         let ext;
 
-        const supportedExtensions = gl.getSupportedExtensions();
+        const supportedExtensions = {};
+        gl.getSupportedExtensions().forEach((e) => {
+            supportedExtensions[e] = true;
+        });
 
         const getExtension = function () {
             for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
+                if (supportedExtensions.hasOwnProperty(arguments[i])) {
                     return gl.getExtension(arguments[i]);
                 }
             }
@@ -980,6 +983,8 @@ class GraphicsDevice extends EventHandler {
 
         this.unpackPremultiplyAlpha = false;
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
     initializeContextCaches() {
