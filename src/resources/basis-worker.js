@@ -120,9 +120,10 @@ function BasisWorker() {
 
     // globals, set on worker init
     let basis;
-    let deviceDetails;
+    let rgbPriority;
+    let rgbaPriority;
 
-    const chooseTargetFormat = (hasAlpha, isUASTC) => {
+    const chooseTargetFormat = (deviceDetails, hasAlpha, isUASTC) => {
         // attempt to match file compression scheme with runtime compression
         if (isUASTC) {
             if (deviceDetails.formats.astc) {
@@ -150,7 +151,7 @@ function BasisWorker() {
             return 'none';
         };
 
-        return testInOrder(hasAlpha ? deviceDetails.rgbaPriority : deviceDetails.rgbPriority);
+        return testInOrder(hasAlpha ? rgbaPriority : rgbPriority);
     };
 
     // transcode the basis super-compressed data into one of the runtime gpu native formats
@@ -163,7 +164,7 @@ function BasisWorker() {
         const images = basisFile.getNumImages();
         const levels = basisFile.getNumLevels(0);
         const hasAlpha = !!basisFile.getHasAlpha();
-        const isUASTC = basisFile.isUASTC();
+        const isUASTC = basisFile.isUASTC && basisFile.isUASTC();
 
         if (!width || !height || !images || !levels) {
             basisFile.close();
@@ -172,7 +173,7 @@ function BasisWorker() {
         }
 
         // choose the target format
-        const format = chooseTargetFormat(hasAlpha, isUASTC);
+        const format = chooseTargetFormat(options.deviceDetails, hasAlpha, isUASTC);
 
         // unswizzle gggr textures under pvr compression
         const unswizzle = !!options.isGGGR && format === 'pvr';
@@ -190,7 +191,7 @@ function BasisWorker() {
             const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
             const notPOT = ((width & (width - 1)) !== 0) || ((height & (height - 1)) !== 0);
             const notSquare = (width !== height);
-            if ((isPVRTC && (notPOT || notSquare)) || (!deviceDetails.webgl2 && notPOT)) {
+            if ((isPVRTC && (notPOT || notSquare)) || (!options.deviceDetails.webgl2 && notPOT)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -282,12 +283,10 @@ function BasisWorker() {
 
                 // set globals
                 basis = instance;
-                deviceDetails = config.deviceDetails;
+                rgbPriority = config.rgbPriority;
+                rgbaPriority = config.rgbaPriority;
 
                 callback(null);
-            })
-            .catch((reason) => {
-                console.error('instantiate failed ' + reason);
             });
     };
 

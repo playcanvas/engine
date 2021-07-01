@@ -13,11 +13,13 @@ import { basisTranscode } from '../../basis.js';
  * @classdesc Parser for basis files.
  */
 class BasisParser {
-    constructor(registry) {
+    constructor(registry, device) {
+        this.device = device;
         this.maxRetries = 0;
     }
 
     load(url, callback, asset) {
+        const device = this.device;
         const options = {
             cache: true,
             responseType: "arraybuffer",
@@ -32,6 +34,7 @@ class BasisParser {
                     callback(err, result);
                 } else {
                     const basisModuleFound = basisTranscode(
+                        device,
                         url.load,
                         result,
                         callback,

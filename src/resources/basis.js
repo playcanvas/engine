@@ -1,5 +1,4 @@
 import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/constants.js';
-import { getApplication } from '../framework/globals.js';
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../net/http.js';
 
@@ -34,17 +33,12 @@ const prepareWorkerModules = (config, callback) => {
     };
 
     const sendResponse = (basisCode, module) => {
-        const device = getApplication().graphicsDevice;
         callback(null, {
             workerUrl: URL.createObjectURL(getWorkerBlob()),
             basisUrl: URL.createObjectURL(basisCode),
             module: module,
-            deviceDetails: {
-                webgl2: device.webgl2,
-                formats: getCompressionFormats(device),
-                rgbPriority: config.rgbPriority,
-                rgbaPriority: config.rgbaPriority
-            }
+            rgbPriority: config.rgbPriority,
+            rgbaPriority: config.rgbaPriority
         });
     };
 
@@ -278,8 +272,9 @@ function basisInitialize(config) {
     if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
         initializing = true;
 
-        config.numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
-        config.eagerWorkers = (config.numWorkers === 1) || (config.hasOwnProperty('eagerWorkers') ? config.eagerWorkers : true);
+        const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
+        const eagerWorkers = (config.numWorkers === 1) || (config.hasOwnProperty('eagerWorkers') ? config.eagerWorkers : true);
+
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
 
@@ -287,19 +282,22 @@ function basisInitialize(config) {
             if (err) {
                 console.error(`failed to initialize basis worker: ${err}`);
             } else {
-                for (let i = 0; i < config.numWorkers; ++i) {
-                    queue.enqueueClient(new BasisClient(queue, clientConfig, config.eagerWorkers));
+                for (let i = 0; i < numWorkers; ++i) {
+                    queue.enqueueClient(new BasisClient(queue, clientConfig, eagerWorkers));
                 }
             }
         });
     }
 }
 
+let deviceDetails = null;
+
 /**
  * @private
  * @name basisTranscode
  * @function
  * @description Enqueue a blob of basis data for transcoding.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} url - URL of the basis file.
  * @param {object} data - The file data to transcode.
  * @param {Function} callback - Callback function to receive transcode result.
@@ -308,9 +306,21 @@ function basisInitialize(config) {
  * circumstances the texture will be unswizzled during transcoding.
  * @returns {boolean} True if the basis worker was initialized and false otherwise.
  */
-function basisTranscode(url, data, callback, options) {
+function basisTranscode(device, url, data, callback, options) {
     basisInitialize();
-    queue.enqueueJob(url, data, callback, options);
+
+    if (!deviceDetails) {
+        deviceDetails = {
+            webgl2: device.webgl2,
+            formats: getCompressionFormats(device)
+        };
+    }
+
+    queue.enqueueJob(url, data, callback, {
+        deviceDetails: deviceDetails,
+        isGGGR: !!options?.isGGGR
+    });
+
     return initializing;
 }
 
