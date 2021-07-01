@@ -8,6 +8,7 @@ import { Quat } from '../math/quat.js';
  * @name XrAnchor
  * @classdesc An anchor keeps track of a position and rotation that is fixed relative to the real world. This allows the application to adjust the location of the virtual objects placed in the scene in a way that helps with maintaining the illusion that the placed objects are really present in the user’s environment.
  * @description Creates an XrAnchor.
+ * @hideconstructor
  * @param {XrAnchors} anchors - Anchor manager.
  * @property {object} xrAnchor native XRAnchor object that is provided by the WebXR API.
  */

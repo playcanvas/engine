@@ -6,6 +6,7 @@ import { XrAnchor } from './xr-anchor.js';
  * @name XrAnchors
  * @classdesc Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
  * @description Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Anchors are supported.
  * @property {XrAnchor[]} list Array of active {@link XrAnchor}s.
