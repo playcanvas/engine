@@ -116,6 +116,7 @@ class LightInfo {
  * @class
  * @name Lightmapper
  * @classdesc The lightmapper is used to bake scene lights into textures.
+ * @hideconstructor
  * @param {GraphicsDevice} device - The grahpics device used by the lightmapper.
  * @param {Entity} root - The root entity of the scene.
  * @param {Scene} scene - The scene to lightmap.
