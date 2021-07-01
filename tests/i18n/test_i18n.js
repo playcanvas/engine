@@ -778,7 +778,7 @@ describe('I18n tests', function () {
         expect(app.i18n.findAvailableLocale('no-IT')).to.equal('no-IT');
     });
 
-    it('findAvailableLocale() should fallback to en-US if translations have not been provide for the desired locale', function () {
+    it('findAvailableLocale() should fallback to en-US if translations have not been provided for the desired locale', function () {
         addText('no-IT', 'key', 'norwegian');
         expect(app.i18n.findAvailableLocale('de-DE')).to.equal('en-US');
     });
