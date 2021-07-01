@@ -47,11 +47,6 @@ class BakeLight {
         this.light.numCascades = this.numCascades;
     }
 
-    get numVirtualLights() {
-        const numVirtualLights = this.light.type === LIGHTTYPE_DIRECTIONAL ? 100 : 1;
-        return numVirtualLights;
-    }
-
     startBake() {
         this.light.enabled = true;
         this.light._cacheShadowMap = true;
@@ -65,6 +60,11 @@ class BakeLight {
         if (this.light._isCachedShadowMap) {
             this.light._destroyShadowMap();
         }
+    }
+
+    get numVirtualLights() {
+        const numVirtualLights = this.light.type === LIGHTTYPE_DIRECTIONAL ? 100 : 1;
+        return numVirtualLights;
     }
 
     prepareVirtualLight(index, numVirtualLights) {
