@@ -52,6 +52,21 @@ class BakeLight {
         return numVirtualLights;
     }
 
+    startBake() {
+        this.light.enabled = true;
+        this.light._cacheShadowMap = true;
+    }
+
+    endBake() {
+        this.light.enabled = false;
+
+        // release light shadowmap
+        this.light._cacheShadowMap = false;
+        if (this.light._isCachedShadowMap) {
+            this.light._destroyShadowMap();
+        }
+    }
+
     prepareVirtualLight(index, numVirtualLights) {
 
         // bake type factor (0..1)

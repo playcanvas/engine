@@ -908,8 +908,7 @@ class Lightmapper {
                     bakeLight.prepareVirtualLight(s, numVirtualLights);
                 }
 
-                bakeLight.light.enabled = true; // enable next light
-                bakeLight.light._cacheShadowMap = true;
+                bakeLight.startBake();
                 let shadowMapRendered = false;
 
                 const shadowCam = this.lightCameraPrepare(device, bakeLight);
@@ -991,14 +990,7 @@ class Lightmapper {
                     this.restoreMaterials(rcv);
                 }
 
-                // disable the light
-                bakeLight.light.enabled = false;
-
-                // release light shadowmap
-                bakeLight.light._cacheShadowMap = false;
-                if (bakeLight.light._isCachedShadowMap) {
-                    bakeLight.light._destroyShadowMap();
-                }
+                bakeLight.endBake();
             }
         }
 
