@@ -7,6 +7,8 @@ const tempSphere = new BoundingSphere();
 // helper class to store all lights including their original state
 class BakeLight {
     constructor(light) {
+
+        // light of type Light
         this.light = light;
 
         // original light properties
@@ -39,12 +41,13 @@ class BakeLight {
     }
 
     restore() {
-        this.light.mask = this.mask;
-        this.light.shadowUpdateMode = this.shadowUpdateMode;
-        this.light.enabled = this.enabled;
-        this.light.intensity = this.intensity;
-        this.light._node.setLocalRotation(this.rotation);
-        this.light.numCascades = this.numCascades;
+        const light = this.light;
+        light.mask = this.mask;
+        light.shadowUpdateMode = this.shadowUpdateMode;
+        light.enabled = this.enabled;
+        light.intensity = this.intensity;
+        light._node.setLocalRotation(this.rotation);
+        light.numCascades = this.numCascades;
     }
 
     startBake() {
@@ -53,21 +56,20 @@ class BakeLight {
     }
 
     endBake() {
-        this.light.enabled = false;
+        const light = this.light;
+        light.enabled = false;
 
         // release light shadowmap
-        this.light._cacheShadowMap = false;
-        if (this.light._isCachedShadowMap) {
-            this.light._destroyShadowMap();
+        light._cacheShadowMap = false;
+        if (light._isCachedShadowMap) {
+            light._destroyShadowMap();
         }
     }
 
-    get numVirtualLights() {
-        const numVirtualLights = this.light.type === LIGHTTYPE_DIRECTIONAL ? 100 : 1;
-        return numVirtualLights;
-    }
+    prepareVirtualLight(index) {
 
-    prepareVirtualLight(index, numVirtualLights) {
+        const light = this.light;
+        const numVirtualLights = light.numBakeSamples;
 
         // bake type factor (0..1)
         // - more skylight: smaller value
@@ -82,22 +84,22 @@ class BakeLight {
             const angle2 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
 
             // set to original rotation and add adjustement
-            this.light._node.setLocalRotation(this.rotation);
-            this.light._node.rotateLocal(angle1, 0, angle2);
+            light._node.setLocalRotation(this.rotation);
+            light._node.rotateLocal(angle1, 0, angle2);
 
         } else {
 
             // skylight - random direction from hemisphere
             // TODO: better distribution, perhaps Halton sequence, cosine weighted
             const angle = 90;
-            this.light._node.setLocalEulerAngles(Math.random() * angle - (angle * 0.5), 10, Math.random() * angle - (angle * 0.5));
+            light._node.setLocalEulerAngles(Math.random() * angle - (angle * 0.5), 10, Math.random() * angle - (angle * 0.5));
         }
 
         // update transform
-        this.light._node.getWorldTransform();
+        light._node.getWorldTransform();
 
         // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
-        this.light.intensity = this.intensity / numVirtualLights;
+        light.intensity = this.intensity / numVirtualLights;
     }
 }
 

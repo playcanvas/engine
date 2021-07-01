@@ -82,6 +82,7 @@ class LightsBakedAOExample extends Example {
             affectDynamic: true,
             affectLightmapped: false,
             bake: true,
+            numBakeSamples: 20,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
