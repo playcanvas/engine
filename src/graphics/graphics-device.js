@@ -3509,7 +3509,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        const ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 

@@ -227,9 +227,9 @@ class VertexIterator {
         this.element = {};
 
         // Add a new 'setter' function for each element
-        var vertexFormat = this.vertexBuffer.getFormat();
-        for (var i = 0; i < vertexFormat.elements.length; i++) {
-            var vertexElement = vertexFormat.elements[i];
+        const vertexFormat = this.vertexBuffer.getFormat();
+        for (let i = 0; i < vertexFormat.elements.length; i++) {
+            const vertexElement = vertexFormat.elements[i];
             this.accessors[i] = new VertexIteratorAccessor(this.buffer, vertexElement, vertexFormat);
             this.element[vertexElement.name] = this.accessors[i];
         }
@@ -253,11 +253,11 @@ class VertexIterator {
      * iterator.end();
      */
     next(count = 1) {
-        var i = 0;
-        var accessors = this.accessors;
-        var numAccessors = this.accessors.length;
+        let i = 0;
+        const accessors = this.accessors;
+        const numAccessors = this.accessors.length;
         while (i < numAccessors) {
-            var accessor = accessors[i++];
+            const accessor = accessors[i++];
             accessor.index += count * accessor.stride;
         }
     }
@@ -287,24 +287,24 @@ class VertexIterator {
     // Copies data for specified semantic into vertex buffer.
     // Works with both interleaved (slower) and non-interleaved (fast) vertex buffer
     writeData(semantic, data, numVertices) {
-        var element = this.element[semantic];
+        const element = this.element[semantic];
         if (element) {
 
             if (numVertices > this.vertexBuffer.numVertices) {
                 // #if _DEBUG
-                console.error("NumVertices provided to setData: " + numVertices + " is larger than space in VertexBuffer: " + this.vertexBuffer.numVertices);
+                console.error(`NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`);
                 // #endif
 
                 // avoid overwrite
                 numVertices = this.vertexBuffer.numVertices;
             }
 
-            var i, numComponents = element.numComponents;
+            const numComponents = element.numComponents;
 
             // copy data to interleaved buffer by looping over vertices and copying them manually
             if (this.vertexBuffer.getFormat().interleaved) {
-                var index = 0;
-                for (i = 0; i < numVertices; i++) {
+                let index = 0;
+                for (let i = 0; i < numVertices; i++) {
                     element.setFromArray(index, data, i * numComponents);
                     index += element.stride;
                 }
@@ -312,7 +312,7 @@ class VertexIterator {
 
                 // if data contains more  data than needed, copy from its subarray
                 if (data.length > numVertices * numComponents) {
-                    var copyCount = numVertices * numComponents;
+                    const copyCount = numVertices * numComponents;
 
                     // if data is typed array
                     if (ArrayBuffer.isView(data)) {
@@ -320,7 +320,7 @@ class VertexIterator {
                         element.array.set(data);
                     } else {
                         // data is array, copy right amount manually
-                        for (i = 0; i < copyCount; i++)
+                        for (let i = 0; i < copyCount; i++)
                             element.array[i] = data[i];
                     }
                 } else {
@@ -336,20 +336,21 @@ class VertexIterator {
     // returns number of verticies
     // Note: when data is typed array and is smaller than needed, only part of data gets copied out (typed arrays ignore read/write out of range)
     readData(semantic, data) {
-        var element = this.element[semantic];
-        var count = 0;
+        const element = this.element[semantic];
+        let count = 0;
         if (element) {
             count = this.vertexBuffer.numVertices;
-            var i, numComponents = element.numComponents;
+            let i;
+            const numComponents = element.numComponents;
 
             if (this.vertexBuffer.getFormat().interleaved) {
 
                 // extract data from interleaved buffer by looping over vertices and copying them manually
-                if  (Array.isArray(data))
+                if (Array.isArray(data))
                     data.length = 0;
 
                 element.index = 0;
-                var offset = 0;
+                let offset = 0;
                 for (i = 0; i < count; i++) {
                     element.getToArray(offset, data, i * numComponents);
                     offset += element.stride;
@@ -361,7 +362,7 @@ class VertexIterator {
                 } else {
                     // destination data is array
                     data.length = 0;
-                    var copyCount = count * numComponents;
+                    const copyCount = count * numComponents;
                     for (i = 0; i < copyCount; i++)
                         data[i] = element.array[i];
                 }

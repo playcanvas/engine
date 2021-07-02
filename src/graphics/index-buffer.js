@@ -49,10 +49,10 @@ class IndexBuffer {
         this.numIndices = numIndices;
         this.usage = usage;
 
-        var gl = this.device.gl;
+        const gl = this.device.gl;
 
         // Allocate the storage
-        var bytesPerIndex;
+        let bytesPerIndex;
         if (format === INDEXFORMAT_UINT8) {
             bytesPerIndex = 1;
             this.glFormat = gl.UNSIGNED_BYTE;
@@ -84,14 +84,14 @@ class IndexBuffer {
      * @description Frees resources associated with this index buffer.
      */
     destroy() {
-        var device = this.device;
-        var idx = device.buffers.indexOf(this);
+        const device = this.device;
+        const idx = device.buffers.indexOf(this);
         if (idx !== -1) {
             device.buffers.splice(idx, 1);
         }
 
         if (this.bufferId) {
-            var gl = this.device.gl;
+            const gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
             this.device._vram.ib -= this.storage.byteLength;
             this.bufferId = null;
@@ -150,13 +150,13 @@ class IndexBuffer {
      */
     unlock() {
         // Upload the new index data
-        var gl = this.device.gl;
+        const gl = this.device.gl;
 
         if (!this.bufferId) {
             this.bufferId = gl.createBuffer();
         }
 
-        var glUsage;
+        let glUsage;
         switch (this.usage) {
             case BUFFER_STATIC:
                 glUsage = gl.STATIC_DRAW;
@@ -194,8 +194,8 @@ class IndexBuffer {
     }
 
     _lockTypedArray() {
-        var lock = this.lock();
-        var indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
+        const lock = this.lock();
+        const indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
             (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock));
         return indices;
     }
@@ -203,7 +203,7 @@ class IndexBuffer {
     // Copies count elements from data into index buffer.
     // optimized for performance from both typed array as well as array
     writeData(data, count) {
-        var indices = this._lockTypedArray();
+        const indices = this._lockTypedArray();
 
         // if data contains more indices than needed, copy from its subarray
         if (data.length > count) {
@@ -214,8 +214,7 @@ class IndexBuffer {
                 indices.set(data);
             } else {
                 // data is array, copy right amount manually
-                var i;
-                for (i = 0; i < count; i++)
+                for (let i = 0; i < count; i++)
                     indices[i] = data[i];
             }
         } else {
@@ -229,8 +228,8 @@ class IndexBuffer {
     // copies index data from index buffer into provided data array
     readData(data) {
         // note: there is no need to unlock this buffer, as we are only reading from it
-        var indices = this._lockTypedArray();
-        var count = this.numIndices;
+        const indices = this._lockTypedArray();
+        const count = this.numIndices;
 
         if (ArrayBuffer.isView(data)) {
             // destination data is typed array
@@ -238,8 +237,7 @@ class IndexBuffer {
         } else {
             // data is array, copy right amount manually
             data.length = 0;
-            var i;
-            for (i = 0; i < count; i++)
+            for (let i = 0; i < count; i++)
                 data[i] = indices[i];
         }
 
