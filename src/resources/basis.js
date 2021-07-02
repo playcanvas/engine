@@ -217,6 +217,7 @@ const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
 
 // global state
 const queue = new BasisQueue();
+let lazyConfig = null;
 let initializing = false;
 
 /**
@@ -227,6 +228,8 @@ let initializing = false;
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
+ * @param {boolean} [config.lazyInit] - Wait for first transcode request before initializing basis
+ * (default is false). Otherwise initialize basis immediately.
  * @param {number} [config.numWorkers] - Number of workers to use for transcoding (default is 1). While it is
  * possible to improve transcode performance using multiple workers, this will likely depend on the runtime
  * platform. For example, desktop will likely benefit from more workers compared to mobile. Also
@@ -247,9 +250,14 @@ function basisInitialize(config) {
         return;
     }
 
-    config = config || {};
+    if (!config) {
+        config = lazyConfig || {};
+    } else if (config.lazyInit) {
+        lazyConfig = config;
+        return;
+    }
 
-    // if any URLs are not specified in the config, search for them in the global PC config structure
+    // if any URLs are not specified in the config, take them from the global PC config structure
     if (!config.glueUrl || !config.wasmUrl || !config.fallbackUrl) {
         const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
         const wasmModule = modules.find(function (m) {

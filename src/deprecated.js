@@ -1076,6 +1076,7 @@ export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
     basisInitialize({
         glueUrl: glueUrl,
         wasmUrl: wasmUrl,
-        fallbackUrl: fallbackUrl
+        fallbackUrl: fallbackUrl,
+        lazyInit: true
     });
 }
