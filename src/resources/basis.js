@@ -228,8 +228,8 @@ let initializing = false;
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
- * @param {boolean} [config.lazyInit] - Wait for first transcode request before initializing basis
- * (default is false). Otherwise initialize basis immediately.
+ * @param {boolean} [config.lazyInit] - Wait for first transcode request before initializing Basis
+ * (default is false). Otherwise initialize Basis immediately.
  * @param {number} [config.numWorkers] - Number of workers to use for transcoding (default is 1). While it is
  * possible to improve transcode performance using multiple workers, this will likely depend on the runtime
  * platform. For example, desktop will likely benefit from more workers compared to mobile. Also
