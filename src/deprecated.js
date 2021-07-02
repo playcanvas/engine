@@ -108,6 +108,7 @@ import {
 } from './framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+import { basisInitialize } from './resources/basis.js';
 
 // CORE
 
@@ -1067,3 +1068,14 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
 };
+
+export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
+    // #endif
+    basisInitialize({
+        glueUrl: glueUrl,
+        wasmUrl: wasmUrl,
+        fallbackUrl: fallbackUrl
+    });
+}
