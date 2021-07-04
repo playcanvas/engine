@@ -38,6 +38,24 @@ class LightsExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
+
+
+
+
+        // enabled clustered lighting. This is a temporary API and will change in the future
+        pc.LayerComposition.clusteredLightingEnabled = true;
+
+        // adjust default clusterered lighting parameters to handle many lights:
+        // 1) subdivide space with lights into this many cells:
+        app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
+
+        // 2) and allow this many lights per cell:
+        app.scene.layers.clusteredLightingMaxLights = 48;
+
+
+
+
+
         // Load a model file and create a Entity with a model component
         const entity = new pc.Entity();
         entity.addComponent("model", {
@@ -86,9 +104,8 @@ class LightsExample extends Example {
             shadowResolution: 2048,
 
             // heart texture's alpha channel as a cookie texture
-            cookie: assets.heart.resource,
-            // cookie: assets.heart.asset.resource,
-            cookieChannel: "a"
+            // cookie: assets.heart.resource,
+            // cookieChannel: "a"
         });
 
         const cone = new pc.Entity();
@@ -191,6 +208,13 @@ class LightsExample extends Example {
                     "\n[Key 2] Spot light: " + spotlight.enabled +
                     "\n[Key 3] Directional light: " + directionallight.enabled;
             }
+
+
+
+            if (spotlight.light.light.shadowMap) {
+                app.renderTexture(0.7, 0.7, 0.4, 0.4, spotlight.light.light.shadowMap.texture);
+            }
+
         });
     }
 }
