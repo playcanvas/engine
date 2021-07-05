@@ -53,6 +53,7 @@ class BatchingDynamicExample extends Example {
             entity.addComponent("render", {
                 type: shapeName,
                 material: Math.random() < 0.5 ? material1 : material2,
+                castShadows: true,
 
                 // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
                 // there will be at least 2 draw calls, one for each material
@@ -66,6 +67,16 @@ class BatchingDynamicExample extends Example {
             entities.push(entity);
         }
 
+        // Create an Entity for the ground
+        const ground = new pc.Entity();
+        ground.addComponent("render", {
+            type: "box",
+            material: material2
+        });
+        ground.setLocalScale(150, 1, 150);
+        ground.setLocalPosition(0, -26, 0);
+        app.root.addChild(ground);
+
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -77,7 +88,11 @@ class BatchingDynamicExample extends Example {
         // Add it as a child of a camera to rotate with the camera
         const light = new pc.Entity();
         light.addComponent("light", {
-            type: "directional"
+            type: "directional",
+            castShadows: true,
+            shadowBias: 0.2,
+            normalOffsetBias: 0.06,
+            shadowDistance: 150
         });
         camera.addChild(light);
         light.setLocalEulerAngles(15, 30, 0);
