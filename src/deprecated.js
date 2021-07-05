@@ -68,7 +68,7 @@ import { Scene } from './scene/scene.js';
 import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
-import { Batch } from './scene/batching/batch.js'
+import { Batch } from './scene/batching/batch.js';
 
 import { Animation, Key, Node } from './animation/animation.js';
 import { Skeleton } from './animation/skeleton.js';

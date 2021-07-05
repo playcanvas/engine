@@ -17,7 +17,6 @@ import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { Model } from '../model.js';
 
 import { Batch } from './batch.js';
 import { BatchGroup } from './batch-group.js';
