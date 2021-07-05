@@ -1051,6 +1051,9 @@ function getShapePrimitive(device, type) {
                 throw new Error("Invalid primitive type: " + type);
         }
 
+        // inc reference to keep primitive alive
+        mesh.incRefCount();
+
         primData = { mesh: mesh, area: area };
 
         // add to cache

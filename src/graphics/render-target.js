@@ -2,7 +2,7 @@ import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
 import { GraphicsDevice } from './graphics-device.js';
 
-var defaultOptions = {
+const defaultOptions = {
     depth: true,
     face: 0
 };
@@ -56,8 +56,8 @@ var defaultOptions = {
  */
 class RenderTarget {
     constructor(options) {
-        var _arg2 = arguments[1];
-        var _arg3 = arguments[2];
+        const _arg2 = arguments[1];
+        const _arg3 = arguments[2];
 
         if (options instanceof GraphicsDevice) {
             // old constructor
@@ -90,7 +90,7 @@ class RenderTarget {
         this._face = (options.face !== undefined) ? options.face : 0;
 
         if (this._depthBuffer) {
-            var format = this._depthBuffer._format;
+            const format = this._depthBuffer._format;
             if (format === PIXELFORMAT_DEPTH) {
                 this._depth = true;
                 this._stencil = false;
@@ -135,9 +135,9 @@ class RenderTarget {
      */
     destroy() {
 
-        var device = this._device;
+        const device = this._device;
         if (device) {
-            var idx = device.targets.indexOf(this);
+            const idx = device.targets.indexOf(this);
             if (idx !== -1) {
                 device.targets.splice(idx, 1);
             }
@@ -148,9 +148,9 @@ class RenderTarget {
 
     destroyFrameBuffers() {
 
-        var device = this._device;
+        const device = this._device;
         if (device) {
-            var gl = device.gl;
+            const gl = device.gl;
             if (this._glFrameBuffer) {
                 gl.deleteFramebuffer(this._glFrameBuffer);
                 this._glFrameBuffer = null;
@@ -217,7 +217,7 @@ class RenderTarget {
         if (!this._device) return;
         if (!this._device.webgl2) return;
 
-        var gl = this._device.gl;
+        const gl = this._device.gl;
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
         gl.blitFramebuffer(0, 0, this.width, this.height,

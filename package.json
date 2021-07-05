@@ -69,12 +69,12 @@
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "0.0.32",
     "mocha": "^9.0.1",
-    "rollup": "^2.52.2",
+    "rollup": "^2.52.6",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-terser": "7.0.2",
     "sinon": "^11.1.1",
     "tsd-jsdoc": "2.5.0",
-    "typescript": "^4.3.4"
+    "typescript": "^4.3.5"
   },
   "scripts": {
     "build": "rollup -c",
