@@ -155,6 +155,9 @@ class Lightmapper {
         MeshInstance.decRefLightmap(this.blackTex);
         this.blackTex = null;
 
+        // destroy all lightmaps
+        MeshInstance.destroyLightmapCache();
+
         this.device = null;
         this.root = null;
         this.scene = null;
