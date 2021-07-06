@@ -12,10 +12,18 @@ import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
 const basic = {
     generateKey: function (options) {
         let key = 'basic';
-        if (options.fog)          key += '_fog';
-        if (options.alphaTest)    key += '_atst';
-        if (options.vertexColors) key += '_vcol';
-        if (options.diffuseMap)   key += '_diff';
+        if (options.fog)                    key += '_fog';
+        if (options.alphaTest)              key += '_atst';
+        if (options.vertexColors)           key += '_vcol';
+        if (options.diffuseMap)             key += '_diff';
+        if (options.skin)                   key += '_skin';
+
+        if (options.screenSpace)            key += '_ss';
+        if (options.useInstancing)          key += '_inst';
+        if (options.useMorphPosition)       key += '_morphp';
+        if (options.useMorphNormal)         key += '_morphn';
+        if (options.useMorphTextureBased)   key += '_morpht';
+
         key += '_' + options.pass;
         return key;
     },
