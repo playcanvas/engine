@@ -36,6 +36,7 @@ import { GraphNode } from '../graph-node.js';
 import { StandardMaterial } from '../materials/standard-material.js';
 
 import { BakeLight } from './bake-light.js';
+import { LightmapCache } from './lightmap-cache.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -113,11 +114,11 @@ class Lightmapper {
     destroy() {
 
         // release reference to the texture
-        MeshInstance.decRefLightmap(this.blackTex);
+        LightmapCache.decRef(this.blackTex);
         this.blackTex = null;
 
         // destroy all lightmaps
-        MeshInstance.destroyLightmapCache();
+        LightmapCache.destroy();
 
         this.device = null;
         this.root = null;
@@ -153,7 +154,7 @@ class Lightmapper {
             this.blackTex.name = 'lightmapBlack';
 
             // incref black texture in the cache to avoid it being destroyed
-            MeshInstance.incRefLightmap(this.blackTex);
+            LightmapCache.incRef(this.blackTex);
 
             // camera used for baking
             const camera = new Camera();
@@ -175,7 +176,7 @@ class Lightmapper {
 
         function destroyRT(rt) {
             // this can cause ref count to be 0 and texture destroyed
-            MeshInstance.decRefLightmap(rt.colorBuffer);
+            LightmapCache.decRef(rt.colorBuffer);
 
             // destroy render target itself
             rt.destroy();
@@ -558,7 +559,7 @@ class Lightmapper {
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_lightmap_" + i));
-                MeshInstance.incRefLightmap(tex);
+                LightmapCache.incRef(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget({
                     colorBuffer: tex,
                     depth: false
@@ -568,7 +569,7 @@ class Lightmapper {
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_temp_lightmap_" + size));
-                MeshInstance.incRefLightmap(tex);
+                LightmapCache.incRef(tex);
                 this.renderTargets.set(size, new RenderTarget({
                     colorBuffer: tex,
                     depth: false
