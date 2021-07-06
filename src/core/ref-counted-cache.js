@@ -10,9 +10,8 @@ class RefCountedCache {
 
     // destroy all stored objects
     destroy() {
-        console.log("RefCountedCache destroy");
-        this.cache.forEach((refCount, lightmap) => {
-            lightmap.destroy();
+        this.cache.forEach((refCount, object) => {
+            object.destroy();
         });
         this.cache.clear();
     }
