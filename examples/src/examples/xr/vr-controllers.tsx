@@ -5,7 +5,7 @@ import Example from '../../app/example';
 
 class VRTemplateExample extends Example {
     static CATEGORY = 'XR';
-    static NAME = 'VR ';
+    static NAME = 'VR Controllers';
 
     load() {
         return <>
