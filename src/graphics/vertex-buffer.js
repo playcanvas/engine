@@ -47,8 +47,8 @@ class VertexBuffer {
      * @description Frees resources associated with this vertex buffer.
      */
     destroy() {
-        var device = this.device;
-        var idx = device.buffers.indexOf(this);
+        const device = this.device;
+        const idx = device.buffers.indexOf(this);
         if (idx !== -1) {
             device.buffers.splice(idx, 1);
         }
@@ -56,7 +56,7 @@ class VertexBuffer {
         if (this.bufferId) {
 
             // clear up bound vertex buffers
-            var gl = device.gl;
+            const gl = device.gl;
             device.boundVao = null;
             gl.bindVertexArray(null);
 
@@ -124,13 +124,13 @@ class VertexBuffer {
      */
     unlock() {
         // Upload the new vertex data
-        var gl = this.device.gl;
+        const gl = this.device.gl;
 
         if (!this.bufferId) {
             this.bufferId = gl.createBuffer();
         }
 
-        var glUsage;
+        let glUsage;
         switch (this.usage) {
             case BUFFER_STATIC:
                 glUsage = gl.STATIC_DRAW;

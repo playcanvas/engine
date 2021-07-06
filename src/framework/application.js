@@ -2063,7 +2063,7 @@ class Application extends EventHandler {
         this.lightmapper.destroy();
         this.lightmapper = null;
 
-        this.batcher.destroyManager();
+        this.batcher.destroy();
         this.batcher = null;
 
         this._entityIndex = {};

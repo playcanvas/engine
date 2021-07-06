@@ -9,20 +9,28 @@ import {
 
 import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
 
-var basic = {
+const basic = {
     generateKey: function (options) {
-        var key = 'basic';
-        if (options.fog)          key += '_fog';
-        if (options.alphaTest)    key += '_atst';
-        if (options.vertexColors) key += '_vcol';
-        if (options.diffuseMap)   key += '_diff';
+        let key = 'basic';
+        if (options.fog)                    key += '_fog';
+        if (options.alphaTest)              key += '_atst';
+        if (options.vertexColors)           key += '_vcol';
+        if (options.diffuseMap)             key += '_diff';
+        if (options.skin)                   key += '_skin';
+
+        if (options.screenSpace)            key += '_ss';
+        if (options.useInstancing)          key += '_inst';
+        if (options.useMorphPosition)       key += '_morphp';
+        if (options.useMorphNormal)         key += '_morphn';
+        if (options.useMorphTextureBased)   key += '_morpht';
+
         key += '_' + options.pass;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
         // GENERATE ATTRIBUTES
-        var attributes = {
+        const attributes = {
             vertex_position: SEMANTIC_POSITION
         };
         if (options.skin) {
@@ -37,7 +45,7 @@ var basic = {
         }
 
         // GENERATE VERTEX SHADER
-        var code = '';
+        let code = '';
 
         // VERTEX SHADER DECLARATIONS
         code += shaderChunks.transformDeclVS;
@@ -88,7 +96,7 @@ var basic = {
 
         code += end();
 
-        var vshader = code;
+        const vshader = code;
 
         // GENERATE FRAGMENT SHADER
         code = precisionCode(device);
@@ -147,7 +155,7 @@ var basic = {
 
         code += end();
 
-        var fshader = code;
+        const fshader = code;
 
         return {
             attributes: attributes,

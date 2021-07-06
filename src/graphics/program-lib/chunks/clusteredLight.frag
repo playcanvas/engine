@@ -22,7 +22,7 @@ float DecodeClusterFloat2(vec2 data) {
 
 void EvaluateClusterLight(float lightIndex) {
 
-    // read point light properties
+    // read omni light properties
     float lightV = (lightIndex + 0.5) * lightsTextureInvSize.w;
 
     // shared data from 8bit texture
@@ -84,7 +84,7 @@ void EvaluateClusterLight(float lightIndex) {
 
     #endif
 
-    // evaluate point light
+    // evaluate omni light
     getLightDirPoint(lightPos);
     dAtten = getFalloffLinear(range);
     if (dAtten > 0.00001) {

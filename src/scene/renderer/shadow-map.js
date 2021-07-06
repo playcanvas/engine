@@ -25,7 +25,7 @@ class ShadowMap {
 
         // an array of render targets:
         // 1 for directional and spot light
-        // 6 for point light
+        // 6 for omni light
         this.renderTargets = targets;
     }
 

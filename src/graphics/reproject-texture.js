@@ -137,7 +137,7 @@ function reprojectTexture(source, target, options = {}) {
     }
 
     // #if _DEBUG
-    device.popMarker("");
+    device.popMarker();
     // #endif
 }
 

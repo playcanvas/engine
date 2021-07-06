@@ -202,7 +202,7 @@ import viewNormalVS from './viewNormal.vert';
  * @name shaderChunks
  * @description Object containing all default shader chunks used by shader generators.
  */
-var shaderChunks = {
+const shaderChunks = {
     alphaTestPS: alphaTestPS,
     ambientConstantPS: ambientConstantPS,
     ambientPrefilteredCubePS: ambientPrefilteredCubePS,

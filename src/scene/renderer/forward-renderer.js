@@ -1024,6 +1024,11 @@ class ForwardRenderer {
 
     // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
     drawInstance(device, meshInstance, mesh, style, normal) {
+
+        // #if _DEBUG
+        device.pushMarker(meshInstance.node.name);
+        // #endif
+
         instancingData = meshInstance.instancingData;
         if (instancingData) {
             if (instancingData.count > 0) {
@@ -1052,11 +1057,21 @@ class ForwardRenderer {
 
             device.draw(mesh.primitive[style]);
         }
+
+        // #if _DEBUG
+        device.popMarker();
+        // #endif
+
         return 0;
     }
 
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
+
+        // #if _DEBUG
+        device.pushMarker(meshInstance.node.name);
+        // #endif
+
         instancingData = meshInstance.instancingData;
         if (instancingData) {
             if (instancingData.count > 0) {
@@ -1072,6 +1087,11 @@ class ForwardRenderer {
             // matrices are already set
             device.draw(mesh.primitive[style], undefined, true);
         }
+
+        // #if _DEBUG
+        device.popMarker();
+        // #endif
+
         return 0;
     }
 

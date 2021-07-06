@@ -68,7 +68,7 @@ class MaterialTranslucentSpecularExample extends Example {
 
             const sphere = new pc.Entity();
 
-            sphere.addComponent("model", {
+            sphere.addComponent("render", {
                 material: material,
                 type: "sphere"
             });
