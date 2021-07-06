@@ -186,6 +186,11 @@ class MeshInstance {
         this._lightmapCache.decRef(texture);
     }
 
+    static destroyLightmapCache() {
+        this._lightmapCache.destroy();
+        this._lightmapCache = null;
+    }
+
     get renderStyle() {
         return this._renderStyle;
     }

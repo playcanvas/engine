@@ -8,6 +8,15 @@ class RefCountedCache {
         this.cache = new Map();
     }
 
+    // destroy all stored objects
+    destroy() {
+        console.log("RefCountedCache destroy");
+        this.cache.forEach((refCount, lightmap) => {
+            lightmap.destroy();
+        });
+        this.cache.clear();
+    }
+
     // add object reference to the cache
     incRef(object) {
         const refCount = (this.cache.get(object) || 0) + 1;
