@@ -554,13 +554,13 @@ class ImageElement {
 
             // Update vertex texture coordinates
             vertexDataF32[6] = rect.x / atlasTextureWidth;
-            vertexDataF32[7] = rect.y / atlasTextureHeight;
+            vertexDataF32[7] = 1.0 - rect.y / atlasTextureHeight;
             vertexDataF32[14] = (rect.x + rect.z) / atlasTextureWidth;
-            vertexDataF32[15] = rect.y / atlasTextureHeight;
+            vertexDataF32[15] = 1.0 - rect.y / atlasTextureHeight;
             vertexDataF32[22] = (rect.x + rect.z) / atlasTextureWidth;
-            vertexDataF32[23] = (rect.y + rect.w) / atlasTextureHeight;
+            vertexDataF32[23] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
             vertexDataF32[30] = rect.x / atlasTextureWidth;
-            vertexDataF32[31] = (rect.y + rect.w) / atlasTextureHeight;
+            vertexDataF32[31] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
 
             vb.unlock();
 
