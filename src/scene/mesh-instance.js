@@ -312,26 +312,23 @@ class MeshInstance {
     }
 
     set material(material) {
-        var i;
-        for (i = 0; i < this._shader.length; i++) {
+        for (let i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
-        }
-        // Remove the material's reference to this mesh instance
-        if (this._material) {
-            var meshInstances = this._material.meshInstances;
-            i = meshInstances.indexOf(this);
-            if (i !== -1) {
-                meshInstances.splice(i, 1);
-            }
         }
 
         var prevMat = this._material;
 
+        // Remove the material's reference to this mesh instance
+        if (prevMat) {
+            prevMat.removeMeshInstanceRef(this);
+        }
+
         this._material = material;
 
         if (this._material) {
+
             // Record that the material is referenced by this mesh instance
-            this._material.meshInstances.push(this);
+            this._material.addMeshInstanceRef(this);
 
             this.updateKey();
 

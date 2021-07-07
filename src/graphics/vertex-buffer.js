@@ -27,6 +27,9 @@ class VertexBuffer {
         // vertex array object
         this._vao = null;
 
+        // marks vertex buffer as instancing data
+        this.instancing = false;
+
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
         graphicsDevice._vram.vb += this.numBytes;
