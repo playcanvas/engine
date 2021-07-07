@@ -173,7 +173,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
     } else {
         const bufferView = bufferViews[gltfAccessor.bufferView];
         result = new dataType(bufferView.buffer,
-                              bufferView.byteOffset + (gltfAccessor.hasOwnProperty('byteOffset') ? gltfAccessor.byteOffset : 0),
+                              bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
                               gltfAccessor.count * numComponents);
     }
 
@@ -419,8 +419,10 @@ const createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
             targetStride = target.stride / 4;
 
             source = sourceDesc[target.name];
-            sourceArray = new Uint32Array(source.buffer, source.offset, source.count * source.stride / 4);
             sourceStride = source.stride / 4;
+            // ensure we don't go beyond the end of the arraybuffer when dealing with
+            // interlaced vertex formats
+            sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + source.size / 4);
 
             let src = 0;
             let dst = target.offset / 4;
@@ -1790,7 +1792,10 @@ const loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, option
                 callback(err);
             } else {
                 if (gltfImageIndex === undefined || gltfImageIndex === null) {
-                    gltfImageIndex = gltfTexture.source;
+                    gltfImageIndex = gltfTexture?.extensions?.KHR_texture_basisu?.source;
+                    if (gltfImageIndex === undefined) {
+                        gltfImageIndex = gltfTexture.source;
+                    }
                 }
 
                 if (assets[gltfImageIndex]) {
@@ -2035,7 +2040,7 @@ const parseBufferViewsAsync = function (gltf, buffers, options, callback) {
             } else {
                 const buffer = buffers[gltfBufferView.buffer];
                 const typedArray = new Uint8Array(buffer.buffer,
-                                                  buffer.byteOffset + (gltfBufferView.hasOwnProperty('byteOffset') ? gltfBufferView.byteOffset : 0),
+                                                  buffer.byteOffset + (gltfBufferView.byteOffset || 0),
                                                   gltfBufferView.byteLength);
                 onLoad(i, typedArray);
             }
