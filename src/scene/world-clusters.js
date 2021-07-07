@@ -485,7 +485,7 @@ class WorldClusters {
 
             // use enabled and visible lights
             const light = lights[i];
-            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame) {
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0) {
 
                 // within light limit
                 if (lightIndex < this.maxLights) {

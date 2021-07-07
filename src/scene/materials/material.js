@@ -425,17 +425,30 @@ class Material {
         this.variants = {};
         this.shader = null;
 
-        var meshInstance, j;
-        for (var i = 0; i < this.meshInstances.length; i++) {
-            meshInstance = this.meshInstances[i];
-            for (j = 0; j < meshInstance._shader.length; j++) {
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            const meshInstance = this.meshInstances[i];
+            for (let j = 0; j < meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            var defaultMaterial = Material.defaultMaterial;
+            const defaultMaterial = Material.defaultMaterial;
             if (this !== defaultMaterial) {
                 meshInstance.material = defaultMaterial;
             }
+        }
+    }
+
+    // registers mesh instance as referencing the material
+    addMeshInstanceRef(meshInstance) {
+        this.meshInstances.push(meshInstance);
+    }
+
+    // de-registers mesh instance as referencing the material
+    removeMeshInstanceRef(meshInstance) {
+        const meshInstances = this.meshInstances;
+        const i = meshInstances.indexOf(meshInstance);
+        if (i !== -1) {
+            meshInstances.splice(i, 1);
         }
     }
 }

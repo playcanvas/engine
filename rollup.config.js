@@ -6,7 +6,12 @@ import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
 
 const execSync = require('child_process').execSync;
-const revision = execSync('git rev-parse --short HEAD').toString().trim();
+let revision;
+try {
+    revision = execSync('git rev-parse --short HEAD').toString().trim();
+} catch (e) {
+    revision = 'unknown';
+}
 
 function getBanner(config) {
     return [

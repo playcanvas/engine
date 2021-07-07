@@ -12,7 +12,7 @@ class HelloWorldExample extends Example {
 
         // create box entity
         const box = new pc.Entity('cube');
-        box.addComponent('model', {
+        box.addComponent('render', {
             type: 'box'
         });
         app.root.addChild(box);

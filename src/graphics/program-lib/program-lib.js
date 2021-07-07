@@ -4,7 +4,7 @@ import { particle } from './programs/particle.js';
 import { skybox } from './programs/skybox.js';
 import { standard } from './programs/standard.js';
 
-var programlib = {
+const programlib = {
     begin: begin,
     dummyFragmentCode: dummyFragmentCode,
     end: end,

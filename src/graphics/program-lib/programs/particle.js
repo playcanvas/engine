@@ -4,10 +4,10 @@ import { shaderChunks } from '../chunks/chunks.js';
 import { collectAttribs } from '../utils.js';
 import { gammaCode, precisionCode, tonemapCode } from './common.js';
 
-var particle = {
+const particle = {
     generateKey: function (options) {
-        var key = "particle";
-        for (var prop in options) {
+        let key = "particle";
+        for (const prop in options) {
             if (options.hasOwnProperty(prop)) {
                 key += options[prop];
             }
@@ -16,15 +16,15 @@ var particle = {
     },
 
     _animTex: function (options) {
-        var vshader = "";
+        let vshader = "";
         vshader += options.animTexLoop ? shaderChunks.particleAnimFrameLoopVS : shaderChunks.particleAnimFrameClampVS;
         vshader += shaderChunks.particleAnimTexVS;
         return vshader;
     },
 
     createShaderDefinition: function (device, options) {
-        var vshader = "";
-        var fshader = precisionCode(device) + "\n";
+        let vshader = "";
+        let fshader = precisionCode(device) + "\n";
         fshader += '#define PARTICLE\n';
 
         if (device.webgl2) {
@@ -43,7 +43,7 @@ var particle = {
         if (options.normal === 1) vshader += "\nvarying vec3 Normal;\n";
         if (options.soft) vshader += "\nvarying float vDepth;\n";
 
-        var faceVS = options.customFace ? shaderChunks.particle_customFaceVS : shaderChunks.particle_billboardVS;
+        const faceVS = options.customFace ? shaderChunks.particle_customFaceVS : shaderChunks.particle_billboardVS;
 
         if (!options.useCpu) {
             vshader += shaderChunks.particle_initVS;
@@ -117,7 +117,7 @@ var particle = {
         }
         fshader += shaderChunks.particle_endPS;
 
-        var attributes = collectAttribs(vshader);
+        const attributes = collectAttribs(vshader);
 
         return {
             attributes: attributes,

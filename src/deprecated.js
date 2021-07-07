@@ -68,6 +68,7 @@ import { Scene } from './scene/scene.js';
 import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
+import { Batch } from './scene/batching/batch.js';
 
 import { Animation, Key, Node } from './animation/animation.js';
 import { Skeleton } from './animation/skeleton.js';
@@ -108,6 +109,7 @@ import {
 } from './framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+import { basisInitialize } from './resources/basis.js';
 
 // CORE
 
@@ -505,6 +507,15 @@ export var scene = {
     Skin: Skin,
     SkinInstance: SkinInstance
 };
+
+Object.defineProperty(Batch.prototype, 'model', {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');
+        // #endif
+        return null;
+    }
+});
 
 Morph.prototype.getTarget = function (index) {
     // #if _DEBUG
@@ -1067,3 +1078,15 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
 };
+
+export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
+    // #endif
+    basisInitialize({
+        glueUrl: glueUrl,
+        wasmUrl: wasmUrl,
+        fallbackUrl: fallbackUrl,
+        lazyInit: true
+    });
+}

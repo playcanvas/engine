@@ -146,15 +146,10 @@ class AreaLightsExample extends Example {
         // create ground plane
         createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
 
-        // Create a model entity and assign the statue model
-        const statue = new pc.Entity();
-        statue.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
+        // get the instance of the statue and set up with render component
+        const statue = assets.statue.resource.instantiateRenderEntity();
         statue.setLocalScale(0.4, 0.4, 0.4);
         app.root.addChild(statue);
-
 
         // Create the camera, which renders entities
         const camera = new pc.Entity();
