@@ -65,7 +65,7 @@ class LightsBakedExample extends Example {
         app.root.addChild(light);
         light.setLocalEulerAngles(45, 30, 0);
 
-        // Create an entity with a point light component that is configured as a baked light
+        // Create an entity with an omni light component that is configured as a baked light
         const lightPoint = new pc.Entity();
         lightPoint.addComponent("light", {
             affectDynamic: false,

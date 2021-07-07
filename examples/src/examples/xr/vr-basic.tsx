@@ -53,7 +53,7 @@ class VRBasicExample extends Example {
 
         const createCube = function (x: number, y: number, z: number) {
             const cube = new pc.Entity();
-            cube.addComponent("model", {
+            cube.addComponent("render", {
                 type: "box"
             });
             cube.setLocalScale(1, 1, 1);

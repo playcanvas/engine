@@ -430,7 +430,7 @@ class Scene extends EventHandler {
 
             var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
             if (skyLayer) {
-                var node = new GraphNode();
+                var node = new GraphNode("Skybox");
                 var mesh = createBox(device);
                 var meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;

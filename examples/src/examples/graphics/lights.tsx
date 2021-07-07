@@ -38,10 +38,9 @@ class LightsExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
-        // Load a model file and create a Entity with a model component
-        const entity = assets.statue.resource.instantiateRenderEntity({
-            castShadows: true
-        });
+        // create an entity with the statue
+        const entity = assets.statue.resource.instantiateRenderEntity();
+
         app.root.addChild(entity);
 
         // Create an Entity with a camera component
@@ -53,19 +52,20 @@ class LightsExample extends Example {
         camera.rotate(-14, 0, 0);
         app.root.addChild(camera);
 
-        // Create an Entity for the ground
-        const ground = new pc.Entity();
-        ground.addComponent("model", {
-            type: "box"
-        });
-        ground.setLocalScale(70, 1, 70);
-        ground.setLocalPosition(0, -0.5, 0);
-
+        // ground material
         const material = createMaterial({
             ambient: pc.Color.GRAY,
             diffuse: pc.Color.GRAY
         });
-        ground.model.material = material;
+
+        // Create an Entity for the ground
+        const ground = new pc.Entity();
+        ground.addComponent("render", {
+            type: "box",
+            material: material
+        });
+        ground.setLocalScale(70, 1, 70);
+        ground.setLocalPosition(0, -0.5, 0);
         app.root.addChild(ground);
 
         // Create an spot light

@@ -155,6 +155,9 @@ class Lightmapper {
         MeshInstance.decRefLightmap(this.blackTex);
         this.blackTex = null;
 
+        // destroy all lightmaps
+        MeshInstance.destroyLightmapCache();
+
         this.device = null;
         this.root = null;
         this.scene = null;
@@ -775,7 +778,7 @@ class Lightmapper {
         }
 
         // per meshInstance culling for spot light only
-        // (point lights cull per face later, directional lights don't cull)
+        // (omni lights cull per face later, directional lights don't cull)
         if (light.type === LIGHTTYPE_SPOT) {
             let nodeVisible = false;
 

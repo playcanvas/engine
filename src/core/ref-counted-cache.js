@@ -8,6 +8,14 @@ class RefCountedCache {
         this.cache = new Map();
     }
 
+    // destroy all stored objects
+    destroy() {
+        this.cache.forEach((refCount, object) => {
+            object.destroy();
+        });
+        this.cache.clear();
+    }
+
     // add object reference to the cache
     incRef(object) {
         const refCount = (this.cache.get(object) || 0) + 1;

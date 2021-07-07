@@ -772,4 +772,24 @@ describe('I18n tests', function () {
 
         expect(asset.getLocalizedAssetId('zh-SG')).to.equal(2);
     });
+
+    it('findAvailableLocale() should find locale if translations have been provided for it', function () {
+        addText('no-IT', 'key', 'norwegian');
+        expect(app.i18n.findAvailableLocale('no-IT')).to.equal('no-IT');
+    });
+
+    it('findAvailableLocale() should fallback to en-US if translations have not been provided for the desired locale', function () {
+        addText('no-IT', 'key', 'norwegian');
+        expect(app.i18n.findAvailableLocale('de-DE')).to.equal('en-US');
+    });
+
+    it('findAvailableLocale() should fallback to zh-CN if translations are provided and zh-SG is the desired locale', function () {
+        addText('zh-CN', 'key', 'Chinese');
+        expect(app.i18n.findAvailableLocale('zh-SG')).to.equal('zh-CN');
+    });
+
+    it('findAvailableLocale() should fallback to en-GB if translations are provided and en-US is the desired locale', function () {
+        addText('en-GB', 'key', 'British');
+        expect(app.i18n.findAvailableLocale('en-US')).to.equal('en-GB');
+    });
 });
