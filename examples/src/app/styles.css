@@ -48,6 +48,10 @@ body {
     }
 }
 
+#codePane.multiple-files > .pcui-panel-content > section {
+    height: calc(100% - 52px) !important;
+}
+
 #sideBar {
     background-color: #324447;
     min-width: 280px;

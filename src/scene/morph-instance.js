@@ -295,7 +295,7 @@ class MorphInstance {
         }
 
         // #if _DEBUG
-        device.popMarker("");
+        device.popMarker();
         // #endif
     }
 

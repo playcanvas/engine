@@ -193,7 +193,7 @@ class ParticleGPUUpdater {
             this._setInputBounds();
 
         // #if _DEBUG
-        device.popMarker("");
+        device.popMarker();
         // #endif
     }
 }

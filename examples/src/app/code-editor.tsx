@@ -64,10 +64,15 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     useEffect(() => {
+        const codePane = document.getElementById('codePane');
+        if (files.length > 1) {
+            codePane.classList.add('multiple-files');
+        } else {
+            codePane.classList.remove('multiple-files');
+        }
         if (!files[selectedFile]) setSelectedFile(0);
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
-        const codePane = document.getElementById('codePane');
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
@@ -91,6 +96,11 @@ const CodeEditor = (props: CodeEditorProps) => {
             onMount={editorDidMount}
             onChange={onChange}
             onValidate={onValidate}
+            options={{
+                scrollbar: {
+                    horizontal: 'visible'
+                }
+            }}
         />
     </Panel>;
 };

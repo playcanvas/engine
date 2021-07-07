@@ -68,6 +68,7 @@ import { Scene } from './scene/scene.js';
 import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
+import { Batch } from './scene/batching/batch.js';
 
 import { Animation, Key, Node } from './animation/animation.js';
 import { Skeleton } from './animation/skeleton.js';
@@ -506,6 +507,15 @@ export var scene = {
     Skin: Skin,
     SkinInstance: SkinInstance
 };
+
+Object.defineProperty(Batch.prototype, 'model', {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');
+        // #endif
+        return null;
+    }
+});
 
 Morph.prototype.getTarget = function (index) {
     // #if _DEBUG
