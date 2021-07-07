@@ -1592,9 +1592,9 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     }
 
     // The original version of FACT generated incorrectly flipped V texture
-    // coordinates. We must compensate by -not- flipping V in this case. Once
+    // coordinates. We must compensate by flipping V in this case. Once
     // all models have been re-exported we can remove this flag.
-    const disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
+    const disableFlipV = !(gltf.asset && gltf.asset.generator === 'PlayCanvas');
 
     const nodes = createNodes(gltf, options);
     const scenes = createScenes(gltf, nodes);
