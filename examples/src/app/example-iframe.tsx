@@ -215,14 +215,12 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             // @ts-ignore
             if (hasBasisAssets()) {
                 // @ts-ignore
-                pc.basisDownload(
-                    'static/lib/basis/basis.wasm.js',
-                    'static/lib/basis/basis.wasm.wasm',
-                    'static/lib/basis/basis.js',
-                    function () {
-                        build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
-                    }
-                );
+                pc.basisInitialize({
+                    glueUrl: 'static/lib/basis/basis.wasm.js',
+                    wasmUrl: 'static/lib/basis/basis.wasm.wasm',
+                    fallbackUrl: 'static/lib/basis/basis.js'
+                });
+                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
             } else {
 
                 build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
