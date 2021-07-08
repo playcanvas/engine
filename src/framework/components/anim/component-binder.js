@@ -15,15 +15,20 @@ const c  = new Color();
 const q  = new Quat();
 
 class AnimComponentBinder extends DefaultAnimBinder {
-    constructor(animComponent, graph, layerName, mask) {
+    constructor(animComponent, graph, layerName, mask, index) {
         super(graph);
         this.animComponent = animComponent;
         this._mask = mask;
         this._layerName = layerName;
+        this._index = index;
     }
 
     get layerName() {
         return this._layerName;
+    }
+
+    get index() {
+        return this._index;
     }
 
     static _packFloat(values) {

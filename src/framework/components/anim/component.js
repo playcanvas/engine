@@ -44,7 +44,31 @@ class AnimComponent extends Component {
         this._parameters = {};
         // a collection of animated property targets
         this._targets = {};
+        // this._weights = null;
+        // this._totalWeight = null;
     }
+
+    // get weights() {
+    //     if (!this._weights) {
+    //         this._weights = this._layers.map((l) => l.weight);
+    //     }
+    //     return this._weights;
+    // }
+
+    // set weights(value) {
+    //     this._weights = value;
+    // }
+
+    // get totalWeight() {
+    //     if (!this._totalWeight) {
+    //         this._totalWeight = this._weights.reduce((a, b) => a + b);
+    //     }
+    //     return this._totalWeight;
+    // }
+
+    // set totalWeight(value) {
+    //     this._totalWeight = value;
+    // }
 
     get stateGraphAsset() {
         return this._stateGraphAsset;
@@ -232,7 +256,7 @@ class AnimComponent extends Component {
         } else {
             graph = this.entity;
         }
-        const animBinder = new AnimComponentBinder(this, graph, name, mask);
+        const animBinder = new AnimComponentBinder(this, graph, name, mask, order);
         const animEvaluator = new AnimEvaluator(animBinder);
         const controller = new AnimController(
             animEvaluator,
@@ -242,7 +266,7 @@ class AnimComponent extends Component {
             this._activate,
             this
         );
-        this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
+        this._layers.push(new AnimComponentLayer(name, controller, this, order, weight, blendType));
         this._layerIndices[name] = order;
     }
 
@@ -266,6 +290,10 @@ class AnimComponent extends Component {
         ];
         const transitions = [];
         this._addLayer({ name, states, transitions, order: this._layers.length, weight, mask, blendType });
+        if (this._weights) {
+            this._weights.push(weight);
+            this._totalWeight += weight;
+        }
     }
 
     /**

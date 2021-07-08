@@ -69,7 +69,6 @@ class AnimComponentSystem extends ComponentSystem {
                     for (var i = 0; i < component.layers.length; i++) {
                         component.layers[i].update(dt * component.speed);
                     }
-                    component.applyTargets();
                 }
             }
         }

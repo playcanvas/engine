@@ -496,7 +496,7 @@ class AnimController {
 
     update(dt) {
         if (!this._playing) {
-            return;
+            dt = 0;
         }
         let state;
         let animation;

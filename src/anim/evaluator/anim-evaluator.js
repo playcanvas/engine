@@ -1,3 +1,110 @@
+import { Quat } from '../../math/quat.js';
+import { Vec3 } from '../../math/vec3.js';
+import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
+
+class AnimTarget {
+    constructor(component) {
+        this._component = component;
+        this._mask = new Int8Array(component.layers.length);
+        this._weights = new Float32Array(component.layers.length);
+        this._totalWeight = 0;
+        this._counter = 0;
+        this._layerCounter = 1;
+        this._value = null;
+        // path: resolved.targetPath,
+        // mask: new Int8Array(this._binder.animComponent.layers.length),
+        // weights: new Float32Array(this._binder.animComponent.layers.length),
+        // totalWeight: 0,
+        // counter: 0,
+        // layerCounter: 1,
+        // weightChangeEvent: this._binder.animComponent.on(`layer.${0}.weight.change`, (value) => {
+        //     this._binder.animComponent.targets[animTarget.targetPath].weights[this._binder.index] = value;
+        //     const weights = this._binder.animComponent.targets[animTarget.targetPath].weights;
+        //     this._binder.animComponent.targets[animTarget.targetPath].totalWeight = weights.reduce((a, b) => a + b);
+        // })
+        this._layerEvts = {};
+    }
+
+    get mask() {
+        return this._mask;
+    }
+
+    set mask(value) {
+        this._mask = value;
+    }
+
+    get weights() {
+        return this._weights;
+    }
+
+    // set weights(value) {
+    //     this._weights = value;
+    // }
+
+    get totalWeight() {
+        return this._totalWeight;
+    }
+
+    set totalWeight(value) {
+        this._totalWeight = value;
+    }
+
+    get counter() {
+        return this._counter;
+    }
+
+    set counter(value) {
+        this._counter = value;
+    }
+
+    get layerCounter() {
+        return this._layerCounter;
+    }
+
+    set layerCounter(value) {
+        this._layerCounter = value;
+    }
+
+    get value() {
+        return this._value;
+    }
+
+    set value(value) {
+        this._value = value;
+    }
+
+    weight(index) {
+        if (this.totalWeight === 0) return 0;
+        return this.weights[index] / this.totalWeight;
+    }
+
+    setMask(index, value) {
+        this._mask[index] = value;
+        if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
+            this._mask = this._mask.fill(0, 0, index - 1);
+        }
+        this.updateWeights();
+        if (!this._layerEvts[index]) {
+            this._layerEvts[index] = this._component.on(`_layer.${index}.weight.update`, (value) => {
+                this._weights[index] = value;
+                this.updateWeights();
+            });
+        }
+    }
+
+    updateWeights() {
+        this._totalWeight = 0;
+        this._weights = this._component.layers.map((l, i) => {
+            this._totalWeight += this._mask[i] * l.weight;
+            return l.weight;
+        });
+    }
+
+    destroy() {
+        Object.values(this._layerEvts).forEach((e) => e.unbind());
+    }
+}
+
 /**
  * @private
  * @class
@@ -149,6 +256,31 @@ class AnimEvaluator {
                     }
 
                     targets[resolved.targetPath] = target;
+                    if (this._binder.animComponent) {
+                        let animTarget = this._binder.animComponent.targets[resolved.targetPath];
+                        if (!animTarget) {
+                            animTarget = new AnimTarget(this._binder.animComponent);
+                            // {
+                            //     path: resolved.targetPath,
+                            //     mask: new Int8Array(this._binder.animComponent.layers.length),
+                            //     weights: new Float32Array(this._binder.animComponent.layers.length),
+                            //     totalWeight: 0,
+                            //     counter: 0,
+                            //     layerCounter: 1,
+                            //     weightChangeEvent: this._binder.animComponent.on(`layer.${0}.weight.change`, (value) => {
+                            //         this._binder.animComponent.targets[animTarget.targetPath].weights[this._binder.index] = value;
+                            //         const weights = this._binder.animComponent.targets[animTarget.targetPath].weights;
+                            //         this._binder.animComponent.targets[animTarget.targetPath].totalWeight = weights.reduce((a, b) => a + b);
+                            //     })
+                            // };
+                            console.log(resolved.targetPath, animTarget.layerCounter);
+                        } else {
+                            animTarget.layerCounter++;
+                            console.log(resolved.targetPath, animTarget.layerCounter);
+                        }
+                        animTarget.setMask(this._binder.index, 1);
+                        this._binder.animComponent.targets[resolved.targetPath] = animTarget;
+                    }
                 }
 
                 // binding may have failed
@@ -195,6 +327,12 @@ class AnimEvaluator {
                     if (target.curves === 0) {
                         this._binder.unresolve(path);
                         delete targets[target.targetPath];
+                        if (this._binder.animComponent) {
+                            this._binder.animComponent.targets[target.targetPath].layerCounter--;
+                            if (this._binder.animComponent.targets[target.targetPath].layerCounter === 0) {
+                                delete this._binder.animComponent.targets[target.targetPath];
+                            }
+                        }
                     }
                 }
             }
@@ -317,18 +455,37 @@ class AnimEvaluator {
             if (targets.hasOwnProperty(path)) {
                 var target = targets[path];
                 if (this._binder.animComponent) {
-                    var targetData = this._binder.animComponent.targets[path];
-                    if (!targetData) {
-                        targetData = {
-                            setter: target.target.func,
-                            values: [target.value],
-                            layers: [this._binder.layerName]
-                        };
-                    } else {
-                        targetData.values.push(target.value);
-                        targetData.layers.push(this._binder.layerName);
+                    const animTarget = this._binder.animComponent.targets[path];
+                    if (animTarget.mask[this._binder.index]) {
+                        if (path.indexOf('localRotation') !== -1) {
+                            if (animTarget.counter === 0) animTarget.value = new Quat();
+                            animTarget.value.mul(new Quat().slerp(Quat.IDENTITY, new Quat(target.value), animTarget.weight(this._binder.index)));
+                        } else {
+                            if (animTarget.counter === 0) animTarget.value = new Vec3();
+                            animTarget.value.add(new Vec3(target.value).mulScalar(animTarget.weight(this._binder.index)));
+                        }
                     }
-                    this._binder.animComponent.targets[path] = targetData;
+                    animTarget.counter++;
+                    if (animTarget.counter === animTarget.layerCounter) {
+                        animTarget.counter = 0;
+                        let value;
+                        if (animTarget.value) {
+                            if (animTarget.value.constructor === Quat) {
+                                value = [
+                                    animTarget.value.x,
+                                    animTarget.value.y,
+                                    animTarget.value.z,
+                                    animTarget.value.w
+                                ];
+                            } else {
+                                value = animTarget.value.data;
+                            }
+                        }
+                        if (value) {
+                            target.target.func(value);
+                        }
+                        animTarget.value = null;
+                    }
                 } else {
                     target.target.func(target.value);
                 }
