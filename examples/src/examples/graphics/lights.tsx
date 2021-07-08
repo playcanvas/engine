@@ -40,6 +40,7 @@ class LightsExample extends Example {
 
         // create an entity with the statue
         const entity = assets.statue.resource.instantiateRenderEntity();
+
         app.root.addChild(entity);
 
         // Create an Entity with a camera component
