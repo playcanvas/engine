@@ -27,7 +27,8 @@ interface ExampleIframeProps {
     controls: any,
     assets: any,
     files: Array<File>,
-    debug?: boolean
+    debug?: boolean,
+    debugExample?: any
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
@@ -83,7 +84,28 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         Loader.load(app, children, onLoadedAssets);
     };
 
-    const executeScript = (script: string, pc: any, canvas: HTMLCanvasElement, app: pc.Application, assetManifest: any, exampleData: any) => {
+    const executeScript = (script: string, pc: any, canvas: HTMLCanvasElement, app: pc.Application, assets: any, data: any) => {
+        if (props.debugExample) {
+            // @ts-ignore
+            const args = {
+                pc,
+                canvas,
+                assets,
+                data,
+                wasmSupported,
+                loadWasmModuleAsync,
+                pcx
+            };
+
+            props.debugExample.init(assets);
+
+            // typescript compiles to strict mode js so we can't access the functions arguments property. We'll get them from it's string instead.
+            const exampleFuncString = props.debugExample.example.toString();
+            const exampleFuncArguments = exampleFuncString.substring(0, exampleFuncString.indexOf(')')).replace('function (', '').split(', ');
+            // @ts-ignore call the example function with it's required arguments
+            props.debugExample.example(...exampleFuncArguments.map((a: string) => args[a]));
+            return;
+        }
         // strip the function closure
         script = script.substring(script.indexOf("\n") + 1);
         script = script.substring(script.lastIndexOf("\n") + 1, -1);
@@ -96,7 +118,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         transformedScript = transformedScript.replace(appCall, '');
 
         // @ts-ignore: abstract class function
-        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', 'pcx', transformedScript).bind(window)(pc, canvas, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync, pcx);
+        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', 'pcx', transformedScript).bind(window)(pc, canvas, app, assets, data, wasmSupported, loadWasmModuleAsync, pcx);
     };
 
 
@@ -193,14 +215,12 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             // @ts-ignore
             if (hasBasisAssets()) {
                 // @ts-ignore
-                pc.basisDownload(
-                    'static/lib/basis/basis.wasm.js',
-                    'static/lib/basis/basis.wasm.wasm',
-                    'static/lib/basis/basis.js',
-                    function () {
-                        build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
-                    }
-                );
+                pc.basisInitialize({
+                    glueUrl: 'static/lib/basis/basis.wasm.js',
+                    wasmUrl: 'static/lib/basis/basis.wasm.wasm',
+                    fallbackUrl: 'static/lib/basis/basis.js'
+                });
+                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
             } else {
 
                 build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
