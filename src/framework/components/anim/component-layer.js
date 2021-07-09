@@ -234,6 +234,11 @@ class AnimComponentLayer {
         return this._controller.states;
     }
 
+    /**
+     * @name AnimComponentLayer#weight
+     * @type {number}
+     * @description The blending weight of this layer. Used when calculating the value of properties that are animated by more than one layer.
+     */
     get weight() {
         return this._weight;
     }

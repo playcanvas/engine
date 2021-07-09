@@ -85,10 +85,10 @@ class AnimTarget {
 
     updateWeights() {
         this._totalWeight = 0;
-        this._weights = this._component.layers.map((l, i) => {
-            this._totalWeight += this._mask[i] * l.weight;
-            return l.weight;
-        });
+        for (let i = 0; i < this._weights.length; i++) {
+            this._weights[i] = this._component.layers[i].weight;
+            this._totalWeight += this._mask[i] * this._weights[i];
+        }
     }
 
     updateValue(index, value) {
@@ -116,6 +116,8 @@ class AnimTarget {
             case (AnimTarget.TYPE_VEC3): {
                 return this._value.data;
             }
+            default:
+                return null;
         }
     }
 }

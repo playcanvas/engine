@@ -275,10 +275,6 @@ class AnimComponent extends Component {
         ];
         const transitions = [];
         this._addLayer({ name, states, transitions, order: this._layers.length, weight, mask, blendType });
-        if (this._weights) {
-            this._weights.push(weight);
-            this._totalWeight += weight;
-        }
     }
 
     /**
@@ -683,51 +679,6 @@ class AnimComponent extends Component {
         if (Number.isFinite(this._stateGraphAsset)) {
             this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
         }
-    }
-
-    applyTargets() {
-        var targetKeys = Object.keys(this._targets);
-        for (let i = 0; i < targetKeys.length; i++) {
-            const targetKey = targetKeys[i];
-            let totalWeight = 0;
-            const target = this._targets[targetKey];
-            if (targetKey.indexOf('localRotation') !== -1) {
-                // if the target contains a rotation then set the value as a weighted average of the layer values using a quarternion slerp
-                totalWeight = 0;
-                let weights = [];
-                for (let j = 0; j < target.values.length; j++) {
-                    const layer = this.findAnimationLayer(target.layers[j]);
-                    if (layer.blendType === ANIM_LAYER_OVERWRITE) {
-                        weights = weights.map(() => 0);
-                        totalWeight = 0;
-                    }
-                    weights.push(layer.weight);
-                    totalWeight += weights[j];
-                }
-                const value = new Quat();
-                for (let j = 0; j < target.values.length; j++) {
-                    value.mul(new Quat().slerp(Quat.IDENTITY, new Quat(target.values[j]), weights[j] / totalWeight));
-                }
-                target.setter([value.x, value.y, value.z, value.w]);
-            } else {
-                // if the target points to a vector then set the value as a linear combination of all layer values and their weights
-                let value = new Vec3();
-                let totalWeight = 0;
-                for (let j = 0; j < target.values.length; j++) {
-                    const layer = this.findAnimationLayer(target.layers[j]);
-                    if (layer.blendType === ANIM_LAYER_OVERWRITE) {
-                        value = new Vec3();
-                        totalWeight = 0;
-                    }
-                    const weight = layer.weight;
-                    totalWeight += weight;
-                    value.add(new Vec3(target.values[j]).mulScalar(weight));
-                }
-                value.mulScalar(1.0 / totalWeight);
-                target.setter([value.x, value.y, value.z]);
-            }
-        }
-        this._targets = {};
     }
 }
 
