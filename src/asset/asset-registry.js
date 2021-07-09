@@ -362,7 +362,6 @@ class AssetRegistry extends EventHandler {
 
         // load has completed on the resource
         var _loaded = function (err, resource, extra) {
-            asset.loaded = true;
             asset.loading = false;
 
             if (err) {
@@ -370,6 +369,8 @@ class AssetRegistry extends EventHandler {
                 self.fire("error:" + asset.id, err, asset);
                 asset.fire("error", err, asset);
             } else {
+                asset.loaded = true;
+
                 if (!script.legacy && asset.type === 'script') {
                     var handler = self._loader.getHandler('script');
                     if (handler._cache[asset.id] && handler._cache[asset.id].parentNode === document.head) {
