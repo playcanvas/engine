@@ -44,31 +44,16 @@ class AnimComponent extends Component {
         this._parameters = {};
         // a collection of animated property targets
         this._targets = {};
-        // this._weights = null;
-        // this._totalWeight = null;
+        this._dirtyWeights = false;
     }
 
-    // get weights() {
-    //     if (!this._weights) {
-    //         this._weights = this._layers.map((l) => l.weight);
-    //     }
-    //     return this._weights;
-    // }
+    get dirtyWeights() {
+        return this._dirtyWeights;
+    }
 
-    // set weights(value) {
-    //     this._weights = value;
-    // }
-
-    // get totalWeight() {
-    //     if (!this._totalWeight) {
-    //         this._totalWeight = this._weights.reduce((a, b) => a + b);
-    //     }
-    //     return this._totalWeight;
-    // }
-
-    // set totalWeight(value) {
-    //     this._totalWeight = value;
-    // }
+    set dirtyWeights(value) {
+        this._dirtyWeights = value;
+    }
 
     get stateGraphAsset() {
         return this._stateGraphAsset;

@@ -240,10 +240,7 @@ class AnimComponentLayer {
 
     set weight(value) {
         this._weight = value;
-        this._component.fire(`_layer.${this._index}.weight.update`, value);
-        // const weights = this._component.weights;
-        // weights[this._index] = value;
-        // this._component.weights = weights;
+        this._component.dirtyWeights = true;
     }
 
     get blendType() {
