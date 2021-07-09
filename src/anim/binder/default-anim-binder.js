@@ -135,6 +135,12 @@ class DefaultAnimBinder {
             const entityPath = path.entityPath.join('/');
             for (var i = 0; i < this._mask.length; i++) {
                 var maskItem = this._mask[i];
+                if (typeof maskItem === 'string') {
+                    if (entityPath.indexOf(maskItem) !== -1) {
+                        shouldAnimateNode = true;
+                    }
+                    break;
+                }
                 if (maskItem.children) {
                     if (entityPath.indexOf(maskItem.path) !== -1) {
                         shouldAnimateNode = true;
