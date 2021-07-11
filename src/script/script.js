@@ -103,6 +103,7 @@ createScript.reservedAttributes = reservedAttributes;
  * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to register the script type to.
  * By default it will use `Application.getApplication()` to get current {@link Application}.
+ * @return {Class<ScriptType>} - Same script, can be used for chaining
  * @example
  * // define a ES6 script class
  * class PlayerController extends pc.ScriptType {
@@ -129,7 +130,7 @@ function registerScript(script, name, app) {
         // #if _DEBUG
         console.error("This project is using the legacy script system. You cannot call pc.registerScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
         // #endif
-        return;
+        return script;
     }
 
     if (typeof script !== 'function')
@@ -150,6 +151,8 @@ function registerScript(script, name, app) {
     registry.add(script);
 
     ScriptHandler._push(script);
+
+    return script;
 }
 
 export { createScript, registerScript };
