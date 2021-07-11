@@ -194,6 +194,7 @@ class ScriptAttributes {
      * @param {object[]} [args.enum] - List of fixed choices for field, defined as array of objects, where key in object is a title of an option.
      * @param {object[]} [args.schema] - List of attributes for type 'json'. Each attribute description is an object with the same properties as regular script attributes
      * but with an added 'name' field to specify the name of each attribute in the JSON.
+     * @return {this}
      * @example
      * PlayerController.attributes.add('fullName', {
      *     type: 'string'
@@ -241,12 +242,12 @@ class ScriptAttributes {
             // #if _DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
             // #endif
-            return;
+            return this;
         } else if (ScriptAttributes.reservedNames.has(name)) {
             // #if _DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
             // #endif
-            return;
+            return this;
         }
 
         this.index[name] = args;
@@ -290,6 +291,8 @@ class ScriptAttributes {
                 this.fire(evtName, this.__attributes[name], oldCopy);
             }
         });
+
+        return this;
     }
 
     /**
