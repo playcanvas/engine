@@ -194,7 +194,7 @@ class ScriptAttributes {
      * @param {object[]} [args.enum] - List of fixed choices for field, defined as array of objects, where key in object is a title of an option.
      * @param {object[]} [args.schema] - List of attributes for type 'json'. Each attribute description is an object with the same properties as regular script attributes
      * but with an added 'name' field to specify the name of each attribute in the JSON.
-     * @return {this}
+     * @returns {this}
      * @example
      * PlayerController.attributes.add('fullName', {
      *     type: 'string'
