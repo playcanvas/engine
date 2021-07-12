@@ -69,8 +69,9 @@ class AnimComponentSystem extends ComponentSystem {
                     for (let i = 0; i < component.layers.length; i++) {
                         component.layers[i].update(dt * component.speed);
                     }
-                    for (let i = 0; i < Object.keys(component.consumedTriggers).length; i++) {
-                        component.parameters[Object.keys(component.consumedTriggers)[i]].value = false;
+                    const keys = Object.keys(component.consumedTriggers);
+                    for (let i = 0; i < keys.length; i++) {
+                        component.parameters[keys[i]].value = false;
                         component.consumedTriggers = {};
                     }
                 }
