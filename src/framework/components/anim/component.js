@@ -646,9 +646,13 @@ class AnimComponent extends Component {
      * @name AnimComponent#setTrigger
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
      * @param {string} name - The name of the parameter to set.
+     * @param {boolean} singleFrame - If true, this trigger will be set back to false at the end of the animation update. Defaults to false.
      */
-    setTrigger(name) {
+    setTrigger(name, singleFrame = false) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, true);
+        if (singleFrame) {
+            this._consumedTriggers[name] = true;
+        }
     }
 
     /**
