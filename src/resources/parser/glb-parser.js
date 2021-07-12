@@ -173,7 +173,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
     } else {
         const bufferView = bufferViews[gltfAccessor.bufferView];
         result = new dataType(bufferView.buffer,
-                              bufferView.byteOffset + (gltfAccessor.hasOwnProperty('byteOffset') ? gltfAccessor.byteOffset : 0),
+                              bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
                               gltfAccessor.count * numComponents);
     }
 
@@ -419,8 +419,10 @@ const createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
             targetStride = target.stride / 4;
 
             source = sourceDesc[target.name];
-            sourceArray = new Uint32Array(source.buffer, source.offset, source.count * source.stride / 4);
             sourceStride = source.stride / 4;
+            // ensure we don't go beyond the end of the arraybuffer when dealing with
+            // interlaced vertex formats
+            sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + source.size / 4);
 
             let src = 0;
             let dst = target.offset / 4;
@@ -765,6 +767,8 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
+            // TODO: Refactor, we should not store temporary data on the mesh.
+            // The container should store some mapping table instead.
             mesh.materialIndex = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
@@ -2035,7 +2039,7 @@ const parseBufferViewsAsync = function (gltf, buffers, options, callback) {
             } else {
                 const buffer = buffers[gltfBufferView.buffer];
                 const typedArray = new Uint8Array(buffer.buffer,
-                                                  buffer.byteOffset + (gltfBufferView.hasOwnProperty('byteOffset') ? gltfBufferView.byteOffset : 0),
+                                                  buffer.byteOffset + (gltfBufferView.byteOffset || 0),
                                                   gltfBufferView.byteLength);
                 onLoad(i, typedArray);
             }

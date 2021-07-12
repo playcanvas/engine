@@ -55,21 +55,28 @@ class VideoTextureExample extends Example {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        // Grab our HTML element with the video
+        // Create our HTML element with the video
         const video: HTMLVideoElement = document.createElement('video');
-        video.setAttribute('autoplay', 'true');
-        video.setAttribute('loop', 'true');
-        video.setAttribute('muted', 'true');
-        video.setAttribute('playsinline', 'true');
-        video.setAttribute('crossorigin', 'anonymous');
-        video.setAttribute('style', 'display:none');
-        video.setAttribute('id', 'vid');
-        const videoSource: HTMLSourceElement = document.createElement('source');
-        videoSource.setAttribute('src', 'static/assets/video/SampleVideo_1280x720_1mb.mp4');
-        videoSource.setAttribute('type', 'video/mp4');
-        video.append(videoSource);
-        document.body.append('video');
-        video.addEventListener('canplay', function () {
+        video.id = 'vid';
+        video.loop = true;
+
+        // Muted so that we can autoplay
+        video.muted = true;
+        video.autoplay = true;
+
+        // Inline needed for iOS otherwise it plays at fullscreen
+        video.playsInline = true;
+
+        video.crossOrigin = "anonymous";
+
+        // Make sure that the video is in view on the page otherwise it doesn't
+        // load on some browsers, especially mobile
+        video.setAttribute('style', 'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none');
+
+        video.src = 'static/assets/video/SampleVideo_1280x720_1mb.mp4';
+        document.body.append(video);
+
+        video.addEventListener('canplaythrough', function () {
             videoTexture.setSource(video);
         });
 
@@ -87,7 +94,6 @@ class VideoTextureExample extends Example {
         entity.render.meshInstances[1].material = material;
 
         video.load();
-        // video.play();
 
         const mouse = new pc.Mouse(document.body);
         mouse.on('mousedown', function (event) {

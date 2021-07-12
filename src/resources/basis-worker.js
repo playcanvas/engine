@@ -17,22 +17,6 @@ function BasisWorker() {
         cTFRGBA4444: 16                     // rgba 4444
     };
 
-    // engine pixel format constants, reproduced here
-    const PIXEL_FORMAT = {
-        ETC1: 21,
-        ETC2_RGBA: 23,
-        DXT1: 8,
-        DXT5: 10,
-        PVRTC_4BPP_RGB_1: 26,
-        PVRTC_4BPP_RGBA_1: 27,
-        ASTC_4x4: 28,
-        ATC_RGB: 29,
-        ATC_RGBA: 30,
-        R8_G8_B8_A8: 7,
-        R5_G6_B5: 3,
-        R4_G4_B4_A4: 5
-    };
-
     // map of GPU to basis format for textures without alpha
     const opaqueMapping = {
         astc: BASIS_FORMAT.cTFASTC_4x4,
@@ -55,20 +39,39 @@ function BasisWorker() {
         none: BASIS_FORMAT.cTFRGBA4444
     };
 
+    // engine pixel format constants, reproduced here
+    const PIXEL_FORMAT = {
+        ETC1: 21,
+        ETC2_RGB: 22,
+        ETC2_RGBA: 23,
+        DXT1: 8,
+        DXT5: 10,
+        PVRTC_4BPP_RGB_1: 26,
+        PVRTC_4BPP_RGBA_1: 27,
+        ASTC_4x4: 28,
+        ATC_RGB: 29,
+        ATC_RGBA: 30,
+        R8_G8_B8_A8: 7,
+        R5_G6_B5: 3,
+        R4_G4_B4_A4: 5
+    };
+
     // map of basis format to engine pixel format
-    const basisToEngineMapping = {
-        [BASIS_FORMAT.cTFETC1]: PIXEL_FORMAT.ETC1,
-        [BASIS_FORMAT.cTFETC2]: PIXEL_FORMAT.ETC2_RGBA,
-        [BASIS_FORMAT.cTFBC1]: PIXEL_FORMAT.DXT1,
-        [BASIS_FORMAT.cTFBC3]: PIXEL_FORMAT.DXT5,
-        [BASIS_FORMAT.cTFPVRTC1_4_RGB]: PIXEL_FORMAT.PVRTC_4BPP_RGB_1,
-        [BASIS_FORMAT.cTFPVRTC1_4_RGBA]: PIXEL_FORMAT.PVRTC_4BPP_RGBA_1,
-        [BASIS_FORMAT.cTFASTC_4x4]: PIXEL_FORMAT.ASTC_4x4,
-        [BASIS_FORMAT.cTFATC_RGB]: PIXEL_FORMAT.ATC_RGB,
-        [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA]: PIXEL_FORMAT.ATC_RGBA,
-        [BASIS_FORMAT.cTFRGBA32]: PIXEL_FORMAT.R8_G8_B8_A8,
-        [BASIS_FORMAT.cTFRGB565]: PIXEL_FORMAT.R5_G6_B5,
-        [BASIS_FORMAT.cTFRGBA4444]: PIXEL_FORMAT.R4_G4_B4_A4
+    const basisToEngineMapping = (basisFormat, deviceDetails) => {
+        switch (basisFormat) {
+            case BASIS_FORMAT.cTFETC1: return deviceDetails.formats.etc1 ? PIXEL_FORMAT.ETC1 : PIXEL_FORMAT.ETC2_RGB;
+            case BASIS_FORMAT.cTFETC2: return PIXEL_FORMAT.ETC2_RGBA;
+            case BASIS_FORMAT.cTFBC1: return PIXEL_FORMAT.DXT1;
+            case BASIS_FORMAT.cTFBC3: return PIXEL_FORMAT.DXT5;
+            case BASIS_FORMAT.cTFPVRTC1_4_RGB: return PIXEL_FORMAT.PVRTC_4BPP_RGB_1;
+            case BASIS_FORMAT.cTFPVRTC1_4_RGBA: return PIXEL_FORMAT.PVRTC_4BPP_RGBA_1;
+            case BASIS_FORMAT.cTFASTC_4x4: return PIXEL_FORMAT.ASTC_4x4;
+            case BASIS_FORMAT.cTFATC_RGB: return PIXEL_FORMAT.ATC_RGB;
+            case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA: return PIXEL_FORMAT.ATC_RGBA;
+            case BASIS_FORMAT.cTFRGBA32: return PIXEL_FORMAT.R8_G8_B8_A8;
+            case BASIS_FORMAT.cTFRGB565: return PIXEL_FORMAT.R5_G6_B5;
+            case BASIS_FORMAT.cTFRGBA4444: return PIXEL_FORMAT.R4_G4_B4_A4;
+        }
     };
 
     // unswizzle two-component gggr8888 normal data into rgba8888
@@ -135,7 +138,7 @@ function BasisWorker() {
                     return 'etc2';
                 }
             } else {
-                if (deviceDetails.formats.etc1) {
+                if (deviceDetails.formats.etc1 || deviceDetails.formats.etc2) {
                     return 'etc1';
                 }
             }
@@ -234,7 +237,7 @@ function BasisWorker() {
         const compressedFormat = isCompressedFormat(basisFormat);
 
         return {
-            format: basisToEngineMapping[basisFormat],
+            format: basisToEngineMapping(basisFormat, options.deviceDetails),
             width: compressedFormat ? ((width + 3) & ~3) : width,
             height: compressedFormat ? ((height + 3) & ~3) : height,
             levels: levelData,
