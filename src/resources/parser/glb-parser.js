@@ -767,6 +767,8 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
+            // TODO: Refactor, we should not store temporary data on the mesh.
+            // The container should store some mapping table instead.
             mesh.materialIndex = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
