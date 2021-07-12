@@ -35,7 +35,7 @@ function onContainerAssetRemoved(containerAsset) {
     renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
 
     if (renderAsset.resource) {
-        renderAsset.resource.meshes = null;
+        renderAsset.resource.destroy();
     }
 }
 
