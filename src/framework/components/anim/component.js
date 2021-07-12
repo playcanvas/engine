@@ -40,6 +40,7 @@ class AnimComponent extends Component {
         this._layers = [];
         this._layerIndices = {};
         this._parameters = {};
+        this._consumedTriggers = {};
     }
 
     get stateGraphAsset() {
@@ -213,6 +214,14 @@ class AnimComponent extends Component {
         return null;
     }
 
+    get consumedTriggers() {
+        return this._consumedTriggers;
+    }
+
+    set consumedTriggers(value) {
+        this._consumedTriggers = value;
+    }
+
     _addLayer(name, states, transitions, order) {
         let graph;
         if (this.rootBone) {
@@ -228,7 +237,8 @@ class AnimComponent extends Component {
             transitions,
             this._parameters,
             this._activate,
-            this
+            this,
+            this._resetTrigger.bind(this)
         );
         this._layers.push(new AnimComponentLayer(name, controller, this));
         this._layerIndices[name] = order;
@@ -649,6 +659,10 @@ class AnimComponent extends Component {
      */
     resetTrigger(name) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, false);
+    }
+
+    _resetTrigger(name) {
+        this._consumedTriggers[name] = true;
     }
 
     onBeforeRemove() {
