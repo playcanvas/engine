@@ -54,7 +54,6 @@ class Batch {
             this._aabb.add(this.origMeshInstances[i].aabb);
         }
         this.meshInstance.aabb = this._aabb;
-        this._aabb._radiusVer = -1;
         this.meshInstance._aabbVer = 0;
     }
 }
