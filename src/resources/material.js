@@ -242,8 +242,8 @@ class MaterialHandler {
             const dataAssetId = data[name];
 
             const materialTexture = material[name];
-            const dataValidated = data.validated;
             const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name, materialAsset);
+            const dataValidated = data.validated;
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {
                 if (!assetReference) {
