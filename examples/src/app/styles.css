@@ -596,14 +596,19 @@ body {
 #appInner.fullscreen #menu {
     opacity: 0;
 }
-#appInner.fullscreen.active #menu, #appInner.fullscreen #menu:hover {
+#appInner.fullscreen.active #menu {
     opacity: 1;
 }
 
 @media only screen and (min-width: 601px) {
-    #appInner.fullscreen #menu {
-        top: 8px;
+    #appInner.fullscreen #menu:hover {
+        opacity: 1;
     }
+}
+
+#appInner.fullscreen #menu {
+    top: 8px;
+    bottom: inherit;
 }
 
 #appInner.fullscreen #controlPanel, #appInner.fullscreen #sideBar {
