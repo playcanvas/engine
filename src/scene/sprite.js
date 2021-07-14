@@ -178,7 +178,7 @@ class Sprite extends EventHandler {
 
                 positions.push(-x, y, z);
                 normals.push(0.0, 1.0, 0.0);
-                uvs.push(u, /*1.0 - */v);
+                uvs.push(u, v);
 
                 if ((i < ws) && (j < ls)) {
                     indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
