@@ -62,11 +62,13 @@ export const examples = (() => {
             };
 
             const transformedCode = require(`!raw-loader!../../examples/${categorySlug}/${nameSlug}.tsx`).default;
-            const functionSignatureString = '): void {';
-            const indexOfAppCallStart = transformedCode.indexOf(functionSignatureString);
-            const indexOfAppCallEnd = findClosingBracketMatchIndex(transformedCode, indexOfAppCallStart + functionSignatureString.length - 1);
-            let functionCall = 'function ' + transformedCode.substring(transformedCode.indexOf('example('), indexOfAppCallEnd + 1);
-            functionCall = functionCall.split('\n')
+            const functionSignatureStartString = 'example(canvas: HTMLCanvasElement';
+            const indexOfFunctionSignatureStart = transformedCode.indexOf(functionSignatureStartString);
+            const functionSignatureEndString = '): void ';
+            const indexOfFunctionSignatureEnd = indexOfFunctionSignatureStart + transformedCode.substring(indexOfFunctionSignatureStart).indexOf(functionSignatureEndString) + functionSignatureEndString.length;
+            const indexOfFunctionEnd = findClosingBracketMatchIndex(transformedCode, indexOfFunctionSignatureEnd) + 1;
+            let functionText = 'function ' + transformedCode.substring(indexOfFunctionSignatureStart, indexOfFunctionEnd);
+            functionText = functionText.split('\n')
                 .map((line: string, index: number) => {
                     if (index === 0) return line;
                     return line.substring(4);
@@ -76,7 +78,7 @@ export const examples = (() => {
             const files: Array<File> = [
                 {
                     name: 'example.ts',
-                    text: functionCall
+                    text: functionText
                 }
             ];
             // @ts-ignore
