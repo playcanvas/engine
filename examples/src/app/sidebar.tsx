@@ -40,6 +40,12 @@ const SideBar = (props: SideBarProps) => {
             sideBar.classList.toggle('small-thumbnails');
             topNavItem.scrollIntoView();
         });
+        // when first opening the examples browser via a specific example, scroll it into view
+        if (!(window as any)._scrolledToExample) {
+            const examplePath = location.hash.split('/');
+            document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
+            (window as any)._scrolledToExample = true;
+        }
     });
 
     return (
@@ -87,8 +93,7 @@ const SideBar = (props: SideBarProps) => {
                                         Object.keys(filteredCategories[category].examples).sort((a: string, b:string) => (a > b ? 1 : -1)).map((example: string) => {
                                             const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
                                             const className = `nav-item ${isSelected ? 'selected' : ''}`;
-                                            return <Link key={example} to={`/${category}/${example}`}>
-                                                <div className={className}>
+                                                <div className={className} id={`link-${category}-${example}`}>
                                                     <img src={`./thumbnails/${category}_${example}.png`} />
                                                     <div className='nav-item-text'>{filteredCategories[category].examples[example].constructor.NAME.toUpperCase()}</div>
                                                 </div>
