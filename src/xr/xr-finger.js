@@ -3,6 +3,7 @@
  * @name XrFinger
  * @classdesc Represents finger with related joints and index.
  * @description Represents finger with related joints and index.
+ * @hideconstructor
  * @param {number} index - Index of a finger.
  * @param {XrHand} hand - Hand that finger relates to.
  * @property {number} index Index of a finger, numeration is: thumb, index, middle, ring, little.
