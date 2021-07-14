@@ -6,6 +6,8 @@ import * as playcanvas from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
 import * as playcanvasDebug from 'playcanvas/build/playcanvas.dbg.js';
 // @ts-ignore: library file import
+import * as playcanvasPerformance from 'playcanvas/build/playcanvas.prf.js';
+// @ts-ignore: library file import
 import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 // @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
