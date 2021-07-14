@@ -91,7 +91,7 @@ body {
     margin-top: 32px;
 }
 
-.sideBar-contents {
+#sideBar-contents {
     height: calc(100% - 88px);
     overflow: auto;
     margin-top: 8px;
@@ -120,7 +120,7 @@ body {
         border-radius: 6px !important;
     }
 
-    .sideBar-contents {
+    #sideBar-contents {
         height: calc(100% - 108px);
         overflow: auto;
         margin-top: 8px;
@@ -128,6 +128,18 @@ body {
 
     #sideBar-panel .pcui-panel-content {
         overflow: hidden;
+    }
+
+    #sideBar {
+        opacity: 0;
+    }
+
+    #sideBar.visible {
+        opacity: 1;
+    }
+
+    #sideBar-panel.pcui-collapsed > .pcui-panel-content {
+        display: none;
     }
 }
 
@@ -399,7 +411,7 @@ body {
     min-width: 32px;
 }
 
-#sideBar.collapsed .sideBar-contents, #sideBar.collapsed .pcui-panel-content, #codePane.collapsed section {
+#sideBar.collapsed #sideBar-contents, #sideBar.collapsed .pcui-panel-content, #codePane.collapsed section {
     display: none !important;
 }
 
