@@ -14,8 +14,7 @@ import './styles.css';
 
 interface ExampleRoutesProps {
     files: Array<File>,
-    setDefaultFiles: (files: Array<File>) => void,
-    showMiniStats: boolean
+    setDefaultFiles: (files: Array<File>) => void
 }
 const ExampleRoutes = (props: ExampleRoutesProps) => {
     return (
@@ -23,7 +22,7 @@ const ExampleRoutes = (props: ExampleRoutesProps) => {
             {
                 examples.paths.map((p) => {
                     return <Route key={p.path} path={[p.path, `${p.path}.html`]}>
-                        <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} showMiniStats={props.showMiniStats} />
+                        <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} />
                     </Route>;
                 })
             }
@@ -57,7 +56,10 @@ const MainLayout = () => {
     // The example files are the files that should be loaded and executed by the example. Upon hitting the play button, the currently set edited files are set to the example files
     const [exampleFiles, setExampleFiles] = useState(emptyFiles);
     const [lintErrors, setLintErrors] = useState(false);
-    const [showMiniStats, setShowMiniStats] = useState(false);
+
+    const updateShowMiniStats = (value: boolean) => {
+        (window as any)._showMiniStats = value;
+    };
 
     const playButtonRef = createRef();
     useEffect(() => {
@@ -109,9 +111,9 @@ const MainLayout = () => {
                     <Route key='main' path={`/`}>
                         <SideBar categories={examples.categories}/>
                         <Container id='main-view-wrapper'>
-                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} showMiniStats={showMiniStats} setShowMiniStats={setShowMiniStats} />
+                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} setShowMiniStats={updateShowMiniStats} />
                             <Container id='main-view'>
-                                <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} showMiniStats={showMiniStats} />
+                                <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} />
                                 <CodeEditor files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles} setFiles={setEditedFiles.bind(this)} setLintErrors={setLintErrors} />
                             </Container>
                         </Container>

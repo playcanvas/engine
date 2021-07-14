@@ -56,13 +56,6 @@ const ExampleIframe = (props: ExampleIframeProps) => {
     } catch (e) {
         files = props.files;
     }
-    let showMiniStats = false;
-    // Try to retrieve a set of B64 encoded files from the URL's query params.
-    // If not present then use the default files passed in the props
-    try {
-        showMiniStats = location.hash.split('showMiniStats=')[1].split('&')[0] === 'true';
-    } catch (e) {
-    }
 
     const fullscreen = location.hash.includes('fullscreen=true');
 
@@ -140,9 +133,10 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             graphicsDeviceOptions: { alpha: true }
         });
 
-        if (showMiniStats) {
-            const miniStats = new pcx.MiniStats(app);
-        }
+        const miniStats: any = new pcx.MiniStats(app);
+        app.on('update', () => {
+            miniStats.enabled = (window?.parent as any)?._showMiniStats;
+        });
 
         (window as any).app = app;
 

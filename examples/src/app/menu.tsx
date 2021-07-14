@@ -7,7 +7,6 @@ interface MenuProps {
     lintErrors: boolean,
     hasEditedFiles: boolean,
     playButtonRef: any,
-    showMiniStats: boolean,
     setShowMiniStats: (value: boolean) => void
 }
 const Menu = (props: MenuProps) => {
