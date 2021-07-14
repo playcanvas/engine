@@ -27,14 +27,18 @@ interface ExampleIframeProps {
     controls: any,
     assets: any,
     files: Array<File>,
-    debug?: boolean,
+    engine: string,
     debugExample?: any
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
-    let pc = playcanvas;
-    if (props.debug) {
+    let pc: any;
+    if (props.engine === 'DEBUG') {
         pc = playcanvasDebug;
+    } else if (props.engine === 'PERFORMANCE') {
+        pc = playcanvasPerformance;
+    } else {
+        pc = playcanvas;
     }
     // expose PlayCanvas as a global in the iframe
     (window as any).pc = pc;
