@@ -71,6 +71,9 @@ export const examples = (() => {
             functionText = functionText.split('\n')
                 .map((line: string, index: number) => {
                     if (index === 0) return line;
+                    if (line.substring(0, 4).includes('//')) {
+                        return line;
+                    }
                     return line.substring(4);
                 })
                 .join('\n');
