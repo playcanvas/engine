@@ -18,6 +18,7 @@ class XrInput extends EventHandler {
         this.manager = manager;
         this._session = null;
         this._inputSources = [];
+        this.velocitiesSupported = (window.XRPose && XRPose.prototype.hasOwnProperty('linearVelocity')) || false;
 
         this._onInputSourcesChangeEvt = (evt) => {
             this._onInputSourcesChange(evt);
