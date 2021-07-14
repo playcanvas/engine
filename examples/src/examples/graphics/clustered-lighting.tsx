@@ -189,7 +189,7 @@ class ClusteredLightingExample extends Example {
 
         // Set an update function on the app's update event
         let time = 0;
-        app.on("update", function (dt) {
+        app.on("update", function (dt: number) {
             time += dt;
 
             // move lights along sin based waves around the cylinder
