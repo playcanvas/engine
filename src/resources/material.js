@@ -238,7 +238,14 @@ class MaterialHandler {
 
             // data[name] contains an asset id for a texture
             // if we have an asset id and nothing is assigned to the texture resource or the placeholder texture is assigned
-            if (data[name] && (!materialAsset.resource[name] || materialAsset.resource[name] === this._getPlaceholderTexture(name, materialAsset))) {
+            // or the data has changed
+            const dataAssetId = data[name];
+
+            const materialTexture = material[name];
+            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name, materialAsset);
+            const dataValidated = data.validated;
+
+            if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {
                 if (!assetReference) {
                     assetReference = new AssetReference(name, materialAsset, assets, {
                         load: this._onTextureLoad,
@@ -252,9 +259,9 @@ class MaterialHandler {
 
                 if (pathMapping) {
                     // texture paths are measured from the material directory
-                    assetReference.url = materialAsset.getAbsoluteUrl(data[name]);
+                    assetReference.url = materialAsset.getAbsoluteUrl(dataAssetId);
                 } else {
-                    assetReference.id = data[name];
+                    assetReference.id = dataAssetId;
                 }
 
                 if (assetReference.asset) {

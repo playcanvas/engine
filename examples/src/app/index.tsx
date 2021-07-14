@@ -96,9 +96,14 @@ const MainLayout = () => {
                             const e = new p.example();
                             const assetsLoader = e.load;
                             const controls = e.controls;
-                            return <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`]}>
-                                <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files} debug={p.path.includes('mini-stats')} />
-                            </Route>;
+                            return [
+                                <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`]}>
+                                    <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files} debug={p.path.includes('mini-stats')}/>
+                                </Route>,
+                                <Route key={`/debug${p.path}`} path={[`/debug${p.path}`]}>
+                                    <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files} debug={p.path.includes('mini-stats')} debugExample={e}/>
+                                </Route>
+                            ];
                         })
                     }
                     <Route key='main' path={`/`}>

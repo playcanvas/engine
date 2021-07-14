@@ -21,74 +21,72 @@ class TextureBasisExample extends Example {
         const app = new pc.Application(canvas, {});
 
         // @ts-ignore engine-tsd
-        pc.basisDownload(
-            'static/lib/basis/basis.wasm.js',
-            'static/lib/basis/basis.wasm.wasm',
-            'static/lib/basis/basis.js',
-            function () {
+        pc.basisInitialize({
+            glueUrl: 'static/lib/basis/basis.wasm.js',
+            wasmUrl: 'static/lib/basis/basis.wasm.wasm',
+            fallbackUrl: 'static/lib/basis/basis.js'
+        });
 
-                app.start();
+        app.start();
 
-                // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-                app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-                app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-                app.scene.ambientLight = new pc.Color(1, 1, 1);
+        app.scene.ambientLight = new pc.Color(1, 1, 1);
 
-                // material using basis texture
-                const material1 = new pc.StandardMaterial();
-                material1.diffuseMap = assets.seaBasis.resource;
-                material1.update();
+        // material using basis texture
+        const material1 = new pc.StandardMaterial();
+        material1.diffuseMap = assets.seaBasis.resource;
+        material1.update();
 
-                // Create a Entity with a Box render component
-                const box1 = new pc.Entity();
-                box1.addComponent("render", {
-                    type: "box",
-                    material: material1
-                });
+        // Create a Entity with a Box render component
+        const box1 = new pc.Entity();
+        box1.addComponent("render", {
+            type: "box",
+            material: material1
+        });
 
-                // another material using basis texture
-                const material2 = new pc.StandardMaterial();
-                material2.diffuseMap = assets.playcanvasBasis.resource;
-                material2.update();
+        // another material using basis texture
+        const material2 = new pc.StandardMaterial();
+        material2.diffuseMap = assets.playcanvasBasis.resource;
+        material2.update();
 
-                const box2 = new pc.Entity();
-                box2.addComponent("render", {
-                    type: "box",
-                    material: material2
-                });
+        const box2 = new pc.Entity();
+        box2.addComponent("render", {
+            type: "box",
+            material: material2
+        });
 
-                // Create an Entity with a camera component
-                const camera = new pc.Entity();
-                camera.addComponent("camera", {
-                    clearColor: new pc.Color(0.4, 0.45, 0.5)
-                });
+        // Create an Entity with a camera component
+        const camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
 
-                // Adjust the camera position
-                camera.translate(0, 0, 5);
+        // Adjust the camera position
+        camera.translate(0, 0, 5);
 
-                // Add the new Entities to the hierarchy
-                app.root.addChild(box1);
-                app.root.addChild(box2);
-                app.root.addChild(camera);
+        // Add the new Entities to the hierarchy
+        app.root.addChild(box1);
+        app.root.addChild(box2);
+        app.root.addChild(camera);
 
-                box1.setPosition(0, -1, 0);
-                box2.setPosition(0, 1, 0);
+        box1.setPosition(0, -1, 0);
+        box2.setPosition(0, 1, 0);
 
-                // Set an update function on the app's update event
-                let angle = 0;
-                app.on("update", function (dt) {
-                    angle += dt;
-                    if (angle > 360) {
-                        angle = 0;
-                    }
-
-                    // Rotate the boxes
-                    box1.setEulerAngles(angle * 2, angle * 4, angle * 8);
-                    box2.setEulerAngles(90 - angle * 12, 120 - angle * 8, 150 - angle * 10);
-                });
+        // Set an update function on the app's update event
+        let angle = 0;
+        app.on("update", function (dt) {
+            angle += dt;
+            if (angle > 360) {
+                angle = 0;
             }
-        );
+
+            // Rotate the boxes
+            box1.setEulerAngles(angle * 2, angle * 4, angle * 8);
+            box2.setEulerAngles(90 - angle * 12, 120 - angle * 8, 150 - angle * 10);
+        });
     }
 }
 

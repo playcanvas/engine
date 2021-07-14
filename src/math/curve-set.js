@@ -7,10 +7,10 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @name CurveSet
  * @classdesc A curve set is a collection of curves.
  * @description Creates a new curve set.
- * @param {...number[]} curveKeys - 0 or many arguments of arrays of keys (pairs of numbers with
+ * @param {Array<number[]>} curveKeys - An array of arrays of keys (pairs of numbers with
  * the time first and value second).
  * @example
- * var curveSet = new pc.CurveSet(
+ * var curveSet = new pc.CurveSet([
  *     [
  *         0, 0,        // At 0 time, value of 0
  *         0.33, 2,     // At 0.33 time, value of 2
@@ -23,7 +23,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
  *         0.66, 36,
  *         1, 37
  *     ]
- * );
+ * ]);
  */
 class CurveSet {
     constructor() {
