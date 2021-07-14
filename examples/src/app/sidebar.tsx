@@ -28,7 +28,17 @@ const SideBar = (props: SideBarProps) => {
         });
 
         observer.on('largeThumbnails:set', () => {
+            let topNavItem: HTMLElement;
+            let minTopNavItemDistance = Number.MAX_VALUE;
+            document.querySelectorAll('.nav-item').forEach((nav: HTMLElement) => {
+                const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
+                if (navItemDistance < minTopNavItemDistance) {
+                    minTopNavItemDistance = navItemDistance;
+                    topNavItem = nav;
+                }
+            });
             sideBar.classList.toggle('small-thumbnails');
+            topNavItem.scrollIntoView();
         });
     });
 
