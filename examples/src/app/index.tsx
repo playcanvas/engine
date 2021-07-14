@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 // @ts-ignore: library file import
 import { Container } from '@playcanvas/pcui/pcui-react';
 // @ts-ignore: library file import
-import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
+import { HashRouter as Router, Switch, Route } from "react-router-dom";
 import SideBar from './sidebar';
 import CodeEditor from './code-editor';
 import ExampleIframe from './example-iframe';
@@ -17,15 +17,19 @@ interface ExampleRoutesProps {
     setDefaultFiles: (files: Array<File>) => void
 }
 const ExampleRoutes = (props: ExampleRoutesProps) => {
+    const defaultExample = examples.paths['/misc/hello-world'];
     return (
         <Switch>
             {
-                examples.paths.map((p) => {
+                Object.values(examples.paths).map((p) => {
                     return <Route key={p.path} path={[p.path, `${p.path}.html`]}>
                         <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} />
                     </Route>;
                 })
             }
+            <Route path='/'>
+                <defaultExample.example path={defaultExample.path} defaultFiles={defaultExample.files} files={props.files} setDefaultFiles={props.setDefaultFiles} />
+            </Route>
         </Switch>
     );
 };
@@ -90,11 +94,8 @@ const MainLayout = () => {
         <div id='appInner'>
             <Router>
                 <Switch>
-                    <Route exact path="/">
-                        <Redirect to="/misc/hello-world" />
-                    </Route>
                     {
-                        examples.paths.map((p) => {
+                        Object.values(examples.paths).map((p) => {
                             const e = new p.example();
                             const assetsLoader = e.load;
                             const controls = e.controls;
@@ -108,7 +109,7 @@ const MainLayout = () => {
                             ];
                         })
                     }
-                    <Route key='main' path={`/`}>
+                    <Route key='main' path='/'>
                         <SideBar categories={examples.categories}/>
                         <Container id='main-view-wrapper'>
                             <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} setShowMiniStats={updateShowMiniStats} />

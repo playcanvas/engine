@@ -21,7 +21,7 @@ export const examples = (() => {
     importAll(require.context('../../examples/', true, /\.tsx$/));
 
     const categories: any = {};
-    const paths: Array<{ path: string, example: any, files: Array<File> }> = [];
+    const paths: {[key: string]: { path: string, example: any, files: Array<File> }} = {};
 
     Object.keys(exampleFiles).forEach((key: string) => {
         if (key.indexOf('./') === 0) {
@@ -105,11 +105,11 @@ export const examples = (() => {
                 });
             }
 
-            paths.push({
+            paths[`/${categorySlug}/${nameSlug}`] = {
                 path: `/${categorySlug}/${nameSlug}`,
                 example: exampleFiles[key].default,
                 files: files
-            });
+            };
         }
     });
 
