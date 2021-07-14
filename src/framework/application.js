@@ -106,7 +106,6 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneDepth } from './scene-depth.js';
-import { XRTYPE_VR } from "../xr/constants";
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
