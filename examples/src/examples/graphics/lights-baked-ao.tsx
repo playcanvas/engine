@@ -4,7 +4,7 @@ import Example from '../../app/example';
 class LightsBakedAOExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
-    static HIDDEN = true;
+    static HIDDEN = false;
 
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
@@ -75,36 +75,25 @@ class LightsBakedAOExample extends Example {
             entity.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
         }
 
-        // simulate skydome lighting by using many directional lights with random hemisphere directions
-        const lights = [];
-        const count = 200;
-        for (let l = 0; l < count; l++) {
-            const light = new pc.Entity("Directional");
-            light.addComponent("light", {
-                affectDynamic: true,
-                affectLightmapped: false,
-                bake: true,
-                castShadows: true,
-                normalOffsetBias: 0.05,
-                shadowBias: 0.2,
-                shadowDistance: 50,
-                shadowResolution: 2048,
-                shadowType: pc.SHADOW_PCF3,
-                color: pc.Color.WHITE,
-                intensity: 0.8 / count,
-                type: "directional"
-            });
-            app.root.addChild(light);
-            lights.push(light);
-
-            // adjust to control skydome bake, value between 0 and 1.
-            // 0 is directional light, 1 is ambient occlusion bake .. pick appropriate ratio
-            const directionality = 0.9;
-
-            // random angle based on directionality, within 10 or 90 degrees from straight down
-            const p = l > (count * directionality) ? 10 : 90;
-            light.setLocalEulerAngles(Math.random() * p - (p * 0.5), 10, Math.random() * p - (p * 0.5));
-        }
+        // directional light
+        const light = new pc.Entity("Directional");
+        light.addComponent("light", {
+            type: "directional",
+            affectDynamic: true,
+            affectLightmapped: false,
+            bake: true,
+            numBakeSamples: 20,
+            castShadows: true,
+            normalOffsetBias: 0.05,
+            shadowBias: 0.2,
+            shadowDistance: 50,
+            shadowResolution: 2048,
+            shadowType: pc.SHADOW_PCF3,
+            color: pc.Color.WHITE,
+            intensity: 0.8
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(0, 10, 0);
 
         // Create an entity with a omni light component that is configured as a baked light
         const lightPoint = new pc.Entity("Point");
@@ -165,11 +154,6 @@ class LightsBakedAOExample extends Example {
 
         // bake lightmaps
         app.lightmapper.bake(null, bakeType);
-
-        // destroy temporary directional lights as they are costly to keep around
-        for (let l = 0; l < lights.length; l++) {
-            lights[l].destroy();
-        }
 
         // Set an update function on the app's update event
         let time = 0;
