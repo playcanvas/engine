@@ -7,9 +7,9 @@ class TextureBasisExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Texture Basis';
 
-    // The color textures were converted with the following command:
+    // Color textures have been converted with the following arguments:
     //   basisu seaside-rocks01-gloss.jpg -q 255 -mipmap
-    // The normalmap was compressed with the following command:
+    // The normalmap has been converted with the following arguments:
     //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
     load() {
         return <>
