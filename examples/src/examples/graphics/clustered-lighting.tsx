@@ -1,11 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+// @ts-ignore: library file import
+import * as pc from 'playcanvas/build/playcanvas.prf.js';
+// @ts-ignore: library file import
+import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
 
 class ClusteredLightingExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Lighting';
+    static ENGINE = 'PERFORMANCE';
 
     load() {
         return <>
@@ -47,24 +51,27 @@ class ClusteredLightingExample extends Example {
         });
 
         // set up options for mini-stats, start with the default options and add clusted lighting stats
-        // const options = pcx.MiniStats.getDefaultOptions();
-        // options.stats.push(
-        //     {
-        //         // CPU time it takes to process the clusters each frame
-        //         name: "Clusters",
-        //         stats: ["frame.lightClustersTime"],
-        //         decimalPlaces: 2,
-        //         unitsName: "ms",
-        //         watermark: 3
-        //     },
-        //     {
-        //         // number of clusters used internally
-        //         // should be one if all lights are on the same set of layers
-        //         name: "Num Clusters",
-        //         stats: ["frame.lightClusters"],
-        //         watermark: 3
-        //     }
-        // );
+        const options = pcx.MiniStats.getDefaultOptions();
+        options.stats.push(
+            {
+                // CPU time it takes to process the clusters each frame
+                name: "Clusters",
+                stats: ["frame.lightClustersTime"],
+                decimalPlaces: 2,
+                unitsName: "ms",
+                watermark: 3
+            },
+            {
+                // number of clusters used internally
+                // should be one if all lights are on the same set of layers
+                name: "Num Clusters",
+                stats: ["frame.lightClusters"],
+                watermark: 3
+            }
+        );
+
+        // create mini-stats system
+        const miniStats = new pcx.MiniStats(app, options);
 
         // material with tiled normal map
         let material = new pc.StandardMaterial();
@@ -182,7 +189,7 @@ class ClusteredLightingExample extends Example {
 
         // Set an update function on the app's update event
         let time = 0;
-        app.on("update", function (dt) {
+        app.on("update", function (dt: number) {
             time += dt;
 
             // move lights along sin based waves around the cylinder

@@ -7,7 +7,6 @@ interface MenuProps {
     lintErrors: boolean,
     hasEditedFiles: boolean,
     playButtonRef: any,
-    showMiniStats: boolean,
     setShowMiniStats: (value: boolean) => void
 }
 const Menu = (props: MenuProps) => {
@@ -23,6 +22,7 @@ const Menu = (props: MenuProps) => {
         document.querySelector('#canvas-container').classList.toggle('fullscreen');
         const app = document.querySelector('#appInner');
         app.classList.toggle('fullscreen');
+        document.querySelector('iframe').contentDocument.getElementById('appInner').classList.toggle('fullscreen');
         if (app.classList.contains('fullscreen')) {
             clickFullscreenListener = () => {
                 app.classList.add('active');
