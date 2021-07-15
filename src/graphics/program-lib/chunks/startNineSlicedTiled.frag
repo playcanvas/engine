@@ -5,3 +5,4 @@
     clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;
     nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);
     nineSlicedUv.y = 1.0 - nineSlicedUv.y;
+    
