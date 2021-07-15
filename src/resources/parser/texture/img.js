@@ -21,7 +21,7 @@ class ImgParser {
         // As of today (9 Jul 2021) ImageBitmap only works on Chrome:
         // - Firefox doesn't support options parameter to createImageBitmap (see https://bugzilla.mozilla.org/show_bug.cgi?id=1533680)
         // - Safari supports ImageBitmap only as experimental feature.
-        this.useImageBitmap = typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
+        this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
     }
 
     load(url, callback, asset) {
