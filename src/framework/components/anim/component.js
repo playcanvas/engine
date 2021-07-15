@@ -40,6 +40,7 @@ class AnimComponent extends Component {
         this._layers = [];
         this._layerIndices = {};
         this._parameters = {};
+        this._consumedTriggers = {};
     }
 
     get stateGraphAsset() {
@@ -213,6 +214,14 @@ class AnimComponent extends Component {
         return null;
     }
 
+    get consumedTriggers() {
+        return this._consumedTriggers;
+    }
+
+    set consumedTriggers(value) {
+        this._consumedTriggers = value;
+    }
+
     _addLayer(name, states, transitions, order) {
         let graph;
         if (this.rootBone) {
@@ -228,7 +237,8 @@ class AnimComponent extends Component {
             transitions,
             this._parameters,
             this._activate,
-            this
+            this,
+            this._resetTrigger.bind(this)
         );
         this._layers.push(new AnimComponentLayer(name, controller, this));
         this._layerIndices[name] = order;
@@ -636,9 +646,13 @@ class AnimComponent extends Component {
      * @name AnimComponent#setTrigger
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
      * @param {string} name - The name of the parameter to set.
+     * @param {boolean} [singleFrame] - If true, this trigger will be set back to false at the end of the animation update. Defaults to false.
      */
-    setTrigger(name) {
+    setTrigger(name, singleFrame = false) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, true);
+        if (singleFrame) {
+            this._consumedTriggers[name] = true;
+        }
     }
 
     /**
@@ -649,6 +663,10 @@ class AnimComponent extends Component {
      */
     resetTrigger(name) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, false);
+    }
+
+    _resetTrigger(name) {
+        this._consumedTriggers[name] = true;
     }
 
     onBeforeRemove() {

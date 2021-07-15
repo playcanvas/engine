@@ -58,16 +58,21 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     onAnimationUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id].entity.anim;
-                var componentData = component.data;
+                const component = components[id].entity.anim;
+                const componentData = component.data;
 
                 if (componentData.enabled && component.entity.enabled && component.playing) {
-                    for (var i = 0; i < component.layers.length; i++) {
+                    for (let i = 0; i < component.layers.length; i++) {
                         component.layers[i].update(dt * component.speed);
+                    }
+                    const keys = Object.keys(component.consumedTriggers);
+                    for (let i = 0; i < keys.length; i++) {
+                        component.parameters[keys[i]].value = false;
+                        component.consumedTriggers = {};
                     }
                 }
             }
