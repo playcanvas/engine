@@ -21,7 +21,7 @@ class LightsExample extends Example {
     // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
-            <Panel headerText='OMNI LIGHT'>
+            <Panel headerText='OMNI LIGHT [KEY_1]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.enabled' }}/>
                 </LabelGroup>
@@ -29,7 +29,7 @@ class LightsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='SPOT LIGHT'>
+            <Panel headerText='SPOT LIGHT [KEY_2]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.enabled' }}/>
                 </LabelGroup>
@@ -37,7 +37,7 @@ class LightsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='DIRECTIONAL LIGHT'>
+            <Panel headerText='DIRECTIONAL LIGHT [KEY_3]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.enabled' }}/>
                 </LabelGroup>
@@ -182,6 +182,23 @@ class LightsExample extends Example {
             ...data.get('lights.directional')
         });
         app.root.addChild(lights.directional);
+
+        // Allow user to toggle individual lights
+        app.keyboard.on("keydown", function (e) {
+            // if the user is editing an input field, ignore key presses
+            if (e.element.constructor.name === 'HTMLInputElement') return;
+            switch (e.key) {
+                case pc.KEY_1:
+                    data.set('lights.omni.enabled', !data.get('lights.omni.enabled'));
+                    break;
+                case pc.KEY_2:
+                    data.set('lights.spot.enabled', !data.get('lights.spot.enabled'));
+                    break;
+                case pc.KEY_3:
+                    data.set('lights.directional.enabled', !data.get('lights.directional.enabled'));
+                    break;
+            }
+        }, this);
 
         // Simple update loop to rotate the light
         let angleRad = 1;

@@ -26,7 +26,7 @@ class PostEffectsExample extends Example {
     // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
-            <Panel headerText='BLOOM'>
+            <Panel headerText='BLOOM [KEY_1]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.enabled' }}/>
                 </LabelGroup>
@@ -40,7 +40,7 @@ class PostEffectsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.blurAmount' }} min={1} max={30}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='SEPIA'>
+            <Panel headerText='SEPIA [KEY_2]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.sepia.enabled' }}/>
                 </LabelGroup>
@@ -48,7 +48,7 @@ class PostEffectsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.sepia.amount' }}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='VIGNETTE'>
+            <Panel headerText='VIGNETTE [KEY_3]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.enabled' }}/>
                 </LabelGroup>
@@ -59,7 +59,7 @@ class PostEffectsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.offset' }} max={2}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='BOKEH'>
+            <Panel headerText='BOKEH [KEY_4]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.enabled' }}/>
                 </LabelGroup>
@@ -70,7 +70,7 @@ class PostEffectsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.maxBlur' }} max={0.1}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='SSAO'>
+            <Panel headerText='SSAO [KEY_5]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.enabled' }}/>
                 </LabelGroup>
@@ -84,7 +84,7 @@ class PostEffectsExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.brightness' }}/>
                 </LabelGroup>
             </Panel>
-            <Panel headerText='POST-PROCESS UI'>
+            <Panel headerText='POST-PROCESS UI [KEY_6]'>
                 <LabelGroup text='enabled'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.postProcessUI.enabled' }}/>
                 </LabelGroup>
@@ -218,6 +218,32 @@ class PostEffectsExample extends Example {
         camera.setLocalPosition(0, 30, -60);
         camera.lookAt(0, 0, 100);
         app.root.addChild(camera);
+
+        // Allow user to toggle individual post effects
+        app.keyboard.on("keydown", function (e) {
+            // if the user is editing an input field, ignore key presses
+            if (e.element.constructor.name === 'HTMLInputElement') return;
+            switch (e.key) {
+                case pc.KEY_1:
+                    data.set('scripts.bloom.enabled', !data.get('scripts.bloom.enabled'));
+                    break;
+                case pc.KEY_2:
+                    data.set('scripts.sepia.enabled', !data.get('scripts.sepia.enabled'));
+                    break;
+                case pc.KEY_3:
+                    data.set('scripts.vignette.enabled', !data.get('scripts.vignette.enabled'));
+                    break;
+                case pc.KEY_4:
+                    data.set('scripts.bokeh.enabled', !data.get('scripts.bokeh.enabled'));
+                    break;
+                case pc.KEY_5:
+                    data.set('scripts.ssao.enabled', !data.get('scripts.ssao.enabled'));
+                    break;
+                case pc.KEY_6:
+                    data.set('data.postProcessUI.enabled', !data.get('data.postProcessUI.enabled'));
+                    break;
+            }
+        }, this);
 
         // Create a 2D screen to place UI on
         const screen = new pc.Entity();
