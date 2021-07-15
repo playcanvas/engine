@@ -239,7 +239,7 @@ class CubemapHandler {
 
         // one of the dependent assets has finished loading
         let awaiting = 7;
-        const onReady = function (index, asset) {
+        const onLoad = function (index, asset) {
             assets[index] = asset;
             awaiting--;
 
@@ -247,28 +247,6 @@ class CubemapHandler {
                 // all dependent assets are finished loading, set them as the active resources
                 self.update(cubemapAsset, assetIds, assets);
                 callback(null, cubemapAsset.resources);
-            }
-        };
-
-        // handle a texture asset finished loading.
-        // the engine is unable to flip ImageBitmaps (to orient them correctly for cubemaps)
-        // so we do that here.
-        const onLoad = function (index, asset) {
-            const level0 = asset && asset.resource && asset.resource._levels[0];
-            if (level0 && typeof ImageBitmap !== 'undefined' && level0 instanceof ImageBitmap) {
-                createImageBitmap(level0, {
-                    premultiplyAlpha: 'none',
-                    imageOrientation: 'flipY'
-                })
-                    .then(function (imageBitmap) {
-                        asset.resource._levels[0] = imageBitmap;
-                        onReady(index, asset);
-                    })
-                    .catch(function (e) {
-                        callback(e);
-                    });
-            } else {
-                onReady(index, asset);
             }
         };
 
@@ -299,10 +277,10 @@ class CubemapHandler {
 
             if (!assetId) {
                 // no asset
-                onReady(i, null);
+                onLoad(i, null);
             } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
                 // asset id hasn't changed from what is currently set
-                onReady(i, loadedAssets[i]);
+                onLoad(i, loadedAssets[i]);
             } else if (parseInt(assetId, 10) === assetId) {
                 // assetId is an asset id
                 texAsset = registry.get(assetId);

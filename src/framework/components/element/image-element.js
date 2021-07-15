@@ -406,26 +406,26 @@ class ImageElement {
         // POS: 0, 0, 0
         vertexDataF32[5] = 1;          // NZ
         vertexDataF32[6] = r.x;        // U
-        vertexDataF32[7] = r.y;        // V
+        vertexDataF32[7] = 1.0 - r.y;  // V
 
         // POS: w, 0, 0
         vertexDataF32[8] = w;          // PX
         vertexDataF32[13] = 1;         // NZ
         vertexDataF32[14] = r.x + r.z; // U
-        vertexDataF32[15] = r.y;       // V
+        vertexDataF32[15] = 1.0 - r.y; // V
 
         // POS: w, h, 0
         vertexDataF32[16] = w;         // PX
         vertexDataF32[17] = h;         // PY
         vertexDataF32[21] = 1;         // NZ
         vertexDataF32[22] = r.x + r.z; // U
-        vertexDataF32[23] = r.y + r.w; // V
+        vertexDataF32[23] = 1.0 - (r.y + r.w); // V
 
         // POS: 0, h, 0
         vertexDataF32[25] = h;         // PY
         vertexDataF32[29] = 1;         // NZ
         vertexDataF32[30] = r.x;       // U
-        vertexDataF32[31] = r.y + r.w; // V
+        vertexDataF32[31] = 1.0 - (r.y + r.w); // V
 
         var vertexDesc = [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
@@ -554,13 +554,13 @@ class ImageElement {
 
             // Update vertex texture coordinates
             vertexDataF32[6] = rect.x / atlasTextureWidth;
-            vertexDataF32[7] = rect.y / atlasTextureHeight;
+            vertexDataF32[7] = 1.0 - rect.y / atlasTextureHeight;
             vertexDataF32[14] = (rect.x + rect.z) / atlasTextureWidth;
-            vertexDataF32[15] = rect.y / atlasTextureHeight;
+            vertexDataF32[15] = 1.0 - rect.y / atlasTextureHeight;
             vertexDataF32[22] = (rect.x + rect.z) / atlasTextureWidth;
-            vertexDataF32[23] = (rect.y + rect.w) / atlasTextureHeight;
+            vertexDataF32[23] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
             vertexDataF32[30] = rect.x / atlasTextureWidth;
-            vertexDataF32[31] = (rect.y + rect.w) / atlasTextureHeight;
+            vertexDataF32[31] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
 
             vb.unlock();
 

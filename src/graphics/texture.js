@@ -128,7 +128,7 @@ class Texture {
         this._cubemap = false;
         this._volume = false;
         this.fixCubemapSeams = false;
-        this._flipY = true;
+        this._flipY = false;
         this._premultiplyAlpha = false;
 
         this._isRenderTarget = false;

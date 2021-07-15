@@ -130,7 +130,7 @@ class RenderToTextureExample extends Example {
         // create a plane called tv which we use to display rendered texture
         // this is only added to excluded Layer, so it does not render into texture
         const tv = createPrimitive("plane", new pc.Vec3(6, 8, -5), new pc.Vec3(20, 10, 10), pc.Color.BLACK, [excludedLayer.id]);
-        tv.setLocalEulerAngles(90, 0, 0);
+        tv.setLocalEulerAngles(90, 0, 180);
         tv.render.castShadows = false;
         tv.render.receiveShadows = false;
         // @ts-ignore engine-tsd
