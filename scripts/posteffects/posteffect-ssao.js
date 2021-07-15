@@ -378,8 +378,8 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     });
     colorBuffer.name = 'ssao';
     this.target = new pc.RenderTarget({
-      colorBuffer: colorBuffer,
-      depth: false,
+        colorBuffer: colorBuffer,
+        depth: false
     });
 
     // Uniforms
