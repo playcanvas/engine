@@ -1,5 +1,6 @@
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
+import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
 
 /**
@@ -10,12 +11,16 @@ import { AnimTransition } from '../../../anim/controller/anim-transition.js';
  * @param {string} name - The name of the layer.
  * @param {object} controller - The controller to manage this layers animations.
  * @param {AnimComponent} component - The component that this layer is a member of.
+ * @param {number} weight - The weight of this layer. Defaults to 1.
  */
 class AnimComponentLayer {
-    constructor(name, controller, component) {
+    constructor(name, controller, component, index, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;
         this._component = component;
+        this._index = index;
+        this._weight = weight;
+        this._blendType = blendType;
     }
 
     /**
@@ -227,6 +232,24 @@ class AnimComponentLayer {
      */
     get states() {
         return this._controller.states;
+    }
+
+    /**
+     * @name AnimComponentLayer#weight
+     * @type {number}
+     * @description The blending weight of this layer. Used when calculating the value of properties that are animated by more than one layer.
+     */
+    get weight() {
+        return this._weight;
+    }
+
+    set weight(value) {
+        this._weight = value;
+        this._component.dirtyWeights = true;
+    }
+
+    get blendType() {
+        return this._blendType;
     }
 }
 

@@ -1,3 +1,130 @@
+import { Quat } from '../../math/quat.js';
+import { Vec3 } from '../../math/vec3.js';
+import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
+
+class AnimTarget {
+    constructor(component, type) {
+        this._component = component;
+        this._mask = new Int8Array(component.layers.length);
+        this._weights = new Float32Array(component.layers.length);
+        this._totalWeight = 0;
+        this._counter = 0;
+        this._layerCounter = 0;
+        this._valueType = type;
+
+        if (this._valueType === AnimTarget.TYPE_QUAT) {
+            this._value = new Quat();
+            this._currentValue = new Quat();
+        } else {
+            this._value = new Vec3();
+            this._currentValue = new Vec3();
+        }
+    }
+
+    get valueType() {
+        return this._valueType;
+    }
+
+    get mask() {
+        return this._mask;
+    }
+
+    set mask(value) {
+        this._mask = value;
+    }
+
+    get weights() {
+        return this._weights;
+    }
+
+    get totalWeight() {
+        return this._totalWeight;
+    }
+
+    set totalWeight(value) {
+        this._totalWeight = value;
+    }
+
+    get counter() {
+        return this._counter;
+    }
+
+    set counter(value) {
+        this._counter = value;
+    }
+
+    get layerCounter() {
+        return this._layerCounter;
+    }
+
+    set layerCounter(value) {
+        this._layerCounter = value;
+    }
+
+    get value() {
+        return this._value;
+    }
+
+    set value(value) {
+        this._value = value;
+    }
+
+    weight(index) {
+        if (this._component.dirtyWeights) this.updateWeights();
+        if (this.totalWeight === 0) return 0;
+        return this.weights[index] / this.totalWeight;
+    }
+
+    setMask(index, value) {
+        this._mask[index] = value;
+        if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
+            this._mask = this._mask.fill(0, 0, index - 1);
+        }
+        this.updateWeights();
+    }
+
+    updateWeights() {
+        this._totalWeight = 0;
+        for (let i = 0; i < this._weights.length; i++) {
+            this._weights[i] = this._component.layers[i].weight;
+            this._totalWeight += this._mask[i] * this._weights[i];
+        }
+    }
+
+    updateValue(index, value) {
+        if (this._counter === 0) {
+            this._value.set(0, 0, 0, 1);
+        }
+        this._currentValue.set(...value);
+        switch (this._valueType) {
+            case (AnimTarget.TYPE_QUAT): {
+                this._value.mul(this._currentValue.slerp(Quat.IDENTITY, this._currentValue, this.weight(index)));
+                break;
+            }
+            case (AnimTarget.TYPE_VEC3): {
+                this._value.add(this._currentValue.mulScalar(this.weight(index)));
+                break;
+            }
+        }
+    }
+
+    get valueData() {
+        switch (this._valueType) {
+            case (AnimTarget.TYPE_QUAT): {
+                return [this._value.x, this._value.y, this._value.z, this._value.w];
+            }
+            case (AnimTarget.TYPE_VEC3): {
+                return this._value.data;
+            }
+            default:
+                return null;
+        }
+    }
+}
+
+AnimTarget.TYPE_QUAT = 'QUATERNION';
+AnimTarget.TYPE_VEC3 = 'VECTOR3';
+
 /**
  * @private
  * @class
@@ -149,6 +276,19 @@ class AnimEvaluator {
                     }
 
                     targets[resolved.targetPath] = target;
+                    if (this._binder.animComponent) {
+                        if (!this._binder.animComponent.targets[resolved.targetPath]) {
+                            let type;
+                            if (resolved.targetPath.indexOf('localRotation') === -1) {
+                                type = AnimTarget.TYPE_VEC3;
+                            } else {
+                                type = AnimTarget.TYPE_QUAT;
+                            }
+                            this._binder.animComponent.targets[resolved.targetPath] = new AnimTarget(this._binder.animComponent, type);
+                        }
+                        this._binder.animComponent.targets[resolved.targetPath].layerCounter++;
+                        this._binder.animComponent.targets[resolved.targetPath].setMask(this._binder.index, 1);
+                    }
                 }
 
                 // binding may have failed
@@ -195,6 +335,9 @@ class AnimEvaluator {
                     if (target.curves === 0) {
                         this._binder.unresolve(path);
                         delete targets[target.targetPath];
+                        if (this._binder.animComponent) {
+                            this._binder.animComponent.targets[target.targetPath].layerCounter--;
+                        }
                     }
                 }
             }
@@ -316,7 +459,19 @@ class AnimEvaluator {
         for (var path in targets) {
             if (targets.hasOwnProperty(path)) {
                 var target = targets[path];
-                target.target.func(target.value);
+                if (this._binder.animComponent) {
+                    const animTarget = this._binder.animComponent.targets[path];
+                    if (animTarget.counter === animTarget.layerCounter) {
+                        animTarget.counter = 0;
+                    }
+                    if (animTarget.mask[this._binder.index]) {
+                        animTarget.updateValue(this._binder.index, target.value);
+                    }
+                    target.target.func(animTarget.valueData);
+                    animTarget.counter++;
+                } else {
+                    target.target.func(target.value);
+                }
                 target.blendCounter = 0;
             }
         }
