@@ -20,7 +20,6 @@ class BasisParser {
 
     load(url, callback, asset) {
         const device = this.device;
-        /*
         const options = {
             cache: true,
             responseType: "arraybuffer",
@@ -48,19 +47,6 @@ class BasisParser {
                 }
             }
         );
-        */
-
-        const basisModuleFound = basisTranscode(
-            device,
-            url.load,
-            null,
-            callback,
-            { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
-        );
-
-        if (!basisModuleFound) {
-            callback('Basis module not found. Asset "' + asset.name + '" basis texture variant will not be loaded.');
-        }
     }
 
     // our async transcode call provides the neat structure we need to create the texture instance

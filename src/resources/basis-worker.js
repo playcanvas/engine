@@ -235,7 +235,7 @@ function BasisWorker() {
         const compressedFormat = isCompressedFormat(basisFormat);
 
         return {
-            format: basisToEngineMapping[basisFormat],
+            format: basisToEngineMapping(basisFormat, options.deviceDetails),
             width: compressedFormat ? ((width + 3) & ~3) : width,
             height: compressedFormat ? ((height + 3) & ~3) : height,
             levels: levelData,
@@ -345,13 +345,8 @@ function BasisWorker() {
 
     // download and transcode the file given the basis module and
     // file url
-    const workerTranscode = async (url, data, options) => {
+    const workerTranscode = (url, data, options) => {
         try {
-            // texture data has been provided
-            if (!data) {
-                data = await fetch(url).then((result) => result.arrayBuffer());
-                console.log(data);
-            }
             const result = transcode(url, data, options);
             result.levels = result.levels.map((v) => v.buffer);
             self.postMessage({ url: url, data: result }, result.levels);
