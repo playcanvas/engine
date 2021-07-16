@@ -11,8 +11,8 @@ interface SideBarProps {
 }
 
 const SideBar = (props: SideBarProps) => {
-    const categories = props.categories;
-    const [filteredCategories, setFilteredCategories] = useState(categories);
+    const defaultCategories = props.categories;
+    const [filteredCategories, setFilteredCategories] = useState(null);
     const [hash, setHash] = useState(location.hash);
     const observer = new Observer({ largeThumbnails: false });
     useEffect(() => {
@@ -28,37 +28,62 @@ const SideBar = (props: SideBarProps) => {
         });
 
         observer.on('largeThumbnails:set', () => {
+            let topNavItem: HTMLElement;
+            let minTopNavItemDistance = Number.MAX_VALUE;
+            document.querySelectorAll('.nav-item').forEach((nav: HTMLElement) => {
+                const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
+                if (navItemDistance < minTopNavItemDistance) {
+                    minTopNavItemDistance = navItemDistance;
+                    topNavItem = nav;
+                }
+            });
             sideBar.classList.toggle('small-thumbnails');
+            topNavItem.scrollIntoView();
         });
+
+        const sideBarPanel = document.getElementById('sideBar-panel');
+        if (!filteredCategories && document.body.offsetWidth < 601) {
+            // @ts-ignore
+            sideBarPanel.ui.collapsed = true;
+        }
+        sideBar.classList.add('visible');
+
+        // when first opening the examples browser via a specific example, scroll it into view
+        if (!(window as any)._scrolledToExample) {
+            const examplePath = location.hash.split('/');
+            document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
+            (window as any)._scrolledToExample = true;
+        }
     });
 
+    const categories = filteredCategories || defaultCategories;
     return (
         <Container id='sideBar' class='small-thumbnails'>
             <div className='panel-toggle' />
-            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} id='sideBar-panel' collapsed={document.body.offsetWidth < 601}>
+            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} id='sideBar-panel'>
                 <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(filter: string) => {
                     const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
                     if (!reg) {
-                        setFilteredCategories(categories);
+                        setFilteredCategories(defaultCategories);
                         return;
                     }
                     const updatedCategories: any = {};
-                    Object.keys(categories).forEach((category: string) => {
-                        if (categories[category].name.search(reg) !== -1) {
-                            updatedCategories[category] = categories[category];
+                    Object.keys(defaultCategories).forEach((category: string) => {
+                        if (defaultCategories[category].name.search(reg) !== -1) {
+                            updatedCategories[category] = defaultCategories[category];
                             return null;
                         }
-                        Object.keys(categories[category].examples).forEach((example: string) => {
-                            if (categories[category].examples[example].constructor.NAME.search(reg) !== -1) {
+                        Object.keys(defaultCategories[category].examples).forEach((example: string) => {
+                            if (defaultCategories[category].examples[example].constructor.NAME.search(reg) !== -1) {
                                 if (!updatedCategories[category]) {
                                     updatedCategories[category] = {
-                                        name: categories[category].name,
+                                        name: defaultCategories[category].name,
                                         examples: {
-                                            [example]: categories[category].examples[example]
+                                            [example]: defaultCategories[category].examples[example]
                                         }
                                     };
                                 } else {
-                                    updatedCategories[category].examples[example] = categories[category].examples[example];
+                                    updatedCategories[category].examples[example] = defaultCategories[category].examples[example];
                                 }
                             }
                         });
@@ -68,19 +93,23 @@ const SideBar = (props: SideBarProps) => {
                 <LabelGroup text='Large thumbnails:'>
                     <BooleanInput type='toggle'  binding={new BindingTwoWay()} link={{ observer, path: 'largeThumbnails' }} />
                 </LabelGroup>
-                <Container class='sideBar-contents'>
+                <Container id='sideBar-contents'>
                     {
-                        Object.keys(filteredCategories).sort((a: string, b:string) => (a > b ? 1 : -1)).map((category: string) => {
-                            return <Panel key={category} class="categoryPanel" headerText={filteredCategories[category].name} collapsible={true} collapsed={false}>
+                        Object.keys(categories).sort((a: string, b:string) => (a > b ? 1 : -1)).map((category: string) => {
+                            return <Panel key={category} class="categoryPanel" headerText={categories[category].name} collapsible={true} collapsed={false}>
                                 <ul className="category-nav">
                                     {
-                                        Object.keys(filteredCategories[category].examples).sort((a: string, b:string) => (a > b ? 1 : -1)).map((example: string) => {
+                                        Object.keys(categories[category].examples).sort((a: string, b:string) => (a > b ? 1 : -1)).map((example: string) => {
                                             const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
                                             const className = `nav-item ${isSelected ? 'selected' : ''}`;
-                                            return <Link key={example} to={`/${category}/${example}`}>
-                                                <div className={className}>
+                                            return <Link key={example} to={`/${category}/${example}`} onClick={() => {
+                                                const sideBarPanel = document.getElementById('sideBar-panel');
+                                                // @ts-ignore
+                                                sideBarPanel.ui.collapsed = true;
+                                            }}>
+                                                <div className={className} id={`link-${category}-${example}`}>
                                                     <img src={`./thumbnails/${category}_${example}.png`} />
-                                                    <div className='nav-item-text'>{filteredCategories[category].examples[example].constructor.NAME.toUpperCase()}</div>
+                                                    <div className='nav-item-text'>{categories[category].examples[example].constructor.NAME.toUpperCase()}</div>
                                                 </div>
                                             </Link>;
                                         })
@@ -90,7 +119,7 @@ const SideBar = (props: SideBarProps) => {
                         })
                     }
                     {
-                        Object.keys(filteredCategories).length === 0 && <Label text='No results'/>
+                        Object.keys(categories).length === 0 && <Label text='No results'/>
                     }
                 </Container>
             </Panel>

@@ -7,6 +7,7 @@ import Example from '../../app/example';
 class MiniStatsExample extends Example {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
+    static ENGINE = 'DEBUG';
 
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, pcx: any): void {

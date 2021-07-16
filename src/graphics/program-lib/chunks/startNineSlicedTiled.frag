@@ -4,3 +4,5 @@
     vec2 clampedUv = mix(innerOffset.xy * 0.5, vec2(1.0) - innerOffset.zw * 0.5, fract((vTiledUv - tileSize) * tileScale));
     clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;
     nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);
+    nineSlicedUv.y = 1.0 - nineSlicedUv.y;
+    

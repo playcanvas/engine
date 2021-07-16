@@ -6,6 +6,8 @@ import * as playcanvas from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
 import * as playcanvasDebug from 'playcanvas/build/playcanvas.dbg.js';
 // @ts-ignore: library file import
+import * as playcanvasPerformance from 'playcanvas/build/playcanvas.prf.js';
+// @ts-ignore: library file import
 import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 // @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
@@ -27,14 +29,18 @@ interface ExampleIframeProps {
     controls: any,
     assets: any,
     files: Array<File>,
-    debug?: boolean,
+    engine: string,
     debugExample?: any
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
-    let pc = playcanvas;
-    if (props.debug) {
+    let pc: any;
+    if (props.engine === 'DEBUG') {
         pc = playcanvasDebug;
+    } else if (props.engine === 'PERFORMANCE') {
+        pc = playcanvasPerformance;
+    } else {
+        pc = playcanvas;
     }
     // expose PlayCanvas as a global in the iframe
     (window as any).pc = pc;
@@ -49,13 +55,6 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         files = JSON.parse(decodeURIComponent(atob(location.hash.split('files=')[1])));
     } catch (e) {
         files = props.files;
-    }
-    let showMiniStats = false;
-    // Try to retrieve a set of B64 encoded files from the URL's query params.
-    // If not present then use the default files passed in the props
-    try {
-        showMiniStats = location.hash.split('showMiniStats=')[1].split('&')[0] === 'true';
-    } catch (e) {
     }
 
     const fullscreen = location.hash.includes('fullscreen=true');
@@ -134,9 +133,10 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             graphicsDeviceOptions: { alpha: true }
         });
 
-        if (showMiniStats) {
-            const miniStats = new pcx.MiniStats(app);
-        }
+        const miniStats: any = new pcx.MiniStats(app);
+        app.on('update', () => {
+            miniStats.enabled = (window?.parent as any)?._showMiniStats;
+        });
 
         (window as any).app = app;
 
