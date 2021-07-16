@@ -39,7 +39,7 @@ class XrManager extends EventHandler {
 
         this.app = app;
 
-        this._supported = !! navigator.xr;
+        this._supported = (typeof navigator !== 'undefined') && !! navigator.xr;
 
         this._available = { };
 

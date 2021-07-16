@@ -2,7 +2,7 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-const tipJointIds = window.XRHand ? [
+const tipJointIds = (typeof window !== 'undefined') && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
     'middle-finger-tip',

@@ -253,7 +253,7 @@ class XrDepthSensing extends EventHandler {
     }
 
     get supported() {
-        return !! window.XRDepthInformation;
+        return (typeof window !== 'undefined') && !! window.XRDepthInformation;
     }
 
     /**

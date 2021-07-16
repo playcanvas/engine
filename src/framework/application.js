@@ -2159,7 +2159,7 @@ var makeTick = function (_app) {
         } else if (application.xr.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = window.requestAnimationFrame(application.tick);
+            frameRequest = (typeof window !== 'undefined') && window.requestAnimationFrame(application.tick);
         }
 
         if (application.graphicsDevice.contextLost)

@@ -13,7 +13,7 @@ const vecA = new Vec3();
 const vecB = new Vec3();
 const vecC = new Vec3();
 
-if (window.XRHand) {
+if ((typeof window !== 'undefined') && window.XRHand) {
     fingerJointIds = [
         ['thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip'],
         ['index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-phalanx-intermediate', 'index-finger-phalanx-distal', 'index-finger-tip'],

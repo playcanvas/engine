@@ -309,18 +309,23 @@ class GraphicsDevice extends EventHandler {
             throw new Error("WebGL not supported");
         }
 
+        const hasWindow = (typeof window !== 'undefined');
+        const hasNavigator = (typeof navigator !== 'undefined');
+
         this.gl = gl;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = hasWindow && !!window.safari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        const isChrome = !!window.chrome;
-        const isMac = navigator.appVersion.indexOf("Mac") !== -1;
+        const isChrome = hasWindow && !!window.chrome;
+        const isMac = hasNavigator && navigator.appVersion.indexOf("Mac") !== -1;
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         // init polyfill for VAOs
-        window.setupVertexArrayObject(gl);
+        if (hasWindow) {
+            window.setupVertexArrayObject(gl);
+        }
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
@@ -1550,8 +1555,10 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
-        this.boundVao = null;
-        this.gl.bindVertexArray(null);
+        if (this.boundVao) {
+            this.boundVao = null;
+            this.gl.bindVertexArray(null);
+        }
 
         // Unset the render target
         const target = this.renderTarget;
@@ -3509,7 +3516,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        const ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        const ratio = Math.min(this._maxPixelRatio, (typeof window !== 'undefined') ? window.devicePixelRatio : 1);
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 

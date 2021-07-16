@@ -16,7 +16,7 @@ class XrImageTracking extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = !! window.XRImageTrackingResult;
+        this._supported = (typeof window !== 'undefined') && !!window.XRImageTrackingResult;
         this._available = false;
 
         this._images = [];

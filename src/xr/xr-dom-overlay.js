@@ -25,7 +25,7 @@
 class XrDomOverlay {
     constructor(manager) {
         this._manager = manager;
-        this._supported = !! window.XRDOMOverlayState;
+        this._supported = (typeof window !== 'undefined') && !!window.XRDOMOverlayState;
         this._root = null;
     }
 

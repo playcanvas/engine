@@ -25,7 +25,7 @@ class XrPlaneDetection extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = !! window.XRPlane;
+        this._supported = (typeof window !== 'undefined') && !!window.XRPlane;
         this._available = false;
 
         // key - XRPlane (native plane does not have ID's)
