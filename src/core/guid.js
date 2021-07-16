@@ -1,3 +1,9 @@
+// Look up table for GUIDs
+const LUT = [];
+for (let i = 0; i < 256; i++) {
+    LUT[i] = (i < 16 ? '0' : '') + i.toString(16);
+}
+
 /**
  * @name guid
  * @namespace
@@ -12,11 +18,14 @@ const guid = {
      * @returns {string} A new GUID.
      */
     create: function () {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0;
-            const v = (c === 'x') ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
+        const d0 = Math.random() * 0xffffffff | 0;
+        const d1 = Math.random() * 0xffffffff | 0;
+        const d2 = Math.random() * 0xffffffff | 0;
+        const d3 = Math.random() * 0xffffffff | 0;
+        return LUT[d0 & 0xff] + LUT[d0 >> 8 & 0xff] + LUT[d0 >> 16 & 0xff] + LUT[d0 >> 24 & 0xff] + '-' +
+            LUT[d1 & 0xff] + LUT[d1 >> 8 & 0xff] + '-' + LUT[d1 >> 16 & 0x0f | 0x40] + LUT[d1 >> 24 & 0xff] + '-' +
+            LUT[d2 & 0x3f | 0x80] + LUT[d2 >> 8 & 0xff] + '-' + LUT[d2 >> 16 & 0xff] + LUT[d2 >> 24 & 0xff] +
+            LUT[d3 & 0xff] + LUT[d3 >> 8 & 0xff] + LUT[d3 >> 16 & 0xff] + LUT[d3 >> 24 & 0xff];
     }
 };
 
