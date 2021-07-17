@@ -1680,21 +1680,23 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         callback(null, textureAsset);
     };
 
+    const mimeTypeFileExtensions = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/basis': 'basis',
+        'image/ktx': 'ktx',
+        'image/vnd-ms.dds': 'dds'
+    };
+
     const loadTexture = function (url, mimeType, crossOrigin, isBlobUrl) {
-        const mimeTypeFileExtensions = {
-            'image/png': 'png',
-            'image/jpeg': 'jpg',
-            'image/basis': 'basis',
-            'image/ktx': 'ktx',
-            'image/vnd-ms.dds': 'dds'
-        };
+        const name = gltfImage.name || 'gltf-texture';
 
         // construct the asset file
         const file = { url: url };
         if (mimeType) {
             const extension = mimeTypeFileExtensions[mimeType];
             if (extension) {
-                file.filename = 'glb-texture-' + index + '.' + extension;
+                file.filename = name + '-' + index + '.' + extension;
             }
         }
 
@@ -1706,9 +1708,30 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
             }
             onLoad(asset);
         });
-        asset.on('error', function (err, asset) {
-            callback(err);
-        });
+        asset.on('error', callback);
+        registry.add(asset);
+        registry.load(asset);
+    };
+
+    const loadTextureFromData = function (mimeType, bufferView) {
+        const name = gltfImage.name || 'gltf-texture';
+
+        // construct the asset file
+        const file = {
+            url: name + '-' + index,
+            contents: bufferView
+        };
+        if (mimeType) {
+            const extension = mimeTypeFileExtensions[mimeType];
+            if (extension) {
+                file.filename = file.url + '.' + extension;
+            }
+        }
+
+        // create and load the asset
+        const asset = new Asset(name, 'texture',  file, null);
+        asset.on('load', onLoad);
+        asset.on('error', callback);
         registry.add(asset);
         registry.load(asset);
     };
@@ -1732,8 +1755,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
-                const blob = new Blob([bufferViews[gltfImage.bufferView]], { type: gltfImage.mimeType });
-                loadTexture(URL.createObjectURL(blob), gltfImage.mimeType, null, true);
+                loadTextureFromData(gltfImage.mimeType, bufferViews[gltfImage.bufferView]);
             } else {
                 // fail
                 callback("Invalid image found in gltf (neither uri or bufferView found). index=" + index);
