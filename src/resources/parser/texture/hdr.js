@@ -10,7 +10,7 @@ import { Texture } from '../../../graphics/texture.js';
 
 class Reader {
     constructor(data) {
-        this.view = new DataView(new ArrayBuffer(data));
+        this.view = new DataView(data);
         this.offset = 0;
     }
 
