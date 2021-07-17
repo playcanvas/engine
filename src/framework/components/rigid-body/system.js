@@ -731,15 +731,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
             triggers[i].updateTransform();
         }
 
-        const compounds = this._compounds;
-        for (i = 0, len = compounds.length; i < len; i++) {
-            compounds[i]._updateCompound();
-        }
-
         // Update all kinematic bodies based on their current entity transform
         const kinematic = this._kinematic;
         for (i = 0, len = kinematic.length; i < len; i++) {
             kinematic[i]._updateKinematic();
+        }
+
+        const compounds = this._compounds;
+        for (i = 0, len = compounds.length; i < len; i++) {
+            compounds[i]._updateCompound();
         }
 
         // Step the physics simulation
