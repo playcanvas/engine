@@ -408,7 +408,7 @@ class StandardMaterial extends Material {
         }
 
         transform = transform || new Vec4();
-        transform.set(tiling.x, tiling.y, offset.x, offset.y);
+        transform.set(tiling.x, tiling.y, offset.x, 1.0 - tiling.y - offset.y);
         return transform;
     }
 
