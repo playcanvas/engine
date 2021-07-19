@@ -327,7 +327,6 @@ const math = {
         };
     }()),
 
-
     /**
      * @function
      * @private
@@ -343,6 +342,41 @@ const math = {
         const min = Math.min(a, b);
         const max = Math.max(a, b);
         return inclusive ? num >= min && num <= max : num > min && num < max;
+    },
+
+    /**
+     * @function
+     * @private
+     * @name math.fibonacciSpherePoint
+     * @description Generates evenly distributed deterministic points on a unit sphere using Fibonacci sphere algorithm. It also allows
+     * points to cover only part of the sphere by specifying start and end parameters, representing value from 0 (top of the sphere) and
+     * 1 (bottom of the sphere). For example by specifying 0.4 and 0.6 and start and end, a band around the equator would be generated.
+     * @param {Vec3} point - the returned generated point.
+     * @param {number} index - index of the point to generate, in the range from 0 to numPoints - 1.
+     * @param {number} numPoints - the total number of points of the set.
+     * @param {number} start - Part on the sphere along y axis to start the points, in the range of 0 and 1.
+     * @param {number} end - Part on the sphere along y axis to stop the points, in the range of 0 and 1.
+     */
+    fibonacciSpherePoint: function (point, index, numPoints, start = 0, end = 1) {
+
+        // golden angle in radians: PI * (3 - sqrt(5))
+        const phi = 2.399963229728653;
+
+        // y coordinate needs to go from -1 (top) to 1 (bottom) for the full sphere
+        // evaluate its vaue for this point and specified start and end
+        start = 1 - 2 * start;
+        end = 1 - 2 * end;
+        const y = math.lerp(start, end, index / numPoints);
+
+        // radius at y
+        const radius = Math.sqrt(1 - y * y);
+
+        // golden angle increment
+        const theta = phi * index;
+
+        point.x = Math.cos(theta) * radius;
+        point.y = y;
+        point.z = Math.sin(theta) * radius;
     }
 };
 
