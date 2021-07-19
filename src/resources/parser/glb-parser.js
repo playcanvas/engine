@@ -1943,7 +1943,7 @@ const parseGltf = function (gltfChunk, callback) {
 
 // parse glb data, returns the gltf and binary chunk
 const parseGlb = function (glbData, callback) {
-    const data = new DataView(glbData);
+    const data = (glbData instanceof ArrayBuffer) ? new DataView(glbData) : new DataView(glbData.buffer, glbData.byteOffset, glbData.byteLength);
 
     // read header
     const magic = data.getUint32(0, true);
@@ -1960,7 +1960,7 @@ const parseGlb = function (glbData, callback) {
         return;
     }
 
-    if (length <= 0 || length > glbData.byteLength) {
+    if (length <= 0 || length > data.byteLength) {
         callback("Invalid length found in glb header. Found " + length);
         return;
     }
@@ -1970,11 +1970,11 @@ const parseGlb = function (glbData, callback) {
     let offset = 12;
     while (offset < length) {
         const chunkLength = data.getUint32(offset, true);
-        if (offset + chunkLength + 8 > glbData.byteLength) {
+        if (offset + chunkLength + 8 > data.byteLength) {
             throw new Error("Invalid chunk length found in glb. Found " + chunkLength);
         }
         const chunkType = data.getUint32(offset + 4, true);
-        const chunkData = new Uint8Array(glbData, offset + 8, chunkLength);
+        const chunkData = new Uint8Array(data.buffer, data.byteOffset + offset + 8, chunkLength);
         chunks.push({ length: chunkLength, type: chunkType, data: chunkData });
         offset += chunkLength + 8;
     }
