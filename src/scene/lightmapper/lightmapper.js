@@ -36,6 +36,7 @@ import { GraphNode } from '../graph-node.js';
 import { StandardMaterial } from '../materials/standard-material.js';
 
 import { BakeLight } from './bake-light.js';
+import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from './lightmap-cache.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
@@ -45,29 +46,6 @@ const PASS_DIR = 1;
 
 const tempVec = new Vec3();
 
-// helper class to wrap node including its meshInstances
-class MeshNode {
-    constructor(node, meshInstances = null) {
-        this.node = node;
-
-        if (node.render) {
-            this.component = node.render;
-            meshInstances = meshInstances ? meshInstances : node.render.meshInstances;
-        } else {
-            this.component = node.model;
-            meshInstances = meshInstances ? meshInstances : node.model.model.meshInstances;
-        }
-
-        this.castShadows = this.component.castShadows;
-        this.meshInstances = meshInstances;
-
-        // world space aabb for all meshInstances
-        this.bounds = null;
-
-        // render target with attached color buffer for each render pass
-        this.renderTargets = [];
-    }
-}
 
 /**
  * @class
@@ -262,7 +240,7 @@ class Lightmapper {
         // mesh instances from model component
         let meshInstances;
         if (node.model?.model && node.model?.enabled) {
-            if (allNodes) allNodes.push(new MeshNode(node));
+            if (allNodes) allNodes.push(new BakeMeshNode(node));
             if (node.model.lightmapped) {
                 if (bakeNodes) {
                     meshInstances = node.model.model.meshInstances;
@@ -272,7 +250,7 @@ class Lightmapper {
 
         // mesh instances from render component
         if (node.render?.enabled) {
-            if (allNodes) allNodes.push(new MeshNode(node));
+            if (allNodes) allNodes.push(new BakeMeshNode(node));
             if (node.render.lightmapped) {
                 if (bakeNodes) {
                     meshInstances = node.render.meshInstances;
@@ -303,7 +281,7 @@ class Lightmapper {
                     // is this mesh an instance of already used mesh in this node
                     if (this._tempSet.has(mesh)) {
                         // collect each instance (object with shared VB) as separate "node"
-                        bakeNodes.push(new MeshNode(node, [meshInstances[i]]));
+                        bakeNodes.push(new BakeMeshNode(node, [meshInstances[i]]));
                     } else {
                         notInstancedMeshInstances.push(meshInstances[i]);
                     }
@@ -314,7 +292,7 @@ class Lightmapper {
 
                 // collect all non-shared objects as one "node"
                 if (notInstancedMeshInstances.length > 0) {
-                    bakeNodes.push(new MeshNode(node, notInstancedMeshInstances));
+                    bakeNodes.push(new BakeMeshNode(node, notInstancedMeshInstances));
                 }
             }
         }
@@ -489,10 +467,10 @@ class Lightmapper {
         const startFboTime = device._renderTargetCreationTime;
         const startCompileTime = device._shaderStats.compileTime;
 
-        // MeshNode objects for baking
+        // BakeMeshNode objects for baking
         const bakeNodes = [];
 
-        // all MeshNode objects
+        // all BakeMeshNode objects
         const allNodes = [];
 
         // collect nodes / meshInstances for baking
@@ -1000,12 +978,11 @@ class Lightmapper {
 
         this.postprocessTextures(device, bakeNodes, passCount);
 
-        // Revert shadow casting
+        // restore changes
         for (node = 0; node < allNodes.length; node++) {
-            allNodes[node].component.castShadows = allNodes[node].castShadows;
+            allNodes[node].restore();
         }
 
-        // restore changes
         this.restoreLights(allLights);
         this.restoreScene();
     }
