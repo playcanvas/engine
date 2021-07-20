@@ -48,8 +48,7 @@ var viewMat3 = new Mat3();
 var viewProjMat = new Mat4();
 var projMat;
 
-var flipYMat = new Mat4();
-flipYMat.setScale(1, -1, 1);
+var flipYMat = new Mat4().setScale(1, -1, 1);
 var flippedViewProjMat = new Mat4();
 var flippedSkyboxProjMat = new Mat4();
 
