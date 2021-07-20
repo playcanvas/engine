@@ -10,8 +10,7 @@ interface ExampleProps {
     files: Array<File>,
     defaultFiles: Array<File>,
     setDefaultFiles: (value: Array<File>) => void,
-    path: string,
-    showMiniStats: boolean
+    path: string
 }
 
 interface ExampleState {
@@ -57,7 +56,7 @@ class Example extends Component <ExampleProps, ExampleState> {
     }
 
     get iframePath() {
-        return `/#/iframe${this.props.path}?showMiniStats=${this.props.showMiniStats}&files=${btoa(encodeURIComponent(JSON.stringify(this.files)))}`;
+        return `/#/iframe${this.props.path}?files=${btoa(encodeURIComponent(JSON.stringify(this.files)))}`;
     }
 
     addAssets(app: pc.Application, assets?: any) {

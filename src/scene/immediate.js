@@ -139,6 +139,7 @@ class ImmediateData {
             void main(void) {
                 gl_Position = matrix_model * vec4(aPosition, 0, 1);
                 uv0 = aPosition.xy + 0.5;
+                uv0.y = 1.0 - uv0.y;
             }
         `;
     }

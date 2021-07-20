@@ -2,6 +2,10 @@ import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
+// @ts-ignore: library file import
+import { Panel, SliderInput, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+// @ts-ignore: library file import
+import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
 
 class LightsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -10,13 +14,42 @@ class LightsExample extends Example {
     load() {
         return <>
             <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
             <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
         </>;
     }
 
+    // @ts-ignore: override class function
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='OMNI LIGHT [KEY_1]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='SPOT LIGHT [KEY_2]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='DIRECTIONAL LIGHT [KEY_3]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.intensity' }}/>
+                </LabelGroup>
+            </Panel>
+        </>;
+    }
+
     // @ts-ignore: override class function$
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    example(canvas: HTMLCanvasElement, assets: any, data:any): void {
         function createMaterial(colors: any) {
             const material: any = new pc.StandardMaterial();
             for (const param in colors) {
@@ -68,24 +101,44 @@ class LightsExample extends Example {
         ground.setLocalPosition(0, -0.5, 0);
         app.root.addChild(ground);
 
-        // Create an spot light
-        const spotlight = new pc.Entity();
-        spotlight.addComponent("light", {
-            type: "spot",
-            color: pc.Color.WHITE,
-            innerConeAngle: 30,
-            outerConeAngle: 31,
-            range: 100,
-            intensity: 0.6,
-            castShadows: true,
-            shadowBias: 0.05,
-            normalOffsetBias: 0.03,
-            shadowResolution: 2048,
+        // setup light data
 
-            // heart texture's alpha channel as a cookie texture
-            cookie: assets.heart.resource,
-            // cookie: assets.heart.asset.resource,
-            cookieChannel: "a"
+        data.set('lights', {
+            spot: {
+                enabled: true,
+                intensity: 0.6
+            },
+            omni: {
+                enabled: true,
+                intensity: 0.6
+            },
+            directional: {
+                enabled: true,
+                intensity: 0.6
+            }
+        });
+
+        const lights: {[key: string]: pc.Entity } = {};
+
+        // Create an spot light
+        lights.spot = new pc.Entity();
+        lights.spot.addComponent("light", {
+            ...{
+                type: "spot",
+                color: pc.Color.WHITE,
+                innerConeAngle: 30,
+                outerConeAngle: 31,
+                range: 100,
+                castShadows: true,
+                shadowBias: 0.05,
+                normalOffsetBias: 0.03,
+                shadowResolution: 2048,
+                // heart texture's alpha channel as a cookie texture
+                cookie: assets.heart.resource,
+                // cookie: assets.heart.asset.resource,
+                cookieChannel: "a"
+            },
+            ...data.get('lights.spot')
         });
 
         const cone = new pc.Entity();
@@ -94,74 +147,55 @@ class LightsExample extends Example {
             castShadows: false,
             material: createMaterial({ emissive: pc.Color.WHITE })
         });
-        spotlight.addChild(cone);
-        app.root.addChild(spotlight);
+        lights.spot.addChild(cone);
+        app.root.addChild(lights.spot);
 
         // Create a omni light
-        const omnilight = new pc.Entity();
-        omnilight.addComponent("light", {
-            type: "omni",
-            color: pc.Color.YELLOW,
-            range: 100,
-            castShadows: true,
-            intensity: 0.6
+        lights.omni = new pc.Entity();
+        lights.omni.addComponent("light", {
+            ...{
+                type: "omni",
+                color: pc.Color.YELLOW,
+                castShadows: true,
+                range: 100
+            },
+            ...data.get('lights.omni')
         });
-        omnilight.addComponent("render", {
+        lights.omni.addComponent("render", {
             type: "sphere",
             castShadows: false,
             material: createMaterial({ diffuse: pc.Color.BLACK, emissive: pc.Color.YELLOW })
         });
-        app.root.addChild(omnilight);
+        app.root.addChild(lights.omni);
 
         // Create a directional light
-        const directionallight = new pc.Entity();
-        directionallight.addComponent("light", {
-            type: "directional",
-            color: pc.Color.CYAN,
-            range: 100,
-            castShadows: true,
-            shadowBias: 0.1,
-            normalOffsetBias: 0.2,
-            intensity: 0.6
+        lights.directional = new pc.Entity();
+        lights.directional.addComponent("light", {
+            ...{
+                type: "directional",
+                color: pc.Color.CYAN,
+                range: 100,
+                castShadows: true,
+                shadowBias: 0.1,
+                normalOffsetBias: 0.2
+            },
+            ...data.get('lights.directional')
         });
-        app.root.addChild(directionallight);
-
-
-        // Create a 2D screen for text rendering
-        const screen = new pc.Entity();
-        screen.addComponent("screen", {
-            referenceResolution: new pc.Vec2(1280, 720),
-            scaleBlend: 0.5,
-            scaleMode: pc.SCALEMODE_BLEND,
-            screenSpace: true
-        });
-        app.root.addChild(screen);
-
-        // Load a font
-
-        // Create a basic text element
-        const text = new pc.Entity();
-        text.addComponent("element", {
-            anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
-            fontAsset: assets.font,
-            fontSize: 28,
-            pivot: new pc.Vec2(0.5, 0.1),
-            type: pc.ELEMENTTYPE_TEXT,
-            alignment: pc.Vec2.ZERO
-        });
-        screen.addChild(text);
+        app.root.addChild(lights.directional);
 
         // Allow user to toggle individual lights
         app.keyboard.on("keydown", function (e) {
+            // if the user is editing an input field, ignore key presses
+            if (e.element.constructor.name === 'HTMLInputElement') return;
             switch (e.key) {
                 case pc.KEY_1:
-                    omnilight.enabled = !omnilight.enabled;
+                    data.set('lights.omni.enabled', !data.get('lights.omni.enabled'));
                     break;
                 case pc.KEY_2:
-                    spotlight.enabled = !spotlight.enabled;
+                    data.set('lights.spot.enabled', !data.get('lights.spot.enabled'));
                     break;
                 case pc.KEY_3:
-                    directionallight.enabled = !directionallight.enabled;
+                    data.set('lights.directional.enabled', !data.get('lights.directional.enabled'));
                     break;
             }
         }, this);
@@ -172,21 +206,23 @@ class LightsExample extends Example {
             angleRad += 0.3 * dt;
             if (entity) {
 
-                spotlight.lookAt(new pc.Vec3(0, -5, 0));
-                spotlight.rotateLocal(90, 0, 0);
-                spotlight.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
+                lights.spot.lookAt(new pc.Vec3(0, -5, 0));
+                lights.spot.rotateLocal(90, 0, 0);
+                lights.spot.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
 
-                omnilight.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                lights.omni.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
 
-                directionallight.setLocalEulerAngles(45, -60 * angleRad, 0);
+                lights.directional.setLocalEulerAngles(45, -60 * angleRad, 0);
             }
+        });
 
-            // update text showing which lights are enabled
-            if (text) {
-                text.element.text =
-                    "[Key 1] Omni light: " + omnilight.enabled +
-                    "\n[Key 2] Spot light: " + spotlight.enabled +
-                    "\n[Key 3] Directional light: " + directionallight.enabled;
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+            if (pathArray[2] === 'enabled') {
+                lights[pathArray[1]].enabled = value;
+            } else {
+                // @ts-ignore
+                lights[pathArray[1]][pathArray[2]] = value;
             }
         });
     }

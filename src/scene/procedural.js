@@ -334,7 +334,7 @@ function createTorus(device, opts) {
 
             positions.push(x, y, z);
             normals.push(nx, ny, nz);
-            uvs.push(u, v);
+            uvs.push(u, 1.0 - v);
 
             if ((i < sides) && (j < segments)) {
                 var first, second, third, fourth;
@@ -399,7 +399,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 normals.push(norm.x, norm.y, norm.z);
                 u = j / capSegments;
                 v = i / heightSegments;
-                uvs.push(u, v);
+                uvs.push(u, 1.0 - v);
 
                 // Pack UV1 to 1st third
                 var _v = v;
@@ -408,7 +408,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 u /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
-                uvs1.push(u, v);
+                uvs1.push(u, 1.0 - v);
 
                 if ((i < heightSegments) && (j < capSegments)) {
                     first   = ((i))     * (capSegments + 1) + ((j));
@@ -449,7 +449,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 
                 positions.push(x * peakRadius, y * peakRadius + capOffset, z * peakRadius);
                 normals.push(x, y, z);
-                uvs.push(u, v);
+                uvs.push(u, 1.0 - v);
 
                 // Pack UV1 to 2nd third
                 u /= 3;
@@ -457,7 +457,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 1.0 / 3;
-                uvs1.push(u, v);
+                uvs1.push(u, 1.0 - v);
             }
         }
 
@@ -492,7 +492,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 
                 positions.push(x * peakRadius, y * peakRadius - capOffset, z * peakRadius);
                 normals.push(x, y, z);
-                uvs.push(u, v);
+                uvs.push(u, 1.0 - v);
 
                 // Pack UV1 to 3rd third
                 u /= 3;
@@ -500,7 +500,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 2.0 / 3;
-                uvs1.push(u, v);
+                uvs1.push(u, 1.0 - v);
             }
         }
 
@@ -528,7 +528,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 
                 positions.push(x * baseRadius, y, z * baseRadius);
                 normals.push(0.0, -1.0, 0.0);
-                uvs.push(u, v);
+                uvs.push(u, 1.0 - v);
 
                 // Pack UV1 to 2nd third
                 u /= 3;
@@ -536,7 +536,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 1.0 / 3;
-                uvs1.push(u, v);
+                uvs1.push(u, 1.0 - v);
 
                 if (i > 1) {
                     indices.push(offset, offset + i, offset + i - 1);
@@ -557,7 +557,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 
                 positions.push(x * peakRadius, y, z * peakRadius);
                 normals.push(0.0, 1.0, 0.0);
-                uvs.push(u, v);
+                uvs.push(u, 1.0 - v);
 
                 // Pack UV1 to 3rd third
                 u /= 3;
@@ -565,7 +565,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 2.0 / 3;
-                uvs1.push(u, v);
+                uvs1.push(u, 1.0 - v);
 
                 if (i > 1) {
                     indices.push(offset, offset + i - 1, offset + i);
@@ -758,7 +758,7 @@ function createSphere(device, opts) {
 
             positions.push(x * radius, y * radius, z * radius);
             normals.push(x, y, z);
-            uvs.push(u, v);
+            uvs.push(u, 1.0 - v);
         }
     }
 
@@ -841,7 +841,7 @@ function createPlane(device, opts) {
 
             positions.push(x, y, z);
             normals.push(0.0, 1.0, 0.0);
-            uvs.push(u, v);
+            uvs.push(u, 1.0 - v);
 
             if ((i < ws) && (j < ls)) {
                 indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
@@ -957,7 +957,7 @@ function createBox(device, opts) {
 
                 positions.push(r.x, r.y, r.z);
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
-                uvs.push(u, v);
+                uvs.push(u, 1.0 - v);
                 // pack as 3x2
                 // 1/3 will be empty, but it's either that or stretched pixels
                 // TODO: generate non-rectangular lightMaps, so we could use space without stretching
@@ -967,7 +967,7 @@ function createBox(device, opts) {
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += (side % 3) / 3;
                 v += Math.floor(side / 3) / 3;
-                uvs1.push(u, v);
+                uvs1.push(u, 1.0 - v);
 
                 if ((i < uSegments) && (j < vSegments)) {
                     indices.push(vcounter + vSegments + 1, vcounter + 1, vcounter);

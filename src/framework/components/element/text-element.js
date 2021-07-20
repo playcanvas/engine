@@ -515,7 +515,7 @@ class TextElement {
                 this._shadowColorUniform[2] = this._shadowColor.b;
                 this._shadowColorUniform[3] = this._shadowColor.a;
                 mi.setParameter("shadow_color", this._shadowColorUniform);
-                var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
+                var ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                 this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                 this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                 mi.setParameter("shadow_offset", this._shadowOffsetUniform);
@@ -943,16 +943,16 @@ class TextElement {
                 var uv = this._getUv(char);
 
                 meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
-                meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
+                meshInfo.uvs[quad * 4 * 2 + 1] = 1.0 - uv[1];
 
                 meshInfo.uvs[quad * 4 * 2 + 2] = uv[2];
-                meshInfo.uvs[quad * 4 * 2 + 3] = uv[1];
+                meshInfo.uvs[quad * 4 * 2 + 3] = 1.0 - uv[1];
 
                 meshInfo.uvs[quad * 4 * 2 + 4] = uv[2];
-                meshInfo.uvs[quad * 4 * 2 + 5] = uv[3];
+                meshInfo.uvs[quad * 4 * 2 + 5] = 1.0 - uv[3];
 
                 meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
-                meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
+                meshInfo.uvs[quad * 4 * 2 + 7] = 1.0 - uv[3];
 
                 // set per-vertex color
                 if (this._symbolColors) {
@@ -1738,7 +1738,7 @@ class TextElement {
 
         if (this._font && this._model) {
             for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
+                var ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                 this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                 this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                 var mi = this._model.meshInstances[i];

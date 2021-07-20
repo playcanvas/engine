@@ -121,9 +121,9 @@ class Sprite extends EventHandler {
         // uvs based on frame rect
         // uvs
         var lu = rect.x / texWidth;
-        var bv = rect.y / texHeight;
+        var bv = 1.0 - rect.y / texHeight;
         var ru = (rect.x + rect.z) / texWidth;
-        var tv = (rect.y + rect.w) / texHeight;
+        var tv = 1.0 - (rect.y + rect.w) / texHeight;
 
         var uvs = [
             lu, bv,
