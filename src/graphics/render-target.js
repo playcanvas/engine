@@ -32,7 +32,7 @@ const defaultOptions = {
  * * {@link CUBEFACE_POSZ}
  * * {@link CUBEFACE_NEGZ}
  *
- * @param {boolean} [options.flipY] - Render the image flipped in Y, useful when the render target will be used as a texture in UI rendering.
+ * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default is false.
  *
  * Defaults to {@link CUBEFACE_POSX}.
  * @example
