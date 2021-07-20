@@ -26,7 +26,9 @@ import { Model } from '../scene/model.js';
  */
 class ContainerResource {
     constructor(data) {
+        // glb content, of type GlbResources
         this.data = data;
+
         this._model = null;
         this.renders = [];
         this.materials = [];
