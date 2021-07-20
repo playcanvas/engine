@@ -1377,6 +1377,8 @@ class ForwardRenderer {
                     }
                 }
 
+                // enable cull inversion if either the camera has flipFaces enabled or the render target
+                // has flipY enabled (but disable inversion if both are true or false).
                 this.setCullMode(camera._cullFaces, !!(camera._flipFaces ^ rtFlipY), drawCall);
 
                 stencilFront = drawCall.stencilFront || material.stencilFront;
@@ -2306,7 +2308,7 @@ class ForwardRenderer {
                                    layer.cullingMask,
                                    layer.onDrawCall,
                                    layer,
-                                   !!(renderAction.renderTarget && renderAction.renderTarget.flipY));
+                                   !!(renderAction?.renderTarget?.flipY));
                 layer._forwardDrawCalls += this._forwardDrawCalls - draws;
 
                 // Revert temp frame stuff
