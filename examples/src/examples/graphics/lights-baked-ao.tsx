@@ -32,11 +32,11 @@ class LightsBakedAOExample extends Example {
             castShadows: false,
             castShadowsLightmap: false,
             lightmapped: true,
-            type: "plane",
+            type: "box",
             material: material
         });
         app.root.addChild(ground);
-        ground.setLocalScale(40, 40, 40);
+        ground.setLocalScale(40, 1, 40);
 
         // create roof box
         const roof = new pc.Entity("Roof");
@@ -51,6 +51,23 @@ class LightsBakedAOExample extends Example {
         roof.setLocalPosition(0, 6, -10);
         roof.setLocalScale(15, 1, 45);
         roof.setLocalEulerAngles(-30, 0, 0);
+
+
+
+        // create large sphere
+        const sphere = new pc.Entity("Ground");
+        sphere.addComponent('render', {
+            castShadows: false,
+            castShadowsLightmap: true,
+            lightmapped: true,
+            type: "sphere",
+            material: material
+        });
+        app.root.addChild(sphere);
+        sphere.setLocalScale(12, 12, 12);
+        sphere.setLocalPosition(3, 6.6, 5);
+        
+
 
         // create random objects on the plane
         const shapes = ["box", "cone", "cylinder", "sphere"];
@@ -75,63 +92,63 @@ class LightsBakedAOExample extends Example {
             entity.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
         }
 
-        // directional light
-        const light = new pc.Entity("Directional");
-        light.addComponent("light", {
-            type: "directional",
-            affectDynamic: true,
-            affectLightmapped: false,
-            bake: true,
-            numBakeSamples: 20,
-            castShadows: true,
-            normalOffsetBias: 0.05,
-            shadowBias: 0.2,
-            shadowDistance: 50,
-            shadowResolution: 2048,
-            shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.WHITE,
-            intensity: 0.8
-        });
-        app.root.addChild(light);
-        light.setLocalEulerAngles(0, 10, 0);
+        // // directional light
+        // const light = new pc.Entity("Directional");
+        // light.addComponent("light", {
+        //     type: "directional",
+        //     affectDynamic: true,
+        //     affectLightmapped: false,
+        //     bake: true,
+        //     numBakeSamples: 20,
+        //     castShadows: true,
+        //     normalOffsetBias: 0.05,
+        //     shadowBias: 0.2,
+        //     shadowDistance: 50,
+        //     shadowResolution: 2048,
+        //     shadowType: pc.SHADOW_PCF3,
+        //     color: pc.Color.WHITE,
+        //     intensity: 0.8
+        // });
+        // app.root.addChild(light);
+        // light.setLocalEulerAngles(0, 10, 0);
 
-        // Create an entity with a omni light component that is configured as a baked light
-        const lightPoint = new pc.Entity("Point");
-        lightPoint.addComponent("light", {
-            affectDynamic: false,
-            affectLightmapped: true,
-            bake: true,
-            castShadows: true,
-            normalOffsetBias: 0.05,
-            shadowBias: 0.2,
-            shadowDistance: 50,
-            shadowResolution: 512,
-            shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.RED,
-            range: 10,
-            type: "omni"
-        });
-        lightPoint.setLocalPosition(-6, 5, 0);
-        app.root.addChild(lightPoint);
+        // // Create an entity with a omni light component that is configured as a baked light
+        // const lightPoint = new pc.Entity("Point");
+        // lightPoint.addComponent("light", {
+        //     affectDynamic: false,
+        //     affectLightmapped: true,
+        //     bake: true,
+        //     castShadows: true,
+        //     normalOffsetBias: 0.05,
+        //     shadowBias: 0.2,
+        //     shadowDistance: 50,
+        //     shadowResolution: 512,
+        //     shadowType: pc.SHADOW_PCF3,
+        //     color: pc.Color.RED,
+        //     range: 10,
+        //     type: "omni"
+        // });
+        // lightPoint.setLocalPosition(-6, 5, 0);
+        // app.root.addChild(lightPoint);
 
-        // Create an entity with a spot light component that is configured as a baked light
-        const lightSpot = new pc.Entity("Spot");
-        lightSpot.addComponent("light", {
-            affectDynamic: false,
-            affectLightmapped: true,
-            bake: true,
-            castShadows: true,
-            normalOffsetBias: 0.05,
-            shadowBias: 0.2,
-            shadowDistance: 50,
-            shadowResolution: 512,
-            shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.BLUE,
-            range: 10,
-            type: "spot"
-        });
-        lightSpot.setLocalPosition(5, 8, 0);
-        app.root.addChild(lightSpot);
+        // // Create an entity with a spot light component that is configured as a baked light
+        // const lightSpot = new pc.Entity("Spot");
+        // lightSpot.addComponent("light", {
+        //     affectDynamic: false,
+        //     affectLightmapped: true,
+        //     bake: true,
+        //     castShadows: true,
+        //     normalOffsetBias: 0.05,
+        //     shadowBias: 0.2,
+        //     shadowDistance: 50,
+        //     shadowResolution: 512,
+        //     shadowType: pc.SHADOW_PCF3,
+        //     color: pc.Color.BLUE,
+        //     range: 10,
+        //     type: "spot"
+        // });
+        // lightSpot.setLocalPosition(5, 8, 0);
+        // app.root.addChild(lightSpot);
 
 
         // Create an entity with a camera component
@@ -164,7 +181,6 @@ class LightsBakedAOExample extends Example {
             camera.setLocalPosition(30 * Math.sin(time * 0.4), 12, 30);
             camera.lookAt(pc.Vec3.ZERO);
         });
-
     }
 }
 

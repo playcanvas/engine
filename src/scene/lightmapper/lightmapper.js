@@ -35,7 +35,8 @@ import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
 import { StandardMaterial } from '../materials/standard-material.js';
 
-import { BakeLight } from './bake-light.js';
+import { BakeLightSimple } from './bake-light-simple.js';
+import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from './lightmap-cache.js';
 
@@ -171,7 +172,7 @@ class Lightmapper {
             node.renderTargets.forEach((rt) => {
                 destroyRT(rt);
             });
-            node.renderTargets.lenght = 0;
+            node.renderTargets.length = 0;
         });
     }
 
@@ -558,13 +559,17 @@ class Lightmapper {
 
     prepareLightsToBake(layerComposition, allLights, bakeLights) {
 
-        const sceneLights = layerComposition._lights;
+        // ambient light
+        const ambientLight = new BakeLightAmbient();
+        bakeLights.push(ambientLight);
 
+        // scene lights
+        const sceneLights = layerComposition._lights;
         for (let i = 0; i < sceneLights.length; i++) {
             const light = sceneLights[i];
 
             // store all lights and their original settings we need to temporariy modify
-            const bakeLight = new BakeLight(light);
+            const bakeLight = new BakeLightSimple(light);
             allLights.push(bakeLight);
 
             // bake light
@@ -887,7 +892,7 @@ class Lightmapper {
 
                 // prepare virtual light
                 if (numVirtualLights > 1) {
-                    bakeLight.prepareVirtualLight(virtualLightIndex);
+                    bakeLight.prepareVirtualLight(virtualLightIndex, numVirtualLights);
                 }
 
                 bakeLight.startBake();

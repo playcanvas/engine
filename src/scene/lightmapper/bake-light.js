@@ -65,42 +65,6 @@ class BakeLight {
             light._destroyShadowMap();
         }
     }
-
-    prepareVirtualLight(index) {
-
-        const light = this.light;
-        const numVirtualLights = light.numBakeSamples;
-
-        // bake type factor (0..1)
-        // - more skylight: smaller value
-        // - more directional: larger values
-        const directionalFactor = 0.6;
-        if (index < numVirtualLights * directionalFactor) {
-
-            // soft directional
-            // TODO: diferent distribution? Perhaps 2d loop in the plane of light direction to get more uniform and predictable pattern
-            const directionalSpreadAngle = 20;
-            const angle1 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
-            const angle2 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
-
-            // set to original rotation and add adjustement
-            light._node.setLocalRotation(this.rotation);
-            light._node.rotateLocal(angle1, 0, angle2);
-
-        } else {
-
-            // skylight - random direction from hemisphere
-            // TODO: better distribution, perhaps Halton sequence, cosine weighted
-            const angle = 90;
-            light._node.setLocalEulerAngles(Math.random() * angle - (angle * 0.5), 10, Math.random() * angle - (angle * 0.5));
-        }
-
-        // update transform
-        light._node.getWorldTransform();
-
-        // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
-        light.intensity = this.intensity / numVirtualLights;
-    }
 }
 
 export { BakeLight };
