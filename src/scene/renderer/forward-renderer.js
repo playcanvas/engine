@@ -1249,7 +1249,7 @@ class ForwardRenderer {
         this.viewPosId.setValue(vp);
     }
 
-    renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, rtFlipY) {
+    renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
         var device = this.device;
         var scene = this.scene;
         var vrDisplay = camera.vrDisplay;
@@ -1377,9 +1377,7 @@ class ForwardRenderer {
                     }
                 }
 
-                // enable cull inversion if either the camera has flipFaces enabled or the render target
-                // has flipY enabled (but disable inversion if both are true or false).
-                this.setCullMode(camera._cullFaces, !!(camera._flipFaces ^ rtFlipY), drawCall);
+                this.setCullMode(camera._cullFaces, flipFaces, drawCall);
 
                 stencilFront = drawCall.stencilFront || material.stencilFront;
                 stencilBack = drawCall.stencilBack || material.stencilBack;
@@ -2299,6 +2297,10 @@ class ForwardRenderer {
                     renderAction.lightClusters.activate();
                 }
 
+                // enable flip faces if either the camera has _flipFaces enabled or the render target
+                // has flipY enabled
+                const flipFaces = !!(camera._flipFaces ^ renderAction?.renderTarget?.flipY);
+
                 const draws = this._forwardDrawCalls;
                 this.renderForward(camera.camera,
                                    visible.list,
@@ -2308,7 +2310,7 @@ class ForwardRenderer {
                                    layer.cullingMask,
                                    layer.onDrawCall,
                                    layer,
-                                   !!(renderAction?.renderTarget?.flipY));
+                                   flipFaces);
                 layer._forwardDrawCalls += this._forwardDrawCalls - draws;
 
                 // Revert temp frame stuff
