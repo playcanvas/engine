@@ -49,6 +49,30 @@ import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '.
 
 import { Asset } from '../../asset/asset.js';
 
+// resources loaded from GLB file that the parser returns
+class GlbResources {
+    constructor(gltf) {
+        this.gltf = gltf;
+        this.nodes = null;
+        this.scenes = null;
+        this.animations = null;
+        this.textures = null;
+        this.materials = null;
+        this.renders = null;
+        this.skins = null;
+        this.lights = null;
+    }
+
+    destroy() {
+        // render needs to dec ref meshes
+        if (this.renders) {
+            this.renders.forEach((render) => {
+                render.meshes = null;
+            });
+        }
+    }
+}
+
 const isDataURI = function (uri) {
     return /^data:.*,.*$/i.test(uri);
 };
@@ -1615,17 +1639,15 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
         renders[i].meshes = meshes[i];
     }
 
-    const result = {
-        'gltf': gltf,
-        'nodes': nodes,
-        'scenes': scenes,
-        'animations': animations,
-        'textures': textureAssets,
-        'materials': materials,
-        'renders': renders,
-        'skins': skins,
-        'lights': lights
-    };
+    const result = new GlbResources(gltf);
+    result.nodes = nodes;
+    result.scenes = scenes;
+    result.animations = animations;
+    result.textures = textureAssets;
+    result.materials = materials;
+    result.renders = renders;
+    result.skins = skins;
+    result.lights = lights;
 
     if (postprocess) {
         postprocess(gltf, result);
