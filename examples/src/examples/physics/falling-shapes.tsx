@@ -81,7 +81,7 @@ class FallingShapesExample extends Example {
                 color: new pc.Color(1, 1, 1),
                 castShadows: true,
                 shadowBias: 0.2,
-                shadowDistance: 16,
+                shadowDistance: 25,
                 normalOffsetBias: 0.05,
                 shadowResolution: 2048
             });
@@ -111,7 +111,7 @@ class FallingShapesExample extends Example {
             // helper function which creates a template for a collider
             const createTemplate = function (type: any, collisionOptions: any, template?: any) {
 
-                // add a model component (visible mesh)
+                // add a render component (visible mesh)
                 if (!template) {
                     template = new pc.Entity();
                     template.addComponent("render", {
