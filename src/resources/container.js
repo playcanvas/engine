@@ -158,10 +158,20 @@ class ContainerResource {
                     }
 
                     // light - clone (additional child) entity with the light component
+                    // cannot clone the component as additional entity has a rotation to handle different light direction
                     if (glb.lights) {
                         const lightEntity = glb.lights.get(gltfNode);
                         if (lightEntity) {
                             entity.addChild(lightEntity.clone());
+                        }
+                    }
+
+                    // camera
+                    if (glb.cameras) {
+                        const cameraEntity = glb.cameras.get(gltfNode);
+                        if (cameraEntity) {
+                            // clone camera component into the entity
+                            cameraEntity.camera.system.cloneComponent(cameraEntity, entity);
                         }
                     }
                 }
@@ -339,6 +349,7 @@ class ContainerResource {
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
  * | light       |      x      |      x      |             |      x      |
+ * | camera      |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | image       |      x      |             |      x      |      x      |
