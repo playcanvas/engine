@@ -2299,7 +2299,7 @@ class ForwardRenderer {
 
                 // enable flip faces if either the camera has _flipFaces enabled or the render target
                 // has flipY enabled
-                const flipFaces = !!(camera._flipFaces ^ renderAction?.renderTarget?.flipY);
+                const flipFaces = !!(camera.camera._flipFaces ^ renderAction?.renderTarget?.flipY);
 
                 const draws = this._forwardDrawCalls;
                 this.renderForward(camera.camera,
