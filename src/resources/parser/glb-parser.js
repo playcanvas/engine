@@ -1608,6 +1608,18 @@ const createLights = function (gltf, nodes, options) {
     return lights;
 };
 
+// link skins to the meshes
+const linkSkins = function (gltf, renders, skins) {
+    gltf.nodes.forEach((gltfNode) => {
+        if (gltfNode.hasOwnProperty('mesh') && gltfNode.hasOwnProperty('skin')) {
+            const meshGroup = renders[gltfNode.mesh].meshes;
+            meshGroup.forEach((mesh) => {
+                mesh.skin = skins[gltfNode.skin];
+            });
+        }
+    });
+};
+
 // create engine resources from the downloaded GLB data
 const createResources = function (device, gltf, bufferViews, textureAssets, options, callback) {
     const preprocess = options && options.global && options.global.preprocess;
@@ -1638,6 +1650,9 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
         renders[i] = new Render();
         renders[i].meshes = meshes[i];
     }
+
+    // link skins to meshes
+    linkSkins(gltf, renders, skins);
 
     const result = new GlbResources(gltf);
     result.nodes = nodes;
