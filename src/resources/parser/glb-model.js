@@ -8,11 +8,13 @@ class GlbModelParser {
     }
 
     parse(data) {
-        const glb = GlbParser.parse("filename.glb", data, this._device);
-        if (!glb) {
-            return null;
+        const glbResources = GlbParser.parse("filename.glb", data, this._device);
+        if (glbResources) {
+            const model = ContainerResource.createModel(glbResources, Material.defaultMaterial);
+            glbResources.destroy();
+            return model;
         }
-        return ContainerResource.createModel(glb, Material.defaultMaterial);
+        return null;
     }
 }
 

@@ -48,6 +48,10 @@ var viewMat3 = new Mat3();
 var viewProjMat = new Mat4();
 var projMat;
 
+var flipYMat = new Mat4().setScale(1, -1, 1);
+var flippedViewProjMat = new Mat4();
+var flippedSkyboxProjMat = new Mat4();
+
 var viewInvL = new Mat4();
 var viewInvR = new Mat4();
 var viewL = new Mat4();
@@ -434,7 +438,17 @@ class ForwardRenderer {
 
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
-            this.viewProjId.setValue(viewProjMat.data);
+
+            if (target && target.flipY) {
+                flippedViewProjMat.mul2(flipYMat, viewProjMat);
+                flippedSkyboxProjMat.mul2(flipYMat, camera.getProjectionMatrixSkybox());
+
+                this.viewProjId.setValue(flippedViewProjMat.data);
+                this.projSkyboxId.setValue(flippedSkyboxProjMat.data);
+            } else {
+                this.viewProjId.setValue(viewProjMat.data);
+                this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
+            }
 
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
@@ -1235,7 +1249,7 @@ class ForwardRenderer {
         this.viewPosId.setValue(vp);
     }
 
-    renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
+    renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
         var device = this.device;
         var scene = this.scene;
         var vrDisplay = camera.vrDisplay;
@@ -1363,7 +1377,7 @@ class ForwardRenderer {
                     }
                 }
 
-                this.setCullMode(camera._cullFaces, camera._flipFaces, drawCall);
+                this.setCullMode(camera._cullFaces, flipFaces, drawCall);
 
                 stencilFront = drawCall.stencilFront || material.stencilFront;
                 stencilBack = drawCall.stencilBack || material.stencilBack;
@@ -2283,6 +2297,10 @@ class ForwardRenderer {
                     renderAction.lightClusters.activate();
                 }
 
+                // enable flip faces if either the camera has _flipFaces enabled or the render target
+                // has flipY enabled
+                const flipFaces = !!(camera.camera._flipFaces ^ renderAction?.renderTarget?.flipY);
+
                 const draws = this._forwardDrawCalls;
                 this.renderForward(camera.camera,
                                    visible.list,
@@ -2291,7 +2309,8 @@ class ForwardRenderer {
                                    layer.shaderPass,
                                    layer.cullingMask,
                                    layer.onDrawCall,
-                                   layer);
+                                   layer,
+                                   flipFaces);
                 layer._forwardDrawCalls += this._forwardDrawCalls - draws;
 
                 // Revert temp frame stuff

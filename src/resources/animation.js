@@ -53,11 +53,13 @@ class AnimationHandler {
 
     open(url, data) {
         if (path.getExtension(url).toLowerCase() === '.glb') {
-            const glb = GlbParser.parse("filename.glb", data, null);
-            if (!glb) {
-                return null;
+            const glbResources = GlbParser.parse("filename.glb", data, null);
+            if (glbResources) {
+                const animations = glbResources.animations;
+                glbResources.destroy();
+                return animations;
             }
-            return glb.animations;
+            return null;
         }
         return this["_parseAnimationV" + data.animation.version](data);
     }
