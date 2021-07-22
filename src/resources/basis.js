@@ -195,15 +195,17 @@ class BasisClient {
     }
 
     run(job) {
+        const transfer = [];
+        if (job.data instanceof ArrayBuffer) {
+            transfer.push(job.data);
+        }
         this.worker.postMessage({
             type: 'transcode',
             url: job.url,
             format: job.format,
             data: job.data,
             options: job.options
-        }, [
-            job.data
-        ]);
+        }, transfer);
         if (this.eager) {
             this.queue.enqueueClient(this);
         }

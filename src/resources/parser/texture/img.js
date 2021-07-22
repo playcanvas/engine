@@ -25,16 +25,33 @@ class ImgParser {
     }
 
     load(url, callback, asset) {
+        const hasContents = !!asset?.file?.contents;
+
+        if (hasContents) {
+            url = {
+                load: URL.createObjectURL(new Blob([asset.file.contents])),
+                original: url.original
+            };
+        }
+
+        const handler = (err, result) => {
+            if (hasContents) {
+                URL.revokeObjectURL(url.load);
+            }
+            callback(err, result);
+        };
+
         let crossOrigin;
         if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
             crossOrigin = asset.options.crossOrigin;
         } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
+
         if (this.useImageBitmap) {
-            this._loadImageBitmap(url.load, url.original, crossOrigin, callback);
+            this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
         } else {
-            this._loadImage(url.load, url.original, crossOrigin, callback);
+            this._loadImage(url.load, url.original, crossOrigin, handler);
         }
     }
 
