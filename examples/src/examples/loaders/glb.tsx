@@ -38,7 +38,7 @@ class GLBExample extends Example {
             app.on("update", function (dt) {
                 time -= dt;
 
-                // every few secnds change the camera
+                // change the camera every few seconds 
                 if (time <= 0) {
                     time = 2;
 
