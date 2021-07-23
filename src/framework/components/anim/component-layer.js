@@ -14,11 +14,10 @@ import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
  * @param {number} weight - The weight of this layer. Defaults to 1.
  */
 class AnimComponentLayer {
-    constructor(name, controller, component, index, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
+    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;
         this._component = component;
-        this._index = index;
         this._weight = weight;
         this._blendType = blendType;
     }

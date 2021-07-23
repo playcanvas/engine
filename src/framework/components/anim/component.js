@@ -12,8 +12,6 @@ import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
-import { Quat } from '../../../math/quat.js';
-import { Vec3 } from '../../../math/vec3.js';
 
 /**
  * @component
@@ -251,7 +249,7 @@ class AnimComponent extends Component {
             this._activate,
             this
         );
-        this._layers.push(new AnimComponentLayer(name, controller, this, order, weight, blendType));
+        this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = order;
     }
 
