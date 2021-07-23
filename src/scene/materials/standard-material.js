@@ -637,7 +637,7 @@ class StandardMaterial extends Material {
         }
 
         const useTexCubeLod = device.useTexCubeLod;
-        const useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
+        const useDp = false;// !device.extTextureLod; // no basic extension? likely slow device, force dp
 
         let globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
         if (this.useSkybox) {
