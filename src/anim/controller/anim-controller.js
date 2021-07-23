@@ -21,15 +21,15 @@ import {
  * @param {object[]} parameters - The anim components parameters.
  * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
  * @param {EventHandler} eventHandler - The event handler which should be notified with anim events
- * @param {Function} resetTrigger - Used to set a trigger back to it's default state after it has been consumed by a transition
+ * @param {Set} consumedTriggers - Used to set triggers back to their default state after they have been consumed by a transition
  */
 class AnimController {
-    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, resetTrigger) {
+    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
-        this._resetTrigger = resetTrigger;
+        this._consumedTriggers = consumedTriggers;
         for (let i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
@@ -324,7 +324,7 @@ class AnimController {
             const condition = transition.conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
-                this._resetTrigger(condition.parameterName);
+                this._consumedTriggers.add(condition.parameterName);
             }
         }
 

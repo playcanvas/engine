@@ -40,7 +40,7 @@ class AnimComponent extends Component {
         this._layers = [];
         this._layerIndices = {};
         this._parameters = {};
-        this._consumedTriggers = {};
+        this._consumedTriggers = new Set();
     }
 
     get stateGraphAsset() {
@@ -214,14 +214,6 @@ class AnimComponent extends Component {
         return null;
     }
 
-    get consumedTriggers() {
-        return this._consumedTriggers;
-    }
-
-    set consumedTriggers(value) {
-        this._consumedTriggers = value;
-    }
-
     _addLayer(name, states, transitions, order) {
         let graph;
         if (this.rootBone) {
@@ -238,7 +230,7 @@ class AnimComponent extends Component {
             this._parameters,
             this._activate,
             this,
-            this._resetTrigger.bind(this)
+            this._consumedTriggers
         );
         this._layers.push(new AnimComponentLayer(name, controller, this));
         this._layerIndices[name] = order;
@@ -651,7 +643,7 @@ class AnimComponent extends Component {
     setTrigger(name, singleFrame = false) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, true);
         if (singleFrame) {
-            this._consumedTriggers[name] = true;
+            this._consumedTriggers.add(name);
         }
     }
 
@@ -665,14 +657,20 @@ class AnimComponent extends Component {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, false);
     }
 
-    _resetTrigger(name) {
-        this._consumedTriggers[name] = true;
-    }
-
     onBeforeRemove() {
         if (Number.isFinite(this._stateGraphAsset)) {
             this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
         }
+    }
+
+    update(dt) {
+        for (let i = 0; i < this.layers.length; i++) {
+            this.layers[i].update(dt * this.speed);
+        }
+        this._consumedTriggers.forEach((trigger) => {
+            this.parameters[trigger].value = false;
+        });
+        this._consumedTriggers.clear();
     }
 }
 
