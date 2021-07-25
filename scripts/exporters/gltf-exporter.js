@@ -110,7 +110,7 @@ class GltfExporter {
                     byteLength: arrayBuffer.byteLength,
                     byteOffset: offset
                 };
-                
+
                 if (buffer instanceof pc.VertexBuffer) {
                     bufferView.target = ARRAY_BUFFER;
                     bufferView.byteStride = buffer.getFormat().size;
@@ -139,7 +139,7 @@ class GltfExporter {
                     json.cameras.push({
                         type: "orthographic",
                         orthographic: {
-                            xmag: 1, 
+                            xmag: 1,
                             ymag: 1,
                             znear: nearClip,
                             zfar: farClip
@@ -216,15 +216,15 @@ class GltfExporter {
                 }
 
                 if (!t.equals(pc.Vec3.ZERO)) {
-                    node.translation = [ t.x, t.y, t.z ];
+                    node.translation = [t.x, t.y, t.z];
                 }
 
                 if (!r.equals(pc.Quat.IDENTITY)) {
-                    node.rotation = [ r.x, r.y, r.z, r.w ];
+                    node.rotation = [r.x, r.y, r.z, r.w];
                 }
 
                 if (!s.equals(pc.Vec3.ONE)) {
-                    node.scale = [ s.x, s.y, s.z ];
+                    node.scale = [s.x, s.y, s.z];
                 }
 
                 if (entity.camera && entity.camera.enabled) {
@@ -295,10 +295,10 @@ class GltfExporter {
 
                         // Position accessor also requires min and max properties
                         const min = meshInstance.mesh.aabb.getMin();
-                        accessor.min = [ min.x, min.y, min.z ];
+                        accessor.min = [min.x, min.y, min.z];
 
                         const max = meshInstance.mesh.aabb.getMax();
-                        accessor.max = [ max.x, max.y, max.z ];
+                        accessor.max = [max.x, max.y, max.z];
                     } else if (element.name === pc.SEMANTIC_NORMAL) {
                         primitive.attributes.NORMAL = idx;
                         accessor.type = "VEC3";
@@ -362,7 +362,7 @@ class GltfExporter {
 
         return json;
     }
-    
+
     buildGlb(entity) {
         const resources = this.collectResources(entity);
 
@@ -386,7 +386,7 @@ class GltfExporter {
         if (binaryDataLength > 0) {
             totalLength += binaryHeaderLength + binaryDataLength;
         }
-        
+
         const glbBuffer = new ArrayBuffer(totalLength);
         const glbView = new DataView(glbBuffer);
 
@@ -396,8 +396,8 @@ class GltfExporter {
         glbView.setUint32(8, totalLength, true);
 
         // JSON chunk header
-        glbView.setUint32(12, jsonDataLength + jsonPaddingLength, true );
-        glbView.setUint32(16, 0x4E4F534A, true );
+        glbView.setUint32(12, jsonDataLength + jsonPaddingLength, true);
+        glbView.setUint32(16, 0x4E4F534A, true);
 
         let offset = headerLength + jsonHeaderLength;
 
