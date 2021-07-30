@@ -34,7 +34,7 @@ class AnimComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
-        const complexProperties = ['animationAssets', 'stateGraph', 'layers'];
+        const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
             // these properties will be initialised manually below
             if (complexProperties.includes(key)) return;
@@ -54,6 +54,14 @@ class AnimComponentSystem extends ComponentSystem {
             });
         } else if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
+        }
+
+        if (data.masks) {
+            Object.keys(data.masks).forEach((key) => {
+                if (component.layers[key]) {
+                    component.layers[key].assignMask(data.masks[key].mask);
+                }
+            });
         }
     }
 

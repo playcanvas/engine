@@ -133,24 +133,36 @@ class DefaultAnimBinder {
         if (this._mask) {
             let shouldAnimateNode = false;
             const entityPath = path.entityPath.join('/');
-            for (let i = 0; i < this._mask.length; i++) {
-                const maskItem = this._mask[i];
-                if (typeof maskItem === 'string') {
-                    if (entityPath.indexOf(maskItem) !== -1) {
-                        shouldAnimateNode = true;
-                    }
-                    break;
-                }
-                if (maskItem.children) {
-                    if (entityPath.indexOf(maskItem.path) !== -1) {
+            let maskItem = this._mask[entityPath];
+            if (this._mask[entityPath] && this._mask[entityPath]?.value !== false) {
+                shouldAnimateNode = true;
+            } else {
+                for (let i = 0; i < path.entityPath.length; i++) {
+                    maskItem = this._mask[path.entityPath.slice(0, i + 1).join('/')];
+                    if (maskItem?.children) {
                         shouldAnimateNode = true;
                         break;
                     }
-                } else if (maskItem.path === entityPath) {
-                    shouldAnimateNode = true;
-                    break;
                 }
             }
+            // for (let i = 0; i < this._mask.length; i++) {
+            //     const maskItem = this._mask[i];
+            //     if (typeof maskItem === 'string') {
+            //         if (entityPath.indexOf(maskItem) !== -1) {
+            //             shouldAnimateNode = true;
+            //         }
+            //         break;
+            //     }
+            //     if (maskItem.children) {
+            //         if (entityPath.indexOf(maskItem.path) !== -1) {
+            //             shouldAnimateNode = true;
+            //             break;
+            //         }
+            //     } else if (maskItem.path === entityPath) {
+            //         shouldAnimateNode = true;
+            //         break;
+            //     }
+            // }
             if (!shouldAnimateNode) return null;
         }
 
@@ -237,6 +249,10 @@ class DefaultAnimBinder {
         for (let i = 0; i < activeNodes.length; ++i) {
             activeNodes[i]._dirtifyLocal();
         }
+    }
+
+    assignMask(mask) {
+        this._mask = mask;
     }
 }
 

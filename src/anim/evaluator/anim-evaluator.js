@@ -264,6 +264,10 @@ class AnimEvaluator {
         });
     }
 
+    assignMask(mask) {
+        this._binder.assignMask(mask);
+    }
+
     /**
      * @private
      * @function
