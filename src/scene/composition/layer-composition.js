@@ -1,20 +1,20 @@
-import { EventHandler } from '../core/event-handler.js';
-import { set } from '../core/set-utils.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { set } from '../../core/set-utils.js';
 
-import { Vec3 } from '../math/vec3.js';
+import { Vec3 } from '../../math/vec3.js';
 
 import {
     LAYERID_DEPTH,
     BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
-} from './constants.js';
+} from '../constants.js';
 
-import { RenderAction } from './render-action.js';
-import { WorldClusters } from './world-clusters.js';
+import { RenderAction } from '../render-action.js';
+import { WorldClusters } from '../world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
-import { getApplication } from '../framework/globals.js';
+import { getApplication } from '../../framework/globals.js';
 
 const tempSet = new Set();
 const tempClusterArray = [];

@@ -67,7 +67,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {object} resource A reference to the resource when the asset is loaded. e.g. a {@link Texture} or a {@link Model}
  * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
  * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.
- * @property {boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+ * @property {boolean} loaded True if the asset has finished attempting to load the resource. It is not guaranteed that the resources are available as there could have been a network error.
  * @property {boolean} loading True if the resource is currently being loaded
  * @property {AssetRegistry} registry The asset registry that this Asset belongs to
  */

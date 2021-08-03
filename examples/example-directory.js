@@ -26,12 +26,13 @@ fs.readdir(`${__dirname}/src/examples/`, function (err, categories) {
             categoriesString += `<h2>${category}</h2>`;
             examplesCounter += examples.length;
             examples.forEach((example) => {
-                categoriesString += `<li><a href='/#/iframe/${category}/${example}'>${example}</a></li>`;
+                categoriesString += `<li><a href='/#/DIRECTORY_TYPE/${category}/${example}'>${example}</a></li>`;
                 examplesCounter--;
                 if (examplesCounter === 0) {
                     categoriesCounter--;
                     if (categoriesCounter === 0) {
-                        createIframeDirectory();
+                        createDirectory('iframe');
+                        createDirectory('debug');
                         createCategoriesListFile();
                     }
                 }
@@ -67,22 +68,22 @@ fs.readdir(`${__dirname}/src/examples/`, function (err, categories) {
     });
 });
 
-function createIframeDirectory() {
-    const iframeDirectoryHtml = `
+function createDirectory(path) {
+    const directoryHtml = (path) => `
     <!DOCTYPE html>
     <html>
     <head>
     </head>
     <body>
-    ${categoriesString}
+    ${categoriesString.split('DIRECTORY_TYPE').join(path)}
     </body>
     </html>
     `;
-    var dir = `dist/iframes/`;
+    var dir = `dist/${path}-directory/`;
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
-    fs.writeFile(`dist/iframes/index.html`, iframeDirectoryHtml, (err) => {
+    fs.writeFile(`dist/${path}-directory/index.html`, directoryHtml(path), (err) => {
         if (err) {
             console.error(err);
             return null;

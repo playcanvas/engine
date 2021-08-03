@@ -521,14 +521,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            var pos = this.aabb.center;
-            if (this._aabb._radiusVer !== this._aabbVer) {
-                this._aabb._radius = this._aabb.halfExtents.length();
-                this._aabb._radiusVer = this._aabbVer;
-            }
-
-            _tempSphere.radius = this._aabb._radius;
-            _tempSphere.center = pos;
+            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
+            _tempSphere.radius = this._aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere);
         }

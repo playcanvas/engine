@@ -27,7 +27,7 @@ import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
-import { LayerComposition } from '../scene/layer-composition.js';
+import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
@@ -106,7 +106,6 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneDepth } from './scene-depth.js';
-import { XRTYPE_VR } from "../xr/constants";
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,

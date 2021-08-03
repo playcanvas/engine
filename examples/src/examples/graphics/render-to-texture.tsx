@@ -69,7 +69,9 @@ class RenderToTextureExample extends Example {
         });
         const renderTarget = new pc.RenderTarget({
             colorBuffer: texture,
-            depth: true
+            depth: true,
+            // @ts-ignore
+            flipY: true
         });
 
         // create a layer for object that do not render into texture

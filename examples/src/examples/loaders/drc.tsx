@@ -64,11 +64,22 @@ class LoadersGlExample extends Example {
             // @ts-ignore: cannot find CORE and DRACO
             const modelData = await CORE.load(url, DRACO.DracoLoader);
 
+            // loaded colors only contain RGB, convert it to an array of RGBA with alpha of 255
+            const srcColors = modelData.attributes.COLOR_0.value;
+            const numVertices = srcColors.length / modelData.attributes.COLOR_0.size;
+            const colors32 = new Uint8Array(numVertices * 4);
+            for (let i = 0; i < numVertices; i++) {
+                colors32[i * 4 + 0] = srcColors[i * 3 + 0];
+                colors32[i * 4 + 1] = srcColors[i * 3 + 1];
+                colors32[i * 4 + 2] = srcColors[i * 3 + 2];
+                colors32[i * 4 + 3] = 255;
+            }
+
             // based on the loaded data, create the mesh with position and color vertex data
             const mesh = new pc.Mesh(app.graphicsDevice);
             mesh.clear(true, false);
             mesh.setPositions(modelData.attributes.POSITION.value, modelData.attributes.POSITION.size);
-            mesh.setColors32(modelData.attributes.COLOR_0.value, modelData.attributes.COLOR_0.size);
+            mesh.setColors32(colors32);
             mesh.update(pc.PRIMITIVE_POINTS);
 
             // Create shader to render mesh as circular points with color

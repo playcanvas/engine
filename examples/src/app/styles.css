@@ -91,7 +91,7 @@ body {
     margin-top: 32px;
 }
 
-.sideBar-contents {
+#sideBar-contents {
     height: calc(100% - 88px);
     overflow: auto;
     margin-top: 8px;
@@ -120,7 +120,7 @@ body {
         border-radius: 6px !important;
     }
 
-    .sideBar-contents {
+    #sideBar-contents {
         height: calc(100% - 108px);
         overflow: auto;
         margin-top: 8px;
@@ -128,6 +128,18 @@ body {
 
     #sideBar-panel .pcui-panel-content {
         overflow: hidden;
+    }
+
+    #sideBar {
+        opacity: 0;
+    }
+
+    #sideBar.visible {
+        opacity: 1;
+    }
+
+    #sideBar-panel.pcui-collapsed > .pcui-panel-content {
+        display: none;
     }
 }
 
@@ -309,6 +321,7 @@ body {
     overflow: auto;
     transition: opacity 500ms;
     opacity: 1;
+    max-height: calc(100% - 16px);
 }
 
 /* @media only screen and (min-width: 601px) { */
@@ -324,6 +337,7 @@ body {
     width: calc(100% - 16px);
     top: inherit;
     background-color: rgba(54, 67, 70, 1);
+    max-height: calc(100% - 112px);
 }
 
 #controlPanel.mobile > .pcui-panel-content {
@@ -343,6 +357,19 @@ body {
 
 #controlPanel.mobile .pcui-slider .pcui-numeric-input {
     min-width: 47px;
+}
+
+#controlPanel-controls > .pcui-panel:first-child {
+    border-top: 1px solid #20292B;
+}
+
+#controlPanel-controls  .pcui-label-group > .pcui-label {
+    font-size: 14px;
+    max-width: 35%;
+}
+
+#controlPanel-controls  .pcui-label-group > .pcui-slider > .pcui-numeric-input {
+    min-width: 46px;
 }
 
 .filter-input {
@@ -399,7 +426,7 @@ body {
     min-width: 32px;
 }
 
-#sideBar.collapsed .sideBar-contents, #sideBar.collapsed .pcui-panel-content, #codePane.collapsed section {
+#sideBar.collapsed #sideBar-contents, #sideBar.collapsed .pcui-panel-content, #codePane.collapsed section {
     display: none !important;
 }
 
@@ -584,14 +611,19 @@ body {
 #appInner.fullscreen #menu {
     opacity: 0;
 }
-#appInner.fullscreen.active #menu, #appInner.fullscreen #menu:hover {
+#appInner.fullscreen.active #menu {
     opacity: 1;
 }
 
 @media only screen and (min-width: 601px) {
-    #appInner.fullscreen #menu {
-        top: 8px;
+    #appInner.fullscreen #menu:hover {
+        opacity: 1;
     }
+}
+
+#appInner.fullscreen #menu {
+    top: 8px;
+    bottom: inherit;
 }
 
 #appInner.fullscreen #controlPanel, #appInner.fullscreen #sideBar {

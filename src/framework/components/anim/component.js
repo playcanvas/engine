@@ -367,11 +367,11 @@ class AnimComponent extends Component {
                         if (asset.data.events) {
                             animTrack.events = new AnimEvents(Object.values(asset.data.events));
                         }
-                        this.assignAnimation(stateName, animTrack, layer.name);
+                        this.findAnimationLayer(layer.name).assignAnimation(stateName, animTrack);
                     } else {
                         asset.once('load', function (layerName, stateName) {
                             return function (asset) {
-                                this.assignAnimation(stateName, asset.resource, layerName);
+                                this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
                             }.bind(this);
                         }.bind(this)(layer.name, stateName));
                         this.system.app.assets.load(asset);
