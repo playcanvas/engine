@@ -49,6 +49,30 @@ import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '.
 
 import { Asset } from '../../asset/asset.js';
 
+// resources loaded from GLB file that the parser returns
+class GlbResources {
+    constructor(gltf) {
+        this.gltf = gltf;
+        this.nodes = null;
+        this.scenes = null;
+        this.animations = null;
+        this.textures = null;
+        this.materials = null;
+        this.renders = null;
+        this.skins = null;
+        this.lights = null;
+    }
+
+    destroy() {
+        // render needs to dec ref meshes
+        if (this.renders) {
+            this.renders.forEach((render) => {
+                render.meshes = null;
+            });
+        }
+    }
+}
+
 const isDataURI = function (uri) {
     return /^data:.*,.*$/i.test(uri);
 };
@@ -951,7 +975,7 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
         // texture coordinate V at load time.
         for (map = 0; map < maps.length; ++map) {
             material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
-            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? offset[1] : 1.0 - scale[1] - offset[1]);
+            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? 1.0 - scale[1] - offset[1] : offset[1]);
         }
     };
 
@@ -1584,6 +1608,18 @@ const createLights = function (gltf, nodes, options) {
     return lights;
 };
 
+// link skins to the meshes
+const linkSkins = function (gltf, renders, skins) {
+    gltf.nodes.forEach((gltfNode) => {
+        if (gltfNode.hasOwnProperty('mesh') && gltfNode.hasOwnProperty('skin')) {
+            const meshGroup = renders[gltfNode.mesh].meshes;
+            meshGroup.forEach((mesh) => {
+                mesh.skin = skins[gltfNode.skin];
+            });
+        }
+    });
+};
+
 // create engine resources from the downloaded GLB data
 const createResources = function (device, gltf, bufferViews, textureAssets, options, callback) {
     const preprocess = options && options.global && options.global.preprocess;
@@ -1615,17 +1651,18 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
         renders[i].meshes = meshes[i];
     }
 
-    const result = {
-        'gltf': gltf,
-        'nodes': nodes,
-        'scenes': scenes,
-        'animations': animations,
-        'textures': textureAssets,
-        'materials': materials,
-        'renders': renders,
-        'skins': skins,
-        'lights': lights
-    };
+    // link skins to meshes
+    linkSkins(gltf, renders, skins);
+
+    const result = new GlbResources(gltf);
+    result.nodes = nodes;
+    result.scenes = scenes;
+    result.animations = animations;
+    result.textures = textureAssets;
+    result.materials = materials;
+    result.renders = renders;
+    result.skins = skins;
+    result.lights = lights;
 
     if (postprocess) {
         postprocess(gltf, result);

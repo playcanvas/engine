@@ -22,7 +22,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { WorldClusters } from '../../../scene/world-clusters.js';
-import { LayerComposition } from '../../../scene/layer-composition.js';
+import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 

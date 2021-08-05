@@ -32,6 +32,8 @@ const defaultOptions = {
  * * {@link CUBEFACE_POSZ}
  * * {@link CUBEFACE_NEGZ}
  *
+ * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default is false.
+ *
  * Defaults to {@link CUBEFACE_POSX}.
  * @example
  * // Create a 512x512x24-bit render target with a depth buffer
@@ -126,6 +128,9 @@ class RenderTarget {
         if (!this.name) {
             this.name = "Untitled";
         }
+
+        // render image flipped in Y
+        this.flipY = !!options.flipY;
     }
 
     /**

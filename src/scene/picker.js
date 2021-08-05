@@ -9,7 +9,7 @@ import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
 import { Camera } from './camera.js';
 import { Command } from './mesh-instance.js';
 import { Layer } from './layer.js';
-import { LayerComposition } from './layer-composition.js';
+import { LayerComposition } from './composition/layer-composition.js';
 
 import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';

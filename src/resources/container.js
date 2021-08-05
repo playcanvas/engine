@@ -26,7 +26,9 @@ import { Model } from '../scene/model.js';
  */
 class ContainerResource {
     constructor(data) {
+        // glb content, of type GlbResources
         this.data = data;
+
         this._model = null;
         this.renders = [];
         this.materials = [];
@@ -114,7 +116,6 @@ class ContainerResource {
             if (gltfNode.hasOwnProperty('skin')) {
                 skinedMeshInstances.push({
                     meshInstance: meshInstance,
-                    skin: skins[gltfNode.skin],
                     rootBone: root,
                     entity: entity
                 });
@@ -192,8 +193,7 @@ class ContainerResource {
 
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
         skinedMeshInstances.forEach((data) => {
-            data.meshInstance.mesh.skin = data.skin;
-            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.skin, data.rootBone, data.entity);
+            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
         });
 
         // return the scene hierarachy created from scene clones
