@@ -240,7 +240,6 @@ function BasisWorker() {
             height: compressedFormat ? ((height + 3) & ~3) : height,
             levels: levelData,
             cubemap: false,
-            mipmaps: true,
             transcodeTime: performanceNow() - funcStart,
             url: url,
             unswizzledGGGR: unswizzle
@@ -332,7 +331,6 @@ function BasisWorker() {
             height: compressedFormat ? ((height + 3) & ~3) : height,
             levels: levelData,
             cubemap: false,
-            mipmaps: true,
             transcodeTime: performanceNow() - funcStart,
             url: url,
             unswizzledGGGR: unswizzle
