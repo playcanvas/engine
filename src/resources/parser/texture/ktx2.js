@@ -181,7 +181,10 @@ class Ktx2Parser {
                 url.load,
                 arraybuffer,
                 callback,
-                { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
+                {
+                    isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
+                    isKTX2: true
+                }
             );
 
             if (!basisModuleFound) {

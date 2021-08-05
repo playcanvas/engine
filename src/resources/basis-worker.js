@@ -340,7 +340,7 @@ function BasisWorker() {
     };
 
     const transcode = (url, data, options) => {
-        return url.endsWith('.basis') ? transcodeBasis(url, data, options) : transcodeKTX2(url, data, options);
+        return options.isKTX2 ? transcodeKTX2(url, data, options) : transcodeBasis(url, data, options);
     };
 
     // download and transcode the file given the basis module and
