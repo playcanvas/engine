@@ -192,7 +192,7 @@ class Ktx2Parser {
             }
         } else {
             // TODO: load non-supercompressed formats
-            callback('unsupported KTX2 pixel formt');
+            callback('unsupported KTX2 pixel format');
         }
     }
 }
