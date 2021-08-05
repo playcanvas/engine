@@ -12,6 +12,7 @@ import {
 import { Texture } from '../../../graphics/texture.js';
 
 /**
+ * @private
  * @class
  * @name DdsParser
  * @implements {TextureParser}
