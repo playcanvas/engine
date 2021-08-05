@@ -167,13 +167,11 @@ class TextureHandler {
         // parser will be used when other more specific parsers are not found.
         this.imgParser = new ImgParser(assets);
 
-        const basisParser = new BasisParser(assets, device);
-
         this.parsers = {
             dds: new DdsParser(assets),
             ktx: new KtxParser(assets),
-            ktx2: basisParser, // new Ktx2Parser(assets),
-            basis: basisParser, // new BasisParser(assets, device),
+            ktx2: new Ktx2Parser(assets, device),
+            basis: new BasisParser(assets, device),
             hdr: new HdrParser(assets)
         };
     }
