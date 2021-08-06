@@ -11,7 +11,8 @@ import { Texture } from '../graphics/texture.js';
 import { BasisParser } from './parser/texture/basis.js';
 import { ImgParser } from './parser/texture/img.js';
 import { KtxParser } from './parser/texture/ktx.js';
-import { LegacyDdsParser } from './parser/texture/legacy-dds.js';
+import { Ktx2Parser } from './parser/texture/ktx2.js';
+import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
 const JSON_ADDRESS_MODE = {
@@ -167,8 +168,9 @@ class TextureHandler {
         this.imgParser = new ImgParser(assets);
 
         this.parsers = {
-            dds: new LegacyDdsParser(assets),
+            dds: new DdsParser(assets),
             ktx: new KtxParser(assets),
+            ktx2: new Ktx2Parser(assets, device),
             basis: new BasisParser(assets, device),
             hdr: new HdrParser(assets)
         };

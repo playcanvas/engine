@@ -1853,7 +1853,10 @@ const loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, option
                 callback(err);
             } else {
                 if (gltfImageIndex === undefined || gltfImageIndex === null) {
-                    gltfImageIndex = gltfTexture.source;
+                    gltfImageIndex = gltfTexture?.extensions?.KHR_texture_basisu?.source;
+                    if (gltfImageIndex === undefined) {
+                        gltfImageIndex = gltfTexture.source;
+                    }
                 }
 
                 if (assets[gltfImageIndex]) {
