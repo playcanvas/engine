@@ -29,7 +29,7 @@ class BasisParser {
         http.get(
             url.load,
             options,
-            function (err, result) {
+            (err, result) => {
                 if (err) {
                     callback(err, result);
                 } else {
