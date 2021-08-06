@@ -1,4 +1,5 @@
 import { version, revision } from '../core/core.js';
+import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
@@ -2158,7 +2159,7 @@ var makeTick = function (_app) {
         } else if (application.xr.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = (typeof window !== 'undefined') && window.requestAnimationFrame(application.tick);
+            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)

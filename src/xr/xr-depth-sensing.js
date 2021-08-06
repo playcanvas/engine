@@ -1,3 +1,4 @@
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Mat4 } from '../math/mat4.js';
 import { Texture } from '../graphics/texture.js';
@@ -253,7 +254,7 @@ class XrDepthSensing extends EventHandler {
     }
 
     get supported() {
-        return (typeof window !== 'undefined') && !! window.XRDepthInformation;
+        return platform.browser && !!window.XRDepthInformation;
     }
 
     /**

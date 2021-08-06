@@ -1,3 +1,5 @@
+import { platform } from "../core/platform.js";
+
 /**
  * @class
  * @name XrDomOverlay
@@ -25,7 +27,7 @@
 class XrDomOverlay {
     constructor(manager) {
         this._manager = manager;
-        this._supported = (typeof window !== 'undefined') && !!window.XRDOMOverlayState;
+        this._supported = platform.browser && !!window.XRDOMOverlayState;
         this._root = null;
     }
 

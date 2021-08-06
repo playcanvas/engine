@@ -1,6 +1,7 @@
 import '../polyfill/OESVertexArrayObject.js';
 import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
+import { platform } from '../core/platform.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -309,23 +310,19 @@ class GraphicsDevice extends EventHandler {
             throw new Error("WebGL not supported");
         }
 
-        const hasWindow = (typeof window !== 'undefined');
-        const hasNavigator = (typeof navigator !== 'undefined');
+        const isChrome = platform.browser && !!window.chrome;
+        const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         this.gl = gl;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = hasWindow && !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        const isChrome = hasWindow && !!window.chrome;
-        const isMac = hasNavigator && navigator.appVersion.indexOf("Mac") !== -1;
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         // init polyfill for VAOs
-        if (hasWindow) {
-            window.setupVertexArrayObject(gl);
-        }
+        platform.global.setupVertexArrayObject(gl);
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
@@ -3516,7 +3513,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        const ratio = Math.min(this._maxPixelRatio, (typeof window !== 'undefined') ? window.devicePixelRatio : 1);
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 
