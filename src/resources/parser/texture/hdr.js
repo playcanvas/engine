@@ -179,7 +179,7 @@ class HdrParser {
         // allocate texture buffer
         const buffer = new ArrayBuffer(width * height * 4);
         const view = new Uint8Array(buffer);
-        let scanstart = flipY ? width * 4 * (height - 1) : 0;
+        let scanstart = flipY ? 0 : width * 4 * (height - 1);
         let x, y, i, channel, count, value;
 
         for (y = 0; y < height; ++y) {
@@ -221,7 +221,7 @@ class HdrParser {
                 }
             }
 
-            scanstart += width * 4 * (flipY ? -1 : 1);
+            scanstart += width * 4 * (flipY ? 1 : -1);
         }
 
         return view;

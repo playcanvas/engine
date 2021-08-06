@@ -152,7 +152,7 @@ class ResourceLoader {
             } else {
                 handleLoad(null, {
                     load: url,
-                    original: asset && asset.getPreferredFile().filename || url
+                    original: asset && asset.file.filename || url
                 });
             }
         }
