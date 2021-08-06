@@ -52,6 +52,9 @@ if (typeof navigator !== 'undefined') {
     } catch (e) {}
 }
 
+// detect browser/node environment
+const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
+
 /**
  * @namespace
  * @name platform
@@ -62,6 +65,24 @@ if (typeof navigator !== 'undefined') {
  * }
  */
 const platform = {
+    /**
+     * @static
+     * @readonly
+     * @type {string}
+     * @name platform.environment
+     * @description Name of the runtime environment. Either 'browser' or 'node'.
+     */
+    environment: environment,
+
+    /**
+     * @static
+     * @readonly
+     * @type {object}
+     * @name platform.global
+     * @description The global object. window when running in browsers and the global object when running on node.
+     */
+    global: (environment === 'browser') ? window : global,
+
     /**
      * @static
      * @readonly
