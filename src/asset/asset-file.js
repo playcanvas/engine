@@ -14,6 +14,8 @@ class AssetFile {
         this.contents = contents || null;
     }
 
+    // Compare this AssetFile with another. Returns true if they have the same data
+    // and false otherwise.
     cmp(other) {
         return this.url === other.url &&
             this.filename === other.filename &&
