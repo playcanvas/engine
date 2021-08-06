@@ -316,13 +316,13 @@ function shFromCubemap(device, source, dontFlipX) {
         // #if _DEBUG
         console.error("ERROR: SH: cubemap must be RGBA8");
         // #endif
-        return;
+        return null;
     }
-    if (!source._levels[0]) {
+    if (!source._levels[0] || !source._levels[0][0]) {
         // #if _DEBUG
         console.error("ERROR: SH: cubemap must be synced to CPU");
         // #endif
-        return;
+        return null;
     }
     if (!source._levels[0][0].length) {
         // Cubemap is not composed of arrays
@@ -376,7 +376,7 @@ function shFromCubemap(device, source, dontFlipX) {
             // #if _DEBUG
             console.error("ERROR: SH: cubemap must be composed of arrays or images");
             // #endif
-            return;
+            return null;
         }
     }
 
