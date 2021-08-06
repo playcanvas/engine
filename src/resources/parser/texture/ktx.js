@@ -56,13 +56,17 @@ class KtxParser {
     }
 
     load(url, callback, asset) {
-        const options = {
-            cache: true,
-            responseType: "arraybuffer",
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-        http.get(url.load, options, callback);
+        if (asset?.file?.contents) {
+            setTimeout(() => callback(null, asset.file.contents));
+        } else {
+            const options = {
+                cache: true,
+                responseType: "arraybuffer",
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
+            };
+            http.get(url.load, options, callback);
+        }
     }
 
     open(url, data, device) {

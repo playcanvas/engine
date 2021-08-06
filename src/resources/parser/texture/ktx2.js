@@ -74,23 +74,27 @@ class Ktx2Parser {
     }
 
     load(url, callback, asset) {
-        const options = {
-            cache: true,
-            responseType: "arraybuffer",
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-        http.get(
-            url.load,
-            options,
-            (err, result) => {
-                if (err) {
-                    callback(err, result);
-                } else {
-                    this.parse(result, url, callback, asset);
+        if (asset?.file?.contents) {
+            setTimeout(() => this.parse(asset.file.contents, url, callback, asset));
+        } else {
+            const options = {
+                cache: true,
+                responseType: "arraybuffer",
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
+            };
+            http.get(
+                url.load,
+                options,
+                (err, result) => {
+                    if (err) {
+                        callback(err, result);
+                    } else {
+                        this.parse(result, url, callback, asset);
+                    }
                 }
-            }
-        );
+            );
+        }
     }
 
     open(url, data, device) {

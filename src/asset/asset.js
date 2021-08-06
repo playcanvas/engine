@@ -6,7 +6,6 @@ import { EventHandler } from '../core/event-handler.js';
 import { findAvailableLocale } from '../i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
-import { AssetVariants } from './asset-variants.js';
 import { AssetFile } from './asset-file.js';
 import { getApplication } from '../framework/globals.js';
 
@@ -82,8 +81,6 @@ class Asset extends EventHandler {
         this.type = type;
         this.tags = new Tags(this);
         this._preload = false;
-
-        this.variants = new AssetVariants(this);
 
         this._file = null;
         this._data = data || { };
