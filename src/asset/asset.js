@@ -8,6 +8,7 @@ import { findAvailableLocale } from '../i18n/utils.js';
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetFile } from './asset-file.js';
 import { getApplication } from '../framework/globals.js';
+import { http } from '../net/http.js';
 
 // auto incrementing number for asset ids
 var assetIdCounter = -1;
@@ -361,7 +362,7 @@ class Asset extends EventHandler {
         const oldFile = this._file;
         const newFile = value ? new AssetFile(value.url, value.filename, value.hash, value.size, value.opt, value.contents) : null;
 
-        if (!!newFile !== !!oldFile || (newFile && !newFile.cmp(oldFile))) {
+        if (!!newFile !== !!oldFile || (newFile && !newFile.equals(oldFile))) {
             this._file = newFile;
             this.fire('change', this, 'file', newFile, oldFile);
             this.reload();
@@ -433,6 +434,22 @@ class Asset extends EventHandler {
             // here we must invoke it manually instead.
             if (this.loaded)
                 this.registry._loader.patch(this, this.registry);
+        }
+    }
+
+    // get the asset file data as an array buffer
+    static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
+        if (asset?.file?.contents) {
+            // asset file contents were provided
+            setTimeout(() => callback(null, asset.file.CONTENTS));
+        } else {
+            // asset contents must be downloaded
+            http.get(loadUrl, {
+                cache: true,
+                responseType: 'arraybuffer',
+                retry: maxRetries > 0,
+                maxRetries: maxRetries
+            }, callback);
         }
     }
 }

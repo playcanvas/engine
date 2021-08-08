@@ -1,5 +1,5 @@
-import { http } from '../../../net/http.js';
-
+import { Asset } from '../../../asset/asset.js';
+import { Texture } from '../../../graphics/texture.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT,
     PIXELFORMAT_DXT1, PIXELFORMAT_DXT5,
@@ -9,7 +9,6 @@ import {
     PIXELFORMAT_RGBA32F,
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
 
 /**
  * @private
@@ -24,17 +23,7 @@ class DdsParser {
     }
 
     load(url, callback, asset) {
-        if (asset?.file?.contents) {
-            setTimeout(() => callback(null, asset.file.contents));
-        } else {
-            const options = {
-                cache: true,
-                responseType: "arraybuffer",
-                retry: this.maxRetries > 0,
-                maxRetries: this.maxRetries
-            };
-            http.get(url.load, options, callback);
-        }
+        Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
     open(url, data, device) {
