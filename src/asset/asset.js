@@ -437,11 +437,24 @@ class Asset extends EventHandler {
         }
     }
 
-    // get the asset file data as an array buffer
+    /**
+     * @private
+     * @function
+     * @name Asset#fetchArrayBuffer
+     * @description Helper function to resolve asset file data and return the contents as an
+     * ArrayBuffer. If the asset file contents are present, that is returned. Otherwise the file
+     * data will be downloaded via http.
+     * @param {string} loadUrl - The URL as passed into the handler
+     * @param {callbacks.LoadAsset} callback - The callback function
+     * @param {Asset} [asset] - The asset
+     * @param {Number} maxRetries - Number of retries if http download is required
+     */
     static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
         if (asset?.file?.contents) {
             // asset file contents were provided
-            setTimeout(() => callback(null, asset.file.contents));
+            setTimeout(() => {
+                callback(null, asset.file.contents);
+            });
         } else {
             // asset contents must be downloaded
             http.get(loadUrl, {
