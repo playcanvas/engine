@@ -663,6 +663,10 @@ class StandardMaterial extends Material {
 
             // no basic extension? likely slow device, attempt tp use dual paraboloid map with spherical harmonic ambient
             const useDp = !device.extTextureLod && allMips;
+
+            // if prefilteredCubeMap16 is not the correct format or doesn't have CPU-side data
+            // then shFromCubemap will fail. here we check that the spherical harmonic is
+            // successfully generated before committing to dual paraboloid lighting.
             const sh = useDp ? prefilteredCubeMap128.sh || shFromCubemap(device, prefilteredCubeMap16) : null;
 
             if (useDp && sh) {
