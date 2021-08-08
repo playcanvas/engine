@@ -122,6 +122,7 @@ class HdrParser {
         readStream.readArray(rgbe);
         if ((rgbe[0] !== 2 || rgbe[1] !== 2 || (rgbe[2] & 0x80) !== 0)) {
             // not RLE
+            readStream.skip(-4);
             return this._readPixelsFlat(readStream, width, height);
         }
 
@@ -179,7 +180,7 @@ class HdrParser {
     }
 
     _readPixelsFlat(readStream, width, height) {
-        return readStream.remainingBytes === width * height * 4 ? new Uint8Array(readStream.arraybuffer.buffer, readStream.offset) : null;
+        return readStream.remainingBytes === width * height * 4 ? new Uint8Array(readStream.arraybuffer, readStream.offset) : null;
     }
 
     _error(message) {
