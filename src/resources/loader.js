@@ -74,9 +74,9 @@ class ResourceLoader {
      * the resource.
      * @param {string} url - The URL of the resource to load.
      * @param {string} type - The type of resource expected.
-     * @param {callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an
+     * error occurs. Passed (err, resource) where err is null if there are no errors.
      * @param {Asset} [asset] - Optional asset that is passed into handler
-     * Passed (err, resource) where err is null if there are no errors.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
      *     // use texture here

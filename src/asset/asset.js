@@ -443,11 +443,11 @@ class Asset extends EventHandler {
      * @name Asset#fetchArrayBuffer
      * @description Helper function to resolve asset file data and return the contents as an
      * ArrayBuffer. If the asset file contents are present, that is returned. Otherwise the file
-     * data will be downloaded via http.
+     * data is be downloaded via http.
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {callbacks.LoadAsset} callback - The callback function
+     * @param {callbacks.ResourceLoader} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
-     * @param {Number} maxRetries - Number of retries if http download is required
+     * @param {number} maxRetries - Number of retries if http download is required
      */
     static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
         if (asset?.file?.contents) {

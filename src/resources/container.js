@@ -1,13 +1,7 @@
 import { path } from '../core/path.js';
-
-import { http, Http } from '../net/http.js';
-
 import { Asset } from '../asset/asset.js';
-
 import { GlbParser } from './parser/glb-parser.js';
-
 import { Entity } from '../framework/entity.js';
-
 import { MeshInstance } from '../scene/mesh-instance.js';
 import { MorphInstance } from '../scene/morph-instance.js';
 import { SkinInstance } from '../scene/skin-instance.js';
@@ -377,48 +371,27 @@ class ContainerHandler {
             };
         }
 
-        const options = {
-            responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-
-        const self = this;
-
-        // parse downloaded file data
-        const parseData = function (arrayBuffer) {
-            GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                 path.extractPath(url.load),
-                                 arrayBuffer,
-                                 self._device,
-                                 asset.registry,
-                                 asset.options,
-                                 function (err, result) {
-                                     if (err) {
-                                         callback(err);
-                                     } else {
-                                         // return everything
-                                         callback(null, new ContainerResource(result));
-                                     }
-                                 });
-        };
-
-        if (asset && asset.file && asset.file.contents) {
-            // file data supplied by caller
-            parseData(asset.file.contents);
-        } else {
-            // data requires download
-            http.get(url.load, options, function (err, response) {
-                if (!callback)
-                    return;
-
-                if (err) {
-                    callback("Error loading model: " + url.original + " [" + err + "]");
-                } else {
-                    parseData(response);
-                }
-            });
-        }
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                GlbParser.parseAsync(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new ContainerResource(result));
+                        }
+                    });
+            }
+        }, asset, this.maxRetries);
     }
 
     open(url, data, asset) {
