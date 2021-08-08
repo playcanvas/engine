@@ -441,7 +441,7 @@ class Asset extends EventHandler {
     static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
         if (asset?.file?.contents) {
             // asset file contents were provided
-            setTimeout(() => callback(null, asset.file.CONTENTS));
+            setTimeout(() => callback(null, asset.file.contents));
         } else {
             // asset contents must be downloaded
             http.get(loadUrl, {
