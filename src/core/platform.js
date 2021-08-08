@@ -77,21 +77,21 @@ const platform = {
     /**
      * @static
      * @readonly
-     * @type {boolean}
-     * @name platform.isBrowser
-     * @description Convenience boolean indicating whether we're running the browser.
-     */
-    browser: environment === 'browser',
-
-    /**
-     * @static
-     * @readonly
      * @type {object}
      * @name platform.global
      * @description The global object. This will be the window object when running in a browser and
      * the global object when running in nodejs.
      */
     global: (environment === 'browser') ? window : global,
+
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name platform.isBrowser
+     * @description Convenience boolean indicating whether we're running the browser.
+     */
+    browser: environment === 'browser',
 
     /**
      * @static
