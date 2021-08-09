@@ -1054,7 +1054,7 @@ class ParticleEmitter {
                     data[i * 6 + 2] = meshData[vert * stride + 2];
                     data[i * 6 + 3] = id;
                     data[i * 6 + 4] = meshData[vert * stride + texCoordOffset + 0];
-                    data[i * 6 + 5] = meshData[vert * stride + texCoordOffset + 1];
+                    data[i * 6 + 5] = 1.0 - meshData[vert * stride + texCoordOffset + 1];
                 }
             }
 
