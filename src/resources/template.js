@@ -5,6 +5,7 @@ import { Template } from '../templates/template.js';
 class TemplateHandler {
     constructor(app) {
         this._app = app;
+        this.maxRetries = 0;
     }
 
     load(url, callback) {
@@ -15,7 +16,13 @@ class TemplateHandler {
             };
         }
 
-        http.get(url.load, {}, function (err, response) {
+        // we need to specify JSON for blob URLs
+        const options = {
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
+        };
+
+        http.get(url.load, options, function (err, response) {
             if (err) {
                 callback("Error requesting template: " + url.original);
             } else {
