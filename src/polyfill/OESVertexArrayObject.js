@@ -1,10 +1,5 @@
 // https://github.com/KhronosGroup/WebGL/blob/master/sdk/demos/google/resources/OESVertexArrayObject.js
 
-import { platform } from '../core/platform.js';
-
-(function() {
-"use strict";
-
 var glErrorShadow = { };
 
 function error(msg) {
@@ -272,14 +267,14 @@ OESVertexArrayObject.prototype.bindVertexArrayOES = function bindVertexArrayOES(
             }
         }
     }
-    
+
     if (this.currentArrayBuffer != currentBinding) {
         original.bindBuffer.call(gl, gl.ARRAY_BUFFER, this.currentArrayBuffer);
     }
 };
 
 // You MUST call this BEFORE adding event listeners for 'webglcontextrestored'
-platform.global.setupVertexArrayObject = function(gl) {
+const setupVertexArrayObject = function(gl) {
     // Ignore if already installed (or the browser provides the extension)
     // FIXME: when all stable browsers support getSupportedExtensions
     // and getExtension, remove the workarounds below.
@@ -320,4 +315,4 @@ platform.global.setupVertexArrayObject = function(gl) {
     };
 };
 
-}());
+export { setupVertexArrayObject };
