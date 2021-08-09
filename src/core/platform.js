@@ -89,7 +89,7 @@ const platform = {
      * @readonly
      * @type {boolean}
      * @name platform.isBrowser
-     * @description Convenience boolean indicating whether we're running the browser.
+     * @description Convenience boolean indicating whether we're running in the browser.
      */
     browser: environment === 'browser',
 

@@ -78,6 +78,4 @@ class ReadStream {
     }
 }
 
-export {
-    ReadStream
-};
+export { ReadStream };
