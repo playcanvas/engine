@@ -26,6 +26,4 @@ class AssetFile {
     }
 }
 
-export {
-    AssetFile
-};
+export { AssetFile };
