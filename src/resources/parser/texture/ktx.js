@@ -1,5 +1,5 @@
-import { http } from '../../../net/http.js';
-
+import { Asset } from '../../../asset/asset.js';
+import { Texture } from '../../../graphics/texture.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT,
     PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -9,7 +9,6 @@ import {
     PIXELFORMAT_111110F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F,
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
 
 // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
 const IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
@@ -56,13 +55,7 @@ class KtxParser {
     }
 
     load(url, callback, asset) {
-        const options = {
-            cache: true,
-            responseType: "arraybuffer",
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-        http.get(url.load, options, callback);
+        Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
     open(url, data, device) {

@@ -1,6 +1,7 @@
-import '../polyfill/OESVertexArrayObject.js';
+import { setupVertexArrayObject } from '../polyfill/OESVertexArrayObject.js';
 import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
+import { platform } from '../core/platform.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -309,18 +310,21 @@ class GraphicsDevice extends EventHandler {
             throw new Error("WebGL not supported");
         }
 
+        const isChrome = platform.browser && !!window.chrome;
+        const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
+
         this.gl = gl;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        const isChrome = !!window.chrome;
-        const isMac = navigator.appVersion.indexOf("Mac") !== -1;
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
-        // init polyfill for VAOs
-        window.setupVertexArrayObject(gl);
+        // init polyfill for VAOs under webgl1
+        if (!this.webgl2) {
+            setupVertexArrayObject(gl);
+        }
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
@@ -1550,8 +1554,10 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
-        this.boundVao = null;
-        this.gl.bindVertexArray(null);
+        if (this.boundVao) {
+            this.boundVao = null;
+            this.gl.bindVertexArray(null);
+        }
 
         // Unset the render target
         const target = this.renderTarget;
@@ -3509,7 +3515,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        const ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 

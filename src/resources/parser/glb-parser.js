@@ -1717,21 +1717,23 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         callback(null, textureAsset);
     };
 
+    const mimeTypeFileExtensions = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/basis': 'basis',
+        'image/ktx': 'ktx',
+        'image/vnd-ms.dds': 'dds'
+    };
+
     const loadTexture = function (url, mimeType, crossOrigin, isBlobUrl) {
-        const mimeTypeFileExtensions = {
-            'image/png': 'png',
-            'image/jpeg': 'jpg',
-            'image/basis': 'basis',
-            'image/ktx': 'ktx',
-            'image/vnd-ms.dds': 'dds'
-        };
+        const name = gltfImage.name || 'gltf-texture';
 
         // construct the asset file
         const file = { url: url };
         if (mimeType) {
             const extension = mimeTypeFileExtensions[mimeType];
             if (extension) {
-                file.filename = 'glb-texture-' + index + '.' + extension;
+                file.filename = name + '-' + index + '.' + extension;
             }
         }
 
@@ -1743,9 +1745,30 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
             }
             onLoad(asset);
         });
-        asset.on('error', function (err, asset) {
-            callback(err);
-        });
+        asset.on('error', callback);
+        registry.add(asset);
+        registry.load(asset);
+    };
+
+    const loadTextureFromData = function (mimeType, bufferView) {
+        const name = gltfImage.name || 'gltf-texture';
+
+        // construct the asset file
+        const file = {
+            url: name + '-' + index,
+            contents: bufferView
+        };
+        if (mimeType) {
+            const extension = mimeTypeFileExtensions[mimeType];
+            if (extension) {
+                file.filename = file.url + '.' + extension;
+            }
+        }
+
+        // create and load the asset
+        const asset = new Asset(name, 'texture',  file, null);
+        asset.on('load', onLoad);
+        asset.on('error', callback);
         registry.add(asset);
         registry.load(asset);
     };
@@ -1769,8 +1792,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
-                const blob = new Blob([bufferViews[gltfImage.bufferView]], { type: gltfImage.mimeType });
-                loadTexture(URL.createObjectURL(blob), gltfImage.mimeType, null, true);
+                loadTextureFromData(gltfImage.mimeType, bufferViews[gltfImage.bufferView]);
             } else {
                 // fail
                 callback("Invalid image found in gltf (neither uri or bufferView found). index=" + index);
@@ -1961,7 +1983,7 @@ const parseGltf = function (gltfChunk, callback) {
 
 // parse glb data, returns the gltf and binary chunk
 const parseGlb = function (glbData, callback) {
-    const data = new DataView(glbData);
+    const data = (glbData instanceof ArrayBuffer) ? new DataView(glbData) : new DataView(glbData.buffer, glbData.byteOffset, glbData.byteLength);
 
     // read header
     const magic = data.getUint32(0, true);
@@ -1978,7 +2000,7 @@ const parseGlb = function (glbData, callback) {
         return;
     }
 
-    if (length <= 0 || length > glbData.byteLength) {
+    if (length <= 0 || length > data.byteLength) {
         callback("Invalid length found in glb header. Found " + length);
         return;
     }
@@ -1988,11 +2010,11 @@ const parseGlb = function (glbData, callback) {
     let offset = 12;
     while (offset < length) {
         const chunkLength = data.getUint32(offset, true);
-        if (offset + chunkLength + 8 > glbData.byteLength) {
+        if (offset + chunkLength + 8 > data.byteLength) {
             throw new Error("Invalid chunk length found in glb. Found " + chunkLength);
         }
         const chunkType = data.getUint32(offset + 4, true);
-        const chunkData = new Uint8Array(glbData, offset + 8, chunkLength);
+        const chunkData = new Uint8Array(data.buffer, data.byteOffset + offset + 8, chunkLength);
         chunks.push({ length: chunkLength, type: chunkType, data: chunkData });
         offset += chunkLength + 8;
     }

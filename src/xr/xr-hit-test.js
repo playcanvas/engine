@@ -1,3 +1,4 @@
+import { platform } from "../core/platform.js";
 import { EventHandler } from '../core/event-handler.js';
 
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
@@ -18,7 +19,7 @@ class XrHitTest extends EventHandler {
         super();
 
         this.manager = manager;
-        this._supported = !! (window.XRSession && window.XRSession.prototype.requestHitTestSource);
+        this._supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
         this._session = null;
 

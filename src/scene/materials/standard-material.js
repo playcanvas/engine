@@ -636,9 +636,6 @@ class StandardMaterial extends Material {
             this._processColor();
         }
 
-        const useTexCubeLod = device.useTexCubeLod;
-        const useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
-
         let globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
         if (this.useSkybox) {
             globalSky128 = scene._skyboxPrefiltered[0];
@@ -664,31 +661,39 @@ class StandardMaterial extends Material {
                          prefilteredCubeMap8 &&
                          prefilteredCubeMap4;
 
-            if (useDp && allMips) {
+            // no basic extension? likely slow device, attempt tp use dual paraboloid map with spherical harmonic ambient
+            const useDp = !device.extTextureLod && allMips;
+
+            // if prefilteredCubeMap16 is not the correct format or doesn't have CPU-side data
+            // then shFromCubemap will fail. here we check that the spherical harmonic is
+            // successfully generated before committing to dual paraboloid lighting.
+            const sh = useDp ? prefilteredCubeMap128.sh || shFromCubemap(device, prefilteredCubeMap16) : null;
+
+            if (useDp && sh) {
                 if (!prefilteredCubeMap128.dpAtlas) {
                     const atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
                         prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
                     prefilteredCubeMap128.dpAtlas = generateDpAtlas(device, atlas);
-                    prefilteredCubeMap128.sh = shFromCubemap(device, prefilteredCubeMap16);
+                    prefilteredCubeMap128.sh = sh;
                 }
                 this.dpAtlas = prefilteredCubeMap128.dpAtlas;
                 this.ambientSH = prefilteredCubeMap128.sh;
                 this._setParameter('ambientSH[0]', this.ambientSH);
                 this._setParameter('texture_sphereMap', this.dpAtlas);
-            } else if (useTexCubeLod) {
+            } else if (device.useTexCubeLod) {
                 if (prefilteredCubeMap128._levels.length < 6) {
                     if (allMips) {
-                       // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
+                        // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                         this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                     } else {
-                        console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                        console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                     }
                 } else {
-                   // Single (able to use single cubemap with texCubeLod)
+                    // Single (able to use single cubemap with texCubeLod)
                     this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                 }
             } else if (allMips) {
-               // Multiple (no texCubeLod, but able to use cubemap per mip)
+                // Multiple (no texCubeLod, but able to use cubemap per mip)
                 this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                 this._setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
                 this._setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
@@ -696,7 +701,7 @@ class StandardMaterial extends Material {
                 this._setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
                 this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
             } else {
-                console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
             if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {

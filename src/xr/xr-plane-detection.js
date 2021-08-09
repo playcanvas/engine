@@ -1,3 +1,4 @@
+import { platform } from "../core/platform.js";
 import { EventHandler } from '../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
@@ -25,7 +26,7 @@ class XrPlaneDetection extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = !! window.XRPlane;
+        this._supported = platform.browser && !!window.XRPlane;
         this._available = false;
 
         // key - XRPlane (native plane does not have ID's)

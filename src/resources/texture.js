@@ -290,14 +290,9 @@ class TextureHandler {
             texture.type = JSON_TEXTURE_TYPE[assetData.type];
         } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
             texture.type = TEXTURETYPE_RGBM;
-        } else if (asset.file && asset.getPreferredFile) {
+        } else if (asset.file && (asset.file.opt & 8) !== 0) {
             // basis normalmaps flag the variant as swizzled
-            const preferredFile = asset.getPreferredFile();
-            if (preferredFile) {
-                if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
-                    texture.type = TEXTURETYPE_SWIZZLEGGGR;
-                }
-            }
+            texture.type = TEXTURETYPE_SWIZZLEGGGR;
         }
     }
 }

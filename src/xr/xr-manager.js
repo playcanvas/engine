@@ -1,3 +1,4 @@
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { Mat3 } from '../math/mat3.js';
@@ -39,7 +40,7 @@ class XrManager extends EventHandler {
 
         this.app = app;
 
-        this._supported = !! navigator.xr;
+        this._supported = platform.browser && !! navigator.xr;
 
         this._available = { };
 

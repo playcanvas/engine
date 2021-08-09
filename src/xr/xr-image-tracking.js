@@ -1,3 +1,4 @@
+import { platform } from "../core/platform.js";
 import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
@@ -16,7 +17,7 @@ class XrImageTracking extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = !! window.XRImageTrackingResult;
+        this._supported = platform.browser && !!window.XRImageTrackingResult;
         this._available = false;
 
         this._images = [];
