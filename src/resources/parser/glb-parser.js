@@ -446,7 +446,7 @@ const createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
             sourceStride = source.stride / 4;
             // ensure we don't go beyond the end of the arraybuffer when dealing with
             // interlaced vertex formats
-            sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + source.size / 4);
+            sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + (source.size + 3) / 4);
 
             let src = 0;
             let dst = target.offset / 4;
