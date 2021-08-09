@@ -1,6 +1,6 @@
-import { Asset } from '../../../asset/asset.js';
-import { Texture } from '../../../graphics/texture.js';
 import { ReadStream } from '../../../core/read-stream.js';
+
+import { Texture } from '../../../graphics/texture.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
@@ -8,6 +8,8 @@ import {
     PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_RGBE
 } from '../../../graphics/constants.js';
+
+import { Asset } from '../../../asset/asset.js';
 
 /**
  * @private
