@@ -8,9 +8,9 @@ class AssetFile {
     constructor(url, filename, hash, size, opt, contents) {
         this.url = url || '';
         this.filename = filename || '';
-        this.hash = hash || null;
-        this.size = size || null;
-        this.opt = opt || null;
+        this.hash = (hash === undefined) ? null : hash;
+        this.size = (size === undefined) ? null : size;
+        this.opt = (opt === undefined) ? null : opt;
         this.contents = contents || null;
     }
 
