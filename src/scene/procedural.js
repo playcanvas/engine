@@ -301,6 +301,7 @@ function createMesh(device, positions, opts) {
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
  * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring (defaults to 30).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new torus-shaped mesh.
  */
 function createTorus(device, opts) {
@@ -600,6 +601,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @param {number} [opts.height] - The length of the body of the cylinder (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the length of the cylinder (defaults to 5).
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cylinder (defaults to 20).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCylinder(device, opts) {
@@ -645,6 +647,7 @@ function createCylinder(device, opts) {
  * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the capsule (defaults to 1).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule (defaults to 20).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCapsule(device, opts) {
@@ -684,6 +687,7 @@ function createCapsule(device, opts) {
  * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone (defaults to 5).
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone (defaults to 18).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cone-shaped mesh.
  */
 function createCone(device, opts) {
@@ -718,8 +722,9 @@ function createCone(device, opts) {
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
- * @param {number} [opts.segments] - The number of divisions along the longitudinal
- * and latitudinal axes of the sphere (defaults to 16).
+ * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the sphere (defaults to 16).
+ * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of the sphere (defaults to 16).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new sphere-shaped mesh.
  */
 function createSphere(device, opts) {
@@ -803,6 +808,7 @@ function createSphere(device, opts) {
  * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane (defaults to 5).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane (defaults to 5).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new plane-shaped mesh.
  */
 function createPlane(device, opts) {
@@ -883,6 +889,7 @@ function createPlane(device, opts) {
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box (defaults to 1).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box (defaults to 1).
  * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box (defaults to 1).
+ * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new box-shaped mesh.
  */
 function createBox(device, opts) {
