@@ -12,6 +12,7 @@ const poolQuat = [];
  * @augments EventHandler
  * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
  * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
  * @param {boolean} transient - True if XRHitTestSource created for input source profile.
