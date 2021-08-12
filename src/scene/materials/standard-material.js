@@ -1011,10 +1011,12 @@ function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMo
     //     });
     // }
 
-    defineProp({
-        name: `${name}Mode`,
-        defaultValue: DETAILMODE_MUL
-    });
+    if (detailMode) {
+        defineProp({
+            name: `${name}Mode`,
+            defaultValue: DETAILMODE_MUL
+        });
+    }
 
     // _propsSerial.push(privMap.substring(1));
     // _propsSerial.push(privMapTiling.substring(1));
