@@ -17,11 +17,10 @@ import {
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
-import { getApplication } from '../../framework/globals.js';
-
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { Quat } from '../../math/quat.js';
 
+const _props = {};
 const _propsSerial = [];
 const _propsSerialDefaultVal = [];
 const _propsInternalNull = [];
@@ -346,6 +345,9 @@ class StandardMaterial extends Material {
     constructor() {
         super();
 
+        this.dirtyShader = true;
+        this._scene = null;
+
         // storage for texture and cubemap asset references
         this._assetReferences = {};
         this._validator = null;
@@ -356,6 +358,10 @@ class StandardMaterial extends Material {
     }
 
     reset() {
+        for (const [name, prop] of Object.entries(_props)) {
+            prop.reset(this);
+        }
+
         for (let i = 0; i < _propsSerial.length; i++) {
             const defVal = _propsSerialDefaultVal[i];
             this[_propsSerial[i]] = defVal ? (defVal.clone ? defVal.clone() : defVal) : defVal;
@@ -383,6 +389,10 @@ class StandardMaterial extends Material {
     clone() {
         const clone = new StandardMaterial();
         this._cloneInternal(clone);
+
+        for (const name of Object.keys(_props)) {
+            clone[name] = this[name];
+        }
 
         for (let i = 0; i < _propsSerial.length; i++) {
             const pname = _propsSerial[i];
@@ -496,8 +506,15 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        let uniform = this.getUniform("shininess", this.shininess, true);
-        this._setParameter(uniform.name, uniform.value);
+        // let uniform = this.getUniform("shininess", this.shininess, true);
+        // this._setParameter(uniform.name, uniform.value);
+
+        const getShininess = () => {
+            return this.shadingModel === SPECULAR_PHONG ?
+                Math.pow(2, this.shininess * 0.01 * 11) : // legacy: expand back to specular power
+                this.shininess * 0.01;
+        };
+        this._setParameter("material_shininess", getShininess());
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', this.emissiveUniform);
@@ -522,7 +539,24 @@ class StandardMaterial extends Material {
         }
 
         if (this.cubeMapProjection === CUBEPROJ_BOX) {
-            this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
+            // this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
+            const bbox = this.cubeMapProjectionBox;
+
+            const bboxMin = bbox.getMin();
+            const bmin = this.cubeMapMinUniform;
+            bmin.set([bboxMin.x, bboxMin.y, bboxMin.z]);
+
+            const bboxMax = bbox.getMax();
+            const bmax = this.cubeMapMaxUniform;
+            bmax.set([bboxMax.x, bboxMax.y, bboxMax.z]);
+
+            return [{
+                name: "envBoxMin",
+                value: bmin
+            }, {
+                name: "envBoxMax",
+                value: bmax
+            }];
         }
 
         for (const p in _matTex2D) {
@@ -542,8 +576,9 @@ class StandardMaterial extends Material {
         }
 
         if (this.heightMap) {
-            uniform = this.getUniform('heightMapFactor', this.heightMapFactor, true);
-            this._setParameter(uniform.name, uniform.value);
+            // uniform = this.getUniform('heightMapFactor', this.heightMapFactor, true);
+            // this._setParameter(uniform.name, uniform.value);
+            this._setParameter('material_heightMapFactor', this.heightMapFactor * 0.025);
         }
 
         if (this.cubeMap) {
@@ -601,40 +636,40 @@ class StandardMaterial extends Material {
             this.clearVariants();
         }
 
-        this._processColor();
+        // this._processColor();
     }
 
-    _processColor() {
-        if (!this.dirtyColor) return;
-        if (!this._scene && this.useGammaTonemap) return;
-        let gammaCorrection = false;
-        if (this.useGammaTonemap) gammaCorrection = this._scene.gammaCorrection;
+    // _processColor() {
+    //     if (!this.dirtyColor) return;
+    //     if (!this._scene && this.useGammaTonemap) return;
+    //     let gammaCorrection = false;
+    //     if (this.useGammaTonemap) gammaCorrection = this._scene.gammaCorrection;
 
-       // Gamma correct colors
-        for (let i = 0; i < _propsColor.length; i++) {
-            const clr = this["_" + _propsColor[i]];
-            const arr = this[_propsColor[i] + "Uniform"];
-            if (gammaCorrection) {
-                arr[0] = Math.pow(clr.r, 2.2);
-                arr[1] = Math.pow(clr.g, 2.2);
-                arr[2] = Math.pow(clr.b, 2.2);
-            } else {
-                arr[0] = clr.r;
-                arr[1] = clr.g;
-                arr[2] = clr.b;
-            }
-        }
-        for (let c = 0; c < 3; c++) {
-            this.emissiveUniform[c] *= this.emissiveIntensity;
-        }
-        this.dirtyColor = false;
-    }
+    //     // Gamma correct colors
+    //     for (let i = 0; i < _propsColor.length; i++) {
+    //         const clr = this["_" + _propsColor[i]];
+    //         const arr = this[_propsColor[i] + "Uniform"];
+    //         if (gammaCorrection) {
+    //             arr[0] = Math.pow(clr.r, 2.2);
+    //             arr[1] = Math.pow(clr.g, 2.2);
+    //             arr[2] = Math.pow(clr.b, 2.2);
+    //         } else {
+    //             arr[0] = clr.r;
+    //             arr[1] = clr.g;
+    //             arr[2] = clr.b;
+    //         }
+    //     }
+    //     for (let c = 0; c < 3; c++) {
+    //         this.emissiveUniform[c] *= this.emissiveIntensity;
+    //     }
+    //     this.dirtyColor = false;
+    // }
 
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        if (!this._colorProcessed && this._scene) {
-            this._colorProcessed = true;
-            this._processColor();
-        }
+        // if (!this._colorProcessed && this._scene) {
+        //     this._colorProcessed = true;
+        //     this._processColor();
+        // }
 
         let globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
         if (this.useSkybox) {
@@ -750,281 +785,466 @@ class StandardMaterial extends Material {
     }
 }
 
-function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMode) {
-    var privMap = "_" + name + "Map";
-    var privMapTiling = privMap + "Tiling";
-    var privMapOffset = privMap + "Offset";
-    var mapTransform = privMap.substring(1) + "Transform";
-    var mapTransformUniform = mapTransform + "Uniform";
-    var privMapUv = privMap + "Uv";
-    var privMapChannel = privMap + "Channel";
-    var privMapVertexColor = "_" + name + "VertexColor";
-    var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
-    var privMapDetailMode = "_" + name + "Mode";
+class Float32ArrayUniform extends Float32Array {
+    equals(other) {
+        for (let i = 0; i < this.length; ++i) {
+            if (this[i] !== other[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    obj[privMap] = null;
-    obj[privMapTiling] = new Vec2(1, 1);
-    obj[privMapOffset] = new Vec2(0, 0);
+    clone() {
+        const result = new Float32ArrayUniform(this.length);
+        for (let i = 0; i < this.length; ++i) {
+            result[i] = this[i];
+        }
+        return result;
+    }
+
+    copy(src) {
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = src[i];
+        }
+        return this;
+    }
+}
+
+// define a standard material property
+const defineProp = (prop) => {
+    const name = prop.name;
+    const internalName = `_${name}`;
+    const defaultValue = prop.defaultValue;
+    const changedFunc = prop.changedFunc || function (oldValue, newValue) {
+        this.dirtyShader = true;
+    };
+
+    const aggFuncs = {
+        equals: (a, b) => a.equals(b),
+        clone: (a) => a.clone(),
+        copy: (dest, src) => dest.copy(src)
+    };
+
+    const valueFuncs = {
+        equals: (a, b) => a === b,
+        clone: (a) => a,
+        copy: (dest, src) => src
+    };
+
+    const funcs = defaultValue && defaultValue.clone ? aggFuncs : valueFuncs;
+
+    Object.defineProperty(StandardMaterial.prototype, name, {
+        get: function () {
+            return this[internalName];
+        },
+        set: function (value) {
+            const oldValue = this[internalName];
+            if (!funcs.equals(value, oldValue)) {
+                changedFunc.call(this, oldValue, value);
+                this[internalName] = funcs.copy(oldValue, value);
+            }
+        }
+    });
+
+    _props[name] = {
+        reset: (material) => {
+            material[internalName] = funcs.clone(defaultValue);
+        }
+    };
+};
+
+function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMode) {
+    // var privMap = "_" + name + "Map";
+    // var privMapTiling = privMap + "Tiling";
+    // var privMapOffset = privMap + "Offset";
+    var mapTransform = name + "MapTransform";
+    var mapTransformUniform = name + "MapTransformUniform";
+    // var privMapUv = privMap + "Uv";
+    // var privMapChannel = privMap + "Channel";
+    // var privMapVertexColor = "_" + name + "VertexColor";
+    // var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
+    // var privMapDetailMode = "_" + name + "Mode";
+
+    // obj[privMap] = null;
+    // obj[privMapTiling] = new Vec2(1, 1);
+    // obj[privMapOffset] = new Vec2(0, 0);
     obj[mapTransform] = null;
     obj[mapTransformUniform] = null;
-    obj[privMapUv] = uv;
-    if (channels > 0) {
-        var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
-        obj[privMapChannel] = channel;
-        if (vertexColor) obj[privMapVertexColorChannel] = channel;
-    }
-    if (vertexColor) obj[privMapVertexColor] = false;
-    if (detailMode) obj[privMapDetailMode] = DETAILMODE_MUL;
+    // obj[privMapUv] = uv;
+    // if (channels > 0) {
+    //     var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
+        // obj[privMapChannel] = channel;
+    //     if (vertexColor) obj[privMapVertexColorChannel] = channel;
+    // }
+    // if (vertexColor) obj[privMapVertexColor] = false;
+    // if (detailMode) obj[privMapDetailMode] = DETAILMODE_MUL;
 
     _matTex2D[name] = channels;
 
-    Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
-        get: function () {
-            return this[privMap];
-        },
-        set: function (value) {
-            var oldVal = this[privMap];
-            if (!!oldVal ^ !!value) this.dirtyShader = true;
-            if (oldVal && value) {
-                if (oldVal.type !== value.type || oldVal.fixCubemapSeams !== value.fixCubemapSeams || oldVal.format !== value.format) {
-                    this.dirtyShader = true;
-                }
+    // Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
+    //     get: function () {
+    //         return this[privMap];
+    //     },
+    //     set: function (value) {
+    //         var oldVal = this[privMap];
+    //         if (!!oldVal ^ !!value) this.dirtyShader = true;
+    //         if (oldVal && value) {
+    //             if (oldVal.type !== value.type || oldVal.fixCubemapSeams !== value.fixCubemapSeams || oldVal.format !== value.format) {
+    //                 this.dirtyShader = true;
+    //             }
+    //         }
+
+    //         this[privMap] = value;
+    //     }
+    // });
+
+    defineProp({
+        name: `${name}Map`,
+        defaultValue: null,
+        changedFunc: function (oldValue, newValue) {
+            if (!!oldValue !== !!newValue ||
+                oldValue && (oldValue.type !== newValue.type ||
+                             oldValue.fixCubemapSeams !== newValue.fixCubemapSeams ||
+                             oldValue.format !== newValue.format)) {
+                this.dirtyShader = true;
             }
-
-            this[privMap] = value;
         }
     });
 
-    var mapTiling = privMapTiling.substring(1);
-    var mapOffset = privMapOffset.substring(1);
+    // var mapTiling = privMapTiling.substring(1);
+    // var mapOffset = privMapOffset.substring(1);
 
-    Object.defineProperty(StandardMaterial.prototype, mapTiling, {
-        get: function () {
-            return this[privMapTiling];
-        },
-        set: function (value) {
-            this.dirtyShader = true;
-            this[privMapTiling] = value;
-        }
-    });
-    _prop2Uniform[mapTiling] = function (mat, val, changeMat) {
-        var tform = mat._updateMapTransform(
-            changeMat ? mat[mapTransform] : null,
-            val,
-            mat[privMapOffset]
-        );
-        return { name: ("texture_" + mapTransform), value: tform.data };
-    };
+    // Object.defineProperty(StandardMaterial.prototype, mapTiling, {
+    //     get: function () {
+    //         return this[privMapTiling];
+    //     },
+    //     set: function (value) {
+    //         this.dirtyShader = true;
+    //         this[privMapTiling] = value;
+    //     }
+    // });
+    // _prop2Uniform[mapTiling] = function (mat, val, changeMat) {
+    //     var tform = mat._updateMapTransform(
+    //         changeMat ? mat[mapTransform] : null,
+    //         val,
+    //         mat[privMapOffset]
+    //     );
+    //     return { name: ("texture_" + mapTransform), value: tform.data };
+    // };
 
-    Object.defineProperty(StandardMaterial.prototype, mapOffset, {
-        get: function () {
-            return this[privMapOffset];
-        },
-        set: function (value) {
-            this.dirtyShader = true;
-            this[privMapOffset] = value;
-        }
-    });
-    _prop2Uniform[mapOffset] = function (mat, val, changeMat) {
-        var tform = mat._updateMapTransform(
-            changeMat ? mat[mapTransform] : null,
-            mat[privMapTiling],
-            val
-        );
-        return { name: ("texture_" + mapTransform), value: tform.data };
-    };
+    // Object.defineProperty(StandardMaterial.prototype, mapOffset, {
+    //     get: function () {
+    //         return this[privMapOffset];
+    //     },
+    //     set: function (value) {
+    //         this.dirtyShader = true;
+    //         this[privMapOffset] = value;
+    //     }
+    // });
+    // _prop2Uniform[mapOffset] = function (mat, val, changeMat) {
+    //     var tform = mat._updateMapTransform(
+    //         changeMat ? mat[mapTransform] : null,
+    //         mat[privMapTiling],
+    //         val
+    //     );
+    //     return { name: ("texture_" + mapTransform), value: tform.data };
+    // };
 
-    Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
-        get: function () {
-            return this[privMapUv];
-        },
-        set: function (value) {
-            if (this[privMapUv] !== value) this.dirtyShader = true;
-            this[privMapUv] = value;
-        }
+    defineProp({
+        name: `${name}Tiling`,
+        defaultValue: new Vec2(1, 1)
     });
-    Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
-        get: function () {
-            return this[privMapChannel];
-        },
-        set: function (value) {
-            if (this[privMapChannel] !== value) this.dirtyShader = true;
-            this[privMapChannel] = value;
-        }
+
+    defineProp({
+        name: `${name}Offset`,
+        defaultValue: new Vec2(0, 0)
     });
+
+    // Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
+    //     get: function () {
+    //         return this[privMapUv];
+    //     },
+    //     set: function (value) {
+    //         if (this[privMapUv] !== value) this.dirtyShader = true;
+    //         this[privMapUv] = value;
+    //     }
+    // });
+    // Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
+    //     get: function () {
+    //         return this[privMapChannel];
+    //     },
+    //     set: function (value) {
+    //         if (this[privMapChannel] !== value) this.dirtyShader = true;
+    //         this[privMapChannel] = value;
+    //     }
+    // });
+
+    defineProp({
+        name: `${name}Uv`,
+        defaultValue: uv
+    });
+
+    if (channels > 0) {
+        defineProp({
+            name: `${name}Channel`,
+            default: defChannel ? defChannel : (channels > 1 ? "rgb" : "g")
+        });
+    }
 
     if (vertexColor) {
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function () {
-                return this[privMapVertexColor];
-            },
-            set: function (value) {
-                this.dirtyShader = true;
-                this[privMapVertexColor] = value;
-            }
+        defineProp({
+            name: `${name}VertexColor`,
+            defaultValue: false
         });
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function () {
-                return this[privMapVertexColorChannel];
-            },
-            set: function (value) {
-                if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
-                this[privMapVertexColorChannel] = value;
-            }
-        });
+        if (channels > 0) {
+            defineProp({
+                name: `${name}VertexColorChannel`,
+                defaultValue: defChannel ? defChannel : (channels > 1 ? "rgb" : "g")
+            });
+        }
     }
 
-    if (detailMode) {
-        Object.defineProperty(StandardMaterial.prototype, privMapDetailMode.substring(1), {
-            get: function () {
-                return this[privMapDetailMode];
-            },
-            set: function (value) {
-                this.dirtyShader = true;
-                this[privMapDetailMode] = value;
-            }
-        });
-    }
+    // if (vertexColor) {
+    //     Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
+    //         get: function () {
+    //             return this[privMapVertexColor];
+    //         },
+    //         set: function (value) {
+    //             this.dirtyShader = true;
+    //             this[privMapVertexColor] = value;
+    //         }
+    //     });
+    //     Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
+    //         get: function () {
+    //             return this[privMapVertexColorChannel];
+    //         },
+    //         set: function (value) {
+    //             if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
+    //             this[privMapVertexColorChannel] = value;
+    //         }
+    //     });
+    // }
 
-    _propsSerial.push(privMap.substring(1));
-    _propsSerial.push(privMapTiling.substring(1));
-    _propsSerial.push(privMapOffset.substring(1));
-    _propsSerial.push(privMapUv.substring(1));
-    _propsSerial.push(privMapChannel.substring(1));
-    if (vertexColor) {
-        _propsSerial.push(privMapVertexColor.substring(1));
-        _propsSerial.push(privMapVertexColorChannel.substring(1));
-    }
-    if (detailMode) {
-        _propsSerial.push(privMapDetailMode.substring(1));
-    }
+    // if (detailMode) {
+    //     Object.defineProperty(StandardMaterial.prototype, privMapDetailMode.substring(1), {
+    //         get: function () {
+    //             return this[privMapDetailMode];
+    //         },
+    //         set: function (value) {
+    //             this.dirtyShader = true;
+    //             this[privMapDetailMode] = value;
+    //         }
+    //     });
+    // }
+
+    defineProp({
+        name: `${name}Mode`,
+        defaultValue: DETAILMODE_MUL
+    });
+
+    // _propsSerial.push(privMap.substring(1));
+    // _propsSerial.push(privMapTiling.substring(1));
+    // _propsSerial.push(privMapOffset.substring(1));
+    // _propsSerial.push(privMapUv.substring(1));
+    // _propsSerial.push(privMapChannel.substring(1));
+    // if (vertexColor) {
+    //     _propsSerial.push(privMapVertexColor.substring(1));
+    //     _propsSerial.push(privMapVertexColorChannel.substring(1));
+    // }
+    // if (detailMode) {
+    //     _propsSerial.push(privMapDetailMode.substring(1));
+    // }
     _propsInternalNull.push(mapTransform);
 }
 
 function _defineColor(obj, name, defaultValue, hasMultiplier) {
-    var priv = "_" + name;
-    var uform = name + "Uniform";
-    var mult = name + "Intensity";
-    var pmult = "_" + mult;
-    obj[priv] = defaultValue;
-    obj[uform] = new Float32Array(3);
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            this.dirtyColor = true;
-            this.dirtyShader = true;
-            return this[priv];
-        },
-        set: function (newValue) {
-            var oldValue = this[priv];
-            var wasRound = (oldValue.r === 0 && oldValue.g === 0 && oldValue.b === 0) || (oldValue.r === 1 && oldValue.g === 1 && oldValue.b === 1);
-            var isRound = (newValue.r === 0 && newValue.g === 0 && newValue.b === 0) || (newValue.r === 1 && newValue.g === 1 && newValue.b === 1);
-            if (wasRound ^ isRound) this.dirtyShader = true;
-            this.dirtyColor = true;
-            this[priv] = newValue;
+    // var priv = "_" + name;
+    // var uform = name + "Uniform";
+    // var mult = name + "Intensity";
+    // var pmult = "_" + mult;
+    // obj[priv] = defaultValue;
+    // obj[uform] = new Float32Array(3);
+    // Object.defineProperty(StandardMaterial.prototype, name, {
+    //     get: function () {
+    //         this.dirtyColor = true;
+    //         this.dirtyShader = true;
+    //         return this[priv];
+    //     },
+    //     set: function (newValue) {
+    //         var oldValue = this[priv];
+    //         var wasRound = (oldValue.r === 0 && oldValue.g === 0 && oldValue.b === 0) || (oldValue.r === 1 && oldValue.g === 1 && oldValue.b === 1);
+    //         var isRound = (newValue.r === 0 && newValue.g === 0 && newValue.b === 0) || (newValue.r === 1 && newValue.g === 1 && newValue.b === 1);
+    //         if (wasRound ^ isRound) this.dirtyShader = true;
+    //         this.dirtyColor = true;
+    //         this[priv] = newValue;
+    //     }
+    // });
+    // _propsSerial.push(name);
+    // _propsInternalVec3.push(uform);
+    // _propsColor.push(name);
+    // _prop2Uniform[name] = function (mat, val, changeMat) {
+    //     var arr = changeMat ? mat[uform] : new Float32Array(3);
+    //     var gammaCorrection = false;
+    //     if (mat.useGammaTonemap) {
+    //         var scene = mat._scene || getApplication().scene;
+    //         gammaCorrection = scene.gammaCorrection;
+    //     }
+    //     for (var c = 0; c < 3; c++) {
+    //         if (gammaCorrection) {
+    //             arr[c] = Math.pow(val.data[c], 2.2);
+    //         } else {
+    //             arr[c] = val.data[c];
+    //         }
+    //         if (hasMultiplier) arr[c] *= mat[pmult];
+    //     }
+    //     return { name: ("material_" + name), value: arr };
+    // };
+
+    // if (hasMultiplier) {
+    //     obj[pmult] = 1;
+    //     Object.defineProperty(StandardMaterial.prototype, mult, {
+    //         get: function () {
+    //             return this[pmult];
+    //         },
+    //         set: function (newValue) {
+    //             var oldValue = this[pmult];
+    //             var wasRound = oldValue === 0 || oldValue === 1;
+    //             var isRound = newValue === 0 || newValue === 1;
+    //             if (wasRound ^ isRound) this.dirtyShader = true;
+    //             this.dirtyColor = true;
+    //             this[pmult] = newValue;
+    //         }
+    //     });
+    //     _propsSerial.push(mult);
+    //     _prop2Uniform[mult] = function (mat, val, changeMat) {
+    //         var arr = changeMat ? mat[uform] : new Float32Array(3);
+    //         var gammaCorrection = false;
+    //         if (mat.useGammaTonemap) {
+    //             var scene = mat._scene || getApplication().scene;
+    //             gammaCorrection = scene.gammaCorrection;
+    //         }
+    //         for (var c = 0; c < 3; c++) {
+    //             if (gammaCorrection) {
+    //                 arr[c] = Math.pow(mat[priv].data[c], 2.2);
+    //             } else {
+    //                 arr[c] = mat[priv].data[c];
+    //             }
+    //             arr[c] *= mat[pmult];
+    //         }
+    //         return { name: ("material_" + name), value: arr };
+    //     };
+    // }
+
+    const uniformName = `${name}Uniform`;
+    const intensityName = `${name}Intensity`;
+
+    defineProp({
+        name: uniformName,
+        defaultValue: new Float32ArrayUniform(3),
+        changedFunc: function (oldValue, newValue) {
+            if (this.useGammaTonemap && this._scene?.gammaCorrection) {
+                newValue[0] = Math.pow(newValue[0], 2.2);
+                newValue[1] = Math.pow(newValue[2], 2.2);
+                newValue[2] = Math.pow(newValue[3], 2.2);
+            }
         }
     });
-    _propsSerial.push(name);
-    _propsInternalVec3.push(uform);
-    _propsColor.push(name);
-    _prop2Uniform[name] = function (mat, val, changeMat) {
-        var arr = changeMat ? mat[uform] : new Float32Array(3);
-        var gammaCorrection = false;
-        if (mat.useGammaTonemap) {
-            var scene = mat._scene || getApplication().scene;
-            gammaCorrection = scene.gammaCorrection;
+
+    defineProp({
+        name: name,
+        defaultValue: defaultValue,
+        changedFunc: function (oldValue, newValue) {
+            const intensity = hasMultiplier ? this[intensityName] : 1.0;
+            this[uniformName] = [newValue.r * intensity, newValue.g * intensity, newValue.b * intensity];
+            // NOTE: this flag was set before only when colour went from 0 or 1 to non 0 or
+            // 1, but I'm not convinced that was correct
+            this.dirtyShader = true;
         }
-        for (var c = 0; c < 3; c++) {
-            if (gammaCorrection) {
-                arr[c] = Math.pow(val.data[c], 2.2);
-            } else {
-                arr[c] = val.data[c];
-            }
-            if (hasMultiplier) arr[c] *= mat[pmult];
-        }
-        return { name: ("material_" + name), value: arr };
-    };
+    });
 
     if (hasMultiplier) {
-        obj[pmult] = 1;
-        Object.defineProperty(StandardMaterial.prototype, mult, {
-            get: function () {
-                return this[pmult];
-            },
-            set: function (newValue) {
-                var oldValue = this[pmult];
-                var wasRound = oldValue === 0 || oldValue === 1;
-                var isRound = newValue === 0 || newValue === 1;
-                if (wasRound ^ isRound) this.dirtyShader = true;
-                this.dirtyColor = true;
-                this[pmult] = newValue;
+        defineProp({
+            name: intensityName,
+            defaultValue: 1,
+            changedFunc: function (oldValue, newValue) {
+                const color = this[name];
+                this[uniformName] = [color.r * newValue, color.g * newValue, color.b * newValue];
+                // NOTE: this flag was set before only when colour went from 0 or 1 to non 0 or
+                // 1, but I'm not convinced that was correct
+                this.dirtyShader = true;
             }
         });
-        _propsSerial.push(mult);
-        _prop2Uniform[mult] = function (mat, val, changeMat) {
-            var arr = changeMat ? mat[uform] : new Float32Array(3);
-            var gammaCorrection = false;
-            if (mat.useGammaTonemap) {
-                var scene = mat._scene || getApplication().scene;
-                gammaCorrection = scene.gammaCorrection;
-            }
-            for (var c = 0; c < 3; c++) {
-                if (gammaCorrection) {
-                    arr[c] = Math.pow(mat[priv].data[c], 2.2);
-                } else {
-                    arr[c] = mat[priv].data[c];
-                }
-                arr[c] *= mat[pmult];
-            }
-            return { name: ("material_" + name), value: arr };
-        };
     }
 }
 
 function _defineFloat(obj, name, defaultValue, func) {
-    var priv = "_" + name;
-    obj[priv] = defaultValue;
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            return this[priv];
-        },
-        set: function (newValue) {
-            var oldValue = this[priv];
-            if (oldValue === newValue) return;
-            this[priv] = newValue;
+    // var priv = "_" + name;
+    // obj[priv] = defaultValue;
+    // Object.defineProperty(StandardMaterial.prototype, name, {
+    //     get: function () {
+    //         return this[priv];
+    //     },
+    //     set: function (newValue) {
+    //         var oldValue = this[priv];
+    //         if (oldValue === newValue) return;
+    //         this[priv] = newValue;
 
-           // This is not always optimal and will sometimes trigger redundant shader
-           // recompilation. However, no number property on a standard material
-           // triggers a shader recompile if the previous and current values both
-           // have a fractional part.
-            var wasRound = oldValue === 0 || oldValue === 1;
-            var isRound = newValue === 0 || newValue === 1;
-            if (wasRound || isRound) this.dirtyShader = true;
+    //        // This is not always optimal and will sometimes trigger redundant shader
+    //        // recompilation. However, no number property on a standard material
+    //        // triggers a shader recompile if the previous and current values both
+    //        // have a fractional part.
+    //         var wasRound = oldValue === 0 || oldValue === 1;
+    //         var isRound = newValue === 0 || newValue === 1;
+    //         if (wasRound || isRound) this.dirtyShader = true;
+    //     }
+    // });
+    // _propsSerial.push(name);
+    // _prop2Uniform[name] = func !== undefined ? func : function (mat, val, changeMat) {
+    //     return {
+    //         name: "material_" + name,
+    //         value: val
+    //     };
+    // };
+
+    defineProp({
+        name: `${name}`,
+        defaultValue: defaultValue,
+        changedFunc: function (oldValue, newValue) {
+            // This is not always optimal and will sometimes trigger redundant shader
+            // recompilation. However, no number property on a standard material
+            // triggers a shader recompile if the previous and current values both
+            // have a fractional part.
+            if ((oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1)) {
+                this.dirtyShader = true;
+            }
         }
     });
-    _propsSerial.push(name);
-    _prop2Uniform[name] = func !== undefined ? func : function (mat, val, changeMat) {
-        return {
-            name: "material_" + name,
-            value: val
-        };
-    };
 }
 
 function _defineObject(obj, name, func) {
-    var priv = "_" + name;
-    obj[priv] = null;
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            return this[priv];
-        },
-        set: function (value) {
-            var oldVal = this[priv];
-            if (!!oldVal ^ !!value) this.dirtyShader = true;
-            this[priv] = value;
+    // var priv = "_" + name;
+    // obj[priv] = null;
+    // Object.defineProperty(StandardMaterial.prototype, name, {
+    //     get: function () {
+    //         return this[priv];
+    //     },
+    //     set: function (value) {
+    //         var oldVal = this[priv];
+    //         if (!!oldVal ^ !!value) this.dirtyShader = true;
+    //         this[priv] = value;
+    //     }
+    // });
+    // _propsSerial.push(name);
+    // _prop2Uniform[name] = func;
+
+    defineProp({
+        name: name,
+        defaultValue: null,
+        changedFunc: function (oldValue, newValue) {
+            this.dirtyShader = !!oldValue === !!newValue;
         }
     });
-    _propsSerial.push(name);
-    _prop2Uniform[name] = func;
 }
 
 function _defineAlias(obj, newName, oldName) {
@@ -1053,46 +1273,53 @@ function _defineChunks(obj) {
 }
 
 function _defineFlag(obj, name, defaultValue) {
-    var priv = "_" + name;
-    obj[priv] = defaultValue;
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            return this[priv];
-        },
-        set: function (value) {
-            if (this[priv] !== value) this.dirtyShader = true;
-            this[priv] = value;
-        }
+    // var priv = "_" + name;
+    // obj[priv] = defaultValue;
+    // Object.defineProperty(StandardMaterial.prototype, name, {
+    //     get: function () {
+    //         return this[priv];
+    //     },
+    //     set: function (value) {
+    //         if (this[priv] !== value) this.dirtyShader = true;
+    //         this[priv] = value;
+    //     }
+    // });
+    // _propsSerial.push(name);
+
+    defineProp({
+        name: name,
+        defaultValue: defaultValue
     });
-    _propsSerial.push(name);
 }
 
 function _defineMaterialProps(obj) {
-    obj.dirtyShader = true;
-    obj.dirtyColor = true;
-    obj._scene = null;
-    obj._colorProcessed = false;
+    // obj.dirtyShader = true;
+    // obj.dirtyColor = true;
+    // obj._scene = null;
+    // obj._colorProcessed = false;
 
     _defineColor(obj, "ambient", new Color(0.7, 0.7, 0.7));
     _defineColor(obj, "diffuse", new Color(1, 1, 1));
     _defineColor(obj, "specular", new Color(0, 0, 0));
     _defineColor(obj, "emissive", new Color(0, 0, 0), true);
 
-    _defineFloat(obj, "shininess", 25, function (mat, shininess) {
-       // Shininess is 0-100 value
-       // which is actually a 0-1 glossiness value.
-       // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-        let value;
-        if (mat.shadingModel === SPECULAR_PHONG) {
-            value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power
-        } else {
-            value = shininess * 0.01; // correct
-        }
-        return { name: "material_shininess", value: value };
-    });
-    _defineFloat(obj, "heightMapFactor", 1, function (mat, height) {
-        return { name: 'material_heightMapFactor', value: height * 0.025 };
-    });
+    _defineFloat(obj, "shininess", 25);
+    // _defineFloat(obj, "shininess", 25, function (mat, shininess) {
+    //    // Shininess is 0-100 value
+    //    // which is actually a 0-1 glossiness value.
+    //    // Can be converted to specular power using exp2(shininess * 0.01 * 11)
+    //     let value;
+    //     if (mat.shadingModel === SPECULAR_PHONG) {
+    //         value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power
+    //     } else {
+    //         value = shininess * 0.01; // correct
+    //     }
+    //     return { name: "material_shininess", value: value };
+    // });
+    // _defineFloat(obj, "heightMapFactor", 1, function (mat, height) {
+    //     return { name: 'material_heightMapFactor', value: height * 0.025 };
+    // });
+    _defineFloat(obj, "heightMapFactor", 1);
     _defineFloat(obj, "opacity", 1);
     _defineFloat(obj, "alphaFade", 1);
     _defineFloat(obj, "alphaTest", 0);
@@ -1109,24 +1336,26 @@ function _defineMaterialProps(obj) {
     _defineFloat(obj, "clearCoatBumpiness", 1);
     _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
-    _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
-        return { name: "ambientSH[0]", value: val };
-    });
+    _defineObject(obj, "ambientSH");
+    // _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
+    //     return { name: "ambientSH[0]", value: val };
+    // });
 
-    _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
-        const bmin = changeMat ? mat.cubeMapMinUniform : new Float32Array(3);
-        const bmax = changeMat ? mat.cubeMapMaxUniform : new Float32Array(3);
+    _defineObject(obj, "cubeMapProjectionBox");
+    // _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
+    //     const bmin = changeMat ? mat.cubeMapMinUniform : new Float32Array(3);
+    //     const bmax = changeMat ? mat.cubeMapMaxUniform : new Float32Array(3);
 
-        bmin[0] = val.center.x - val.halfExtents.x;
-        bmin[1] = val.center.y - val.halfExtents.y;
-        bmin[2] = val.center.z - val.halfExtents.z;
+    //     bmin[0] = val.center.x - val.halfExtents.x;
+    //     bmin[1] = val.center.y - val.halfExtents.y;
+    //     bmin[2] = val.center.z - val.halfExtents.z;
 
-        bmax[0] = val.center.x + val.halfExtents.x;
-        bmax[1] = val.center.y + val.halfExtents.y;
-        bmax[2] = val.center.z + val.halfExtents.z;
+    //     bmax[0] = val.center.x + val.halfExtents.x;
+    //     bmax[1] = val.center.y + val.halfExtents.y;
+    //     bmax[2] = val.center.z + val.halfExtents.z;
 
-        return [{ name: "envBoxMin", value: bmin }, { name: "envBoxMax", value: bmax }];
-    });
+    //     return [{ name: "envBoxMin", value: bmin }, { name: "envBoxMax", value: bmax }];
+    // });
 
     _defineChunks(obj);
 
