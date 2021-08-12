@@ -358,8 +358,8 @@ class StandardMaterial extends Material {
     }
 
     reset() {
-        for (const [name, prop] of Object.entries(_props)) {
-            prop.reset(this);
+        for (const name in Object.keys(_props)) {
+            delete this[`_${name}`];
         }
 
         for (let i = 0; i < _propsSerial.length; i++) {
@@ -806,6 +806,9 @@ const defineProp = (prop) => {
     };
 
     const funcs = defaultValue && defaultValue.clone ? aggFuncs : valueFuncs;
+
+    // store the default internal value on the StandardMaterial prototype
+    StandardMaterial.prototype[internalName] = defaultValue;
 
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: function () {
