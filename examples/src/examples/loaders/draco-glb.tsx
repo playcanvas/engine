@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 
-class GLBExample extends Example {
+class DracoGLBExample extends Example {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
 
@@ -60,4 +60,4 @@ class GLBExample extends Example {
     }
 }
 
-export default GLBExample;
+export default DracoGLBExample;
