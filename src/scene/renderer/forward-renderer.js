@@ -1309,7 +1309,7 @@ class ForwardRenderer {
                     this._materialSwitches++;
 
                     if (material.dirty) {
-                        material.updateUniforms();
+                        material.updateUniforms(device, scene);
                         material.dirty = false;
                     }
 

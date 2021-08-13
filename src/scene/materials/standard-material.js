@@ -337,7 +337,6 @@ class StandardMaterial extends Material {
         super();
 
         this._dirtyShader = true;
-        this._scene = null;
 
         // storage for texture and cubemap asset references
         this._assetReferences = {};
@@ -421,22 +420,27 @@ class StandardMaterial extends Material {
         return uniform;
     }
 
-    getUniform(name) {
-        return _uniforms[name](this);
+    getUniform(name, device, scene) {
+        return _uniforms[name](this, device, scene);
     }
 
-    updateUniforms() {
+    updateUniforms(device, scene) {
+
+        const getUniform = (name) => {
+            return this.getUniform(name, device, scene);
+        };
+
         this._clearParameters();
 
-        this._setParameter('material_ambient', this.getUniform('ambient'));
+        this._setParameter('material_ambient', getUniform('ambient'));
 
         if (!this.diffuseMap || this.diffuseTint) {
-            this._setParameter('material_diffuse', this.getUniform('diffuse'));
+            this._setParameter('material_diffuse', getUniform('diffuse'));
         }
 
         if (!this.useMetalness) {
             if (!this.specularMap || this.specularTint) {
-                this._setParameter('material_specular', this.getUniform('specular'));
+                this._setParameter('material_specular', getUniform('specular'));
             }
         } else {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -455,10 +459,10 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter("material_shininess", this.getUniform('shininess'));
+        this._setParameter("material_shininess", getUniform('shininess'));
 
         if (!this.emissiveMap || this.emissiveTint) {
-            this._setParameter('material_emissive', this.getUniform('emissive'));
+            this._setParameter('material_emissive', getUniform('emissive'));
         }
         if (this.emissiveMap) {
             this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
@@ -480,7 +484,7 @@ class StandardMaterial extends Material {
         }
 
         if (this.cubeMapProjection === CUBEPROJ_BOX) {
-            this._setParameter(this.getUniform("cubeMapProjectionBox"));
+            this._setParameter(getUniform("cubeMapProjectionBox"));
         }
 
         for (const p in _matTex2D) {
@@ -500,47 +504,11 @@ class StandardMaterial extends Material {
         }
 
         if (this.heightMap) {
-            this._setParameter('material_heightMapFactor', this.getUniform('heightMapFactor'));
+            this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
         if (this.cubeMap) {
             this._setParameter('texture_cubeMap', this.cubeMap);
-        }
-
-        if (this.prefilteredCubeMap128) {
-            this._setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
-        } else if (this._scene && this._scene._skyboxPrefiltered[0]) {
-            this._setParameter('texture_prefilteredCubeMap128', this._scene._skyboxPrefiltered[0]);
-        }
-
-        if (this.prefilteredCubeMap64) {
-            this._setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
-        } else if (this._scene && this._scene._skyboxPrefiltered[1]) {
-            this._setParameter('texture_prefilteredCubeMap64', this._scene._skyboxPrefiltered[1]);
-        }
-
-        if (this.prefilteredCubeMap32) {
-            this._setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
-        } else if (this._scene && this._scene._skyboxPrefiltered[2]) {
-            this._setParameter('texture_prefilteredCubeMap32', this._scene._skyboxPrefiltered[2]);
-        }
-
-        if (this.prefilteredCubeMap16) {
-            this._setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
-        } else if (this._scene && this._scene._skyboxPrefiltered[3]) {
-            this._setParameter('texture_prefilteredCubeMap16', this._scene._skyboxPrefiltered[3]);
-        }
-
-        if (this.prefilteredCubeMap8) {
-            this._setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
-        } else if (this._scene && this._scene._skyboxPrefiltered[4]) {
-            this._setParameter('texture_prefilteredCubeMap8', this._scene._skyboxPrefiltered[4]);
-        }
-
-        if (this.prefilteredCubeMap4) {
-            this._setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
-        } else if (this._scene && this._scene._skyboxPrefiltered[5]) {
-            this._setParameter('texture_prefilteredCubeMap4', this._scene._skyboxPrefiltered[5]);
         }
 
         if (this.sphereMap) {
@@ -549,17 +517,15 @@ class StandardMaterial extends Material {
         if (this.dpAtlas) {
             this._setParameter('texture_sphereMap', this.dpAtlas);
         }
-       // if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
         this._setParameter('material_reflectivity', this.reflectivity);
-       // }
 
-        if (this._dirtyShader || !this._scene) {
+        if (this._dirtyShader) {
             this.shader = null;
             this.clearVariants();
         }
     }
 
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    updateLightingUniforms(device, scene) {
         let globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
         if (this.useSkybox) {
             globalSky128 = scene._skyboxPrefiltered[0];
@@ -632,6 +598,12 @@ class StandardMaterial extends Material {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
+    }
+
+    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+        // update prefiltered lighting data
+        this.updateLightingUniforms(device, scene);
+        const prefilteredCubeMap128 = this.parameters.texture_prefilteredCubeMap128?.data;
 
         // Minimal options for Depth and Shadow passes
         const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
@@ -789,7 +761,7 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     const mapTiling = `${name}MapTiling`;
     const mapOffset = `${name}MapOffset`;
     const mapTransform = `${name}MapTransform`;
-    defineUniform(mapTransform, (material) => {
+    defineUniform(mapTransform, (material, device, scene) => {
         const tiling = material[mapTiling];
         const offset = material[mapOffset];
         if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
@@ -811,16 +783,16 @@ function _defineColor(name, defaultValue, hasIntensity) {
     defineProp({
         name: name,
         defaultValue: defaultValue,
-        getUniformFunc: (material) => {
+        getUniformFunc: (material, device, scene) => {
             const uniform = material._allocUniform(name, () => new Float32Array(3));
             const color = material[name];
             const intensity = hasIntensity ? material[intensityName] : 1.0;
-            const gamma = material.useGammaTonemap && material._scene?.gammaCorrection;
+            const gamma = material.useGammaTonemap && scene.gammaCorrection;
 
             if (gamma) {
-                uniform[0] = Math.pow(color.r * intensity, 2.2);
-                uniform[1] = Math.pow(color.g * intensity, 2.2);
-                uniform[2] = Math.pow(color.b * intensity, 2.2);
+                uniform[0] = Math.pow(color.r, 2.2) * intensity;
+                uniform[1] = Math.pow(color.g, 2.2) * intensity;
+                uniform[2] = Math.pow(color.b, 2.2) * intensity;
             } else {
                 uniform[0] = color.r * intensity;
                 uniform[1] = color.g * intensity;
@@ -902,14 +874,14 @@ function _defineMaterialProps() {
     _defineColor("specular", new Color(0, 0, 0));
     _defineColor("emissive", new Color(0, 0, 0), true);
 
-    _defineFloat("shininess", 25, (material) => {
+    _defineFloat("shininess", 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
         return material.shadingModel === SPECULAR_PHONG ?
             // legacy: expand back to specular power
             Math.pow(2, material.shininess * 0.01 * 11) :
             material.shininess * 0.01;
     });
-    _defineFloat("heightMapFactor", 1, (material) => {
+    _defineFloat("heightMapFactor", 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
     _defineFloat("opacity", 1);
@@ -930,7 +902,7 @@ function _defineMaterialProps() {
 
     _defineObject("ambientSH");
 
-    _defineObject("cubeMapProjectionBox", (material) => {
+    _defineObject("cubeMapProjectionBox", (material, device, scene) => {
         const value = material.cubeMapProjectionBox;
 
         const minUniform = material._allocUniform('cubeMapMin', () => new Float32Array(3));
