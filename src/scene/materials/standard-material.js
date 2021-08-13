@@ -394,7 +394,7 @@ class StandardMaterial extends Material {
         _propsSet.forEach((p) => {
             delete this.parameters[p];
         });
-        _propsSet = [];
+        _propsSet.length = 0;
     }
 
     _updateMap(p) {
