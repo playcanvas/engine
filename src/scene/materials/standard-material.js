@@ -1,6 +1,5 @@
 import { Color } from '../../math/color.js';
 import { Vec2 } from '../../math/vec2.js';
-import { Vec4 } from '../../math/vec4.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
@@ -22,21 +21,21 @@ import { Quat } from '../../math/quat.js';
 
 const _props = {};
 const _uniforms = {};
-const _propsSerial = [];
-const _propsSerialDefaultVal = [];
-const _propsInternalNull = [];
-const _propsInternalVec3 = [];
+// const _propsSerial = [];
+// const _propsSerialDefaultVal = [];
+// const _propsInternalNull = [];
+// const _propsInternalVec3 = [];
 // const _prop2Uniform = {};
 // const _propsColor = [];
 
-class Chunks {
-    copy(from) {
-        for (const p in from) {
-            if (from.hasOwnProperty(p) && p !== 'copy')
-                this[p] = from[p];
-        }
-    }
-}
+// class Chunks {
+//     copy(from) {
+//         for (const p in from) {
+//             if (from.hasOwnProperty(p) && p !== 'copy')
+//                 this[p] = from[p];
+//         }
+//     }
+// }
 
 /**
  * @class
@@ -364,18 +363,18 @@ class StandardMaterial extends Material {
             this[`_${name}`] = prop.value();
         }
 
-        for (let i = 0; i < _propsSerial.length; i++) {
-            const defVal = _propsSerialDefaultVal[i];
-            this[_propsSerial[i]] = defVal ? (defVal.clone ? defVal.clone() : defVal) : defVal;
-        }
-        for (let i = 0; i < _propsInternalNull.length; i++) {
-            this[_propsInternalNull[i]] = null;
-        }
-        for (let i = 0; i < _propsInternalVec3.length; i++) {
-            this[_propsInternalVec3[i]] = new Float32Array(3);
-        }
+        // for (let i = 0; i < _propsSerial.length; i++) {
+        //     const defVal = _propsSerialDefaultVal[i];
+        //     this[_propsSerial[i]] = defVal ? (defVal.clone ? defVal.clone() : defVal) : defVal;
+        // }
+        // for (let i = 0; i < _propsInternalNull.length; i++) {
+        //     this[_propsInternalNull[i]] = null;
+        // }
+        // for (let i = 0; i < _propsInternalVec3.length; i++) {
+        //     this[_propsInternalVec3[i]] = new Float32Array(3);
+        // }
 
-        this._chunks = new Chunks();
+        this._chunks = { };
         this._uniformCache = { };
     }
 
@@ -388,26 +387,33 @@ class StandardMaterial extends Material {
      */
     clone() {
         const clone = new StandardMaterial();
+
         this._cloneInternal(clone);
 
         Object.keys(_props).forEach((k) => {
             clone[k] = this[k];
         });
 
-        for (let i = 0; i < _propsSerial.length; i++) {
-            const pname = _propsSerial[i];
-            if (this[pname] !== undefined) {
-                if (this[pname] && this[pname].copy) {
-                    if (clone[pname]) {
-                        clone[pname].copy(this[pname]);
-                    } else {
-                        clone[pname] = this[pname].clone();
-                    }
-                } else {
-                    clone[pname] = this[pname];
-                }
-            }
+        // clone chunks
+        for (const p in this._chunks) {
+            if (this._chunks.hasOwnProperty(p))
+                clone._chunks[p] = this._chunks[p];
         }
+
+        // for (let i = 0; i < _propsSerial.length; i++) {
+        //     const pname = _propsSerial[i];
+        //     if (this[pname] !== undefined) {
+        //         if (this[pname] && this[pname].copy) {
+        //             if (clone[pname]) {
+        //                 clone[pname].copy(this[pname]);
+        //             } else {
+        //                 clone[pname] = this[pname].clone();
+        //             }
+        //         } else {
+        //             clone[pname] = this[pname];
+        //         }
+        //     }
+        // }
 
         return clone;
     }
@@ -1265,7 +1271,7 @@ function _defineChunks(obj) {
             this._chunks = value;
         }
     });
-    _propsSerial.push("chunks");
+    // _propsSerial.push("chunks");
 }
 
 function _defineFlag(obj, name, defaultValue) {
@@ -1448,9 +1454,9 @@ function _defineMaterialProps(obj) {
     _defineAlias(obj, "opacityVertexColor", "opacityMapVertexColor");
     _defineAlias(obj, "lightVertexColor", "lightMapVertexColor");
 
-    for (let i = 0; i < _propsSerial.length; i++) {
-        _propsSerialDefaultVal[i] = obj[_propsSerial[i]];
-    }
+    // for (let i = 0; i < _propsSerial.length; i++) {
+    //     _propsSerialDefaultVal[i] = obj[_propsSerial[i]];
+    // }
 
     obj._propsSet = [];
 }
