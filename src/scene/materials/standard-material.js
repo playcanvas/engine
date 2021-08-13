@@ -26,7 +26,7 @@ const _props = {};
 const _uniforms = {};
 
 // temporary helper array
-let _propsSet = [];
+const _propsSet = [];
 
 /**
  * @class
@@ -350,9 +350,9 @@ class StandardMaterial extends Material {
 
     reset() {
         // set default values
-        for (const [name, prop] of Object.entries(_props)) {
-            this[`_${name}`] = prop.value();
-        }
+        Object.keys(_props).forEach((name) => {
+            this[`_${name}`] = _props[name].value();
+        });
 
         this._chunks = { };
         this._uniformCache = { };
