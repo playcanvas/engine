@@ -930,7 +930,7 @@ function _defineMaterialProps() {
 
     _defineObject("ambientSH");
 
-    _defineObject("cubeMapProjectionBox", function (material) {
+    _defineObject("cubeMapProjectionBox", (material) => {
         const value = material.cubeMapProjectionBox;
 
         const minUniform = material._allocUniform('cubeMapMin', () => new Float32Array(3));
