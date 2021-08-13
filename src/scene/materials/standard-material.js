@@ -455,9 +455,6 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        // let uniform = this.getUniform("shininess", this.shininess, true);
-        // this._setParameter(uniform.name, uniform.value);
-
         this._setParameter("material_shininess", this.getUniform('shininess'));
 
         if (!this.emissiveMap || this.emissiveTint) {
