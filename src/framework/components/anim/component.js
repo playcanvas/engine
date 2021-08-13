@@ -42,15 +42,6 @@ class AnimComponent extends Component {
         this._parameters = {};
         // a collection of animated property targets
         this._targets = {};
-        this._dirtyWeights = false;
-    }
-
-    get dirtyWeights() {
-        return this._dirtyWeights;
-    }
-
-    set dirtyWeights(value) {
-        this._dirtyWeights = value;
     }
 
     get stateGraphAsset() {
@@ -230,6 +221,13 @@ class AnimComponent extends Component {
             return this._layers[0];
         }
         return null;
+    }
+
+    dirtifyTargets() {
+        const targets = Object.values(this._targets);
+        for (let i = 0; i < targets.length; i++) {
+            targets[i].dirty = true;
+        }
     }
 
     _addLayer({ name, states, transitions, order, weight, mask, blendType }) {

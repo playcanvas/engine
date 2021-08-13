@@ -129,31 +129,38 @@ class DefaultAnimBinder {
         };
     }
 
-    findNode(path) {
-        if (this._mask) {
-            let shouldAnimateNode = false;
-            const entityPathArrays = [path.entityPath];
-            if (this.graph.name !== entityPathArrays[0][0]) {
-                entityPathArrays.push([this.graph.name, ...entityPathArrays[0].slice(1)]);
-            }
+    _isPathActive(path) {
+        if (!this._mask) return true;
 
-            for (let i = 0; i < entityPathArrays.length; i++) {
-                const entityPathArr = entityPathArrays[i];
-                const entityPath = entityPathArr.join('/');
-                let maskItem = this._mask[entityPath];
-                if (this._mask[entityPath] && this._mask[entityPath]?.value !== false) {
-                    shouldAnimateNode = true;
-                } else {
-                    for (let i = 0; i < entityPathArr.length; i++) {
-                        maskItem = this._mask[entityPathArr.slice(0, i + 1).join('/')];
-                        if (maskItem?.children) {
-                            shouldAnimateNode = true;
-                            break;
-                        }
+        let shouldAnimateNode = false;
+
+        const entityPathArrays = [path.entityPath];
+        if (this.graph.name !== entityPathArrays[0][0]) {
+            entityPathArrays.push([this.graph.name, ...entityPathArrays[0].slice(1)]);
+        }
+
+        for (let i = 0; i < entityPathArrays.length; i++) {
+            const entityPathArr = entityPathArrays[i];
+            const entityPath = entityPathArr.join('/');
+            let maskItem = this._mask[entityPath];
+            if (this._mask[entityPath] && this._mask[entityPath]?.value !== false) {
+                shouldAnimateNode = true;
+            } else {
+                for (let i = 0; i < entityPathArr.length; i++) {
+                    maskItem = this._mask[entityPathArr.slice(0, i + 1).join('/')];
+                    if (maskItem?.children) {
+                        shouldAnimateNode = true;
+                        break;
                     }
                 }
             }
-            if (!shouldAnimateNode) return null;
+        }
+        return shouldAnimateNode;
+    }
+
+    findNode(path) {
+        if (!this._isPathActive(path)) {
+            return null;
         }
 
         let node;

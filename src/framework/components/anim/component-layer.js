@@ -248,7 +248,7 @@ class AnimComponentLayer {
 
     set weight(value) {
         this._weight = value;
-        this._component.dirtyWeights = true;
+        this._component.dirtifyTargets();
     }
 
     get blendType() {

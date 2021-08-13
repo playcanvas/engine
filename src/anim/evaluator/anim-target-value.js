@@ -2,6 +2,14 @@ import { Quat } from '../../math/quat.js';
 import { Vec3 } from '../../math/vec3.js';
 import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 
+/**
+ * @private
+ * @class
+ * @name AnimTargetValue
+ * @classdesc Used to store and update the value of an animation target. This combines the values of multiple layer targets into a single value.
+ * @param {AnimComponent} component - The anim component this target value is associated with.
+ * @param {string} type - The type of value stored, either quat or vec3.
+ */
 class AnimTargetValue {
     constructor(component, type) {
         this._component = component;
@@ -11,6 +19,7 @@ class AnimTargetValue {
         this.counter = 0;
         this.layerCounter = 0;
         this.valueType = type;
+        this.dirty = true;
 
         if (this.valueType === AnimTargetValue.TYPE_QUAT) {
             this.value = new Quat();
@@ -21,8 +30,8 @@ class AnimTargetValue {
         }
     }
 
-    weight(index) {
-        if (this._component.dirtyWeights) this.updateWeights();
+    getWeight(index) {
+        if (this._dirty) this.updateWeights();
         if (this.totalWeight === 0) return 0;
         return this.weights[index] / this.totalWeight;
     }
@@ -32,7 +41,7 @@ class AnimTargetValue {
         if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
             this.mask = this.mask.fill(0, 0, index - 1);
         }
-        this.updateWeights();
+        this._dirty = true;
     }
 
     updateWeights() {
@@ -41,6 +50,7 @@ class AnimTargetValue {
             this.weights[i] = this._component.layers[i].weight;
             this.totalWeight += this.mask[i] * this.weights[i];
         }
+        this.dirty = false;
     }
 
     updateValue(index, value) {
@@ -50,11 +60,11 @@ class AnimTargetValue {
         this._currentValue.set(...value);
         switch (this.valueType) {
             case (AnimTargetValue.TYPE_QUAT): {
-                this.value.mul(this._currentValue.slerp(Quat.IDENTITY, this._currentValue, this.weight(index)));
+                this.value.mul(this._currentValue.slerp(Quat.IDENTITY, this._currentValue, this.getWeight(index)));
                 break;
             }
             case (AnimTargetValue.TYPE_VEC3): {
-                this.value.add(this._currentValue.mulScalar(this.weight(index)));
+                this.value.add(this._currentValue.mulScalar(this.getWeight(index)));
                 break;
             }
         }
