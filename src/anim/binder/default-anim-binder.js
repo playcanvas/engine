@@ -129,39 +129,33 @@ class DefaultAnimBinder {
         };
     }
 
+    _isPathInMask = (path, checkMaskValue) => {
+        const maskItem = this._mask[path];
+        if (!maskItem) return false;
+        else if (maskItem.children || (checkMaskValue && maskItem.value !== false)) return true;
+        return false;
+    };
+
     _isPathActive(path) {
         if (!this._mask) return true;
 
-        let shouldAnimateNode = false;
-
-        const entityPathArrays = [path.entityPath];
-        if (this.graph.name !== entityPathArrays[0][0]) {
-            entityPathArrays.push([this.graph.name, ...entityPathArrays[0].slice(1)]);
-        }
-
-        for (let i = 0; i < entityPathArrays.length; i++) {
-            const entityPathArr = entityPathArrays[i];
-            const entityPath = entityPathArr.join('/');
-            let maskItem = this._mask[entityPath];
-            if (this._mask[entityPath] && this._mask[entityPath]?.value !== false) {
-                shouldAnimateNode = true;
-            } else {
-                for (let i = 0; i < entityPathArr.length; i++) {
-                    maskItem = this._mask[entityPathArr.slice(0, i + 1).join('/')];
-                    if (maskItem?.children) {
-                        shouldAnimateNode = true;
-                        break;
-                    }
-                }
+        const rootNodeNames = [path.entityPath[0], this.graph.name];
+        for (let j = 0; j < rootNodeNames.length; ++j) {
+            let currEntityPath = rootNodeNames[j];
+            if (this._isPathInMask(currEntityPath, path.entityPath.length === 1)) return true;
+            for (let i = 1; i < path.entityPath.length; i++) {
+                currEntityPath += '/' + path.entityPath[i];
+                if (this._isPathInMask(currEntityPath, i === path.entityPath.length - 1)) return true;
             }
         }
-        return shouldAnimateNode;
+        return false;
     }
 
     findNode(path) {
         if (!this._isPathActive(path)) {
             return null;
         }
+
 
         let node;
         if (this.graph) {
