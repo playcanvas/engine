@@ -79,7 +79,7 @@ class EventsExample extends Example {
             const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
             colorVec.mulScalar(1 / colorVec.length());
             // @ts-ignore engine-tsd
-            boxes[`${i}${j}`].model.material.emissive = new pc.Color(colorVec.data);
+            boxes[`${i}${j}`].model.material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
             highlightedBoxes.push(boxes[`${i}${j}`]);
         };
 
