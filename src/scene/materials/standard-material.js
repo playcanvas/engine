@@ -684,9 +684,7 @@ const defineProp = (prop) => {
     const name = prop.name;
     const internalName = `_${name}`;
     const defaultValue = prop.defaultValue;
-    const changedFunc = prop.changedFunc || ((material, oldValue, newValue) => {
-        material._dirtyShader = true;
-    });
+    const dirtyShaderFunc = prop.dirtyShaderFunc || null;
     const getUniformFunc = prop.getUniformFunc || null;
 
     const aggFuncs = {
@@ -710,7 +708,9 @@ const defineProp = (prop) => {
         set: function (value) {
             const oldValue = this[internalName];
             if (!funcs.equals(value, oldValue)) {
-                changedFunc(this, oldValue, value);
+                if (!this._dirtyShader && dirtyShaderFunc) {
+                    this._dirtyShader = dirtyShaderFunc(oldValue, value);
+                }
                 this[internalName] = funcs.copy(oldValue, value);
             }
         }
@@ -734,13 +734,11 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     defineProp({
         name: `${name}Map`,
         defaultValue: null,
-        changedFunc: (material, oldValue, newValue) => {
-            if (!!oldValue !== !!newValue ||
+        dirtyShaderFunc: (oldValue, newValue) => {
+            return !!oldValue !== !!newValue ||
                 oldValue && (oldValue.type !== newValue.type ||
                              oldValue.fixCubemapSeams !== newValue.fixCubemapSeams ||
-                             oldValue.format !== newValue.format)) {
-                material._dirtyShader = true;
-            }
+                             oldValue.format !== newValue.format);
         }
     });
 
@@ -845,14 +843,12 @@ function _defineFloat(name, defaultValue, getUniformFunc) {
     defineProp({
         name: `${name}`,
         defaultValue: defaultValue,
-        changedFunc: (material, oldValue, newValue) => {
+        dirtyShaderFunc: (oldValue, newValue) => {
             // This is not always optimal and will sometimes trigger redundant shader
             // recompilation. However, no number property on a standard material
             // triggers a shader recompile if the previous and current values both
             // have a fractional part.
-            if ((oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1)) {
-                material._dirtyShader = true;
-            }
+            return (oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1);
         },
         getUniformFunc: getUniformFunc
     });
@@ -862,8 +858,8 @@ function _defineObject(name, getUniformFunc) {
     defineProp({
         name: name,
         defaultValue: null,
-        changedFunc: (material, oldValue, newValue) => {
-            material._dirtyShader = !!oldValue === !!newValue;
+        dirtyShaderFunc: (oldValue, newValue) => {
+            return !!oldValue === !!newValue;
         },
         getUniformFunc: getUniformFunc
     });
