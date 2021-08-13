@@ -22,6 +22,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  * @augments EventHandler
  * @classdesc Manage and update XR session and its states.
  * @description Manage and update XR session and its states.
+ * @hideconstructor
  * @param {Application} app - The main application.
  * @property {boolean} supported True if XR is supported.
  * @property {boolean} active True if XR session is running.

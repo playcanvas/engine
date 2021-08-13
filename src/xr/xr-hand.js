@@ -29,6 +29,7 @@ if (platform.browser && window.XRHand) {
  * @name XrHand
  * @classdesc Represents a hand with fingers and joints.
  * @description Represents a hand with fingers and joints.
+ * @hideconstructor
  * @param {XrInputSource} inputSource - Input Source that hand is related to.
  * @property {XrFinger[]} fingers List of fingers of a hand.
  * @property {XrJoint[]} joints List of joints of hand.

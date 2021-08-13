@@ -22,6 +22,7 @@ for (let i = 0; i < tipJointIds.length; i++) {
  * @name XrJoint
  * @classdesc Represents joint of a finger.
  * @description Represents joint of a finger.
+ * @hideconstructor
  * @param {number} index - Index of a joint within a finger.
  * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
  * @param {XrHand} hand - Hand that joint relates to.

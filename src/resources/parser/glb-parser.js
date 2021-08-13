@@ -27,7 +27,9 @@ import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
 import {
-    BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED
+    BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
+    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
+    ASPECT_MANUAL, ASPECT_AUTO
 } from '../../scene/constants.js';
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -61,6 +63,7 @@ class GlbResources {
         this.renders = null;
         this.skins = null;
         this.lights = null;
+        this.cameras = null;
     }
 
     destroy() {
@@ -1398,6 +1401,42 @@ const createNode = function (gltfNode, nodeIndex) {
     return entity;
 };
 
+// creates a camera component on the supplied node, and returns it
+const createCamera = function (gltfCamera, node) {
+
+    const projection = gltfCamera.type === "orthographic" ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
+    const gltfProperties = projection === PROJECTION_ORTHOGRAPHIC ? gltfCamera.orthographic : gltfCamera.perspective;
+
+    const componentData = {
+        enabled: false,
+        projection: projection,
+        nearClip: gltfProperties.znear,
+        aspectRatioMode: ASPECT_AUTO
+    };
+
+    if (gltfProperties.zfar) {
+        componentData.farClip = gltfProperties.zfar;
+    }
+
+    if (projection === PROJECTION_ORTHOGRAPHIC) {
+        componentData.orthoHeight = 0.5 * gltfProperties.ymag;
+        if (gltfProperties.ymag) {
+            componentData.aspectRatioMode = ASPECT_MANUAL;
+            componentData.aspectRatio = gltfProperties.xmag / gltfProperties.ymag;
+        }
+    } else {
+        componentData.fov = gltfProperties.yfov * math.RAD_TO_DEG;
+        if (gltfProperties.aspectRatio) {
+            componentData.aspectRatioMode = ASPECT_MANUAL;
+            componentData.aspectRatio = gltfProperties.aspectRatio;
+        }
+    }
+
+    const cameraEntity = new Entity(gltfCamera.name);
+    cameraEntity.addComponent("camera", componentData);
+    return cameraEntity;
+};
+
 // creates light component, adds it to the node and returns the created light component
 const createLight = function (gltfLight, node) {
 
@@ -1421,13 +1460,12 @@ const createLight = function (gltfLight, node) {
 
     // Rotate to match light orientation in glTF specification
     // Note that this adds a new entity node into the hierarchy that does not exist in the gltf hierarchy
-    var lightNode = new Entity(node.name);
-    lightNode.rotateLocal(90, 0, 0);
+    const lightEntity = new Entity(node.name);
+    lightEntity.rotateLocal(90, 0, 0);
 
     // add component
-    lightNode.addComponent("light", lightProps);
-
-    return lightNode;
+    lightEntity.addComponent("light", lightProps);
+    return lightEntity;
 };
 
 const createSkins = function (device, gltf, nodes, bufferViews) {
@@ -1563,6 +1601,41 @@ const createScenes = function (gltf, nodes) {
     return scenes;
 };
 
+const createCameras = function (gltf, nodes, options) {
+
+    let cameras = null;
+
+    if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
+
+        const preprocess = options && options.camera && options.camera.preprocess;
+        const process = options && options.camera && options.camera.process || createCamera;
+        const postprocess = options && options.camera && options.camera.postprocess;
+
+        gltf.nodes.forEach(function (gltfNode, nodeIndex) {
+            if (gltfNode.hasOwnProperty('camera')) {
+                const gltfCamera = gltf.cameras[gltfNode.camera];
+                if (gltfCamera) {
+                    if (preprocess) {
+                        preprocess(gltfCamera);
+                    }
+                    const camera = process(gltfCamera, nodes[nodeIndex]);
+                    if (postprocess) {
+                        postprocess(gltfCamera, camera);
+                    }
+
+                    // add the camera to node->camera map
+                    if (camera) {
+                        if (!cameras) cameras = new Map();
+                        cameras.set(gltfNode, camera);
+                    }
+                }
+            }
+        });
+    }
+
+    return cameras;
+};
+
 const createLights = function (gltf, nodes, options) {
 
     let lights = null;
@@ -1637,6 +1710,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const nodes = createNodes(gltf, options);
     const scenes = createScenes(gltf, nodes);
     const lights = createLights(gltf, nodes, options);
+    const cameras = createCameras(gltf, nodes, options);
     const animations = createAnimations(gltf, nodes, bufferViews, options);
     const materials = createMaterials(gltf, textureAssets.map(function (textureAsset) {
         return textureAsset.resource;
@@ -1663,6 +1737,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     result.renders = renders;
     result.skins = skins;
     result.lights = lights;
+    result.cameras = cameras;
 
     if (postprocess) {
         postprocess(gltf, result);
