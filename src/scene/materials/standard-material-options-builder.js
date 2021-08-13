@@ -273,7 +273,7 @@ StandardMaterialOptionsBuilder.prototype._updateTexOptions = function (options, 
             if (stdMat[uname] === 1 && !hasUv1) allow = false;
             if (allow) {
                 options[mname] = !!stdMat[mname];
-                options[tname] = this._getMapTransformID(stdMat[tname], stdMat[uname]);
+                options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                 options[cname] = stdMat[cname];
                 options[uname] = stdMat[uname];
             }
@@ -312,36 +312,39 @@ StandardMaterialOptionsBuilder.prototype._getMapTransformID = function (xform, u
     if (!xform) return 0;
     if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
-    var i, same;
-    for (i = 0; i < this._mapXForms[uv].length; i++) {
-        same = true;
-        if (this._mapXForms[uv][i][0] !== xform.x) {
-            same = false;
-            break;
-        }
-        if (this._mapXForms[uv][i][1] !== xform.y) {
-            same = false;
-            break;
-        }
-        if (this._mapXForms[uv][i][2] !== xform.z) {
-            same = false;
-            break;
-        }
-        if (this._mapXForms[uv][i][3] !== xform.w) {
-            same = false;
-            break;
-        }
-        if (same) {
+    for (let i = 0; i < this._mapXForms[uv].length; i++) {
+        // compare the two arrays
+        if (this._mapXForms[uv][i].every((e, i) => e === xform[i])) {
             return i + 1;
         }
+        // same = true;
+        // if (this._mapXForms[uv][i][0] !== xform.x) {
+        //     same = false;
+        //     break;
+        // }
+        // if (this._mapXForms[uv][i][1] !== xform.y) {
+        //     same = false;
+        //     break;
+        // }
+        // if (this._mapXForms[uv][i][2] !== xform.z) {
+        //     same = false;
+        //     break;
+        // }
+        // if (this._mapXForms[uv][i][3] !== xform.w) {
+        //     same = false;
+        //     break;
+        // }
+        // if (same) {
+        //     return i + 1;
+        // }
     }
-    var newID = this._mapXForms[uv].length;
-    this._mapXForms[uv][newID] = [];
+    const newID = this._mapXForms[uv].length;
+    this._mapXForms[uv][newID] = xform;
 
-    this._mapXForms[uv][newID][0] = xform.x;
-    this._mapXForms[uv][newID][1] = xform.y;
-    this._mapXForms[uv][newID][2] = xform.z;
-    this._mapXForms[uv][newID][3] = xform.w;
+    // this._mapXForms[uv][newID][0] = xform.x;
+    // this._mapXForms[uv][newID][1] = xform.y;
+    // this._mapXForms[uv][newID][2] = xform.z;
+    // this._mapXForms[uv][newID][3] = xform.w;
 
     return newID + 1;
 };

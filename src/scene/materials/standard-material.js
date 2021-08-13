@@ -21,6 +21,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
 import { Quat } from '../../math/quat.js';
 
 const _props = {};
+const _uniforms = {};
 const _propsSerial = [];
 const _propsSerialDefaultVal = [];
 const _propsInternalNull = [];
@@ -358,8 +359,9 @@ class StandardMaterial extends Material {
     }
 
     reset() {
-        for (const name in Object.keys(_props)) {
-            delete this[`_${name}`];
+        // set default values
+        for (const [name, prop] of Object.entries(_props)) {
+            this[`_${name}`] = prop.value();
         }
 
         for (let i = 0; i < _propsSerial.length; i++) {
@@ -374,16 +376,7 @@ class StandardMaterial extends Material {
         }
 
         this._chunks = new Chunks();
-
-        // allocate uniforms
-        this._uniforms = {
-            ambient: new Float32Array(3),
-            diffuse: new Float32Array(3),
-            specular: new Float32Array(3),
-            emissive: new Float32Array(3),
-            cubeMapMinUniform: new Float32Array(3),
-            cubeMapMaxUniform: new Float32Array(3)
-        };
+        this._uniformCache = { };
     }
 
     /**
@@ -397,9 +390,9 @@ class StandardMaterial extends Material {
         const clone = new StandardMaterial();
         this._cloneInternal(clone);
 
-        for (const name of Object.keys(_props)) {
-            clone[name] = this[name];
-        }
+        Object.keys(_props).forEach((k) => {
+            clone[k] = this[k];
+        });
 
         for (let i = 0; i < _propsSerial.length; i++) {
             const pname = _propsSerial[i];
@@ -419,15 +412,15 @@ class StandardMaterial extends Material {
         return clone;
     }
 
-    _updateMapTransform(transform, tiling, offset) {
-        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
-            return null;
-        }
+    // _updateMapTransform(transform, tiling, offset) {
+    //     if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+    //         return null;
+    //     }
 
-        transform = transform || new Vec4();
-        transform.set(tiling.x, tiling.y, offset.x, 1.0 - tiling.y - offset.y);
-        return transform;
-    }
+    //     transform = transform || new Vec4();
+    //     transform.set(tiling.x, tiling.y, offset.x, 1.0 - tiling.y - offset.y);
+    //     return transform;
+    // }
 
     _setParameter(name, value) {
         if (!this.parameters[name])
@@ -449,30 +442,46 @@ class StandardMaterial extends Material {
         if (map) {
             this._setParameter("texture_" + mname, map);
 
-            // update transform
             const tname = mname + "Transform";
-            this[tname] = this._updateMapTransform(
-                this[tname],
-                this[mname + "Tiling"],
-                this[mname + "Offset"]
-            );
-
-            // update uniform
-            const transform = this[tname];
-            if (transform) {
-                const uname = mname + "TransformUniform";
-                let uniform = this[uname];
-                if (!uniform) {
-                    uniform = new Float32Array(4);
-                    this[uname] = uniform;
-                }
-                uniform[0] = transform.x;
-                uniform[1] = transform.y;
-                uniform[2] = transform.z;
-                uniform[3] = transform.w;
+            const uniform = this.getUniform(tname);
+            if (uniform) {
                 this._setParameter('texture_' + tname, uniform);
             }
+
+            // // update transform
+            // const tname = mname + "Transform";
+            // this[tname] = this._updateMapTransform(
+            //     this[tname],
+            //     this[mname + "Tiling"],
+            //     this[mname + "Offset"]
+            // );
+
+            // // update uniform
+            // const transform = this[tname];
+            // if (transform) {
+            //     const uname = mname + "TransformUniform";
+            //     let uniform = this[uname];
+            //     if (!uniform) {
+            //         uniform = new Float32Array(4);
+            //         this[uname] = uniform;
+            //     }
+            //     uniform[0] = transform.x;
+            //     uniform[1] = transform.y;
+            //     uniform[2] = transform.z;
+            //     uniform[3] = transform.w;
+            //     this._setParameter('texture_' + tname, uniform);
+            // }
         }
+    }
+
+    // allocate a uniform if it doesn't already exist in the uniform cache
+    _allocUniform(name, allocFunc) {
+        let uniform = this._uniformCache[name];
+        if (!uniform) {
+            uniform = allocFunc();
+            this._uniformCache[name] = uniform;
+        }
+        return uniform;
     }
 
     // getUniform(varName, value, changeMat) {
@@ -483,20 +492,22 @@ class StandardMaterial extends Material {
     //     return null;
     // }
 
+    getUniform(name) {
+        return _uniforms[name](this);
+    }
+
     updateUniforms() {
         this._clearParameters();
 
-        const uniforms = this._uniforms;
-
-        this._setParameter('material_ambient', uniforms.ambient);
+        this._setParameter('material_ambient', this.getUniform('ambient'));
 
         if (!this.diffuseMap || this.diffuseTint) {
-            this._setParameter('material_diffuse', uniforms.diffuse);
+            this._setParameter('material_diffuse', this.getUniform('diffuse'));
         }
 
         if (!this.useMetalness) {
             if (!this.specularMap || this.specularTint) {
-                this._setParameter('material_specular', uniforms.specular);
+                this._setParameter('material_specular', this.getUniform('specular'));
             }
         } else {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -518,15 +529,10 @@ class StandardMaterial extends Material {
         // let uniform = this.getUniform("shininess", this.shininess, true);
         // this._setParameter(uniform.name, uniform.value);
 
-        const getShininess = () => {
-            return this.shadingModel === SPECULAR_PHONG ?
-                Math.pow(2, this.shininess * 0.01 * 11) : // legacy: expand back to specular power
-                this.shininess * 0.01;
-        };
-        this._setParameter("material_shininess", getShininess());
+        this._setParameter("material_shininess", this.getUniform('shininess'));
 
         if (!this.emissiveMap || this.emissiveTint) {
-            this._setParameter('material_emissive', uniforms.emissive);
+            this._setParameter('material_emissive', this.getUniform('emissive'));
         }
         if (this.emissiveMap) {
             this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
@@ -548,14 +554,7 @@ class StandardMaterial extends Material {
         }
 
         if (this.cubeMapProjection === CUBEPROJ_BOX) {
-            // this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
-            return [{
-                name: "envBoxMin",
-                value: uniforms.cubeMapMinUniform
-            }, {
-                name: "envBoxMax",
-                value: uniforms.cubeMapMaxUniform
-            }];
+            this._setParameter(this.getUniform("cubeMapProjectionBox"));
         }
 
         for (const p in _matTex2D) {
@@ -577,7 +576,7 @@ class StandardMaterial extends Material {
         if (this.heightMap) {
             // uniform = this.getUniform('heightMapFactor', this.heightMapFactor, true);
             // this._setParameter(uniform.name, uniform.value);
-            this._setParameter('material_heightMapFactor', this.heightMapFactor * 0.025);
+            this._setParameter('material_heightMapFactor', this.getUniform('heightMapFactor'));
         }
 
         if (this.cubeMap) {
@@ -784,14 +783,20 @@ class StandardMaterial extends Material {
     }
 }
 
+// define a uniform get function
+const defineUniform = (name, getUniformFunc) => {
+    _uniforms[name] = getUniformFunc;
+};
+
 // define a standard material property
 const defineProp = (prop) => {
     const name = prop.name;
     const internalName = `_${name}`;
     const defaultValue = prop.defaultValue;
-    const changedFunc = prop.changedFunc || function (oldValue, newValue) {
-        this.dirtyShader = true;
-    };
+    const changedFunc = prop.changedFunc || ((material, oldValue, newValue) => {
+        material.dirtyShader = true;
+    });
+    const getUniformFunc = prop.getUniformFunc || null;
 
     const aggFuncs = {
         equals: (a, b) => a.equals(b),
@@ -807,9 +812,6 @@ const defineProp = (prop) => {
 
     const funcs = defaultValue && defaultValue.clone ? aggFuncs : valueFuncs;
 
-    // store the default internal value on the StandardMaterial prototype
-    StandardMaterial.prototype[internalName] = defaultValue;
-
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: function () {
             return this[internalName];
@@ -817,25 +819,29 @@ const defineProp = (prop) => {
         set: function (value) {
             const oldValue = this[internalName];
             if (!funcs.equals(value, oldValue)) {
-                changedFunc.call(this, oldValue, value);
+                changedFunc(this, oldValue, value);
                 this[internalName] = funcs.copy(oldValue, value);
             }
         }
     });
 
     _props[name] = {
-        reset: (material) => {
-            material[internalName] = funcs.clone(defaultValue);
+        value: () => {
+            return funcs.clone(defaultValue);
         }
     };
+
+    if (getUniformFunc) {
+        defineUniform(name, getUniformFunc);
+    }
 };
 
 function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMode) {
     // var privMap = "_" + name + "Map";
     // var privMapTiling = privMap + "Tiling";
     // var privMapOffset = privMap + "Offset";
-    var mapTransform = name + "MapTransform";
-    var mapTransformUniform = name + "MapTransformUniform";
+    // var mapTransform = name + "MapTransform";
+    // var mapTransformUniform = name + "MapTransformUniform";
     // var privMapUv = privMap + "Uv";
     // var privMapChannel = privMap + "Channel";
     // var privMapVertexColor = "_" + name + "VertexColor";
@@ -845,8 +851,8 @@ function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMo
     // obj[privMap] = null;
     // obj[privMapTiling] = new Vec2(1, 1);
     // obj[privMapOffset] = new Vec2(0, 0);
-    obj[mapTransform] = null;
-    obj[mapTransformUniform] = null;
+    // obj[mapTransform] = null;
+    // obj[mapTransformUniform] = null;
     // obj[privMapUv] = uv;
     // if (channels > 0) {
     //     var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
@@ -878,12 +884,12 @@ function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMo
     defineProp({
         name: `${name}Map`,
         defaultValue: null,
-        changedFunc: function (oldValue, newValue) {
+        changedFunc: (material, oldValue, newValue) => {
             if (!!oldValue !== !!newValue ||
                 oldValue && (oldValue.type !== newValue.type ||
                              oldValue.fixCubemapSeams !== newValue.fixCubemapSeams ||
                              oldValue.format !== newValue.format)) {
-                this.dirtyShader = true;
+                material.dirtyShader = true;
             }
         }
     });
@@ -1033,7 +1039,26 @@ function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMo
     // if (detailMode) {
     //     _propsSerial.push(privMapDetailMode.substring(1));
     // }
-    _propsInternalNull.push(mapTransform);
+    // _propsInternalNull.push(mapTransform);
+
+    // construct the transform uniform
+    const mapTiling = `${name}MapTiling`;
+    const mapOffset = `${name}MapOffset`;
+    const mapTransform = `${name}MapTransform`;
+    defineUniform(mapTransform, (material) => {
+        const tiling = material[mapTiling];
+        const offset = material[mapOffset];
+        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+            return null;
+        }
+
+        const uniform = material._allocUniform(mapTransform, () => new Float32Array(4));
+        uniform[0] = tiling.x;
+        uniform[1] = tiling.y;
+        uniform[2] = offset.x;
+        uniform[3] = 1.0 - tiling.y - offset.y;
+        return uniform;
+    });
 }
 
 function _defineColor(obj, name, defaultValue, hasIntensity) {
@@ -1114,51 +1139,40 @@ function _defineColor(obj, name, defaultValue, hasIntensity) {
     //     };
     // }
 
-    const updateUniform = function (color, intensity) {
-        const gamma = this.useGammaTonemap && this._scene?.gammaCorrection;
-        const r = gamma ? Math.pow(color.r * intensity, 2.2) : color.r * intensity;
-        const g = gamma ? Math.pow(color.g * intensity, 2.2) : color.g * intensity;
-        const b = gamma ? Math.pow(color.b * intensity, 2.2) : color.b * intensity;
-
-        const uniform = this._uniforms[name];
-        if (r !== uniform[0] || g !== uniform[1] || b !== uniform[2]) {
-            // detect colour value going to/from (0, 0, 0) and (1, 1, 1)
-            const wereZeros = uniform.every((value) => value === 0);
-            const wereOnes = uniform.every((value) => value === 1);
-            const areZeros = r === 0 && g === 0 && b === 0;
-            const areOnes = r === 1 && g === 1 && b === 1;
-            if (wereZeros || wereOnes || areZeros || areOnes) {
-                this.dirtyShader = true;
-            }
-
-            uniform[0] = r;
-            uniform[1] = g;
-            uniform[2] = b;
-        }
-    };
-
     const intensityName = `${name}Intensity`;
 
     defineProp({
         name: name,
         defaultValue: defaultValue,
-        changedFunc: function (oldValue, newValue) {
-            updateUniform.call(this, newValue, hasIntensity ? this[intensityName] : 1.0);
+        getUniformFunc: (material) => {
+            const uniform = material._allocUniform(name, () => new Float32Array(3));
+            const color = material[name];
+            const intensity = hasIntensity ? material[intensityName] : 1.0;
+            const gamma = material.useGammaTonemap && material._scene?.gammaCorrection;
+
+            if (gamma) {
+                uniform[0] = Math.pow(color.r * intensity, 2.2);
+                uniform[1] = Math.pow(color.g * intensity, 2.2);
+                uniform[2] = Math.pow(color.b * intensity, 2.2);
+            } else {
+                uniform[0] = color.r * intensity;
+                uniform[1] = color.g * intensity;
+                uniform[2] = color.b * intensity;
+            }
+
+            return uniform;
         }
     });
 
     if (hasIntensity) {
         defineProp({
             name: intensityName,
-            defaultValue: 1,
-            changedFunc: function (oldValue, newValue) {
-                updateUniform.call(this, this[name], newValue);
-            }
+            defaultValue: 1
         });
     }
 }
 
-function _defineFloat(obj, name, defaultValue, func) {
+function _defineFloat(obj, name, defaultValue, getUniformFunc) {
     // var priv = "_" + name;
     // obj[priv] = defaultValue;
     // Object.defineProperty(StandardMaterial.prototype, name, {
@@ -1190,19 +1204,20 @@ function _defineFloat(obj, name, defaultValue, func) {
     defineProp({
         name: `${name}`,
         defaultValue: defaultValue,
-        changedFunc: function (oldValue, newValue) {
+        changedFunc: (material, oldValue, newValue) => {
             // This is not always optimal and will sometimes trigger redundant shader
             // recompilation. However, no number property on a standard material
             // triggers a shader recompile if the previous and current values both
             // have a fractional part.
             if ((oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1)) {
-                this.dirtyShader = true;
+                material.dirtyShader = true;
             }
-        }
+        },
+        getUniformFunc: getUniformFunc
     });
 }
 
-function _defineObject(obj, name, func) {
+function _defineObject(obj, name, getUniformFunc) {
     // var priv = "_" + name;
     // obj[priv] = null;
     // Object.defineProperty(StandardMaterial.prototype, name, {
@@ -1221,9 +1236,10 @@ function _defineObject(obj, name, func) {
     defineProp({
         name: name,
         defaultValue: null,
-        changedFunc: func || function (oldValue, newValue) {
-            this.dirtyShader = !!oldValue === !!newValue;
-        }
+        changedFunc: (material, oldValue, newValue) => {
+            material.dirtyShader = !!oldValue === !!newValue;
+        },
+        getUniformFunc: getUniformFunc
     });
 }
 
@@ -1283,7 +1299,13 @@ function _defineMaterialProps(obj) {
     _defineColor(obj, "specular", new Color(0, 0, 0));
     _defineColor(obj, "emissive", new Color(0, 0, 0), true);
 
-    _defineFloat(obj, "shininess", 25);
+    _defineFloat(obj, "shininess", 25, (material) => {
+        // Shininess is 0-100 value which is actually a 0-1 glossiness value.
+        return material.shadingModel === SPECULAR_PHONG ?
+            // legacy: expand back to specular power
+            Math.pow(2, material.shininess * 0.01 * 11) :
+            material.shininess * 0.01;
+    });
     // _defineFloat(obj, "shininess", 25, function (mat, shininess) {
     //    // Shininess is 0-100 value
     //    // which is actually a 0-1 glossiness value.
@@ -1299,7 +1321,9 @@ function _defineMaterialProps(obj) {
     // _defineFloat(obj, "heightMapFactor", 1, function (mat, height) {
     //     return { name: 'material_heightMapFactor', value: height * 0.025 };
     // });
-    _defineFloat(obj, "heightMapFactor", 1);
+    _defineFloat(obj, "heightMapFactor", 1, (material) => {
+        return material.heightMapFactor * 0.025;
+    });
     _defineFloat(obj, "opacity", 1);
     _defineFloat(obj, "alphaFade", 1);
     _defineFloat(obj, "alphaTest", 0);
@@ -1321,13 +1345,24 @@ function _defineMaterialProps(obj) {
     //     return { name: "ambientSH[0]", value: val };
     // });
 
-    _defineObject(obj, "cubeMapProjectionBox", function (oldValue, newValue) {
-        // this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
-        const bboxMin = newValue.getMin();
-        this._uniforms.cubeMapMinUniform.set([bboxMin.x, bboxMin.y, bboxMin.z]);
+    _defineObject(obj, "cubeMapProjectionBox", function (material) {
+        const value = material.cubeMapProjectionBox;
 
-        const bboxMax = newValue.getMax();
-        this._uniforms.cubeMapMaxUniform.set([bboxMax.x, bboxMax.y, bboxMax.z]);
+        const minUniform = material._allocUniform('cubeMapMin', () => new Float32Array(3));
+        const bboxMin = value.getMin();
+        minUniform.set([bboxMin.x, bboxMin.y, bboxMin.z]);
+
+        const maxUniform = material._allocUniform('cubeMapMax', () => new Float32Array(3));
+        const bboxMax = value.getMax();
+        maxUniform.set([bboxMax.x, bboxMax.y, bboxMax.z]);
+
+        return [{
+            name: "envBoxMin",
+            value: minUniform
+        }, {
+            name: "envBoxMax",
+            value: maxUniform
+        }];
     });
     // _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
     //     const bmin = changeMat ? mat.cubeMapMinUniform : new Float32Array(3);
