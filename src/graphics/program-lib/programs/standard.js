@@ -236,10 +236,9 @@ var standard = {
 
     _setMapTransform: function (codes, name, id, uv) {
         const varName = `texture_${name}MapTransform`;
+        const checkId = id + uv * 100;
 
         codes[0] += `uniform mat3 ${varName};\n`;
-
-        var checkId = id + uv * 100;
         if (!codes[3][checkId]) {
             codes[1] += `varying vec2 vUV${uv}_${id};\n`;
             codes[2] += `   vUV${uv}_${id} = (${varName} * vec3(uv${uv}, 1)).xy;\n`;
