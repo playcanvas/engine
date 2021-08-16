@@ -1,5 +1,7 @@
 import { Color } from '../../math/color.js';
 import { Vec2 } from '../../math/vec2.js';
+import { Quat } from '../../math/quat.js';
+import { Mat3 } from '../../math/mat3.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
@@ -17,7 +19,6 @@ import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
-import { Quat } from '../../math/quat.js';
 
 // properties that get created on a standard material
 const _props = {};
@@ -27,6 +28,9 @@ const _uniforms = {};
 
 // temporary helper array
 const _propsSet = [];
+
+const _tmpMat0 = new Mat3();
+const _tmpMat1 = new Mat3();
 
 /**
  * @class
@@ -47,6 +51,7 @@ const _propsSet = [];
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
  * @property {Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
  * @property {Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each component is between 0 and 1.
+ * @property {Mat3} diffuseMapTransform Controls the 2D transform of the main (primary) diffuse map.
  * @property {string} diffuseMapChannel Color channels of the main (primary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
  * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -55,6 +60,7 @@ const _propsSet = [];
  * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
  * @property {Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse map.
  * @property {Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
+ * @property {Mat3} diffuseDetailMapTransform Controls the 2D transform of the main (secondary) diffuse map.
  * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {string} diffuseDetailMode Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
  * * {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
@@ -73,6 +79,7 @@ const _propsSet = [];
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
  * @property {Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
+ * @property {Mat3} specularMapTransform Controls the 2D transform of the specular map.
  * @property {string} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -88,6 +95,7 @@ const _propsSet = [];
  * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
  * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
  * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each component is between 0 and 1.
+ * @property {Mat3} clearCoatMapTransform Controls the 2D transform of the clear coat intensity map.
  * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can be "r", "g", "b" or "a".
  * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If clearCoatMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat intensity. Can be "r", "g", "b" or "a".
@@ -96,6 +104,7 @@ const _propsSet = [];
  * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
  * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
  * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map. Each component is between 0 and 1.
+ * @property {Mat3} clearCoatGlossMapTransform Controls the 2D transform of the clear coat gloss map.
  * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use. Can be "r", "g", "b" or "a".
  * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness. If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat glossiness. Can be "r", "g", "b" or "a".
@@ -103,6 +112,7 @@ const _propsSet = [];
  * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
  * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal map.
  * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal map. Each component is between 0 and 1.
+ * @property {Mat3} clearCoatMapTransform Controls the 2D transform of the main clear coat map.
  * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales the assigned main clear coat normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
@@ -116,6 +126,7 @@ const _propsSet = [];
  * @property {number} metalnessMapUv Metalness map UV channel.
  * @property {Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
  * @property {Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
+ * @property {Mat3} metalnessMapTransform Controls the 2D transform of the metalness map.
  * @property {string} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
  * @property {boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
@@ -128,6 +139,7 @@ const _propsSet = [];
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
  * @property {Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
+ * @property {Mat3} glossMapTransform Controls the 2D transform of the gloss map.
  * @property {boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
  * @property {string} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
  *
@@ -144,6 +156,7 @@ const _propsSet = [];
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
  * @property {Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
+ * @property {Mat3} emissiveMapTransform Controls the 2D transform of the emissive map.
  * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -157,6 +170,7 @@ const _propsSet = [];
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
  * @property {Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
+ * @property {Mat3} opacityMapTransform Controls the 2D transform of the opacity map.
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
@@ -168,6 +182,7 @@ const _propsSet = [];
  * @property {number} normalMapUv Main (primary) normal map UV channel.
  * @property {Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
  * @property {Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each component is between 0 and 1.
+ * @property {Mat3} normalMapTransform Controls the 2D transform of the main (primary) normal map.
  * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main (primary) normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
@@ -175,6 +190,7 @@ const _propsSet = [];
  * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
  * @property {Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal map.
  * @property {Vec2} normalDetailMapOffset Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and 1.
+ * @property {Mat3} normalDetailMapTransform Controls the 2D transform of the detail (secondary) normal map.
  * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
@@ -185,6 +201,7 @@ const _propsSet = [];
  * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} heightMapTiling Controls the 2D tiling of the height map.
  * @property {Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
+ * @property {Mat3} heightMapTransform Controls the 2D transform of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
  *
  * @property {Texture|null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
@@ -202,6 +219,7 @@ const _propsSet = [];
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
  * @property {Vec2} lightMapOffset Controls the 2D offset of the lightmap. Each component is between 0 and 1.
+ * @property {Mat3} lightMapTransform Controls the 2D transform of the lightmap.
  * @property {boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  *
@@ -211,6 +229,7 @@ const _propsSet = [];
  * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} aoMapTiling Controls the 2D tiling of the AO map.
  * @property {Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0 and 1.
+ * @property {Mat3} aoMapTransform Controls the 2D transform of the AO map.
  * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
  * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
@@ -733,6 +752,11 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     });
 
     defineProp({
+        name: `${name}MapTransform`,
+        defaultValue: new Mat3()
+    });
+
+    defineProp({
         name: `${name}MapUv`,
         defaultValue: uv
     });
@@ -772,15 +796,39 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     defineUniform(mapTransform, (material, device, scene) => {
         const tiling = material[mapTiling];
         const offset = material[mapOffset];
-        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+        const transform = material[mapTransform];
+        const tdata = transform.data;
+
+        const hasTilingOffset = tiling.x !== 1 || tiling.y !== 1 ||
+                                offset.x !== 0 || offset.y !== 0;
+
+        const hasTransform = tdata[0] !== 1 || tdata[1] !== 0 ||
+                             tdata[3] !== 0 || tdata[4] !== 1 ||
+                             tdata[6] !== 0 || tdata[7] !== 0;
+
+        if (!hasTilingOffset && !hasTransform) {
             return null;
         }
 
-        const uniform = material._allocUniform(mapTransform, () => new Float32Array(4));
-        uniform[0] = tiling.x;
-        uniform[1] = tiling.y;
-        uniform[2] = offset.x;
-        uniform[3] = 1.0 - tiling.y - offset.y;
+        let src;
+        if (hasTilingOffset) {
+            _tmpMat0[0] = tiling.x;
+            _tmpMat0[4] = tiling.y;
+            _tmpMat0[6] = offset.x;
+            _tmpMat0[7] = 1.0 - tiling.y - offset.y;
+
+            if (hasTransform) {
+                _tmpMat1.mul2(_tmpMat0, transform);
+                src = _tmpMat1.data;
+            } else {
+                src = _tmpMat0.data;
+            }
+        } else {
+            src = transform.data;
+        }
+
+        const uniform = material._allocUniform(mapTransform, () => new Float32Array(9));
+        uniform.set(src);
         return uniform;
     });
 }
