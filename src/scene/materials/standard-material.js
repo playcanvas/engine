@@ -112,7 +112,7 @@ const _tmpMat1 = new Mat3();
  * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
  * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal map.
  * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal map. Each component is between 0 and 1.
- * @property {Mat3} clearCoatMapTransform Controls the 2D transform of the main clear coat map.
+ * @property {Mat3} clearCoatNormalMapTransform Controls the 2D transform of the main clear coat map.
  * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales the assigned main clear coat normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
