@@ -672,16 +672,24 @@ const defineProp = (prop) => {
     };
 
     const funcs = defaultValue && defaultValue.clone ? aggFuncs : valueFuncs;
+    const isColor = prop.default instanceof Color;
 
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: function () {
+            if (isColor) {
+                // HACK: since we can't detect whether a user is going to set a color property
+                // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
+                // the worst and flag the shader as dirty.
+                // This means currently animating a material colour is horribly slow.
+                this._dirtyShader = true;
+            }
             return this[internalName];
         },
         set: function (value) {
             const oldValue = this[internalName];
             if (!funcs.equals(value, oldValue)) {
-                if (!this._dirtyShader && dirtyShaderFunc) {
-                    this._dirtyShader = dirtyShaderFunc(oldValue, value);
+                if (!this._dirtyShader) {
+                    this._dirtyShader = dirtyShaderFunc ? dirtyShaderFunc(oldValue, value) : true;
                 }
                 this[internalName] = funcs.copy(oldValue, value);
             }
@@ -886,7 +894,7 @@ function _defineMaterialProps() {
     });
     _defineFloat("opacity", 1);
     _defineFloat("alphaFade", 1);
-    _defineFloat("alphaTest", 0);
+    _defineFloat("alphaTest", 0);       // NOTE: overwrites Material.alphaTest
     _defineFloat("bumpiness", 1);
     _defineFloat("normalDetailMapBumpiness", 1);
     _defineFloat("reflectivity", 1);
@@ -925,7 +933,6 @@ function _defineMaterialProps() {
     _defineChunks();
 
     _defineFlag("ambientTint", false);
-
     _defineFlag("diffuseTint", false);
     _defineFlag("specularTint", false);
     _defineFlag("emissiveTint", false);
