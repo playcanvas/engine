@@ -955,7 +955,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             }
         }
 
-        const textureTransform = source?.extensions?.KHR_texture_transform;
+        const textureTransform = source.extensions?.KHR_texture_transform;
         if (textureTransform) {
             const offset = textureTransform.offset || [0, 0];
             const scale = textureTransform.scale || [1, 1];
