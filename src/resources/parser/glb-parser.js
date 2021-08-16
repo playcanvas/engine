@@ -3,8 +3,8 @@ import { path } from '../../core/path.js';
 import { http } from '../../net/http.js';
 
 import { math } from '../../math/math.js';
-import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
+import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Color } from '../../math/color.js';
 
@@ -960,14 +960,11 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             const offset = textureTransform.offset || [0, 0];
             const scale = textureTransform.scale || [1, 1];
             const rotation = -(textureTransform.rotation || 0);
-            const tmpMat = new Mat3();
-            tmpMat.set([
-                Math.cos(rotation) * scale[0], Math.sin(rotation) * scale[0], 0,
-                -Math.sin(rotation) * scale[1], Math.cos(rotation) * scale[1], 0,
-                offset[0], offset[1], 1
-            ]);
+
             for (map = 0; map < maps.length; ++map) {
-                material[maps[map] + 'MapTransform'] = tmpMat;
+                material[`${maps[map]}MapTiling`] = new Vec2(scale[0], scale[1]);
+                material[`${maps[map]}MapOffset`] = new Vec2(offset[0], 1.0 - scale[1] - offset[1]);
+                material[`${maps[map]}MapRotation`] = rotation;
             }
         }
     };
