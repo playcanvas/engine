@@ -959,11 +959,14 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         if (textureTransform) {
             const offset = textureTransform.offset || [0, 0];
             const scale = textureTransform.scale || [1, 1];
-            const rotation = -(textureTransform.rotation || 0);
+            const rotation = textureTransform.rotation ? (-textureTransform.rotation * math.RAD_TO_DEG) : 0;
+
+            const tilingVec = new Vec2(scale[0], scale[1]);
+            const offsetVec = new Vec2(offset[0], 1.0 - scale[1] - offset[1]);
 
             for (map = 0; map < maps.length; ++map) {
-                material[`${maps[map]}MapTiling`] = new Vec2(scale[0], scale[1]);
-                material[`${maps[map]}MapOffset`] = new Vec2(offset[0], 1.0 - scale[1] - offset[1]);
+                material[`${maps[map]}MapTiling`] = tilingVec;
+                material[`${maps[map]}MapOffset`] = offsetVec;
                 material[`${maps[map]}MapRotation`] = rotation;
             }
         }

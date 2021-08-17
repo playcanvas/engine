@@ -238,10 +238,12 @@ var standard = {
         const varName = `texture_${name}MapTransform`;
         const checkId = id + uv * 100;
 
-        codes[0] += `uniform mat3 ${varName};\n`;
+        // upload a 3x2 matrix and manually perform the multiplication
+        codes[0] += `uniform vec3 ${varName}0;\n`;
+        codes[0] += `uniform vec3 ${varName}1;\n`;
         if (!codes[3][checkId]) {
             codes[1] += `varying vec2 vUV${uv}_${id};\n`;
-            codes[2] += `   vUV${uv}_${id} = (${varName} * vec3(uv${uv}, 1)).xy;\n`;
+            codes[2] += `   vUV${uv}_${id} = vec2(dot(uv${uv}, ${varName}0.xy) + ${varName}0.z, dot(uv${uv}, ${varName}1.xy) + ${varName}1.z).xy;\n`;
             codes[3][checkId] = true;
         }
         return codes;

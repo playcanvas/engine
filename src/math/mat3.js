@@ -135,56 +135,6 @@ class Mat3 {
 
     /**
      * @function
-     * @name Mat3#mul2
-     * @description Multiplies the specified 3x3 matrices together and stores the result in
-     * the current instance.
-     * @param {Mat3} lhs - The 3x3 matrix used as the first multiplicand of the operation.
-     * @param {Mat3} rhs - The 3x3 matrix used as the second multiplicand of the operation.
-     * @returns {Mat3} Self for chaining.
-     */
-    mul2(lhs, rhs) {
-        const a = lhs.data;
-        const b = rhs.data;
-        const r = this.data;
-
-        const a00 = a[0];
-        const a01 = a[1];
-        const a02 = a[2];
-        const a10 = a[3];
-        const a11 = a[4];
-        const a12 = a[5];
-        const a20 = a[6];
-        const a21 = a[7];
-        const a22 = a[8];
-
-        let b0, b1, b2;
-
-        b0 = b[0];
-        b1 = b[1];
-        b2 = b[2];
-        r[0] = a00 * b0 + a10 * b1 + a20 * b2;
-        r[1] = a01 * b0 + a11 * b1 + a21 * b2;
-        r[2] = a02 * b0 + a12 * b1 + a22 * b2;
-
-        b0 = b[3];
-        b1 = b[4];
-        b2 = b[5];
-        r[3] = a00 * b0 + a10 * b1 + a20 * b2;
-        r[4] = a01 * b0 + a11 * b1 + a21 * b2;
-        r[5] = a02 * b0 + a12 * b1 + a22 * b2;
-
-        b0 = b[6];
-        b1 = b[7];
-        b2 = b[8];
-        r[6] = a00 * b0 + a10 * b1 + a20 * b2;
-        r[7] = a01 * b0 + a11 * b1 + a21 * b2;
-        r[8] = a02 * b0 + a12 * b1 + a22 * b2;
-
-        return this;
-    }
-
-    /**
-     * @function
      * @name Mat3#setIdentity
      * @description Sets the matrix to the identity matrix.
      * @returns {Mat3} Self for chaining.
