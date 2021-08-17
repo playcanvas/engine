@@ -957,8 +957,8 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
         const textureTransform = source.extensions?.KHR_texture_transform;
         if (textureTransform) {
-            const offset = textureTransform.offset || [0, 0];
-            const scale = textureTransform.scale || [1, 1];
+            const offset = textureTransform.offset || Vec2.ZERO;
+            const scale = textureTransform.scale || Vec2.ONE;
             const rotation = textureTransform.rotation ? (-textureTransform.rotation * math.RAD_TO_DEG) : 0;
 
             const tilingVec = new Vec2(scale[0], scale[1]);
