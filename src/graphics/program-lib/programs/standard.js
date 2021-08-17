@@ -243,7 +243,7 @@ var standard = {
         codes[0] += `uniform vec3 ${varName}1;\n`;
         if (!codes[3][checkId]) {
             codes[1] += `varying vec2 vUV${uv}_${id};\n`;
-            codes[2] += `   vUV${uv}_${id} = vec2(dot(uv${uv}, ${varName}0.xy) + ${varName}0.z, dot(uv${uv}, ${varName}1.xy) + ${varName}1.z).xy;\n`;
+            codes[2] += `   vUV${uv}_${id} = vec2(dot(vec3(uv${uv}, 1), ${varName}0), dot(vec3(uv${uv}, 1), ${varName}1));\n`;
             codes[3][checkId] = true;
         }
         return codes;
