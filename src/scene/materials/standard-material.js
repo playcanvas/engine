@@ -625,7 +625,7 @@ class StandardMaterial extends Material {
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // update prefiltered lighting data
         this.updateLightingUniforms(device, scene);
-        const prefilteredCubeMap128 = this.parameters.texture_prefilteredCubeMap128?.data;
+        const prefilteredCubeMap128 = this.prefilteredCubeMap128 || (this.useSkybox && scene._skyboxPrefiltered[0]);
 
         // Minimal options for Depth and Shadow passes
         const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
