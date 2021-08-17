@@ -235,12 +235,15 @@ var standard = {
     },
 
     _setMapTransform: function (codes, name, id, uv) {
-        codes[0] += "uniform vec4 texture_" + name + "MapTransform;\n";
+        const varName = `texture_${name}MapTransform`;
+        const checkId = id + uv * 100;
 
-        var checkId = id + uv * 100;
+        // upload a 3x2 matrix and manually perform the multiplication
+        codes[0] += `uniform vec3 ${varName}0;\n`;
+        codes[0] += `uniform vec3 ${varName}1;\n`;
         if (!codes[3][checkId]) {
-            codes[1] += "varying vec2 vUV" + uv + "_" + id + ";\n";
-            codes[2] += "   vUV" + uv + "_" + id + " = uv" + uv + " * texture_" + name + "MapTransform.xy + texture_" + name + "MapTransform.zw;\n";
+            codes[1] += `varying vec2 vUV${uv}_${id};\n`;
+            codes[2] += `   vUV${uv}_${id} = vec2(dot(vec3(uv${uv}, 1), ${varName}0), dot(vec3(uv${uv}, 1), ${varName}1));\n`;
             codes[3][checkId] = true;
         }
         return codes;

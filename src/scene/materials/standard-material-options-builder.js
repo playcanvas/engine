@@ -330,7 +330,8 @@ StandardMaterialOptionsBuilder.prototype._getMapTransformID = function (xform, u
     }
 
     for (let i = 0; i < xforms.length; i++) {
-        if (arraysEqual(xforms[i], xform)) {
+        if (arraysEqual(xforms[i][0].value, xform[0].value) &&
+            arraysEqual(xforms[i][1].value, xform[1].value)) {
             return i + 1;
         }
     }
