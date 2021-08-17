@@ -1434,6 +1434,7 @@ const createCamera = function (gltfCamera, node) {
 const createLight = function (gltfLight, node) {
 
     const lightProps = {
+        enabled: false,
         type: gltfLight.type === "point" ? "omni" : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : Number.MAX_VALUE,
