@@ -1,3 +1,4 @@
+import { RefCountedCache } from '../core/ref-counted-cache.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { BoundingSphere } from '../shape/bounding-sphere.js';
 
@@ -54,6 +55,7 @@ class Command {
  * @param {Material} material - The material used to render this instance.
  * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
  * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
+ * @property {MorphInstance} morphInstance The morph instance managing morphing of this mesh instance, or null if morphing is not used.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
  * @property {GraphNode} node The graph node defining the transform for this instance.
@@ -146,6 +148,9 @@ class MeshInstance {
         this._morphInstance = null;
         this.instancingData = null;
 
+        // override local space AABB
+        this._customAabb = null;
+
         // World space AABB
         this.aabb = new BoundingBox();
         this._aabbVer = -1;
@@ -168,33 +173,21 @@ class MeshInstance {
     static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
 
     // cache of lightmaps internally created by baking using Lightmapper
-    // the key is the lightmap (texture), the value is reference count .. when it reaches 0, the lightmap gets destroyed.
     // this allows us to automatically release realtime baked lightmaps when mesh instances using them are destroyed
-    static _lightmapCache = new Map();
+    static _lightmapCache = new RefCountedCache();
 
     // add texture reference to lightmap cache
     static incRefLightmap(texture) {
-        let refCount = MeshInstance._lightmapCache.get(texture) || 0;
-        refCount++;
-        MeshInstance._lightmapCache.set(texture, refCount);
+        this._lightmapCache.incRef(texture);
     }
 
     // remove texture reference from lightmap cache
     static decRefLightmap(texture) {
-        if (texture) {
-            let refCount = MeshInstance._lightmapCache.get(texture);
-            if (refCount) {
-                refCount--;
-                if (refCount === 0) {
-                    // destroy texture and remove it from cache
-                    MeshInstance._lightmapCache.delete(texture);
-                    texture.destroy();
-                } else {
-                    // update new ref count in the cache
-                    MeshInstance._lightmapCache.set(texture, refCount);
-                }
-            }
-        }
+        this._lightmapCache.decRef(texture);
+    }
+
+    static destroyLightmapCache() {
+        this._lightmapCache.destroy();
     }
 
     get renderStyle() {
@@ -248,69 +241,83 @@ class MeshInstance {
     }
 
     get aabb() {
-        var i;
 
+        // use specified world space aabb
         if (!this._updateAabb) {
             return this._aabb;
         }
 
+        // callback function returning world space aabb
         if (this._updateAabbFunc) {
             return this._updateAabbFunc(this._aabb);
         }
 
-        if (this.skinInstance) {
+        // use local space override aabb if specified
+        let localAabb = this._customAabb;
+        let toWorldSpace = !!localAabb;
 
-            // Initialize local bone AABBs if needed
-            if (!this.mesh.boneAabb) {
-                var morphTargets = this._morphInstance ? this._morphInstance.morph._targets : null;
-                this.mesh._initBoneAabbs(morphTargets);
-            }
+        // otherwise evaluate local aabb
+        if (!localAabb) {
 
-            // evaluate world space bounds based on all active bones
-            var boneUsed = this.mesh.boneUsed;
-            var rootNodeTransform = this.node.getWorldTransform();
-            var first = true;
+            localAabb = _tmpAabb;
 
-            for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                if (boneUsed[i]) {
+            if (this.skinInstance) {
 
-                    // transform bone AABB by bone matrix
-                    _tempBoneAabb.setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
+                // Initialize local bone AABBs if needed
+                if (!this.mesh.boneAabb) {
+                    const morphTargets = this._morphInstance ? this._morphInstance.morph._targets : null;
+                    this.mesh._initBoneAabbs(morphTargets);
+                }
 
-                    // add them up
-                    if (first) {
-                        first = false;
-                        _tmpAabb.center.copy(_tempBoneAabb.center);
-                        _tmpAabb.halfExtents.copy(_tempBoneAabb.halfExtents);
-                    } else {
-                        _tmpAabb.add(_tempBoneAabb);
+                // evaluate local space bounds based on all active bones
+                const boneUsed = this.mesh.boneUsed;
+                let first = true;
+
+                for (let i = 0; i < this.mesh.boneAabb.length; i++) {
+                    if (boneUsed[i]) {
+
+                        // transform bone AABB by bone matrix
+                        _tempBoneAabb.setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
+
+                        // add them up
+                        if (first) {
+                            first = false;
+                            localAabb.center.copy(_tempBoneAabb.center);
+                            localAabb.halfExtents.copy(_tempBoneAabb.halfExtents);
+                        } else {
+                            localAabb.add(_tempBoneAabb);
+                        }
                     }
                 }
+
+                toWorldSpace = true;
+
+            } else if (this.node._aabbVer !== this._aabbVer) {
+
+                // local space bounding box - either from mesh or empty
+                if (this.mesh) {
+                    localAabb.center.copy(this.mesh.aabb.center);
+                    localAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
+                } else {
+                    localAabb.center.set(0, 0, 0);
+                    localAabb.halfExtents.set(0, 0, 0);
+                }
+
+                // update local space bounding box by morph targets
+                if (this.mesh && this.mesh.morph) {
+                    localAabb._expand(this.mesh.morph.aabb.getMin(), this.mesh.morph.aabb.getMax());
+                }
+
+                toWorldSpace = true;
+                this._aabbVer = this.node._aabbVer;
             }
-
-            // store world space bounding box
-            this._aabb.setFromTransformedAabb(_tmpAabb, rootNodeTransform);
-
-        } else if (this.node._aabbVer !== this._aabbVer) {
-
-            // local space bounding box - either from mesh or empty
-            if (this.mesh) {
-                _tmpAabb.center.copy(this.mesh.aabb.center);
-                _tmpAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
-            } else {
-                _tmpAabb.center.set(0, 0, 0);
-                _tmpAabb.halfExtents.set(0, 0, 0);
-            }
-
-            // update local space bounding box by morph targets
-            if (this.mesh && this.mesh.morph) {
-                _tmpAabb._expand(this.mesh.morph.aabb.getMin(), this.mesh.morph.aabb.getMax());
-            }
-
-            // store world space bounding box
-            this._aabb.setFromTransformedAabb(_tmpAabb, this.node.getWorldTransform());
-            this._aabbVer = this.node._aabbVer;
         }
+
+        // store world space bounding box
+        if (toWorldSpace) {
+            this._aabb.setFromTransformedAabb(localAabb, this.node.getWorldTransform());
+        }
+
         return this._aabb;
     }
 
@@ -323,26 +330,23 @@ class MeshInstance {
     }
 
     set material(material) {
-        var i;
-        for (i = 0; i < this._shader.length; i++) {
+        for (let i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
-        }
-        // Remove the material's reference to this mesh instance
-        if (this._material) {
-            var meshInstances = this._material.meshInstances;
-            i = meshInstances.indexOf(this);
-            if (i !== -1) {
-                meshInstances.splice(i, 1);
-            }
         }
 
         var prevMat = this._material;
 
+        // Remove the material's reference to this mesh instance
+        if (prevMat) {
+            prevMat.removeMeshInstanceRef(this);
+        }
+
         this._material = material;
 
         if (this._material) {
+
             // Record that the material is referenced by this mesh instance
-            this._material.meshInstances.push(this);
+            this._material.addMeshInstanceRef(this);
 
             this.updateKey();
 
@@ -517,14 +521,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            var pos = this.aabb.center;
-            if (this._aabb._radiusVer !== this._aabbVer) {
-                this._aabb._radius = this._aabb.halfExtents.length();
-                this._aabb._radiusVer = this._aabbVer;
-            }
-
-            _tempSphere.radius = this._aabb._radius;
-            _tempSphere.center = pos;
+            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
+            _tempSphere.radius = this._aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere);
         }
@@ -680,10 +678,19 @@ class MeshInstance {
         }
     }
 
-    setOverrideAabb(aabb) {
-        this._updateAabb = !aabb;
+    setCustomAabb(aabb) {
+
         if (aabb) {
-            this.aabb.copy(aabb);
+            // store the override aabb
+            if (this._customAabb) {
+                this._customAabb.copy(aabb);
+            } else {
+                this._customAabb = aabb.clone();
+            }
+        } else {
+            // no override, force refresh the actual one
+            this._customAabb = null;
+            this._aabbVer = -1;
         }
 
         this._setupSkinUpdate();
@@ -693,7 +700,7 @@ class MeshInstance {
 
         // set if bones need to be updated before culling
         if (this._skinInstance) {
-            this._skinInstance._updateBeforeCull = this._updateAabb;
+            this._skinInstance._updateBeforeCull = !this._customAabb;
         }
     }
 }

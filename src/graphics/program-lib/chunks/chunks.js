@@ -20,6 +20,8 @@ import blurVSMPS from './blurVSM.frag';
 import clearCoatPS from './clearCoat.frag';
 import clearCoatGlossPS from './clearCoatGloss.frag';
 import clearCoatNormalPS from './clearCoatNormal.frag';
+import clusteredLightLoopPS from './clusteredLightLoop.frag';
+import clusteredLightPS from './clusteredLight.frag';
 import combineClearCoatPS from './combineClearCoat.frag';
 import combineDiffusePS from './combineDiffuse.frag';
 import combineDiffuseSpecularPS from './combineDiffuseSpecular.frag';
@@ -146,18 +148,15 @@ import refractionPS from './refraction.frag';
 import reprojectPS from './reproject.frag';
 import rgbmPS from './rgbm.frag';
 import screenDepthPS from './screenDepth.frag';
+import shadowCascadesPS from './shadowCascades.frag';
 import shadowCommonPS from './shadowCommon.frag';
 import shadowCoordPS from './shadowCoord.frag';
-import shadowCoordVS from './shadowCoord.vert';
 import shadowCoordPerspZbufferPS from './shadowCoordPerspZbuffer.frag';
 import shadowEVSMPS from './shadowEVSM.frag';
 import shadowEVSMnPS from './shadowEVSMn.frag';
 import shadowStandardPS from './shadowStandard.frag';
 import shadowStandardGL2PS from './shadowStandardGL2.frag';
-import shadowStandardGL2VSPS from './shadowStandardGL2VS.frag';
-import shadowStandardVSPS from './shadowStandardVS.frag';
 import shadowVSM8PS from './shadowVSM8.frag';
-import shadowVSMVSPS from './shadowVSMVS.frag';
 import shadowVSM_commonPS from './shadowVSM_common.frag';
 import skinBatchConstVS from './skinBatchConst.vert';
 import skinBatchTexVS from './skinBatchTex.vert';
@@ -202,7 +201,7 @@ import viewNormalVS from './viewNormal.vert';
  * @name shaderChunks
  * @description Object containing all default shader chunks used by shader generators.
  */
-var shaderChunks = {
+const shaderChunks = {
     alphaTestPS: alphaTestPS,
     ambientConstantPS: ambientConstantPS,
     ambientPrefilteredCubePS: ambientPrefilteredCubePS,
@@ -225,6 +224,8 @@ var shaderChunks = {
     clearCoatPS: clearCoatPS,
     clearCoatGlossPS: clearCoatGlossPS,
     clearCoatNormalPS: clearCoatNormalPS,
+    clusteredLightLoopPS: clusteredLightLoopPS,
+    clusteredLightPS: clusteredLightPS,
     combineClearCoatPS: combineClearCoatPS,
     combineDiffusePS: combineDiffusePS,
     combineDiffuseSpecularPS: combineDiffuseSpecularPS,
@@ -351,18 +352,15 @@ var shaderChunks = {
     reprojectPS: reprojectPS,
     rgbmPS: rgbmPS,
     screenDepthPS: screenDepthPS,
+    shadowCascadesPS: shadowCascadesPS,
     shadowCommonPS: shadowCommonPS,
     shadowCoordPS: shadowCoordPS,
-    shadowCoordVS: shadowCoordVS,
     shadowCoordPerspZbufferPS: shadowCoordPerspZbufferPS,
     shadowEVSMPS: shadowEVSMPS,
     shadowEVSMnPS: shadowEVSMnPS,
     shadowStandardPS: shadowStandardPS,
     shadowStandardGL2PS: shadowStandardGL2PS,
-    shadowStandardGL2VSPS: shadowStandardGL2VSPS,
-    shadowStandardVSPS: shadowStandardVSPS,
     shadowVSM8PS: shadowVSM8PS,
-    shadowVSMVSPS: shadowVSMVSPS,
     shadowVSM_commonPS: shadowVSM_commonPS,
     skinBatchConstVS: skinBatchConstVS,
     skinBatchTexVS: skinBatchTexVS,

@@ -8,6 +8,7 @@ import { XrInputSource } from './xr-input-source.js';
  * @augments EventHandler
  * @classdesc Provides access to input sources for WebXR.
  * @description Provides access to input sources for WebXR.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @property {XrInputSource[]} inputSources List of active {@link XrInputSource}.
  */
@@ -15,14 +16,12 @@ class XrInput extends EventHandler {
     constructor(manager) {
         super();
 
-        var self = this;
-
         this.manager = manager;
         this._session = null;
         this._inputSources = [];
 
-        this._onInputSourcesChangeEvt = function (evt) {
-            self._onInputSourcesChange(evt);
+        this._onInputSourcesChangeEvt = (evt) => {
+            this._onInputSourcesChange(evt);
         };
 
         this.manager.on('start', this._onSessionStart, this);
@@ -117,61 +116,59 @@ class XrInput extends EventHandler {
         this._session = this.manager.session;
         this._session.addEventListener('inputsourceschange', this._onInputSourcesChangeEvt);
 
-        var self = this;
-
-        this._session.addEventListener('select', function (evt) {
-            var inputSource = self._getByInputSource(evt.inputSource);
+        this._session.addEventListener('select', (evt) => {
+            const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('select', evt);
-            self.fire('select', inputSource, evt);
+            this.fire('select', inputSource, evt);
         });
-        this._session.addEventListener('selectstart', function (evt) {
-            var inputSource = self._getByInputSource(evt.inputSource);
+        this._session.addEventListener('selectstart', (evt) => {
+            const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._selecting = true;
             inputSource.fire('selectstart', evt);
-            self.fire('selectstart', inputSource, evt);
+            this.fire('selectstart', inputSource, evt);
         });
-        this._session.addEventListener('selectend', function (evt) {
-            var inputSource = self._getByInputSource(evt.inputSource);
+        this._session.addEventListener('selectend', (evt) => {
+            const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._selecting = false;
             inputSource.fire('selectend', evt);
-            self.fire('selectend', inputSource, evt);
+            this.fire('selectend', inputSource, evt);
         });
 
-        this._session.addEventListener('squeeze', function (evt) {
-            var inputSource = self._getByInputSource(evt.inputSource);
+        this._session.addEventListener('squeeze', (evt) => {
+            const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('squeeze', evt);
-            self.fire('squeeze', inputSource, evt);
+            this.fire('squeeze', inputSource, evt);
         });
-        this._session.addEventListener('squeezestart', function (evt) {
-            var inputSource = self._getByInputSource(evt.inputSource);
+        this._session.addEventListener('squeezestart', (evt) => {
+            const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._squeezing = true;
             inputSource.fire('squeezestart', evt);
-            self.fire('squeezestart', inputSource, evt);
+            this.fire('squeezestart', inputSource, evt);
         });
-        this._session.addEventListener('squeezeend', function (evt) {
-            var inputSource = self._getByInputSource(evt.inputSource);
+        this._session.addEventListener('squeezeend', (evt) => {
+            const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._squeezing = false;
             inputSource.fire('squeezeend', evt);
-            self.fire('squeezeend', inputSource, evt);
+            this.fire('squeezeend', inputSource, evt);
         });
 
         // add input sources
-        var inputSources = this._session.inputSources;
-        for (var i = 0; i < inputSources.length; i++) {
+        const inputSources = this._session.inputSources;
+        for (let i = 0; i < inputSources.length; i++) {
             this._addInputSource(inputSources[i]);
         }
     }
 
     _onSessionEnd() {
-        var i = this._inputSources.length;
+        let i = this._inputSources.length;
         while (i--) {
-            var inputSource = this._inputSources[i];
+            const inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);
             inputSource.fire('remove');
             this.fire('remove', inputSource);
@@ -182,21 +179,19 @@ class XrInput extends EventHandler {
     }
 
     _onInputSourcesChange(evt) {
-        var i;
-
         // remove
-        for (i = 0; i < evt.removed.length; i++) {
+        for (let i = 0; i < evt.removed.length; i++) {
             this._removeInputSource(evt.removed[i]);
         }
 
         // add
-        for (i = 0; i < evt.added.length; i++) {
+        for (let i = 0; i < evt.added.length; i++) {
             this._addInputSource(evt.added[i]);
         }
     }
 
     _getByInputSource(xrInputSource) {
-        for (var i = 0; i < this._inputSources.length; i++) {
+        for (let i = 0; i < this._inputSources.length; i++) {
             if (this._inputSources[i].inputSource === xrInputSource) {
                 return this._inputSources[i];
             }
@@ -209,20 +204,20 @@ class XrInput extends EventHandler {
         if (this._getByInputSource(xrInputSource))
             return;
 
-        var inputSource = new XrInputSource(this.manager, xrInputSource);
+        const inputSource = new XrInputSource(this.manager, xrInputSource);
         this._inputSources.push(inputSource);
         this.fire('add', inputSource);
     }
 
     _removeInputSource(xrInputSource) {
-        for (var i = 0; i < this._inputSources.length; i++) {
+        for (let i = 0; i < this._inputSources.length; i++) {
             if (this._inputSources[i].inputSource !== xrInputSource)
                 continue;
 
-            var inputSource = this._inputSources[i];
+            const inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);
 
-            var h = inputSource.hitTestSources.length;
+            let h = inputSource.hitTestSources.length;
             while (h--) {
                 inputSource.hitTestSources[h].remove();
             }
@@ -234,7 +229,7 @@ class XrInput extends EventHandler {
     }
 
     update(frame) {
-        for (var i = 0; i < this._inputSources.length; i++) {
+        for (let i = 0; i < this._inputSources.length; i++) {
             this._inputSources[i].update(frame);
         }
     }

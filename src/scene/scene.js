@@ -2,7 +2,9 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { Color } from '../math/color.js';
 import { Mat3 } from '../math/mat3.js';
+import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
+import { Quat } from '../math/quat.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
@@ -13,8 +15,6 @@ import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 import { StandardMaterial } from './materials/standard-material.js';
-import { Quat } from '../math/quat.js';
-import { Mat4 } from '../math/mat4.js';
 
 /**
  * @class
@@ -114,7 +114,6 @@ class Scene extends EventHandler {
 
         this._skyboxPrefiltered = [null, null, null, null, null, null];
 
-        this._firstUpdateSkybox = true;
         this._skyboxCubeMap = null;
         this.skyboxModel = null;
 
@@ -431,7 +430,7 @@ class Scene extends EventHandler {
 
             var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
             if (skyLayer) {
-                var node = new GraphNode();
+                var node = new GraphNode("Skybox");
                 var mesh = createBox(device);
                 var meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
@@ -444,12 +443,6 @@ class Scene extends EventHandler {
 
                 skyLayer.addMeshInstances(model.meshInstances);
                 this.skyLayer = skyLayer;
-
-                // enable the layer on first skybox update (the skybox layer is created disabled)
-                if (this._firstUpdateSkybox) {
-                    skyLayer.enabled = true;
-                    this._firstUpdateSkybox = false;
-                }
 
                 this.fire("set:skybox", usedTex);
             }

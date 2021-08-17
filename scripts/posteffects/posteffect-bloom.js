@@ -187,7 +187,10 @@ function BloomEffect(graphicsDevice) {
         colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.name = 'pe-bloom';
-        var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
+        var target = new pc.RenderTarget({
+            colorBuffer: colorBuffer,
+            depth: false
+        });
 
         this.targets.push(target);
     }

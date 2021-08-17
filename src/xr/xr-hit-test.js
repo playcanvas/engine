@@ -1,3 +1,4 @@
+import { platform } from "../core/platform.js";
 import { EventHandler } from '../core/event-handler.js';
 
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
@@ -9,6 +10,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  * @augments EventHandler
  * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
  * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if AR Hit Test is supported.
  * @property {XrHitTestSource[]} sources list of active {@link XrHitTestSource}.
@@ -18,7 +20,7 @@ class XrHitTest extends EventHandler {
         super();
 
         this.manager = manager;
-        this._supported = !! (window.XRSession && window.XRSession.prototype.requestHitTestSource);
+        this._supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
         this._session = null;
 
@@ -87,14 +89,14 @@ class XrHitTest extends EventHandler {
 
         this._session = null;
 
-        for (var i = 0; i < this.sources.length; i++) {
+        for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].onStop();
         }
         this.sources = [];
     }
 
     isAvailable(callback, fireError) {
-        var err;
+        let err;
 
         if (! this._supported)
             err = new Error('XR HitTest is not supported');
@@ -170,8 +172,6 @@ class XrHitTest extends EventHandler {
      * });
      */
     start(options) {
-        var self = this;
-
         options = options || { };
 
         if (! this.isAvailable(options.callback, this))
@@ -180,45 +180,45 @@ class XrHitTest extends EventHandler {
         if (! options.profile && ! options.spaceType)
             options.spaceType = XRSPACE_VIEWER;
 
-        var xrRay;
-        var offsetRay = options.offsetRay;
+        let xrRay;
+        const offsetRay = options.offsetRay;
         if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
 
-        var callback = options.callback;
+        const callback = options.callback;
 
         if (options.spaceType) {
-            this._session.requestReferenceSpace(options.spaceType).then(function (referenceSpace) {
-                if (! self._session) {
-                    var err = new Error('XR Session is not started (2)');
+            this._session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
+                if (! this._session) {
+                    const err = new Error('XR Session is not started (2)');
                     if (callback) callback(err);
-                    self.fire('error', err);
+                    this.fire('error', err);
                     return;
                 }
 
-                self._session.requestHitTestSource({
+                this._session.requestHitTestSource({
                     space: referenceSpace,
                     entityTypes: options.entityTypes || undefined,
                     offsetRay: xrRay
-                }).then(function (xrHitTestSource) {
-                    self._onHitTestSource(xrHitTestSource, false, callback);
-                }).catch(function (ex) {
+                }).then((xrHitTestSource) => {
+                    this._onHitTestSource(xrHitTestSource, false, callback);
+                }).catch((ex) => {
                     if (callback) callback(ex);
-                    self.fire('error', ex);
+                    this.fire('error', ex);
                 });
-            }).catch(function (ex) {
+            }).catch((ex) => {
                 if (callback) callback(ex);
-                self.fire('error', ex);
+                this.fire('error', ex);
             });
         } else {
             this._session.requestHitTestSourceForTransientInput({
                 profile: options.profile,
                 entityTypes: options.entityTypes || undefined,
                 offsetRay: xrRay
-            }).then(function (xrHitTestSource) {
-                self._onHitTestSource(xrHitTestSource, true, callback);
-            }).catch(function (ex) {
+            }).then((xrHitTestSource) => {
+                this._onHitTestSource(xrHitTestSource, true, callback);
+            }).catch((ex) => {
                 if (callback) callback(ex);
-                self.fire('error', ex);
+                this.fire('error', ex);
             });
         }
     }
@@ -226,13 +226,13 @@ class XrHitTest extends EventHandler {
     _onHitTestSource(xrHitTestSource, transient, callback) {
         if (! this._session) {
             xrHitTestSource.cancel();
-            var err = new Error('XR Session is not started (3)');
+            const err = new Error('XR Session is not started (3)');
             if (callback) callback(err);
             this.fire('error', err);
             return;
         }
 
-        var hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient);
+        const hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient);
         this.sources.push(hitTestSource);
 
         if (callback) callback(null, hitTestSource);
@@ -240,7 +240,7 @@ class XrHitTest extends EventHandler {
     }
 
     update(frame) {
-        for (var i = 0; i < this.sources.length; i++) {
+        for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);
         }
     }

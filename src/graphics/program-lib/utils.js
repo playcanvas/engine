@@ -9,7 +9,7 @@ import { shaderChunks } from './chunks/chunks.js';
 
 import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 
-var attrib2Semantic = {
+const attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
     vertex_normal: SEMANTIC_NORMAL,
     vertex_tangent: SEMANTIC_TANGENT,
@@ -27,17 +27,17 @@ var attrib2Semantic = {
 };
 
 function collectAttribs(vsCode) {
-    var attribs = {};
-    var attrs = 0;
+    const attribs = {};
+    let attrs = 0;
 
-    var found = vsCode.indexOf("attribute");
+    let found = vsCode.indexOf("attribute");
     while (found >= 0) {
         if (found > 0 && vsCode[found - 1] === "/") break;
-        var endOfLine = vsCode.indexOf(';', found);
-        var startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
-        var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
+        const endOfLine = vsCode.indexOf(';', found);
+        const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
+        const attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
 
-        var semantic = attrib2Semantic[attribName];
+        const semantic = attrib2Semantic[attribName];
         if (semantic !== undefined) {
             attribs[attribName] = semantic;
         } else {
@@ -51,9 +51,9 @@ function collectAttribs(vsCode) {
 }
 
 function createShader(device, vsName, psName, useTransformFeedback) {
-    var vsCode = shaderChunks[vsName];
-    var psCode = precisionCode(device) + "\n" + shaderChunks[psName];
-    var attribs = collectAttribs(vsCode);
+    let vsCode = shaderChunks[vsName];
+    let psCode = precisionCode(device) + "\n" + shaderChunks[psName];
+    const attribs = collectAttribs(vsCode);
 
     if (device.webgl2) {
         vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
@@ -69,12 +69,12 @@ function createShader(device, vsName, psName, useTransformFeedback) {
 }
 
 function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedback, psPreamble) {
-    var shaderCache = device.programLib._cache;
-    var cached = shaderCache[uName];
+    const shaderCache = device.programLib._cache;
+    const cached = shaderCache[uName];
     if (cached !== undefined) return cached;
 
     psCode = precisionCode(device) + "\n" + (psCode || dummyFragmentCode());
-    var attribs = collectAttribs(vsCode);
+    const attribs = collectAttribs(vsCode);
 
     if (device.webgl2) {
         vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;

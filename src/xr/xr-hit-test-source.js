@@ -3,8 +3,8 @@ import { EventHandler } from '../core/event-handler.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-var poolVec3 = [];
-var poolQuat = [];
+const poolVec3 = [];
+const poolQuat = [];
 
 /**
  * @class
@@ -12,6 +12,7 @@ var poolQuat = [];
  * @augments EventHandler
  * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
  * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
  * @param {boolean} transient - True if XRHitTestSource created for input source profile.
@@ -62,8 +63,8 @@ class XrHitTestSource extends EventHandler {
         if (! this._xrHitTestSource)
             return;
 
-        var sources = this.manager.hitTest.sources;
-        var ind = sources.indexOf(this);
+        const sources = this.manager.hitTest.sources;
+        const ind = sources.indexOf(this);
         if (ind !== -1) sources.splice(ind, 1);
 
         this.onStop();
@@ -79,10 +80,10 @@ class XrHitTestSource extends EventHandler {
 
     update(frame) {
         if (this._transient) {
-            var transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
-            for (var i = 0; i < transientResults.length; i++) {
-                var transientResult = transientResults[i];
-                var inputSource;
+            const transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
+            for (let i = 0; i < transientResults.length; i++) {
+                const transientResult = transientResults[i];
+                let inputSource;
 
                 if (transientResult.inputSource)
                     inputSource = this.manager.input._getByInputSource(transientResult.inputSource);
@@ -95,14 +96,14 @@ class XrHitTestSource extends EventHandler {
     }
 
     updateHitResults(results, inputSource) {
-        for (var i = 0; i < results.length; i++) {
-            var pose = results[i].getPose(this.manager._referenceSpace);
+        for (let i = 0; i < results.length; i++) {
+            const pose = results[i].getPose(this.manager._referenceSpace);
 
-            var position = poolVec3.pop();
+            let position = poolVec3.pop();
             if (! position) position = new Vec3();
             position.copy(pose.transform.position);
 
-            var rotation = poolQuat.pop();
+            let rotation = poolQuat.pop();
             if (! rotation) rotation = new Quat();
             rotation.copy(pose.transform.orientation);
 

@@ -19,6 +19,8 @@ var textureMorphVertexShader =
  * @name MorphInstance
  * @classdesc An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages selection of active morph targets.
  * @param {Morph} morph - The {@link Morph} to instance.
+ * @property {MeshInstance} meshInstance The mesh instance this morph instance controls the morphing of.
+ * @property {Morph} morph The morph with its targets, which is being instanced.
  */
 class MorphInstance {
     constructor(morph) {
@@ -293,7 +295,7 @@ class MorphInstance {
         }
 
         // #if _DEBUG
-        device.popMarker("");
+        device.popMarker();
         // #endif
     }
 

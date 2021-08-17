@@ -3,19 +3,18 @@ import { shaderChunks } from '../chunks/chunks.js';
 
 import { gammaCode, precisionCode, tonemapCode } from './common.js';
 
-var skybox = {
+const skybox = {
     generateKey: function (options) {
-        var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
+        const key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
                   options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" +
                   options.useCubeMapRotation + "" + options.useRightHandedCubeMap + "" + options.mip;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
-        var mip2size = [128, 64, 32, 16, 8, 4, 2];
+        const mip2size = [128, 64, 32, 16, 8, 4, 2];
 
-        var fshader;
-        fshader  = precisionCode(device);
+        let fshader = precisionCode(device);
         fshader += options.useCubeMapRotation ? '#define CUBEMAP_ROTATION\n' : '';
         fshader += options.useRightHandedCubeMap ? '#define RIGHT_HANDED_CUBEMAP\n' : '';
         fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;

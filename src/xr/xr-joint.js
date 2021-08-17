@@ -1,8 +1,9 @@
+import { platform } from "../core/platform.js";
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-var tipJointIds = window.XRHand ? [
+const tipJointIds = platform.browser && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
     'middle-finger-tip',
@@ -10,9 +11,9 @@ var tipJointIds = window.XRHand ? [
     'pinky-finger-tip'
 ] : [];
 
-var tipJointIdsIndex = {};
+const tipJointIdsIndex = {};
 
-for (var i = 0; i < tipJointIds.length; i++) {
+for (let i = 0; i < tipJointIds.length; i++) {
     tipJointIdsIndex[tipJointIds[i]] = true;
 }
 
@@ -21,6 +22,7 @@ for (var i = 0; i < tipJointIds.length; i++) {
  * @name XrJoint
  * @classdesc Represents joint of a finger.
  * @description Represents joint of a finger.
+ * @hideconstructor
  * @param {number} index - Index of a joint within a finger.
  * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
  * @param {XrHand} hand - Hand that joint relates to.
@@ -38,20 +40,9 @@ class XrJoint {
         this._id = id;
 
         this._hand = hand;
-        this._hand._joints.push(this);
-        this._hand._jointsById[id] = this;
-
         this._finger = finger;
-        if (this._finger) this._finger._joints.push(this);
-
         this._wrist = id === 'wrist';
-        if (this._wrist) this._hand._wrist = this;
-
         this._tip = this._finger && !! tipJointIdsIndex[id];
-        if (this._tip) {
-            this._hand._tips.push(this);
-            if (this._finger) this._finger._tip = this;
-        }
 
         this._radius = null;
 
@@ -80,8 +71,8 @@ class XrJoint {
             this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
         }
 
-        var manager = this._hand._manager;
-        var parent = manager.camera.parent;
+        const manager = this._hand._manager;
+        const parent = manager.camera.parent;
 
         if (parent) {
             this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);

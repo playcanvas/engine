@@ -1,4 +1,5 @@
 // POLYFILLS
+import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
 import './polyfill/array-find-index.js';
 import './polyfill/math-log2.js';
@@ -8,6 +9,7 @@ import './polyfill/object-assign.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
+import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
@@ -79,11 +81,12 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
+export { WorldClusters } from './scene/world-clusters.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
-export { ForwardRenderer } from './scene/forward-renderer.js';
+export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
-export { LayerComposition } from './scene/layer-composition.js';
+export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { Lightmapper } from './scene/lightmapper.js';
 export { Material } from './scene/materials/material.js';
@@ -116,6 +119,7 @@ export { AnimData } from './anim/evaluator/anim-data.js';
 export { AnimEvaluator } from './anim/evaluator/anim-evaluator.js';
 export { AnimSnapshot } from './anim/evaluator/anim-snapshot.js';
 export { AnimTarget } from './anim/evaluator/anim-target.js';
+export { AnimEvents } from './anim/evaluator/anim-events.js';
 export { AnimTrack } from './anim/evaluator/anim-track.js';
 export { DefaultAnimBinder } from './anim/binder/default-anim-binder.js';
 export * from './anim/controller/constants.js';
@@ -140,7 +144,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisInitialize, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
@@ -222,7 +226,6 @@ export { CameraComponentSystem } from './framework/components/camera/system.js';
 export { CollisionComponent } from './framework/components/collision/component.js';
 export { CollisionComponentSystem } from './framework/components/collision/system.js';
 export { Component } from './framework/components/component.js';
-export { ComponentData } from './framework/components/data.js';
 export { ComponentSystem } from './framework/components/system.js';
 export { ComponentSystemRegistry } from './framework/components/registry.js';
 export * from './framework/components/element/constants.js';
@@ -297,6 +300,8 @@ export { XrHitTestSource } from './xr/xr-hit-test-source.js';
 export { XrImageTracking } from './xr/xr-image-tracking.js';
 export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
+export { XrPlaneDetection } from './xr/xr-plane-detection.js';
+export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';

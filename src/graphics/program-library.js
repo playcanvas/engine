@@ -18,7 +18,7 @@ class ProgramLibrary {
         this._programsCollection = [];
         this._defaultStdMatOption = {};
         this._defaultStdMatOptionMin = {};
-        var m = new StandardMaterial();
+        const m = new StandardMaterial();
         m.shaderOptBuilder.updateRef(
             this._defaultStdMatOption, device, {}, m, null, [], SHADER_FORWARD, null, null);
         m.shaderOptBuilder.updateMinRef(
@@ -38,27 +38,28 @@ class ProgramLibrary {
     }
 
     isRegistered(name) {
-        var generator = this._generators[name];
+        const generator = this._generators[name];
         return (generator !== undefined);
     }
 
     getProgram(name, options) {
-        var generator = this._generators[name];
+        const generator = this._generators[name];
         if (generator === undefined) {
             // #if _DEBUG
             console.warn("ProgramLibrary#getProgram: No program library functions registered for: " + name);
             // #endif
             return null;
         }
-        var gd = this._device;
-        var key = generator.generateKey(options);
-        var shader = this._cache[key];
+        const gd = this._device;
+        const key = generator.generateKey(options);
+        let shader = this._cache[key];
         if (!shader) {
-            var lights;
+            let lights;
             if (options.lights) {
                 lights = options.lights;
                 options.lights = lights.map(function (l) {
-                    var lcopy = l.clone ? l.clone() : l;
+                    // TODO: refactor this to avoid creating a clone of the light.
+                    const lcopy = l.clone ? l.clone() : l;
                     lcopy.key = l.key;
                     return lcopy;
                 });
@@ -72,19 +73,19 @@ class ProgramLibrary {
             if (this._precached)
                 console.warn("ProgramLibrary#getProgram: Cache miss for shader", name, "key", key, "after shaders precaching");
 
-            var shaderDefinition = generator.createShaderDefinition(gd, options);
+            const shaderDefinition = generator.createShaderDefinition(gd, options);
             shader = this._cache[key] = new Shader(gd, shaderDefinition);
         }
         return shader;
     }
 
     storeNewProgram(name, options) {
-        var opt = {};
+        let opt = {};
         if (name === "standard") {
             // For standard material saving all default values is overkill, so we store only diff
-            var defaultMat = this._getDefaultStdMatOptions(options.pass);
+            const defaultMat = this._getDefaultStdMatOptions(options.pass);
 
-            for (var p in options) {
+            for (const p in options) {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
                     opt[p] = options[p];
             }
@@ -98,11 +99,11 @@ class ProgramLibrary {
 
     // run pc.app.graphicsDevice.programLib.dumpPrograms(); from browser console to build shader options script
     dumpPrograms() {
-        var text = 'var device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
-        text += 'var shaders = [';
+        let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
+        text += 'let shaders = [';
         if (this._programsCollection[0])
             text += '\n\t' + this._programsCollection[0];
-        for (var i = 1; i < this._programsCollection.length; ++i) {
+        for (let i = 1; i < this._programsCollection.length; ++i) {
             text += ',\n\t' + this._programsCollection[i];
         }
         text += '\n];\n';
@@ -110,7 +111,7 @@ class ProgramLibrary {
         text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
-        var element = document.createElement('a');
+        const element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
         element.setAttribute('download', 'precompile-shaders.js');
         element.style.display = 'none';
@@ -120,9 +121,9 @@ class ProgramLibrary {
     }
 
     clearCache() {
-        var cache = this._cache;
+        const cache = this._cache;
         this._isClearingCache = true;
-        for (var key in cache) {
+        for (const key in cache) {
             if (cache.hasOwnProperty(key)) {
                 cache[key].destroy();
             }
@@ -133,8 +134,8 @@ class ProgramLibrary {
 
     removeFromCache(shader) {
         if (this._isClearingCache) return; // don't delete by one when clearing whole cache
-        var cache = this._cache;
-        for (var key in cache) {
+        const cache = this._cache;
+        for (const key in cache) {
             if (cache.hasOwnProperty(key)) {
                 if (cache[key] === shader) {
                     delete cache[key];
@@ -151,12 +152,12 @@ class ProgramLibrary {
 
     precompile(cache) {
         if (cache) {
-            var shaders = new Array(cache.length);
-            for (var i = 0; i < cache.length; i++) {
+            const shaders = new Array(cache.length);
+            for (let i = 0; i < cache.length; i++) {
                 if (cache[i].name === "standard") {
-                    var opt = cache[i].options;
-                    var defaultMat = this._getDefaultStdMatOptions(opt.pass);
-                    for (var p in defaultMat) {
+                    const opt = cache[i].options;
+                    const defaultMat = this._getDefaultStdMatOptions(opt.pass);
+                    for (const p in defaultMat) {
                         if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
                             opt[p] = defaultMat[p];
                     }
@@ -166,9 +167,9 @@ class ProgramLibrary {
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
             // Uncomment to force finish linking after preload
-            // var device = this._device;
-            // var forceLink = function () {
-            //     for (var i = 0; i < shaders.length; i++) {
+            // let device = this._device;
+            // let forceLink = function () {
+            //     for (let i = 0; i < shaders.length; i++) {
             //         device.postLink(shaders[i]);
             //     }
             // };

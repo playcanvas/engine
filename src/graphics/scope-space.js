@@ -37,8 +37,8 @@ class ScopeSpace {
 
     // clears value for any uniform with matching value (used to remove deleted textures)
     removeValue(value) {
-        for (var uniformName in this.variables) {
-            var uniform = this.variables[uniformName];
+        for (const uniformName in this.variables) {
+            const uniform = this.variables[uniformName];
             if (uniform.value === value) {
                 uniform.value = null;
             }

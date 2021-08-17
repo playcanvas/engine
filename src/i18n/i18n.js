@@ -42,17 +42,43 @@ class I18n extends EventHandler {
     }
 
     /**
+     * @private
      * @static
      * @function
-     * @name I18n#findAvailableLocale
+     * @name I18n.findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
-     * @param {string} desiredLocale - The desired locale e.g. En-US.
+     * @param {string} desiredLocale - The desired locale e.g. en-US.
      * @param {object} availableLocales - A dictionary where each key is an available locale.
      * @returns {string} The locale found or if no locale is available returns the default en-US locale.
+     * @example
+     * // With a defined dictionary of locales
+     * var availableLocales = { en: 'en-US', fr: 'fr-FR' };
+     * var locale = pc.I18n.getText('en-US', availableLocales);
+     * // returns 'en'
      */
     static findAvailableLocale(desiredLocale, availableLocales) {
         return findAvailableLocale(desiredLocale, availableLocales);
+    }
+
+    /**
+     * @function
+     * @name I18n#findAvailableLocale
+     * @description Returns the first available locale based on the desired locale specified. First
+     * tries to find the desired locale in the loaded translations and then tries to find an alternative
+     * locale based on the language.
+     * @param {string} desiredLocale - The desired locale e.g. en-US.
+     * @returns {string} The locale found or if no locale is available returns the default en-US locale.
+     * @example
+     * var locale = this.app.i18n.getText('en-US');
+     */
+    findAvailableLocale(desiredLocale) {
+        if (this._translations[desiredLocale]) {
+            return desiredLocale;
+        }
+
+        const lang = getLang(desiredLocale);
+        return this._findFallbackLocale(desiredLocale, lang);
     }
 
     /**

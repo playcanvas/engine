@@ -6,8 +6,9 @@ import { EventHandler } from '../core/event-handler.js';
 import { findAvailableLocale } from '../i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
-import { AssetVariants } from './asset-variants.js';
+import { AssetFile } from './asset-file.js';
 import { getApplication } from '../framework/globals.js';
+import { http } from '../net/http.js';
 
 // auto incrementing number for asset ids
 var assetIdCounter = -1;
@@ -37,7 +38,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * See the {@link AssetRegistry} for details on loading resources from assets.
  * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
  * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
- * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+ * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container", cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", text", "texture"]
  * @param {object} [file] - Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
  * @example
  * var file = {
@@ -53,7 +54,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * });
  * @property {string} name The name of the asset
  * @property {number} id The asset id
- * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+ * @property {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"script"|"shader"|"sprite"|"template"|"text"|"texture")} type The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", "text", "texture"]
  * @property {Tags} tags Interface for tagging. Allows to find assets by tags using {@link AssetRegistry#findByTag} method.
  * @property {object} file The file details or null if no file
  * @property {string} [file.url] The URL of the resource file that contains the asset data
@@ -67,7 +68,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {object} resource A reference to the resource when the asset is loaded. e.g. a {@link Texture} or a {@link Model}
  * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
  * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.
- * @property {boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+ * @property {boolean} loaded True if the asset has finished attempting to load the resource. It is not guaranteed that the resources are available as there could have been a network error.
  * @property {boolean} loading True if the resource is currently being loaded
  * @property {AssetRegistry} registry The asset registry that this Asset belongs to
  */
@@ -81,8 +82,6 @@ class Asset extends EventHandler {
         this.type = type;
         this.tags = new Tags(this);
         this._preload = false;
-
-        this.variants = new AssetVariants(this);
 
         this._file = null;
         this._data = data || { };
@@ -169,7 +168,7 @@ class Asset extends EventHandler {
      * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
      */
     getFileUrl() {
-        var file = this.getPreferredFile();
+        var file = this.file;
 
         if (!file || !file.url)
             return null;
@@ -188,53 +187,20 @@ class Asset extends EventHandler {
         return url;
     }
 
-    getPreferredFile() {
-        if (!this.file)
-            return null;
-
-        if (this.type === 'texture' || this.type === 'textureatlas' || this.type === 'bundle') {
-            var app = this.registry?._loader?._app || getApplication();
-            var device = app?.graphicsDevice;
-            if (device) {
-                for (var i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
-                    var variant = VARIANT_DEFAULT_PRIORITY[i];
-                    // if the device supports the variant
-                    if (! device[VARIANT_SUPPORT[variant]]) continue;
-
-                    // if the variant exists in the asset then just return it
-                    if (this.file.variants[variant]) {
-                        return this.file.variants[variant];
-                    }
-
-                    // if the variant does not exist but the asset is in a bundle
-                    // and the bundle contain assets with this variant then return the default
-                    // file for the asset
-                    if (app.enableBundles) {
-                        var bundles = app.bundles.listBundlesForAsset(this);
-                        if (! bundles) continue;
-
-                        for (var j = 0, len2 = bundles.length; j < len2; j++) {
-                            if (bundles[j].file && bundles[j].file.variants && bundles[j].file.variants[variant]) {
-                                return this.file;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return this.file;
-    }
-
     /**
      * @private
      * @function
      * @name Asset#getAbsoluteUrl
-     * @description Construct an asset URL from this asset's location and a relative path.
+     * @description Construct an asset URL from this asset's location and a relative path. If the relativePath is a
+     * blob or Base64 URI, then return that instead.
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url.
      * @returns {string} Resulting URL of the asset.
      */
     getAbsoluteUrl(relativePath) {
+        if (relativePath.startsWith('blob:') || relativePath.startsWith('data:')) {
+            return relativePath;
+        }
+
         var base = path.getDirectory(this.file.url);
         return path.join(base, relativePath);
     }
@@ -364,54 +330,42 @@ class Asset extends EventHandler {
     }
 
     set file(value) {
-        // fire change event when the file changes
-        // so that we reload it if necessary
-        // set/unset file property of file hash been changed
-        var key;
-        var valueAsBool = !!value;
-        var fileAsBool = !!this._file;
-        if (valueAsBool !== fileAsBool || (value && this._file && value.hash !== this._file)) {
-            if (value) {
-                if (!this._file)
-                    this._file = { };
+        // if value contains variants, choose the correct variant first
+        if (value && value.variants && ['texture', 'textureatlas', 'bundle'].indexOf(this.type) !== -1) {
+            // search for active variant
+            const app = this.registry?._loader?._app || getApplication();
+            const device = app?.graphicsDevice;
+            if (device) {
+                for (let i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
+                    const variant = VARIANT_DEFAULT_PRIORITY[i];
+                    // if the device supports the variant
+                    if (value.variants[variant] && device[VARIANT_SUPPORT[variant]]) {
+                        value = value.variants[variant];
+                        break;
+                    }
 
-                this._file.url = value.url;
-                this._file.filename = value.filename;
-                this._file.hash = value.hash;
-                this._file.size = value.size;
-                this._file.variants = this.variants;
-                this._file.contents = value.contents;
-
-                if (value.hasOwnProperty('variants')) {
-                    this.variants.clear();
-
-                    if (value.variants) {
-                        for (key in value.variants) {
-                            if (!value.variants[key])
-                                continue;
-
-                            this.variants[key] = value.variants[key];
+                    // if the variant does not exist but the asset is in a bundle
+                    // and the bundle contain assets with this variant then return the default
+                    // file for the asset
+                    if (app.enableBundles) {
+                        const bundles = app.bundles.listBundlesForAsset(this);
+                        if (bundles && bundles.find((b) => {
+                            return b?.file?.variants[variant];
+                        })) {
+                            break;
                         }
                     }
                 }
-
-                this.fire('change', this, 'file', this._file, this._file);
-                this.reload();
-            } else {
-                this._file = null;
-                this.variants.clear();
             }
-        } else if (value && this._file && value.hasOwnProperty('variants')) {
-            this.variants.clear();
+        }
 
-            if (value.variants) {
-                for (key in value.variants) {
-                    if (!value.variants[key])
-                        continue;
+        const oldFile = this._file;
+        const newFile = value ? new AssetFile(value.url, value.filename, value.hash, value.size, value.opt, value.contents) : null;
 
-                    this.variants[key] = value.variants[key];
-                }
-            }
+        if (!!newFile !== !!oldFile || (newFile && !newFile.equals(oldFile))) {
+            this._file = newFile;
+            this.fire('change', this, 'file', newFile, oldFile);
+            this.reload();
         }
     }
 
@@ -480,6 +434,35 @@ class Asset extends EventHandler {
             // here we must invoke it manually instead.
             if (this.loaded)
                 this.registry._loader.patch(this, this.registry);
+        }
+    }
+
+    /**
+     * @private
+     * @function
+     * @name Asset#fetchArrayBuffer
+     * @description Helper function to resolve asset file data and return the contents as an
+     * ArrayBuffer. If the asset file contents are present, that is returned. Otherwise the file
+     * data is be downloaded via http.
+     * @param {string} loadUrl - The URL as passed into the handler
+     * @param {callbacks.ResourceLoader} callback - The callback function to receive results.
+     * @param {Asset} [asset] - The asset
+     * @param {number} maxRetries - Number of retries if http download is required
+     */
+    static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
+        if (asset?.file?.contents) {
+            // asset file contents were provided
+            setTimeout(() => {
+                callback(null, asset.file.contents);
+            });
+        } else {
+            // asset contents must be downloaded
+            http.get(loadUrl, {
+                cache: true,
+                responseType: 'arraybuffer',
+                retry: maxRetries > 0,
+                maxRetries: maxRetries
+            }, callback);
         }
     }
 }

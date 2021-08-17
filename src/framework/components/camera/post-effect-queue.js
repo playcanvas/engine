@@ -54,7 +54,7 @@ class PostEffectQueue {
             self.resizeRenderTargets();
         };
 
-        camera.on('set_rect', this.onCameraRectChanged, this);
+        camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
     _allocateColorBuffer(format, name) {
@@ -97,24 +97,25 @@ class PostEffectQueue {
         var useStencil =  this.app.graphicsDevice.supportsStencil;
         var samples = useDepth ? device.samples : 1;
 
-        return new RenderTarget(device, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
+        return new RenderTarget({
+            colorBuffer: colorBuffer,
+            depth: useDepth,
+            stencil: useStencil,
+            samples: samples
+        });
     }
 
     _resizeOffscreenTarget(rt) {
         const format = rt.colorBuffer.format;
         const name = rt.colorBuffer.name;
 
-        rt._colorBuffer.destroy();
+        rt.destroyFrameBuffers();
+        rt.destroyTextureBuffers();
         rt._colorBuffer = this._allocateColorBuffer(format, name);
-        rt.destroy();
     }
 
     _destroyOffscreenTarget(rt) {
-        if (rt._colorBuffer)
-            rt._colorBuffer.destroy();
-        if (rt._depthBuffer)
-            rt._depthBuffer.destroy();
-
+        rt.destroyTextureBuffers();
         rt.destroy();
     }
 
@@ -311,12 +312,12 @@ class PostEffectQueue {
                             fx.effect.render(fx.inputTarget, destTarget, rect);
 
                             // #if _DEBUG
-                            self.app.graphicsDevice.popMarker("");
+                            self.app.graphicsDevice.popMarker();
                             // #endif
                         }
 
                         // #if _DEBUG
-                        self.app.graphicsDevice.popMarker("");
+                        self.app.graphicsDevice.popMarker();
                         // #endif
                     }
                 }
@@ -353,6 +354,8 @@ class PostEffectQueue {
         if (this.resizeTimeout)
             return;
 
+        // Note: this should be reviewed, as this would make postprocessing incorrect for a few frames
+        // until the resize takes place
         if ((now() - this.resizeLast) > 100) {
             // allow resizing immediately if haven't been resized recently
             this.resizeRenderTargets();

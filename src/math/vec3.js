@@ -148,7 +148,7 @@ class Vec3 {
     /**
      * @function
      * @name Vec3#copy
-     * @description Copied the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
+     * @description Copies the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
      * @param {Vec3} rhs - A vector to copy to the specified vector.
      * @returns {Vec3} Self for chaining.
      * @example
@@ -467,6 +467,73 @@ class Vec3 {
             this.z *= invLength;
         }
 
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#floor
+     * @description Each element is set to the largest integer less than or equal to its value.
+     * @returns {Vec3} Self for chaining.
+     */
+    floor() {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        this.z = Math.floor(this.z);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#ceil
+     * @description Each element is rounded up to the next largest integer.
+     * @returns {Vec3} Self for chaining.
+     */
+    ceil() {
+        this.x = Math.ceil(this.x);
+        this.y = Math.ceil(this.y);
+        this.z = Math.ceil(this.z);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#round
+     * @description Each element is rounded up or down to the nearest integer.
+     * @returns {Vec3} Self for chaining.
+     */
+    round() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        this.z = Math.round(this.z);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#min
+     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec3} Self for chaining.
+     */
+    min(rhs) {
+        if (rhs.x < this.x) this.x = rhs.x;
+        if (rhs.y < this.y) this.y = rhs.y;
+        if (rhs.z < this.z) this.z = rhs.z;
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec3#max
+     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec3} Self for chaining.
+     */
+    max(rhs) {
+        if (rhs.x > this.x) this.x = rhs.x;
+        if (rhs.y > this.y) this.y = rhs.y;
+        if (rhs.z > this.z) this.z = rhs.z;
         return this;
     }
 

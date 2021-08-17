@@ -76,6 +76,9 @@ class LightInfo {
         // original light properties
         this.store();
 
+        // don't use cascades
+        light.numCascades = 1;
+
         // bounds for non-directional light
         if (light.type !== LIGHTTYPE_DIRECTIONAL) {
 
@@ -94,12 +97,14 @@ class LightInfo {
         this.mask = this.light.mask;
         this.shadowUpdateMode = this.light.shadowUpdateMode;
         this.enabled = this.light.enabled;
+        this.numCascades = this.light.numCascades;
     }
 
     restore() {
         this.light.mask = this.mask;
         this.light.shadowUpdateMode = this.shadowUpdateMode;
         this.light.enabled = this.enabled;
+        this.light.numCascades = this.numCascades;
     }
 }
 
@@ -120,6 +125,7 @@ class Lightmapper {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
+        this.shadowMapCache = renderer._shadowRenderer.shadowMapCache;
 
         this._tempSet = new Set();
         this._initCalled = false;
@@ -148,6 +154,9 @@ class Lightmapper {
         // release reference to the texture
         MeshInstance.decRefLightmap(this.blackTex);
         this.blackTex = null;
+
+        // destroy all lightmaps
+        MeshInstance.destroyLightmapCache();
 
         this.device = null;
         this.root = null;
@@ -279,8 +288,6 @@ class Lightmapper {
         return tex;
     }
 
-    // TODO: report warning on nodes set up for baking that don't have uv1
-
     // recursively walk the hierarchy of nodes starting at the specified node
     // collect all nodes that need to be lightmapped to bakeNodes array
     // collect all nodes with geometry to allNodes array
@@ -314,6 +321,11 @@ class Lightmapper {
             for (let i = 0; i < meshInstances.length; i++) {
                 if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
                     hasUv1 = false;
+
+                    // #if _DEBUG
+                    console.log(`Lightmapper - node [${node.name}] contains meshes without required uv1, excluding it from baking.`);
+                    // #endif
+
                     break;
                 }
             }
@@ -573,7 +585,6 @@ class Lightmapper {
     // as we ping-pong between various render targets anyways, and shader uses hardcoded types and ignores it anyways.
     allocateTextures(bakeNodes, passCount) {
 
-        const device = this.device;
         for (let i = 0; i < bakeNodes.length; i++) {
 
             // required lightmap size
@@ -584,14 +595,20 @@ class Lightmapper {
             for (let pass = 0; pass < passCount; pass++) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_lightmap_" + i));
                 MeshInstance.incRefLightmap(tex);
-                bakeNode.renderTargets[pass] = new RenderTarget(device, tex, { depth: false });
+                bakeNode.renderTargets[pass] = new RenderTarget({
+                    colorBuffer: tex,
+                    depth: false
+                });
             }
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
                 const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_temp_lightmap_" + size));
                 MeshInstance.incRefLightmap(tex);
-                this.renderTargets.set(size, new RenderTarget(device, tex, { depth: false }));
+                this.renderTargets.set(size, new RenderTarget({
+                    colorBuffer: tex,
+                    depth: false
+                }));
             }
         }
     }
@@ -711,7 +728,9 @@ class Lightmapper {
 
         // only prepare camera for spot light, other cameras need to be adjusted per cubemap face / per node later
         if (light.type === LIGHTTYPE_SPOT) {
-            shadowCam = this.renderer.getShadowCamera(device, light);
+
+            const lightRenderData = light.getRenderData(null, 0);
+            shadowCam = lightRenderData.shadowCamera;
 
             shadowCam._node.setPosition(light._node.getPosition());
             shadowCam._node.setRotation(light._node.getRotation());
@@ -759,7 +778,7 @@ class Lightmapper {
         }
 
         // per meshInstance culling for spot light only
-        // (point lights cull per face later, directional lights don't cull)
+        // (omni lights cull per face later, directional lights don't cull)
         if (light.type === LIGHTTYPE_SPOT) {
             let nodeVisible = false;
 
@@ -788,14 +807,18 @@ class Lightmapper {
         lightArray[light.type][0] = light;
     }
 
-    renderShadowMap(shadowMapRendered, casters, lightArray, light) {
+    renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
 
+        const light = bakeLight.light;
         if (!shadowMapRendered && light.castShadows) {
 
+            // allocate shadow map from the cache to avoid per light allocation
+            light.shadowMap = this.shadowMapCache.get(this.device, light);
+
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer.cullDirectionalShadowmap(light, casters, this.camera);
+                this.renderer._shadowRenderer.cullDirectional(light, casters, this.camera);
             } else {
-                this.renderer.cullLocalShadowmap(light, casters);
+                this.renderer._shadowRenderer.cullLocal(light, casters);
             }
 
             this.renderer.renderShadows(lightArray[light.type], this.camera);
@@ -909,7 +932,6 @@ class Lightmapper {
             const bakeLight = bakeLights[i];
 
             bakeLight.light.enabled = true; // enable next light
-            bakeLight.light._cacheShadowMap = true;
             let shadowMapRendered = false;
 
             const shadowCam = this.lightCameraPrepare(device, bakeLight);
@@ -927,7 +949,7 @@ class Lightmapper {
                 this.setupLightArray(lightArray, bakeLight.light);
 
                 // render light shadow map needs to be rendered
-                shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
+                shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
 
                 // Store original materials
                 this.backupMaterials(rcv);
@@ -994,13 +1016,17 @@ class Lightmapper {
             // disable the light
             bakeLight.light.enabled = false;
 
-            // release light shadowmap
-            bakeLight.light._cacheShadowMap = false;
-            if (bakeLight.light._isCachedShadowMap) {
-                bakeLight.light._destroyShadowMap();
+            // release shadow map back to the cache
+            if (bakeLight.light.shadowMap?.cached) {
+                this.shadowMapCache.add(bakeLight.light, bakeLight.light.shadowMap);
+                bakeLight.light.shadowMap = null;
             }
         }
 
+        // destroy all cached shadowmaps
+        this.shadowMapCache.clear();
+
+        // postprocess lightmaps
         this.dilateTextures(device, bakeNodes, passCount);
 
         // Revert shadow casting

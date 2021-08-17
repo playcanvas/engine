@@ -9,7 +9,7 @@ function onContainerAssetLoaded(containerAsset) {
 
     const render = containerResource.renders && containerResource.renders[renderAsset.data.renderIndex];
     if (render) {
-        renderAsset.resource.meshes = render.resource;
+        renderAsset.resource.meshes = render.resource.meshes;
     }
 }
 
@@ -35,7 +35,7 @@ function onContainerAssetRemoved(containerAsset) {
     renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
 
     if (renderAsset.resource) {
-        renderAsset.resource.meshes = null;
+        renderAsset.resource.destroy();
     }
 }
 

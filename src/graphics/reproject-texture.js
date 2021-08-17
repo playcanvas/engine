@@ -7,6 +7,7 @@ import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
+import { GraphicsDevice } from './graphics-device.js';
 
 // get a coding string for texture based on its type and pixel format.
 function getCoding(texture) {
@@ -48,15 +49,36 @@ function getProjectionName(projection) {
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats. When
  * specularPower is specified it will perform a phong-weighted convolution of the source (for generating
  * a gloss maps).
- * @param {GraphicsDevice} device - The graphics device.
  * @param {Texture} source - The source texture.
  * @param {Texture} target - The target texture.
- * @param {number} [specularPower] - Optional specular power. When specular power is specified,
+ * @param {object} [options] - The options object.
+ * @param {number} [options.specularPower] - Optional specular power. When specular power is specified,
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
- * @param {number} [numSamples] - Optional number of samples (default is 1024).
+ * @param {number} [options.numSamples] - Optional number of samples (default is 1024).
+ * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  */
-function reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024) {
+function reprojectTexture(source, target, options = {}) {
+    // maintain backwards compatibility with previous function signature
+    // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
+    if (source instanceof GraphicsDevice) {
+        source = arguments[1];
+        target = arguments[2];
+        options = {
+            specularPower: arguments[3] === undefined ? 1 : arguments[3],
+            numSamples: arguments[4] === undefined ? 1024 : arguments[4]
+        };
+        // #if _DEBUG
+        console.warn('DEPRECATED: please use the updated pc.reprojectTexture API.');
+        // #endif
+    }
+
+    // extract options
+    const device = source.device;
+    const specularPower = options.hasOwnProperty('specularPower') ? options.specularPower : 1;
+    const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
+    const face = options.hasOwnProperty('face') ? options.face : null;
+
     const processFunc = (specularPower === 1) ? 'reproject' : 'prefilter';
     const decodeFunc = "decode" + getCoding(source);
     const encodeFunc = "encode" + getCoding(target);
@@ -91,24 +113,31 @@ function reprojectTexture(device, source, target, specularPower = 1, numSamples 
     constantSource.setValue(source);
 
     const constantParams = device.scope.resolve("params");
-    const params = new Float32Array(4);
-    params[1] = specularPower;
-    params[2] = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
-    params[3] = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
+    const params = [
+        0,
+        specularPower,
+        1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0),          // source seam scale
+        1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0)           // target seam scale
+    ];
 
-    for (let face = 0; face < (target.cubemap ? 6 : 1); face++) {
-        const targ = new RenderTarget(device, target, {
-            face: face,
-            depth: false
-        });
-        params[0] = face;
-        constantParams.setValue(params);
+    for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
+        if (face === null || f === face) {
+            const renderTarget = new RenderTarget({
+                colorBuffer: target,
+                face: f,
+                depth: false
+            });
+            params[0] = f;
+            constantParams.setValue(params);
 
-        drawQuadWithShader(device, targ, shader);
+            drawQuadWithShader(device, renderTarget, shader);
+
+            renderTarget.destroy();
+        }
     }
 
     // #if _DEBUG
-    device.popMarker("");
+    device.popMarker();
     // #endif
 }
 

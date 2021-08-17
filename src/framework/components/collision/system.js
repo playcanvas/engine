@@ -4,7 +4,6 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { SEMANTIC_POSITION } from '../../../graphics/constants.js';
 
-import { RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
 
@@ -18,6 +17,7 @@ import { Trigger } from './trigger.js';
 var mat4 = new Mat4();
 var vec3 = new Vec3();
 var quat = new Quat();
+var tempGraphNode = new GraphNode();
 
 const _schema = [
     'enabled',
@@ -27,8 +27,10 @@ const _schema = [
     'axis',
     'height',
     'asset',
+    'renderAsset',
     'shape',
-    'model'
+    'model',
+    'render'
 ];
 
 // Collision system implementations
@@ -195,7 +197,9 @@ class CollisionSystemImpl {
             axis: src.data.axis,
             height: src.data.height,
             asset: src.data.asset,
-            model: src.data.model
+            renderAsset: src.data.renderAsset,
+            model: src.data.model,
+            render: src.data.render
         };
 
         return this.system.addComponent(clone, data);
@@ -315,72 +319,84 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
+    createAmmoMesh(mesh, node, shape) {
+        var triMesh;
+        var i;
+
+        if (this.system._triMeshCache[mesh.id]) {
+            triMesh = this.system._triMeshCache[mesh.id];
+        } else {
+            var vb = mesh.vertexBuffer;
+
+            var format = vb.getFormat();
+            var stride;
+            var positions;
+            for (i = 0; i < format.elements.length; i++) {
+                var element = format.elements[i];
+                if (element.name === SEMANTIC_POSITION) {
+                    positions = new Float32Array(vb.lock(), element.offset);
+                    stride = element.stride / 4;
+                    break;
+                }
+            }
+
+            var indices = [];
+            mesh.getIndices(indices);
+            var numTriangles = mesh.primitive[0].count / 3;
+
+            var v1 = new Ammo.btVector3();
+            var v2 = new Ammo.btVector3();
+            var v3 = new Ammo.btVector3();
+            var i1, i2, i3;
+
+            var base = mesh.primitive[0].base;
+            triMesh = new Ammo.btTriangleMesh();
+            this.system._triMeshCache[mesh.id] = triMesh;
+
+            for (i = 0; i < numTriangles; i++) {
+                i1 = indices[base + i * 3] * stride;
+                i2 = indices[base + i * 3 + 1] * stride;
+                i3 = indices[base + i * 3 + 2] * stride;
+                v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+                v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+                v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
+                triMesh.addTriangle(v1, v2, v3, true);
+            }
+
+            Ammo.destroy(v1);
+            Ammo.destroy(v2);
+            Ammo.destroy(v3);
+        }
+
+        var useQuantizedAabbCompression = true;
+        var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+
+        var scaling = this.system._getNodeScaling(node);
+        triMeshShape.setLocalScaling(scaling);
+        Ammo.destroy(scaling);
+
+        var transform = this.system._getNodeTransform(node);
+        shape.addChildShape(transform, triMeshShape);
+        Ammo.destroy(transform);
+    }
+
     createPhysicalShape(entity, data) {
-        if (typeof Ammo !== 'undefined' && data.model) {
-            var model = data.model;
+        if (typeof Ammo === 'undefined') return;
+
+        if (data.model || data.render) {
+
             var shape = new Ammo.btCompoundShape();
 
-            var i, j;
-            for (i = 0; i < model.meshInstances.length; i++) {
-                var meshInstance = model.meshInstances[i];
-                var mesh = meshInstance.mesh;
-                var triMesh;
-
-                if (this.system._triMeshCache[mesh.id]) {
-                    triMesh = this.system._triMeshCache[mesh.id];
-                } else {
-                    var ib = mesh.indexBuffer[RENDERSTYLE_SOLID];
-                    var vb = mesh.vertexBuffer;
-
-                    var format = vb.getFormat();
-                    var stride;
-                    var positions;
-                    for (j = 0; j < format.elements.length; j++) {
-                        var element = format.elements[j];
-                        if (element.name === SEMANTIC_POSITION) {
-                            positions = new Float32Array(vb.lock(), element.offset);
-                            stride = element.stride / 4;
-                            break;
-                        }
-                    }
-
-                    var indices = new Uint16Array(ib.lock());
-                    var numTriangles = mesh.primitive[0].count / 3;
-
-                    var v1 = new Ammo.btVector3();
-                    var v2 = new Ammo.btVector3();
-                    var v3 = new Ammo.btVector3();
-                    var i1, i2, i3;
-
-                    var base = mesh.primitive[0].base;
-                    triMesh = new Ammo.btTriangleMesh();
-                    this.system._triMeshCache[mesh.id] = triMesh;
-
-                    for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base + j * 3] * stride;
-                        i2 = indices[base + j * 3 + 1] * stride;
-                        i3 = indices[base + j * 3 + 2] * stride;
-                        v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                        v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                        v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                        triMesh.addTriangle(v1, v2, v3, true);
-                    }
-
-                    Ammo.destroy(v1);
-                    Ammo.destroy(v2);
-                    Ammo.destroy(v3);
+            if (data.model) {
+                var meshInstances = data.model.meshInstances;
+                for (let i = 0; i < meshInstances.length; i++) {
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
                 }
-
-                var useQuantizedAabbCompression = true;
-                var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
-
-                var scaling = this.system._getNodeScaling(meshInstance.node);
-                triMeshShape.setLocalScaling(scaling);
-                Ammo.destroy(scaling);
-
-                var transform = this.system._getNodeTransform(meshInstance.node);
-                shape.addChildShape(transform, triMeshShape);
-                Ammo.destroy(transform);
+            } else if (data.render) {
+                var meshes = data.render.meshes;
+                for (let i = 0; i < meshes.length; i++) {
+                    this.createAmmoMesh(meshes[i], tempGraphNode, shape);
+                }
             }
 
             var entityTransform = entity.getWorldTransform();
@@ -391,36 +407,41 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             return shape;
         }
-        return undefined;
     }
 
     recreatePhysicalShapes(component) {
         var data = component.data;
 
-        if (data.asset !== null && component.enabled && component.entity.enabled) {
-            this.loadModelAsset(component);
-        } else {
-            this.doRecreatePhysicalShape(component);
+        if (data.renderAsset || data.asset) {
+            if (component.enabled && component.entity.enabled) {
+                this.loadAsset(
+                    component,
+                    data.renderAsset || data.asset,
+                    data.renderAsset ? 'render' : 'model'
+                );
+                return;
+            }
         }
+
+        this.doRecreatePhysicalShape(component);
     }
 
-    loadModelAsset(component) {
+    loadAsset(component, id, property) {
         var self = this;
-        var id = component.data.asset;
         var data = component.data;
         var assets = this.system.app.assets;
 
         var asset = assets.get(id);
         if (asset) {
             asset.ready(function (asset) {
-                data.model = asset.resource;
+                data[property] = asset.resource;
                 self.doRecreatePhysicalShape(component);
             });
             assets.load(asset);
         } else {
             assets.once("add:" + id, function (asset) {
                 asset.ready(function (asset) {
-                    data.model = asset.resource;
+                    data[property] = asset.resource;
                     self.doRecreatePhysicalShape(component);
                 });
                 assets.load(asset);
@@ -432,7 +453,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         var entity = component.entity;
         var data = component.data;
 
-        if (data.model) {
+        if (data.model || data.render) {
             this.destroyShape(data);
 
             data.shape = this.createPhysicalShape(entity, data);
@@ -564,7 +585,19 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, _data, properties) {
-        properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+        properties = [
+            'type',
+            'halfExtents',
+            'radius',
+            'axis',
+            'height',
+            'shape',
+            'model',
+            'asset',
+            'render',
+            'renderAsset',
+            'enabled'
+        ];
 
         // duplicate the input data because we are modifying it
         var data = {};
@@ -579,6 +612,10 @@ class CollisionComponentSystem extends ComponentSystem {
         var idx;
         if (_data.hasOwnProperty('asset')) {
             idx = properties.indexOf('model');
+            if (idx !== -1) {
+                properties.splice(idx, 1);
+            }
+            idx = properties.indexOf('render');
             if (idx !== -1) {
                 properties.splice(idx, 1);
             }

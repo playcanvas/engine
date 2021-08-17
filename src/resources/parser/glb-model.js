@@ -1,4 +1,5 @@
 import { Material } from '../../scene/materials/material.js';
+import { ContainerResource } from '../container.js';
 import { GlbParser } from './glb-parser.js';
 
 class GlbModelParser {
@@ -7,11 +8,13 @@ class GlbModelParser {
     }
 
     parse(data) {
-        const glb = GlbParser.parse("filename.glb", data, this._device);
-        if (!glb) {
-            return null;
+        const glbResources = GlbParser.parse("filename.glb", data, this._device);
+        if (glbResources) {
+            const model = ContainerResource.createModel(glbResources, Material.defaultMaterial);
+            glbResources.destroy();
+            return model;
         }
-        return GlbParser.createModel(glb, Material.defaultMaterial);
+        return null;
     }
 }
 

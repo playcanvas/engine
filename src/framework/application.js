@@ -1,4 +1,5 @@
 import { version, revision } from '../core/core.js';
+import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
@@ -12,32 +13,27 @@ import { Quat } from '../math/quat.js';
 import { http } from '../net/http.js';
 
 import {
-    ADDRESS_CLAMP_TO_EDGE,
-    CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    FILTER_NEAREST,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
 import { GraphicsDevice } from '../graphics/graphics-device.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { Texture } from '../graphics/texture.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     LINEBATCH_OVERLAY,
-    SHADER_DEPTH,
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
-import { ForwardRenderer } from '../scene/forward-renderer.js';
+import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { Immediate } from '../scene/immediate/immediate.js';
+import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
-import { LayerComposition } from '../scene/layer-composition.js';
+import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
+import { WorldClusters } from '../scene/world-clusters.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -110,6 +106,7 @@ import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
+import { SceneDepth } from './scene-depth.js';
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
@@ -411,6 +408,9 @@ class Application extends EventHandler {
 
         app = this;
 
+        this._destroyRequested = false;
+        this._inFrameUpdate = false;
+
         this._time = 0;
         this.timeScale = 1;
         this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
@@ -443,6 +443,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
+        WorldClusters.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
@@ -473,175 +474,11 @@ class Application extends EventHandler {
             id: LAYERID_WORLD
         });
 
-        if (this.graphicsDevice.webgl2) {
-            // WebGL 2 depth layer just copies existing depth
-            this.defaultLayerDepth = new Layer({
-                enabled: false,
-                name: "Depth",
-                id: LAYERID_DEPTH,
-
-                onEnable: function () {
-                    if (this.renderTarget) return;
-                    var depthBuffer = new Texture(self.graphicsDevice, {
-                        format: PIXELFORMAT_DEPTHSTENCIL,
-                        width: self.graphicsDevice.width,
-                        height: self.graphicsDevice.height,
-                        mipmaps: false
-                    });
-                    depthBuffer.name = 'rt-depth2';
-                    depthBuffer.minFilter = FILTER_NEAREST;
-                    depthBuffer.magFilter = FILTER_NEAREST;
-                    depthBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    depthBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new RenderTarget({
-                        colorBuffer: null,
-                        depthBuffer: depthBuffer,
-                        autoResolve: false
-                    });
-                    self.graphicsDevice.scope.resolve("uDepthMap").setValue(depthBuffer);
-                },
-
-                onDisable: function () {
-                    if (!this.renderTarget) return;
-                    this.renderTarget._depthBuffer.destroy();
-                    this.renderTarget.destroy();
-                    this.renderTarget = null;
-                },
-
-                onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
-                    var gl = self.graphicsDevice.gl;
-                    this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-
-                    if (!this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
-                        this.onDisable();
-                        this.onEnable();
-                    }
-
-                    // disable clearing
-                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                    this.cameras[cameraPass].camera._clearOptions = this.depthClearOptions;
-                },
-
-                onPostRenderOpaque: function (cameraPass) { // copy depth
-                    if (!this.renderTarget) return;
-
-                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
-
-                    var gl = self.graphicsDevice.gl;
-
-                    self.graphicsDevice.setRenderTarget(this.renderTarget);
-                    self.graphicsDevice.updateBegin();
-
-                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
-                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
-                    gl.blitFramebuffer(0, 0, this.renderTarget.width, this.renderTarget.height,
-                                       0, 0, this.renderTarget.width, this.renderTarget.height,
-                                       gl.DEPTH_BUFFER_BIT,
-                                       gl.NEAREST);
-                }
-
-            });
-            this.defaultLayerDepth.depthClearOptions = {
-                flags: 0
-            };
-        } else {
-            // WebGL 1 depth layer just renders same objects as in World, but with RGBA-encoded depth shader
-            this.defaultLayerDepth = new Layer({
-                enabled: false,
-                name: "Depth",
-                id: LAYERID_DEPTH,
-                shaderPass: SHADER_DEPTH,
-
-                onEnable: function () {
-                    if (this.renderTarget) return;
-                    var colorBuffer = new Texture(self.graphicsDevice, {
-                        format: PIXELFORMAT_R8_G8_B8_A8,
-                        width: self.graphicsDevice.width,
-                        height: self.graphicsDevice.height,
-                        mipmaps: false
-                    });
-                    colorBuffer.name = 'rt-depth1';
-                    colorBuffer.minFilter = FILTER_NEAREST;
-                    colorBuffer.magFilter = FILTER_NEAREST;
-                    colorBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new RenderTarget(self.graphicsDevice, colorBuffer, {
-                        depth: true,
-                        stencil: self.graphicsDevice.supportsStencil
-                    });
-                    self.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
-                },
-
-                onDisable: function () {
-                    if (!this.renderTarget) return;
-                    this.renderTarget._colorBuffer.destroy();
-                    this.renderTarget.destroy();
-                    this.renderTarget = null;
-                },
-
-                onPostCull: function (cameraPass) {
-                    // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
-                    var visibleObjects = this.instances.visibleOpaque[cameraPass];
-                    var visibleList = visibleObjects.list;
-                    var visibleLength = 0;
-                    var layers = self.scene.layers.layerList;
-                    var subLayerEnabled = self.scene.layers.subLayerEnabled;
-                    var isTransparent = self.scene.layers.subLayerList;
-                    // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
-                    var rt = self.scene.layers.getLayerById(LAYERID_WORLD).renderTarget;
-                    var cam = this.cameras[cameraPass];
-                    var layer;
-                    var j;
-                    var layerVisibleList, layerCamId, layerVisibleListLength, drawCall, transparent;
-                    for (var i = 0; i < layers.length; i++) {
-                        layer = layers[i];
-                        if (layer === this) break;
-                        if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
-                        layerCamId = layer.cameras.indexOf(cam);
-                        if (layerCamId < 0) continue;
-                        transparent = isTransparent[i];
-                        layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
-                        layerVisibleListLength = layerVisibleList.length;
-                        layerVisibleList = layerVisibleList.list;
-                        for (j = 0; j < layerVisibleListLength; j++) {
-                            drawCall = layerVisibleList[j];
-                            if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
-                                visibleList[visibleLength] = drawCall;
-                                visibleLength++;
-                            }
-                        }
-                    }
-                    visibleObjects.length = visibleLength;
-                },
-
-                onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
-                    if (!this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
-                        this.onDisable();
-                        this.onEnable();
-                    }
-                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                    this.cameras[cameraPass].camera._clearOptions = this.rgbaDepthClearOptions;
-                },
-
-                onDrawCall: function () {
-                    self.graphicsDevice.setColorWrite(true, true, true, true);
-                },
-
-                onPostRenderOpaque: function (cameraPass) {
-                    if (!this.renderTarget) return;
-                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
-                }
-
-            });
-            this.defaultLayerDepth.rgbaDepthClearOptions = {
-                color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
-                depth: 1.0,
-                flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-            };
-        }
+        this.sceneDepth = new SceneDepth(this);
+        this.defaultLayerDepth = this.sceneDepth.layer;
 
         this.defaultLayerSkybox = new Layer({
-            enabled: false,
+            enabled: true,
             name: "Skybox",
             id: LAYERID_SKYBOX,
             opaqueSortMode: SORTMODE_NONE
@@ -660,17 +497,16 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition("default");
 
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
-        this.defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
-
-        this.scene.layers = this.defaultLayerComposition;
+        const defaultLayerComposition = new LayerComposition(this.graphicsDevice, "default");
+        defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
+        defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
+        defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
+        defaultLayerComposition.pushTransparent(this.defaultLayerUi);
+        this.scene.layers = defaultLayerComposition;
 
         this._immediateLayer = this.defaultLayerImmediate;
 
@@ -682,15 +518,7 @@ class Application extends EventHandler {
                 layer = list[i];
                 switch (layer.id) {
                     case LAYERID_DEPTH:
-                        layer.onEnable = self.defaultLayerDepth.onEnable;
-                        layer.onDisable = self.defaultLayerDepth.onDisable;
-                        layer.onPreRenderOpaque = self.defaultLayerDepth.onPreRenderOpaque;
-                        layer.onPostRenderOpaque = self.defaultLayerDepth.onPostRenderOpaque;
-                        layer.depthClearOptions = self.defaultLayerDepth.depthClearOptions;
-                        layer.rgbaDepthClearOptions = self.defaultLayerDepth.rgbaDepthClearOptions;
-                        layer.shaderPass = self.defaultLayerDepth.shaderPass;
-                        layer.onPostCull = self.defaultLayerDepth.onPostCull;
-                        layer.onDrawCall = self.defaultLayerDepth.onDrawCall;
+                        self.sceneDepth.patch(layer);
                         break;
                     case LAYERID_UI:
                         layer.passThrough = self.defaultLayerUi.passThrough;
@@ -701,6 +529,9 @@ class Application extends EventHandler {
                 }
             }
         });
+
+        // placeholder texture for area light LUTs
+        AreaLightLuts.createPlaceholder(this.graphicsDevice);
 
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -1052,7 +883,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition("application");
+            var composition = new LayerComposition(this.graphicsDevice, "application");
 
             var layers = {};
             for (var key in props.layers) {
@@ -1293,6 +1124,21 @@ class Application extends EventHandler {
         this.tick();
     }
 
+    inputUpdate(dt) {
+        if (this.controller) {
+            this.controller.update(dt);
+        }
+        if (this.mouse) {
+            this.mouse.update(dt);
+        }
+        if (this.keyboard) {
+            this.keyboard.update(dt);
+        }
+        if (this.gamepads) {
+            this.gamepads.update(dt);
+        }
+    }
+
     /**
      * @function
      * @name Application#update
@@ -1325,18 +1171,8 @@ class Application extends EventHandler {
         // fire update event
         this.fire("update", dt);
 
-        if (this.controller) {
-            this.controller.update(dt);
-        }
-        if (this.mouse) {
-            this.mouse.update(dt);
-        }
-        if (this.keyboard) {
-            this.keyboard.update(dt);
-        }
-        if (this.gamepads) {
-            this.gamepads.update(dt);
-        }
+        // update input devices
+        this.inputUpdate(dt);
 
         // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
@@ -1359,6 +1195,10 @@ class Application extends EventHandler {
         this.fire('prerender');
         this.root.syncHierarchy();
         this.batcher.updateAll();
+
+        // #if _PROFILER
+        ForwardRenderer._skipRenderCounter = 0;
+        // #endif
         this.renderer.renderComposition(this.scene.layers);
         this.fire('postrender');
 
@@ -1405,6 +1245,8 @@ class Application extends EventHandler {
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
         stats.instancingTime = this.renderer._instancingTime;
+        stats.lightClusters = this.renderer._lightClusters;
+        stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
         for (var i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
@@ -1418,6 +1260,7 @@ class Application extends EventHandler {
         this.graphicsDevice._shaderSwitchesPerFrame = 0;
         this.renderer._cullTime = 0;
         this.renderer._layerCompositionUpdateTime = 0;
+        this.renderer._lightClustersTime = 0;
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
@@ -1560,16 +1403,34 @@ class Application extends EventHandler {
         this.graphicsDevice.canvas.style.width = width + 'px';
         this.graphicsDevice.canvas.style.height = height + 'px';
 
-        // In AUTO mode the resolution is changed to match the canvas size
-        if (this._resolutionMode === RESOLUTION_AUTO) {
-            this.setCanvasResolution(RESOLUTION_AUTO);
-        }
+        this.updateCanvasSize();
 
         // return the final values calculated for width and height
         return {
             width: width,
             height: height
         };
+    }
+
+    /**
+     * @function
+     * @name Application#updateCanvasSize
+     * @description Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document page.
+     * It is recommended to call this function when the canvas size changes (e.g on window resize and orientation change
+     * events) so that the canvas resolution is immediately updated.
+     */
+    updateCanvasSize() {
+        // Don't update if we are in VR or XR
+        if ((!this._allowResize) || (this.xr.active)) {
+            return;
+        }
+
+        // In AUTO mode the resolution is changed to match the canvas size
+        if (this._resolutionMode === RESOLUTION_AUTO) {
+            // Check if the canvas DOM has changed size
+            const canvas = this.graphicsDevice.canvas;
+            this.graphicsDevice.resizeCanvas(canvas.clientWidth, canvas.clientHeight);
+        }
     }
 
     /**
@@ -1687,9 +1548,9 @@ class Application extends EventHandler {
      */
     setAreaLightLuts(asset) {
         if (asset) {
-            var renderer = this.renderer;
+            const device = this.graphicsDevice;
             asset.ready(function (asset) {
-                renderer._uploadAreaLightLuts(asset.resource);
+                AreaLightLuts.set(device, asset.resource);
             });
             this.assets.load(asset);
         } else {
@@ -2069,11 +1930,17 @@ class Application extends EventHandler {
     /**
      * @function
      * @name Application#destroy
-     * @description Destroys application and removes all event listeners.
+     * @description Destroys application and removes all event listeners at the end of the current engine frame update.
+     * However, if called outside of the engine frame update, calling destroy() will destroy the application immediately.
      * @example
      * this.app.destroy();
      */
     destroy() {
+        if (this._inFrameUpdate) {
+            this._destroyRequested = true;
+            return;
+        }
+
         var i, l;
         var canvasId = this.graphicsDevice.canvas.id;
 
@@ -2122,6 +1989,11 @@ class Application extends EventHandler {
 
         ComponentSystem.destroy();
 
+        // layer composition
+        if (this.scene.layers) {
+            this.scene.layers.destroy();
+        }
+
         // destroy all texture resources
         var assets = this.assets.list();
         for (i = 0; i < assets.length; i++) {
@@ -2164,7 +2036,7 @@ class Application extends EventHandler {
         this.lightmapper.destroy();
         this.lightmapper = null;
 
-        this.batcher.destroyManager();
+        this.batcher.destroy();
         this.batcher = null;
 
         this._entityIndex = {};
@@ -2187,7 +2059,9 @@ class Application extends EventHandler {
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
+        this.renderer.destroy();
         this.renderer = null;
+
         this.tick = null;
 
         this.off(); // remove all events
@@ -2258,7 +2132,7 @@ var makeTick = function (_app) {
         } else if (application.xr.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = window.requestAnimationFrame(application.tick);
+            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)
@@ -2270,6 +2144,7 @@ var makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
+        application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         if (frame) {
@@ -2284,6 +2159,7 @@ var makeTick = function (_app) {
         application.fire("framerender");
 
         if (application.autoRender || application.renderNextFrame) {
+            application.updateCanvasSize();
             application.render();
             application.renderNextFrame = false;
         }
@@ -2297,6 +2173,12 @@ var makeTick = function (_app) {
 
         if (application.vr && application.vr.display && application.vr.display.presenting) {
             application.vr.display.submitFrame();
+        }
+
+        application._inFrameUpdate = false;
+
+        if (application._destroyRequested) {
+            application.destroy();
         }
     };
 };

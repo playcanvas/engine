@@ -89,7 +89,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     } else {
                         switch (collision.type) {
                             case 'box':
-                                if (!collision._debugShape._halfExents.equals(collision.halfExtents)) {
+                                if (!collision._debugShape._halfExtents.equals(collision.halfExtents)) {
                                     deleteShape = true;
                                 }
                                 break;
@@ -130,7 +130,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                             mesh = pc.createBox(this.app.graphicsDevice, {
                                 halfExtents: collision.halfExtents
                             });
-                            debugShape._halfExents = collision.halfExtents.clone();
+                            debugShape._halfExtents = collision.halfExtents.clone();
                             break;
                         case 'cone':
                             mesh = pc.createCone(this.app.graphicsDevice, {
@@ -185,7 +185,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
 
                 // Use the rigid body position if we have it
                 if (collision.entity.rigidbody) {
-                    var body = collision.entity.rigidbody.data.body;
+                    var body = collision.entity.rigidbody.body;
                     if (body) {
                         var t = body.getWorldTransform();
 

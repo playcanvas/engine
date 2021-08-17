@@ -71,8 +71,10 @@ Object.assign(ObjModelParser.prototype, {
                     for (p = 1; p < parts.length; p++) {
                         r = this._parseIndices(parts[p]);
                         parsed[group].verts.push(verts[r[0] * 3], verts[r[0] * 3 + 1], verts[r[0] * 3 + 2]); // expand uvs from indices
-                        parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]); // expand uvs from indices
-                        parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]); // expand normals from indices
+                        if (r[1] * 2 < uvs.length)
+                            parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]); // expand uvs from indices
+                        if (r[2] * 3 < normals.length)
+                            parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]); // expand normals from indices
                     }
 
                 } else if (parts.length === 5) {
@@ -104,10 +106,14 @@ Object.assign(ObjModelParser.prototype, {
             if (currentGroup.verts.length > 65535) {
                 console.warn("Warning: mesh with more than 65535 vertices");
             }
-            var mesh = pc.createMesh(this._device, currentGroup.verts, {
-                normals: currentGroup.normals,
-                uvs: currentGroup.uvs
-            });
+
+            var meshOptions = {};
+            if (currentGroup.normals.length > 0)
+                meshOptions.normals = currentGroup.normals;
+            if (currentGroup.uvs.length > 0)
+                meshOptions.uvs = currentGroup.uvs;
+
+            var mesh = pc.createMesh(this._device, currentGroup.verts, meshOptions);
             var mi = new pc.MeshInstance(mesh, this._defaultMaterial, new pc.GraphNode());
             model.meshInstances.push(mi);
             root.addChild(mi.node);

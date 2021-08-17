@@ -11,6 +11,7 @@ import {
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
+import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
 
 /**
  * @component
@@ -26,65 +27,295 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
  * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
-    /**
-     * @function
-     * @name AnimComponent#loadStateGraph
-     * @description Initialises component animation controllers using the provided state graph.
-     * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
-     */
-    loadStateGraph(stateGraph) {
-        var i;
-        var data = this.data;
-        data.stateGraph = stateGraph;
-        data.parameters = {};
-        var paramKeys = Object.keys(stateGraph.parameters);
-        for (i = 0; i < paramKeys.length; i++) {
-            var paramKey = paramKeys[i];
-            data.parameters[paramKey] = {
-                type: stateGraph.parameters[paramKey].type,
-                value: stateGraph.parameters[paramKey].value
-            };
-        }
-        data.layers = [];
+    constructor(system, entity) {
+        super(system, entity);
 
-        var graph;
+        this._stateGraphAsset = null;
+        this._animationAssets = {};
+        this._speed = 1.0;
+        this._activate = true;
+        this._playing = false;
+        this._rootBone = null;
+        this._stateGraph = null;
+        this._layers = [];
+        this._layerIndices = {};
+        this._parameters = {};
+    }
+
+    get stateGraphAsset() {
+        return this._stateGraphAsset;
+    }
+
+    set stateGraphAsset(value) {
+        if (value === null) {
+            this.removeStateGraph();
+            return;
+        }
+
+        // remove event from previous asset
+        if (this._stateGraphAsset) this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
+
+        let _id;
+        let _asset;
+
+        if (value instanceof Asset) {
+            _id = value.id;
+            _asset = this.system.app.assets.get(_id);
+            if (!_asset) {
+                this.system.app.assets.add(value);
+                _asset = this.system.app.assets.get(_id);
+            }
+        } else {
+            _id = value;
+            _asset = this.system.app.assets.get(_id);
+        }
+        if (!_asset || this._stateGraphAsset === _id) {
+            return;
+        }
+
+        if (_asset.resource) {
+            this._stateGraph = _asset.resource;
+            this.loadStateGraph(this._stateGraph);
+            _asset.on('change', this._onStateGraphAssetChangeEvent);
+        } else {
+            _asset.once('load', (asset) => {
+                this._stateGraph = asset.resource;
+                this.loadStateGraph(this._stateGraph);
+            });
+            _asset.on('change', this._onStateGraphAssetChangeEvent);
+            this.system.app.assets.load(_asset);
+        }
+        this._stateGraphAsset = _id;
+    }
+
+    _onStateGraphAssetChangeEvent = (asset) => {
+        this._stateGraph = new AnimStateGraph(asset._data);
+        this.loadStateGraph(this._stateGraph);
+    }
+
+
+    get animationAssets() {
+        return this._animationAssets;
+    }
+
+    set animationAssets(value) {
+        this._animationAssets = value;
+        this.loadAnimationAssets();
+    }
+
+    get speed() {
+        return this._speed;
+    }
+
+    set speed(value) {
+        this._speed = value;
+    }
+
+    get activate() {
+        return this._activate;
+    }
+
+    set activate(value) {
+        this._activate = value;
+    }
+
+    get playing() {
+        return this._playing;
+    }
+
+    set playing(value) {
+        this._playing = value;
+    }
+
+    /**
+     * @name AnimComponent#rootBone
+     * @type {Entity}
+     * @description The entity that this anim component should use as the root of the animation hierarchy.
+     */
+    get rootBone() {
+        return this._rootBone;
+    }
+
+    set rootBone(value) {
+        if (typeof value === 'string') {
+            const entity = this.entity.root.findByGuid(value);
+            this._rootBone = entity;
+            // #if _DEBUG
+            if (!entity) {
+                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
+            }
+            // #endif
+        } else if (value?.constructor.name === 'Entity') {
+            this._rootBone = value;
+        } else {
+            this._rootBone = null;
+        }
+        this.rebind();
+    }
+
+    get stateGraph() {
+        return this._stateGraph;
+    }
+
+    set stateGraph(value) {
+        this._stateGraph = value;
+    }
+
+    get layers() {
+        return this._layers;
+    }
+
+    set layers(value) {
+        this._layers = value;
+    }
+
+    get layerIndicies() {
+        return this._layerIndicies;
+    }
+
+    set layerIndicies(value) {
+        this._layerIndicies = value;
+    }
+
+    get parameters() {
+        return this._parameters;
+    }
+
+    set parameters(value) {
+        this._parameters = value;
+    }
+
+    /**
+     * @name AnimComponent#playable
+     * @type {boolean}
+     * @readonly
+     * @description Returns whether all component layers are currently playable.
+     */
+    get playable() {
+        for (let i = 0; i < this._layers.length; i++) {
+            if (!this._layers[i].playable) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @name AnimComponent#baseLayer
+     * @type {AnimComponentLayer}
+     * @readonly
+     * @description Returns the base layer of the state graph.
+     */
+    get baseLayer() {
+        if (this._layers.length > 0) {
+            return this._layers[0];
+        }
+        return null;
+    }
+
+    _addLayer(name, states, transitions, order) {
+        let graph;
         if (this.rootBone) {
             graph = this.rootBone;
         } else {
             graph = this.entity;
         }
+        const animBinder = new AnimComponentBinder(this, graph);
+        const animEvaluator = new AnimEvaluator(animBinder);
+        const controller = new AnimController(
+            animEvaluator,
+            states,
+            transitions,
+            this._parameters,
+            this._activate,
+            this
+        );
+        this._layers.push(new AnimComponentLayer(name, controller, this));
+        this._layerIndices[name] = order;
+    }
 
-        function addLayer(name, states, transitions, order) {
-            var animBinder = new AnimComponentBinder(this, graph);
-            var animEvaluator = new AnimEvaluator(animBinder);
-            var controller = new AnimController(
-                animEvaluator,
-                states,
-                transitions,
-                data.parameters,
-                data.activate
-            );
-            data.layers.push(new AnimComponentLayer(name, controller, this));
-            data.layerIndices[name] = order;
+    /**
+     * @name AnimComponent#addLayer
+     * @returns {AnimComponentLayer} - The created anim component layer
+     * @description Adds a new anim component layer to the anim component.
+     * @param {string} layerName - The name of the layer to create.
+     */
+    addLayer(layerName) {
+        const layer = this.findAnimationLayer(layerName);
+        if (layer) return layer;
+        const states = [
+            {
+                "name": "START",
+                "speed": 1
+            }
+        ];
+        const transitions = [];
+        this._addLayer(layerName, states, transitions, this._layers.length);
+    }
+
+    /**
+     * @function
+     * @name AnimComponent#loadStateGraph
+     * @description Initialises component animation controllers using the provided state graph.
+     * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
+     * @example
+     * entity.anim.loadStateGraph({
+     *     "layers": [
+     *         {
+     *             "name": layerName,
+     *             "states": [
+     *                 {
+     *                     "name": "START",
+     *                     "speed": 1
+     *                 },
+     *                 {
+     *                     "name": "Initial State",
+     *                     "speed": speed,
+     *                     "loop": loop,
+     *                     "defaultState": true
+     *                 }
+     *             ],
+     *             "transitions": [
+     *                 {
+     *                     "from": "START",
+     *                     "to": "Initial State"
+     *                 }
+     *             ]
+     *         }
+     *     ],
+     *     "parameters": {}
+     * });
+     */
+    loadStateGraph(stateGraph) {
+        this._stateGraph = stateGraph;
+        this._parameters = {};
+        const paramKeys = Object.keys(stateGraph.parameters);
+        for (let i = 0; i < paramKeys.length; i++) {
+            const paramKey = paramKeys[i];
+            this._parameters[paramKey] = {
+                type: stateGraph.parameters[paramKey].type,
+                value: stateGraph.parameters[paramKey].value
+            };
         }
+        this._layers = [];
 
-        for (i = 0; i < stateGraph.layers.length; i++) {
-            var layer = stateGraph.layers[i];
-            addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
+        for (let i = 0; i < stateGraph.layers.length; i++) {
+            const layer = stateGraph.layers[i];
+            this._addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
         }
         this.setupAnimationAssets();
     }
 
     setupAnimationAssets() {
-        for (var i = 0; i < this.data.layers.length; i++) {
-            var layer = this.data.layers[i];
-            var layerName = layer.name;
-            for (var j = 0; j < layer.states.length; j++) {
-                var stateName = layer.states[j];
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this._layers[i];
+            const layerName = layer.name;
+            for (let j = 0; j < layer.states.length; j++) {
+                const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) === -1) {
-                    var stateKey = layerName + ':' + stateName;
-                    if (!this.data.animationAssets[stateKey]) {
-                        this.data.animationAssets[stateKey] = {
+                    const stateKey = layerName + ':' + stateName;
+                    if (!this._animationAssets[stateKey]) {
+                        this._animationAssets[stateKey] = {
                             asset: null
                         };
                     }
@@ -95,26 +326,30 @@ class AnimComponent extends Component {
     }
 
     loadAnimationAssets() {
-        for (var i = 0; i < this.data.layers.length; i++) {
-            var layer = this.data.layers[i];
-            for (var j = 0; j < layer.states.length; j++) {
-                var stateName = layer.states[j];
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this._layers[i];
+            for (let j = 0; j < layer.states.length; j++) {
+                const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
-                var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
+                const animationAsset = this._animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
                     this.removeNodeAnimations(stateName, layer.name);
                     continue;
                 }
-                var assetId = animationAsset.asset;
-                var asset = this.system.app.assets.get(assetId);
+                const assetId = animationAsset.asset;
+                const asset = this.system.app.assets.get(assetId);
                 // check whether assigned animation asset still exists
                 if (asset) {
                     if (asset.resource) {
-                        this.assignAnimation(stateName, asset.resource, layer.name);
+                        const animTrack = asset.resource;
+                        if (asset.data.events) {
+                            animTrack.events = new AnimEvents(Object.values(asset.data.events));
+                        }
+                        this.findAnimationLayer(layer.name).assignAnimation(stateName, animTrack);
                     } else {
                         asset.once('load', function (layerName, stateName) {
                             return function (asset) {
-                                this.assignAnimation(stateName, asset.resource, layerName);
+                                this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
                             }.bind(this);
                         }.bind(this)(layer.name, stateName));
                         this.system.app.assets.load(asset);
@@ -130,18 +365,18 @@ class AnimComponent extends Component {
      * @description Removes all layers from the anim component.
      */
     removeStateGraph() {
-        this.data.stateGraph = null;
-        this.data.stateGraphAsset = null;
-        this.data.animationAssets = {};
-        this.data.layers = [];
-        this.data.layerIndices = {};
-        this.data.parameters = {};
-        this.data.playing = false;
+        this._stateGraph = null;
+        this._stateGraphAsset = null;
+        this._animationAssets = {};
+        this._layers = [];
+        this._layerIndices = {};
+        this._parameters = {};
+        this._playing = false;
     }
 
     resetStateGraph() {
         if (this.stateGraphAsset) {
-            var stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
+            const stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
             this.loadStateGraph(stateGraph);
         } else {
             this.removeStateGraph();
@@ -154,11 +389,11 @@ class AnimComponent extends Component {
      * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing.
      */
     reset() {
-        this.data.parameters = Object.assign({}, this.data.stateGraph.parameters);
-        for (var i = 0; i < this.data.layers.length; i++) {
-            var layerPlaying = this.data.layers[i].playing;
-            this.data.layers[i].reset();
-            this.data.layers[i].playing = layerPlaying;
+        this._parameters = Object.assign({}, this._stateGraph.parameters);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layerPlaying = this._layers[i].playing;
+            this._layers[i].reset();
+            this._layers[i].playing = layerPlaying;
         }
     }
 
@@ -168,8 +403,8 @@ class AnimComponent extends Component {
      * @description Rebind all of the components layers.
      */
     rebind() {
-        for (var i = 0; i < this.data.layers.length; i++) {
-            this.data.layers[i].rebind();
+        for (let i = 0; i < this._layers.length; i++) {
+            this._layers[i].rebind();
         }
     }
 
@@ -181,33 +416,97 @@ class AnimComponent extends Component {
      * @returns {AnimComponentLayer} Layer.
      */
     findAnimationLayer(layerName) {
-        var layerIndex = this.data.layerIndices[layerName];
-        return this.data.layers[layerIndex] || null;
+        const layerIndex = this._layerIndices[layerName];
+        return this._layers[layerIndex] || null;
+    }
+
+    addAnimationState(nodeName, animTrack, speed = 1, loop = true, layerName = 'Base') {
+        if (!this._stateGraph) {
+            this.loadStateGraph(new AnimStateGraph({
+                "layers": [
+                    {
+                        "name": layerName,
+                        "states": [
+                            {
+                                "name": "START",
+                                "speed": 1
+                            },
+                            {
+                                "name": nodeName,
+                                "speed": speed,
+                                "loop": loop,
+                                "defaultState": true
+                            }
+                        ],
+                        "transitions": [
+                            {
+                                "from": 'START',
+                                "to": nodeName
+                            }
+                        ]
+                    }
+                ],
+                "parameters": {}
+            }));
+        }
+        const layer = this.findAnimationLayer(layerName);
+        if (layer) {
+            layer.assignAnimation(nodeName, animTrack, speed, loop);
+        } else {
+            this.addLayer(layerName)?.assignAnimation(nodeName, animTrack, speed, loop);
+        }
     }
 
     /**
      * @function
      * @name AnimComponent#assignAnimation
      * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodeName parameter.
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
+     * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
+     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
-    assignAnimation(nodeName, animTrack, layerName) {
-        if (!this.data.stateGraph) {
-            // #if _DEBUG
-            console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
-            // #endif
+    assignAnimation(nodeName, animTrack, layerName, speed = 1,  loop = true) {
+        if (!this._stateGraph) {
+            this.loadStateGraph(new AnimStateGraph({
+                "layers": [
+                    {
+                        "name": "Base",
+                        "states": [
+                            {
+                                "name": "START",
+                                "speed": 1
+                            },
+                            {
+                                "name": nodeName,
+                                "speed": speed,
+                                "loop": loop,
+                                "defaultState": true
+                            }
+                        ],
+                        "transitions": [
+                            {
+                                "from": 'START',
+                                "to": nodeName
+                            }
+                        ]
+                    }
+                ],
+                "parameters": {}
+            }));
+            this.baseLayer.assignAnimation(nodeName, animTrack);
             return;
         }
-        var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
+        const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #if _DEBUG
             console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             // #endif
             return;
         }
-        layer.assignAnimation(nodeName, animTrack);
+        layer.assignAnimation(nodeName, animTrack, speed, loop);
     }
 
     /**
@@ -218,7 +517,7 @@ class AnimComponent extends Component {
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {
-        var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
+        const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #if _DEBUG
             console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
@@ -229,7 +528,7 @@ class AnimComponent extends Component {
     }
 
     getParameterValue(name, type) {
-        var param = this.data.parameters[name];
+        const param = this._parameters[name];
         if (param && param.type === type) {
             return param.value;
         }
@@ -239,7 +538,7 @@ class AnimComponent extends Component {
     }
 
     setParameterValue(name, type, value) {
-        var param = this.data.parameters[name];
+        const param = this._parameters[name];
         if (param && param.type === type) {
             param.value = value;
             return;
@@ -352,127 +651,10 @@ class AnimComponent extends Component {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, false);
     }
 
-    /**
-     * @name AnimComponent#rootBone
-     * @type {Entity}
-     * @description The entity that this anim component should use as the root of the animation hierarchy.
-     */
-    get rootBone() {
-        return this.data.rootBone;
-    }
-
-    set rootBone(value) {
-        if (typeof value === 'string') {
-            const entity = this.entity.root.findByGuid(value);
-            this.data.rootBone = entity;
-            // #if _DEBUG
-            if (!entity) {
-                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
-            }
-            // #endif
-        } else if (value?.constructor.name === 'Entity') {
-            this.data.rootBone = value;
-        } else {
-            this.data.rootBone = null;
+    onBeforeRemove() {
+        if (Number.isFinite(this._stateGraphAsset)) {
+            this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
         }
-        this.rebind();
-    }
-
-    /**
-     * @name AnimComponent#stateGraphAsset
-     * @type {number}
-     * @description The state graph asset this component should use to generate it's animation state graph.
-     */
-    get stateGraphAsset() {
-        return this.data.stateGraphAsset;
-    }
-
-    set stateGraphAsset(value) {
-        if (value === null) {
-            this.removeStateGraph();
-            return;
-        }
-
-        var _id;
-        var _asset;
-
-        if (value instanceof Asset) {
-            _id = value.id;
-            _asset = this.system.app.assets.get(_id);
-            if (!_asset) {
-                this.system.app.assets.add(value);
-                _asset = this.system.app.assets.get(_id);
-            }
-        } else {
-            _id = value;
-            _asset = this.system.app.assets.get(_id);
-        }
-        if (!_asset || this.data.stateGraphAsset === _id) {
-            return;
-        }
-
-        if (_asset.resource) {
-            this.data.stateGraph = _asset.resource;
-            this.loadStateGraph(this.data.stateGraph);
-            _asset.on('change', function (asset) {
-                this.data.stateGraph = new AnimStateGraph(asset._data);
-                this.loadStateGraph(this.data.stateGraph);
-            }.bind(this));
-        } else {
-            _asset.once('load', function (asset) {
-                this.data.stateGraph = asset.resource;
-                this.loadStateGraph(this.data.stateGraph);
-            }.bind(this));
-            _asset.on('change', function (asset) {
-                this.data.stateGraph = new AnimStateGraph(asset._data);
-                this.loadStateGraph(this.data.stateGraph);
-            }.bind(this));
-            this.system.app.assets.load(_asset);
-        }
-        this.data.stateGraphAsset = _id;
-    }
-
-    /**
-     * @private
-     * @name AnimComponent#animationAssets
-     * @type {object}
-     * @description The animation assets used to load each states animation tracks.
-     */
-    get animationAssets() {
-        return this.data.animationAssets;
-    }
-
-    set animationAssets(value) {
-        this.data.animationAssets = value;
-        this.loadAnimationAssets();
-    }
-
-    /**
-     * @name AnimComponent#playable
-     * @type {boolean}
-     * @readonly
-     * @description Returns whether all component layers are currently playable.
-     */
-    get playable() {
-        for (var i = 0; i < this.data.layers.length; i++) {
-            if (!this.data.layers[i].playable) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @name AnimComponent#baseLayer
-     * @type {AnimComponentLayer}
-     * @readonly
-     * @description Returns the base layer of the state graph.
-     */
-    get baseLayer() {
-        if (this.data.layers.length > 0) {
-            return this.data.layers[0];
-        }
-        return null;
     }
 }
 

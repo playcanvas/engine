@@ -131,7 +131,7 @@ class Vec2 {
     /**
      * @function
      * @name Vec2#copy
-     * @description Copied the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
+     * @description Copies the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
      * @param {Vec2} rhs - A vector to copy to the specified vector.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -429,6 +429,68 @@ class Vec2 {
             this.y *= invLength;
         }
 
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#floor
+     * @description Each element is set to the largest integer less than or equal to its value.
+     * @returns {Vec2} Self for chaining.
+     */
+    floor() {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#ceil
+     * @description Each element is rounded up to the next largest integer.
+     * @returns {Vec2} Self for chaining.
+     */
+    ceil() {
+        this.x = Math.ceil(this.x);
+        this.y = Math.ceil(this.y);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#round
+     * @description Each element is rounded up or down to the nearest integer.
+     * @returns {Vec2} Self for chaining.
+     */
+    round() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#min
+     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec2} Self for chaining.
+     */
+    min(rhs) {
+        if (rhs.x < this.x) this.x = rhs.x;
+        if (rhs.y < this.y) this.y = rhs.y;
+        return this;
+    }
+
+    /**
+     * @function
+     * @name Vec2#max
+     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
+     * @returns {Vec2} Self for chaining.
+     */
+    max(rhs) {
+        if (rhs.x > this.x) this.x = rhs.x;
+        if (rhs.y > this.y) this.y = rhs.y;
         return this;
     }
 

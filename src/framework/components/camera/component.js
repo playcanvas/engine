@@ -5,6 +5,29 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
+// note: when this list is modified, the copy() function needs to be adjusted
+const properties = [
+    { name: 'aspectRatio', readonly: false },
+    { name: 'aspectRatioMode', readonly: false },
+    { name: 'calculateProjection', readonly: false },
+    { name: 'calculateTransform', readonly: false },
+    { name: 'clearColor', readonly: false },
+    { name: 'cullFaces', readonly: false },
+    { name: 'farClip', readonly: false },
+    { name: 'flipFaces', readonly: false },
+    { name: 'fov', readonly: false },
+    { name: 'frustum', readonly: true },
+    { name: 'frustumCulling', readonly: false },
+    { name: 'horizontalFov', readonly: false },
+    { name: 'nearClip', readonly: false },
+    { name: 'orthoHeight', readonly: false },
+    { name: 'projection', readonly: false },
+    { name: 'projectionMatrix', readonly: true },
+    { name: 'scissorRect', readonly: false },
+    { name: 'viewMatrix', readonly: true },
+    { name: 'vrDisplay', readonly: false }
+];
+
 /**
  * @component
  * @class
@@ -209,6 +232,14 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    get rect() {
+        return this._camera.rect;
+    }
+
+    set rect(value) {
+        this._camera.rect = value;
+        this.fire('set:rect', this._camera.rect);
+    }
 
     get clearColorBuffer() {
         return this._camera.clearColorBuffer;
@@ -563,9 +594,14 @@ class CameraComponent extends Component {
      *
      * @param {object} [options] - Object with options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
+     * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
      * @param {callbacks.XrError} [options.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
      * session started successfully.
+     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
+     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing system.
+     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying depth sensing system.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
@@ -603,31 +639,34 @@ class CameraComponent extends Component {
 
         this._camera.xr.end(callback);
     }
+
+    // function to copy properties from the source CameraComponent.
+    // properties not copied: postEffects
+    // inherited properties not copied (all): system, entity, enabled)
+    copy(source) {
+
+        // copy data driven properties
+        properties.forEach((property) => {
+            if (!property.readonly) {
+                const name = property.name;
+                this[name] = source[name];
+            }
+        });
+
+        // other properties
+        this.clearColorBuffer = source.clearColorBuffer;
+        this.clearDepthBuffer = source.clearDepthBuffer;
+        this.clearStencilBuffer = source.clearStencilBuffer;
+        this.disablePostEffectsLayer = source.disablePostEffectsLayer;
+        this.layers = source.layers;
+        this.priority = source.priority;
+        this.renderTarget = source.renderTarget;
+        this.rect = source.rect;
+    }
 }
 
 // for common properties, create getters and setters which use this._camera as a storage for their values
-[
-    { name: 'aspectRatio', readonly: false },
-    { name: 'aspectRatioMode', readonly: false },
-    { name: 'calculateProjection', readonly: false },
-    { name: 'calculateTransform', readonly: false },
-    { name: 'clearColor', readonly: false },
-    { name: 'cullFaces', readonly: false },
-    { name: 'farClip', readonly: false },
-    { name: 'flipFaces', readonly: false },
-    { name: 'fov', readonly: false },
-    { name: 'frustum', readonly: true },
-    { name: 'frustumCulling', readonly: false },
-    { name: 'horizontalFov', readonly: false },
-    { name: 'nearClip', readonly: false },
-    { name: 'orthoHeight', readonly: false },
-    { name: 'projection', readonly: false },
-    { name: 'projectionMatrix', readonly: true },
-    { name: 'rect', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'viewMatrix', readonly: true },
-    { name: 'vrDisplay', readonly: false }
-].forEach(function (property) {
+properties.forEach(function (property) {
     var name = property.name;
     var options = {};
 

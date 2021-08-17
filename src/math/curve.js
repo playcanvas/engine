@@ -26,10 +26,10 @@ import { CurveEvaluator } from './curve-evaluator.js';
  *
  * @example
  * var curve = new pc.Curve([
- *     [0, 0],
- *     [0.33, 2],
- *     [0.66, 2.6],
- *     [1, 3]
+ *     0, 0,        // At 0 time, value of 0
+ *     0.33, 2,     // At 0.33 time, value of 2
+ *     0.66, 2.6,   // At 0.66 time, value of 2.6
+ *     1, 3         // At 1 time, value of 3
  * ]);
  */
 class Curve {

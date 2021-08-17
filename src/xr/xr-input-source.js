@@ -8,8 +8,8 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
-var quat = new Quat();
-var ids = 0;
+const quat = new Quat();
+let ids = 0;
 
 /**
  * @class
@@ -17,6 +17,7 @@ var ids = 0;
  * @augments EventHandler
  * @classdesc Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
  * @description Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @param {object} xrInputSource - [XRInputSource]{@link https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource} object that is created by WebXR API.
  * @property {number} id Unique number associated with instance of input source. Same physical devices when reconnected will not share this ID.
@@ -186,7 +187,7 @@ class XrInputSource extends EventHandler {
         } else {
             // grip
             if (this._xrInputSource.gripSpace) {
-                var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+                const gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
                     if (! this._grip) {
                         this._grip = true;
@@ -204,7 +205,7 @@ class XrInputSource extends EventHandler {
             }
 
             // ray
-            var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
+            const targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
             if (targetRayPose) {
                 this._dirtyRay = true;
                 this._rayLocal.origin.copy(targetRayPose.transform.position);
@@ -221,7 +222,7 @@ class XrInputSource extends EventHandler {
             this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
         }
 
-        var parent = this._manager.camera.parent;
+        const parent = this._manager.camera.parent;
         if (parent) {
             this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
         } else {
@@ -230,12 +231,12 @@ class XrInputSource extends EventHandler {
     }
 
     _updateRayTransforms() {
-        var dirty = this._dirtyRay;
+        const dirty = this._dirtyRay;
         this._dirtyRay = false;
 
-        var parent = this._manager.camera.parent;
+        const parent = this._manager.camera.parent;
         if (parent) {
-            var parentTransform = this._manager.camera.parent.getWorldTransform();
+            const parentTransform = this._manager.camera.parent.getWorldTransform();
 
             parentTransform.getTranslation(this._position);
             this._rotation.setFromMat4(parentTransform);
@@ -354,13 +355,11 @@ class XrInputSource extends EventHandler {
      * });
      */
     hitTestStart(options = {}) {
-        var self = this;
-
         options.profile = this._xrInputSource.profiles[0];
 
-        var callback = options.callback;
-        options.callback = function (err, hitTestSource) {
-            if (hitTestSource) self.onHitTestSourceAdd(hitTestSource);
+        const callback = options.callback;
+        options.callback = (err, hitTestSource) => {
+            if (hitTestSource) this.onHitTestSourceAdd(hitTestSource);
             if (callback) callback(err, hitTestSource);
         };
 
@@ -385,7 +384,7 @@ class XrInputSource extends EventHandler {
     }
 
     onHitTestSourceRemove(hitTestSource) {
-        var ind = this._hitTestSources.indexOf(hitTestSource);
+        const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     }
 

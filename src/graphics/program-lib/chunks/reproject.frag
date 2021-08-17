@@ -109,17 +109,18 @@ vec3 modifySeams(vec3 dir, float amount) {
 }
 
 vec2 toSpherical(vec3 dir) {
-    return vec2(atan(dir.z, dir.x) * -1.0, asin(dir.y));
+    return vec2(atan(dir.z, dir.x), asin(dir.y));
 }
 
 vec3 fromSpherical(vec2 uv) {
-    return vec3(cos(uv.y) * cos(-uv.x),
+    return vec3(cos(uv.y) * cos(uv.x),
                 sin(uv.y),
-                cos(uv.y) * sin(-uv.x));
+                cos(uv.y) * sin(uv.x));
 }
 
 vec4 sampleEquirect(vec2 sph) {
-    return texture2D(sourceTex, sph / vec2(PI * 2.0, PI) + 0.5);
+    vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
+    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
 }
 
 vec4 sampleEquirect(vec3 dir) {
@@ -135,7 +136,7 @@ vec4 sampleCubemap(vec2 sph) {
 }
 
 vec3 getDirectionEquirect() {
-    return fromSpherical((vUv0 * 2.0 - 1.0) * vec2(PI, PI * 0.5));
+    return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
 
 // octahedral code, based on http://jcgt.org/published/0003/02/01
@@ -159,7 +160,7 @@ vec3 octDecode(vec2 o) {
 }
 
 vec3 getDirectionOctahedral() {
-    return octDecode(vUv0 * 2.0 - 1.0);
+    return octDecode(vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0);
 }
 
 // Assumes that v is a unit vector. The result is an octahedral vector on the [-1, +1] square
@@ -173,7 +174,8 @@ vec2 octEncode(in vec3 v) {
 }
 
 vec4 sampleOctahedral(vec3 dir) {
-    return texture2D(sourceTex, octEncode(dir) * 0.5 + 0.5);
+    vec2 uv = octEncode(dir) * 0.5 + 0.5;
+    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
 }
 
 vec4 sampleOctahedral(vec2 sph) {

@@ -2,7 +2,7 @@ import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
 import { GraphicsDevice } from './graphics-device.js';
 
-var defaultOptions = {
+const defaultOptions = {
     depth: true,
     face: 0
 };
@@ -32,6 +32,8 @@ var defaultOptions = {
  * * {@link CUBEFACE_POSZ}
  * * {@link CUBEFACE_NEGZ}
  *
+ * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default is false.
+ *
  * Defaults to {@link CUBEFACE_POSX}.
  * @example
  * // Create a 512x512x24-bit render target with a depth buffer
@@ -45,18 +47,29 @@ var defaultOptions = {
  *     depth: true
  * });
  *
- * // Set the render target on a layer
- * layer.renderTarget = renderTarget;
+ * // Set the render target on a camera component
+ * camera.renderTarget = renderTarget;
+ *
+ * // Destroy render target at a later stage. Note that the color buffer needs
+ * // to be destroyed separately.
+ * renderTarget.colorBuffer.destroy();
+ * renderTarget.destroy();
+ * camera.renderTarget = null;
  */
 class RenderTarget {
     constructor(options) {
-        var _arg2 = arguments[1];
-        var _arg3 = arguments[2];
+        const _arg2 = arguments[1];
+        const _arg3 = arguments[2];
 
         if (options instanceof GraphicsDevice) {
             // old constructor
             this._colorBuffer = _arg2;
             options = _arg3;
+
+            // #if _DEBUG
+            console.warn('DEPRECATED: pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+            // #endif
+
         } else {
             // new constructor
             this._colorBuffer = options.colorBuffer;
@@ -67,6 +80,9 @@ class RenderTarget {
             this._colorBuffer._isRenderTarget = true;
         }
 
+        // device, gets assigned when the framebuffer is created during the rendering
+        this._device = null;
+
         this._glFrameBuffer = null;
         this._glDepthBuffer = null;
 
@@ -76,7 +92,7 @@ class RenderTarget {
         this._face = (options.face !== undefined) ? options.face : 0;
 
         if (this._depthBuffer) {
-            var format = this._depthBuffer._format;
+            const format = this._depthBuffer._format;
             if (format === PIXELFORMAT_DEPTH) {
                 this._depth = true;
                 this._stencil = false;
@@ -112,6 +128,9 @@ class RenderTarget {
         if (!this.name) {
             this.name = "Untitled";
         }
+
+        // render image flipped in Y
+        this.flipY = !!options.flipY;
     }
 
     /**
@@ -121,38 +140,59 @@ class RenderTarget {
      */
     destroy() {
 
-        var device = this._device;
-        if (!device) return;
+        const device = this._device;
+        if (device) {
+            const idx = device.targets.indexOf(this);
+            if (idx !== -1) {
+                device.targets.splice(idx, 1);
+            }
 
-        var idx = device.targets.indexOf(this);
-        if (idx !== -1) {
-            device.targets.splice(idx, 1);
+            this.destroyFrameBuffers();
+        }
+    }
+
+    destroyFrameBuffers() {
+
+        const device = this._device;
+        if (device) {
+            const gl = device.gl;
+            if (this._glFrameBuffer) {
+                gl.deleteFramebuffer(this._glFrameBuffer);
+                this._glFrameBuffer = null;
+            }
+
+            if (this._glDepthBuffer) {
+                gl.deleteRenderbuffer(this._glDepthBuffer);
+                this._glDepthBuffer = null;
+            }
+
+            if (this._glResolveFrameBuffer) {
+                gl.deleteFramebuffer(this._glResolveFrameBuffer);
+                this._glResolveFrameBuffer = null;
+            }
+
+            if (this._glMsaaColorBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaColorBuffer);
+                this._glMsaaColorBuffer = null;
+            }
+
+            if (this._glMsaaDepthBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
+                this._glMsaaDepthBuffer = null;
+            }
+        }
+    }
+
+    destroyTextureBuffers() {
+
+        if (this._depthBuffer) {
+            this._depthBuffer.destroy();
+            this._depthBuffer = null;
         }
 
-        var gl = device.gl;
-        if (this._glFrameBuffer) {
-            gl.deleteFramebuffer(this._glFrameBuffer);
-            this._glFrameBuffer = null;
-        }
-
-        if (this._glDepthBuffer) {
-            gl.deleteRenderbuffer(this._glDepthBuffer);
-            this._glDepthBuffer = null;
-        }
-
-        if (this._glResolveFrameBuffer) {
-            gl.deleteFramebuffer(this._glResolveFrameBuffer);
-            this._glResolveFrameBuffer = null;
-        }
-
-        if (this._glMsaaColorBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaColorBuffer);
-            this._glMsaaColorBuffer = null;
-        }
-
-        if (this._glMsaaDepthBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
-            this._glMsaaDepthBuffer = null;
+        if (this._colorBuffer) {
+            this._colorBuffer.destroy();
+            this._colorBuffer = null;
         }
     }
 
@@ -182,7 +222,7 @@ class RenderTarget {
         if (!this._device) return;
         if (!this._device.webgl2) return;
 
-        var gl = this._device.gl;
+        const gl = this._device.gl;
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
         gl.blitFramebuffer(0, 0, this.width, this.height,
