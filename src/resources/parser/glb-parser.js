@@ -110,6 +110,16 @@ const getComponentType = function (componentType) {
     }
 };
 
+const getComponentNormalizationScale = function (componentType) {
+    switch (componentType) {
+        case 5120: return 1 / 127;      // int8
+        case 5121: return 1 / 255;      // uint8
+        case 5122: return 1 / 32767;    // int16
+        case 5123: return 1 / 65535;    // uint16
+        default: return 1;
+    }
+};
+
 const getComponentSizeInBytes = function (componentType) {
     switch (componentType) {
         case 5120: return 1;    // int8
@@ -205,6 +215,21 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
     }
 
     return result;
+};
+
+const getAccessorDataAsFloat = function (gltfAccessor, bufferViews) {
+
+    const srcData = getAccessorData(gltfAccessor, bufferViews);
+    const scale = getComponentNormalizationScale(gltfAccessor.componentType);
+
+    // if (scale !== 1 || gltfAccessor.normalized) {
+        const data = new Float32Array(srcData.length);
+        for (let i = 0; i < srcData.length; i++) {
+            data[i] = srcData[i] * scale;
+        }
+        return data;
+    // }
+    // return srcData;
 };
 
 const getPrimitiveType = function (primitive) {
@@ -816,19 +841,35 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
-                        options.deltaPositions = getAccessorData(accessor, bufferViews);
-                        options.deltaPositionsType = getComponentType(accessor.componentType);
+
+                        const origData = getAccessorData(accessor, bufferViews);
+
+                        // convert morph target data to float format
+                        options.deltaPositions = getAccessorDataAsFloat(accessor, bufferViews);
+                        options.deltaPositionsType = TYPE_FLOAT32;
+
+                        console.log("morph pos ", origData, options.deltaPositions);
+                        
+                        
+                        // const posComp = getNumComponents(accessor.componentType);
+                        // const norm = accessor.normalized;
+                        // console.log("POS", options.deltaPositions, " pos num comp " + posComp + " normalized: " + norm);
+
+
                         if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
                             options.aabb = new BoundingBox();
+
+                            // TODO: min & max need to be dequantized as well
+                            console.log("minmax: ", accessor.min, accessor.max);
                             options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
                         }
                     }
 
-                    if (target.hasOwnProperty('NORMAL')) {
-                        accessor = accessors[target.NORMAL];
-                        options.deltaNormals = getAccessorData(accessor, bufferViews);
-                        options.deltaNormalsType = getComponentType(accessor.componentType);
-                    }
+                    // if (target.hasOwnProperty('NORMAL')) {
+                    //     accessor = accessors[target.NORMAL];
+                    //     options.deltaNormals = getAccessorData(accessor, bufferViews);
+                    //     options.deltaNormalsType = getComponentType(accessor.componentType);
+                    // }
 
                     // name if specified
                     if (gltfMesh.hasOwnProperty('extras') &&
@@ -1223,7 +1264,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
-        const data = getAccessorData(gltfAccessor, bufferViews);
+        const data = getAccessorDataAsFloat(gltfAccessor, bufferViews);
         // TODO: this assumes data is tightly packed, handle the case data is interleaved
         return new AnimData(getNumComponents(gltfAccessor.type), new data.constructor(data));
     };
