@@ -37,6 +37,7 @@ class SpineboyExample extends Example {
         });
         app.root.addChild(spineEntity);
 
+        // @ts-ignore
         spineEntity.spine.state.setAnimation(0, "portal", true);
 
         app.start();
