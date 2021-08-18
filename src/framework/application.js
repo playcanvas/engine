@@ -1716,6 +1716,11 @@ class Application extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
+     * // Render a single line, with unique colors for each point
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
+     * @example
      * // Render 2 discrete line segments
      * var points = [
      *     // Line 1
