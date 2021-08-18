@@ -232,14 +232,14 @@ class RenderCubemapExample extends Example {
                 numSamples: 1
             });
             // @ts-ignore engine-tsd
-            app.renderTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
+            app.drawTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
 
             // cube -> octa1
             pc.reprojectTexture(srcCube, textureOcta, {
                 numSamples: 1
             });
             // @ts-ignore engine-tsd
-            app.renderTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
+            app.drawTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
 
             // equi1 -> octa2
             pc.reprojectTexture(textureEqui, textureOcta2, {
@@ -247,7 +247,7 @@ class RenderCubemapExample extends Example {
                 numSamples: 1024
             });
             // @ts-ignore engine-tsd
-            app.renderTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
+            app.drawTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
 
             // octa1 -> equi2
             pc.reprojectTexture(textureOcta, textureEqui2, {
@@ -255,7 +255,7 @@ class RenderCubemapExample extends Example {
                 numSamples: 512
             });
             // @ts-ignore engine-tsd
-            app.renderTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
+            app.drawTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
         });
     }
 }

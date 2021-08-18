@@ -171,7 +171,7 @@ class Immediate {
     }
 
     // Draw mesh at this frame
-    renderMesh(material, matrix, mesh, meshInstance, options) {
+    drawMesh(material, matrix, mesh, meshInstance, layer) {
 
         // create a mesh instance for the mesh if needed
         if (!meshInstance) {
@@ -181,7 +181,6 @@ class Immediate {
         }
 
         // add the mesh instance to an array per layer, they get added to layers before rendering
-        const layer = options.layer;
         let layerMeshInstances = this.layerMeshInstances.get(layer);
         if (!layerMeshInstances) {
             layerMeshInstances = [];
@@ -191,7 +190,7 @@ class Immediate {
     }
 
     // Draw lines forming a transformed unit-sized cube at this frame
-    renderWireCube(matrix, color, options) {
+    drawWireCube(matrix, color, depthTest, layer) {
 
         if (!this.cubeLocalPos) {
             const x = 0.5;
@@ -229,11 +228,11 @@ class Immediate {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
         }
 
-        const batch = this.getBatch(options.layer, options.depthTest);
+        const batch = this.getBatch(layer, depthTest);
         batch.addLines(this.cubePositions, color);
     }
 
-    renderWireAlignedBox(min, max, color, options) {
+    drawWireAlignedBox(min, max, color, depthTest, layer) {
         tempPoints.push(
             min.x, min.y, min.z, min.x, max.y, min.z,
             min.x, max.y, min.z, max.x, max.y, min.z,
@@ -249,12 +248,12 @@ class Immediate {
             max.x, min.y, min.z, max.x, min.y, max.z
         );
 
-        const batch = this.getBatch(options.layer, options.depthTest);
+        const batch = this.getBatch(layer, depthTest);
         batch.addLinesArrays(tempPoints, color);
         tempPoints.length = 0;
     }
 
-    renderWireSphere(center, radius, color, numSegments, options) {
+    drawWireSphere(center, radius, color, numSegments, depthTest, layer) {
 
         const step = 2 * Math.PI / numSegments;
         let angle = 0;
@@ -274,7 +273,7 @@ class Immediate {
             tempPoints.push(center.x, center.y + radius * sin1, center.z + radius * cos1);
         }
 
-        const batch = this.getBatch(options.layer, options.depthTest);
+        const batch = this.getBatch(layer, depthTest);
         batch.addLinesArrays(tempPoints, color);
         tempPoints.length = 0;
     }

@@ -22,8 +22,9 @@ class LinesExample extends Example {
 
         // setup skydome
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 0.7;
+        app.scene.exposure = 1.0;
         app.scene.setSkybox(assets['helipad.dds'].resources);
+        app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 30, 0);
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -82,8 +83,8 @@ class LinesExample extends Example {
 
         // helper function to generate a color for 3d point by lerping between green and red color
         // based on its y coordinate
-        function groundColor(point: pc.Vec3) {
-            return new pc.Color().lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
+        function groundColor(color: pc.Color, point: pc.Vec3) {
+            color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
         }
 
         // access two layers, used to render lines to them
@@ -98,33 +99,50 @@ class LinesExample extends Example {
         app.on("update", function (dt) {
             time += dt;
 
-            // generate grid of lines
+            // generate grid of lines - store positions and colors as arrays of numbers instead of
+            // Vec3s and Colors to improve performance
             const positions = [];
             const colors = [];
+            const pt1 = new pc.Vec3();
+            const pt2 = new pc.Vec3();
+            const pt3 = new pc.Vec3();
+            const c1 = new pc.Color();
+            const c2 = new pc.Color();
+            const c3 = new pc.Color();
+
             for (let x = 1; x < 60; x++) {
                 for (let z = 1; z < 60; z++) {
 
                     // generate 3 points: one start point, one along x and one along z axis
-                    const pt1 = new pc.Vec3(x, groundElevation(time, x, z), z);
-                    const pt2 = new pc.Vec3(x - 1, groundElevation(time, x - 1, z), z);
-                    const pt3 = new pc.Vec3(x, groundElevation(time, x, z - 1), z - 1);
+                    pt1.set(x, groundElevation(time, x, z), z);
+                    pt2.set(x - 1, groundElevation(time, x - 1, z), z);
+                    pt3.set(x, groundElevation(time, x, z - 1), z - 1);
+
+                    // generate colors for the 3 points
+                    groundColor(c1, pt1);
+                    groundColor(c2, pt2);
+                    groundColor(c3, pt3);
 
                     // add line connecting points along z axis
                     if (x > 1) {
-                        positions.push(pt1, pt2);
-                        colors.push(groundColor(pt1), groundColor(pt2));
+                        positions.push(pt1.x, pt1.y, pt1.z, pt2.x, pt2.y, pt2.z);
+                        colors.push(c1.r, c1.g, c1.b, c1.a, c2.r, c2.g, c2.b, c2.a);
                     }
 
                     // add line connecting points along x axis
                     if (z > 1) {
-                        positions.push(pt1, pt3);
-                        colors.push(groundColor(pt1), groundColor(pt3));
+                        positions.push(pt1.x, pt1.y, pt1.z, pt3.x, pt3.y, pt3.z);
+                        colors.push(c1.r, c1.g, c1.b, c1.a, c3.r, c3.g, c3.b, c3.a);
                     }
                 }
             }
 
-            // submit the generated array of lines for rendering
-            app.renderLines(positions, colors);
+            // submit the generated arrays of lines and colors for rendering
+            // @ts-ignore
+            app.drawLineArrays(positions, colors);
+
+            const grayLinePositions = [];
+            const grayLineColors = [];
 
             // handle the array of sphere meshes
             for (let i = 0; i < numInstances; i++) {
@@ -138,7 +156,7 @@ class LinesExample extends Example {
                     30 + 20 * Math.cos(time * 0.2 + offset)
                 );
 
-                // update bounding box for all meshes
+                // add up bounds of all the meshes
                 const thisBounds = entity.render.meshInstances[0].aabb;
                 if (i === 0) {
                     bounds.copy(thisBounds);
@@ -146,31 +164,40 @@ class LinesExample extends Example {
                     bounds.add(thisBounds);
                 }
 
-                const options = {
+                // half of them uses depth testing, the other does not, and so lines show through the sphere
+                const depthTest = i < 0.5 * numInstances;
 
-                    // half of them are rendered in immediate layer, the other half in world layer
-                    layer: i < 0.5 * numInstances ? immediateLayer : worldLayer,
-
-                    // half of them uses depth testing, the other does not, and so lines show through the sphere
-                    depthTest: i < 0.5 * numInstances
-                };
+                // half of them are rendered in immediate layer, the other half in world layer
+                const layer = i < 0.5 * numInstances ? immediateLayer : worldLayer;
 
                 // render either wiframe sphere or cube around the sphere objects
                 if (i % 2) {
                     // @ts-ignore
-                    app.renderWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, 30, options);
+                    app.drawWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, 30, depthTest, layer);
                 } else {
 
                     // rotate the cylinders
                     entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
                     // @ts-ignore
-                    app.renderWireCube(entity.getWorldTransform(), pc.Color.CYAN, options);
+                    app.drawWireCube(entity.getWorldTransform(), pc.Color.CYAN, depthTest, layer);
                 }
+
+                const nextEntity = spheres[(i + 1) % spheres.length];
+                // @ts-ignore
+                app.drawLine(entity.getPosition(), nextEntity.getPosition(), pc.Color.MAGENTA);
+
+                // store positions and colors of lines connecting objects to a center point
+                grayLinePositions.push(entity.getPosition(), new pc.Vec3(0, 10, 0));
+                grayLineColors.push(pc.Color.GRAY, pc.Color.GRAY);
             }
+
+            // render all gray lines
+            // @ts-ignore
+            app.drawLines(grayLinePositions, grayLineColors);
 
             // wireframe box for the bounds around all meshes
             // @ts-ignore
-            app.renderWireAlignedBox(bounds.getMin(), bounds.getMax(), pc.Color.WHITE);
+            app.drawWireAlignedBox(bounds.getMin(), bounds.getMax(), pc.Color.WHITE);
 
         });
     }
