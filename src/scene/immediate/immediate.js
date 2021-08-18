@@ -189,49 +189,6 @@ class Immediate {
         layerMeshInstances.push(meshInstance);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    drawWireCube(matrix, color, depthTest, layer) {
-
-        if (!this.cubeLocalPos) {
-            const x = 0.5;
-            this.cubeLocalPos = [
-                new Vec3(-x, -x, -x), new Vec3(-x, x, -x), new Vec3(x, x, -x), new Vec3(x, -x, -x),
-                new Vec3(-x, -x, x), new Vec3(-x, x, x), new Vec3(x, x, x), new Vec3(x, -x, x)
-            ];
-            this.cubeWorldPos = [
-                new Vec3(), new Vec3(), new Vec3(), new Vec3(),
-                new Vec3(), new Vec3(), new Vec3(), new Vec3()
-            ];
-            const cubeWorldPos = this.cubeWorldPos;
-            this.cubePositions = [
-                cubeWorldPos[0], cubeWorldPos[1],
-                cubeWorldPos[1], cubeWorldPos[2],
-                cubeWorldPos[2], cubeWorldPos[3],
-                cubeWorldPos[3], cubeWorldPos[0],
-
-                cubeWorldPos[4], cubeWorldPos[5],
-                cubeWorldPos[5], cubeWorldPos[6],
-                cubeWorldPos[6], cubeWorldPos[7],
-                cubeWorldPos[7], cubeWorldPos[4],
-
-                cubeWorldPos[0], cubeWorldPos[4],
-                cubeWorldPos[1], cubeWorldPos[5],
-                cubeWorldPos[2], cubeWorldPos[6],
-                cubeWorldPos[3], cubeWorldPos[7]
-            ];
-        }
-
-        // Transform to world space
-        const cubeLocalPos = this.cubeLocalPos;
-        const cubeWorldPos = this.cubeWorldPos;
-        for (let i = 0; i < 8; i++) {
-            matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
-        }
-
-        const batch = this.getBatch(layer, depthTest);
-        batch.addLines(this.cubePositions, color);
-    }
-
     drawWireAlignedBox(min, max, color, depthTest, layer) {
         tempPoints.push(
             min.x, min.y, min.z, min.x, max.y, min.z,

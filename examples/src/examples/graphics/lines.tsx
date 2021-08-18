@@ -138,7 +138,6 @@ class LinesExample extends Example {
             }
 
             // submit the generated arrays of lines and colors for rendering
-            // @ts-ignore
             app.drawLineArrays(positions, colors);
 
             const grayLinePositions = [];
@@ -170,20 +169,18 @@ class LinesExample extends Example {
                 // half of them are rendered in immediate layer, the other half in world layer
                 const layer = i < 0.5 * numInstances ? immediateLayer : worldLayer;
 
-                // render either wiframe sphere or cube around the sphere objects
+                // render wiframe sphere around the objects
                 if (i % 2) {
-                    // @ts-ignore
                     app.drawWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, 30, depthTest, layer);
                 } else {
 
                     // rotate the cylinders
                     entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
-                    // @ts-ignore
-                    app.drawWireCube(entity.getWorldTransform(), pc.Color.CYAN, depthTest, layer);
+                    app.drawWireSphere(entity.getLocalPosition(), 3, pc.Color.YELLOW, 30, depthTest, layer);
+
                 }
 
                 const nextEntity = spheres[(i + 1) % spheres.length];
-                // @ts-ignore
                 app.drawLine(entity.getPosition(), nextEntity.getPosition(), pc.Color.MAGENTA);
 
                 // store positions and colors of lines connecting objects to a center point
@@ -192,7 +189,6 @@ class LinesExample extends Example {
             }
 
             // render all gray lines
-            // @ts-ignore
             app.drawLines(grayLinePositions, grayLineColors);
 
             // wireframe box for the bounds around all meshes

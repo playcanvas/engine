@@ -1666,39 +1666,151 @@ class Application extends EventHandler {
         return timestamp;
     }
 
+    // returns the default layer used by the line drawing functions
     _getDefaultDrawLayer() {
         return this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     }
 
-    // single line with a single color
+    /**
+     * @function
+     * @name Application#drawLine
+     * @description Draws a single line. Line start and end coordinates are specified in world-space.
+     * The line will be flat-shaded with the specified color.
+     * @param {Vec3} start - The start world-space coordinate of the line.
+     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {boolean} [depthTest] - Specifies if the line is depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a 1-unit long white line
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * app.drawLine(start, end);
+     * @example
+     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * app.drawLine(start, end, pc.Color.RED, false);
+     * @example
+     * // Render a 1-unit long white line into the world layer
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
+     */
     drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
         const batch = this._immediate.getBatch(layer, depthTest);
         batch.addLines([start, end], [color, color]);
     }
 
-    // multiple lines with multiple colors
+    /**
+     * @function
+     * @name Application#drawLines
+     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
+     * point in the array. Instead, they are individual segments specified by two points. Therefore, the lengths of the
+     * supplied position and color arrays must be the same and also must be a multiple of 2. The colors of the ends of each
+     * line segment will be interpolated along the length of each line.
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same length as the position array.
+     * The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render 2 discrete line segments
+     * var points = [
+     *     // Line 1
+     *     new pc.Vec3(0, 0, 0),
+     *     new pc.Vec3(1, 0, 0),
+     *     // Line 2
+     *     new pc.Vec3(1, 1, 0),
+     *     new pc.Vec3(1, 1, 1)
+     * ];
+     * var colors = [
+     *     // Line 1
+     *     pc.Color.RED,
+     *     pc.Color.YELLOW,
+     *     // Line 2
+     *     pc.Color.CYAN,
+     *     pc.Color.BLUE
+     * ];
+     * app.drawLines(points, colors);
+     */
     drawLines(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
         const batch = this._immediate.getBatch(layer, depthTest);
         batch.addLines(positions, colors);
     }
 
+    /**
+     * @function
+     * @name Application#drawLineArrays
+     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
+     * point in the array. Instead, they are individual segments specified by two points.
+     * @param {number[]} positions - An array of points to draw lines between. Each point is represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same length as the position array.
+     * The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render 2 discrete line segments
+     * var points = [
+     *     // Line 1
+     *     0, 0, 0,
+     *     1, 0, 0,
+     *     // Line 2
+     *     1, 1, 0,
+     *     1, 1, 1
+     * ];
+     * var colors = [
+     *     // Line 1
+     *     1, 0, 0, 1,  // red
+     *     0, 1, 0, 1,  // green
+     *     // Line 2
+     *     0, 0, 1, 1,  // blue
+     *     1, 1, 1, 1   // white
+     * ];
+     * app.drawLineArrays(points, colors);
+     */
     drawLineArrays(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
         const batch = this._immediate.getBatch(layer, depthTest);
         batch.addLinesArrays(positions, colors);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    drawWireCube(matrix, color, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawWireCube(matrix, color, depthTest, layer);
-    }
-
-    drawWireAlignedBox(minPoint, maxPoint, color, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
-    }
-
-    // // Draw lines forming sphere at this frame
-    drawWireSphere(center, radius, color, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
+    /**
+     * @function
+     * @name Application#drawWireSphere
+     * @description Draws a wireframe sphere with center, radius and color.
+     * @param {Vec3} center - The center of the sphere.
+     * @param {number} radius - The radius of the sphere.
+     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
+     * @param {number} [segments] - Number of line segments used to render the circles forming the sphere. Defaults to 20.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a red wire sphere with radius of 1
+     * var center = new pc.Vec3(0, 0, 0);
+     * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     */
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
         this._immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
+    }
+
+    /**
+     * @function
+     * @name Application#drawWireAlignedBox
+     * @description Draws a wireframe axis aligned box specified by min and max points and color.
+     * @param {Vec3} minPoint - The min corner point of the box.
+     * @param {Vec3} maxPoint - The max corner point of the box.
+     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a red wire aligned box
+     * var min = new pc.Vec3(-1, -1, -1);
+     * var max = new pc.Vec3(1, 1, 1);
+     * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     */
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
     // Draw meshInstance at this frame

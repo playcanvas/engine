@@ -994,56 +994,6 @@ Application.prototype._addLines = function (positions, colors, options) {
     batch.addLines(positions, colors);
 };
 
-/**
- * @function
- * @private
- * @name Application#renderLine
- * @description Renders a line. Line start and end coordinates are specified in
- * world-space. If a single color is supplied, the line will be flat-shaded with
- * that color. If two colors are supplied, the line will be smooth shaded between
- * those colors. It is also possible to control which scene layer the line is
- * rendered into. By default, lines are rendered into the immediate layer
- * {@link LAYERID_IMMEDIATE}.
- * @param {Vec3} start - The start world-space coordinate of the line.
- * @param {Vec3} end - The end world-space coordinate of the line.
- * @param {Color} color - The start color of the line.
- * @param {Color} [endColor] - The end color of the line.
- * @param {object} [options] - Options to set rendering properties.
- * @param {Layer} [options.layer] - The layer to render the line into. Defaults
- * to {@link LAYERID_IMMEDIATE}.
- * @example
- * // Render a 1-unit long white line
- * var start = new pc.Vec3(0, 0, 0);
- * var end = new pc.Vec3(1, 0, 0);
- * var color = new pc.Color(1, 1, 1);
- * app.renderLine(start, end, color);
- * @example
- * // Render a 1-unit long line that is smooth-shaded from white to red
- * var start = new pc.Vec3(0, 0, 0);
- * var end = new pc.Vec3(1, 0, 0);
- * var startColor = new pc.Color(1, 1, 1);
- * var endColor = new pc.Color(1, 0, 0);
- * app.renderLine(start, end, startColor, endColor);
- * @example
- * // Render a 1-unit long white line into the world layer
- * var start = new pc.Vec3(0, 0, 0);
- * var end = new pc.Vec3(1, 0, 0);
- * var color = new pc.Color(1, 1, 1);
- * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
- * app.renderLine(start, end, color, {
- *     layer: worldLayer
- * });
- * @example
- * // Render a 1-unit long line that is smooth-shaded from white to red into the world layer
- * var start = new pc.Vec3(0, 0, 0);
- * var end = new pc.Vec3(1, 0, 0);
- * var startColor = new pc.Color(1, 1, 1);
- * var endColor = new pc.Color(1, 0, 0);
- * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
- * app.renderLine(start, end, color, {
- *     layer: worldLayer
- * });
- */
 Application.prototype.renderLine = function (start, end, color) {
 
     // #if _DEBUG
@@ -1100,43 +1050,6 @@ Application.prototype.renderLine = function (start, end, color) {
     this._addLines([start, end], [color, endColor], options);
 };
 
-/**
- * @function
- * @private
- * @name Application#renderLines
- * @description Renders an arbitrary number of discrete line segments. The lines
- * are not connected by each subsequent point in the array. Instead, they are
- * individual segments specified by two points. Therefore, the lengths of the
- * supplied position and color arrays must be the same and also must be a multiple
- * of 2. The colors of the ends of each line segment will be interpolated along
- * the length of each line.
- * @param {Vec3[]} position - An array of points to draw lines between. The
- * length of the array must be a multiple of 2.
- * @param {Color[]} color - An array of colors to color the lines. This
- * must be the same length as the position array. The length of the array must
- * also be a multiple of 2.
- * @param {object} [options] - Options to set rendering properties.
- * @param {Layer} [options.layer] - The layer to render the lines into.
- * @example
- * // Render 2 discrete line segments
- * var points = [
- *     // Line 1
- *     new pc.Vec3(0, 0, 0),
- *     new pc.Vec3(1, 0, 0),
- *     // Line 2
- *     new pc.Vec3(1, 1, 0),
- *     new pc.Vec3(1, 1, 1)
- * ];
- * var colors = [
- *     // Line 1
- *     pc.Color.RED,
- *     pc.Color.YELLOW,
- *     // Line 2
- *     pc.Color.CYAN,
- *     pc.Color.BLUE
- * ];
- * app.renderLines(points, colors);
- */
 Application.prototype.renderLines = function (position, color, options) {
 
     // #if _DEBUG
