@@ -44,15 +44,14 @@ class LinesExample extends Example {
         directionallight.addComponent("light", {
             type: "directional",
             color: pc.Color.WHITE,
-            castShadows: false,
-            intensity: 1
+            castShadows: false
         });
         app.root.addChild(directionallight);
 
-        // create a circle of sphere meshes
-        const spheres: Array<pc.Entity> = [];
-        const numInstances = 10;
-        for (let i = 0; i < numInstances; i++) {
+        // create a circle of meshes
+        const meshes: Array<pc.Entity> = [];
+        const numMeshes = 10;
+        for (let i = 0; i < numMeshes; i++) {
             const entity = new pc.Entity();
             entity.setLocalScale(4, 4, 4);
 
@@ -73,7 +72,7 @@ class LinesExample extends Example {
 
             // add entity for rendering
             app.root.addChild(entity);
-            spheres.push(entity);
+            meshes.push(entity);
         }
 
         // helper function to generate elevation of a point with [x, y] coordinates
@@ -87,7 +86,7 @@ class LinesExample extends Example {
             color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
         }
 
-        // access two layers, used to render lines to them
+        // access to two layers used to render lines
         const worldLayer = app.scene.layers.getLayerByName("World");
         const immediateLayer = app.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
 
@@ -99,10 +98,12 @@ class LinesExample extends Example {
         app.on("update", function (dt) {
             time += dt;
 
-            // generate grid of lines - store positions and colors as arrays of numbers instead of
+            // generate grid of lines - store positions and colors as an arrays of numbers instead of
             // Vec3s and Colors to improve performance
             const positions = [];
             const colors = [];
+
+            // temporary instances for calculations
             const pt1 = new pc.Vec3();
             const pt2 = new pc.Vec3();
             const pt3 = new pc.Vec3();
@@ -140,18 +141,19 @@ class LinesExample extends Example {
             // submit the generated arrays of lines and colors for rendering
             app.drawLineArrays(positions, colors);
 
+            // array of Vec3 and Color classes for different way to render lines
             const grayLinePositions = [];
             const grayLineColors = [];
 
-            // handle the array of sphere meshes
-            for (let i = 0; i < numInstances; i++) {
+            // handle the array of meshes
+            for (let i = 0; i < numMeshes; i++) {
 
                 // move them equally spaced out around in the circle
-                const offset = i * Math.PI * 2 / numInstances;
-                const entity = spheres[i];
+                const offset = i * Math.PI * 2 / numMeshes;
+                const entity = meshes[i];
                 entity.setLocalPosition(
                     30 + 20 * Math.sin(time * 0.2 + offset),
-                    5 + 2 * Math.sin(time + 3 * i / numInstances),
+                    5 + 2 * Math.sin(time + 3 * i / numMeshes),
                     30 + 20 * Math.cos(time * 0.2 + offset)
                 );
 
@@ -163,24 +165,20 @@ class LinesExample extends Example {
                     bounds.add(thisBounds);
                 }
 
-                // half of them uses depth testing, the other does not, and so lines show through the sphere
-                const depthTest = i < 0.5 * numInstances;
+                // half of them uses depth testing, the others do not, and so lines show through the mesh
+                const depthTest = i < 0.5 * numMeshes;
 
                 // half of them are rendered in immediate layer, the other half in world layer
-                const layer = i < 0.5 * numInstances ? immediateLayer : worldLayer;
+                const layer = i < 0.5 * numMeshes ? immediateLayer : worldLayer;
+
+                // rotate the meshes
+                entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
 
                 // render wiframe sphere around the objects
-                if (i % 2) {
-                    app.drawWireSphere(entity.getLocalPosition(), 2.2, pc.Color.YELLOW, 30, depthTest, layer);
-                } else {
+                app.drawWireSphere(entity.getLocalPosition(), 3, pc.Color.YELLOW, 30, depthTest, layer);
 
-                    // rotate the cylinders
-                    entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
-                    app.drawWireSphere(entity.getLocalPosition(), 3, pc.Color.YELLOW, 30, depthTest, layer);
-
-                }
-
-                const nextEntity = spheres[(i + 1) % spheres.length];
+                // draw a single magenta line from this mesh to the next mesh
+                const nextEntity = meshes[(i + 1) % meshes.length];
                 app.drawLine(entity.getPosition(), nextEntity.getPosition(), pc.Color.MAGENTA);
 
                 // store positions and colors of lines connecting objects to a center point
@@ -192,9 +190,7 @@ class LinesExample extends Example {
             app.drawLines(grayLinePositions, grayLineColors);
 
             // wireframe box for the bounds around all meshes
-            // @ts-ignore
             app.drawWireAlignedBox(bounds.getMin(), bounds.getMax(), pc.Color.WHITE);
-
         });
     }
 }
