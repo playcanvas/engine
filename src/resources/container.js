@@ -1,13 +1,7 @@
 import { path } from '../core/path.js';
-
-import { http, Http } from '../net/http.js';
-
 import { Asset } from '../asset/asset.js';
-
 import { GlbParser } from './parser/glb-parser.js';
-
 import { Entity } from '../framework/entity.js';
-
 import { MeshInstance } from '../scene/mesh-instance.js';
 import { MorphInstance } from '../scene/morph-instance.js';
 import { SkinInstance } from '../scene/skin-instance.js';
@@ -26,7 +20,9 @@ import { Model } from '../scene/model.js';
  */
 class ContainerResource {
     constructor(data) {
+        // glb content, of type GlbResources
         this.data = data;
+
         this._model = null;
         this.renders = [];
         this.materials = [];
@@ -114,7 +110,6 @@ class ContainerResource {
             if (gltfNode.hasOwnProperty('skin')) {
                 skinedMeshInstances.push({
                     meshInstance: meshInstance,
-                    skin: skins[gltfNode.skin],
                     rootBone: root,
                     entity: entity
                 });
@@ -157,10 +152,20 @@ class ContainerResource {
                     }
 
                     // light - clone (additional child) entity with the light component
+                    // cannot clone the component as additional entity has a rotation to handle different light direction
                     if (glb.lights) {
                         const lightEntity = glb.lights.get(gltfNode);
                         if (lightEntity) {
                             entity.addChild(lightEntity.clone());
+                        }
+                    }
+
+                    // camera
+                    if (glb.cameras) {
+                        const cameraEntity = glb.cameras.get(gltfNode);
+                        if (cameraEntity) {
+                            // clone camera component into the entity
+                            cameraEntity.camera.system.cloneComponent(cameraEntity, entity);
                         }
                     }
                 }
@@ -192,8 +197,7 @@ class ContainerResource {
 
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
         skinedMeshInstances.forEach((data) => {
-            data.meshInstance.mesh.skin = data.skin;
-            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.skin, data.rootBone, data.entity);
+            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
         });
 
         // return the scene hierarachy created from scene clones
@@ -339,6 +343,7 @@ class ContainerResource {
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
  * | light       |      x      |      x      |             |      x      |
+ * | camera      |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | image       |      x      |             |      x      |      x      |
@@ -377,48 +382,27 @@ class ContainerHandler {
             };
         }
 
-        const options = {
-            responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-
-        const self = this;
-
-        // parse downloaded file data
-        const parseData = function (arrayBuffer) {
-            GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                 path.extractPath(url.load),
-                                 arrayBuffer,
-                                 self._device,
-                                 asset.registry,
-                                 asset.options,
-                                 function (err, result) {
-                                     if (err) {
-                                         callback(err);
-                                     } else {
-                                         // return everything
-                                         callback(null, new ContainerResource(result));
-                                     }
-                                 });
-        };
-
-        if (asset && asset.file && asset.file.contents) {
-            // file data supplied by caller
-            parseData(asset.file.contents);
-        } else {
-            // data requires download
-            http.get(url.load, options, function (err, response) {
-                if (!callback)
-                    return;
-
-                if (err) {
-                    callback("Error loading model: " + url.original + " [" + err + "]");
-                } else {
-                    parseData(response);
-                }
-            });
-        }
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                GlbParser.parseAsync(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new ContainerResource(result));
+                        }
+                    });
+            }
+        }, asset, this.maxRetries);
     }
 
     open(url, data, asset) {

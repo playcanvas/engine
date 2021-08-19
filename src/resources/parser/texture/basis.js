@@ -1,9 +1,7 @@
-import { http } from '../../../net/http.js';
-
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
+import { Asset } from '../../../asset/asset.js';
 import { Texture } from '../../../graphics/texture.js';
-
 import { basisTranscode } from '../../basis.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 
 /**
  * @private
@@ -20,33 +18,28 @@ class BasisParser {
 
     load(url, callback, asset) {
         const device = this.device;
-        const options = {
-            cache: true,
-            responseType: "arraybuffer",
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-        http.get(
-            url.load,
-            options,
-            function (err, result) {
-                if (err) {
-                    callback(err, result);
-                } else {
-                    const basisModuleFound = basisTranscode(
-                        device,
-                        url.load,
-                        result,
-                        callback,
-                        { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
-                    );
 
-                    if (!basisModuleFound) {
-                        callback('Basis module not found. Asset "' + asset.name + '" basis texture variant will not be loaded.');
-                    }
-                }
+        const transcode = (data) => {
+            const basisModuleFound = basisTranscode(
+                device,
+                url.load,
+                data,
+                callback,
+                { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
+            );
+
+            if (!basisModuleFound) {
+                callback(`Basis module not found. Asset '${asset.name}' basis texture variant will not be loaded.`);
             }
-        );
+        };
+
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                transcode(result);
+            }
+        }, asset, this.maxRetries);
     }
 
     // our async transcode call provides the neat structure we need to create the texture instance

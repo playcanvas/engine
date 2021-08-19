@@ -222,7 +222,7 @@ class LightsExample extends Example {
                 lights[pathArray[1]].enabled = value;
             } else {
                 // @ts-ignore
-                lights[pathArray[1]][pathArray[2]] = value;
+                lights[pathArray[1]].light[pathArray[2]] = value;
             }
         });
     }

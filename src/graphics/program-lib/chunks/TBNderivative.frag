@@ -17,5 +17,5 @@ void getTBN() {
     // construct a scale-invariant frame
     float denom = max( dot(T,T), dot(B,B) );
     float invmax = (denom == 0.0) ? 0.0 : 1.0 / sqrt( denom );
-    dTBN = mat3( T * invmax, B * invmax, dVertexNormalW );
+    dTBN = mat3( T * invmax, -B * invmax, dVertexNormalW );
 }

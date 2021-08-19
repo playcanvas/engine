@@ -1,3 +1,4 @@
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { Mat3 } from '../math/mat3.js';
@@ -21,6 +22,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  * @augments EventHandler
  * @classdesc Manage and update XR session and its states.
  * @description Manage and update XR session and its states.
+ * @hideconstructor
  * @param {Application} app - The main application.
  * @property {boolean} supported True if XR is supported.
  * @property {boolean} active True if XR session is running.
@@ -39,7 +41,7 @@ class XrManager extends EventHandler {
 
         this.app = app;
 
-        this._supported = !! navigator.xr;
+        this._supported = platform.browser && !! navigator.xr;
 
         this._available = { };
 
