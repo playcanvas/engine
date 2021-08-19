@@ -237,6 +237,11 @@ class GltfExporter {
                     });
                 }
 
+                if (entity.model && entity.model.enabled) {
+                    entity.model.meshInstances.forEach((meshInstance) => {
+                        node.mesh = resources.meshInstances.indexOf(meshInstance);
+                    });
+                }
                 if (entity.children.length > 0) {
                     node.children = [];
 
