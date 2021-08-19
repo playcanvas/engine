@@ -273,7 +273,7 @@ StandardMaterialOptionsBuilder.prototype._updateTexOptions = function (options, 
             if (stdMat[uname] === 1 && !hasUv1) allow = false;
             if (allow) {
                 options[mname] = !!stdMat[mname];
-                options[tname] = this._getMapTransformID(stdMat[tname], stdMat[uname]);
+                options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                 options[cname] = stdMat[cname];
                 options[uname] = stdMat[uname];
             }
@@ -308,42 +308,35 @@ StandardMaterialOptionsBuilder.prototype._collectLights = function (lType, light
     }
 };
 
+const arraysEqual = (a, b) => {
+    if (a.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+    return true;
+};
+
 StandardMaterialOptionsBuilder.prototype._getMapTransformID = function (xform, uv) {
     if (!xform) return 0;
-    if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
-    var i, same;
-    for (i = 0; i < this._mapXForms[uv].length; i++) {
-        same = true;
-        if (this._mapXForms[uv][i][0] !== xform.x) {
-            same = false;
-            break;
-        }
-        if (this._mapXForms[uv][i][1] !== xform.y) {
-            same = false;
-            break;
-        }
-        if (this._mapXForms[uv][i][2] !== xform.z) {
-            same = false;
-            break;
-        }
-        if (this._mapXForms[uv][i][3] !== xform.w) {
-            same = false;
-            break;
-        }
-        if (same) {
+    let xforms = this._mapXForms[uv];
+    if (!xforms) {
+        xforms = [];
+        this._mapXForms[uv] = xforms;
+    }
+
+    for (let i = 0; i < xforms.length; i++) {
+        if (arraysEqual(xforms[i][0].value, xform[0].value) &&
+            arraysEqual(xforms[i][1].value, xform[1].value)) {
             return i + 1;
         }
     }
-    var newID = this._mapXForms[uv].length;
-    this._mapXForms[uv][newID] = [];
 
-    this._mapXForms[uv][newID][0] = xform.x;
-    this._mapXForms[uv][newID][1] = xform.y;
-    this._mapXForms[uv][newID][2] = xform.z;
-    this._mapXForms[uv][newID][3] = xform.w;
-
-    return newID + 1;
+    return xforms.push(xform);
 };
 
 export { StandardMaterialOptionsBuilder };

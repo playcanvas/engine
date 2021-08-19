@@ -79,7 +79,7 @@ class EventsExample extends Example {
             const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
             colorVec.mulScalar(1 / colorVec.length());
             // @ts-ignore engine-tsd
-            boxes[`${i}${j}`].model.material.emissive = new pc.Color(colorVec.data);
+            boxes[`${i}${j}`].model.material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
             highlightedBoxes.push(boxes[`${i}${j}`]);
         };
 
@@ -130,27 +130,15 @@ class EventsExample extends Example {
 
         app.on('update', (dt) => {
             // on update, iterate over any currently highlighted boxes and reduce their emmisive property
-            let popBoxCount = 0;
             highlightedBoxes.forEach((box: pc.Entity) => {
                 // @ts-ignore engine-tsd
-                let emissive = box.model.material.emissive;
-                emissive = new pc.Vec3(emissive.r, emissive.g, emissive.b);
-                emissive.scale(0.92);
-                emissive = new pc.Color(emissive.data);
-                if (emissive.r < 0.001 && emissive.g < 0.001 && emissive.b < 0.001) {
-                    // @ts-ignore engine-tsd
-                    box.model.material.emissive = new pc.Color(0, 0, 0);
-                    popBoxCount++;
-                } else {
-                    // @ts-ignore engine-tsd
-                    box.model.material.emissive = emissive;
-                }
+                const emissive = box.model.material.emissive;
+                emissive.lerp(emissive, pc.Color.BLACK, 0.08);
                 box.model.material.update();
             });
-            // if a box is no longer emissive, it should be removed from the list
-            while (popBoxCount !== 0) {
+            // remove old highlighted boxes from the update loop
+            while (highlightedBoxes.length > 5) {
                 highlightedBoxes.shift();
-                popBoxCount--;
             }
 
             // set the camera to folow the model

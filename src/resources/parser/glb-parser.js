@@ -27,7 +27,9 @@ import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
 import {
-    BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED
+    BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
+    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
+    ASPECT_MANUAL, ASPECT_AUTO
 } from '../../scene/constants.js';
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -61,6 +63,7 @@ class GlbResources {
         this.renders = null;
         this.skins = null;
         this.lights = null;
+        this.cameras = null;
     }
 
     destroy() {
@@ -359,7 +362,7 @@ const cloneTextureAsset = function (src) {
     return result;
 };
 
-const createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
+const createVertexBufferInternal = function (device, sourceDesc, flipV) {
     const positionDesc = sourceDesc[SEMANTIC_POSITION];
     if (!positionDesc) {
         // ignore meshes without positions
@@ -461,7 +464,7 @@ const createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
         }
     }
 
-    if (!disableFlipV) {
+    if (flipV) {
         flipTexCoordVs(vertexBuffer);
     }
 
@@ -470,7 +473,7 @@ const createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     return vertexBuffer;
 };
 
-const createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, disableFlipV, vertexBufferDict) {
+const createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, flipV, vertexBufferDict) {
 
     // extract list of attributes to use
     const useAttributes = {};
@@ -519,14 +522,14 @@ const createVertexBuffer = function (device, attributes, indices, accessors, buf
         }
 
         // create and store it in the dictionary
-        vb = createVertexBufferInternal(device, sourceDesc, disableFlipV);
+        vb = createVertexBufferInternal(device, sourceDesc, flipV);
         vertexBufferDict[vbKey] = vb;
     }
 
     return vb;
 };
 
-const createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV) {
+const createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, indices, flipV) {
 
     const numPoints = outputGeometry.num_points();
 
@@ -606,7 +609,7 @@ const createVertexBufferDraco = function (device, outputGeometry, extDraco, deco
         generateNormals(sourceDesc, indices);
     }
 
-    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
+    return createVertexBufferInternal(device, sourceDesc, flipV);
 };
 
 const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) {
@@ -655,7 +658,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, disableFlipV, vertexBufferDict) {
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -725,7 +728,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                         }
 
                         // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV);
+                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, indices, flipV);
 
                         // clean up
                         decoderModule.destroy(outputGeometry);
@@ -746,7 +749,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, disableFlipV, vertexBufferDict);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
             primitiveType = getPrimitiveType(primitive);
         }
 
@@ -853,7 +856,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
     return meshes;
 };
 
-const createMaterial = function (gltfMaterial, textures, disableFlipV) {
+const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = [
         "#ifdef MAPFLOAT",
@@ -942,8 +945,8 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
         "}"
     ].join('\n');
 
-    const uvONE = [1, 1];
-    const uvZERO = [0, 0];
+    const zeros = [0, 0];
+    const ones = [1, 1];
 
     const extractTextureTransform = function (source, material, maps) {
         let map;
@@ -955,27 +958,20 @@ const createMaterial = function (gltfMaterial, textures, disableFlipV) {
             }
         }
 
-        let scale = uvONE;
-        let offset = uvZERO;
+        const textureTransform = source.extensions?.KHR_texture_transform;
+        if (textureTransform) {
+            const offset = textureTransform.offset || zeros;
+            const scale = textureTransform.scale || ones;
+            const rotation = textureTransform.rotation ? (-textureTransform.rotation * math.RAD_TO_DEG) : 0;
 
-        const extensions = source.extensions;
-        if (extensions) {
-            const textureTransformData = extensions.KHR_texture_transform;
-            if (textureTransformData) {
-                if (textureTransformData.scale) {
-                    scale = textureTransformData.scale;
-                }
-                if (textureTransformData.offset) {
-                    offset = textureTransformData.offset;
-                }
+            const tilingVec = new Vec2(scale[0], scale[1]);
+            const offsetVec = new Vec2(offset[0], 1.0 - scale[1] - offset[1]);
+
+            for (map = 0; map < maps.length; ++map) {
+                material[`${maps[map]}MapTiling`] = tilingVec;
+                material[`${maps[map]}MapOffset`] = offsetVec;
+                material[`${maps[map]}MapRotation`] = rotation;
             }
-        }
-
-        // NOTE: we construct the texture transform specially to compensate for the fact we flip
-        // texture coordinate V at load time.
-        for (map = 0; map < maps.length; ++map) {
-            material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
-            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? 1.0 - scale[1] - offset[1] : offset[1]);
         }
     };
 
@@ -1398,10 +1394,47 @@ const createNode = function (gltfNode, nodeIndex) {
     return entity;
 };
 
+// creates a camera component on the supplied node, and returns it
+const createCamera = function (gltfCamera, node) {
+
+    const projection = gltfCamera.type === "orthographic" ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
+    const gltfProperties = projection === PROJECTION_ORTHOGRAPHIC ? gltfCamera.orthographic : gltfCamera.perspective;
+
+    const componentData = {
+        enabled: false,
+        projection: projection,
+        nearClip: gltfProperties.znear,
+        aspectRatioMode: ASPECT_AUTO
+    };
+
+    if (gltfProperties.zfar) {
+        componentData.farClip = gltfProperties.zfar;
+    }
+
+    if (projection === PROJECTION_ORTHOGRAPHIC) {
+        componentData.orthoHeight = 0.5 * gltfProperties.ymag;
+        if (gltfProperties.ymag) {
+            componentData.aspectRatioMode = ASPECT_MANUAL;
+            componentData.aspectRatio = gltfProperties.xmag / gltfProperties.ymag;
+        }
+    } else {
+        componentData.fov = gltfProperties.yfov * math.RAD_TO_DEG;
+        if (gltfProperties.aspectRatio) {
+            componentData.aspectRatioMode = ASPECT_MANUAL;
+            componentData.aspectRatio = gltfProperties.aspectRatio;
+        }
+    }
+
+    const cameraEntity = new Entity(gltfCamera.name);
+    cameraEntity.addComponent("camera", componentData);
+    return cameraEntity;
+};
+
 // creates light component, adds it to the node and returns the created light component
 const createLight = function (gltfLight, node) {
 
     const lightProps = {
+        enabled: false,
         type: gltfLight.type === "point" ? "omni" : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : Number.MAX_VALUE,
@@ -1421,13 +1454,12 @@ const createLight = function (gltfLight, node) {
 
     // Rotate to match light orientation in glTF specification
     // Note that this adds a new entity node into the hierarchy that does not exist in the gltf hierarchy
-    var lightNode = new Entity(node.name);
-    lightNode.rotateLocal(90, 0, 0);
+    const lightEntity = new Entity(node.name);
+    lightEntity.rotateLocal(90, 0, 0);
 
     // add component
-    lightNode.addComponent("light", lightProps);
-
-    return lightNode;
+    lightEntity.addComponent("light", lightProps);
+    return lightEntity;
 };
 
 const createSkins = function (device, gltf, nodes, bufferViews) {
@@ -1443,7 +1475,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, disableFlipV) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1454,11 +1486,11 @@ const createMeshes = function (device, gltf, bufferViews, callback, disableFlipV
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, disableFlipV, vertexBufferDict);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict);
     });
 };
 
-const createMaterials = function (gltf, textures, options, disableFlipV) {
+const createMaterials = function (gltf, textures, options, flipV) {
     if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
         return [];
     }
@@ -1471,7 +1503,7 @@ const createMaterials = function (gltf, textures, options, disableFlipV) {
         if (preprocess) {
             preprocess(gltfMaterial);
         }
-        const material = process(gltfMaterial, textures, disableFlipV);
+        const material = process(gltfMaterial, textures, flipV);
         if (postprocess) {
             postprocess(gltfMaterial, material);
         }
@@ -1563,6 +1595,41 @@ const createScenes = function (gltf, nodes) {
     return scenes;
 };
 
+const createCameras = function (gltf, nodes, options) {
+
+    let cameras = null;
+
+    if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
+
+        const preprocess = options && options.camera && options.camera.preprocess;
+        const process = options && options.camera && options.camera.process || createCamera;
+        const postprocess = options && options.camera && options.camera.postprocess;
+
+        gltf.nodes.forEach(function (gltfNode, nodeIndex) {
+            if (gltfNode.hasOwnProperty('camera')) {
+                const gltfCamera = gltf.cameras[gltfNode.camera];
+                if (gltfCamera) {
+                    if (preprocess) {
+                        preprocess(gltfCamera);
+                    }
+                    const camera = process(gltfCamera, nodes[nodeIndex]);
+                    if (postprocess) {
+                        postprocess(gltfCamera, camera);
+                    }
+
+                    // add the camera to node->camera map
+                    if (camera) {
+                        if (!cameras) cameras = new Map();
+                        cameras.set(gltfNode, camera);
+                    }
+                }
+            }
+        });
+    }
+
+    return cameras;
+};
+
 const createLights = function (gltf, nodes, options) {
 
     let lights = null;
@@ -1632,16 +1699,17 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     // The original version of FACT generated incorrectly flipped V texture
     // coordinates. We must compensate by flipping V in this case. Once
     // all models have been re-exported we can remove this flag.
-    const disableFlipV = !(gltf.asset && gltf.asset.generator === 'PlayCanvas');
+    const flipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
 
     const nodes = createNodes(gltf, options);
     const scenes = createScenes(gltf, nodes);
     const lights = createLights(gltf, nodes, options);
+    const cameras = createCameras(gltf, nodes, options);
     const animations = createAnimations(gltf, nodes, bufferViews, options);
     const materials = createMaterials(gltf, textureAssets.map(function (textureAsset) {
         return textureAsset.resource;
-    }), options, disableFlipV);
-    const meshes = createMeshes(device, gltf, bufferViews, callback, disableFlipV);
+    }), options, flipV);
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
@@ -1663,6 +1731,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     result.renders = renders;
     result.skins = skins;
     result.lights = lights;
+    result.cameras = cameras;
 
     if (postprocess) {
         postprocess(gltf, result);
@@ -1702,6 +1771,8 @@ const applySampler = function (texture, gltfSampler) {
     }
 };
 
+let gltfTextureUniqueId = 0;
+
 // load an image
 const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registry, options, callback) {
     const preprocess = options && options.image && options.image.preprocess;
@@ -1725,39 +1796,16 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         'image/vnd-ms.dds': 'dds'
     };
 
-    const loadTexture = function (url, mimeType, crossOrigin, isBlobUrl) {
-        const name = gltfImage.name || 'gltf-texture';
-
-        // construct the asset file
-        const file = { url: url };
-        if (mimeType) {
-            const extension = mimeTypeFileExtensions[mimeType];
-            if (extension) {
-                file.filename = name + '-' + index + '.' + extension;
-            }
-        }
-
-        // create and load the asset
-        const asset = new Asset('texture_' + index, 'texture',  file, null, { crossOrigin: crossOrigin });
-        asset.on('load', function () {
-            if (isBlobUrl) {
-                URL.revokeObjectURL(url);
-            }
-            onLoad(asset);
-        });
-        asset.on('error', callback);
-        registry.add(asset);
-        registry.load(asset);
-    };
-
-    const loadTextureFromData = function (mimeType, bufferView) {
-        const name = gltfImage.name || 'gltf-texture';
+    const loadTexture = function (url, bufferView, mimeType, options) {
+        const name = (gltfImage.name || 'gltf-texture') + '-' + gltfTextureUniqueId++;
 
         // construct the asset file
         const file = {
-            url: name + '-' + index,
-            contents: bufferView
+            url: url || name
         };
+        if (bufferView) {
+            file.contents = bufferView;
+        }
         if (mimeType) {
             const extension = mimeTypeFileExtensions[mimeType];
             if (extension) {
@@ -1766,7 +1814,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         }
 
         // create and load the asset
-        const asset = new Asset(name, 'texture',  file, null);
+        const asset = new Asset(name, 'texture',  file, null, options);
         asset.on('load', onLoad);
         asset.on('error', callback);
         registry.add(asset);
@@ -1786,13 +1834,13 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
             if (gltfImage.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(gltfImage.uri)) {
-                    loadTexture(gltfImage.uri, getDataURIMimeType(gltfImage.uri));
+                    loadTexture(gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null);
                 } else {
-                    loadTexture(path.join(urlBase, gltfImage.uri), null, "anonymous");
+                    loadTexture(path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: "anonymous" });
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
-                loadTextureFromData(gltfImage.mimeType, bufferViews[gltfImage.bufferView]);
+                loadTexture(null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null);
             } else {
                 // fail
                 callback("Invalid image found in gltf (neither uri or bufferView found). index=" + index);

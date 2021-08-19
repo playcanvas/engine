@@ -13,6 +13,8 @@ const tmpVecB = new Vec3();
  * var sphere = new pc.BoundingSphere();
  * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The constructor takes a reference of this parameter.
  * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
+ * @property {Vec3} center Center of sphere.
+ * @property {number} radius The radius of the bounding sphere.
  */
 class BoundingSphere {
     constructor(center = new Vec3(), radius = 0.5) {

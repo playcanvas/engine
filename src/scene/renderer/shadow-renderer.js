@@ -466,7 +466,7 @@ class ShadowRenderer {
             forwardRenderer.setSkinning(device, meshInstance, material);
 
             if (material.dirty) {
-                material.updateUniforms();
+                material.updateUniforms(device, forwardRenderer.scene);
                 material.dirty = false;
             }
 
