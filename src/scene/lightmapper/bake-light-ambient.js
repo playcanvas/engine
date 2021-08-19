@@ -16,7 +16,7 @@ class BakeLightAmbient extends BakeLight {
             affectDynamic: true,
             affectLightmapped: false,
             bake: true,
-            numBakeSamples: 50,
+            numBakeSamples: 30,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
@@ -36,7 +36,6 @@ class BakeLightAmbient extends BakeLight {
         math.fibonacciSpherePoint(_tempPoint, index, numVirtualLights, 0, 0.4);
         this.light._node.lookAt(_tempPoint.mulScalar(-1));
         this.light._node.rotateLocal(90, 0, 0);
-
 
 
         // TODO: this does not seem to work well and lightmap gets dark with more virtual lights

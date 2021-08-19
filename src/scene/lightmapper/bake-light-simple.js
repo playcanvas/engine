@@ -20,8 +20,6 @@ class BakeLightSimple extends BakeLight {
         light._node.getWorldTransform();
 
 
-
-
         // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
         light.intensity = this.intensity / numVirtualLights;
     }
