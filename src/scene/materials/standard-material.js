@@ -709,7 +709,7 @@ const defineProp = (prop) => {
         },
         set: function (value) {
             const oldValue = this[internalName];
-            if (!funcs.equals(value, oldValue)) {
+            if (!funcs.equals(oldValue, value)) {
                 if (!this._dirtyShader) {
                     this._dirtyShader = dirtyShaderFunc ? dirtyShaderFunc(oldValue, value) : true;
                 }
