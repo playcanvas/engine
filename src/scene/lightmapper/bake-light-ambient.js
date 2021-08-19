@@ -1,5 +1,8 @@
 import { Vec3 } from '../../math/vec3.js';
 import { math } from '../../math/math.js';
+import { Color } from '../../math/color.js';
+import { Entity } from '../../framework/entity.js';
+import { SHADOW_PCF3 } from '../constants.js';
 import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec3();
@@ -7,7 +10,7 @@ const _tempPoint = new Vec3();
 class BakeLightAmbient extends BakeLight {
     constructor() {
 
-        const lightEntity = new pc.Entity("AmbientLight");
+        const lightEntity = new Entity("AmbientLight");
         lightEntity.addComponent("light", {
             type: "directional",
             affectDynamic: true,
@@ -19,8 +22,8 @@ class BakeLightAmbient extends BakeLight {
             shadowBias: 0.2,
             shadowDistance: 50,
             shadowResolution: 2048,
-            shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.WHITE,
+            shadowType: SHADOW_PCF3,
+            color: Color.WHITE,
             intensity: 1
         });
 
