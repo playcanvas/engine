@@ -33,7 +33,7 @@ class PNGExample extends Example {
                 texture.type = pc.TEXTURETYPE_RGBM;
 
                 const material = new pc.StandardMaterial();
-                material.diffuse.set(0.0478, 0.0478, 0.0478);
+                material.diffuse.set(0.4, 0.4, 0.4);
                 material.lightMap = texture;
                 material.lightMapUv = 0;
                 material.update();
