@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 
-class OBJExample extends Example {
+class PNGExample extends Example {
     static CATEGORY = 'Loaders';
     static NAME = 'PNG';
 
@@ -26,7 +26,7 @@ class OBJExample extends Example {
                 camera.addComponent("camera", {
                     clearColor: new pc.Color(0.4, 0.45, 0.5)
                 });
-                camera.translate(0, 0, 1.5);
+                camera.translate(0, 0, 2);
                 app.root.addChild(camera);
 
                 const texture = asset.resource;
@@ -51,4 +51,4 @@ class OBJExample extends Example {
     }
 }
 
-export default OBJExample;
+export default PNGExample;
