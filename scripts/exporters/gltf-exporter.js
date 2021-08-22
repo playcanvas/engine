@@ -9,8 +9,6 @@ const UNSIGNED_INT = 5125;
 const FLOAT = 5126;
 
 class GltfExporter {
-    constructor() {}
-
     collectResources(root) {
         const resources = {
             buffers: [],
@@ -94,11 +92,9 @@ class GltfExporter {
 
     writeBufferViews(resources, json) {
         if (resources.buffers.length > 0) {
-            json.bufferViews = [];
-
             let offset = 0;
 
-            resources.buffers.forEach((buffer) => {
+            json.bufferViews = resources.buffers.map((buffer) => {
                 const arrayBuffer = buffer.lock();
 
                 const bufferView = {
@@ -116,50 +112,47 @@ class GltfExporter {
 
                 offset += arrayBuffer.byteLength;
 
-                json.bufferViews.push(bufferView);
+                return bufferView;
             });
         }
     }
 
     writeCameras(resources, json) {
         if (resources.cameras.length > 0) {
-            json.cameras = [];
-
-            resources.cameras.forEach((cam) => {
+            json.cameras = resources.cameras.map((cam) => {
                 const projection = cam.projection;
                 const nearClip = cam.nearClip;
                 const farClip = cam.farClip;
-                const fov = cam.fov;
+
+                const camera = {};
 
                 if (projection === pc.PROJECTION_ORTHOGRAPHIC) {
-                    json.cameras.push({
-                        type: "orthographic",
-                        orthographic: {
-                            xmag: 1,
-                            ymag: 1,
-                            znear: nearClip,
-                            zfar: farClip
-                        }
-                    });
+                    camera.type = "orthographic";
+                    camera.orthographic = {
+                        xmag: 1,
+                        ymag: 1,
+                        znear: nearClip,
+                        zfar: farClip
+                    };
                 } else {
-                    json.cameras.push({
-                        type: "perspective",
-                        perspective: {
-                            yfov: fov * Math.PI / 180,
-                            znear: nearClip,
-                            zfar: farClip
-                        }
-                    });
+                    const fov = cam.fov;
+
+                    camera.type = "perspective";
+                    camera.perspective = {
+                        yfov: fov * Math.PI / 180,
+                        znear: nearClip,
+                        zfar: farClip
+                    };
                 }
+
+                return camera;
             });
         }
     }
 
     writeMaterials(resources, json) {
         if (resources.materials.length > 0) {
-            json.materials = [];
-
-            resources.materials.forEach((mat) => {
+            json.materials = resources.materials.map((mat) => {
                 const name = mat.name;
                 const diffuse = mat.diffuse;
                 const emissive = mat.emissive;
@@ -190,16 +183,14 @@ class GltfExporter {
                     material.doubleSided = true;
                 }
 
-                json.materials.push(material);
+                return material;
             });
         }
     }
 
     writeNodes(resources, json) {
         if (resources.entities.length > 0) {
-            json.nodes = [];
-
-            resources.entities.forEach(function (entity) {
+            json.nodes = resources.entities.map((entity) => {
                 const name = entity.name;
                 const t = entity.getLocalPosition();
                 const r = entity.getLocalRotation();
@@ -246,7 +237,7 @@ class GltfExporter {
                     });
                 }
 
-                json.nodes.push(node);
+                return node;
             });
         }
     }
