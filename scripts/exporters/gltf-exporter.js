@@ -8,10 +8,6 @@ const UNSIGNED_SHORT = 5123;
 const UNSIGNED_INT = 5125;
 const FLOAT = 5126;
 
-function roundToNextMultiple(x, multiple = 4) {
-    return Math.ceil(x / multiple) * multiple;
-}
-
 class GltfExporter {
     constructor() {}
 
@@ -385,7 +381,7 @@ class GltfExporter {
         resources.buffers.forEach((buffer) => {
             binaryDataLength += buffer.lock().byteLength;
         });
-        binaryDataLength = roundToNextMultiple(binaryDataLength, 4);
+        binaryDataLength = pc.math.roundUp(binaryDataLength, 4);
 
         let totalLength = headerLength + jsonHeaderLength + jsonDataLength + jsonPaddingLength;
         if (binaryDataLength > 0) {
