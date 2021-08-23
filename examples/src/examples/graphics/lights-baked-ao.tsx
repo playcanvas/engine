@@ -1,13 +1,21 @@
+import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
+import { AssetLoader } from '../../app/helpers/loader';
 
 class LightsBakedAOExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
     static HIDDEN = false;
 
+    load() {
+        return <>
+            <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+        </>;
+    }
+
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -17,13 +25,25 @@ class LightsBakedAOExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+        app.scene.ambientLight = new pc.Color(0.3, 0.3, 0.4);
+//        app.scene.ambientLight = new pc.Color(0, 0, 0);
+
+        // setup skydome
+        app.scene.skyboxMip = 3;
+        app.scene.skyboxIntensity = 1;    // !!!!! TODO: when I change this, lightmaps don't bake !!!
+        app.scene.setSkybox(assets.cubemap.resources);
+
+        app.scene.ambientBake = true;
+//        app.scene.ambientBake = false;
+        app.scene.ambientNumBakeSamples = 30;
+        app.scene.ambientOcclusionContrast = -0.2;
+        app.scene.ambientOcclusionBrightness = 0.2;
 
         // create material used to render lightmapped objects. Set it up using metalness to see the specularity
         const material = new pc.StandardMaterial();
-        material.shininess = 60;
-        material.useMetalness = true;
-        material.metalness = 0.03;
+        // material.shininess = 40;
+        // material.useMetalness = true;
+        // material.metalness = 0.03;
         material.update();
 
         // create ground plane
@@ -92,44 +112,45 @@ class LightsBakedAOExample extends Example {
             entity.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
         }
 
-        // // directional light
-        // const light = new pc.Entity("Directional");
-        // light.addComponent("light", {
-        //     type: "directional",
-        //     affectDynamic: true,
-        //     affectLightmapped: false,
-        //     bake: true,
-        //     numBakeSamples: 20,
-        //     castShadows: true,
-        //     normalOffsetBias: 0.05,
-        //     shadowBias: 0.2,
-        //     shadowDistance: 50,
-        //     shadowResolution: 2048,
-        //     shadowType: pc.SHADOW_PCF3,
-        //     color: pc.Color.WHITE,
-        //     intensity: 0.8
-        // });
-        // app.root.addChild(light);
-        // light.setLocalEulerAngles(0, 10, 0);
+        // directional light
+        const light = new pc.Entity("Directional");
+        light.addComponent("light", {
+            type: "directional",
+            affectDynamic: true,
+            affectLightmapped: false,
+            bake: true,
+            numBakeSamples: 120,
+            castShadows: true,
+            normalOffsetBias: 0.05,
+            shadowBias: 0.2,
+            shadowDistance: 50,
+            shadowResolution: 2048,
+            shadowType: pc.SHADOW_PCF3,
+            color: new pc.Color(0.7, 0.7, 0),
+            intensity: 1
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(0, 10, 0);
 
-        // // Create an entity with a omni light component that is configured as a baked light
-        // const lightPoint = new pc.Entity("Point");
-        // lightPoint.addComponent("light", {
-        //     affectDynamic: false,
-        //     affectLightmapped: true,
-        //     bake: true,
-        //     castShadows: true,
-        //     normalOffsetBias: 0.05,
-        //     shadowBias: 0.2,
-        //     shadowDistance: 50,
-        //     shadowResolution: 512,
-        //     shadowType: pc.SHADOW_PCF3,
-        //     color: pc.Color.RED,
-        //     range: 10,
-        //     type: "omni"
-        // });
-        // lightPoint.setLocalPosition(-6, 5, 0);
-        // app.root.addChild(lightPoint);
+        // Create an entity with a omni light component that is configured as a baked light
+        const lightPoint = new pc.Entity("Omni");
+        lightPoint.addComponent("light", {
+            affectDynamic: false,
+            affectLightmapped: true,
+            bake: true,
+            castShadows: true,
+            normalOffsetBias: 0.05,
+            shadowBias: 0.2,
+            shadowDistance: 50,
+            shadowResolution: 512,
+            shadowType: pc.SHADOW_PCF3,
+            color: pc.Color.RED,
+            range: 10,
+            type: "omni",
+            intensity: 1
+        });
+        lightPoint.setLocalPosition(-6, 5, 0);
+        app.root.addChild(lightPoint);
 
         // // Create an entity with a spot light component that is configured as a baked light
         // const lightSpot = new pc.Entity("Spot");

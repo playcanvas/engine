@@ -27,7 +27,7 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
-    SHADERDEF_DIRLM, SHADERDEF_LM,
+    SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_LIGHTMAP, MASK_BAKED,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
@@ -70,7 +70,10 @@ class Lightmapper {
 
         this._tempSet = new Set();
         this._initCalled = false;
+
+        // internal materials used by baking
         this.passMaterials = [];
+        this.ambientAOMaterial = null;
 
         this.fog = "";
         this.ambientLight = new Color();
@@ -174,42 +177,66 @@ class Lightmapper {
             });
             node.renderTargets.length = 0;
         });
+
+        // this shader has hardcoded brightness and contrast values, dispose it
+        this.ambientAOMaterial = null;
+    }
+
+    createMaterialForPass(device, scene, pass, addAmbient) {
+        const material = new StandardMaterial();
+        material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}-----------${Math.random()}`;
+        material.chunks.transformVS = "#define UV1LAYOUT\n" + shaderChunks.transformVS; // draw UV1
+
+        if (pass === PASS_COLOR) {
+            let bakeLmEndChunk = shaderChunks.bakeLmEndPS; // encode to RGBM
+            if (addAmbient) {
+                // diffuse light stores accumulated AO, apply contrast and brightness to it
+                // and multiply ambient light color by the AO
+                bakeLmEndChunk = `
+                    dDiffuseLight = ((dDiffuseLight - 0.5) * max(${scene.ambientOcclusionContrast.toFixed(1)} + 1.0, 0.0)) + 0.5;
+                    dDiffuseLight += vec3(${scene.ambientOcclusionBrightness.toFixed(1)});
+                    dDiffuseLight *= dAmbientLight;
+                ` + bakeLmEndChunk;
+            } else {
+                material.ambient = new Color(0, 0, 0);    // don't bake ambient
+                material.ambientTint = true;
+            }
+            material.chunks.endPS = bakeLmEndChunk;
+            material.lightMap = this.blackTex;
+        } else {
+            material.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
+            material.chunks.endPS = shaderChunks.bakeDirLmEndPS;
+        }
+
+        // avoid writing unrelated things to alpha
+        material.chunks.outputAlphaPS = "\n";
+        material.chunks.outputAlphaOpaquePS = "\n";
+        material.chunks.outputAlphaPremulPS = "\n";
+        material.cull = CULLFACE_NONE;
+        material.forceUv1 = true; // provide data to xformUv1
+        material.update();
+        material.updateShader(device, scene);
+
+        return material;
     }
 
     createMaterials(device, scene, passCount) {
-
-        const xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
-        const bakeLmEnd = shaderChunks.bakeLmEndPS;
-
         for (let pass = 0; pass < passCount; pass++) {
             if (!this.passMaterials[pass]) {
-
-                const lmMaterial = new StandardMaterial();
-                lmMaterial.chunks.transformVS = xformUv1; // draw UV1
-
-                if (pass === PASS_COLOR) {
-                    lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
-                    // don't bake ambient
-                    lmMaterial.ambient = new Color(0, 0, 0);
-                    lmMaterial.ambientTint = true;
-                    lmMaterial.lightMap = this.blackTex;
-                } else {
-                    lmMaterial.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
-                    lmMaterial.chunks.endPS = shaderChunks.bakeDirLmEndPS;
-                }
-
-                // avoid writing unrelated things to alpha
-                lmMaterial.chunks.outputAlphaPS = "\n";
-                lmMaterial.chunks.outputAlphaOpaquePS = "\n";
-                lmMaterial.chunks.outputAlphaPremulPS = "\n";
-                lmMaterial.cull = CULLFACE_NONE;
-                lmMaterial.forceUv1 = true; // provide data to xformUv1
-                lmMaterial.update();
-                lmMaterial.updateShader(device, scene);
-                lmMaterial.name = "lmMaterial" + pass;
-
-                this.passMaterials[pass] = lmMaterial;
+                this.passMaterials[pass] = this.createMaterialForPass(device, scene, pass, false);
             }
+        }
+
+        // material used on last render of ambient light to multiply accumulated AO in lightmap by ambient light
+        if (!this.ambientAOMaterial) {
+            this.ambientAOMaterial = this.createMaterialForPass(device, scene, 0, true);
+            this.ambientAOMaterial.onUpdateShader = function (options) {
+                // mark LM as without ambient, to add it
+                options.lightMapWithoutAmbient = true;
+                // don't add ambient to diffuse directly but keep it separate, to allow AO to be multiplied in
+                options.separateAmbient = true;
+                return options;
+            };
         }
     }
 
@@ -492,6 +519,10 @@ class Lightmapper {
 
         }
 
+        // #if _DEBUG
+        this.device.pushMarker("LMBake");
+        // #endif
+
         // bake nodes
         if (bakeNodes.length > 0) {
 
@@ -503,12 +534,22 @@ class Lightmapper {
             this.bakeInternal(passCount, bakeNodes, allNodes);
 
             // Enable new lightmaps
-            const shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
+            let shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
+
+            // mark lightmap as containing ambient lighting
+            if (this.scene.ambientBake) {
+                shaderDefs |= SHADERDEF_LMAMBIENT;
+            }
+
             this.setLightmaping(bakeNodes, true, passCount, shaderDefs);
 
             // clean up memory
             this.finishBake(bakeNodes);
         }
+
+        // #if _DEBUG
+        this.device.popMarker();
+        // #endif
 
         const nowTime = now();
         this.stats.totalRenderTime = nowTime - startTime;
@@ -560,8 +601,10 @@ class Lightmapper {
     prepareLightsToBake(layerComposition, allLights, bakeLights) {
 
         // ambient light
-        const ambientLight = new BakeLightAmbient();
-        bakeLights.push(ambientLight);
+        if (this.scene.ambientBake) {
+            const ambientLight = new BakeLightAmbient(this.scene);
+            bakeLights.push(ambientLight);
+        }
 
         // scene lights
         const sceneLights = layerComposition._lights;
@@ -610,7 +653,14 @@ class Lightmapper {
 
         // set up scene
         this.scene.fog = FOG_NONE;
-        this.scene.ambientLight.set(0, 0, 0);
+
+        // if not baking ambient, set it to black
+        if (!this.scene.ambientBake) {
+            this.scene.ambientLight.set(0, 0, 0);
+        }
+
+        // apply scene settings
+        this.renderer.setSceneConstants();
     }
 
     restoreScene() {
@@ -789,6 +839,10 @@ class Lightmapper {
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
 
+            // #if _DEBUG
+            this.device.pushMarker(`LMPost:${node}`);
+            // #endif
+
             for (let pass = 0; pass < passCount; pass++) {
 
                 const nodeRT = bakeNode.renderTargets[pass];
@@ -816,6 +870,10 @@ class Lightmapper {
                     drawQuadWithShader(device, nodeRT, dilateShader);
                 }
             }
+
+            // #if _DEBUG
+            this.device.popMarker();
+            // #endif
         }
     }
 
@@ -885,10 +943,15 @@ class Lightmapper {
         // Accumulate lights into RGBM textures
         for (i = 0; i < bakeLights.length; i++) {
             const bakeLight = bakeLights[i];
+            const isAmbientLight = bakeLight instanceof BakeLightAmbient;
 
             // directional light can be baked using many virtual lights to create soft effect
             const numVirtualLights = bakeLight.light.numBakeSamples;
             for (let virtualLightIndex = 0; virtualLightIndex < numVirtualLights; virtualLightIndex++) {
+
+                // #if _DEBUG
+                device.pushMarker(`Light:${bakeLight.light._node.name}:${virtualLightIndex}`);
+                // #endif
 
                 // prepare virtual light
                 if (numVirtualLights > 1) {
@@ -920,6 +983,10 @@ class Lightmapper {
 
                     for (pass = 0; pass < passCount; pass++) {
 
+                        // #if _DEBUG
+                        device.pushMarker(`LMPass:${pass}`);
+                        // #endif
+
                         // lightmap size
                         const nodeRT = bakeNode.renderTargets[pass];
                         const lightmapSize = bakeNode.renderTargets[pass].colorBuffer.width;
@@ -934,9 +1001,18 @@ class Lightmapper {
                             scene.updateShaders = true;
                         }
 
+                        let passMaterial = this.passMaterials[pass];
+                        if (isAmbientLight) {
+                            // for last virtual light of ambient light, multiply accumulated AO lightmap with ambient light
+                            const lastVirtualLightForPass = virtualLightIndex + 1 === numVirtualLights;
+                            if (lastVirtualLightForPass && pass === 0) {
+                                passMaterial = this.ambientAOMaterial;
+                            }
+                        }
+
                         // set up material for baking a pass
                         for (j = 0; j < rcv.length; j++) {
-                            rcv[j].material = this.passMaterials[pass];
+                            rcv[j].material = passMaterial;
                         }
 
                         // update shader
@@ -971,6 +1047,10 @@ class Lightmapper {
                             m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
                             m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                         }
+
+                        // #if _DEBUG
+                        device.popMarker();
+                        // #endif
                     }
 
                     // Revert to original materials
@@ -978,6 +1058,10 @@ class Lightmapper {
                 }
 
                 bakeLight.endBake();
+
+                // #if _DEBUG
+                device.popMarker();
+                // #endif
             }
         }
 

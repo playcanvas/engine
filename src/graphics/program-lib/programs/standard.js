@@ -1502,6 +1502,14 @@ var standard = {
 
         if (addAmbient) {
             code += "   addAmbient();\n";
+
+            // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
+            if (options.separateAmbient) {
+                code += `
+                    vec3 dAmbientLight = dDiffuseLight;
+                    dDiffuseLight = vec3(0);
+                `;
+            }
         }
         if (options.ambientTint && !useOldAmbient) {
             code += "   dDiffuseLight *= material_ambient;\n";

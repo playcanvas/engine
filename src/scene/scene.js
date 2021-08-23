@@ -5,6 +5,7 @@ import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
+import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
@@ -83,6 +84,10 @@ import { StandardMaterial } from './materials/standard-material.js';
  * light direction.
  *
  * Defaults to {@link BAKE_COLORDIR}.
+ * @property {boolean} ambientBake If enabled the ambient lighting will be baked into lightmaps. This would be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
+ * @property {number} ambientNumBakeSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
+ * @property {number} ambientOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+ * @property {number} ambientOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
  * @property {StandardMaterial} defaultMaterial The default material used in case no
@@ -125,6 +130,12 @@ class Scene extends EventHandler {
         this._skyboxRotationMat4 = null;
 
         this._skyboxIsRenderTarget = false;
+
+        // ambient light lightmapping properties
+        this._ambientBake = false;
+        this._ambientNumBakeSamples = 1;
+        this.ambientOcclusionContrast = 0;
+        this.ambientOcclusionBrightness = 0;
 
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
@@ -217,6 +228,22 @@ class Scene extends EventHandler {
         this._skyboxIntensity = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
+    }
+
+    get ambientBake() {
+        return this._ambientBake;
+    }
+
+    set ambientBake(value) {
+        this._ambientBake = value;
+    }
+
+    get ambientNumBakeSamples() {
+        return this._ambientNumBakeSamples;
+    }
+
+    set ambientNumBakeSamples(value) {
+        this._ambientNumBakeSamples = math.clamp(Math.floor(value), 1, 255);
     }
 
     get skyboxRotation() {

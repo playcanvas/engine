@@ -8,7 +8,7 @@ class BakeLightSimple extends BakeLight {
         // TODO: handle other types than directional
 
         // TODO: diferent distribution? Perhaps 2d loop in the plane of light direction to get more uniform and predictable pattern
-        const directionalSpreadAngle = 80;
+        const directionalSpreadAngle = 30;
         const angle1 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
         const angle2 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
 

@@ -8,7 +8,7 @@ import { BakeLight } from './bake-light.js';
 const _tempPoint = new Vec3();
 
 class BakeLightAmbient extends BakeLight {
-    constructor() {
+    constructor(scene) {
 
         const lightEntity = new Entity("AmbientLight");
         lightEntity.addComponent("light", {
@@ -16,7 +16,7 @@ class BakeLightAmbient extends BakeLight {
             affectDynamic: true,
             affectLightmapped: false,
             bake: true,
-            numBakeSamples: 30,
+            numBakeSamples: scene.ambientNumBakeSamples,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
@@ -24,7 +24,7 @@ class BakeLightAmbient extends BakeLight {
             shadowResolution: 2048,
             shadowType: SHADOW_PCF3,
             color: Color.WHITE,
-            intensity: 1
+            intensity: 2.5
         });
 
         super(lightEntity.light.light);
