@@ -1,3 +1,5 @@
+#define SHADER_NAME Dilate
+
 varying vec2 vUv0;
 
 uniform sampler2D source;
