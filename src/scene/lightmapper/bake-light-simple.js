@@ -9,7 +9,7 @@ class BakeLightSimple extends BakeLight {
     get numVirtualLights() {
         // only directional lights support multiple samples
         if (this.light.type === LIGHTTYPE_DIRECTIONAL) {
-            return this.light.numBakeSamples;
+            return this.light.bakeNumSamples;
         }
 
         return 1;

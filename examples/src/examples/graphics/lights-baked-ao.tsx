@@ -43,7 +43,7 @@ class LightsBakedAOExample extends Example {
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bake' }} value={data.get('data.directional.bake')}/>
                 </LabelGroup>
                 <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.numBakeSamples' }}  value={data.get('data.directional.numBakeSamples')} max={64} precision={0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeNumSamples' }}  value={data.get('data.directional.bakeNumSamples')} max={64} precision={0}/>
                 </LabelGroup>
             </Panel>
         </>;
@@ -70,7 +70,7 @@ class LightsBakedAOExample extends Example {
             },
             directional: {
                 bake: true,
-                numBakeSamples: 20
+                bakeNumSamples: 20
             }
         });
 
@@ -165,7 +165,7 @@ class LightsBakedAOExample extends Example {
             affectDynamic: true,
             affectLightmapped: true,
             bake: data.get('data.directional.bake'),
-            numBakeSamples: 20,
+            bakeNumSamples: 20,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,

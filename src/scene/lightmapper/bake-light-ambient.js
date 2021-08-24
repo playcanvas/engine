@@ -16,7 +16,7 @@ class BakeLightAmbient extends BakeLight {
             affectDynamic: true,
             affectLightmapped: false,
             bake: true,
-            numBakeSamples: scene.ambientNumBakeSamples,
+            bakeNumSamples: scene.ambientNumBakeSamples,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
@@ -31,7 +31,7 @@ class BakeLightAmbient extends BakeLight {
     }
 
     get numVirtualLights() {
-        return this.light.numBakeSamples;
+        return this.light.bakeNumSamples;
     }
 
     prepareVirtualLight(index, numVirtualLights) {
