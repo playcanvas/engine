@@ -130,6 +130,7 @@ class ForwardRenderer {
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
         this.cameraParamsId = scope.resolve('camera_params');
+        this.tbnBasis = scope.resolve('tbnBasis');
 
         this.fogColorId = scope.resolve('fog_color');
         this.fogStartId = scope.resolve('fog_start');
@@ -445,9 +446,11 @@ class ForwardRenderer {
 
                 this.viewProjId.setValue(flippedViewProjMat.data);
                 this.projSkyboxId.setValue(flippedSkyboxProjMat.data);
+                this.tbnBasis.setValue(-1);
             } else {
                 this.viewProjId.setValue(viewProjMat.data);
                 this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
+                this.tbnBasis.setValue(1);
             }
 
             // View Position (world space)
