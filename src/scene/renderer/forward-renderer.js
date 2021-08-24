@@ -446,11 +446,9 @@ class ForwardRenderer {
 
                 this.viewProjId.setValue(flippedViewProjMat.data);
                 this.projSkyboxId.setValue(flippedSkyboxProjMat.data);
-                this.tbnBasis.setValue(-1);
             } else {
                 this.viewProjId.setValue(viewProjMat.data);
                 this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
-                this.tbnBasis.setValue(1);
             }
 
             // View Position (world space)
@@ -458,6 +456,8 @@ class ForwardRenderer {
 
             camera.frustum.setFromMat4(viewProjMat);
         }
+
+        this.tbnBasis.setValue(target && target.flipY ? -1 : 1);
 
         // Near and far clip values
         this.nearClipId.setValue(camera._nearClip);
