@@ -85,7 +85,7 @@ import { StandardMaterial } from './materials/standard-material.js';
  *
  * Defaults to {@link BAKE_COLORDIR}.
  * @property {boolean} ambientBake If enabled the ambient lighting will be baked into lightmaps. This would be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
- * @property {number} ambientNumBakeSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
+ * @property {number} ambientBakeNumSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
  * @property {number} ambientOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
  * @property {number} ambientOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
@@ -133,7 +133,7 @@ class Scene extends EventHandler {
 
         // ambient light lightmapping properties
         this._ambientBake = false;
-        this._ambientNumBakeSamples = 1;
+        this._ambientBakeNumSamples = 1;
         this.ambientOcclusionContrast = 0;
         this.ambientOcclusionBrightness = 0;
 
@@ -238,12 +238,12 @@ class Scene extends EventHandler {
         this._ambientBake = value;
     }
 
-    get ambientNumBakeSamples() {
-        return this._ambientNumBakeSamples;
+    get ambientBakeNumSamples() {
+        return this._ambientBakeNumSamples;
     }
 
-    set ambientNumBakeSamples(value) {
-        this._ambientNumBakeSamples = math.clamp(Math.floor(value), 1, 255);
+    set ambientBakeNumSamples(value) {
+        this._ambientBakeNumSamples = math.clamp(Math.floor(value), 1, 255);
     }
 
     get skyboxRotation() {

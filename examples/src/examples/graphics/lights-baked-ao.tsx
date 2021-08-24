@@ -29,7 +29,7 @@ class LightsBakedAOExample extends Example {
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.cubemap' }} value={data.get('data.ambient.cubemap')}/>
                 </LabelGroup>
                 <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientNumBakeSamples' }}  value={data.get('data.ambient.ambientNumBakeSamples')} max={64} precision={0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeNumSamples' }}  value={data.get('data.ambient.ambientBakeNumSamples')} max={64} precision={0}/>
                 </LabelGroup>
                 <LabelGroup text='contrast'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientOcclusionContrast' }}  value={data.get('data.ambient.ambientOcclusionContrast')} min = {-1} max={1}/>
@@ -64,7 +64,7 @@ class LightsBakedAOExample extends Example {
             ambient: {
                 ambientBake: true,
                 cubemap: true,
-                ambientNumBakeSamples: 20,
+                ambientBakeNumSamples: 20,
                 ambientOcclusionContrast: 0,
                 ambientOcclusionBrightness: 0
             },
@@ -83,7 +83,7 @@ class LightsBakedAOExample extends Example {
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.25);
 
         app.scene.ambientBake = data.get('data.ambient.ambientBake');
-        app.scene.ambientNumBakeSamples = data.get('data.ambient.ambientNumBakeSamples');
+        app.scene.ambientBakeNumSamples = data.get('data.ambient.ambientBakeNumSamples');
 
         // create material used to render lightmapped objects. Set it up using metalness to see the specularity
         const material = new pc.StandardMaterial();

@@ -16,7 +16,7 @@ class BakeLightAmbient extends BakeLight {
             affectDynamic: true,
             affectLightmapped: false,
             bake: true,
-            bakeNumSamples: scene.ambientNumBakeSamples,
+            bakeNumSamples: scene.ambientBakeNumSamples,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
