@@ -94,6 +94,7 @@ class Light {
         this.key = 0;
         this.bakeDir = true;
         this.bakeNumSamples = 1;
+        this.bakeArea = 0;
 
         // Omni and spot properties
         this.attenuationStart = 10;

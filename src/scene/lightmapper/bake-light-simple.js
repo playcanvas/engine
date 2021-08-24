@@ -20,7 +20,7 @@ class BakeLightSimple extends BakeLight {
         const light = this.light;
 
         // random angles to adjust the directional light facing
-        const directionalSpreadAngle = 10;
+        const directionalSpreadAngle = light.bakeArea;
         math.randomInsideUnitCircle(_tempPoint);
         _tempPoint.mulScalar(directionalSpreadAngle * 0.5);
 
