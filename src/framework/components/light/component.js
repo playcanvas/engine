@@ -474,6 +474,7 @@ function _defineProps() {
             this.light.mask &= ~MASK_LIGHTMAP;
             if (this.affectLightmapped) this.light.mask |= MASK_BAKED;
         }
+        this.light.layersDirty();
     });
     _defineProperty("bakeDir", true, function (newValue, oldValue) {
         this.light.bakeDir = newValue;

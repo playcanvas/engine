@@ -184,7 +184,7 @@ class Lightmapper {
 
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
-        material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}-----------${Math.random()}`;
+        material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
         material.chunks.transformVS = "#define UV1LAYOUT\n" + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {

@@ -2,6 +2,10 @@ import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
+// @ts-ignore: library file import
+import { Panel, SliderInput, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+// @ts-ignore: library file import
+import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
 
 class LightsBakedAOExample extends Example {
     static CATEGORY = 'Graphics';
@@ -15,7 +19,38 @@ class LightsBakedAOExample extends Example {
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Ambient'>
+                <LabelGroup text='bake'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBake' }} value={data.get('data.ambient.ambientBake')}/>
+                </LabelGroup>
+                <LabelGroup text='cubemap'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.cubemap' }} value={data.get('data.ambient.cubemap')}/>
+                </LabelGroup>
+                <LabelGroup text='samples'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientNumBakeSamples' }}  value={data.get('data.ambient.ambientNumBakeSamples')} max={64} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='contrast'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientOcclusionContrast' }}  value={data.get('data.ambient.ambientOcclusionContrast')} min = {-1} max={1}/>
+                </LabelGroup>
+                <LabelGroup text='brightness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientOcclusionBrightness' }}  value={data.get('data.ambient.ambientOcclusionBrightness')} min = {-1} max={1}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Directional'>
+                <LabelGroup text='bake'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bake' }} value={data.get('data.directional.bake')}/>
+                </LabelGroup>
+                <LabelGroup text='samples'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.numBakeSamples' }}  value={data.get('data.directional.numBakeSamples')} max={64} precision={0}/>
+                </LabelGroup>
+            </Panel>
+        </>;
+    }
+
+    // @ts-ignore: override class function
+    example(canvas: HTMLCanvasElement, assets: any, data: any): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -25,19 +60,30 @@ class LightsBakedAOExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.ambientLight = new pc.Color(0.3, 0.3, 0.4);
-//        app.scene.ambientLight = new pc.Color(0, 0, 0);
+        data.set('data', {
+            ambient: {
+                ambientBake: true,
+                cubemap: true,
+                ambientNumBakeSamples: 20,
+                ambientOcclusionContrast: 0,
+                ambientOcclusionBrightness: 0
+            },
+            directional: {
+                bake: true,
+                numBakeSamples: 20
+            }
+        });
 
-        // setup skydome
+        // setup skydome - this is the main source of ambient light
         app.scene.skyboxMip = 3;
         app.scene.skyboxIntensity = 1;    // !!!!! TODO: when I change this, lightmaps don't bake !!!
         app.scene.setSkybox(assets.cubemap.resources);
 
-        app.scene.ambientBake = true;
-//        app.scene.ambientBake = false;
-        app.scene.ambientNumBakeSamples = 30;
-        app.scene.ambientOcclusionContrast = -0.2;
-        app.scene.ambientOcclusionBrightness = 0.2;
+        // if skydome cubemap is disabled using HUD, a constant ambient color is used instead
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.25);
+
+        app.scene.ambientBake = data.get('data.ambient.ambientBake');
+        app.scene.ambientNumBakeSamples = data.get('data.ambient.ambientNumBakeSamples');
 
         // create material used to render lightmapped objects. Set it up using metalness to see the specularity
         const material = new pc.StandardMaterial();
@@ -49,8 +95,8 @@ class LightsBakedAOExample extends Example {
         // create ground plane
         const ground = new pc.Entity("Ground");
         ground.addComponent('render', {
-            castShadows: false,
-            castShadowsLightmap: false,
+            castShadows: true,
+            castShadowsLightmap: true,
             lightmapped: true,
             type: "box",
             material: material
@@ -61,7 +107,7 @@ class LightsBakedAOExample extends Example {
         // create roof box
         const roof = new pc.Entity("Roof");
         roof.addComponent('render', {
-            castShadows: false,
+            castShadows: true,
             castShadowsLightmap: true,
             lightmapped: true,
             type: "box",
@@ -77,7 +123,7 @@ class LightsBakedAOExample extends Example {
         // create large sphere
         const sphere = new pc.Entity("Ground");
         sphere.addComponent('render', {
-            castShadows: false,
+            castShadows: true,
             castShadowsLightmap: true,
             lightmapped: true,
             type: "sphere",
@@ -86,7 +132,7 @@ class LightsBakedAOExample extends Example {
         app.root.addChild(sphere);
         sphere.setLocalScale(12, 12, 12);
         sphere.setLocalPosition(3, 6.6, 5);
-        
+
 
 
         // create random objects on the plane
@@ -97,7 +143,7 @@ class LightsBakedAOExample extends Example {
             // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
             const entity = new pc.Entity("Primitive" + i);
             entity.addComponent('render', {
-                castShadows: false,
+                castShadows: true,
                 castShadowsLightmap: true,
                 lightmapped: true,
                 type: shape,
@@ -113,44 +159,45 @@ class LightsBakedAOExample extends Example {
         }
 
         // directional light
-        const light = new pc.Entity("Directional");
-        light.addComponent("light", {
+        const lightDirectional = new pc.Entity("Directional");
+        lightDirectional.addComponent("light", {
             type: "directional",
             affectDynamic: true,
-            affectLightmapped: false,
-            bake: true,
-            numBakeSamples: 120,
+            affectLightmapped: true,
+            bake: data.get('data.directional.bake'),
+            numBakeSamples: 20,
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
-            shadowDistance: 50,
+            shadowDistance: 70,
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
             color: new pc.Color(0.7, 0.7, 0),
             intensity: 1
         });
-        app.root.addChild(light);
-        light.setLocalEulerAngles(0, 10, 0);
+        app.root.addChild(lightDirectional);
+        // light.enabled = data.get('data.directional.enabled');
+        lightDirectional.setLocalEulerAngles(0, 10, 0);
 
-        // Create an entity with a omni light component that is configured as a baked light
-        const lightPoint = new pc.Entity("Omni");
-        lightPoint.addComponent("light", {
-            affectDynamic: false,
-            affectLightmapped: true,
-            bake: true,
-            castShadows: true,
-            normalOffsetBias: 0.05,
-            shadowBias: 0.2,
-            shadowDistance: 50,
-            shadowResolution: 512,
-            shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.RED,
-            range: 10,
-            type: "omni",
-            intensity: 1
-        });
-        lightPoint.setLocalPosition(-6, 5, 0);
-        app.root.addChild(lightPoint);
+        // // Create an entity with a omni light component that is configured as a baked light
+        // const lightPoint = new pc.Entity("Omni");
+        // lightPoint.addComponent("light", {
+        //     affectDynamic: false,
+        //     affectLightmapped: true,
+        //     bake: true,
+        //     castShadows: true,
+        //     normalOffsetBias: 0.05,
+        //     shadowBias: 0.2,
+        //     shadowDistance: 50,
+        //     shadowResolution: 512,
+        //     shadowType: pc.SHADOW_PCF3,
+        //     color: pc.Color.RED,
+        //     range: 10,
+        //     type: "omni",
+        //     intensity: 1
+        // });
+        // lightPoint.setLocalPosition(-6, 5, 0);
+        // app.root.addChild(lightPoint);
 
         // // Create an entity with a spot light component that is configured as a baked light
         // const lightSpot = new pc.Entity("Spot");
@@ -190,17 +237,49 @@ class LightsBakedAOExample extends Example {
         // multiplier for lightmap resolution
         app.scene.lightmapSizeMultiplier = 10;
 
-        // bake lightmaps
-        app.lightmapper.bake(null, bakeType);
-
         // Set an update function on the app's update event
         let time = 0;
+        let needBake = true;
         app.on("update", function (dt) {
             time += dt;
+
+            // bake lightmaps as needed
+            if (needBake) {
+                needBake = false;
+                app.lightmapper.bake(null, bakeType);
+            }
 
             // orbit camera
             camera.setLocalPosition(30 * Math.sin(time * 0.4), 12, 30);
             camera.lookAt(pc.Vec3.ZERO);
+        });
+
+        // handle data changes from HUD
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+
+            // ambient light
+            if (pathArray[1] === 'ambient') {
+                if (pathArray[2] === 'cubemap') {
+                    // enable / disable cubemap
+                    app.scene.setSkybox(value ? assets.cubemap.resources : null);
+                } else {
+                    // all other values
+                    app.scene[pathArray[2]] = value;
+                }
+            } else if (pathArray[1] === 'directional') {
+                if (pathArray[2] === 'bake') {
+                    lightDirectional.light.bake = value;
+
+
+                    // temporary workaround for incorrect handling of dirty flags to rebuild shaders when multiple compositions are used
+                    app.scene.updateLitShaders = true;
+                } else {
+                    lightDirectional.light[pathArray[2]] = value;
+                }
+            }
+
+            needBake = true;
         });
     }
 }
