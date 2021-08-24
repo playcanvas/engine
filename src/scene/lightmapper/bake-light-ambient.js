@@ -30,6 +30,10 @@ class BakeLightAmbient extends BakeLight {
         super(lightEntity.light.light);
     }
 
+    get numVirtualLights() {
+        return this.light.numBakeSamples;
+    }
+
     prepareVirtualLight(index, numVirtualLights) {
 
         // directional points down the negative Y-axis

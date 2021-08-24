@@ -946,7 +946,7 @@ class Lightmapper {
             const isAmbientLight = bakeLight instanceof BakeLightAmbient;
 
             // directional light can be baked using many virtual lights to create soft effect
-            const numVirtualLights = bakeLight.light.numBakeSamples;
+            const numVirtualLights = bakeLight.numVirtualLights;
             for (let virtualLightIndex = 0; virtualLightIndex < numVirtualLights; virtualLightIndex++) {
 
                 // #if _DEBUG

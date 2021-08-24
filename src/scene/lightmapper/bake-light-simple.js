@@ -1,20 +1,32 @@
+import { Vec2 } from '../../math/vec2.js';
+import { math } from '../../math/math.js';
+import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 import { BakeLight } from './bake-light.js';
 
+const _tempPoint = new Vec2();
+
 class BakeLightSimple extends BakeLight {
+    get numVirtualLights() {
+        // only directional lights support multiple samples
+        if (this.light.type === LIGHTTYPE_DIRECTIONAL) {
+            return this.light.numBakeSamples;
+        }
+
+        return 1;
+    }
+
     prepareVirtualLight(index, numVirtualLights) {
 
         const light = this.light;
 
-        // TODO: handle other types than directional
-
-        // TODO: diferent distribution? Perhaps 2d loop in the plane of light direction to get more uniform and predictable pattern
-        const directionalSpreadAngle = 30;
-        const angle1 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
-        const angle2 = Math.random() * directionalSpreadAngle - directionalSpreadAngle * 0.5;
+        // random angles to adjust the directional light facing
+        const directionalSpreadAngle = 10;
+        math.randomInsideUnitCircle(_tempPoint);
+        _tempPoint.mulScalar(directionalSpreadAngle * 0.5);
 
         // set to original rotation and add adjustement
         light._node.setLocalRotation(this.rotation);
-        light._node.rotateLocal(angle1, 0, angle2);
+        light._node.rotateLocal(_tempPoint.x, 0, _tempPoint.y);
 
         // update transform
         light._node.getWorldTransform();

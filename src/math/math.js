@@ -214,6 +214,19 @@ const math = {
 
     /**
      * @function
+     * @name math.randomInsideUnitCircle
+     * @description Return a pseudo-random 2D point inside a unit circle.
+     * @param {Vec2} point - the returned generated point.
+     */
+    randomInsideUnitCircle: function (point) {
+        const r = Math.sqrt(Math.random());
+        const theta = Math.random() * 2 * Math.PI;
+        point.x = r * Math.cos(theta);
+        point.y = r * Math.sin(theta);
+    },
+
+    /**
+     * @function
      * @name math.smoothstep
      * @description The function interpolates smoothly between two input values based on
      * a third one that should be between the first two. The returned value is clamped
