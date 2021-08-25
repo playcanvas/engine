@@ -267,7 +267,7 @@ class Scene extends EventHandler {
     }
 
     set lightmapFilterSmoothness(value) {
-        this._lightmapFilterSmoothness = Math.max(value, 0.001);;
+        this._lightmapFilterSmoothness = Math.max(value, 0.001);
     }
 
     get skyboxRotation() {
