@@ -1,5 +1,5 @@
 import { Vec2 } from '../../math/vec2.js';
-import { math } from '../../math/math.js';
+import { random } from '../../math/random.js';
 import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 import { BakeLight } from './bake-light.js';
 
@@ -17,16 +17,17 @@ class BakeLightSimple extends BakeLight {
 
     prepareVirtualLight(index, numVirtualLights) {
 
+        // set to original rotation
         const light = this.light;
-
-        // random angles to adjust the directional light facing
-        const directionalSpreadAngle = light.bakeArea;
-        math.randomInsideUnitCircle(_tempPoint);
-        _tempPoint.mulScalar(directionalSpreadAngle * 0.5);
-
-        // set to original rotation and add adjustement
         light._node.setLocalRotation(this.rotation);
-        light._node.rotateLocal(_tempPoint.x, 0, _tempPoint.y);
+
+        // random adjustment to the directional light facing
+        if (index > 0) {
+            const directionalSpreadAngle = light.bakeArea;
+            random.spiralCirclePoint(_tempPoint, index, numVirtualLights);
+            _tempPoint.mulScalar(directionalSpreadAngle * 0.5);
+            light._node.rotateLocal(_tempPoint.x, 0, _tempPoint.y);
+        }
 
         // update transform
         light._node.getWorldTransform();

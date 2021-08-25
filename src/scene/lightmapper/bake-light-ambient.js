@@ -1,5 +1,5 @@
 import { Vec3 } from '../../math/vec3.js';
-import { math } from '../../math/math.js';
+import { random } from '../../math/random.js';
 import { Color } from '../../math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { SHADOW_PCF3 } from '../constants.js';
@@ -37,7 +37,7 @@ class BakeLightAmbient extends BakeLight {
     prepareVirtualLight(index, numVirtualLights) {
 
         // directional points down the negative Y-axis
-        math.fibonacciSpherePoint(_tempPoint, index, numVirtualLights, 0, 0.4);
+        random.spiralSpherePoint(_tempPoint, index, numVirtualLights, 0, 0.4);
         this.light._node.lookAt(_tempPoint.mulScalar(-1));
         this.light._node.rotateLocal(90, 0, 0);
 

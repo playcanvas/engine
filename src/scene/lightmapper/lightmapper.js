@@ -178,7 +178,7 @@ class Lightmapper {
             node.renderTargets.length = 0;
         });
 
-        // this shader has hardcoded brightness and contrast values, dispose it
+        // this shader is only valid for specific brightness and contrast values, dispose it
         this.ambientAOMaterial = null;
     }
 
@@ -864,7 +864,7 @@ class Lightmapper {
                 // bounce dilate between textures, execute denoise on the first pass
                 for (let i = 0; i < numDilates2x; i++) {
                     constantTexSource.setValue(lightmap);
-                    drawQuadWithShader(device, tempRT, i === 0 ? bilateralDeNoiseShader : dilateShader);
+                    drawQuadWithShader(device, tempRT, (i === 0 && pass === 0) ? bilateralDeNoiseShader : dilateShader);
 
                     constantTexSource.setValue(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);
@@ -945,8 +945,18 @@ class Lightmapper {
             const bakeLight = bakeLights[i];
             const isAmbientLight = bakeLight instanceof BakeLightAmbient;
 
-            // directional light can be baked using many virtual lights to create soft effect
-            const numVirtualLights = bakeLight.numVirtualLights;
+            // light can be baked using many virtual lights to create soft effect
+            let numVirtualLights = bakeLight.numVirtualLights;
+
+            // direction baking is not currently compatible with virtual lights, as we end up with no valid direction in lights penumbra
+            if (passCount > 1 && numVirtualLights > 1) {
+                numVirtualLights = 1;
+
+                // #if _DEBUG
+                console.warn("Lightmapper's BAKE_COLORDIR mode is not compatible with Light's bakeNumSamples larger than one. Forcing it to one.");
+                // #endif
+            }
+
             for (let virtualLightIndex = 0; virtualLightIndex < numVirtualLights; virtualLightIndex++) {
 
                 // #if _DEBUG
@@ -982,6 +992,16 @@ class Lightmapper {
                     this.backupMaterials(rcv);
 
                     for (pass = 0; pass < passCount; pass++) {
+
+                        // only bake first virtual light for pass 1, as it does not handle overlapping lights
+                        if (pass > 0 && virtualLightIndex > 0) {
+                            break;
+                        }
+
+                        // don't bake ambient light in pass 1, as there's no main direction
+                        if (isAmbientLight && pass > 0) {
+                            break;
+                        }
 
                         // #if _DEBUG
                         device.pushMarker(`LMPass:${pass}`);

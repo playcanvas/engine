@@ -39,6 +39,9 @@ class LightsBakedAOExample extends Example {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Directional'>
+                <LabelGroup text='enable'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.enabled' }} value={data.get('data.directional.enabled')}/>
+                </LabelGroup>
                 <LabelGroup text='bake'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bake' }} value={data.get('data.directional.bake')}/>
                 </LabelGroup>
@@ -72,9 +75,10 @@ class LightsBakedAOExample extends Example {
                 ambientOcclusionBrightness: 0
             },
             directional: {
+                enabled: true,
                 bake: true,
                 bakeNumSamples: 15,
-                bakeArea: 5
+                bakeArea: 10
             }
         });
 
@@ -122,8 +126,6 @@ class LightsBakedAOExample extends Example {
         roof.setLocalScale(15, 1, 45);
         roof.setLocalEulerAngles(-30, 0, 0);
 
-
-
         // create large sphere
         const sphere = new pc.Entity("Ground");
         sphere.addComponent('render', {
@@ -136,8 +138,6 @@ class LightsBakedAOExample extends Example {
         app.root.addChild(sphere);
         sphere.setLocalScale(12, 12, 12);
         sphere.setLocalPosition(3, 6.6, 5);
-
-
 
         // create random objects on the plane
         const shapes = ["box", "cone", "cylinder", "sphere"];
@@ -276,8 +276,8 @@ class LightsBakedAOExample extends Example {
                 if (pathArray[2] === 'bake') {
                     lightDirectional.light.bake = value;
 
-
                     // temporary workaround for incorrect handling of dirty flags to rebuild shaders when multiple compositions are used
+                    // @ts-ignore
                     app.scene.updateLitShaders = true;
                 } else {
                     lightDirectional.light[pathArray[2]] = value;
