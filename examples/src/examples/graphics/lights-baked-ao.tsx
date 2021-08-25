@@ -3,7 +3,7 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
 // @ts-ignore: library file import
-import { Panel, SliderInput, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+import { Panel, SliderInput, LabelGroup, BooleanInput, Label } from '@playcanvas/pcui/pcui-react';
 // @ts-ignore: library file import
 import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
 
@@ -71,6 +71,11 @@ class LightsBakedAOExample extends Example {
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.other.enabled' }} value={data.get('data.other.enabled')}/>
                 </LabelGroup>
             </Panel>
+            <Panel headerText='Bake stats'>
+                <LabelGroup text='duration'>
+                    <Label binding={new BindingTwoWay()} link={{ observer: data, path: 'data.stats.duration' }} value={data.get('data.stats.duration')}/>
+                </LabelGroup>
+            </Panel>
         </>;
     }
 
@@ -108,6 +113,9 @@ class LightsBakedAOExample extends Example {
             },
             other: {
                 enabled: true,
+            },
+            stats: {
+                duration: ''
             }
         });
 
@@ -280,6 +288,9 @@ class LightsBakedAOExample extends Example {
             if (needBake) {
                 needBake = false;
                 app.lightmapper.bake(null, bakeType);
+
+                // update stats
+                data.set('data.stats.duration', app.lightmapper.stats.totalRenderTime.toFixed(1) + 'ms');
             }
 
             // orbit camera
@@ -290,6 +301,8 @@ class LightsBakedAOExample extends Example {
         // handle data changes from HUD
         data.on('*:set', (path: string, value: any) => {
             const pathArray = path.split('.');
+
+            needBake = true;
 
             // ambient light
             if (pathArray[1] === 'ambient') {
@@ -318,9 +331,10 @@ class LightsBakedAOExample extends Example {
             } else if (pathArray[1] === 'other') {
                 lightOmni.light[pathArray[2]] = value;
                 lightSpot.light[pathArray[2]] = value;
+            } else {
+                // don't rebake if stats change
+                needBake = false;
             }
-
-            needBake = true;
         });
     }
 }
