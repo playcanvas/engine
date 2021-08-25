@@ -46,10 +46,10 @@ class LightsBakedAOExample extends Example {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeNumSamples' }}  value={data.get('data.ambient.ambientBakeNumSamples')} max={64} precision={0}/>
                 </LabelGroup>
                 <LabelGroup text='contrast'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }}  value={data.get('data.ambient.ambientBakeOcclusionContrast')} min = {-1} max={1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }}  value={data.get('data.ambient.ambientBakeOcclusionContrast')} min = {-1} max={1} precision={1}/>
                 </LabelGroup>
                 <LabelGroup text='brightness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }}  value={data.get('data.ambient.ambientBakeOcclusionBrightness')} min = {-1} max={1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }}  value={data.get('data.ambient.ambientBakeOcclusionBrightness')} min = {-1} max={1} precision={1}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Directional'>
@@ -91,8 +91,8 @@ class LightsBakedAOExample extends Example {
                 cubemap: true,
                 hemisphere: true,
                 ambientBakeNumSamples: 20,
-                ambientBakeOcclusionContrast: 0,
-                ambientBakeOcclusionBrightness: 0
+                ambientBakeOcclusionContrast: -0.2,
+                ambientBakeOcclusionBrightness: 0.2
             },
             directional: {
                 enabled: true,
