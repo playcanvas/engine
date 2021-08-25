@@ -39,14 +39,17 @@ class LightsBakedAOExample extends Example {
                 <LabelGroup text='cubemap'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.cubemap' }} value={data.get('data.ambient.cubemap')}/>
                 </LabelGroup>
+                <LabelGroup text='hemisphere'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.hemisphere' }} value={data.get('data.ambient.hemisphere')}/>
+                </LabelGroup>
                 <LabelGroup text='samples'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeNumSamples' }}  value={data.get('data.ambient.ambientBakeNumSamples')} max={64} precision={0}/>
                 </LabelGroup>
                 <LabelGroup text='contrast'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientOcclusionContrast' }}  value={data.get('data.ambient.ambientOcclusionContrast')} min = {-1} max={1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }}  value={data.get('data.ambient.ambientBakeOcclusionContrast')} min = {-1} max={1}/>
                 </LabelGroup>
                 <LabelGroup text='brightness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientOcclusionBrightness' }}  value={data.get('data.ambient.ambientOcclusionBrightness')} min = {-1} max={1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }}  value={data.get('data.ambient.ambientBakeOcclusionBrightness')} min = {-1} max={1}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Directional'>
@@ -86,9 +89,10 @@ class LightsBakedAOExample extends Example {
             ambient: {
                 ambientBake: true,
                 cubemap: true,
+                hemisphere: true,
                 ambientBakeNumSamples: 20,
-                ambientOcclusionContrast: 0,
-                ambientOcclusionBrightness: 0
+                ambientBakeOcclusionContrast: 0,
+                ambientBakeOcclusionBrightness: 0
             },
             directional: {
                 enabled: true,
@@ -289,6 +293,9 @@ class LightsBakedAOExample extends Example {
                 if (pathArray[2] === 'cubemap') {
                     // enable / disable cubemap
                     app.scene.setSkybox(value ? assets.cubemap.resources : null);
+                } else if (pathArray[2] === 'hemisphere') {
+                    // switch between smaller hemosphere and full sphere
+                    app.scene.ambientBakeSpherePart = value ? 0.4 : 1;
                 } else {
                     // all other values
                     app.scene[pathArray[2]] = value;

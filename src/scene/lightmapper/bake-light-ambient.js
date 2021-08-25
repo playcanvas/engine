@@ -7,6 +7,7 @@ import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec3();
 
+// bake light representing an ambient light (cubemap or constant)
 class BakeLightAmbient extends BakeLight {
     constructor(scene) {
 
@@ -20,14 +21,15 @@ class BakeLightAmbient extends BakeLight {
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
-            shadowDistance: 50,
+            shadowDistance: 1,  // this is updated during shadow map rendering
             shadowResolution: 2048,
             shadowType: SHADOW_PCF3,
             color: Color.WHITE,
-            intensity: 2.5
+            intensity: 1
         });
 
         super(lightEntity.light.light);
+        this.scene = scene;
     }
 
     get numVirtualLights() {
@@ -37,13 +39,14 @@ class BakeLightAmbient extends BakeLight {
     prepareVirtualLight(index, numVirtualLights) {
 
         // directional points down the negative Y-axis
-        random.spiralSpherePoint(_tempPoint, index, numVirtualLights, 0, 0.4);
+        random.spiralSpherePoint(_tempPoint, index, numVirtualLights, 0, this.scene.ambientBakeSpherePart);
         this.light._node.lookAt(_tempPoint.mulScalar(-1));
         this.light._node.rotateLocal(90, 0, 0);
 
-
-        // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
-        this.light.intensity = this.intensity / numVirtualLights;
+        // intensity of the virtual light depends on the sphere part used, and also needs to take into account
+        // the fact N dot L used to bake it lower total intensity
+        const fullIntensity = 2 * Math.PI * this.scene.ambientBakeSpherePart;
+        this.light.intensity = fullIntensity / numVirtualLights;
     }
 }
 

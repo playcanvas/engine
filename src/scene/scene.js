@@ -91,8 +91,10 @@ import { StandardMaterial } from './materials/standard-material.js';
  * @property {number} lightmapFilterSmoothness A spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value blurs less similar colors. This needs to be positive non-zero value. Defaults to 0.2.
  * @property {boolean} ambientBake If enabled the ambient lighting will be baked into lightmaps. This would be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
  * @property {number} ambientBakeNumSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
- * @property {number} ambientOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
- * @property {number} ambientOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
+ * @property {number} ambientBakeSpherePart If {@link Scene#ambientBake} is true, this specified a part of the sphere which represents the source of ambient light. The valid range is 0..1, represending a part of the sphere from top to the bottom.
+ * Value of 0.5 represents upper hemisphere. Value of 1 represents full sphere. Defaults to 0.4, which is a smaller hemisphere as this requires smaller number of samples to bake.
+ * @property {number} ambientBakeOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+ * @property {number} ambientBakeOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
  * @property {StandardMaterial} defaultMaterial The default material used in case no
@@ -139,8 +141,9 @@ class Scene extends EventHandler {
         // ambient light lightmapping properties
         this._ambientBake = false;
         this._ambientBakeNumSamples = 1;
-        this.ambientOcclusionContrast = 0;
-        this.ambientOcclusionBrightness = 0;
+        this._ambientBakeSpherePart = 0.4;
+        this.ambientBakeOcclusionContrast = 0;
+        this.ambientBakeOcclusionBrightness = 0;
 
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
@@ -252,6 +255,14 @@ class Scene extends EventHandler {
 
     set ambientBakeNumSamples(value) {
         this._ambientBakeNumSamples = math.clamp(Math.floor(value), 1, 255);
+    }
+
+    get ambientBakeSpherePart() {
+        return this._ambientBakeSpherePart;
+    }
+
+    set ambientBakeSpherePart(value) {
+        this._ambientBakeSpherePart = math.clamp(value, 0.001, 1);
     }
 
     get lightmapFilterRange() {

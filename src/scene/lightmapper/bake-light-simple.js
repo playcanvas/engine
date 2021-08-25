@@ -5,6 +5,7 @@ import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec2();
 
+// a bake light representing a directional, omni or spot typ of lights
 class BakeLightSimple extends BakeLight {
     get numVirtualLights() {
         // only directional lights support multiple samples
@@ -32,8 +33,6 @@ class BakeLightSimple extends BakeLight {
         // update transform
         light._node.getWorldTransform();
 
-
-        // TODO: this does not seem to work well and lightmap gets dark with more virtual lights
         light.intensity = this.intensity / numVirtualLights;
     }
 }

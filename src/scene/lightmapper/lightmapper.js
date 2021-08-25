@@ -193,8 +193,8 @@ class Lightmapper {
                 // diffuse light stores accumulated AO, apply contrast and brightness to it
                 // and multiply ambient light color by the AO
                 bakeLmEndChunk = `
-                    dDiffuseLight = ((dDiffuseLight - 0.5) * max(${scene.ambientOcclusionContrast.toFixed(1)} + 1.0, 0.0)) + 0.5;
-                    dDiffuseLight += vec3(${scene.ambientOcclusionBrightness.toFixed(1)});
+                    dDiffuseLight = ((dDiffuseLight - 0.5) * max(${scene.ambientBakeOcclusionContrast.toFixed(1)} + 1.0, 0.0)) + 0.5;
+                    dDiffuseLight += vec3(${scene.ambientBakeOcclusionBrightness.toFixed(1)});
                     dDiffuseLight = saturate(dDiffuseLight);
                     dDiffuseLight *= dAmbientLight;
                 ` + bakeLmEndChunk;
