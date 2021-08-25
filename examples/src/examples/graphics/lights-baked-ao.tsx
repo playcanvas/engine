@@ -21,7 +21,7 @@ class LightsBakedAOExample extends Example {
     // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
-            <Panel headerText='Filter Settings'>
+            <Panel headerText='Lightmap Filter Settings'>
                 <LabelGroup text='enable'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterEnabled' }} value={data.get('data.settings.lightmapFilterEnabled')}/>
                 </LabelGroup>
