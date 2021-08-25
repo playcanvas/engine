@@ -1972,12 +1972,14 @@ class Application extends EventHandler {
         var canvasId = this.graphicsDevice.canvas.id;
 
         this.off('librariesloaded');
-        document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+        }
         this._visibilityChangeHandler = null;
-        this.onVisibilityChange = null;
 
         this.root.destroy();
         this.root = null;
