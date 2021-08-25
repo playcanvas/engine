@@ -1,5 +1,8 @@
 import { math } from './math.js';
 
+// golden angle in radians: PI * (3 - sqrt(5))
+const _goldenAngle = 2.399963229728653;
+
 /**
  * @name random
  * @namespace
@@ -29,8 +32,7 @@ const random = {
      * @param {number} numPoints - the total number of points of the set.
      */
     spiralCirclePoint: function (point, index, numPoints) {
-        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-        const theta = index * goldenAngle;
+        const theta = index * _goldenAngle;
         const r = Math.sqrt(index) / Math.sqrt(numPoints);
 
         point.x = r * Math.cos(theta);
@@ -52,9 +54,6 @@ const random = {
      */
     spiralSpherePoint: function (point, index, numPoints, start = 0, end = 1) {
 
-        // golden angle in radians: PI * (3 - sqrt(5))
-        const phi = 2.399963229728653;
-
         // y coordinate needs to go from -1 (top) to 1 (bottom) for the full sphere
         // evaluate its vaue for this point and specified start and end
         start = 1 - 2 * start;
@@ -65,7 +64,7 @@ const random = {
         const radius = Math.sqrt(1 - y * y);
 
         // golden angle increment
-        const theta = phi * index;
+        const theta = _goldenAngle * index;
 
         point.x = Math.cos(theta) * radius;
         point.y = y;
