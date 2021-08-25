@@ -21,6 +21,17 @@ class LightsBakedAOExample extends Example {
     // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
+            <Panel headerText='Filter Settings'>
+                <LabelGroup text='enable'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterEnabled' }} value={data.get('data.settings.lightmapFilterEnabled')}/>
+                </LabelGroup>
+                <LabelGroup text='range'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterRange' }}  value={data.get('data.settings.lightmapFilterRange')} min = {1} max = {20} precision = {0}/>
+                </LabelGroup>
+                <LabelGroup text='smoothness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterSmoothness' }}  value={data.get('data.settings.lightmapFilterSmoothness')} min = {0.1} max = {2} precision = {1}/>
+                </LabelGroup>
+            </Panel>
             <Panel headerText='Ambient'>
                 <LabelGroup text='bake'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBake' }} value={data.get('data.ambient.ambientBake')}/>
@@ -67,6 +78,11 @@ class LightsBakedAOExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         data.set('data', {
+            settings: {
+                lightmapFilterEnabled: true,
+                lightmapFilterRange: 10,
+                lightmapFilterSmoothness: 0.2
+            },
             ambient: {
                 ambientBake: true,
                 cubemap: true,
@@ -92,6 +108,11 @@ class LightsBakedAOExample extends Example {
 
         app.scene.ambientBake = data.get('data.ambient.ambientBake');
         app.scene.ambientBakeNumSamples = data.get('data.ambient.ambientBakeNumSamples');
+
+        app.scene.lightmapFilterEnabled = data.get('data.settings.lightmapFilterEnabled');
+        app.scene.lightmapFilterRange = data.get('data.settings.lightmapFilterRange');
+        app.scene.lightmapFilterSmoothness = data.get('data.settings.lightmapFilterSmoothness');
+
 
         // create material used to render lightmapped objects. Set it up using metalness to see the specularity
         const material = new pc.StandardMaterial();
@@ -282,6 +303,8 @@ class LightsBakedAOExample extends Example {
                 } else {
                     lightDirectional.light[pathArray[2]] = value;
                 }
+            } else if (pathArray[1] === 'settings') {
+                app.scene[pathArray[2]] = value;
             }
 
             needBake = true;

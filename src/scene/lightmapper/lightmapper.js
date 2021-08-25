@@ -856,15 +856,17 @@ class Lightmapper {
                 pixelOffset[1] = 1 / lightmap.height;
                 constantPixelOffset.setValue(pixelOffset);
 
-                // bilateral filter sigmas
-                sigmas[0] = 10;
-                sigmas[1] = 0.2;
+                // bilateral filter - runs as a first pass, before dilate
+                sigmas[0] = this.scene.lightmapFilterRange;
+                sigmas[1] = this.scene.lightmapFilterSmoothness;
                 constantSigmas.setValue(sigmas);
 
                 // bounce dilate between textures, execute denoise on the first pass
                 for (let i = 0; i < numDilates2x; i++) {
+
                     constantTexSource.setValue(lightmap);
-                    drawQuadWithShader(device, tempRT, (i === 0 && pass === 0) ? bilateralDeNoiseShader : dilateShader);
+                    const bilateralFilterEnabled = this.scene.lightmapFilterEnabled && pass === 0 && i === 0;
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? bilateralDeNoiseShader : dilateShader);
 
                     constantTexSource.setValue(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);
