@@ -28,8 +28,7 @@ class BakeLightAmbient extends BakeLight {
             intensity: 1
         });
 
-        super(lightEntity.light.light);
-        this.scene = scene;
+        super(scene, lightEntity.light.light);
     }
 
     get numVirtualLights() {
@@ -45,8 +44,10 @@ class BakeLightAmbient extends BakeLight {
 
         // intensity of the virtual light depends on the sphere part used, and also needs to take into account
         // the fact N dot L used to bake it lower total intensity
+        const gamma = this.scene.gammaCorrection ? 2.2 : 1;
         const fullIntensity = 2 * Math.PI * this.scene.ambientBakeSpherePart;
-        this.light.intensity = fullIntensity / numVirtualLights;
+        const linearIntensity = Math.pow(fullIntensity, gamma);
+        this.light.intensity = Math.pow(linearIntensity / numVirtualLights, 1 / gamma);
     }
 }
 

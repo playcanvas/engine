@@ -6,7 +6,9 @@ const tempSphere = new BoundingSphere();
 
 // helper class to store all lights including their original state
 class BakeLight {
-    constructor(light) {
+    constructor(scene, light) {
+
+        this.scene = scene;
 
         // light of type Light
         this.light = light;

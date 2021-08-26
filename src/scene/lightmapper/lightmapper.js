@@ -613,7 +613,7 @@ class Lightmapper {
             const light = sceneLights[i];
 
             // store all lights and their original settings we need to temporariy modify
-            const bakeLight = new BakeLightSimple(light);
+            const bakeLight = new BakeLightSimple(this.scene, light);
             allLights.push(bakeLight);
 
             // bake light
