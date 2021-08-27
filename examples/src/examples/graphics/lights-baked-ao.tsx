@@ -10,7 +10,6 @@ import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
 class LightsBakedAOExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
-    static HIDDEN = false;
 
     load() {
         return <>
