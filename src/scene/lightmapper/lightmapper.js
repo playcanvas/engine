@@ -7,6 +7,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
+    ADDRESS_CLAMP_TO_EDGE,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
@@ -253,7 +254,9 @@ class Lightmapper {
             mipmaps: false,
             type: type,
             minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
         });
         tex.name = name;
 
@@ -828,7 +831,7 @@ class Lightmapper {
 
     postprocessTextures(device, bakeNodes, passCount) {
 
-        const numDilates2x = 4; // 8 dilates
+        const numDilates2x = 1; // 1 or 2 dilates (depending on filter being enabled)
         const pixelOffset = this.pixelOffset;
         const sigmas = this.sigmas;
         const dilateShader = this.dilateShader;
