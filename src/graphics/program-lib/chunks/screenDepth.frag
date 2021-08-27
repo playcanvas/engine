@@ -1,4 +1,4 @@
-uniform sampler2D uDepthMap;
+uniform highp sampler2D uDepthMap;
 
 #ifndef SCREENSIZE
 #define SCREENSIZE
