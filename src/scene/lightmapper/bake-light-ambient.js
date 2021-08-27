@@ -43,7 +43,7 @@ class BakeLightAmbient extends BakeLight {
         this.light._node.rotateLocal(90, 0, 0);
 
         // intensity of the virtual light depends on the sphere part used, and also needs to take into account
-        // the fact N dot L used to bake it lower total intensity
+        // the fact N dot L used to bake it lowers total intensity
         const gamma = this.scene.gammaCorrection ? 2.2 : 1;
         const fullIntensity = 2 * Math.PI * this.scene.ambientBakeSpherePart;
         const linearIntensity = Math.pow(fullIntensity, gamma);
