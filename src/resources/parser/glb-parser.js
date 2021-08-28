@@ -207,6 +207,44 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
     return result;
 };
 
+// unpack an array of (quantized) data to Float32Array
+const unpackDataFloat32 = function (srcTypedData, normalized) {
+    const getConvFunc = () => {
+        if (normalized) {
+            // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
+            if (srcTypedData instanceof Uint8Array) {
+                return (x) => x / 255.0;
+            } else if (srcTypedData instanceof Int8Array) {
+                return (x) => Math.max(x / 127.0, -1.0);
+            } else if (srcTypedData instanceof Int16Array) {
+                return (x) => Math.max(x / 32767.0, -1.0);
+            } else if (srcTypedData instanceof Uint16Array) {
+                return (x) => x / 65535.0;
+            }
+            // #if _DEBUG
+            console.warn("Unsupported quantized data encountered.");
+            // #endif
+        }
+        return (x) => x;
+    };
+
+    const len = srcTypedData.length;
+    const result = new Float32Array(len);
+    const convFunc = getConvFunc();
+
+    for (let i = 0; i < len; ++i) {
+        result[i] = convFunc(srcTypedData[i]);
+    }
+
+    return result;
+};
+
+// get accessor data in Float32 format
+const getAccessorDataFloat32 = function (gltfAccessor, bufferViews) {
+    const data = getAccessorData(gltfAccessor, bufferViews);
+    return (data instanceof Float32Array) ? data : unpackDataFloat32(data, gltfAccessor.normalized);
+};
+
 const getPrimitiveType = function (primitive) {
     if (!primitive.hasOwnProperty('mode')) {
         return PRIMITIVE_TRIANGLES;
@@ -1223,9 +1261,8 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
-        const data = getAccessorData(gltfAccessor, bufferViews);
         // TODO: this assumes data is tightly packed, handle the case data is interleaved
-        return new AnimData(getNumComponents(gltfAccessor.type), new data.constructor(data));
+        return new AnimData(getNumComponents(gltfAccessor.type), getAccessorDataFloat32(gltfAccessor, bufferViews));
     };
 
     const interpMap = {
