@@ -8,7 +8,7 @@ class BakeMeshNode {
             meshInstances = meshInstances ? meshInstances : node.render.meshInstances;
         } else {
             this.component = node.model;
-            meshInstances = meshInstances ? meshInstances : node.model.model.meshInstances;
+            meshInstances = meshInstances ? meshInstances : node.model.meshInstances;
         }
 
         // original component properties
