@@ -5,7 +5,7 @@ import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec2();
 
-// a bake light representing a directional, omni or spot typ of lights
+// a bake light representing a directional, omni or spot type of light
 class BakeLightSimple extends BakeLight {
     get numVirtualLights() {
         // only directional lights support multiple samples
