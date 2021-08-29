@@ -13,8 +13,7 @@ float normpdf(in float x, in float sigma) {
     return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;
 }
 
-float normpdf3(in vec3 v, in float sigma)
-{
+float normpdf3(in vec3 v, in float sigma) {
     return 0.39894 * exp(-0.5 * dot(v, v) / (sigma * sigma)) / sigma;
 }
 
