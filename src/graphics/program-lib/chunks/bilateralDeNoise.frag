@@ -9,8 +9,7 @@
 
 #define SHADER_NAME BilateralDeNoise
 
-float normpdf(in float x, in float sigma)
-{
+float normpdf(in float x, in float sigma) {
     return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;
 }
 
