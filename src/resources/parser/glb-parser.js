@@ -148,12 +148,14 @@ const gltfToEngineSemanticMap = {
 };
 
 // get accessor data, making a copy and patching in the case of a sparse accessor
-const getAccessorData = function (gltfAccessor, bufferViews) {
+const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
     const numComponents = getNumComponents(gltfAccessor.type);
     const dataType = getComponentDataType(gltfAccessor.componentType);
     if (!dataType) {
         return null;
     }
+
+    const bufferView = bufferViews[gltfAccessor.bufferView];
     let result;
 
     if (gltfAccessor.sparse) {
@@ -165,7 +167,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
             count: sparse.count,
             type: "SCALAR"
         };
-        const indices = getAccessorData(Object.assign(indicesAccessor, sparse.indices), bufferViews);
+        const indices = getAccessorData(Object.assign(indicesAccessor, sparse.indices), bufferViews, true);
 
         // data values data
         const valuesAccessor = {
@@ -173,7 +175,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
             type: gltfAccessor.scalar,
             componentType: gltfAccessor.componentType
         };
-        const values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews);
+        const values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews, true);
 
         // get base data
         if (gltfAccessor.hasOwnProperty('bufferView')) {
@@ -197,8 +199,23 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
                 result[targetIndex * numComponents + j] = values[i * numComponents + j];
             }
         }
+    } else if (flatten && bufferView.hasOwnProperty('byteStride')) {
+        // flatten stridden data
+        const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
+        const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
+        const tmpArray = new Uint8Array(storage);
+
+        let dstOffset = 0;
+        for (let i = 0; i < gltfAccessor.count; ++i) {
+            // no need to add bufferView.byteOffset because accessor takes this into account
+            let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
+            for (let b = 0; b < bytesPerElement; ++b) {
+                tmpArray[dstOffset++] = bufferView[srcOffset++];
+            }
+        }
+
+        result = new dataType(storage);
     } else {
-        const bufferView = bufferViews[gltfAccessor.bufferView];
         result = new dataType(bufferView.buffer,
                               bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
                               gltfAccessor.count * numComponents);
@@ -854,7 +871,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
-                        options.deltaPositions = getAccessorData(accessor, bufferViews);
+                        options.deltaPositions = getAccessorData(accessor, bufferViews, true);
                         options.deltaPositionsType = getComponentType(accessor.componentType);
                         if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
                             options.aabb = new BoundingBox();
@@ -864,7 +881,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                     if (target.hasOwnProperty('NORMAL')) {
                         accessor = accessors[target.NORMAL];
-                        options.deltaNormals = getAccessorData(accessor, bufferViews);
+                        options.deltaNormals = getAccessorData(accessor, bufferViews, true);
                         options.deltaNormalsType = getComponentType(accessor.componentType);
                     }
 
