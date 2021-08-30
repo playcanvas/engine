@@ -187,7 +187,7 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
                 type: gltfAccessor.type
             };
             // make a copy of the base data since we'll patch the values
-            result = getAccessorData(baseAccessor, bufferViews).slice();
+            result = getAccessorData(baseAccessor, bufferViews, true).slice();
         } else {
             // there is no base data, create empty 0'd out data
             result = new dataType(gltfAccessor.count * numComponents);
@@ -258,7 +258,7 @@ const unpackDataFloat32 = function (srcTypedData, normalized) {
 
 // get accessor data in Float32 format
 const getAccessorDataFloat32 = function (gltfAccessor, bufferViews) {
-    const data = getAccessorData(gltfAccessor, bufferViews);
+    const data = getAccessorData(gltfAccessor, bufferViews, true);
     return (data instanceof Float32Array) ? data : unpackDataFloat32(data, gltfAccessor.normalized);
 };
 
@@ -674,7 +674,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
     const ibp = [];
     if (gltfSkin.hasOwnProperty('inverseBindMatrices')) {
         const inverseBindMatrices = gltfSkin.inverseBindMatrices;
-        const ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews);
+        const ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews, true);
         const ibmValues = [];
 
         for (i = 0; i < numJoints; i++) {
@@ -803,7 +803,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
-            indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews) : null;
+            indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
             vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
             primitiveType = getPrimitiveType(primitive);
         }
@@ -881,8 +881,9 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                     if (target.hasOwnProperty('NORMAL')) {
                         accessor = accessors[target.NORMAL];
-                        options.deltaNormals = getAccessorData(accessor, bufferViews, true);
-                        options.deltaNormalsType = getComponentType(accessor.componentType);
+                        // NOTE: the morph targets can't currently accept quantized normals
+                        options.deltaNormals = getAccessorDataFloat32(accessor, bufferViews);
+                        options.deltaNormalsType = TYPE_FLOAT32;
                     }
 
                     // name if specified
