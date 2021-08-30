@@ -1279,7 +1279,6 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
-        // TODO: this assumes data is tightly packed, handle the case data is interleaved
         return new AnimData(getNumComponents(gltfAccessor.type), getAccessorDataFloat32(gltfAccessor, bufferViews));
     };
 
