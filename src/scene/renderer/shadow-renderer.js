@@ -1,6 +1,5 @@
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
-import { Vec4 } from '../../math/vec4.js';
 import { Quat } from '../../math/quat.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Color } from '../../math/color.js';
@@ -542,7 +541,7 @@ class ShadowRenderer {
 
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
-                //const border = faceCount === 1;
+                // const border = faceCount === 1;
                 const border = false;
                 forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, border);
 

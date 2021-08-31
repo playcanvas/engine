@@ -1,8 +1,8 @@
 import { Vec4 } from '../../math/vec4.js';
 
 import {
-    LIGHTTYPE_OMNI,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32
+//    LIGHTTYPE_OMNI,
+    SHADOW_PCF3// , SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32
 } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 

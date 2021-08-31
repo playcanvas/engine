@@ -295,7 +295,6 @@ class GraphicsDevice extends EventHandler {
         const preferWebGl2 = false;
 
 
-
         const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
         options = options || {};

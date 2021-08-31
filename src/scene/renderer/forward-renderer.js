@@ -486,7 +486,7 @@ class ForwardRenderer {
 
         // Note: this is not atlas friendly !!!! needs to adjust x, y, w and h instead !!!
 
-        
+
         if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
     }
 
