@@ -1101,10 +1101,7 @@ class GraphNode extends EventHandler {
 
     // fires an event on all children of the node
     _fireOnHierarchy(name) {
-        if (this.fire) {
-            this.fire(name);
-        }
-
+        this.fire(name);
         for (let i = 0; i < this._children.length; i++) {
             this._children[i]._fireOnHierarchy(name);
         }
