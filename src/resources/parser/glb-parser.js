@@ -147,37 +147,27 @@ const gltfToEngineSemanticMap = {
     'TEXCOORD_1': SEMANTIC_TEXCOORD1
 };
 
-// unpack an array of (quantized) data to Float32Array
-const dequantizeDataFloat32 = function (srcTypedData, normalized) {
-    const getConvFunc = () => {
-        if (normalized) {
-            // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
-            if (srcTypedData instanceof Uint8Array) {
-                return (x) => x / 255.0;
-            } else if (srcTypedData instanceof Int8Array) {
-                return (x) => Math.max(x / 127.0, -1.0);
-            } else if (srcTypedData instanceof Int16Array) {
-                return (x) => Math.max(x / 32767.0, -1.0);
-            } else if (srcTypedData instanceof Uint16Array) {
-                return (x) => x / 65535.0;
-            }
-            // #if _DEBUG
-            console.warn("Unsupported quantized data encountered.");
-            // #endif
-        }
-        return (x) => x;
-    };
-
-    const len = srcTypedData.length;
-    const result = new Float32Array(len);
-    const convFunc = getConvFunc();
-
-    for (let i = 0; i < len; ++i) {
-        result[i] = convFunc(srcTypedData[i]);
+// returns a function for dequantizing the data type
+const getDequantizeFunc = (srcType) => {
+    // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
+    switch (srcType) {
+        case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
+        case TYPE_UINT8: return (x) => x / 255.0;
+        case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
+        case TYPE_UINT16: return (x) => x / 65535.0;
+        default: return (x) => x;
     }
-
-    return result;
 };
+
+// dequantize an array of data
+const dequantizeArray = function (dstArray, srcArray, srcType) {
+    const convFunc = getDequantizeFunc(srcType);
+    const len = srcArray.length;
+    for (let i = 0; i < len; ++i) {
+        dstArray[i] = convFunc(srcArray[i]);
+    }
+    return dstArray;
+}
 
 // get accessor data, making a copy and patching in the case of a sparse accessor
 const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
@@ -256,11 +246,41 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
     return result;
 };
 
-// get accessor data in Float32 format
+// get accessor data as (unnormalized, unquantized) Float32 data
 const getAccessorDataFloat32 = function (gltfAccessor, bufferViews) {
     const data = getAccessorData(gltfAccessor, bufferViews, true);
-    return (data instanceof Float32Array) ? data : dequantizeDataFloat32(data, gltfAccessor.normalized);
+    if (data instanceof Float32Array) { //} || !gltfAccessor.normalized) {
+        // if the source data is quantized (say to int16), but not normalized
+        // then reading the values of the array is the same whether the values
+        // are stored as float32 or int16. so probably no need to convert to
+        // float32.
+        return data;
+    }
+
+    const float32Data = new Float32Array(data.length);
+    dequantizeArray(float32Data, data, getComponentType(gltfAccessor.componentType));
+    return float32Data;
 };
+
+// returns a dequantized bounding box for the accessor
+const getAccessorBoundingBox = function (gltfAccessor) {
+    let min = gltfAccessor.min;
+    let max = gltfAccessor.max;
+    if (!min || !max) {
+        return null;
+    }
+
+    if (gltfAccessor.normalized) {
+        const ctype = getComponentType(gltfAccessor.componentType);
+        min = dequantizeArray([], min, ctype);
+        max = dequantizeArray([], max, ctype);
+    }
+
+    return new BoundingBox(
+        new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+        new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+    );
+}
 
 const getPrimitiveType = function (primitive) {
     if (!primitive.hasOwnProperty('mode')) {
@@ -854,13 +874,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             mesh.materialIndex = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
-            const min = accessor.min;
-            const max = accessor.max;
-            const aabb = new BoundingBox(
-                new Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
-                new Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
-            );
-            mesh.aabb = aabb;
+            mesh.aabb = getAccessorBoundingBox(accessor);
 
             // morph targets
             if (canUseMorph && primitive.hasOwnProperty('targets')) {
@@ -871,12 +885,9 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
-                        options.deltaPositions = getAccessorData(accessor, bufferViews, true);
-                        options.deltaPositionsType = getComponentType(accessor.componentType);
-                        if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
-                            options.aabb = new BoundingBox();
-                            options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
-                        }
+                        options.deltaPositions = getAccessorDataFloat32(accessor, bufferViews);
+                        options.deltaPositionsType = TYPE_FLOAT32;
+                        options.aabb = getAccessorBoundingBox(accessor);
                     }
 
                     if (target.hasOwnProperty('NORMAL')) {
