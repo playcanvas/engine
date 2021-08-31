@@ -356,7 +356,7 @@ class Mesh extends RefCountedObject {
         }
 
         // account for normalized positional data
-        let positionElement = this.vertexBuffer.getFormat().elements.find((e) => e.name === SEMANTIC_POSITION);
+        const positionElement = this.vertexBuffer.getFormat().elements.find((e) => e.name === SEMANTIC_POSITION);
         if (positionElement && positionElement.normalize) {
             const func = (() => {
                 switch (positionElement.dataType) {

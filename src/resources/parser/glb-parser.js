@@ -167,7 +167,7 @@ const dequantizeArray = function (dstArray, srcArray, srcType) {
         dstArray[i] = convFunc(srcArray[i]);
     }
     return dstArray;
-}
+};
 
 // get accessor data, making a copy and patching in the case of a sparse accessor
 const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
@@ -249,7 +249,7 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
 // get accessor data as (unnormalized, unquantized) Float32 data
 const getAccessorDataFloat32 = function (gltfAccessor, bufferViews) {
     const data = getAccessorData(gltfAccessor, bufferViews, true);
-    if (data instanceof Float32Array) { //} || !gltfAccessor.normalized) {
+    if (data instanceof Float32Array || !gltfAccessor.normalized) {
         // if the source data is quantized (say to int16), but not normalized
         // then reading the values of the array is the same whether the values
         // are stored as float32 or int16. so probably no need to convert to
@@ -280,7 +280,7 @@ const getAccessorBoundingBox = function (gltfAccessor) {
         new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
         new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
     );
-}
+};
 
 const getPrimitiveType = function (primitive) {
     if (!primitive.hasOwnProperty('mode')) {
