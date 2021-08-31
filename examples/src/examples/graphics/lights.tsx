@@ -75,15 +75,15 @@ class LightsExample extends Example {
 
 
 
-        // enabled clustered lighting. This is a temporary API and will change in the future
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        // // enabled clustered lighting. This is a temporary API and will change in the future
+        // pc.LayerComposition.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
-        // 1) subdivide space with lights into this many cells:
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
+        // // adjust default clusterered lighting parameters to handle many lights:
+        // // 1) subdivide space with lights into this many cells:
+        // app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
 
-        // 2) and allow this many lights per cell:
-        app.scene.layers.clusteredLightingMaxLights = 48;
+        // // 2) and allow this many lights per cell:
+        // app.scene.layers.clusteredLightingMaxLights = 48;
 
 
 
@@ -192,6 +192,7 @@ class LightsExample extends Example {
                 type: "directional",
                 color: pc.Color.CYAN,
                 range: 100,
+                shadowDistance: 50,
                 castShadows: true,
                 shadowBias: 0.1,
                 normalOffsetBias: 0.2
