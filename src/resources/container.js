@@ -82,7 +82,7 @@ class ContainerResource {
      * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
      * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
      * @example
-     * // load a glb file and instantiate an entity with a model component based on it
+     * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
      *     var entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
