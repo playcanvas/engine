@@ -64,7 +64,7 @@ class CollisionSystemImpl {
         var entity = component.entity;
         var data = component.data;
 
-        if (typeof Ammo !== 'undefined') {
+        if (typeof Ammo !== 'undefined' && entity.enabled && component.enabled) {
             if (entity.trigger) {
                 entity.trigger.destroy();
                 delete entity.trigger;
