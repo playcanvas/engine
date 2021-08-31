@@ -19,7 +19,7 @@ import {
 } from '../constants.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
-import { LayerComposition } from '../layer-composition.js';
+import { LayerComposition } from '../composition/layer-composition.js';
 
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';

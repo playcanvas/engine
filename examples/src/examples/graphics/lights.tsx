@@ -244,8 +244,8 @@ class LightsExample extends Example {
 
 
 
-            if (spotlight.light.light.shadowMap) {
-                app.renderTexture(0.7, 0.7, 0.4, 0.4, spotlight.light.light.shadowMap.texture);
+            if (lights.spot.light.light.shadowMap) {
+                app.renderTexture(0.7, 0.7, 0.4, 0.4, lights.spot.light.light.shadowMap.texture);
             }
 
         });
