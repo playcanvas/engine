@@ -8,7 +8,7 @@ import {
     INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES, PRIMITIVE_POINTS,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
-    TYPE_FLOAT32, TYPE_UINT8,
+    TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
     typedArrayIndexFormats
 } from '../graphics/constants.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
@@ -284,7 +284,6 @@ class Mesh extends RefCountedObject {
         var weightsElement = iterator.element[SEMANTIC_BLENDWEIGHT];
         var indicesElement = iterator.element[SEMANTIC_BLENDINDICES];
 
-
         // Find bone AABBs of attached vertices
         for (j = 0; j < numVerts; j++) {
             for (k = 0; k < 4; k++) {
@@ -354,6 +353,29 @@ class Mesh extends RefCountedObject {
                 }
             }
             iterator.next();
+        }
+
+        // account for normalized positional data
+        let positionElement = this.vertexBuffer.getFormat().elements.find((e) => e.name === SEMANTIC_POSITION);
+        if (positionElement && positionElement.normalize) {
+            const func = (() => {
+                switch (positionElement.dataType) {
+                    case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
+                    case TYPE_UINT8: return (x) => x / 255.0;
+                    case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
+                    case TYPE_UINT16: return (x) => x / 65535.0;
+                    default: return (x) => x;
+                }
+            })();
+
+            for (i = 0; i < numBones; i++) {
+                if (boneUsed[i]) {
+                    const min = boneMin[i];
+                    const max = boneMax[i];
+                    min.set(func(min.x), func(min.y), func(min.z));
+                    max.set(func(max.x), func(max.y), func(max.z));
+                }
+            }
         }
 
         // store bone bounding boxes
