@@ -340,7 +340,7 @@ class AssetRegistry extends EventHandler {
         }
 
         var self = this;
-        var file = asset.getPreferredFile();
+        var file = asset.file;
 
         // open has completed on the resource
         var _opened = function (resource) {

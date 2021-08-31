@@ -25,10 +25,18 @@ class MeshDecalsExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
+        // create material for the plane
+        const planeMaterial = new pc.StandardMaterial();
+        planeMaterial.shininess = 60;
+        planeMaterial.metalness = 0.3;
+        planeMaterial.useMetalness = true;
+        planeMaterial.update();
+
         // create plane primitive
         const primitive = new pc.Entity();
-        primitive.addComponent('model', {
-            type: "plane"
+        primitive.addComponent('render', {
+            type: "plane",
+            material: planeMaterial
         });
 
         // set position and scale and add it to scene
@@ -60,9 +68,9 @@ class MeshDecalsExample extends Example {
         camera.translate(0, 10, 20);
         camera.lookAt(pc.Vec3.ZERO);
 
-        // Create bounding call model and add it to hierarchy
+        // Create bouncing ball model and add it to hierarchy
         const ball = new pc.Entity();
-        ball.addComponent("model", {
+        ball.addComponent("render", {
             type: "sphere"
         });
         app.root.addChild(ball);
@@ -79,14 +87,13 @@ class MeshDecalsExample extends Example {
 
         // Allocate storage for uvs, each vertex stores u and v. And fill them up to display whole texture
         const uvs: any = [];
-        let i;
-        for (i = 0; i < numDecals; i++)
+        for (let i = 0; i < numDecals; i++)
             uvs.push(0, 0,      0, 1,       1, 1,       1, 0);
 
         // Allocate and generate indices. Each quad is representing using 2 triangles, and uses 4 vertices
         const quadTriangles = [0, 1, 2,       2, 3, 0];
         const indices = new Uint16Array(6 * numDecals);
-        for (i = 0; i < numDecals; i++) {
+        for (let i = 0; i < numDecals; i++) {
             indices[6 * i + 0] = 4 * i + quadTriangles[0];
             indices[6 * i + 1] = 4 * i + quadTriangles[1];
             indices[6 * i + 2] = 4 * i + quadTriangles[2];
@@ -107,8 +114,7 @@ class MeshDecalsExample extends Example {
             const g = Math.random() * 255;
             const b = Math.random() * 255;
 
-            let j;
-            for (j = 0; j < 4; j++) {
+            for (let j = 0; j < 4; j++) {
                 colors[i * 16 + j * 4 + 0] = r;
                 colors[i * 16 + j * 4 + 1] = g;
                 colors[i * 16 + j * 4 + 2] = b;
@@ -154,32 +160,20 @@ class MeshDecalsExample extends Example {
         material.emissiveVertexColor = true;
         material.blendType = pc.BLEND_ADDITIVE;     // additive alpha blend
         material.depthWrite = false;        // optimization - no need to write to depth buffer, as decals are part of the ground plane
+        material.emissiveMap = assets.spark.resource;
+        material.update();
 
         // Create the mesh instance
-        const node = new pc.GraphNode();
-        const meshInstance = new pc.MeshInstance(mesh, material, node);
+        const meshInstance = new pc.MeshInstance(mesh, material);
 
-        // Create a model and add the mesh instance to it
-        const model = new pc.Model();
-        model.graph = node;
-        model.meshInstances = [meshInstance];
-
-        // Create Entity and add it to the scene
+        // Create Entity with a render component to render the mesh instance
         const entity = new pc.Entity();
-        app.root.addChild(entity);
-
-        // Add a model compoonent
-        // @ts-ignore engine-tsd
-        app.systems.model.addComponent(entity, {
+        entity.addComponent("render", {
             type: 'asset',
+            meshInstances: [meshInstance],
             castShadows: false
         });
-        entity.model.model = model;
-
-        // @ts-ignore engine-tsd
-        entity.model.meshInstances[0].material.emissiveMap = assets.spark.resource;
-        entity.model.meshInstances[0].material.update();
-
+        app.root.addChild(entity);
 
         // Set an update function on the app's update event
         let time = 0;
@@ -213,7 +207,7 @@ class MeshDecalsExample extends Example {
 
             // fade out all vertex colors once a second
             if (Math.round(time) != Math.round(previousTime)) {
-                for (i = 0; i < colors.length; i++)
+                for (let i = 0; i < colors.length; i++)
                     colors[i] -= 2;
 
                 // colors were updated

@@ -1,3 +1,4 @@
+import { platform } from "../core/platform.js";
 import { EventHandler } from '../core/event-handler.js';
 
 import { XRHAND_LEFT } from './constants.js';
@@ -13,7 +14,7 @@ const vecA = new Vec3();
 const vecB = new Vec3();
 const vecC = new Vec3();
 
-if (window.XRHand) {
+if (platform.browser && window.XRHand) {
     fingerJointIds = [
         ['thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip'],
         ['index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-phalanx-intermediate', 'index-finger-phalanx-distal', 'index-finger-tip'],
@@ -28,6 +29,7 @@ if (window.XRHand) {
  * @name XrHand
  * @classdesc Represents a hand with fingers and joints.
  * @description Represents a hand with fingers and joints.
+ * @hideconstructor
  * @param {XrInputSource} inputSource - Input Source that hand is related to.
  * @property {XrFinger[]} fingers List of fingers of a hand.
  * @property {XrJoint[]} joints List of joints of hand.

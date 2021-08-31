@@ -52,7 +52,7 @@ function skinCode(device, chunks) {
 }
 
 function precisionCode(device) {
-    var pcode = 'precision ' + device.precision + ' float;\n';
+    let pcode = 'precision ' + device.precision + ' float;\n';
     if (device.webgl2) {
         pcode += '#ifdef GL2\nprecision ' + device.precision + ' sampler2DShadow;\n#endif\n';
     }

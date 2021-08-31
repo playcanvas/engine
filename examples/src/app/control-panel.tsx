@@ -9,7 +9,7 @@ const ControlPanel = (props: any) => {
     const [state, setState] = useState({
         showParameters: !!props.controls,
         showCode: !props.controls,
-        collapsed: document.body.offsetWidth < 601
+        collapsed: window.top.innerWidth < 601
     });
     const beforeMount = (monaco: any) => {
         monaco.languages.typescript.typescriptDefaults.addExtraLib(
@@ -48,15 +48,16 @@ const ControlPanel = (props: any) => {
         controls.ui.hidden = !controls.ui.hidden;
     };
 
-    return <Panel id='controlPanel' class={[!props.controls ? 'empty' : 'null', window.top.innerWidth < 601 ? 'mobile' : null]} resizable='top' headerText='CONTROLS' collapsible={true} collapsed={state.collapsed}>
-        <Container id= 'controlPanel-tabs' class='tabs-container'>
-            {props.controls && <Button text='PARAMETERS' class={state.showParameters ? 'selected' : null} id='paramButton' onClick={onClickParametersTab} /> }
+    return <Panel id='controlPanel' class={[window.top.innerWidth > 600 && !props.controls ? 'empty' : 'null', window.top.innerWidth < 601 ? 'mobile' : null]} resizable='top' headerText={window.top.innerWidth < 601 ? (props.controls ? 'CONTROLS & CODE' : 'CODE') : 'CONTROLS'} collapsible={true} collapsed={state.collapsed}>
+        { window.top.innerWidth < 601 && props.controls && <Container id= 'controlPanel-tabs' class='tabs-container'>
+            <Button text='PARAMETERS' class={state.showParameters ? 'selected' : null} id='paramButton' onClick={onClickParametersTab} />
             <Button text='CODE' id='codeButton' class={state.showCode ? 'selected' : null} onClick={onClickCodeTab}/>
         </Container>
+        }
         <Container id='controlPanel-controls'>
             { props.controls }
         </Container>
-        { document.body.offsetWidth < 601 && state.showCode && <MonacoEditor
+        { window.top.innerWidth < 601 && state.showCode && <MonacoEditor
             options={{
                 readOnly: true
             }}

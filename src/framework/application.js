@@ -1,4 +1,5 @@
 import { version, revision } from '../core/core.js';
+import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
@@ -27,7 +28,7 @@ import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
-import { LayerComposition } from '../scene/layer-composition.js';
+import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
@@ -106,7 +107,6 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneDepth } from './scene-depth.js';
-import { XRTYPE_VR } from "../xr/constants";
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
@@ -407,6 +407,9 @@ class Application extends EventHandler {
         setApplication(this);
 
         app = this;
+
+        this._destroyRequested = false;
+        this._inFrameUpdate = false;
 
         this._time = 0;
         this.timeScale = 1;
@@ -1417,8 +1420,8 @@ class Application extends EventHandler {
      * events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
-        // Don't update if we are in VR
-        if ((this.vr && this.vr.display) || (this.xr.active && this.xr.type === XRTYPE_VR)) {
+        // Don't update if we are in VR or XR
+        if ((!this._allowResize) || (this.xr.active)) {
             return;
         }
 
@@ -1954,21 +1957,29 @@ class Application extends EventHandler {
     /**
      * @function
      * @name Application#destroy
-     * @description Destroys application and removes all event listeners.
+     * @description Destroys application and removes all event listeners at the end of the current engine frame update.
+     * However, if called outside of the engine frame update, calling destroy() will destroy the application immediately.
      * @example
      * this.app.destroy();
      */
     destroy() {
+        if (this._inFrameUpdate) {
+            this._destroyRequested = true;
+            return;
+        }
+
         var i, l;
         var canvasId = this.graphicsDevice.canvas.id;
 
         this.off('librariesloaded');
-        document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+        }
         this._visibilityChangeHandler = null;
-        this.onVisibilityChange = null;
 
         this.root.destroy();
         this.root = null;
@@ -2054,7 +2065,7 @@ class Application extends EventHandler {
         this.lightmapper.destroy();
         this.lightmapper = null;
 
-        this.batcher.destroyManager();
+        this.batcher.destroy();
         this.batcher = null;
 
         this._entityIndex = {};
@@ -2150,7 +2161,7 @@ var makeTick = function (_app) {
         } else if (application.xr.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = window.requestAnimationFrame(application.tick);
+            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)
@@ -2162,6 +2173,7 @@ var makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
+        application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         if (frame) {
@@ -2190,6 +2202,12 @@ var makeTick = function (_app) {
 
         if (application.vr && application.vr.display && application.vr.display.presenting) {
             application.vr.display.submitFrame();
+        }
+
+        application._inFrameUpdate = false;
+
+        if (application._destroyRequested) {
+            application.destroy();
         }
     };
 };

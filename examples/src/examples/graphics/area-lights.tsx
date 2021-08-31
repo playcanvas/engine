@@ -48,10 +48,10 @@ class AreaLightsExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
-                type: primitiveType
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
@@ -95,7 +95,7 @@ class AreaLightsExample extends Example {
 
             const brightShape = new pc.Entity();
             // primitive shape that matches light source shape
-            brightShape.addComponent("model", {
+            brightShape.addComponent("render", {
                 type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: brightMaterial,
                 castShadows: (type === "directional") ? false : true
@@ -113,7 +113,7 @@ class AreaLightsExample extends Example {
                 blackMaterial.update();
 
                 const blackShape = new pc.Entity();
-                blackShape.addComponent("model", {
+                blackShape.addComponent("render", {
                     type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                     material: blackMaterial
                 });
@@ -146,15 +146,10 @@ class AreaLightsExample extends Example {
         // create ground plane
         createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
 
-        // Create a model entity and assign the statue model
-        const statue = new pc.Entity();
-        statue.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model
-        });
+        // get the instance of the statue and set up with render component
+        const statue = assets.statue.resource.instantiateRenderEntity();
         statue.setLocalScale(0.4, 0.4, 0.4);
         app.root.addChild(statue);
-
 
         // Create the camera, which renders entities
         const camera = new pc.Entity();

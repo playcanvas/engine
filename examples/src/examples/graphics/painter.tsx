@@ -43,8 +43,7 @@ class PainterExample extends Example {
             width: 1024,
             height: 1024,
             format: pc.PIXELFORMAT_R8_G8_B8,
-            // @ts-ignore engine-tsd
-            autoMipmap: false,
+            mipmaps: false,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
@@ -56,10 +55,6 @@ class PainterExample extends Example {
         // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
         const paintLayer = new pc.Layer({ name: "paintLayer" });
         app.scene.layers.insert(paintLayer, 0);
-
-        // set up layer to render to the render targer
-        // @ts-ignore engine-tsd
-        paintLayer.renderTarget = renderTarget;
 
         // create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
         const brushMaterial = new pc.StandardMaterial();
@@ -83,12 +78,14 @@ class PainterExample extends Example {
             return brush;
         }
 
-        // Create orthographic camera, which renders brushes in paintLayer
+        // Create orthographic camera, which renders brushes in paintLayer, and renders before the main camera
         const paintCamera = new pc.Entity();
         paintCamera.addComponent("camera", {
             clearColorBuffer: false,
             projection: pc.PROJECTION_ORTHOGRAPHIC,
-            layers: [paintLayer.id]
+            layers: [paintLayer.id],
+            renderTarget: renderTarget,
+            priority: -1
         });
 
         // make it look at the center of the render target, some distance away
@@ -115,7 +112,7 @@ class PainterExample extends Example {
         const worldLayer = app.scene.layers.getLayerByName("World");
         const box = createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15), [worldLayer.id], material);
 
-        let progress = 1, stepProgress: any;
+        let progress = 1;
         let scale: number;
         let startPos: pc.Vec3, endPos: pc.Vec3;
         const pos = new pc.Vec3();

@@ -1,6 +1,7 @@
-import '../polyfill/OESVertexArrayObject.js';
+import { setupVertexArrayObject } from '../polyfill/OESVertexArrayObject.js';
 import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
+import { platform } from '../core/platform.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -312,18 +313,21 @@ class GraphicsDevice extends EventHandler {
             throw new Error("WebGL not supported");
         }
 
+        const isChrome = platform.browser && !!window.chrome;
+        const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
+
         this.gl = gl;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        const isChrome = !!window.chrome;
-        const isMac = navigator.appVersion.indexOf("Mac") !== -1;
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
-        // init polyfill for VAOs
-        window.setupVertexArrayObject(gl);
+        // init polyfill for VAOs under webgl1
+        if (!this.webgl2) {
+            setupVertexArrayObject(gl);
+        }
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
@@ -771,11 +775,14 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
         let ext;
 
-        const supportedExtensions = gl.getSupportedExtensions();
+        const supportedExtensions = {};
+        gl.getSupportedExtensions().forEach((e) => {
+            supportedExtensions[e] = true;
+        });
 
         const getExtension = function () {
             for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
+                if (supportedExtensions.hasOwnProperty(arguments[i])) {
                     return gl.getExtension(arguments[i]);
                 }
             }
@@ -983,6 +990,8 @@ class GraphicsDevice extends EventHandler {
 
         this.unpackPremultiplyAlpha = false;
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
     initializeContextCaches() {
@@ -1548,8 +1557,10 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
-        this.boundVao = null;
-        this.gl.bindVertexArray(null);
+        if (this.boundVao) {
+            this.boundVao = null;
+            this.gl.bindVertexArray(null);
+        }
 
         // Unset the render target
         const target = this.renderTarget;
@@ -2364,6 +2375,8 @@ class GraphicsDevice extends EventHandler {
         let sampler, samplerValue, texture, numTextures; // Samplers
         let uniform, scopeId, uniformVersion, programVersion; // Uniforms
         const shader = this.shader;
+        if (!shader)
+            return;
         const samplers = shader.samplers;
         const uniforms = shader.uniforms;
 
@@ -3244,6 +3257,16 @@ class GraphicsDevice extends EventHandler {
 
         const definition = shader.definition;
         const attrs = definition.attributes;
+
+        // #if _DEBUG
+        if (!definition.vshader) {
+            console.error('No vertex shader has been specified when creating a shader.');
+        }
+        if (!definition.fshader) {
+            console.error('No fragment shader has been specified when creating a shader.');
+        }
+        // #endif
+
         const glVertexShader = this.compileShaderSource(definition.vshader, true);
         const glFragmentShader = this.compileShaderSource(definition.fshader, false);
 
@@ -3316,6 +3339,9 @@ class GraphicsDevice extends EventHandler {
     }
 
     _addLineNumbers(src) {
+        if (!src)
+            return "";
+
         const lines = src.split("\n");
 
         // Chrome reports shader errors on lines indexed from 1
@@ -3492,7 +3518,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 

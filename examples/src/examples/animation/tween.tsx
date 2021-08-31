@@ -62,18 +62,18 @@ class TweenExample extends Example {
         const colors: Array<pc.Color> = [];
 
         for (let i = 0; i < easingFunctions.length; i++) {
-            // Create an entity with a sphere model component
+            // Create an entity with a sphere render component
             const sphere = new pc.Entity();
 
-            sphere.addComponent("model", {
+            sphere.addComponent("render", {
                 type: "sphere"
             });
             // @ts-ignore engine-tsd
-            sphere.model.material.diffuse.set(1, 0, 0);
+            sphere.render.material.diffuse.set(1, 0, 0);
             // @ts-ignore engine-tsd
-            sphere.model.material.specular.set(0.6, 0.6, 0.6);
+            sphere.render.material.specular.set(0.6, 0.6, 0.6);
             // @ts-ignore engine-tsd
-            sphere.model.material.shininess = 20;
+            sphere.render.material.shininess = 20;
 
             sphere.addComponent("script");
             sphere.script.create("tween", {

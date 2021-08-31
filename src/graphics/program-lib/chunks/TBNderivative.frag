@@ -1,3 +1,5 @@
+uniform float tbnBasis;
+
 // http://www.thetenthplanet.de/archives/1180
 void getTBN() {
     vec2 uv = $UV;
@@ -15,6 +17,7 @@ void getTBN() {
     vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 
     // construct a scale-invariant frame
-    float invmax = 1.0 / sqrt( max( dot(T,T), dot(B,B) ) );
-    dTBN = mat3( T * invmax, B * invmax, dVertexNormalW );
+    float denom = max( dot(T,T), dot(B,B) );
+    float invmax = (denom == 0.0) ? 0.0 : tbnBasis / sqrt( denom );
+    dTBN = mat3(T * invmax, -B * invmax, dVertexNormalW );
 }

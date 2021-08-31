@@ -15,7 +15,7 @@ class SceneHandler {
     }
 
     load(url, callback) {
-        SceneUtils.load(url, callback);
+        SceneUtils.load(url, this.maxRetries, callback);
     }
 
     open(url, data) {

@@ -1,4 +1,5 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
+// @ts-ignore: library file import
+import * as pc from 'playcanvas/build/playcanvas.dbg.js';
 // @ts-ignore: library file import
 import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 import Example from '../../app/example';
@@ -6,6 +7,7 @@ import Example from '../../app/example';
 class MiniStatsExample extends Example {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
+    static ENGINE = 'DEBUG';
 
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, pcx: any): void {
@@ -157,7 +159,7 @@ class MiniStatsExample extends Example {
         let adding = true;
         const step = 10, max = 2000;
         let entity: pc.GraphNode, vertexBuffer: pc.VertexBuffer, texture: { destroy: () => void; };
-        app.on("update", function (dt) {
+        app.on("update", function (dt: any) {
 
             // execute some tasks multiple times per frame
             for (let i = 0; i < step; i++) {
@@ -189,8 +191,7 @@ class MiniStatsExample extends Example {
                         width: 64,
                         height: 64,
                         format: pc.PIXELFORMAT_R8_G8_B8,
-                        // @ts-ignore engine-tsd
-                        autoMipmap: false
+                        mipmaps: false
                     });
                     textures.push(texture);
 

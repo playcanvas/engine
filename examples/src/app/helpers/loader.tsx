@@ -2,10 +2,10 @@ import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 
 interface AssetLoaderProps {
- name: string,
- type: string,
- data?: any,
- url?: string
+    name: string,
+    type: string,
+    data?: any,
+    url?: string
 }
 
 class AssetLoader extends React.Component <AssetLoaderProps, any>  {
@@ -29,8 +29,8 @@ class AssetLoader extends React.Component <AssetLoaderProps, any>  {
 }
 
 interface ScriptLoaderProps {
- name: string,
- url: string
+    name: string,
+    url: string
 }
 class ScriptLoader extends React.Component <ScriptLoaderProps, any>  {
     static ctor: any;

@@ -59,6 +59,7 @@ import { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 import { GraphNode } from './scene/graph-node.js';
 import { Material } from './scene/materials/material.js';
 import { Mesh } from './scene/mesh.js';
+import { Morph } from './scene/morph.js';
 import { MeshInstance, Command } from './scene/mesh-instance.js';
 import { Model } from './scene/model.js';
 import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
@@ -67,6 +68,7 @@ import { Scene } from './scene/scene.js';
 import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
+import { Batch } from './scene/batching/batch.js';
 
 import { Animation, Key, Node } from './animation/animation.js';
 import { Skeleton } from './animation/skeleton.js';
@@ -107,6 +109,7 @@ import {
 } from './framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+import { basisInitialize } from './resources/basis.js';
 
 // CORE
 
@@ -503,6 +506,23 @@ export var scene = {
     Scene: Scene,
     Skin: Skin,
     SkinInstance: SkinInstance
+};
+
+Object.defineProperty(Batch.prototype, 'model', {
+    get: function () {
+        // #if _DEBUG
+        console.error('DEPRECATED: pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');
+        // #endif
+        return null;
+    }
+});
+
+Morph.prototype.getTarget = function (index) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
+    // #endif
+
+    return this.targets[index];
 };
 
 GraphNode.prototype._dirtify = function (local) {
@@ -1058,3 +1078,15 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
 };
+
+export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
+    // #if _DEBUG
+    console.warn('DEPRECATED: pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
+    // #endif
+    basisInitialize({
+        glueUrl: glueUrl,
+        wasmUrl: wasmUrl,
+        fallbackUrl: fallbackUrl,
+        lazyInit: true
+    });
+}

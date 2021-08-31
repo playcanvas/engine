@@ -42,11 +42,11 @@ class RenderToTextureExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
+            primitive.addComponent('render', {
                 type: primitiveType,
-                layers: layer
+                layers: layer,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
@@ -61,8 +61,7 @@ class RenderToTextureExample extends Example {
             width: 512,
             height: 256,
             format: pc.PIXELFORMAT_R8_G8_B8,
-            // @ts-ignore engine-tsd
-            autoMipmap: true,
+            mipmaps: true,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
@@ -70,7 +69,9 @@ class RenderToTextureExample extends Example {
         });
         const renderTarget = new pc.RenderTarget({
             colorBuffer: texture,
-            depth: true
+            depth: true,
+            // @ts-ignore
+            flipY: true
         });
 
         // create a layer for object that do not render into texture
@@ -111,7 +112,7 @@ class RenderToTextureExample extends Example {
         });
 
         // add sphere at the position of this camera to see it in the world
-        textureCamera.addComponent("model", {
+        textureCamera.addComponent("render", {
             type: "sphere"
         });
         app.root.addChild(textureCamera);
@@ -132,15 +133,14 @@ class RenderToTextureExample extends Example {
         // this is only added to excluded Layer, so it does not render into texture
         const tv = createPrimitive("plane", new pc.Vec3(6, 8, -5), new pc.Vec3(20, 10, 10), pc.Color.BLACK, [excludedLayer.id]);
         tv.setLocalEulerAngles(90, 0, 0);
-        tv.model.castShadows = false;
-        tv.model.receiveShadows = false;
+        tv.render.castShadows = false;
+        tv.render.receiveShadows = false;
         // @ts-ignore engine-tsd
-        tv.model.material.emissiveMap = texture;     // assign the rendered texture as a emissive texture
-        tv.model.material.update();
+        tv.render.material.emissiveMap = texture;     // assign the rendered texture as an emissive texture
+        tv.render.material.update();
 
-        // setup skydome
-        app.scene.skyboxMip = 0;        // use top mipmap level of cubemap (full resolution)
-
+        // setup skydome, use top mipmap level of cubemap (full resolution)
+        app.scene.skyboxMip = 0;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
         app.scene.gammaCorrection = pc.GAMMA_SRGB;

@@ -86,7 +86,7 @@ export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
-export { LayerComposition } from './scene/layer-composition.js';
+export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { Lightmapper } from './scene/lightmapper.js';
 export { Material } from './scene/materials/material.js';
@@ -119,6 +119,7 @@ export { AnimData } from './anim/evaluator/anim-data.js';
 export { AnimEvaluator } from './anim/evaluator/anim-evaluator.js';
 export { AnimSnapshot } from './anim/evaluator/anim-snapshot.js';
 export { AnimTarget } from './anim/evaluator/anim-target.js';
+export { AnimEvents } from './anim/evaluator/anim-events.js';
 export { AnimTrack } from './anim/evaluator/anim-track.js';
 export { DefaultAnimBinder } from './anim/binder/default-anim-binder.js';
 export * from './anim/controller/constants.js';
@@ -143,7 +144,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisInitialize, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
@@ -299,6 +300,8 @@ export { XrHitTestSource } from './xr/xr-hit-test-source.js';
 export { XrImageTracking } from './xr/xr-image-tracking.js';
 export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
+export { XrPlaneDetection } from './xr/xr-plane-detection.js';
+export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';

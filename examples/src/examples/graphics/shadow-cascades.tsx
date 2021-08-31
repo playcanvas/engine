@@ -1,3 +1,4 @@
+import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
@@ -81,6 +82,7 @@ class ShadowCascadesExample extends Example {
         // add the fly camera script to the camera, to allow mouse / keyboard movement
         camera.addComponent("script");
         camera.script.create("flyCamera");
+        // @ts-ignore
         camera.script.flyCamera.speed = 60;
 
         // Create a directional light casting cascaded shadows

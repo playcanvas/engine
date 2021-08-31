@@ -55,6 +55,7 @@ class Command {
  * @param {Material} material - The material used to render this instance.
  * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
  * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
+ * @property {MorphInstance} morphInstance The morph instance managing morphing of this mesh instance, or null if morphing is not used.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
  * @property {GraphNode} node The graph node defining the transform for this instance.
@@ -183,6 +184,10 @@ class MeshInstance {
     // remove texture reference from lightmap cache
     static decRefLightmap(texture) {
         this._lightmapCache.decRef(texture);
+    }
+
+    static destroyLightmapCache() {
+        this._lightmapCache.destroy();
     }
 
     get renderStyle() {
@@ -325,26 +330,23 @@ class MeshInstance {
     }
 
     set material(material) {
-        var i;
-        for (i = 0; i < this._shader.length; i++) {
+        for (let i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
-        }
-        // Remove the material's reference to this mesh instance
-        if (this._material) {
-            var meshInstances = this._material.meshInstances;
-            i = meshInstances.indexOf(this);
-            if (i !== -1) {
-                meshInstances.splice(i, 1);
-            }
         }
 
         var prevMat = this._material;
 
+        // Remove the material's reference to this mesh instance
+        if (prevMat) {
+            prevMat.removeMeshInstanceRef(this);
+        }
+
         this._material = material;
 
         if (this._material) {
+
             // Record that the material is referenced by this mesh instance
-            this._material.meshInstances.push(this);
+            this._material.addMeshInstanceRef(this);
 
             this.updateKey();
 
@@ -519,14 +521,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            var pos = this.aabb.center;
-            if (this._aabb._radiusVer !== this._aabbVer) {
-                this._aabb._radius = this._aabb.halfExtents.length();
-                this._aabb._radiusVer = this._aabbVer;
-            }
-
-            _tempSphere.radius = this._aabb._radius;
-            _tempSphere.center = pos;
+            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
+            _tempSphere.radius = this._aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere);
         }

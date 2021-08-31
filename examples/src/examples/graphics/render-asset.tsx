@@ -26,7 +26,6 @@ class RenderAssetExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         const cubeEntities: pc.Entity[] = [];
-        let statueEntity: pc.Entity = null;
 
         app.start();
 
@@ -43,7 +42,7 @@ class RenderAssetExample extends Example {
         app.root.addChild(cubeEntities[1]);
 
         // get the instance of the statue and set up with render component
-        statueEntity = assets.statue.resource.instantiateRenderEntity();
+        const statueEntity = assets.statue.resource.instantiateRenderEntity();
         app.root.addChild(statueEntity);
 
         // Create an Entity with a camera component
@@ -60,6 +59,7 @@ class RenderAssetExample extends Example {
         app.scene.setSkybox(assets["helipad.dds"].resources);
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
+        app.scene.skyboxMip = 1;
 
         // spin the meshes
         app.on("update", function (dt) {

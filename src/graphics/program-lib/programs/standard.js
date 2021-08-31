@@ -22,7 +22,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { WorldClusters } from '../../../scene/world-clusters.js';
-import { LayerComposition } from '../../../scene/layer-composition.js';
+import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -235,12 +235,15 @@ var standard = {
     },
 
     _setMapTransform: function (codes, name, id, uv) {
-        codes[0] += "uniform vec4 texture_" + name + "MapTransform;\n";
+        const varName = `texture_${name}MapTransform`;
+        const checkId = id + uv * 100;
 
-        var checkId = id + uv * 100;
+        // upload a 3x2 matrix and manually perform the multiplication
+        codes[0] += `uniform vec3 ${varName}0;\n`;
+        codes[0] += `uniform vec3 ${varName}1;\n`;
         if (!codes[3][checkId]) {
-            codes[1] += "varying vec2 vUV" + uv + "_" + id + ";\n";
-            codes[2] += "   vUV" + uv + "_" + id + " = uv" + uv + " * texture_" + name + "MapTransform.xy + texture_" + name + "MapTransform.zw;\n";
+            codes[1] += `varying vec2 vUV${uv}_${id};\n`;
+            codes[2] += `   vUV${uv}_${id} = vec2(dot(vec3(uv${uv}, 1), ${varName}0), dot(vec3(uv${uv}, 1), ${varName}1));\n`;
             codes[3][checkId] = true;
         }
         return codes;
@@ -784,7 +787,6 @@ var standard = {
 
         var oldVars = varyings;
         varyings = "";
-        varyings += this._addVaryingIfNeeded(code, "vec4", "vMainShadowUv");
         varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
@@ -1063,9 +1065,11 @@ var standard = {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
 
                 // directional (cascaded) shadows
-                code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
-                code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
-                code += "uniform float light" + i + "_shadowCascadeCount;\n";
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeCount;\n";
+                }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius

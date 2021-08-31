@@ -43,7 +43,8 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     const onValidate = (markers: Array<any>) => {
-        if (markers.length === 0) {
+        // filter out markers which are warnings
+        if (markers.filter((m) => m.severity > 1).length === 0) {
             props.setFiles(files);
             props.setLintErrors(false);
         } else {
@@ -64,19 +65,24 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     useEffect(() => {
-        monacoEditor?.setScrollPosition({ scrollTop: 0 });
+        const codePane = document.getElementById('codePane');
+        if (files.length > 1) {
+            codePane.classList.add('multiple-files');
+        } else {
+            codePane.classList.remove('multiple-files');
+        }
         if (!files[selectedFile]) setSelectedFile(0);
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
-        const codePane = document.getElementById('codePane');
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
+            localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
         });
         (window as any).toggleEvent = true;
     });
 
-    return <Panel headerText='CODE' id='codePane'>
+    return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') !== 'false' ? 'collapsed' : null}>
         <div className='panel-toggle' id='codePane-panel-toggle'/>
         { props.files && props.files.length > 1 && <Container class='tabs-container'>
             {props.files.map((file: File, index: number) => {
@@ -91,6 +97,11 @@ const CodeEditor = (props: CodeEditorProps) => {
             onMount={editorDidMount}
             onChange={onChange}
             onValidate={onValidate}
+            options={{
+                scrollbar: {
+                    horizontal: 'visible'
+                }
+            }}
         />
     </Panel>;
 };

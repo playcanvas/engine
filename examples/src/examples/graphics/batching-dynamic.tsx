@@ -23,10 +23,16 @@ class BatchingDynamicExample extends Example {
         // create two material
         const material1 = new pc.StandardMaterial();
         material1.diffuse = new pc.Color(1, 1, 0);
+        material1.shininess = 40;
+        material1.metalness = 0.5;
+        material1.useMetalness = true;
         material1.update();
 
         const material2 = new pc.StandardMaterial();
         material2.diffuse = new pc.Color(0, 1, 1);
+        material2.shininess = 40;
+        material2.metalness = 0.5;
+        material2.useMetalness = true;
         material2.update();
 
         // create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
@@ -47,6 +53,7 @@ class BatchingDynamicExample extends Example {
             entity.addComponent("render", {
                 type: shapeName,
                 material: Math.random() < 0.5 ? material1 : material2,
+                castShadows: true,
 
                 // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
                 // there will be at least 2 draw calls, one for each material
@@ -60,20 +67,35 @@ class BatchingDynamicExample extends Example {
             entities.push(entity);
         }
 
-        // Create an entity with a directional light component
-        const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "directional"
+        // Create an Entity for the ground
+        const ground = new pc.Entity();
+        ground.addComponent("render", {
+            type: "box",
+            material: material2
         });
-        app.root.addChild(light);
-        light.setLocalEulerAngles(45, 30, 0);
+        ground.setLocalScale(150, 1, 150);
+        ground.setLocalPosition(0, -26, 0);
+        app.root.addChild(ground);
 
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0.3, 0.3, 0.3)
+            clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
         app.root.addChild(camera);
+
+        // Create an entity with a directional light component
+        // Add it as a child of a camera to rotate with the camera
+        const light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            castShadows: true,
+            shadowBias: 0.2,
+            normalOffsetBias: 0.06,
+            shadowDistance: 150
+        });
+        camera.addChild(light);
+        light.setLocalEulerAngles(15, 30, 0);
 
         // Set an update function on the app's update event
         let time = 0;
@@ -89,7 +111,7 @@ class BatchingDynamicExample extends Example {
             }
 
             // orbit camera around
-            camera.setLocalPosition(100 * Math.sin(time), 0, 100 * Math.cos(time));
+            camera.setLocalPosition(70 * Math.sin(time), 0, 70 * Math.cos(time));
             camera.lookAt(pc.Vec3.ZERO);
         });
     }

@@ -1,9 +1,9 @@
 import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 
-class ModelShapesExample extends Example {
+class ShapesExample extends Example {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Shapes';
+    static NAME = 'Shapes';
 
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
@@ -17,14 +17,14 @@ class ModelShapesExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // All model component primitive shape types
+        // All render component primitive shape types
         const shapes = ["box", "plane", "cone", "cylinder", "sphere", "capsule"];
         let x = -1, y = -1;
 
         shapes.forEach(function (shape) {
-            // Create an entity with a model component
+            // Create an entity with a render component
             const entity = new pc.Entity();
-            entity.addComponent("model", {
+            entity.addComponent("render", {
                 type: shape
             });
             app.root.addChild(entity);
@@ -55,4 +55,4 @@ class ModelShapesExample extends Example {
     }
 }
 
-export default ModelShapesExample;
+export default ShapesExample;

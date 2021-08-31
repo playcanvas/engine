@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 // @ts-ignore: library file import
 import { Container } from '@playcanvas/pcui/pcui-react';
 // @ts-ignore: library file import
-import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
+import { HashRouter as Router, Switch, Route } from "react-router-dom";
 import SideBar from './sidebar';
 import CodeEditor from './code-editor';
 import ExampleIframe from './example-iframe';
@@ -14,19 +14,22 @@ import './styles.css';
 
 interface ExampleRoutesProps {
     files: Array<File>,
-    setDefaultFiles: (files: Array<File>) => void,
-    showMiniStats: boolean
+    setDefaultFiles: (files: Array<File>) => void
 }
 const ExampleRoutes = (props: ExampleRoutesProps) => {
+    const defaultExample = examples.paths['/misc/hello-world'];
     return (
         <Switch>
             {
-                examples.paths.map((p) => {
-                    return <Route key={p.path} path={p.path}>
-                        <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} showMiniStats={props.showMiniStats} />
+                Object.values(examples.paths).map((p) => {
+                    return <Route key={p.path} path={[p.path, `${p.path}.html`]}>
+                        <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} />
                     </Route>;
                 })
             }
+            <Route path='/'>
+                <defaultExample.example path={defaultExample.path} defaultFiles={defaultExample.files} files={props.files} setDefaultFiles={props.setDefaultFiles} />
+            </Route>
         </Switch>
     );
 };
@@ -57,7 +60,10 @@ const MainLayout = () => {
     // The example files are the files that should be loaded and executed by the example. Upon hitting the play button, the currently set edited files are set to the example files
     const [exampleFiles, setExampleFiles] = useState(emptyFiles);
     const [lintErrors, setLintErrors] = useState(false);
-    const [showMiniStats, setShowMiniStats] = useState(false);
+
+    const updateShowMiniStats = (value: boolean) => {
+        (window as any)._showMiniStats = value;
+    };
 
     const playButtonRef = createRef();
     useEffect(() => {
@@ -88,25 +94,27 @@ const MainLayout = () => {
         <div id='appInner'>
             <Router>
                 <Switch>
-                    <Route exact path="/">
-                        <Redirect to="/misc/hello-world" />
-                    </Route>
                     {
-                        examples.paths.map((p) => {
+                        Object.values(examples.paths).map((p) => {
                             const e = new p.example();
                             const assetsLoader = e.load;
                             const controls = e.controls;
-                            return <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`, `${p.path}.html`]}>
-                                <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files}/>
-                            </Route>;
+                            return [
+                                <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`]}>
+                                    <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} engine={e.constructor.ENGINE} files={p.files} />
+                                </Route>,
+                                <Route key={`/debug${p.path}`} path={[`/debug${p.path}`]}>
+                                    <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null}  engine={e.constructor.ENGINE} files={p.files} debugExample={e}/>
+                                </Route>
+                            ];
                         })
                     }
-                    <Route key='main' path={`/`}>
+                    <Route key='main' path='/'>
                         <SideBar categories={examples.categories}/>
                         <Container id='main-view-wrapper'>
-                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} showMiniStats={showMiniStats} setShowMiniStats={setShowMiniStats} />
+                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} setShowMiniStats={updateShowMiniStats} />
                             <Container id='main-view'>
-                                <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} showMiniStats={showMiniStats} />
+                                <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} />
                                 <CodeEditor files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles} setFiles={setEditedFiles.bind(this)} setLintErrors={setLintErrors} />
                             </Container>
                         </Container>

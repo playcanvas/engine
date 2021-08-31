@@ -67,7 +67,7 @@ class RaycastExample extends Example {
                 app.root.addChild(e);
                 e.setPosition(x, y, z);
 
-                e.addComponent("model", {
+                e.addComponent("render", {
                     type: type,
                     material: material
                 });
@@ -107,11 +107,11 @@ class RaycastExample extends Example {
                 time += dt;
 
                 // Reset all shapes to green
-                app.root.findComponents('model').forEach(function (model: pc.ModelComponent) {
-                    model.material = green;
+                app.root.findComponents('render').forEach(function (render: pc.RenderComponent) {
+                    render.material = green;
                 });
 
-                y = 2 + Math.sin(time);
+                y = 2 + 1.2 * Math.sin(time);
                 start.set(0, y, 0);
                 end.set(10, y, 0);
 
@@ -121,7 +121,7 @@ class RaycastExample extends Example {
                 // @ts-ignore engine-tsd
                 const result = app.systems.rigidbody.raycastFirst(start, end);
                 if (result) {
-                    result.entity.model.material = red;
+                    result.entity.render.material = red;
 
                     // Render the normal on the surface from the hit point
                     // @ts-ignore engine-tsd
@@ -129,7 +129,7 @@ class RaycastExample extends Example {
                     app.renderLine(result.point, temp, blue);
                 }
 
-                y = -2 + Math.sin(time);
+                y = -2 + 1.2 * Math.sin(time);
                 start.set(0, y, 0);
                 end.set(10, y, 0);
 
@@ -139,7 +139,7 @@ class RaycastExample extends Example {
                 // @ts-ignore engine-tsd
                 const results = app.systems.rigidbody.raycastAll(start, end);
                 results.forEach(function (result: { entity: pc.Entity, point: pc.Vec3 }) {
-                    result.entity.model.material = red;
+                    result.entity.render.material = red;
 
                     // Render the normal on the surface from the hit point
                     // @ts-ignore engine-tsd

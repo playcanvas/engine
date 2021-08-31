@@ -1,4 +1,6 @@
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
+import { AnimTransition } from '../../../anim/controller/anim-transition.js';
+
 
 /**
  * @class
@@ -60,18 +62,20 @@ class AnimComponentLayer {
     /**
      * @function
      * @name AnimComponentLayer#assignAnimation
-     * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * @description Assigns an animation track to a state in the current graph. If a state for the given nodeName doesn't exist, it will be created. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
+     * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
+     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
-    assignAnimation(nodeName, animTrack) {
+    assignAnimation(nodeName, animTrack, speed, loop) {
         if (animTrack.constructor !== AnimTrack) {
             // #if _DEBUG
             console.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             // #endif
             return;
         }
-        this._controller.assignAnimation(nodeName, animTrack);
+        this._controller.assignAnimation(nodeName, animTrack, speed, loop);
         if (this._component.activate && this._component.playable) {
             this._component.playing = true;
         }
@@ -87,6 +91,23 @@ class AnimComponentLayer {
         if (this._controller.removeNodeAnimations(nodeName)) {
             this._component.playing = false;
         }
+    }
+
+    /**
+     * @function
+     * @name AnimComponentLayer#transition
+     * @description Transition to any state in the current layers graph. Transitions can be instant or take an optional blend time.
+     * @param {string} to - The state that this transition will transition to.
+     * @param {number} [time] - The duration of the transition in seconds. Defaults to 0.
+     * @param {number} [transitionOffset] - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1. Defaults to null.
+     */
+    transition(to, time = 0, transitionOffset = null) {
+        this._controller.updateStateFromTransition(new AnimTransition({
+            from: this._controller.activeStateName,
+            to,
+            time,
+            transitionOffset
+        }));
     }
 
     /**

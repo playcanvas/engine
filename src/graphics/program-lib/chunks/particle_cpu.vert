@@ -74,11 +74,11 @@ void main(void)
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
 
     vec2 quadXY = vertPos.xy;
-    
-#ifndef USE_MESH
-    texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
-#else
+
+#ifdef USE_MESH
     texCoordsAlphaLife = vec4(particle_vertexData5.zw, particle_vertexData2.z, particle_vertexData.w);
+#else
+    texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
 #endif
     mat2 rotMatrix;
 

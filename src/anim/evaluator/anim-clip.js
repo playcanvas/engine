@@ -15,7 +15,7 @@ import { AnimSnapshot } from './anim-snapshot.js';
  */
 // TODO: add configurable looping start/end times?
 class AnimClip {
-    constructor(track, time, speed, playing, loop) {
+    constructor(track, time, speed, playing, loop, eventHandler) {
         this._name = track.name;        // default to track name
         this._track = track;
         this._snapshot = new AnimSnapshot(track);
@@ -25,6 +25,12 @@ class AnimClip {
         this._loop = loop;              // whether to loop
         this._blendWeight = 1.0;        // blend weight 0..1
         this._blendOrder = 0.0;         // blend order relative to other clips
+        this._eventHandler = eventHandler;
+        this._eventCursor = 0;
+        // move the event cursor to an event that should fire after the starting time
+        while (this._track.events[this._eventCursor] && this._track.events[this._eventCursor].time < this.time) {
+            this._eventCursor++;
+        }
     }
 
     get name() {
@@ -83,12 +89,49 @@ class AnimClip {
         this._blendOrder = blendOrder;
     }
 
+    get eventCursor() {
+        return this._eventCursor;
+    }
+
+    set eventCursor(value) {
+        this._eventCursor = value;
+    }
+
+    activeEventsForFrame(frameStartTime, frameEndTime) {
+        if (frameStartTime === 0) {
+            this.eventCursor = 0;
+        }
+        var clippedFrameDuration;
+        // if this frame overlaps with the end of the track, we should clip off the end of the frame time then check that clipped time later
+        if (frameEndTime > this.track.duration) {
+            clippedFrameDuration = frameEndTime - this.track.duration;
+            frameEndTime = this.track.duration;
+        }
+
+        // check whether the next event occurs during the current frame. If the frame end time is at the end of the track then test that inclusively too
+        while (this.track.events[this.eventCursor] && this.track.events[this.eventCursor].time >= frameStartTime && (frameEndTime === this.track.duration ? this.track.events[this.eventCursor].time <= frameEndTime : this.track.events[this.eventCursor].time < frameEndTime)) {
+            const event = this.track.events[this.eventCursor];
+            this._eventHandler.fire(event.name, { track: this.track, ...event });
+            this.eventCursor++;
+        }
+
+        // if we had to clip the current frame, then we should check the start of the track for events during that clipped duration
+        if (Number.isFinite(clippedFrameDuration)) {
+            this.activeEventsForFrame(0, clippedFrameDuration);
+        }
+    }
+
     _update(deltaTime) {
         if (this._playing) {
             var time = this._time;
             var duration = this._track.duration;
             var speed = this._speed;
             var loop = this._loop;
+
+            // check for events that should fire during this frame
+            if (this._track.events.length > 0 && duration > 0) {
+                this.activeEventsForFrame(time, time + speed * deltaTime);
+            }
 
             // update time
             time += speed * deltaTime;

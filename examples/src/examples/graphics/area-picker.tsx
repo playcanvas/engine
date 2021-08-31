@@ -61,10 +61,10 @@ class AreaPickerExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
-                type: primitiveType
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale
             primitive.setLocalPosition(position);

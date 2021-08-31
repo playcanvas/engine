@@ -107,8 +107,6 @@ import {
  */
 class VertexFormat {
     constructor(graphicsDevice, description, vertexCount) {
-        var i, len, element;
-
         this.elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
@@ -123,9 +121,9 @@ class VertexFormat {
             return total + Math.ceil(desc.components * typedArrayTypesByteSize[desc.type] / 4) * 4;
         }, 0);
 
-        var offset = 0, elementSize;
-        for (i = 0, len = description.length; i < len; i++) {
-            var elementDesc = description[i];
+        let offset = 0, elementSize;
+        for (var i = 0, len = description.length; i < len; i++) {
+            const elementDesc = description[i];
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
@@ -140,7 +138,7 @@ class VertexFormat {
                 // #endif
             }
 
-            element = {
+            const element = {
                 name: elementDesc.semantic,
                 offset: (vertexCount ? offset : (elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset)),
                 stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
@@ -178,7 +176,7 @@ class VertexFormat {
     static _defaultInstancingFormat = null;
 
     static init(graphicsDevice) {
-        var formatDesc = [
+        const formatDesc = [
             { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD3, components: 4, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD4, components: 4, type: TYPE_FLOAT32 },
@@ -211,11 +209,13 @@ class VertexFormat {
 
     // evaluates hash valuees for the format allowing fast compare of batching / rendering compatibility
     _evaluateHash() {
-        var stringElementBatch, stringElementsBatch = [];
-        var stringElementRender, stringElementsRender = [];
-        var i, len = this.elements.length, element;
-        for (i = 0; i < len; i++) {
-            element = this.elements[i];
+        let stringElementBatch;
+        const stringElementsBatch = [];
+        let stringElementRender;
+        const stringElementsRender = [];
+        const len = this.elements.length;
+        for (let i = 0; i < len; i++) {
+            const element = this.elements[i];
 
             // create string description of each element that is relevant for batching
             stringElementBatch = element.name;

@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import ControlPanel from './control-panel';
 // @ts-ignore: library file import
 import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as playcanvas from 'playcanvas/build/playcanvas.js';
+// @ts-ignore: library file import
+import * as playcanvasDebug from 'playcanvas/build/playcanvas.dbg.js';
+// @ts-ignore: library file import
+import * as playcanvasPerformance from 'playcanvas/build/playcanvas.prf.js';
 // @ts-ignore: library file import
 import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 // @ts-ignore: library file import
@@ -24,10 +28,20 @@ const APP_STATE = {
 interface ExampleIframeProps {
     controls: any,
     assets: any,
-    files: Array<File>
+    files: Array<File>,
+    engine: string,
+    debugExample?: any
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
+    let pc: any;
+    if (props.engine === 'DEBUG') {
+        pc = playcanvasDebug;
+    } else if (props.engine === 'PERFORMANCE') {
+        pc = playcanvasPerformance;
+    } else {
+        pc = playcanvas;
+    }
     // expose PlayCanvas as a global in the iframe
     (window as any).pc = pc;
 
@@ -41,13 +55,6 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         files = JSON.parse(decodeURIComponent(atob(location.hash.split('files=')[1])));
     } catch (e) {
         files = props.files;
-    }
-    let showMiniStats = false;
-    // Try to retrieve a set of B64 encoded files from the URL's query params.
-    // If not present then use the default files passed in the props
-    try {
-        showMiniStats = location.hash.split('showMiniStats=')[1].split('&')[0] === 'true';
-    } catch (e) {
     }
 
     const fullscreen = location.hash.includes('fullscreen=true');
@@ -76,7 +83,28 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         Loader.load(app, children, onLoadedAssets);
     };
 
-    const executeScript = (script: string, pc: any, canvas: HTMLCanvasElement, app: pc.Application, assetManifest: any, exampleData: any) => {
+    const executeScript = (script: string, pc: any, canvas: HTMLCanvasElement, app: pc.Application, assets: any, data: any) => {
+        if (props.debugExample) {
+            // @ts-ignore
+            const args = {
+                pc,
+                canvas,
+                assets,
+                data,
+                wasmSupported,
+                loadWasmModuleAsync,
+                pcx
+            };
+
+            props.debugExample.init(assets);
+
+            // typescript compiles to strict mode js so we can't access the functions arguments property. We'll get them from it's string instead.
+            const exampleFuncString = props.debugExample.example.toString();
+            const exampleFuncArguments = exampleFuncString.substring(0, exampleFuncString.indexOf(')')).replace('function (', '').split(', ');
+            // @ts-ignore call the example function with it's required arguments
+            props.debugExample.example(...exampleFuncArguments.map((a: string) => args[a]));
+            return;
+        }
         // strip the function closure
         script = script.substring(script.indexOf("\n") + 1);
         script = script.substring(script.lastIndexOf("\n") + 1, -1);
@@ -89,7 +117,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         transformedScript = transformedScript.replace(appCall, '');
 
         // @ts-ignore: abstract class function
-        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', 'pcx', transformedScript).bind(window)(pc, canvas, app, assetManifest, exampleData, wasmSupported, loadWasmModuleAsync, pcx);
+        Function('pc', 'canvas', 'app', 'assets', 'data', 'wasmSupported', 'loadWasmModuleAsync', 'pcx', transformedScript).bind(window)(pc, canvas, app, assets, data, wasmSupported, loadWasmModuleAsync, pcx);
     };
 
 
@@ -105,9 +133,10 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             graphicsDeviceOptions: { alpha: true }
         });
 
-        if (showMiniStats) {
-            const miniStats = new pcx.MiniStats(app);
-        }
+        const miniStats: any = new pcx.MiniStats(app);
+        app.on('update', () => {
+            miniStats.enabled = (window?.parent as any)?._showMiniStats;
+        });
 
         (window as any).app = app;
 
@@ -186,14 +215,12 @@ const ExampleIframe = (props: ExampleIframeProps) => {
             // @ts-ignore
             if (hasBasisAssets()) {
                 // @ts-ignore
-                pc.basisDownload(
-                    'static/lib/basis/basis.wasm.js',
-                    'static/lib/basis/basis.wasm.wasm',
-                    'static/lib/basis/basis.js',
-                    function () {
-                        build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
-                    }
-                );
+                pc.basisInitialize({
+                    glueUrl: 'static/lib/basis/basis.wasm.js',
+                    wasmUrl: 'static/lib/basis/basis.wasm.wasm',
+                    fallbackUrl: 'static/lib/basis/basis.js'
+                });
+                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
             } else {
 
                 build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
