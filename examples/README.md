@@ -94,7 +94,7 @@ example(canvas: HTMLCanvasElement, TWEEN: any) {
 ### `controls` function
 This function allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 ```tsx
-import { Button } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 controls(data: any) {
     return <>
         <Button text='Flash' onClick={() => {
