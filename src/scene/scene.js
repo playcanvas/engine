@@ -438,7 +438,7 @@ class Scene extends EventHandler {
             return;
         }
         this.updateSkybox = false;
-        
+
         // Create skybox
         if (!this.skyboxModel) {
 
