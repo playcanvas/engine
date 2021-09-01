@@ -26,8 +26,8 @@ class ShadowCascadesExample extends Example {
     // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
-            <Panel headerText='Settings'>
-                <LabelGroup text='NumCascades'>
+            <Panel headerText='Shadow Cascade Settings'>
+                <LabelGroup text='Count'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.numCascades' }} min={1} max={4} precision={0}/>
                 </LabelGroup>
                 <LabelGroup text='Resolution'>
