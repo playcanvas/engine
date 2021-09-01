@@ -10,7 +10,8 @@
     "local": "cross-env ENGINE_PATH=../build/playcanvas.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others \"npm run build:watch\"",
     "local:dbg": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others \"npm run build:watch\"",
     "serve": "serve dist",
-    "thumbnails": "node ./thumbnails.js"
+    "thumbnails": "node ./thumbnails.js",
+    "build:directory": "node ./example-directory.js"
   },
   "eslintConfig": {
     "root": true,
