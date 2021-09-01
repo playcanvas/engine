@@ -2,6 +2,16 @@ import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 class ShadowCascadesExample extends Example {
     static CATEGORY = 'Graphics';
@@ -14,11 +24,35 @@ class ShadowCascadesExample extends Example {
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Settings'>
+                <LabelGroup text='NumCascades'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.numCascades' }} min={1} max={4} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Resolution'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowResolution' }} min={128} max={2048} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Distribution'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.cascadeDistribution' }} min={0} max={1} precision={2}/>
+                </LabelGroup>
+            </Panel>
+        </>;
+    }
+
+    // @ts-ignore: override class function
+    example(canvas: HTMLCanvasElement, assets: any, data:any): void {
 
         const app = new pc.Application(canvas, {});
-
         app.start();
+
+        data.set('settings', {
+            light: {
+                numCascades: 4,             // number of cascades
+                shadowResolution: 2048,     // shadow map resolution storing 4 cascades
+                cascadeDistribution: 0.7    // distribution of cascade distances to prefer sharpness closer to the camera
+            }
+        });
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -88,28 +122,31 @@ class ShadowCascadesExample extends Example {
         // Create a directional light casting cascaded shadows
         const dirLight = new pc.Entity();
         dirLight.addComponent("light", {
-            type: "directional",
-            color: pc.Color.WHITE,
-            shadowBias: 0.3,
-            normalOffsetBias: 0.2,
-            intensity: 1.0,
+            ...{
+                type: "directional",
+                color: pc.Color.WHITE,
+                shadowBias: 0.3,
+                normalOffsetBias: 0.2,
+                intensity: 1.0,
 
-            // enable shadow casting
-            castShadows: true,
-            shadowDistance: 1000,
+                // enable shadow casting
+                castShadows: true,
+                shadowDistance: 1000,
 
-            // shadow map resolution storing 4 cascades
-            shadowResolution: 2048,
-            numCascades: 4,
-
-            // distribution of cascade distances to prefer sharpness closer to the camera
-            cascadeDistribution: 0.7,
-
-            // shadow filtering
-            shadowType: pc.SHADOW_PCF3
+                // shadow filtering
+                shadowType: pc.SHADOW_PCF3
+            },
+            ...data.get('settings.light')
         });
         app.root.addChild(dirLight);
         dirLight.setLocalEulerAngles(45, -20, 20);
+
+        // handle HUD changes - update properties on the light
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+            // @ts-ignore
+            dirLight.light[pathArray[2]] = value;
+        });
     }
 }
 
