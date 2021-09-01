@@ -6,5 +6,5 @@ https://creativecommons.org/licenses/by/4.0/
 
 modifications done to it:
 - uv1 channel has been generated for lightmapping
-- textures has been stripped out
+- textures have been stripped out
 - converted to glb format
