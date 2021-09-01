@@ -1,4 +1,4 @@
-the house model has been obtain from this address:
+The house model has been obtained from this address:
 https://sketchfab.com/3d-models/house-scene-52772448c62348e0a4951b51758d5587
 
 it'd distributed under CC lincense:
