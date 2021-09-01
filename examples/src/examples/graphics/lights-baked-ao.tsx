@@ -14,6 +14,8 @@ class LightsBakedAOExample extends Example {
     load() {
         return <>
             <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='house' type='container' url='static/assets/models/house.glb' />
+            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
         </>;
     }
 
@@ -81,124 +83,37 @@ class LightsBakedAOExample extends Example {
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any, data: any): void {
 
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
+        // Create the app and start the update loop
+        const app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body)
+        });
         app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // bake properties connected to the HUD
-        data.set('data', {
-            settings: {
-                lightmapFilterEnabled: true,
-                lightmapFilterRange: 10,
-                lightmapFilterSmoothness: 0.2
-            },
-            ambient: {
-                ambientBake: true,
-                cubemap: true,
-                hemisphere: true,
-                ambientBakeNumSamples: 20,
-                ambientBakeOcclusionContrast: -0.2,
-                ambientBakeOcclusionBrightness: 0.2
-            },
-            directional: {
-                enabled: true,
-                bake: true,
-                bakeNumSamples: 15,
-                bakeArea: 10
-            },
-            other: {
-                enabled: true,
-            },
-            stats: {
-                duration: ''
-            }
-        });
-
         // setup skydome - this is the main source of ambient light
         app.scene.skyboxMip = 3;
-        app.scene.skyboxIntensity = 1;
+        app.scene.skyboxIntensity = 1.5;
         app.scene.setSkybox(assets.cubemap.resources);
 
         // if skydome cubemap is disabled using HUD, a constant ambient color is used instead
         app.scene.ambientLight = new pc.Color(0.1, 0.3, 0.4);
 
-        // bake properties
-        app.scene.ambientBake = data.get('data.ambient.ambientBake');
-        app.scene.ambientBakeNumSamples = data.get('data.ambient.ambientBakeNumSamples');
+        // instantiate the house model, which has unwrapped texture coordinates for lightmap in UV1
+        const house = assets.house.resource.instantiateRenderEntity();
+        house.setLocalScale(1, 1, 1);
+        app.root.addChild(house);
 
-        app.scene.lightmapFilterEnabled = data.get('data.settings.lightmapFilterEnabled');
-        app.scene.lightmapFilterRange = data.get('data.settings.lightmapFilterRange');
-        app.scene.lightmapFilterSmoothness = data.get('data.settings.lightmapFilterSmoothness');
-
-        // create material used to render lightmapped objects
-        const material = new pc.StandardMaterial();
-        material.update();
-
-        // create ground plane
-        const ground = new pc.Entity("Ground");
-        ground.addComponent('render', {
-            castShadows: true,
-            castShadowsLightmap: true,
-            lightmapped: true,
-            type: "box",
-            material: material
+        // change its materials to lightmapping
+        const renders: Array<pc.RenderComponent> = house.findComponents("render");
+        renders.forEach((render) => {
+            render.castShadows = true;
+            render.castShadowsLightmap = true;
+            render.lightmapped = true;
         });
-        app.root.addChild(ground);
-        ground.setLocalScale(40, 1, 40);
-
-        // create roof box
-        const roof = new pc.Entity("Roof");
-        roof.addComponent('render', {
-            castShadows: true,
-            castShadowsLightmap: true,
-            lightmapped: true,
-            type: "box",
-            material: material
-        });
-        app.root.addChild(roof);
-        roof.setLocalPosition(0, 6, -10);
-        roof.setLocalScale(15, 1, 45);
-        roof.setLocalEulerAngles(-30, 0, 0);
-
-        // create large sphere
-        const sphere = new pc.Entity("Ground");
-        sphere.addComponent('render', {
-            castShadows: true,
-            castShadowsLightmap: true,
-            lightmapped: true,
-            type: "sphere",
-            material: material
-        });
-        app.root.addChild(sphere);
-        sphere.setLocalScale(12, 12, 12);
-        sphere.setLocalPosition(3, 6.6, 5);
-
-        // create random objects on the plane
-        const shapes = ["box", "cone", "cylinder", "sphere"];
-        for (let i = 0; i < 40; i++) {
-            const shape = shapes[Math.floor(Math.random() * shapes.length)];
-
-            // Create an entity with a render component that is set up to be lightmapped
-            const entity = new pc.Entity("Primitive" + i);
-            entity.addComponent('render', {
-                castShadows: true,
-                castShadowsLightmap: true,
-                lightmapped: true,
-                type: shape,
-                material: material
-            });
-            app.root.addChild(entity);
-
-            // random orientation
-            const scale = 1 + Math.random() * 2;
-            entity.setLocalScale(scale, scale, scale);
-            entity.setLocalPosition(Math.random() * 30 - 15, scale + Math.random() * 2, Math.random() * 30 - 15);
-            entity.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-        }
 
         // directional light
         const lightDirectional = new pc.Entity("Directional");
@@ -206,20 +121,17 @@ class LightsBakedAOExample extends Example {
             type: "directional",
             affectDynamic: true,
             affectLightmapped: true,
-            bake: data.get('data.directional.bake'),
-            bakeArea: data.get('data.directional.bakeArea'),
-            bakeNumSamples: data.get('data.directional.bakeNumSamples'),
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
-            shadowDistance: 70,
+            shadowDistance: 100,
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
             color: new pc.Color(0.7, 0.7, 0.5),
-            intensity: 0.6
+            intensity: 1.2
         });
         app.root.addChild(lightDirectional);
-        lightDirectional.setLocalEulerAngles(0, 10, 0);
+        lightDirectional.setLocalEulerAngles(-55, 0, -30);
 
         // Create an entity with a omni light component that is configured as a baked light
         const lightOmni = new pc.Entity("Omni");
@@ -234,11 +146,11 @@ class LightsBakedAOExample extends Example {
             shadowDistance: 50,
             shadowResolution: 512,
             shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.RED,
+            color: pc.Color.YELLOW,
             range: 10,
             intensity: 0.7
         });
-        lightOmni.setLocalPosition(-6, 5, 0);
+        lightOmni.setLocalPosition(-4, 10, 5);
         app.root.addChild(lightOmni);
 
         // Create an entity with a spot light component that is configured as a baked light
@@ -254,10 +166,11 @@ class LightsBakedAOExample extends Example {
             shadowDistance: 50,
             shadowResolution: 512,
             shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.BLUE,
-            range: 10
+            color: pc.Color.RED,
+            range: 10,
+            intensity: 2
         });
-        lightSpot.setLocalPosition(5, 8, -3);
+        lightSpot.setLocalPosition(-5, 10, -7.5);
         app.root.addChild(lightSpot);
 
         // Create an entity with a camera component
@@ -265,8 +178,21 @@ class LightsBakedAOExample extends Example {
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.4, 0.45, 0.5),
             farClip: 100,
-            nearClip: 0.05
+            nearClip: 1
         });
+        camera.setLocalPosition(40, 20, 40);
+
+        // add orbit camera script with a mouse and a touch support
+        camera.addComponent("script");
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+                focusEntity: house,
+                distanceMax: 60
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
 
         // lightmap baking properties
@@ -275,33 +201,15 @@ class LightsBakedAOExample extends Example {
         app.scene.lightmapMaxResolution = 1024;
 
         // multiplier for lightmap resolution
-        app.scene.lightmapSizeMultiplier = 10;
+        app.scene.lightmapSizeMultiplier = 512;
 
-        // Set an update function on the app's update event
-        let time = 0;
-        let needBake = true;
-        app.on("update", function (dt) {
-            time += dt;
+        // bake when settings are changed only
+        let needBake = false;
 
-            // bake lightmaps when HUD properties change
-            if (needBake) {
-                needBake = false;
-                app.lightmapper.bake(null, bakeType);
-
-                // update stats
-                data.set('data.stats.duration', app.lightmapper.stats.totalRenderTime.toFixed(1) + 'ms');
-            }
-
-            // orbit camera
-            camera.setLocalPosition(30 * Math.sin(time * 0.4), 12, 30);
-            camera.lookAt(pc.Vec3.ZERO);
-        });
-
-        // handle data changes from HUD
+        // handle data changes from HUD to modify baking properties
         data.on('*:set', (path: string, value: any) => {
+            let bakeSettingChanged = true;
             const pathArray = path.split('.');
-
-            needBake = true;
 
             // ambient light
             if (pathArray[1] === 'ambient') {
@@ -309,22 +217,14 @@ class LightsBakedAOExample extends Example {
                     // enable / disable cubemap
                     app.scene.setSkybox(value ? assets.cubemap.resources : null);
                 } else if (pathArray[2] === 'hemisphere') {
-                    // switch between smaller hemosphere and full sphere
+                    // switch between smaller upper hemosphere and full sphere
                     app.scene.ambientBakeSpherePart = value ? 0.4 : 1;
                 } else {
-                    // all other values
+                    // all other values are set directly on the scene
                     app.scene[pathArray[2]] = value;
                 }
             } else if (pathArray[1] === 'directional') {
-                if (pathArray[2] === 'bake') {
-                    lightDirectional.light.bake = value;
-
-                    // temporary workaround for incorrect handling of dirty flags to rebuild shaders when multiple compositions are used
-                    // @ts-ignore
-                    app.scene.updateLitShaders = true;
-                } else {
-                    lightDirectional.light[pathArray[2]] = value;
-                }
+                lightDirectional.light[pathArray[2]] = value;
             } else if (pathArray[1] === 'settings') {
                 app.scene[pathArray[2]] = value;
             } else if (pathArray[1] === 'other') {
@@ -332,7 +232,52 @@ class LightsBakedAOExample extends Example {
                 lightSpot.light[pathArray[2]] = value;
             } else {
                 // don't rebake if stats change
+                bakeSettingChanged = false;
+            }
+
+            // trigger bake on the next frame if relevant settings were changes
+            needBake ||= bakeSettingChanged;
+        });
+
+        // bake properties connected to the HUD
+        data.set('data', {
+            settings: {
+                lightmapFilterEnabled: true,
+                lightmapFilterRange: 10,
+                lightmapFilterSmoothness: 0.2
+            },
+            ambient: {
+                ambientBake: true,
+                cubemap: true,
+                hemisphere: true,
+                ambientBakeNumSamples: 20,
+                ambientBakeOcclusionContrast: 0,
+                ambientBakeOcclusionBrightness: 0.4
+            },
+            directional: {
+                enabled: true,
+                bake: true,
+                bakeNumSamples: 15,
+                bakeArea: 10
+            },
+            other: {
+                enabled: true,
+            },
+            stats: {
+                duration: ''
+            }
+        });
+
+        // Set an update function on the app's update event
+        app.on("update", function (dt) {
+
+            // bake lightmaps when HUD properties change
+            if (needBake) {
                 needBake = false;
+                app.lightmapper.bake(null, bakeType);
+
+                // update stats with the bake duration
+                data.set('data.stats.duration', app.lightmapper.stats.totalRenderTime.toFixed(1) + 'ms');
             }
         });
     }

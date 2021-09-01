@@ -485,6 +485,9 @@ class Lightmapper {
         const device = this.device;
         const startTime = now();
 
+        // update skybox
+        this.scene._updateSkybox(device);
+
         // #if _PROFILER
         device.fire('lightmapper:start', {
             timestamp: startTime,

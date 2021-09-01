@@ -2162,10 +2162,7 @@ class ForwardRenderer {
         var i, layer, layerIndex, transparent;
 
         // update the skybox, since this might change _meshInstances
-        if (this.scene.updateSkybox) {
-            this.scene._updateSkybox(device);
-            this.scene.updateSkybox = false;
-        }
+        this.scene._updateSkybox(device);
 
         this.beginLayers(comp);
 
