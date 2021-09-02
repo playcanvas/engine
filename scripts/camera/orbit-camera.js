@@ -3,10 +3,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 var OrbitCamera = pc.createScript('orbitCamera');
 
-OrbitCamera.attributes.add('distanceMax', { type: 'number', default: 0, title: 'Distance Max', description: 'Setting this at 0 will give an infinite distance limit' });
-OrbitCamera.attributes.add('distanceMin', { type: 'number', default: 0, title: 'Distance Min' });
-OrbitCamera.attributes.add('pitchAngleMax', { type: 'number', default: 90, title: 'Pitch Angle Max (degrees)' });
-OrbitCamera.attributes.add('pitchAngleMin', { type: 'number', default: -90, title: 'Pitch Angle Min (degrees)' });
+OrbitCamera.attributes.add('distanceMax', {type: 'number', default: 0, title: 'Distance Max', description: 'Setting this at 0 will give an infinite distance limit'});
+OrbitCamera.attributes.add('distanceMin', {type: 'number', default: 0, title: 'Distance Min'});
+OrbitCamera.attributes.add('pitchAngleMax', {type: 'number', default: 90, title: 'Pitch Angle Max (degrees)'});
+OrbitCamera.attributes.add('pitchAngleMin', {type: 'number', default: -90, title: 'Pitch Angle Min (degrees)'});
 
 OrbitCamera.attributes.add('inertiaFactor', {
     type: 'number',
@@ -32,11 +32,11 @@ OrbitCamera.attributes.add('frameOnStart', {
 // Property to get and set the distance between the pivot point and camera
 // Clamped between this.distanceMin and this.distanceMax
 Object.defineProperty(OrbitCamera.prototype, "distance", {
-    get: function () {
+    get: function() {
         return this._targetDistance;
     },
 
-    set: function (value) {
+    set: function(value) {
         this._targetDistance = this._clampDistance(value);
     }
 });
@@ -46,11 +46,11 @@ Object.defineProperty(OrbitCamera.prototype, "distance", {
 // Clamped between this.pitchAngleMin and this.pitchAngleMax
 // When set at 0, the camera angle is flat, looking along the horizon
 Object.defineProperty(OrbitCamera.prototype, "pitch", {
-    get: function () {
+    get: function() {
         return this._targetPitch;
     },
 
-    set: function (value) {
+    set: function(value) {
         this._targetPitch = this._clampPitchAngle(value);
     }
 });
@@ -58,14 +58,14 @@ Object.defineProperty(OrbitCamera.prototype, "pitch", {
 
 // Property to get and set the yaw of the camera around the pivot point (degrees)
 Object.defineProperty(OrbitCamera.prototype, "yaw", {
-    get: function () {
+    get: function() {
         return this._targetYaw;
     },
 
-    set: function (value) {
+    set: function(value) {
         this._targetYaw = value;
 
-        // Ensure that the yaw takes the shortest route by making sure that
+        // Ensure that the yaw takes the shortest route by making sure that 
         // the difference between the targetYaw and the actual is 180 degrees
         // in either direction
         var diff = this._targetYaw - this._yaw;
@@ -83,11 +83,11 @@ Object.defineProperty(OrbitCamera.prototype, "yaw", {
 
 // Property to get and set the world position of the pivot point that the camera orbits around
 Object.defineProperty(OrbitCamera.prototype, "pivotPoint", {
-    get: function () {
+    get: function() {
         return this._pivotPoint;
     },
 
-    set: function (value) {
+    set: function(value) {
         this._pivotPoint.copy(value);
     }
 });
@@ -99,9 +99,12 @@ OrbitCamera.prototype.focus = function (focusEntity) {
     this._buildAabb(focusEntity, 0);
 
     var halfExtents = this._modelsAabb.halfExtents;
-    var radius = Math.max(halfExtents.x, Math.max(halfExtents.y, halfExtents.z));
 
-    this.distance = (radius * 1.5) / Math.sin(0.5 * this.entity.camera.fov * pc.math.DEG_TO_RAD);
+    var distance = Math.max(halfExtents.x, Math.max(halfExtents.y, halfExtents.z));
+    distance = (distance / Math.tan(0.5 * this.entity.camera.fov * pc.math.DEG_TO_RAD));
+    distance = (distance * 2);
+
+    this.distance = distance;
 
     this._removeInertia();
 
@@ -202,19 +205,19 @@ OrbitCamera.prototype.initialize = function () {
 
     // Reapply the clamps if they are changed in the editor
     this.on('attr:distanceMin', function (value, prev) {
-        this._distance = this._clampDistance(this._distance);
+        this._targetDistance = this._clampDistance(this._distance);
     });
 
     this.on('attr:distanceMax', function (value, prev) {
-        this._distance = this._clampDistance(this._distance);
+        this._targetDistance = this._clampDistance(this._distance);
     });
 
     this.on('attr:pitchAngleMin', function (value, prev) {
-        this._pitch = this._clampPitchAngle(this._pitch);
+        this._targetPitch = this._clampPitchAngle(this._pitch);
     });
 
     this.on('attr:pitchAngleMax', function (value, prev) {
-        this._pitch = this._clampPitchAngle(this._pitch);
+        this._targetPitch = this._clampPitchAngle(this._pitch);
     });
 
     // Focus on the entity if we change the focus entity
@@ -232,13 +235,13 @@ OrbitCamera.prototype.initialize = function () {
         }
     });
 
-    this.on('destroy', function () {
+    this.on('destroy', function() {
         window.removeEventListener('resize', onWindowResize, false);
     });
 };
 
 
-OrbitCamera.prototype.update = function (dt) {
+OrbitCamera.prototype.update = function(dt) {
     // Add inertia, if any
     var t = this.inertiaFactor === 0 ? 1 : Math.min(dt / this.inertiaFactor, 1);
     this._distance = pc.math.lerp(this._distance, this._targetDistance, t);
@@ -251,7 +254,7 @@ OrbitCamera.prototype.update = function (dt) {
 
 OrbitCamera.prototype._updatePosition = function () {
     // Work out the camera position based on the pivot point, pitch, yaw and distance
-    this.entity.setLocalPosition(0, 0, 0);
+    this.entity.setLocalPosition(0,0,0);
     this.entity.setLocalEulerAngles(this._pitch, this._yaw, 0);
 
     var position = this.entity.getPosition();
@@ -280,15 +283,32 @@ OrbitCamera.prototype._checkAspectRatio = function () {
 
 
 OrbitCamera.prototype._buildAabb = function (entity, modelsAdded) {
-    var i = 0;
+    var i = 0, j = 0, meshInstances;
+    
+    if (entity instanceof pc.Entity) {
+        var allMeshInstances = [];
+        var renders = entity.findComponents('render');
 
-    if (entity.model) {
-        var mi = entity.model.meshInstances;
-        for (i = 0; i < mi.length; i++) {
+        for (i = 0; i < renders.length; ++i) {
+            meshInstances = renders[i].meshInstances;
+            for (j = 0; j < meshInstances.length; j++) {
+                allMeshInstances.push(meshInstances[j]);
+            }
+        }  
+
+        var models = entity.findComponents('model');
+        for (i = 0; i < models.length; ++i) {
+            meshInstances = models[i].meshInstances;
+            for (j = 0; j < meshInstances.length; j++) {
+                allMeshInstances.push(meshInstances[j]);
+            }
+        }  
+
+        for (i = 0; i < allMeshInstances.length; i++) {
             if (modelsAdded === 0) {
-                this._modelsAabb.copy(mi[i].aabb);
+                this._modelsAabb.copy(allMeshInstances[i].aabb);
             } else {
-                this._modelsAabb.add(mi[i].aabb);
+                this._modelsAabb.add(allMeshInstances[i].aabb);
             }
 
             modelsAdded += 1;
@@ -314,9 +334,9 @@ OrbitCamera.prototype._calcYaw = function (quat) {
 OrbitCamera.prototype._clampDistance = function (distance) {
     if (this.distanceMax > 0) {
         return pc.math.clamp(distance, this.distanceMin, this.distanceMax);
+    } else {
+        return Math.max(distance, this.distanceMin);
     }
-    return Math.max(distance, this.distanceMin);
-
 };
 
 
@@ -329,7 +349,7 @@ OrbitCamera.prototype._clampPitchAngle = function (pitch) {
 OrbitCamera.quatWithoutYaw = new pc.Quat();
 OrbitCamera.yawOffset = new pc.Quat();
 
-OrbitCamera.prototype._calcPitch = function (quat, yaw) {
+OrbitCamera.prototype._calcPitch = function(quat, yaw) {
     var quatWithoutYaw = OrbitCamera.quatWithoutYaw;
     var yawOffset = OrbitCamera.yawOffset;
 
