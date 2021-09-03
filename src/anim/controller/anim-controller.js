@@ -323,11 +323,6 @@ class AnimController {
         // If transition.from is set, tranisition from the active state irregardless of the transition.from value (this could be the previous, active or ANY states).
         // Otherwise the previousState is cleared.
         this.previousState = (transition.from ? this.activeStateName : null);
-        if (transition.from === ANIM_STATE_ANY) {
-            this.previousState = this.activeStateName;
-        } else {
-            this.previousState = transition.from;
-        }
         this.activeState = transition.to;
 
         // turn off any triggers which were required to activate this transition
