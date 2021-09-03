@@ -320,7 +320,7 @@ class AnimController {
         let state;
         let animation;
         let clip;
-        // If transition.from is set, tranisition from the active state irregardless of the transition.from value (this could be the previous, active or ANY states).
+        // If transition.from is set, transition from the active state irregardless of the transition.from value (this could be the previous, active or ANY states).
         // Otherwise the previousState is cleared.
         this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
