@@ -452,12 +452,10 @@ class StandardMaterial extends Material {
     }
 
     updateUniforms(device, scene) {
-
         const getUniform = (name) => {
             return this.getUniform(name, device, scene);
         };
 
-        // gather params as we set them into this object
         this._setParameter('material_ambient', getUniform('ambient'));
 
         if (!this.diffuseMap || this.diffuseTint) {
