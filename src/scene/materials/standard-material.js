@@ -26,8 +26,8 @@ const _props = {};
 // special uniform functions on a standard material
 const _uniforms = {};
 
-// temporary helper array
-const _propsSet = [];
+// temporary set of params
+let _params = { };
 
 /**
  * @class
@@ -358,6 +358,9 @@ class StandardMaterial extends Material {
         this._assetReferences = {};
         this._validator = null;
 
+        this._activeParams = null;
+        this._activeLightingParams = null;
+
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
         this.reset();
@@ -400,8 +403,7 @@ class StandardMaterial extends Material {
     }
 
     _setParameter(name, value) {
-        if (!this.parameters[name])
-            _propsSet.push(name);
+        _params[name] = true;
         this.setParameter(name, value);
     }
 
@@ -411,11 +413,14 @@ class StandardMaterial extends Material {
         });
     }
 
-    _clearParameters() {
-        _propsSet.forEach((p) => {
-            delete this.parameters[p];
-        });
-        _propsSet.length = 0;
+    _clearUnusedParameters(prevParams, activeParams) {
+        if (prevParams) {
+            Object.keys(prevParams).forEach((param) => {
+                if (!activeParams.hasOwnProperty(param)) {
+                    delete this.parameters[name];
+                }
+            });
+        }
     }
 
     _updateMap(p) {
@@ -452,8 +457,7 @@ class StandardMaterial extends Material {
             return this.getUniform(name, device, scene);
         };
 
-        this._clearParameters();
-
+        // gather params as we set them into this object
         this._setParameter('material_ambient', getUniform('ambient'));
 
         if (!this.diffuseMap || this.diffuseTint) {
@@ -541,6 +545,11 @@ class StandardMaterial extends Material {
         }
         this._setParameter('material_reflectivity', this.reflectivity);
 
+        // remove unused params
+        this._clearUnusedParameters(this._activeParams, _params);
+        this._activeParams = _params;
+        _params = { };
+
         if (this._dirtyShader) {
             this.shader = null;
             this.clearVariants();
@@ -620,6 +629,11 @@ class StandardMaterial extends Material {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
+
+        // remove unused lighting params
+        this._clearUnusedParameters(this._activeLightingParams, _params);
+        this._activeLightingParams = _params;
+        _params = { };
     }
 
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
