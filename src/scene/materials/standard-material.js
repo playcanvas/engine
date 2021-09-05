@@ -417,7 +417,7 @@ class StandardMaterial extends Material {
         if (prevParams) {
             Object.keys(prevParams).forEach((param) => {
                 if (!activeParams.hasOwnProperty(param)) {
-                    delete this.parameters[name];
+                    delete this.parameters[param];
                 }
             });
         }
