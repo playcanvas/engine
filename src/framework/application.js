@@ -175,6 +175,7 @@ var _deprecationWarning = false;
  * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
  * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
  * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
+ * @param {boolean} [options.muteVersionLogging] - Disables version number logging at startup.
  * @example
  * // Engine-only example: create the application manually
  * var app = new pc.Application(canvas, options);
@@ -400,7 +401,8 @@ class Application extends EventHandler {
     constructor(canvas, options = {}) {
         super();
 
-        console.log("Powered by PlayCanvas " + version + " " + revision);
+        if (! options.muteVersionLogging)
+            console.log("Powered by PlayCanvas " + version + " " + revision);
 
         // Store application instance
         Application._applications[canvas.id] = this;
