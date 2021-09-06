@@ -69,7 +69,7 @@ const config = {
         alias: {
             lib: path.resolve(__dirname, 'lib')
         },
-        extensions: ['.tsx', '.ts', '.js', '.css']
+        extensions: ['.tsx', '.ts', '.mjs', '.js', '.css']
     },
     devtool: process.env.ENVIRONMENT === 'production' ? 'source-map' : 'eval-source-map',
     context: __dirname,

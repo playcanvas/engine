@@ -3,7 +3,7 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
-import { Observer } from '@playcanvas/pcui/pcui-binding';
+import { Observer } from '@playcanvas/observer';
 
 // create an anim state graph
 const animStateGraphData = {

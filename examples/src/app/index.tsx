@@ -1,7 +1,7 @@
 import React, { useEffect, useState, createRef } from 'react';
 import ReactDOM from 'react-dom';
 // @ts-ignore: library file import
-import { Container } from '@playcanvas/pcui/pcui-react';
+import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route } from "react-router-dom";
 import SideBar from './sidebar';

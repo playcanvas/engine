@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
-import { Observer } from '@playcanvas/pcui/pcui-binding';
+import { Observer } from '@playcanvas/observer';
 // @ts-ignore: library file import
-import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Spinner  from '@playcanvas/pcui/Spinner/component';
 import { File } from './helpers/types';
 
 interface ExampleProps {
