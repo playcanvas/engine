@@ -104,7 +104,7 @@ class LightsBakedAOExample extends Example {
 
         // instantiate the house model, which has unwrapped texture coordinates for lightmap in UV1
         const house = assets.house.resource.instantiateRenderEntity();
-        house.setLocalScale(1, 1, 1);
+        house.setLocalScale(100, 100, 100);
         app.root.addChild(house);
 
         // change its materials to lightmapping
