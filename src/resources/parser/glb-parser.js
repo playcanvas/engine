@@ -147,13 +147,37 @@ const gltfToEngineSemanticMap = {
     'TEXCOORD_1': SEMANTIC_TEXCOORD1
 };
 
+// returns a function for dequantizing the data type
+const getDequantizeFunc = (srcType) => {
+    // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
+    switch (srcType) {
+        case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
+        case TYPE_UINT8: return (x) => x / 255.0;
+        case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
+        case TYPE_UINT16: return (x) => x / 65535.0;
+        default: return (x) => x;
+    }
+};
+
+// dequantize an array of data
+const dequantizeArray = function (dstArray, srcArray, srcType) {
+    const convFunc = getDequantizeFunc(srcType);
+    const len = srcArray.length;
+    for (let i = 0; i < len; ++i) {
+        dstArray[i] = convFunc(srcArray[i]);
+    }
+    return dstArray;
+};
+
 // get accessor data, making a copy and patching in the case of a sparse accessor
-const getAccessorData = function (gltfAccessor, bufferViews) {
+const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
     const numComponents = getNumComponents(gltfAccessor.type);
     const dataType = getComponentDataType(gltfAccessor.componentType);
     if (!dataType) {
         return null;
     }
+
+    const bufferView = bufferViews[gltfAccessor.bufferView];
     let result;
 
     if (gltfAccessor.sparse) {
@@ -165,7 +189,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
             count: sparse.count,
             type: "SCALAR"
         };
-        const indices = getAccessorData(Object.assign(indicesAccessor, sparse.indices), bufferViews);
+        const indices = getAccessorData(Object.assign(indicesAccessor, sparse.indices), bufferViews, true);
 
         // data values data
         const valuesAccessor = {
@@ -173,7 +197,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
             type: gltfAccessor.scalar,
             componentType: gltfAccessor.componentType
         };
-        const values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews);
+        const values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews, true);
 
         // get base data
         if (gltfAccessor.hasOwnProperty('bufferView')) {
@@ -185,7 +209,7 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
                 type: gltfAccessor.type
             };
             // make a copy of the base data since we'll patch the values
-            result = getAccessorData(baseAccessor, bufferViews).slice();
+            result = getAccessorData(baseAccessor, bufferViews, true).slice();
         } else {
             // there is no base data, create empty 0'd out data
             result = new dataType(gltfAccessor.count * numComponents);
@@ -197,14 +221,65 @@ const getAccessorData = function (gltfAccessor, bufferViews) {
                 result[targetIndex * numComponents + j] = values[i * numComponents + j];
             }
         }
+    } else if (flatten && bufferView.hasOwnProperty('byteStride')) {
+        // flatten stridden data
+        const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
+        const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
+        const tmpArray = new Uint8Array(storage);
+
+        let dstOffset = 0;
+        for (let i = 0; i < gltfAccessor.count; ++i) {
+            // no need to add bufferView.byteOffset because accessor takes this into account
+            let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
+            for (let b = 0; b < bytesPerElement; ++b) {
+                tmpArray[dstOffset++] = bufferView[srcOffset++];
+            }
+        }
+
+        result = new dataType(storage);
     } else {
-        const bufferView = bufferViews[gltfAccessor.bufferView];
         result = new dataType(bufferView.buffer,
                               bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
                               gltfAccessor.count * numComponents);
     }
 
     return result;
+};
+
+// get accessor data as (unnormalized, unquantized) Float32 data
+const getAccessorDataFloat32 = function (gltfAccessor, bufferViews) {
+    const data = getAccessorData(gltfAccessor, bufferViews, true);
+    if (data instanceof Float32Array || !gltfAccessor.normalized) {
+        // if the source data is quantized (say to int16), but not normalized
+        // then reading the values of the array is the same whether the values
+        // are stored as float32 or int16. so probably no need to convert to
+        // float32.
+        return data;
+    }
+
+    const float32Data = new Float32Array(data.length);
+    dequantizeArray(float32Data, data, getComponentType(gltfAccessor.componentType));
+    return float32Data;
+};
+
+// returns a dequantized bounding box for the accessor
+const getAccessorBoundingBox = function (gltfAccessor) {
+    let min = gltfAccessor.min;
+    let max = gltfAccessor.max;
+    if (!min || !max) {
+        return null;
+    }
+
+    if (gltfAccessor.normalized) {
+        const ctype = getComponentType(gltfAccessor.componentType);
+        min = dequantizeArray([], min, ctype);
+        max = dequantizeArray([], max, ctype);
+    }
+
+    return new BoundingBox(
+        new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+        new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+    );
 };
 
 const getPrimitiveType = function (primitive) {
@@ -619,7 +694,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
     const ibp = [];
     if (gltfSkin.hasOwnProperty('inverseBindMatrices')) {
         const inverseBindMatrices = gltfSkin.inverseBindMatrices;
-        const ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews);
+        const ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews, true);
         const ibmValues = [];
 
         for (i = 0; i < numJoints; i++) {
@@ -748,7 +823,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
-            indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews) : null;
+            indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
             vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
             primitiveType = getPrimitiveType(primitive);
         }
@@ -799,13 +874,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             mesh.materialIndex = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
-            const min = accessor.min;
-            const max = accessor.max;
-            const aabb = new BoundingBox(
-                new Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
-                new Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
-            );
-            mesh.aabb = aabb;
+            mesh.aabb = getAccessorBoundingBox(accessor);
 
             // morph targets
             if (canUseMorph && primitive.hasOwnProperty('targets')) {
@@ -816,18 +885,16 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
-                        options.deltaPositions = getAccessorData(accessor, bufferViews);
-                        options.deltaPositionsType = getComponentType(accessor.componentType);
-                        if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
-                            options.aabb = new BoundingBox();
-                            options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
-                        }
+                        options.deltaPositions = getAccessorDataFloat32(accessor, bufferViews);
+                        options.deltaPositionsType = TYPE_FLOAT32;
+                        options.aabb = getAccessorBoundingBox(accessor);
                     }
 
                     if (target.hasOwnProperty('NORMAL')) {
                         accessor = accessors[target.NORMAL];
-                        options.deltaNormals = getAccessorData(accessor, bufferViews);
-                        options.deltaNormalsType = getComponentType(accessor.componentType);
+                        // NOTE: the morph targets can't currently accept quantized normals
+                        options.deltaNormals = getAccessorDataFloat32(accessor, bufferViews);
+                        options.deltaNormalsType = TYPE_FLOAT32;
                     }
 
                     // name if specified
@@ -1223,9 +1290,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
-        const data = getAccessorData(gltfAccessor, bufferViews);
-        // TODO: this assumes data is tightly packed, handle the case data is interleaved
-        return new AnimData(getNumComponents(gltfAccessor.type), new data.constructor(data));
+        return new AnimData(getNumComponents(gltfAccessor.type), getAccessorDataFloat32(gltfAccessor, bufferViews));
     };
 
     const interpMap = {

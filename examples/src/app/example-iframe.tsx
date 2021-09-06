@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import ControlPanel from './control-panel';
 // @ts-ignore: library file import
-import { Container, Spinner } from '@playcanvas/pcui/pcui-react';
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Spinner from '@playcanvas/pcui/Spinner/component';
 import * as playcanvas from 'playcanvas/build/playcanvas.js';
 // @ts-ignore: library file import
 import * as playcanvasDebug from 'playcanvas/build/playcanvas.dbg.js';
@@ -12,7 +14,7 @@ import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 // @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
 // @ts-ignore: library file import
-import { Observer } from '@playcanvas/pcui/pcui-binding';
+import { Observer } from '@playcanvas/observer';
 import * as javascriptErrorOverlay from '../../lib/javascriptErrorOverlay';
 import { File } from './helpers/types';
 import { Loader } from './helpers/loader';

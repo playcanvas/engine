@@ -8,9 +8,10 @@ const SceneUtils = {
      * @name SceneUtils.load
      * @description Loads the scene JSON file from a URL.
      * @param {string} url - URL to scene JSON.
+     * @param {number} maxRetries - Number of http load retry attempts.
      * @param {Function} callback - The callback to the JSON file is loaded.
      */
-    load: function (url, callback) {
+    load: function (url, maxRetries, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -19,8 +20,8 @@ const SceneUtils = {
         }
 
         http.get(url.load, {
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
+            retry: maxRetries > 0,
+            maxRetries: maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(err, response);

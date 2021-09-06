@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 // @ts-ignore: library file import
-import { Container, Panel, TextInput, Label, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import TextInput from '@playcanvas/pcui/TextInput/component';
+// @ts-ignore: library file import
+import Label from '@playcanvas/pcui/Label/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
 // @ts-ignore: library file import
-import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
+import { Observer } from '@playcanvas/observer';
 
 interface SideBarProps {
     categories: any
