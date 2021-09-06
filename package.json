@@ -38,6 +38,7 @@
     "examples/lib/*", 
     "scripts/textmesh/earcut.min.js", 
     "scripts/textmesh/opentype.min.js", 
+    "scripts/spine/*",
     "src/polyfill/*"
   ], 
   "files": [
