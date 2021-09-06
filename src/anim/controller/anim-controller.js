@@ -282,6 +282,10 @@ class AnimController {
 
         // filter out transitions that don't have their conditions met
         transitions = transitions.filter(function (transition) {
+            // if the transition is moving to the already active state, ignore it
+            if (transition.to === this.activeStateName) {
+                return false;
+            }
             // when an exit time is present, we should only exit if it falls within the current frame delta time
             if (transition.hasExitTime) {
                 let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
@@ -316,7 +320,9 @@ class AnimController {
         let state;
         let animation;
         let clip;
-        this.previousState = transition.from;
+        // If transition.from is set, transition from the active state irregardless of the transition.from value (this could be the previous, active or ANY states).
+        // Otherwise the previousState is cleared.
+        this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
 
         // turn off any triggers which were required to activate this transition
