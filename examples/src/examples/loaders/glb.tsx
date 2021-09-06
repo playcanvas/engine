@@ -33,6 +33,12 @@ class GLBExample extends Example {
                 component.aspectRatioMode = pc.ASPECT_AUTO;
             });
 
+            // enable all lights from the glb
+            const lightComponents: Array<pc.LightComponent> = entity.findComponents("light");
+            lightComponents.forEach((component) => {
+                component.enabled = true;
+            });
+
             let time = 0;
             let activeCamera = 0;
             app.on("update", function (dt) {
