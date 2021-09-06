@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import { playcanvasTypeDefs } from './helpers/raw-file-loading';
 import MonacoEditor from "@monaco-editor/react";
 // @ts-ignore: library file import
-import { Panel, Container, Button } from '@playcanvas/pcui/pcui-react';
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Button from '@playcanvas/pcui/Button/component';
 
 const ControlPanel = (props: any) => {
     const [state, setState] = useState({

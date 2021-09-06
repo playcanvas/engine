@@ -107,6 +107,7 @@ class CameraComponentSystem extends ComponentSystem {
             clearDepthBuffer: c.clearDepthBuffer,
             clearStencilBuffer: c.clearStencilBuffer,
             cullFaces: c.cullFaces,
+            enabled: c.enabled,
             farClip: c.farClip,
             flipFaces: c.flipFaces,
             fov: c.fov,

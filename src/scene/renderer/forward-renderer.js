@@ -130,6 +130,7 @@ class ForwardRenderer {
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
         this.cameraParamsId = scope.resolve('camera_params');
+        this.tbnBasis = scope.resolve('tbnBasis');
 
         this.fogColorId = scope.resolve('fog_color');
         this.fogStartId = scope.resolve('fog_start');
@@ -455,6 +456,8 @@ class ForwardRenderer {
 
             camera.frustum.setFromMat4(viewProjMat);
         }
+
+        this.tbnBasis.setValue(target && target.flipY ? -1 : 1);
 
         // Near and far clip values
         this.nearClipId.setValue(camera._nearClip);
