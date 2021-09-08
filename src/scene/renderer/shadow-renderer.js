@@ -18,6 +18,7 @@ import {
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
 
+import { FUNC_LESSEQUAL } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
@@ -400,6 +401,7 @@ class ShadowRenderer {
         device.setBlending(false);
         device.setDepthWrite(true);
         device.setDepthTest(true);
+        device.setDepthFunc(FUNC_LESSEQUAL);
         if (light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI) {
             device.setColorWrite(false, false, false, false);
         } else {
