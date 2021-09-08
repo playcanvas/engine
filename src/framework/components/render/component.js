@@ -75,7 +75,6 @@ class RenderComponent extends Component {
         this._area = null;
 
         // the entity that represents the root bone if this render component has skinned meshes
-        this._initialRootBone = null;
         this._rootBone = new EntityReference(this, 'rootBone');
         this._rootBone.on('set:entity', this._onSetRootBone, this);
 
@@ -751,6 +750,7 @@ class RenderComponent extends Component {
         if (oldRender.rootBone && duplicatedIdsMap[oldRender.rootBone]) {
             this.rootBone = duplicatedIdsMap[oldRender.rootBone];
         }
+        this._clearSkinInstances();
     }
 }
 
