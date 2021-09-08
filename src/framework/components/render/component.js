@@ -75,6 +75,7 @@ class RenderComponent extends Component {
         this._area = null;
 
         // the entity that represents the root bone if this render component has skinned meshes
+        this._initialRootBone = null;
         this._rootBone = new EntityReference(this, 'rootBone');
         this._rootBone.on('set:entity', this._onSetRootBone, this);
 
@@ -197,6 +198,11 @@ class RenderComponent extends Component {
     onEnable() {
         var app = this.system.app;
         var scene = app.scene;
+
+        if (this._initialRootBone) {
+            this.rootBone = this._initialRootBone;
+            this._initialRootBone = null;
+        }
 
         this._rootBone.onParentComponentEnable();
 
@@ -739,6 +745,21 @@ class RenderComponent extends Component {
 
         if (this._assetReference.asset) {
             this._onRenderAssetAdded();
+        }
+    }
+
+    get initialRootBone() {
+        return this._initialRootBone;
+    }
+
+    set initialRootBone(value) {
+        this._initialRootBone = value;
+    }
+
+    resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {
+        const oldRootBoneId = oldRender.rootBone || (oldRender.initialRootBone && oldRender.initialRootBone.getGuid());
+        if (oldRootBoneId && duplicatedIdsMap[oldRootBoneId]) {
+            this.rootBone = duplicatedIdsMap[oldRootBoneId];
         }
     }
 }

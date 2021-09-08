@@ -73,6 +73,11 @@ class RenderComponentSystem extends ComponentSystem {
             component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
+        component.initialRootBone = _data.rootBone;
+        if (component.initialRootBone) {
+            delete _data.rootBone;
+        }
+
         super.initializeComponentData(component, _data, _schema);
     }
 
