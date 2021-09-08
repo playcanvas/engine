@@ -27,7 +27,7 @@ const _props = {};
 const _uniforms = {};
 
 // temporary set of params
-let _params = { };
+let _params = new Set();
 
 /**
  * @class
@@ -358,8 +358,8 @@ class StandardMaterial extends Material {
         this._assetReferences = {};
         this._validator = null;
 
-        this._activeParams = null;
-        this._activeLightingParams = null;
+        this._activeParams = new Set();
+        this._activeLightingParams = new Set();
 
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
@@ -403,7 +403,7 @@ class StandardMaterial extends Material {
     }
 
     _setParameter(name, value) {
-        _params[name] = true;
+        _params.add(name);
         this.setParameter(name, value);
     }
 
@@ -413,14 +413,17 @@ class StandardMaterial extends Material {
         });
     }
 
-    _clearUnusedParameters(prevParams, activeParams) {
-        if (prevParams) {
-            Object.keys(prevParams).forEach((param) => {
-                if (!activeParams.hasOwnProperty(param)) {
-                    delete this.parameters[param];
-                }
-            });
+    _processParameters(paramsName) {
+        const prevParams = this[paramsName];
+        for (const param of prevParams) {
+            if (!_params.has(param)) {
+                delete this.parameters[param];
+            }
         }
+
+        this[paramsName] = _params;
+        _params = prevParams;
+        _params.clear();
     }
 
     _updateMap(p) {
@@ -544,9 +547,7 @@ class StandardMaterial extends Material {
         this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
-        this._clearUnusedParameters(this._activeParams, _params);
-        this._activeParams = _params;
-        _params = { };
+        this._processParameters('_activeParams');
 
         if (this._dirtyShader) {
             this.shader = null;
@@ -629,9 +630,7 @@ class StandardMaterial extends Material {
         }
 
         // remove unused lighting params
-        this._clearUnusedParameters(this._activeLightingParams, _params);
-        this._activeLightingParams = _params;
-        _params = { };
+        this._processParameters('_activeLightingParams');
     }
 
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
