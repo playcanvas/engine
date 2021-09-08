@@ -175,7 +175,8 @@ class ContainerResource {
             if (attachedMi) {
                 entity.addComponent("render", Object.assign({
                     type: "asset",
-                    meshInstances: attachedMi
+                    meshInstances: attachedMi,
+                    rootBone: root
                 }, options));
             }
 
