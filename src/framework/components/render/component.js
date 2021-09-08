@@ -747,14 +747,6 @@ class RenderComponent extends Component {
         }
     }
 
-    get initialRootBone() {
-        return this._initialRootBone;
-    }
-
-    set initialRootBone(value) {
-        this._initialRootBone = value;
-    }
-
     resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {
         if (oldRender.rootBone && duplicatedIdsMap[oldRender.rootBone]) {
             this.rootBone = duplicatedIdsMap[oldRender.rootBone];
