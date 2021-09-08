@@ -112,7 +112,9 @@ class RenderComponent extends Component {
     _onRootBoneChanged() {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
-        this._cloneSkinInstances();
+        if (this.enabled && this.entity.enabled) {
+            this._cloneSkinInstances();
+        }
     }
 
     destroyMeshInstances() {
@@ -199,12 +201,9 @@ class RenderComponent extends Component {
         var app = this.system.app;
         var scene = app.scene;
 
-        if (this._initialRootBone) {
-            this.rootBone = this._initialRootBone;
-            this._initialRootBone = null;
-        }
-
         this._rootBone.onParentComponentEnable();
+
+        this._cloneSkinInstances();
 
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
@@ -757,9 +756,8 @@ class RenderComponent extends Component {
     }
 
     resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {
-        const oldRootBoneId = oldRender.rootBone || (oldRender.initialRootBone && oldRender.initialRootBone.getGuid());
-        if (oldRootBoneId && duplicatedIdsMap[oldRootBoneId]) {
-            this.rootBone = duplicatedIdsMap[oldRootBoneId];
+        if (oldRender.rootBone && duplicatedIdsMap[oldRender.rootBone]) {
+            this.rootBone = duplicatedIdsMap[oldRender.rootBone];
         }
     }
 }
