@@ -88,6 +88,15 @@ class ContainerResource {
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
+     *
+     *     // find all render components containing mesh instances, and change blend mode on their materials
+     *     var renders = entity.findComponents("render");
+     *     renders.forEach(function (render) {
+     *         render.meshInstances.forEach(function (meshInstance) {
+     *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
+     *             meshInstance.material.update();
+     *         });
+     *     });
      * });
      */
     instantiateRenderEntity(options) {
