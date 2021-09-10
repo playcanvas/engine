@@ -1100,10 +1100,12 @@ class GraphNode extends EventHandler {
     // #endif
 
     // fires an event on all children of the node
-    _fireOnHierarchy(name) {
-        this.fire(name);
+    // the event name is fired on the first (root) node only
+    // the event nameHierarchy is fired for all children
+    _fireOnHierarchy(name, nameHierarchy, parent) {
+        this.fire(name, parent);
         for (let i = 0; i < this._children.length; i++) {
-            this._children[i]._fireOnHierarchy(name);
+            this._children[i]._fireOnHierarchy(nameHierarchy, nameHierarchy, parent);
         }
     }
 
@@ -1133,7 +1135,7 @@ class GraphNode extends EventHandler {
             node._unfreezeParentToRoot();
 
         // alert an entity hierarchy that it has been inserted
-        node._fireOnHierarchy('insert');
+        node._fireOnHierarchy('insert', 'inserthierarchy', this);
 
         // alert the parent that it has had a child inserted
         if (this.fire) this.fire('childinsert', node);
@@ -1173,7 +1175,7 @@ class GraphNode extends EventHandler {
                 child._parent = null;
 
                 // alert children that they has been removed
-                child._fireOnHierarchy('remove');
+                child._fireOnHierarchy('remove', 'removehierarchy', this);
 
                 // alert the parent that it has had a child removed
                 if (this.fire) this.fire('childremove', child);
