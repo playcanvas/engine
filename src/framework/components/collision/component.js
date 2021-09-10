@@ -315,6 +315,9 @@ class CollisionComponent extends Component {
             if (asset && (!asset.resource || !this.data.shape)) {
                 this.system.recreatePhysicalShapes(this);
                 return;
+            } else if (! this.data.initialized && ! this.data.shape) {
+                this.system.recreatePhysicalShapes(this);
+                return;
             }
         }
 
