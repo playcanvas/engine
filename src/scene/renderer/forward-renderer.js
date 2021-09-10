@@ -82,16 +82,20 @@ const _tempMaterialSet = new Set();
  * @name ForwardRenderer
  * @classdesc The forward renderer render scene objects.
  * @description Creates a new forward renderer object.
+ * @hideconstructor
  * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+ * @param {Scene} A - scene for the rendering.
  */
 class ForwardRenderer {
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, scene) {
         this.device = graphicsDevice;
-        const device = this.device;
+        this.scene = scene;
 
         this._shadowDrawCalls = 0;
         this._forwardDrawCalls = 0;
         this._skinDrawCalls = 0;
+        this._numDrawCallsCulled = 0;
+        this._instancedDrawCalls = 0;
         this._camerasRendered = 0;
         this._materialSwitches = 0;
         this._shadowMapUpdates = 0;
@@ -103,11 +107,13 @@ class ForwardRenderer {
         this._skinTime = 0;
         this._morphTime = 0;
         this._instancingTime = 0;
+        this._removedByInstancing = 0;
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
         this._lightClusters = 0;
 
         // Shaders
+        const device = this.device;
         const library = device.getProgramLibrary();
         this.library = library;
 
@@ -1634,7 +1640,7 @@ class ForwardRenderer {
             this.fogColor[1] = scene.fogColor.g;
             this.fogColor[2] = scene.fogColor.b;
             if (scene.gammaCorrection) {
-                for (const i = 0; i < 3; i++) {
+                for (let i = 0; i < 3; i++) {
                     this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
                 }
             }
