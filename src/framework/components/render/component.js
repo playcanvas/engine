@@ -98,8 +98,11 @@ class RenderComponent extends Component {
         // material asset references
         this._materialReferences = [];
 
+        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy) added or removed from the parent
         entity.on('remove', this.onRemoveChild, this);
+        entity.on('removehierarchy', this.onRemoveChild, this);
         entity.on('insert', this.onInsertChild, this);
+        entity.on('inserthierarchy', this.onInsertChild, this);
     }
 
     _onSetRootBone(entity) {
