@@ -49,9 +49,7 @@ class CollisionSystemImpl {
 
     // Called after the call to system.super.initializeComponentData is made
     afterInitialize(component, data) {
-        const entity = component.entity;
-
-        if (entity.enabled && component.enabled) {
+        if (component.entity.enabled && component.enabled) {
             this.recreatePhysicalShapes(component);
             component.data.initialized = true;
         }
