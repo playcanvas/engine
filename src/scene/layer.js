@@ -390,7 +390,7 @@ class Layer {
         for (let i = 0; i < meshInstances.length; i++) {
             const m = meshInstances[i];
             const mat = m.material;
-            const arr = mat.blendType === BLEND_NONE ? this.opaqueMeshInstances : arr = this.transparentMeshInstances;
+            const arr = mat.blendType === BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
 
             // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
             // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
