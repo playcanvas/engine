@@ -103,7 +103,7 @@ class SceneParser {
         for (let i = 0; i < len; i++) {
             const system = systemsList[i];
             const componentData = entityData.components[system.id];
-            if (componentData) {
+            if (componentData && componentData.enabled) {
                 system.addComponent(entity, componentData);
             }
         }
