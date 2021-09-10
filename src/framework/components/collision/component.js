@@ -322,7 +322,7 @@ class CollisionComponent extends Component {
 
         if (_recreatePhysicalShapes) {
             this.system.recreatePhysicalShapes(this);
-            return;            
+            return;
         }
 
         if (this.entity.rigidbody) {
