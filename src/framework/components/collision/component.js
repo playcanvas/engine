@@ -308,17 +308,21 @@ class CollisionComponent extends Component {
     }
 
     onEnable() {
+        let _recreatePhysicalShapes = false;
         if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
             var asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
             // recreate the collision shape if the model asset is not loaded
             // or the shape does not exist
             if (asset && (!asset.resource || !this.data.shape)) {
-                this.system.recreatePhysicalShapes(this);
-                return;
-            } else if (! this.data.initialized && ! this.data.shape) {
-                this.system.recreatePhysicalShapes(this);
-                return;
+                _recreatePhysicalShapes = true;
             }
+        } else if (! this.data.initialized && ! this.data.shape) {
+            _recreatePhysicalShapes = true;
+        }
+
+        if (_recreatePhysicalShapes) {
+            this.system.recreatePhysicalShapes(this);
+            return;            
         }
 
         if (this.entity.rigidbody) {
