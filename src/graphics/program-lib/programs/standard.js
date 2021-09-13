@@ -1132,7 +1132,8 @@ var standard = {
 
                 if (!options.hasTangents) {
                     // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
-                    var normalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    const transformPropName = options.normalMap ? "normalMapTransform" : "clearCoatNormalMapTransform";
+                    const normalMapUv = this._getUvSourceExpression(transformPropName, "normalMapUv", options);
                     tbn = tbn.replace(/\$UV/g, normalMapUv);
                 }
                 code += tbn;

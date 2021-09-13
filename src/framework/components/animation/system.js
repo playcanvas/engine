@@ -145,7 +145,7 @@ class AnimationComponentSystem extends ComponentSystem {
                         }
 
                         // update blend weight
-                        if (componentData.blending) {
+                        if (componentData.blending && animEvaluator.clips.length > 1) {
                             animEvaluator.clips[1].blendWeight = componentData.blend;
                         }
 
