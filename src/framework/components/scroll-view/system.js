@@ -12,6 +12,8 @@ const _schema = [
     { name: 'bounceAmount', type: 'number' },
     { name: 'friction', type: 'number' },
     { name: 'dragThreshold', type: 'number' },
+    { name: 'useMouseWheel', type: 'boolean' },
+    { name: 'mouseWheelSensitivity', type: 'vec2' },
     { name: 'horizontalScrollbarVisibility', type: 'number' },
     { name: 'verticalScrollbarVisibility', type: 'number' },
     { name: 'viewportEntity', type: 'entity' },
