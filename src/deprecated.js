@@ -113,7 +113,7 @@ import { basisInitialize } from './resources/basis.js';
 
 // CORE
 
-export var log = {
+export const log = {
     write: function (text) {
         // #if _DEBUG
         console.warn("DEPRECATED: pc.log.write is deprecated. Use console.log instead.");
@@ -188,7 +188,7 @@ string.startsWith = function (s, subs) {
     return s.startsWith(subs);
 };
 
-export var time = {
+export const time = {
     now: now,
     Timer: Timer
 };
@@ -225,8 +225,8 @@ Object.defineProperty(Color.prototype, "data3", {
 });
 
 export function inherits(Self, Super) {
-    var Temp = function () {};
-    var Func = function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+    const Temp = function () {};
+    const Func = function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
         Super.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
         Self.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
         // this.constructor = Self;
@@ -305,7 +305,7 @@ Vec4.prototype.scale = Vec4.prototype.mulScalar;
 
 // SHAPE
 
-export var shape = {
+export const shape = {
     Aabb: BoundingBox,
     Sphere: BoundingSphere,
     Plane: Plane
@@ -318,7 +318,7 @@ Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
     console.warn('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
     // #endif
 
-    var viewProj = new Mat4();
+    const viewProj = new Mat4();
 
     viewProj.mul2(projectionMatrix, viewMatrix);
 
@@ -327,13 +327,13 @@ Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
 
 // GRAPHICS
 
-export var ELEMENTTYPE_INT8 = TYPE_INT8;
-export var ELEMENTTYPE_UINT8 = TYPE_UINT8;
-export var ELEMENTTYPE_INT16 = TYPE_INT16;
-export var ELEMENTTYPE_UINT16 = TYPE_UINT16;
-export var ELEMENTTYPE_INT32 = TYPE_INT32;
-export var ELEMENTTYPE_UINT32 = TYPE_UINT32;
-export var ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
+export const ELEMENTTYPE_INT8 = TYPE_INT8;
+export const ELEMENTTYPE_UINT8 = TYPE_UINT8;
+export const ELEMENTTYPE_INT16 = TYPE_INT16;
+export const ELEMENTTYPE_UINT16 = TYPE_UINT16;
+export const ELEMENTTYPE_INT32 = TYPE_INT32;
+export const ELEMENTTYPE_UINT32 = TYPE_UINT32;
+export const ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
 
 export function UnsupportedBrowserError(message) {
     this.name = "UnsupportedBrowserError";
@@ -347,7 +347,7 @@ export function ContextCreationError(message) {
 }
 ContextCreationError.prototype = Error.prototype;
 
-export var gfx = {
+export const gfx = {
     ADDRESS_CLAMP_TO_EDGE: ADDRESS_CLAMP_TO_EDGE,
     ADDRESS_MIRRORED_REPEAT: ADDRESS_MIRRORED_REPEAT,
     ADDRESS_REPEAT: ADDRESS_REPEAT,
@@ -425,7 +425,7 @@ export var gfx = {
     VertexIterator: VertexIterator
 };
 
-export var posteffect = {
+export const posteffect = {
     createFullscreenQuad: createFullscreenQuad,
     drawFullscreenQuad: drawFullscreenQuad,
     PostEffect: PostEffect,
@@ -472,9 +472,9 @@ Object.defineProperties(Texture.prototype, {
 
 // SCENE
 
-export var PhongMaterial = StandardMaterial;
+export const PhongMaterial = StandardMaterial;
 
-export var scene = {
+export const scene = {
     partitionSkin: partitionSkin,
     procedural: {
         calculateTangents: calculateTangents,
@@ -567,19 +567,16 @@ GraphNode.prototype.removeLabel = function (label) {
     delete this._labels[label];
 };
 
-GraphNode.prototype.findByLabel = function (label, results) {
+GraphNode.prototype.findByLabel = function (label, results = []) {
     // #if _DEBUG
     console.warn('DEPRECATED: pc.GraphNode#findByLabel is deprecated. Use pc.GraphNode#tags instead.');
     // #endif
-
-    var i, length = this._children.length;
-    results = results || [];
 
     if (this.hasLabel(label)) {
         results.push(this);
     }
 
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < this._children.length; ++i) {
         results = this._children[i].findByLabel(label, results);
     }
 
@@ -664,7 +661,7 @@ Material.prototype.setShader = function (shader) {
 
 // ANIMATION
 
-export var anim = {
+export const anim = {
     Animation: Animation,
     Key: Key,
     Node: Node,
@@ -757,7 +754,7 @@ Skeleton.prototype.setLooping = function (looping) {
 
 // SOUND
 
-export var audio = {
+export const audio = {
     AudioManager: SoundManager,
     Channel: Channel,
     Channel3d: Channel3d,
@@ -788,7 +785,7 @@ SoundManager.prototype.setVolume = function (volume) {
 
 // ASSET
 
-export var asset = {
+export const asset = {
     ASSET_ANIMATION: 'animation',
     ASSET_AUDIO: 'audio',
     ASSET_IMAGE: 'image',
@@ -839,7 +836,7 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 
 // INPUT
 
-export var input = {
+export const input = {
     getTouchTargetCoords: getTouchTargetCoords,
     Controller: Controller,
     GamePads: GamePads,
@@ -866,19 +863,19 @@ Object.defineProperty(MouseEvent.prototype, 'wheel', {
 
 // FRAMEWORK
 
-export var RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
-export var RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;
-export var RIGIDBODY_TYPE_KINEMATIC = BODYTYPE_KINEMATIC;
-export var RIGIDBODY_CF_STATIC_OBJECT = BODYFLAG_STATIC_OBJECT;
-export var RIGIDBODY_CF_KINEMATIC_OBJECT = BODYFLAG_KINEMATIC_OBJECT;
-export var RIGIDBODY_CF_NORESPONSE_OBJECT = BODYFLAG_NORESPONSE_OBJECT;
-export var RIGIDBODY_ACTIVE_TAG = BODYSTATE_ACTIVE_TAG;
-export var RIGIDBODY_ISLAND_SLEEPING = BODYSTATE_ISLAND_SLEEPING;
-export var RIGIDBODY_WANTS_DEACTIVATION = BODYSTATE_WANTS_DEACTIVATION;
-export var RIGIDBODY_DISABLE_DEACTIVATION = BODYSTATE_DISABLE_DEACTIVATION;
-export var RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
+export const RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
+export const RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;
+export const RIGIDBODY_TYPE_KINEMATIC = BODYTYPE_KINEMATIC;
+export const RIGIDBODY_CF_STATIC_OBJECT = BODYFLAG_STATIC_OBJECT;
+export const RIGIDBODY_CF_KINEMATIC_OBJECT = BODYFLAG_KINEMATIC_OBJECT;
+export const RIGIDBODY_CF_NORESPONSE_OBJECT = BODYFLAG_NORESPONSE_OBJECT;
+export const RIGIDBODY_ACTIVE_TAG = BODYSTATE_ACTIVE_TAG;
+export const RIGIDBODY_ISLAND_SLEEPING = BODYSTATE_ISLAND_SLEEPING;
+export const RIGIDBODY_WANTS_DEACTIVATION = BODYSTATE_WANTS_DEACTIVATION;
+export const RIGIDBODY_DISABLE_DEACTIVATION = BODYSTATE_DISABLE_DEACTIVATION;
+export const RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
 
-export var fw = {
+export const fw = {
     Application: Application,
     Component: Component,
     ComponentSystem: ComponentSystem,
@@ -910,13 +907,13 @@ Application.prototype.enableFullscreen = function (element, success, error) {
     element = element || this.graphicsDevice.canvas;
 
     // success callback
-    var s = function () {
+    const s = function () {
         success();
         document.removeEventListener('fullscreenchange', s);
     };
 
     // error callback
-    var e = function () {
+    const e = function () {
         error();
         document.removeEventListener('fullscreenerror', e);
     };
@@ -942,7 +939,7 @@ Application.prototype.disableFullscreen = function (success) {
     // #endif
 
     // success callback
-    var s = function () {
+    const s = function () {
         success();
         document.removeEventListener('fullscreenchange', s);
     };
@@ -958,7 +955,7 @@ Application.prototype.getSceneUrl = function (name) {
     // #if _DEBUG
     console.warn("DEPRECATED: pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
     // #endif
-    var entry = this.scenes.find(name);
+    const entry = this.scenes.find(name);
     if (entry) {
         return entry.url;
     }

@@ -436,6 +436,9 @@ class Scene extends EventHandler {
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
 
+                // disable picker, the material has custom update shader and does not handle picker variant
+                meshInstance.pick = false;
+
                 var model = new Model();
                 model.graph = node;
                 model.meshInstances = [meshInstance];
