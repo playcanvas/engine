@@ -83,15 +83,15 @@ class LightsExample extends Example {
 
 
 
-        // // enabled clustered lighting. This is a temporary API and will change in the future
-        // pc.LayerComposition.clusteredLightingEnabled = true;
+        // enabled clustered lighting. This is a temporary API and will change in the future
+        pc.LayerComposition.clusteredLightingEnabled = true;
 
-        // // adjust default clusterered lighting parameters to handle many lights:
-        // // 1) subdivide space with lights into this many cells:
-        // app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
+        // adjust default clusterered lighting parameters to handle many lights:
+        // 1) subdivide space with lights into this many cells:
+        app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
 
-        // // 2) and allow this many lights per cell:
-        // app.scene.layers.clusteredLightingMaxLights = 48;
+        // 2) and allow this many lights per cell:
+        app.scene.layers.clusteredLightingMaxLights = 48;
 
 
 
@@ -240,6 +240,10 @@ class LightsExample extends Example {
 
                 lights.directional.setLocalEulerAngles(45, -60 * angleRad, 0);
             }
+
+            if (lights.spot.light.light.shadowMap) {
+                app.renderTexture(-0.7, 0.7, 0.4, 0.4, lights.spot.light.light.shadowMap.texture);
+            }
         });
 
         data.on('*:set', (path: string, value: any) => {
@@ -250,13 +254,6 @@ class LightsExample extends Example {
                 // @ts-ignore
                 lights[pathArray[1]].light[pathArray[2]] = value;
             }
-
-
-
-            if (lights.spot.light.light.shadowMap) {
-                app.renderTexture(0.7, 0.7, 0.4, 0.4, lights.spot.light.light.shadowMap.texture);
-            }
-
         });
     }
 }

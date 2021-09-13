@@ -12,7 +12,7 @@ class LightTextureAtlas {
         // shadow map
         this.shadowMap = ShadowMap.createAtlas(device, 1024, SHADOW_PCF3);
 
-        // avoid it being destoyed by lights
+        // avoid it being destroyed by lights
         this.shadowMap.cached = false;
 
         // available slots
