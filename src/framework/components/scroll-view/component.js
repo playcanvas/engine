@@ -34,7 +34,7 @@ var _tempScrollValue = new Vec2();
  * @property {number} bounceAmount Controls how far the content should move before bouncing back.
  * @property {number} friction Controls how freely the content should move if thrown, i.e. By flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
  * @property {boolean} useMouseWheel Whether to use mouse wheel for scrolling (horizontally and vertically) when mouse is within bounds.
- * @property {vec2} mouseWheelSensitivity Mouse wheel horizontal and vertical sensitivity. Only used if useMouseWheel is set.
+ * @property {Vec2} mouseWheelSensitivity Mouse wheel horizontal and vertical sensitivity. Only used if useMouseWheel is set.
  * @property {number} horizontalScrollbarVisibility Controls whether the horizontal scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
  * @property {number} verticalScrollbarVisibility Controls whether the vertical scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
  * @property {Entity} viewportEntity The entity to be used as the masked viewport area, within which the content will scroll. This entity must have an ElementGroup component.
