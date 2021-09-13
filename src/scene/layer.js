@@ -10,7 +10,7 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
-let keyA, keyB, sortPos, sortDir;
+var keyA, keyB, sortPos, sortDir;
 
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -33,14 +33,14 @@ function sortFrontToBack(drawCallA, drawCallB) {
     return drawCallA.zdist - drawCallB.zdist;
 }
 
-const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
+var sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
 function sortLights(lightA, lightB) {
     return lightB.key - lightA.key;
 }
 
 // Layers
-let layerCounter = 0;
+var layerCounter = 0;
 
 class VisibleInstanceList {
     constructor() {
@@ -384,13 +384,19 @@ class Layer {
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
-        const sceneShaderVer = this._shaderVersion;
+        var sceneShaderVer = this._shaderVersion;
 
-        const casters = this.shadowCasters;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
-            const mat = m.material;
-            const arr = mat.blendType === BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
+        var m, arr, mat;
+        var casters = this.shadowCasters;
+        for (var i = 0; i < meshInstances.length; i++) {
+            m = meshInstances[i];
+
+            mat = m.material;
+            if (mat.blendType === BLEND_NONE) {
+                arr = this.opaqueMeshInstances;
+            } else {
+                arr = this.transparentMeshInstances;
+            }
 
             // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
             // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
@@ -414,11 +420,12 @@ class Layer {
     // internal function to remove meshInstance from an array
     removeMeshInstanceFromArray(m, arr) {
 
-        let spliceOffset = -1;
-        let spliceCount = 0;
-        const len = arr.length;
-        for (let j = 0; j < len; j++) {
-            const drawCall = arr[j];
+        var drawCall;
+        var spliceOffset = -1;
+        var spliceCount = 0;
+        var len = arr.length;
+        for (var j = 0; j < len; j++) {
+            drawCall = arr[j];
             if (drawCall === m) {
                 spliceOffset = j;
                 spliceCount = 1;
@@ -446,12 +453,13 @@ class Layer {
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
 
-        const opaque = this.opaqueMeshInstances;
-        const transparent = this.transparentMeshInstances;
-        const casters = this.shadowCasters;
+        var j, m;
+        var opaque = this.opaqueMeshInstances;
+        var transparent = this.transparentMeshInstances;
+        var casters = this.shadowCasters;
 
-        for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
+        for (var i = 0; i < meshInstances.length; i++) {
+            m = meshInstances[i];
 
             // remove from opaque
             this.removeMeshInstanceFromArray(m, opaque);
@@ -461,7 +469,7 @@ class Layer {
 
             // remove from casters
             if (!skipShadowCasters) {
-                const j = casters.indexOf(m);
+                j = casters.indexOf(m);
                 if (j >= 0)
                     casters.splice(j, 1);
             }
@@ -555,9 +563,10 @@ class Layer {
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
-        const arr = this.shadowCasters;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
+        var m;
+        var arr = this.shadowCasters;
+        for (var i = 0; i < meshInstances.length; i++) {
+            m = meshInstances[i];
             if (!m.castShadow) continue;
             if (arr.indexOf(m) < 0) arr.push(m);
         }
@@ -571,9 +580,10 @@ class Layer {
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
-        const arr = this.shadowCasters;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const id = arr.indexOf(meshInstances[i]);
+        var id;
+        var arr = this.shadowCasters;
+        for (var i = 0; i < meshInstances.length; i++) {
+            id = arr.indexOf(meshInstances[i]);
             if (id >= 0) arr.splice(id, 1);
         }
         this._dirtyLights = true;
@@ -584,10 +594,10 @@ class Layer {
         // order of lights shouldn't matter
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
-            let str = "";
-            let strStatic = "";
+            var str = "";
+            var strStatic = "";
 
-            for (let i = 0; i < this._lights.length; i++) {
+            for (var i = 0; i < this._lights.length; i++) {
                 if (this._lights[i].isStatic) {
                     strStatic += this._lights[i].key;
                 } else {
@@ -632,7 +642,7 @@ class Layer {
      * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
-        const index = this.cameras.indexOf(camera);
+        var index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
             this._dirtyCameras = true;
@@ -653,28 +663,30 @@ class Layer {
     }
 
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
-        for (let i = 0; i < drawCallsCount; i++) {
-            const drawCall = drawCalls[i];
+        var i, drawCall, meshPos;
+        var tempx, tempy, tempz;
+        for (i = 0; i < drawCallsCount; i++) {
+            drawCall = drawCalls[i];
             if (drawCall.command) continue;
             if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
             if (drawCall.calculateSortDistance) {
                 drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
                 continue;
             }
-            const meshPos = drawCall.aabb.center;
-            const tempx = meshPos.x - camPos.x;
-            const tempy = meshPos.y - camPos.y;
-            const tempz = meshPos.z - camPos.z;
+            meshPos = drawCall.aabb.center;
+            tempx = meshPos.x - camPos.x;
+            tempy = meshPos.y - camPos.y;
+            tempz = meshPos.z - camPos.z;
             drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
         }
     }
 
     _sortVisible(transparent, cameraNode, cameraPass) {
-        const objects = this.instances;
-        const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
+        var objects = this.instances;
+        var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === SORTMODE_NONE) return;
 
-        const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+        var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
         if (sortMode === SORTMODE_CUSTOM) {
             sortPos = cameraNode.getPosition();

@@ -6,21 +6,21 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-const scaleCompensatePosTransform = new Mat4();
-const scaleCompensatePos = new Vec3();
-const scaleCompensateRot = new Quat();
-const scaleCompensateRot2 = new Quat();
-const scaleCompensateScale = new Vec3();
-const scaleCompensateScaleForParent = new Vec3();
-const tmpMat4 = new Mat4();
-const tmpQuat = new Quat();
-const position = new Vec3();
-const invParentWtm = new Mat4();
-const rotation = new Quat();
-const invParentRot = new Quat();
-const matrix = new Mat4();
-const target = new Vec3();
-const up = new Vec3();
+var scaleCompensatePosTransform = new Mat4();
+var scaleCompensatePos = new Vec3();
+var scaleCompensateRot = new Quat();
+var scaleCompensateRot2 = new Quat();
+var scaleCompensateScale = new Vec3();
+var scaleCompensateScaleForParent = new Vec3();
+var tmpMat4 = new Mat4();
+var tmpQuat = new Quat();
+var position = new Vec3();
+var invParentWtm = new Mat4();
+var rotation = new Quat();
+var invParentRot = new Quat();
+var matrix = new Mat4();
+var target = new Vec3();
+var up = new Vec3();
 
 /**
  * @class
@@ -161,9 +161,9 @@ class GraphNode extends EventHandler {
      * the root of the hierarchy.
      */
     get path() {
-        let parent = this._parent;
+        var parent = this._parent;
         if (parent) {
-            let path = this.name;
+            var path = this.name;
 
             while (parent && parent._parent) {
                 path = parent.name + "/" + path;
@@ -182,7 +182,7 @@ class GraphNode extends EventHandler {
      * @description A read-only property to get highest graph node from current node.
      */
     get root() {
-        let parent = this._parent;
+        var parent = this._parent;
         if (!parent)
             return this;
 
@@ -215,8 +215,8 @@ class GraphNode extends EventHandler {
     _notifyHierarchyStateChanged(node, enabled) {
         node._onHierarchyStateChanged(enabled);
 
-        const c = node._children;
-        for (let i = 0, len = c.length; i < len; i++) {
+        var c = node._children;
+        for (var i = 0, len = c.length; i < len; i++) {
             if (c[i]._enabled)
                 this._notifyHierarchyStateChanged(c[i], enabled);
         }
@@ -239,9 +239,9 @@ class GraphNode extends EventHandler {
     _cloneInternal(clone) {
         clone.name = this.name;
 
-        const tags = this.tags._list;
+        var tags = this.tags._list;
         clone.tags.clear();
-        for (let i = 0; i < tags.length; i++)
+        for (var i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
 
         clone._labels = Object.assign({}, this._labels);
@@ -272,7 +272,7 @@ class GraphNode extends EventHandler {
     }
 
     clone() {
-        const clone = new GraphNode();
+        var clone = new GraphNode();
         this._cloneInternal(clone);
         return clone;
     }
@@ -306,23 +306,24 @@ class GraphNode extends EventHandler {
      * var entities = parent.find('name', 'Test');
      */
     find(attr, value) {
-        let result, results = [];
-        const len = this._children.length;
+        var result, results = [];
+        var len = this._children.length;
+        var i, descendants;
 
         if (attr instanceof Function) {
-            const fn = attr;
+            var fn = attr;
 
             result = fn(this);
             if (result)
                 results.push(this);
 
-            for (let i = 0; i < len; i++) {
-                const descendants = this._children[i].find(fn);
+            for (i = 0; i < len; i++) {
+                descendants = this._children[i].find(fn);
                 if (descendants.length)
                     results = results.concat(descendants);
             }
         } else {
-            let testValue;
+            var testValue;
 
             if (this[attr]) {
                 if (this[attr] instanceof Function) {
@@ -334,8 +335,8 @@ class GraphNode extends EventHandler {
                     results.push(this);
             }
 
-            for (let i = 0; i < len; ++i) {
-                const descendants = this._children[i].find(attr, value);
+            for (i = 0; i < len; ++i) {
+                descendants = this._children[i].find(attr, value);
                 if (descendants.length)
                     results = results.concat(descendants);
             }
@@ -367,23 +368,24 @@ class GraphNode extends EventHandler {
      * var node = parent.findOne('name', 'Test');
      */
     findOne(attr, value) {
-        const len = this._children.length;
-        let result = null;
+        var i;
+        var len = this._children.length;
+        var result = null;
 
         if (attr instanceof Function) {
-            const fn = attr;
+            var fn = attr;
 
             result = fn(this);
             if (result)
                 return this;
 
-            for (let i = 0; i < len; i++) {
+            for (i = 0; i < len; i++) {
                 result = this._children[i].findOne(fn);
                 if (result)
                     return result;
             }
         } else {
-            let testValue;
+            var testValue;
             if (this[attr]) {
                 if (this[attr] instanceof Function) {
                     testValue = this[attr]();
@@ -395,7 +397,7 @@ class GraphNode extends EventHandler {
                 }
             }
 
-            for (let i = 0; i < len; i++) {
+            for (i = 0; i < len; i++) {
                 result = this._children[i].findOne(attr, value);
                 if (result !== null)
                     return result;
@@ -428,19 +430,20 @@ class GraphNode extends EventHandler {
      * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag() {
-        const tags = this.tags._processArguments(arguments);
+        var tags = this.tags._processArguments(arguments);
         return this._findByTag(tags);
     }
 
     _findByTag(tags) {
-        let result = [];
+        var result = [];
+        var i, len = this._children.length;
+        var descendants;
 
-        const len = this._children.length;
-        for (let i = 0; i < len; i++) {
+        for (i = 0; i < len; i++) {
             if (this._children[i].tags._has(tags))
                 result.push(this._children[i]);
 
-            const descendants = this._children[i]._findByTag(tags);
+            descendants = this._children[i]._findByTag(tags);
             if (descendants.length)
                 result = result.concat(descendants);
         }
@@ -459,8 +462,8 @@ class GraphNode extends EventHandler {
     findByName(name) {
         if (this.name === name) return this;
 
-        for (let i = 0; i < this._children.length; i++) {
-            const found = this._children[i].findByName(name);
+        for (var i = 0; i < this._children.length; i++) {
+            var found = this._children[i].findByName(name);
             if (found !== null) return found;
         }
         return null;
@@ -478,24 +481,24 @@ class GraphNode extends EventHandler {
      */
     findByPath(path) {
         // if the path isn't an array, split the path in parts. Each part represents a deeper hierarchy level
-        let parts;
+        var parts;
         if (Array.isArray(path)) {
             if (path.length === 0) return null;
             parts = path;
         } else {
             parts = path.split('/');
         }
-        let currentParent = this;
-        let result = null;
+        var currentParent = this;
+        var result = null;
 
-        for (let i = 0, imax = parts.length; i < imax && currentParent; i++) {
-            const part = parts[i];
+        for (var i = 0, imax = parts.length; i < imax && currentParent; i++) {
+            var part = parts[i];
 
             result = null;
 
             // check all the children
-            const children = currentParent._children;
-            for (let j = 0, jmax = children.length; j < jmax; j++) {
+            var children = currentParent._children;
+            for (var j = 0, jmax = children.length; j < jmax; j++) {
                 if (children[j].name === part) {
                     result = children[j];
                     break;
@@ -524,8 +527,8 @@ class GraphNode extends EventHandler {
     forEach(callback, thisArg) {
         callback.call(thisArg, this);
 
-        const children = this._children;
-        for (let i = 0; i < children.length; i++) {
+        var children = this._children;
+        for (var i = 0; i < children.length; i++) {
             children[i].forEach(callback, thisArg);
         }
     }
@@ -542,7 +545,7 @@ class GraphNode extends EventHandler {
      * }
      */
     isDescendantOf(node) {
-        let parent = this._parent;
+        var parent = this._parent;
         while (parent) {
             if (parent === node)
                 return true;
@@ -747,7 +750,7 @@ class GraphNode extends EventHandler {
      * @param {number} [index] - The child index where the child node should be placed.
      */
     reparent(parent, index) {
-        const current = this._parent;
+        var current = this._parent;
 
         if (current)
             current.removeChild(this);
@@ -888,7 +891,7 @@ class GraphNode extends EventHandler {
     }
 
     _unfreezeParentToRoot() {
-        let p = this._parent;
+        var p = this._parent;
         while (p) {
             p._frozen = false;
             p = p._parent;
@@ -905,7 +908,7 @@ class GraphNode extends EventHandler {
         if (!this._dirtyWorld) {
             this._frozen = false;
             this._dirtyWorld = true;
-            for (let i = 0; i < this._children.length; i++) {
+            for (var i = 0; i < this._children.length; i++) {
                 if (!this._children[i]._dirtyWorld)
                     this._children[i]._dirtifyWorldInternal();
             }
@@ -979,7 +982,7 @@ class GraphNode extends EventHandler {
         if (this._parent === null) {
             this.localRotation.copy(rotation);
         } else {
-            const parentRot = this._parent.getRotation();
+            var parentRot = this._parent.getRotation();
             invParentRot.copy(parentRot).invert();
             this.localRotation.copy(invParentRot).mul(rotation);
         }
@@ -1015,7 +1018,7 @@ class GraphNode extends EventHandler {
         }
 
         if (this._parent !== null) {
-            const parentRot = this._parent.getRotation();
+            var parentRot = this._parent.getRotation();
             invParentRot.copy(parentRot).invert();
             this.localRotation.mul2(invParentRot, this.localRotation);
         }
@@ -1050,10 +1053,10 @@ class GraphNode extends EventHandler {
         this._debugInsertChild(node);
         // #endif
 
-        const wPos = node.getPosition();
-        const wRot = node.getRotation();
+        var wPos = node.getPosition();
+        var wRot = node.getRotation();
 
-        const current = node._parent;
+        var current = node._parent;
         if (current)
             current.removeChild(node);
 
@@ -1111,7 +1114,7 @@ class GraphNode extends EventHandler {
 
         // the child node should be enabled in the hierarchy only if itself is enabled and if
         // this parent is enabled
-        const enabledInHierarchy = (node._enabled && this.enabled);
+        var enabledInHierarchy = (node._enabled && this.enabled);
         if (node._enabledInHierarchy !== enabledInHierarchy) {
             node._enabledInHierarchy = enabledInHierarchy;
 
@@ -1145,7 +1148,7 @@ class GraphNode extends EventHandler {
             this._graphDepth = 0;
         }
 
-        for (let i = 0, len = this._children.length; i < len; i++) {
+        for (var i = 0, len = this._children.length; i < len; i++) {
             this._children[i]._updateGraphDepth();
         }
     }
@@ -1160,10 +1163,11 @@ class GraphNode extends EventHandler {
      * this.entity.removeChild(child);
      */
     removeChild(child) {
+        var i;
+        var length = this._children.length;
 
         // Remove from child list
-        const length = this._children.length;
-        for (let i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             if (this._children[i] === child) {
                 this._children.splice(i, 1);
 
@@ -1193,12 +1197,12 @@ class GraphNode extends EventHandler {
                 this.worldTransform.copy(this.localTransform);
             } else {
                 if (this.scaleCompensation) {
-                    let parentWorldScale;
-                    const parent = this._parent;
+                    var parentWorldScale;
+                    var parent = this._parent;
 
                     // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
-                    let scale = this.localScale;
-                    let parentToUseScaleFrom = parent; // current parent
+                    var scale = this.localScale;
+                    var parentToUseScaleFrom = parent; // current parent
                     if (parentToUseScaleFrom) {
                         while (parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
                             parentToUseScaleFrom = parentToUseScaleFrom._parent;
@@ -1219,7 +1223,7 @@ class GraphNode extends EventHandler {
                     scaleCompensateRot.mul2(scaleCompensateRot2, this.localRotation);
 
                     // Find matrix to transform position
-                    let tmatrix = parent.worldTransform;
+                    var tmatrix = parent.worldTransform;
                     if (parent.scaleCompensation) {
                         scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
                         scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos),
@@ -1258,8 +1262,8 @@ class GraphNode extends EventHandler {
             this._sync();
         }
 
-        const children = this._children;
-        for (let i = 0, len = children.length; i < len; i++) {
+        var children = this._children;
+        for (var i = 0, len = children.length; i < len; i++) {
             children[i].syncHierarchy();
         }
     }
@@ -1403,8 +1407,8 @@ class GraphNode extends EventHandler {
         if (this._parent === null) {
             this.localRotation.mul2(rotation, this.localRotation);
         } else {
-            const rot = this.getRotation();
-            const parentRot = this._parent.getRotation();
+            var rot = this.getRotation();
+            var parentRot = this._parent.getRotation();
 
             invParentRot.copy(parentRot).invert();
             rotation.mul2(invParentRot, rotation);
