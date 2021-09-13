@@ -12,15 +12,15 @@ uniform vec3 clusterCellsDot;
 uniform vec3 clusterCellsMax;
 uniform vec2 clusterCompressionLimit0;
 
-float DecodeClusterFloat4(vec4 data) {
+float decodeClusterFloat4(vec4 data) {
     return dot(data, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
 }
 
-float DecodeClusterFloat2(vec2 data) {
+float decodeClusterFloat2(vec2 data) {
     return dot(data, vec2(1.0, 1.0 / 255.0));
 }
 
-void EvaluateClusterLight(float lightIndex) {
+void evaluateClusterLight(float lightIndex) {
 
     // read omni light properties
     float lightV = (lightIndex + 0.5) * lightsTextureInvSize.w;
@@ -35,15 +35,15 @@ void EvaluateClusterLight(float lightIndex) {
     vec4 colorA = texture2D(lightsTexture8, vec2(1.5 * lightsTextureInvSize.z, lightV));
     vec4 colorB = texture2D(lightsTexture8, vec2(2.5 * lightsTextureInvSize.z, lightV));
     vec3 lightColor = vec3(
-        DecodeClusterFloat2(colorA.xy),
-        DecodeClusterFloat2(colorA.zw),
-        DecodeClusterFloat2(colorB.xy)
+        decodeClusterFloat2(colorA.xy),
+        decodeClusterFloat2(colorA.zw),
+        decodeClusterFloat2(colorB.xy)
     ) * clusterCompressionLimit0.y;
 
     // spot light cos angles
     vec4 coneAngle = texture2D(lightsTexture8, vec2(3.5 * lightsTextureInvSize.z, lightV));
-    float innerConeAngleCos = DecodeClusterFloat2(coneAngle.xy) * 2.0 - 1.0;
-    float outerConeAngleCos = DecodeClusterFloat2(coneAngle.zw) * 2.0 - 1.0;
+    float innerConeAngleCos = decodeClusterFloat2(coneAngle.xy) * 2.0 - 1.0;
+    float outerConeAngleCos = decodeClusterFloat2(coneAngle.zw) * 2.0 - 1.0;
 
 
     #ifdef CLUSTER_TEXTURE_FLOAT
@@ -63,13 +63,13 @@ void EvaluateClusterLight(float lightIndex) {
         vec4 encPosZ = texture2D(lightsTexture8, vec2(6.5 * lightsTextureInvSize.z, lightV));
 
         vec3 lightPos = vec3(
-            DecodeClusterFloat4(encPosX),
-            DecodeClusterFloat4(encPosY),
-            DecodeClusterFloat4(encPosZ)
+            decodeClusterFloat4(encPosX),
+            decodeClusterFloat4(encPosY),
+            decodeClusterFloat4(encPosZ)
         ) * clusterBoundsDelta + clusterBoundsMin;
 
         vec4 encRange = texture2D(lightsTexture8, vec2(7.5 * lightsTextureInvSize.z, lightV));
-        float range = DecodeClusterFloat4(encRange) * clusterCompressionLimit0.x;
+        float range = decodeClusterFloat4(encRange) * clusterCompressionLimit0.x;
 
         // spot light direction
         vec4 encDirX = texture2D(lightsTexture8, vec2(8.5 * lightsTextureInvSize.z, lightV));
@@ -77,9 +77,9 @@ void EvaluateClusterLight(float lightIndex) {
         vec4 encDirZ = texture2D(lightsTexture8, vec2(10.5 * lightsTextureInvSize.z, lightV));
 
         vec3 lightDir = vec3(
-            DecodeClusterFloat4(encDirX),
-            DecodeClusterFloat4(encDirY),
-            DecodeClusterFloat4(encDirZ)
+            decodeClusterFloat4(encDirX),
+            decodeClusterFloat4(encDirY),
+            decodeClusterFloat4(encDirZ)
         ) * 2.0 - 1.0;
 
     #endif
@@ -96,5 +96,55 @@ void EvaluateClusterLight(float lightIndex) {
 
         dAtten *= getLightDiffuse();
         dDiffuseLight += dAtten * lightColor;
+    }
+}
+
+void addClusteredLights() {
+    // world space position to 3d integer cell cordinates in the cluster structure
+    vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
+
+    // no lighting when cell coordinate is out of range
+    if (!(any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
+
+        // cell index (mapping from 3d cell coordinates to linear memory)
+        float cellIndex = dot(clusterCellsDot, cellCoords);
+
+        // convert cell index to uv coordinates
+        float clusterV = floor(cellIndex * clusterTextureSize.y);
+        float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+        clusterV = (clusterV + 0.5) * clusterTextureSize.z;
+
+        // loop over maximum possible number of supported light cells
+        const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+        for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+
+            vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
+            vec4 indices = lightIndices * 255.0;
+
+            if (indices.x <= 0.0)
+                break;
+
+            evaluateClusterLight(indices.x);
+
+            if (indices.y <= 0.0)
+                break;
+
+            evaluateClusterLight(indices.y);
+
+            if (indices.z <= 0.0)
+                break;
+
+            evaluateClusterLight(indices.z);
+
+            if (indices.w <= 0.0)
+                break;
+
+            evaluateClusterLight(indices.w);
+
+            // end of the cell array
+            if (lightCellIndex > clusterPixelsPerCell) {
+                break;
+            }
+        }
     }
 }

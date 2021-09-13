@@ -1539,7 +1539,7 @@ var standard = {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
-                code += chunks.clusteredLightLoopPS;
+                code += '   addClusteredLights();';
             }
 
             for (i = 0; i < options.lights.length; i++) {
