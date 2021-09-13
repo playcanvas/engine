@@ -672,6 +672,14 @@ class AnimComponent extends Component {
         });
         this._consumedTriggers.clear();
     }
+
+    resolveDuplicatedEntityReferenceProperties(oldAnim, duplicatedIdsMap) {
+        if (oldAnim.rootBone && duplicatedIdsMap[oldAnim.rootBone.getGuid()]) {
+            this.rootBone = duplicatedIdsMap[oldAnim.rootBone.getGuid()];
+        } else {
+            this.rebind();
+        }
+    }
 }
 
 export { AnimComponent };

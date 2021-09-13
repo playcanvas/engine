@@ -477,6 +477,16 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
             newEntity.script.resolveDuplicatedEntityReferenceProperties(components.script, duplicatedIdsMap);
         }
 
+        // Handle entity render attributes
+        if (components.render) {
+            newEntity.render.resolveDuplicatedEntityReferenceProperties(components.render, duplicatedIdsMap);
+        }
+
+        // Handle entity anim attributes
+        if (components.anim) {
+            newEntity.anim.resolveDuplicatedEntityReferenceProperties(components.anim, duplicatedIdsMap);
+        }
+
         // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
         // in order to correctly handle cases where a child has an entity reference
         // field that points to a parent or other ancestor that is still within the
