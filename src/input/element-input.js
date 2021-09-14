@@ -55,12 +55,12 @@ function scalarTriple(p1, p2, p3) {
 // corners is assumed to be an array [BottomLeft, BottomRight, TopRight, TopLeft]
 // algorithm from from Real-Time Collision Detection book
 function calculateSqrDistancePointTo3dRect(p, corners) {
-    _sdpr1.sub2(corners[1], corners[0]); // vector across rect
-    _sdpr2.sub2(corners[3], corners[0]); // vector down rect
+    _sdpr1.sub2(corners[2], corners[3]); // vector across rect
+    _sdpr2.sub2(corners[0], corners[3]); // vector down rect
     _sdprD.sub2(p, corners[0]);
 
     // Start result at top-left corner of rect; make steps from there
-    _sdprQ.set(corners[0].x, corners[0].y, corners[0].z);
+    _sdprQ.set(corners[3].x, corners[3].y, corners[3].z);
 
     // Clamp p’ (projection of p to plane of r) to rectangle in the across direction
     var dist = _sdprD.dot(_sdpr1);
@@ -1040,7 +1040,7 @@ class ElementInput {
             return this._checkElementSqrDistanceToBounds(ray, element.maskedBy.element, screen);
         }
 
-        var scale;
+        let scale;
 
         if (screen) {
             scale = this._calculateScaleToScreen(element);
@@ -1048,7 +1048,7 @@ class ElementInput {
             scale = element.entity.getWorldTransform().getScale();
         }
 
-        var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
+        const corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
 
         if (intersectLineQuad(ray.origin, ray.end, corners))
             return calculateSqrDistancePointTo3dRect(ray.origin, corners);
