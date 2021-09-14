@@ -29,6 +29,11 @@ var _pc = new Vec3();
 var _pd = new Vec3();
 var _m = new Vec3();
 var _sct = new Vec3();
+var _sdpr1 = new Vec3();
+var _sdpr2 = new Vec3();
+var _sdprQ = new Vec3();
+var _sdprD = new Vec3();
+var _sdprTemp = new Vec3();
 var _accumulatedScale = new Vec2();
 var _paddingTop = new Vec3();
 var _paddingBottom = new Vec3();
@@ -44,6 +49,40 @@ var ZERO_VEC4 = new Vec4();
 // pi x p2 * p3
 function scalarTriple(p1, p2, p3) {
     return _sct.cross(p1, p2).dot(p3);
+}
+
+// calculates the distance from a point to a 3D rectangle defined by its corners
+// corners is assumed to be an array [BottomLeft, BottomRight, TopRight, TopLeft]
+// algorithm from from Real-Time Collision Detection book
+function calculateSqrDistancePointTo3dRect(p, corners) {
+    _sdpr1.sub2(corners[1], corners[0]); // vector across rect
+    _sdpr2.sub2(corners[3], corners[0]); // vector down rect
+    _sdprD.sub2(p, corners[0]);
+
+    // Start result at top-left corner of rect; make steps from there
+    _sdprQ.set(corners[0].x, corners[0].y, corners[0].z);
+
+    // Clamp p’ (projection of p to plane of r) to rectangle in the across direction
+    var dist = _sdprD.dot(_sdpr1);
+    var maxDist = _sdpr1.dot(_sdpr1);
+    if (dist >= maxDist) {
+        _sdprQ.add(_sdpr1);
+    } else if (dist > 0.0) {
+        _sdprTemp.copy(_sdpr1).mulScalar(dist / maxDist);
+        _sdprQ.add(_sdprTemp);
+    }
+
+    // Clamp p’ (projection of p to plane of r) to rectangle in the down direction
+    dist = _sdprD.dot(_sdpr2);
+    maxDist = _sdpr2.dot(_sdpr2);
+    if (dist >= maxDist) {
+        _sdprQ.add(_sdpr2);
+    } else if (dist > 0.0) {
+        _sdprTemp.copy(_sdpr2).mulScalar(dist / maxDist);
+        _sdprQ.add(_sdprTemp);
+    }
+
+    return _sdprQ.sub(p).lengthSq();
 }
 
 // Given line pq and ccw corners of a quad, return whether the line
@@ -811,6 +850,7 @@ class ElementInput {
 
     _getTargetElement(camera, x, y) {
         var result = null;
+        var closestDistance = Infinity;
 
         // sort elements
         this._elements.sort(this._sortHandler);
@@ -844,9 +884,10 @@ class ElementInput {
                 ray = ray3d;
             }
 
-            if (ray && this._checkElement(ray, element, screen)) {
+            var d = this._checkElementSqrDistanceToBounds(ray, element, screen);
+            if (ray && d > 0 && d < closestDistance) {
                 result = element;
-                break;
+                closestDistance = d;
             }
         }
 
@@ -991,6 +1032,28 @@ class ElementInput {
             return true;
         }
         return false;
+    }
+
+    _checkElementSqrDistanceToBounds(ray, element, screen) {
+        // ensure click is contained by any mask first
+        if (element.maskedBy) {
+            return this._checkElementSqrDistanceToBounds(ray, element.maskedBy.element, screen);
+        }
+
+        var scale;
+
+        if (screen) {
+            scale = this._calculateScaleToScreen(element);
+        } else {
+            scale = element.entity.getWorldTransform().getScale();
+        }
+
+        var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
+
+        if (intersectLineQuad(ray.origin, ray.end, corners))
+            return calculateSqrDistancePointTo3dRect(ray.origin, corners);
+
+        return -1;
     }
 
     _checkElement(ray, element, screen) {
