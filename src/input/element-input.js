@@ -1034,7 +1034,7 @@ class ElementInput {
         // ensure click is contained by any mask first
         if (element.maskedBy) {
             var result = this._checkElement(ray, element.maskedBy.element, screen);
-            if (!result) return -1;
+            if (result < 0) return -1;
         }
 
         var scale;
