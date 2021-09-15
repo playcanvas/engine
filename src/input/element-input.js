@@ -50,7 +50,7 @@ function scalarTriple(p1, p2, p3) {
     return _sct.cross(p1, p2).dot(p3);
 }
 
-// Given line pq and ccw corners of a quad, return the distance to the intersection point.
+// Given line pq and ccw corners of a quad, return the square distance to the intersection point.
 // If the line and quad do not intersect, return -1. (from Real-Time Collision Detection book)
 function intersectLineQuad(p, q, corners) {
     _pq.sub2(q, p);
@@ -838,7 +838,7 @@ class ElementInput {
 
     _getTargetElement(camera, x, y) {
         var result = null;
-        var closestDistance = Infinity;
+        let closestDistance3d = Infinity;
 
         // sort elements
         this._elements.sort(this._sortHandler);
@@ -861,6 +861,13 @@ class ElementInput {
                 }
                 ray = rayScreen;
                 screen = true;
+
+                // break on the first element that hit
+                const hit = this._checkElement(ray, element, screen) > 0;
+                if (ray && hit === true) {
+                    result = element;
+                    break;
+                }
             } else {
                 // 3d
                 if (ray3d === undefined) {
@@ -870,12 +877,13 @@ class ElementInput {
                     }
                 }
                 ray = ray3d;
-            }
 
-            var d = this._checkElement(ray, element, screen);
-            if (ray && d > 0 && d < closestDistance) {
-                result = element;
-                closestDistance = d;
+                // continue looking through all elements, only storing the closest one
+                const currentDistance = this._checkElement(ray, element, screen);
+                if (ray && currentDistance > 0 && currentDistance < closestDistance3d) {
+                    result = element;
+                    closestDistance3d = currentDistance;
+                }
             }
         }
 
