@@ -13,19 +13,21 @@ class LightTextureAtlas {
     constructor(device) {
 
         this.device = device;
-        this.resolution = 2048;
         this.subdivision = 0;
+
+        this.shadowMapResolution = 2048;
         this.shadowMap = null;
 
         // available slots
         this.slots = [];
 
+        this.allocateShadowMap(1);  // placeholder as shader requires it
         this.allocateUniforms();
     }
 
-    allocateShadowMap() {
-        if (!this.shadowMap) {
-            this.shadowMap = ShadowMap.createAtlas(this.device, this.resolution, SHADOW_PCF3);
+    allocateShadowMap(resolution) {
+        if (!this.shadowMap || this.shadowMap.texture.width !== resolution) {
+            this.shadowMap = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
 
             // avoid it being destroyed by lights
             this.shadowMap.cached = false;
@@ -47,7 +49,7 @@ class LightTextureAtlas {
         this._shadowAtlasTextureId.setValue(shadowBuffer);
 
         // shadow atlas params
-        this._shadowAtlasParamsId.setValue(this.resolution);
+        this._shadowAtlasParamsId.setValue(this.shadowMapResolution);
     }
 
     subdivide(numLights) {
@@ -83,7 +85,7 @@ class LightTextureAtlas {
         }
 
         if (lights.length > 0) {
-            this.allocateShadowMap();
+            this.allocateShadowMap(this.shadowMapResolution);
             this.subdivide(lights.length);
         }
 
