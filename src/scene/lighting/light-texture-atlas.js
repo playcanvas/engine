@@ -10,16 +10,21 @@ class LightTextureAtlas {
     constructor(device) {
 
         // shadow map
-        this.shadowMap = ShadowMap.createAtlas(device, 1024, SHADOW_PCF3);
+        this.resolution = 2048; // !!!!!!!!!!!!!!!
+        this.shadowMap = ShadowMap.createAtlas(device, this.resolution, SHADOW_PCF3);
 
         // avoid it being destroyed by lights
         this.shadowMap.cached = false;
 
         // available slots
         this.slots = [];
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-                this.slots.push(new Vec4(i * 0.25, j * 0.25, 0.25, 0.25));
+        //const slotGridSize = 4;
+        const slotGridSize = 8;
+//        const slotGridSize = 1;
+        const invSize = 1 / slotGridSize;
+        for (let i = 0; i < slotGridSize; i++) {
+            for (let j = 0; j < slotGridSize; j++) {
+                this.slots.push(new Vec4(i * invSize, j * invSize, invSize, invSize));
             }
         }
     }

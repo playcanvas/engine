@@ -48,6 +48,7 @@ import falloffInvSquaredPS from './falloffInvSquared.frag';
 import falloffLinearPS from './falloffLinear.frag';
 import fixCubemapSeamsNonePS from './fixCubemapSeamsNone.frag';
 import fixCubemapSeamsStretchPS from './fixCubemapSeamsStretch.frag';
+import floatUnpackingPS from './float-unpacking.frag';
 import fogExpPS from './fogExp.frag';
 import fogExp2PS from './fogExp2.frag';
 import fogLinearPS from './fogLinear.frag';
@@ -251,6 +252,7 @@ const shaderChunks = {
     falloffLinearPS: falloffLinearPS,
     fixCubemapSeamsNonePS: fixCubemapSeamsNonePS,
     fixCubemapSeamsStretchPS: fixCubemapSeamsStretchPS,
+    floatUnpackingPS: floatUnpackingPS,
     fogExpPS: fogExpPS,
     fogExp2PS: fogExp2PS,
     fogLinearPS: fogLinearPS,
