@@ -2181,20 +2181,21 @@ class ForwardRenderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
-        if (LayerComposition.clusteredLightingEnabled) {
-            // update shadow / cookie atlas allocation for the visible lights
-            this.updateLightTextureAtlas(comp);
-
-            // update light clusters
-            this.updateClusters(comp);
-        }
-
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
+
+        // update shadow / cookie atlas allocation for the visible lights
+        if (LayerComposition.clusteredLightingEnabled)
+            this.updateLightTextureAtlas(comp);
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
         this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+
+        // update light clusters
+        if (LayerComposition.clusteredLightingEnabled) {
+            this.updateClusters(comp);
+        }
 
         // Rendering
         let sortTime, drawTime;

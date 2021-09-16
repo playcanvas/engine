@@ -3,32 +3,33 @@ import { Vec4 } from '../../math/vec4.js';
 import { SHADOW_PCF3 } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
+const _tempArray = [];
+
+// A class handling runtime allocation of slots in a texture. Used to allocate slots in the shadow map,
+// and will be used to allocate slots in the cookie texture as well.
+// Note: this will be improved in the future  to allocate different size for lights of different priority and screen size,
+// and also handle persistent slots for shadows that do not need to render each frame
 class LightTextureAtlas {
     constructor(device) {
+
         this.device = device;
-
-        // shadow map
-        this.resolution = 2048; // !!!!!!!!!!!!!!!
-        this.shadowMap = ShadowMap.createAtlas(device, this.resolution, SHADOW_PCF3);
-
-        // avoid it being destroyed by lights
-        this.shadowMap.cached = false;
+        this.resolution = 2048;
+        this.subdivision = 0;
+        this.shadowMap = null;
 
         // available slots
         this.slots = [];
-        //const slotGridSize = 4;
-        const slotGridSize = 8;
-//        const slotGridSize = 1;
-        const invSize = 1 / slotGridSize;
-        for (let i = 0; i < slotGridSize; i++) {
-            for (let j = 0; j < slotGridSize; j++) {
-                this.slots.push(new Vec4(i * invSize, j * invSize, invSize, invSize));
-            }
-        }
-
-
 
         this.allocateUniforms();
+    }
+
+    allocateShadowMap() {
+        if (!this.shadowMap) {
+            this.shadowMap = ShadowMap.createAtlas(this.device, this.resolution, SHADOW_PCF3);
+
+            // avoid it being destroyed by lights
+            this.shadowMap.cached = false;
+        }
     }
 
     allocateUniforms() {
@@ -49,31 +50,58 @@ class LightTextureAtlas {
         this._shadowAtlasParamsId.setValue(this.resolution);
     }
 
+    subdivide(numLights) {
+
+        // required grid size
+        const gridSize = Math.ceil(Math.sqrt(numLights));
+
+        // subdivide the texture to required grid size
+        if (this.subdivision !== gridSize) {
+            this.subdivision = gridSize;
+
+            this.slots.length = 0;
+            const invSize = 1 / gridSize;
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    this.slots.push(new Vec4(i * invSize, j * invSize, invSize, invSize));
+                }
+            }
+        }
+    }
+
     // update texture atlas for a list of lights (of type ClusterLight)
     update(spotLights, omniLights) {
 
+        // get all lights that need shadows
+        const lights = _tempArray;
+        lights.length = 0;
+        for (let i = 0; i < spotLights.length; i++) {
+            const light = spotLights[i];
+            if (light.visibleThisFrame && light.castShadows) {
+                lights.push(light);
+            }
+        }
 
+        if (lights.length > 0) {
+            this.allocateShadowMap();
+            this.subdivide(lights.length);
+        }
 
-        const lights = spotLights.concat(omniLights);  ///!!!!!!!!!!!!!!!!!!! dont allocate new array
-
-
-
+        // assign atlas slots to lights
         let usedCount = 0;
         for (let i = 0; i < lights.length; i++) {
+
             const light = lights[i];
-            if (light && light.castShadows) {
+            light._shadowMap = this.shadowMap;
 
-                const faceCount = light.numShadowFaces;
-                for (let face = 0; face < faceCount; face++) {
+            const faceCount = light.numShadowFaces;
+            for (let face = 0; face < faceCount; face++) {
 
-                    const slot = this.slots[usedCount];
-                    usedCount++;
+                const slot = this.slots[usedCount];
+                usedCount++;
 
-                    const lightRenderData = light.getRenderData(null, face);
-                    lightRenderData.shadowViewport.copy(slot);
-                }
-
-                light._shadowMap = this.shadowMap;
+                const lightRenderData = light.getRenderData(null, face);
+                lightRenderData.shadowViewport.copy(slot);
             }
         }
 
