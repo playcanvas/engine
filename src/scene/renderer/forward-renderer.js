@@ -627,22 +627,7 @@ class ForwardRenderer {
             if (directional.castShadows) {
 
                 const lightRenderData = directional.getRenderData(camera, 0);
-
-                // make bias dependent on far plane because it's not constant for direct light
-                // clip distance used is based on the nearest shadow cascade
-                const farClip = lightRenderData.shadowCamera._farClip;
-                let bias;
-                if (directional._isVsm) {
-                    bias = -0.00001 * 20;
-                } else {
-                    bias = (directional.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) {
-                        bias *= -100;
-                    }
-                }
-                var normalBias = directional._isVsm ?
-                    directional.vsmBias / (farClip / 7.0) :
-                    directional._normalOffsetBias;
+                const biases = directional._getUniformBiasValues(lightRenderData);
 
                 this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
@@ -654,8 +639,8 @@ class ForwardRenderer {
                 var params = directional._shadowRenderParams;
                 params.length = 3;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = normalBias;
-                params[2] = bias;
+                params[1] = biases.y;
+                params[2] = biases.x;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
             cnt++;
@@ -703,11 +688,12 @@ class ForwardRenderer {
             const lightRenderData = omni.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
+            const biases = omni._getUniformBiasValues(lightRenderData);
             var params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
-            params[1] = omni._normalOffsetBias;
-            params[2] = omni.shadowBias;
+            params[1] = biases.y;
+            params[2] = biases.x;
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
@@ -750,27 +736,19 @@ class ForwardRenderer {
 
         let cookieMatrix;
         if (spot.castShadows) {
-            var bias;
-            if (spot._isVsm) {
-                bias = -0.00001 * 20;
-            } else {
-                bias = spot.shadowBias * 20; // approx remap from old bias values
-                if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
-            }
-            var normalBias = spot._isVsm ?
-                spot.vsmBias / (spot.attenuationEnd / 7.0) :
-                spot._normalOffsetBias;
 
             // shadow map
             const lightRenderData = spot.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
             this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
+
+            const biases = spot._getUniformBiasValues(lightRenderData);
             var params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
-            params[1] = normalBias;
-            params[2] = bias;
+            params[1] = biases.y;
+            params[2] = biases.x;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
 
@@ -2203,11 +2181,13 @@ class ForwardRenderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
-        // update shadow / cookie atlas allocation for the visible lights
-        this.updateLightTextureAtlas(comp);
+        if (LayerComposition.clusteredLightingEnabled) {
+            // update shadow / cookie atlas allocation for the visible lights
+            this.updateLightTextureAtlas(comp);
 
-        // update light clusters
-        this.updateClusters(comp);
+            // update light clusters
+            this.updateClusters(comp);
+        }
 
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);

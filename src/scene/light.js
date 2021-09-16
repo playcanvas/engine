@@ -18,6 +18,7 @@ import { ShadowRenderer } from './renderer/shadow-renderer.js';
 const spotCenter = new Vec3();
 const spotEndPoint = new Vec3();
 const tmpVec = new Vec3();
+const tmpVec2 = new Vec2();
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
@@ -263,6 +264,43 @@ class Light {
         // clone.cookieOffset = this._cookieOffset;
 
         return clone;
+    }
+
+    // returns the bias (.x) and normalBias (.y) value for lights as used by uniforms
+    // Note: this needs to be revisited and simplified
+    // Note: vsmBias is not used at all for omni light, even though is displayed in the Editor
+    _getUniformBiasValues(lightRenderData) {
+
+        const farClip = lightRenderData.shadowCamera._farClip;
+
+        switch (this._type) {
+            case LIGHTTYPE_OMNI:
+                tmpVec2.x = this.shadowBias;
+                tmpVec2.y = this._normalOffsetBias;
+                break;
+            case LIGHTTYPE_SPOT:
+                if (this._isVsm) {
+                    tmpVec2.x = -0.00001 * 20;
+                } else {
+                    tmpVec2.x = this.shadowBias * 20; // approx remap from old bias values
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpVec2.x *= -100;
+                }
+                tmpVec2.y = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
+                break;
+            case LIGHTTYPE_DIRECTIONAL:
+                // make bias dependent on far plane because it's not constant for direct light
+                // clip distance used is based on the nearest shadow cascade
+                if (this._isVsm) {
+                    tmpVec2.x = -0.00001 * 20;
+                } else {
+                    tmpVec2.x = (this.shadowBias / farClip) * 100;
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpVec2.x *= -100;
+                }
+                tmpVec2.y = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
+                break;
+        }
+
+        return tmpVec2;
     }
 
     get numCascades() {
