@@ -38,6 +38,7 @@ import { LayerComposition } from '../composition/layer-composition.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
+import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 
 var shadowCamView = new Mat4();
 var shadowCamViewProj = new Mat4();
@@ -116,6 +117,9 @@ class ForwardRenderer {
 
         // shadows
         this._shadowRenderer = new ShadowRenderer(this);
+
+        // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
+        this.lightTextureAtlas = new LightTextureAtlas(device);
 
         // Uniforms
         var scope = device.scope;
@@ -2140,6 +2144,10 @@ class ForwardRenderer {
         // #endif
     }
 
+    updateLightTextureAtlas(comp) {
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI]);
+    }
+
     updateClusters(comp) {
 
         // #if _PROFILER
@@ -2194,6 +2202,9 @@ class ForwardRenderer {
         // visibility culling of lights, meshInstances, shadows casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
+
+        // update shadow / cookie atlas allocation for the visible lights
+        this.updateLightTextureAtlas(comp);
 
         // update light clusters
         this.updateClusters(comp);
@@ -2297,7 +2308,7 @@ class ForwardRenderer {
 
                 // upload clustered lights uniforms
                 if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
-                    renderAction.lightClusters.activate();
+                    renderAction.lightClusters.activate(this.lightTextureAtlas);
                 }
 
                 // enable flip faces if either the camera has _flipFaces enabled or the render target

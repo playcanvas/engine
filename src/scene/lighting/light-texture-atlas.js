@@ -1,13 +1,11 @@
 import { Vec4 } from '../../math/vec4.js';
 
-import {
-//    LIGHTTYPE_OMNI,
-    SHADOW_PCF3// , SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32
-} from '../constants.js';
+import { SHADOW_PCF3 } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 class LightTextureAtlas {
     constructor(device) {
+        this.device = device;
 
         // shadow map
         this.resolution = 2048; // !!!!!!!!!!!!!!!
@@ -27,13 +25,42 @@ class LightTextureAtlas {
                 this.slots.push(new Vec4(i * invSize, j * invSize, invSize, invSize));
             }
         }
+
+
+
+        this.allocateUniforms();
+    }
+
+    allocateUniforms() {
+        this._shadowAtlasTextureId = this.device.scope.resolve("shadowAtlasTexture");
+        this._shadowAtlasParamsId = this.device.scope.resolve("shadowAtlasParams");
+    }
+
+    updateUniforms() {
+
+        // shadow atlas texture
+        const isShadowFilterPcf = true;
+        const shadowMap = this.shadowMap;
+        const rt = shadowMap.renderTargets[0];
+        const shadowBuffer = (this.device.webgl2 && isShadowFilterPcf) ? rt.depthBuffer : rt.colorBuffer;
+        this._shadowAtlasTextureId.setValue(shadowBuffer);
+
+        // shadow atlas params
+        this._shadowAtlasParamsId.setValue(this.resolution);
     }
 
     // update texture atlas for a list of lights (of type ClusterLight)
-    update(clusterLights) {
+    update(spotLights, omniLights) {
+
+
+
+        const lights = spotLights.concat(omniLights);  ///!!!!!!!!!!!!!!!!!!! dont allocate new array
+
+
+
         let usedCount = 0;
-        for (let i = 0; i < clusterLights.length; i++) {
-            const light = clusterLights[i].light;
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
             if (light && light.castShadows) {
 
                 const faceCount = light.numShadowFaces;
@@ -47,9 +74,10 @@ class LightTextureAtlas {
                 }
 
                 light._shadowMap = this.shadowMap;
-
             }
         }
+
+        this.updateUniforms();
     }
 }
 

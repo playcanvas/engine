@@ -121,8 +121,8 @@ class ClusteredShadowsExample extends Example {
             farClip: 1000,
             nearClip: 0.1
         });
-        camera.setLocalPosition(350, 190, 350);
-        camera.lookAt(new pc.Vec3(0, 0, 0));
+        camera.setLocalPosition(250, 90, 150);
+        camera.lookAt(new pc.Vec3(0, -30, 0));
         app.root.addChild(camera);
 
         // Set an update function on the app's update event

@@ -18,7 +18,7 @@ uniform vec3 clusterBoundsDelta;
 uniform vec3 clusterCellsDot;
 uniform vec3 clusterCellsMax;
 uniform vec2 clusterCompressionLimit0;
-uniform vec3 shadowAtlasParams;
+uniform float shadowAtlasParams;
 
 struct ClusterLightData {
 
@@ -155,7 +155,10 @@ void evaluateLight(ClusterLightData light) {
         if (light.castShadows > 0.5) {
             decodeClusterLightShadowMatrix(light);
 
-            vec4 shadowParams = vec4(shadowAtlasParams.xyz, 1.0 / light.range);
+            float shadowTextureResolution = shadowAtlasParams;
+            float bias1 = 0.3;
+            float bias2 = 0.07;
+            vec4 shadowParams = vec4(shadowTextureResolution, bias1, bias2, 1.0 / light.range);
             getShadowCoordPerspZbufferNormalOffset(light.shadowMatrix, shadowParams);
             dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
         }

@@ -5,7 +5,6 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT } from './constants.js';
-import { LightTextureAtlas } from './lighting/light-texture-atlas.js';
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -88,9 +87,6 @@ class WorldClusters {
         // allocate textures to store lights
         this.initLightsTexture();
 
-        // texture atlas managing shadow map / cookie texture atlassing
-        this.lightTextureAtlas = new LightTextureAtlas(device);
-
         // shadow distance bias is contant for all lights
         this.shadowBias = 0.2;
     }
@@ -145,13 +141,6 @@ class WorldClusters {
         // compression limit 0
         this._clusterCompressionLimit0Id = device.scope.resolve("clusterCompressionLimit0");
         this._clusterCompressionLimit0Data = new Float32Array(2);
-
-        // shadow texture
-        this._shadowAtlasTextureId = this.device.scope.resolve("shadowAtlasTexture");
-
-        // shadow parameters
-        this._shadowAtlasParamsId = this.device.scope.resolve("shadowAtlasParams");
-        this._shadowAtlasParamsData = new Float32Array(3);
     }
 
     get maxCellLightCount() {
@@ -430,29 +419,6 @@ class WorldClusters {
         this._clusterWorldTextureId.setValue(this.clusterTexture);
         this._lightsTexture8Id.setValue(this.lightsTexture8);
 
-
-
-        // shadow map
-        const isShadowFilterPcf = true; // !!!!!!!!!!!!!
-        const shadowMap = this.lightTextureAtlas.shadowMap;
-        const rt = shadowMap.renderTargets[0];
-        const shadowBuffer = (this.device.webgl2 && isShadowFilterPcf) ? rt.depthBuffer : rt.colorBuffer;
-        this._shadowAtlasTextureId.setValue(shadowBuffer);
-
-
-
-
-
-        //  !!!!!!!!!!!!!! figure out those biases
-        // shadow params
-        this._shadowAtlasParamsData[0] = this.lightTextureAtlas.resolution;
-        this._shadowAtlasParamsData[1] = 0.3;
-        this._shadowAtlasParamsData[2] = 0.07;
-        this._shadowAtlasParamsId.setValue(this._shadowAtlasParamsData);
-
-
-
-
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
             this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
         }
@@ -548,10 +514,6 @@ class WorldClusters {
         }
 
         usedLights.length = lightIndex;
-    }
-
-    updateTextureAtlas() {
-        this.lightTextureAtlas.update(this._usedLights);
     }
 
     // evaluate the area all lights cover
@@ -679,7 +641,6 @@ class WorldClusters {
     update(lights, gammaCorrection) {
         this.updateCells();
         this.collectLights(lights);
-        this.updateTextureAtlas();
         this.evaluateBounds();
         this.evaluateCompressionLimits(gammaCorrection);
         this.updateClusters(gammaCorrection);
