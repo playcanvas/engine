@@ -291,9 +291,7 @@ class GraphicsDevice extends EventHandler {
         };
 
         // Retrieve the WebGL context
-        // const preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
-        const preferWebGl2 = false;
-
+        const preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
         const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
