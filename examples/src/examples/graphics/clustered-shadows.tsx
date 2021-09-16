@@ -144,9 +144,10 @@ class ClusteredShadowsExample extends Example {
                 spotlight.rotateLocal(90, 0, 0);
             });
 
-            if (spotLightList[0].light.light.shadowMap) {
-                app.renderTexture(-0.7, 0.7, 0.4, 0.4, spotLightList[0].light.light.shadowMap.texture);
-            }
+            // display shadow texture (debug feature, only works when depth is stored as color)
+            // if (spotLightList[0].light.light.shadowMap) {
+            //     app.renderTexture(-0.7, 0.7, 0.4, 0.4, spotLightList[0].light.light.shadowMap.texture);
+            // }
         });
     }
 }
