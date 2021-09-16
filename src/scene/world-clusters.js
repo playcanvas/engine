@@ -331,8 +331,8 @@ class WorldClusters {
         } else {    // high precision data stored using 8bit texture
 
             // position and range scaled to 0..1 range
-            floatPacking.float2Bytes(normPos.x, data8, data8Index + 0, 4);
             const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
+            floatPacking.float2Bytes(normPos.x, data8, data8Index + 0, 4);
             floatPacking.float2Bytes(normPos.y, data8, data8Index + 4, 4);
             floatPacking.float2Bytes(normPos.z, data8, data8Index + 8, 4);
             floatPacking.float2Bytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 12, 4);
