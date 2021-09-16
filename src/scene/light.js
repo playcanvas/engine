@@ -266,9 +266,9 @@ class Light {
         return clone;
     }
 
-    // returns the bias (.x) and normalBias (.y) value for lights as used by uniforms
+    // returns the bias (.x) and normalBias (.y) value for lights as passed to shaders by uniforms
     // Note: this needs to be revisited and simplified
-    // Note: vsmBias is not used at all for omni light, even though is displayed in the Editor
+    // Note: vsmBias is not used at all for omni light, even though it is editable in the Editor
     _getUniformBiasValues(lightRenderData) {
 
         const farClip = lightRenderData.shadowCamera._farClip;
