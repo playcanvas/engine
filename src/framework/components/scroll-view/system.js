@@ -4,6 +4,8 @@ import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
+import { Vec2 } from '../../../math/vec2.js';
+
 const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'horizontal', type: 'boolean' },
@@ -23,6 +25,7 @@ const _schema = [
 ];
 
 const DEFAULT_DRAG_THRESHOLD = 10;
+const SCROLLBAR_MOUSE_WHEEL_SENSITIVITY = Vec2.ONE;
 
 /**
  * @class
@@ -51,6 +54,12 @@ class ScrollViewComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         if (data.dragThreshold === undefined) {
             data.dragThreshold = DEFAULT_DRAG_THRESHOLD;
+        }
+        if (data.useMouseWheel === undefined) {
+            data.useMouseWheel = true;
+        }
+        if (data.mouseWheelSensitivity === undefined) {
+            data.mouseWheelSensitivity = SCROLLBAR_MOUSE_WHEEL_SENSITIVITY;
         }
 
         super.initializeComponentData(component, data, _schema);
