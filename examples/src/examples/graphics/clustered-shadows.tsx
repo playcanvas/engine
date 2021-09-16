@@ -91,7 +91,7 @@ class ClusteredShadowsExample extends Example {
                 type: "spot",
                 color: color,
                 innerConeAngle: 20,
-                outerConeAngle: 30,
+                outerConeAngle: 21 + Math.random() * 20,
                 range: 80,
                 castShadows: true,
                 shadowBias: 0.3,
@@ -121,8 +121,6 @@ class ClusteredShadowsExample extends Example {
             farClip: 1000,
             nearClip: 0.1
         });
-        camera.setLocalPosition(250, 90, 150);
-        camera.lookAt(new pc.Vec3(0, -30, 0));
         app.root.addChild(camera);
 
         // Set an update function on the app's update event
@@ -143,6 +141,10 @@ class ClusteredShadowsExample extends Example {
                 spotlight.lookAt(lightPos, pc.Vec3.RIGHT);
                 spotlight.rotateLocal(90, 0, 0);
             });
+
+            // orbit the camera
+            camera.setLocalPosition(300 * Math.sin(time * 0.4), 90, 300 * Math.cos(time * 0.4));
+            camera.lookAt(new pc.Vec3(0, 0, 0));
 
             // display shadow texture (debug feature, only works when depth is stored as color)
             // if (spotLightList[0].light.light.shadowMap) {
