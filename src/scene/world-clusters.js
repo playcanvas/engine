@@ -86,9 +86,6 @@ class WorldClusters {
 
         // allocate textures to store lights
         this.initLightsTexture();
-
-        // shadow distance bias is contant for all lights
-        this.shadowBias = 0.2;
     }
 
     destroy() {
