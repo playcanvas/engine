@@ -28,7 +28,11 @@ struct ClusterLightData {
     float type;
     float shape;
     float falloffMode;
+
     float castShadows;
+    float shadowBias;
+    float shadowNormalBias;
+    mat4 shadowMatrix;
 
     vec3 position;
     vec3 direction;
@@ -36,8 +40,6 @@ struct ClusterLightData {
     float innerConeAngleCos;
     float outerConeAngleCos;
     vec3 color;
-
-    mat4 shadowMatrix;
 };
 
 vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
@@ -103,7 +105,14 @@ void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
     clusterLightData.outerConeAngleCos = bytes2float2(coneAngle.zw) * 2.0 - 1.0;
 }
 
-void decodeClusterLightShadowMatrix(inout ClusterLightData clusterLightData) {
+void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
+    
+    // shadow biases
+    vec4 biases = texture2D(lightsTexture8, vec2(4.5 * lightsTextureInvSize.z, clusterLightData.lightV));
+    clusterLightData.shadowBias = bytes2floatRange2(biases.xy, -1.0, 20.0),
+    clusterLightData.shadowNormalBias = bytes2float2(biases.zw);
+
+    // shadow matrix
     #ifdef CLUSTER_TEXTURE_FLOAT
         vec4 m0 = texture2D(lightsTextureFloat, vec2(2.5 * lightsTextureInvSize.x, clusterLightData.lightV));
         vec4 m1 = texture2D(lightsTextureFloat, vec2(3.5 * lightsTextureInvSize.x, clusterLightData.lightV));
@@ -153,12 +162,10 @@ void evaluateLight(ClusterLightData light) {
 
         // shadow
         if (light.castShadows > 0.5) {
-            decodeClusterLightShadowMatrix(light);
+            decodeClusterLightShadowData(light);
 
             float shadowTextureResolution = shadowAtlasParams;
-            float bias1 = 0.3;
-            float bias2 = 0.07;
-            vec4 shadowParams = vec4(shadowTextureResolution, bias1, bias2, 1.0 / light.range);
+            vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
             getShadowCoordPerspZbufferNormalOffset(light.shadowMatrix, shadowParams);
             dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
         }

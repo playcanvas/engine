@@ -197,11 +197,12 @@ class WorldClusters {
         this.maxLights = 255;
 
         // shared 8bit texture pixels:
-        // 0: lightType, -, -, -
+        // 0: lightType, lightShape, follofMode, castShadows
         // 1: color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
         // 2: color.b, color.b, -, -
         // 3: spotInner, spotInner, spotOuter, spotOuter
-        let pixelsPerLight8 = 4;
+        // 4: bias, bias, normalBias, normalBias
+        let pixelsPerLight8 = 5;
         let pixelsPerLightFloat = 0;
 
         // float texture format
@@ -266,7 +267,7 @@ class WorldClusters {
 
         // light type & shape && falloffMode
         data8[data8Index + 0] = isSpot ? 255 : 0;
-        data8[data8Index + 1] = light._shape * 255;
+        data8[data8Index + 1] = light._shape * 255;         // this need different encoding as value is 0..2
         data8[data8Index + 2] = light._falloffMode * 255;   // we should consider making this global instead of per light
         data8[data8Index + 3] = light.castShadows ? 255 : 0;
         data8Index += 4;
@@ -284,6 +285,15 @@ class WorldClusters {
         if (isSpot) {
             floatPacking.float2Bytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 2);
             floatPacking.float2Bytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 2, 2);
+        }
+        data8Index += 4;
+
+        // shadow biases
+        if (light.castShadows) {
+            const lightRenderData = light.getRenderData(null, 0);
+            const biases = light._getUniformBiasValues(lightRenderData);
+            floatPacking.float2BytesRange(biases.x, data8, data8Index, -1, 20, 2);  // bias: -1 to 20 range
+            floatPacking.float2Bytes(biases.y, data8, data8Index + 2, 2);           // normalBias: 0 to 1 range
         }
         data8Index += 4;
 
@@ -321,8 +331,8 @@ class WorldClusters {
         } else {    // high precision data stored using 8bit texture
 
             // position and range scaled to 0..1 range
-            const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
             floatPacking.float2Bytes(normPos.x, data8, data8Index + 0, 4);
+            const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
             floatPacking.float2Bytes(normPos.y, data8, data8Index + 4, 4);
             floatPacking.float2Bytes(normPos.z, data8, data8Index + 8, 4);
             floatPacking.float2Bytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 12, 4);
