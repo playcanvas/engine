@@ -91,11 +91,10 @@ class ClusteredShadowsExample extends Example {
                 type: "spot",
                 color: color,
                 innerConeAngle: 20,
-                outerConeAngle: 21 + Math.random() * 20,
+                outerConeAngle: 24 + Math.random() * 20,
                 range: 80,
                 castShadows: true,
-                shadowBias: 0.3,
-                normalOffsetBias: 0.3,
+                shadowBias: 0.4,
                 shadowResolution: 512      // only used when clustering is off
             });
 
@@ -126,14 +125,14 @@ class ClusteredShadowsExample extends Example {
         // Set an update function on the app's update event
         let time = 0;
         app.on("update", function (dt: number) {
-            time += dt * 0.2;
+            time += dt * 0.05;
 
             // rotate spot lights around
             const lightPos = new pc.Vec3();
             spotLightList.forEach(function (spotlight, i) {
                 const angle = (i / spotLightList.length) * Math.PI * 8;
                 const x = ((i / spotLightList.length) - 0.5) * 500;
-                const z = 200 * Math.sin(angle + time  * 1);
+                const z = 200 * Math.sin(angle + time);
                 lightPos.set(x, 60, z);
                 spotlight.setLocalPosition(lightPos);
 
@@ -146,7 +145,7 @@ class ClusteredShadowsExample extends Example {
             camera.setLocalPosition(300 * Math.sin(time * 0.4), 90, 300 * Math.cos(time * 0.4));
             camera.lookAt(new pc.Vec3(0, 0, 0));
 
-            // display shadow texture (debug feature, only works when depth is stored as color)
+            // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
             // if (spotLightList[0].light.light.shadowMap) {
             //     app.renderTexture(-0.7, 0.7, 0.4, 0.4, spotLightList[0].light.light.shadowMap.texture);
             // }
