@@ -15,6 +15,7 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 
 [English](https://github.com/playcanvas/engine/blob/master/README.md)
 [中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
+[日本語](https://github.com/playcanvas/engine/blob/master/README-ja.md)
 
 ## 项目展示
 
