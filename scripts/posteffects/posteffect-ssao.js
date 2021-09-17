@@ -336,9 +336,9 @@ function SSAOEffect(graphicsDevice, script) {
                 ao = mix(ao, 1.0, uBrightness);
                 gl_FragColor.rgb = inCol.rgb * ao;
                 gl_FragColor.a = 1.0;
-            }`,
+            }`
     });
-    
+
     this.resize();
 }
 
@@ -359,8 +359,8 @@ SSAOEffect.prototype.render = function (inputTarget, outputTarget, rect) {
     var intensity = (peak * 2.0 * 3.141) * 0.125;
     var cameraFarClip = this.script.entity.camera.farClip;
 
-    let width = this.width;
-    let height = this.height;
+    var width = this.width;
+    var height = this.height;
     var projectionScale = 0.5 * height;
 
     // ssao pass
@@ -393,13 +393,13 @@ SSAOEffect.prototype.render = function (inputTarget, outputTarget, rect) {
 SSAOEffect.prototype.resize = function () {
     var width = Math.round(this.device.width / this.device.maxPixelRatio / this.script.downSample);
     var height = Math.round(this.device.height / this.device.maxPixelRatio / this.script.downSample);
-    
+
     if (this.width === width && this.height === height)
         return;
-    
+
     this.width = width;
     this.height = height;
-    
+
     if (this.target) {
         // clear previous render target
         this.target.destroyFrameBuffers();
@@ -407,7 +407,7 @@ SSAOEffect.prototype.resize = function () {
         this.target.destroy();
         this.target = null;
     }
-    
+
     var colorBuffer = new pc.Texture(this.device, {
         format: pc.PIXELFORMAT_R8_G8_B8_A8,
         minFilter: pc.FILTER_LINEAR,
@@ -418,9 +418,9 @@ SSAOEffect.prototype.resize = function () {
         height: height,
         mipmaps: false
     });
-    
+
     colorBuffer.name = 'ssao';
-    
+
     this.target = new pc.RenderTarget({
         colorBuffer: colorBuffer,
         depth: false
@@ -430,12 +430,12 @@ SSAOEffect.prototype.resize = function () {
 SSAOEffect.prototype.destroy = function () {
     if (! this.target)
         return;
-    
+
     this.target.destroyFrameBuffers();
     this.target.destroyTextureBuffers();
     this.target.destroy();
     this.target = null;
-    
+
     this.width = 0;
     this.height = 0;
 };
@@ -490,12 +490,12 @@ SSAO.prototype.initialize = function () {
             this.effect.destroy();
         }
     });
-    
+
     this.on('attr:downSample', () => {
         if (! this.enabled) return;
         this.effect.resize();
     });
-    
+
     // resize render target
     this.app.graphicsDevice.on('resizecanvas', () => {
         if (! this.enabled) return;
