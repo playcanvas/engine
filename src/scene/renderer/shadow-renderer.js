@@ -539,7 +539,8 @@ class ShadowRenderer {
                 const shadowCam = lightRenderData.shadowCamera;
 
                 // assign render target for the face
-                shadowCam.renderTarget = light._shadowMap.renderTargets[face];
+                const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
+                shadowCam.renderTarget = light._shadowMap.renderTargets[renderTargetIndex];
 
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
