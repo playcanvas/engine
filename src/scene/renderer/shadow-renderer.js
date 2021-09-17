@@ -156,6 +156,7 @@ class ShadowRenderer {
         shadowCam.node = new GraphNode("ShadowCamera");
         shadowCam.aspectRatio = 1;
         shadowCam.aspectRatioMode = ASPECT_MANUAL;
+        shadowCam._scissorRectClear = true;
 
         // set up constant settings based on light type
         switch (type) {
@@ -299,6 +300,7 @@ class ShadowRenderer {
 
             // viewport
             lightRenderData.shadowViewport.copy(light.cascades[cascade]);
+            lightRenderData.shadowScissor.copy(light.cascades[cascade]);
 
             const shadowCamNode = shadowCam._node;
             const lightNode = light._node;
@@ -433,11 +435,11 @@ class ShadowRenderer {
         shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
 
         // viewport handling
-        const rect = lightRenderData.shadowViewport;
-        shadowCam.rect = rect;
-        shadowCam.scissorRect = rect;
+        const rectViewport = lightRenderData.shadowViewport;
+        shadowCam.rect = rectViewport;
+        shadowCam.scissorRect = lightRenderData.shadowScissor;
 
-        viewportMatrix.setViewport(rect.x, rect.y, rect.z, rect.w);
+        viewportMatrix.setViewport(rectViewport.x, rectViewport.y, rectViewport.z, rectViewport.w);
         lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
 
         if (light._type === LIGHTTYPE_DIRECTIONAL) {
@@ -544,9 +546,7 @@ class ShadowRenderer {
 
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
-                // const border = faceCount === 1;
-                const border = false;
-                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, border);
+                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true);
 
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);

@@ -1,6 +1,6 @@
 import { Vec4 } from '../../math/vec4.js';
 
-import { SHADOW_PCF3 } from '../constants.js';
+import { LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
@@ -89,6 +89,11 @@ class LightTextureAtlas {
             this.subdivide(lights.length);
         }
 
+        // leave gap between individual tiles to avoid shadow sampling other tiles (4 pixels - should be enough for PCF5)
+        // note that this only fades / removes shaders on the edges, which is still not correct - a shader clipping is needed?
+        const scissorOffset = 4 / this.shadowMapResolution;
+        const scissorVec = new Vec4(scissorOffset, scissorOffset, -2 * scissorOffset, -2 * scissorOffset);
+
         // assign atlas slots to lights
         let usedCount = 0;
         for (let i = 0; i < lights.length; i++) {
@@ -102,8 +107,15 @@ class LightTextureAtlas {
                 const slot = this.slots[usedCount];
                 usedCount++;
 
+                // slot viewport
                 const lightRenderData = light.getRenderData(null, face);
                 lightRenderData.shadowViewport.copy(slot);
+                lightRenderData.shadowScissor.copy(slot);
+
+                // for spot lights in the atlas, make viewport slightly smaller to avoid sampling past the edges
+                if (light._type === LIGHTTYPE_SPOT) {
+                    lightRenderData.shadowViewport.add(scissorVec);
+                }
             }
         }
 

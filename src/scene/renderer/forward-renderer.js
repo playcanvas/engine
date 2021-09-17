@@ -316,7 +316,7 @@ class ForwardRenderer {
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    setCamera(camera, target, clear, cullBorder) {
+    setCamera(camera, target, clear) {
         var vrDisplay = camera.vrDisplay;
         var parent, transform;
 
@@ -476,22 +476,6 @@ class ForwardRenderer {
         this.cameraParamsId.setValue(this.cameraParams);
 
         this.clearView(camera, target, clear, false);
-
-        var device = this.device;
-        var pixelWidth = target ? target.width : device.width;
-        var pixelHeight = target ? target.height : device.height;
-
-        var scissorRect = camera.scissorRect;
-        var x = Math.floor(scissorRect.x * pixelWidth);
-        var y = Math.floor(scissorRect.y * pixelHeight);
-        var w = Math.floor(scissorRect.z * pixelWidth);
-        var h = Math.floor(scissorRect.w * pixelHeight);
-        device.setScissor(x, y, w, h);
-
-        // Note: this is not atlas friendly !!!! needs to adjust x, y, w and h instead !!!
-
-
-        if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
     }
 
     clearView(camera, target, clear, forceWrite, options) {
@@ -504,14 +488,24 @@ class ForwardRenderer {
             device.setDepthWrite(true);
         }
 
-        var rect = camera.rect;
         var pixelWidth = target ? target.width : device.width;
         var pixelHeight = target ? target.height : device.height;
+
+        var rect = camera.rect;
         var x = Math.floor(rect.x * pixelWidth);
         var y = Math.floor(rect.y * pixelHeight);
         var w = Math.floor(rect.z * pixelWidth);
         var h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
+
+        // by default clear is using viewport rectangle. Use scissor rectangle when required.
+        if (camera._scissorRectClear) {
+            var scissorRect = camera.scissorRect;
+            x = Math.floor(scissorRect.x * pixelWidth);
+            y = Math.floor(scissorRect.y * pixelHeight);
+            w = Math.floor(scissorRect.z * pixelWidth);
+            h = Math.floor(scissorRect.w * pixelHeight);
+        }
         device.setScissor(x, y, w, h);
 
         if (clear) {
@@ -526,7 +520,7 @@ class ForwardRenderer {
                        (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
                        (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
                 stencil: camera._clearStencil
-            }); // clear full RT
+            });
         }
     }
 

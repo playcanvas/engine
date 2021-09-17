@@ -52,6 +52,9 @@ class LightRenderData {
         // viewport for the shadow rendering to the texture (x, y, width, height)
         this.shadowViewport = new Vec4(0, 0, 1, 1);
 
+        // scissor rectangle for the shadow rendering to the texture (x, y, width, height)
+        this.shadowScissor = new Vec4(0, 0, 1, 1);
+
         // face index, value is based on light type:
         // - spot: always 0
         // - omni: cubemap face, 0..5
