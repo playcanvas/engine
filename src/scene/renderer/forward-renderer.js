@@ -202,6 +202,9 @@ class ForwardRenderer {
     destroy() {
         this._shadowRenderer.destroy();
         this._shadowRenderer = null;
+
+        this.lightTextureAtlas.destroy();
+        this.lightTextureAtlas = null;
     }
 
     // #if _PROFILER

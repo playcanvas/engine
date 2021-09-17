@@ -80,7 +80,7 @@ class ShadowMap {
         return shadowMap;
     }
 
-    // creates a shadow map which is used light texture atlas for clustered lighting
+    // creates a shadow map which is used by the light texture atlas for clustered lighting
     static createAtlas(device, resolution, shadowType) {
         const shadowMap = this.create2dMap(device, resolution, shadowType);
 

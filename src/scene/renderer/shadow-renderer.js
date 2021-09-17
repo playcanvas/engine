@@ -252,9 +252,6 @@ class ShadowRenderer {
                 shadowCamNode.rotateLocal(-90, 0, 0);
             }
 
-            // // assign render target for the face
-            // shadowCam.renderTarget = light._shadowMap.renderTargets[face];
-
             // cull shadow casters
             this.forwardRenderer.updateCameraFrustum(shadowCam);
             this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
@@ -294,9 +291,6 @@ class ShadowRenderer {
 
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
-
-            // // assign render target
-            // shadowCam.renderTarget = light._shadowMap.renderTargets[0];
 
             // viewport
             lightRenderData.shadowViewport.copy(light.cascades[cascade]);

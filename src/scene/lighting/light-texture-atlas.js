@@ -6,9 +6,10 @@ import { ShadowMap } from '../renderer/shadow-map.js';
 const _tempArray = [];
 
 // A class handling runtime allocation of slots in a texture. Used to allocate slots in the shadow map,
-// and will be used to allocate slots in the cookie texture as well.
+// and will be used to allocate slots in the cookie texture atlas as well.
 // Note: this will be improved in the future  to allocate different size for lights of different priority and screen size,
-// and also handle persistent slots for shadows that do not need to render each frame
+// and also handle persistent slots for shadows that do not need to render each frame. Also some properties will be
+// exposed in some form to the user.
 class LightTextureAtlas {
     constructor(device) {
 
@@ -23,6 +24,13 @@ class LightTextureAtlas {
 
         this.allocateShadowMap(1);  // placeholder as shader requires it
         this.allocateUniforms();
+    }
+
+    destroy() {
+        if (this.shadowMap) {
+            this.shadowMap.destroy();
+            this.shadowMap = null;
+        }
     }
 
     allocateShadowMap(resolution) {
@@ -71,7 +79,7 @@ class LightTextureAtlas {
         }
     }
 
-    // update texture atlas for a list of lights (of type ClusterLight)
+    // update texture atlas for a list of lights
     update(spotLights, omniLights) {
 
         // get all lights that need shadows
