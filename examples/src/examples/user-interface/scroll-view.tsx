@@ -193,7 +193,7 @@ class ScrollViewExample extends Example {
             contentEntity: content,
             friction: 0.05,
             useMouseWheel: true,
-            mouseWheelSensitivity: new pc.Vec2(1, 1),
+            mouseWheelSensitivity: pc.Vec2.ONE,
             horizontal: true,
             horizontalScrollbarEntity: horizontalScrollbar,
             horizontalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,

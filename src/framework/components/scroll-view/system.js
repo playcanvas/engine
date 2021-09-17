@@ -25,7 +25,6 @@ const _schema = [
 ];
 
 const DEFAULT_DRAG_THRESHOLD = 10;
-const DEFAULT_SCROLLBAR_MOUSE_WHEEL_SENSITIVITY = Object.freeze(Vec2.ONE.clone());
 
 /**
  * @class
@@ -59,7 +58,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
             data.useMouseWheel = true;
         }
         if (data.mouseWheelSensitivity === undefined) {
-            data.mouseWheelSensitivity = DEFAULT_SCROLLBAR_MOUSE_WHEEL_SENSITIVITY;
+            data.mouseWheelSensitivity = new Vec2(1, 1);
         }
 
         super.initializeComponentData(component, data, _schema);
