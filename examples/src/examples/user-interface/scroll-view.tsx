@@ -192,6 +192,8 @@ class ScrollViewExample extends Example {
             bounceAmount: 0.1,
             contentEntity: content,
             friction: 0.05,
+            useMouseWheel: true,
+            mouseWheelSensitivity: new pc.Vec2(1, 1),
             horizontal: true,
             horizontalScrollbarEntity: horizontalScrollbar,
             horizontalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,
