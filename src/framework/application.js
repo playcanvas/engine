@@ -534,6 +534,7 @@ class Application extends EventHandler {
         AreaLightLuts.createPlaceholder(this.graphicsDevice);
 
         this.renderer = new ForwardRenderer(this.graphicsDevice, this.scene);
+        this.renderer.scene = this.scene;
         this.lightmapper = new Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
         this.batcher = new BatchManager(this.graphicsDevice, this.root, this.scene);

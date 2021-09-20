@@ -87,9 +87,8 @@ const _tempMaterialSet = new Set();
  * @param {Scene} A - scene for the rendering.
  */
 class ForwardRenderer {
-    constructor(graphicsDevice, scene) {
+    constructor(graphicsDevice) {
         this.device = graphicsDevice;
-        this.scene = scene;
 
         this._shadowDrawCalls = 0;
         this._forwardDrawCalls = 0;
