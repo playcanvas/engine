@@ -591,8 +591,8 @@ class ScrollViewComponent extends Component {
             const normalizedDeltaY = (wheelEvent.deltaY / this._contentReference.entity.element.calculatedHeight) * this.mouseWheelSensitivity.y;
 
             // update scroll positions, clamping to [0, maxScrollValue] to always prevent over-shooting
-            var scrollX = math.clamp(this._scroll.x + normalizedDeltaX, 0, this._getMaxScrollValue(ORIENTATION_HORIZONTAL));
-            var scrollY = math.clamp(this._scroll.y + normalizedDeltaY, 0, this._getMaxScrollValue(ORIENTATION_VERTICAL));
+            const scrollX = math.clamp(this._scroll.x + normalizedDeltaX, 0, this._getMaxScrollValue(ORIENTATION_HORIZONTAL));
+            const scrollY = math.clamp(this._scroll.y + normalizedDeltaY, 0, this._getMaxScrollValue(ORIENTATION_VERTICAL));
 
             this.scroll = new Vec2(scrollX, scrollY);
         }
