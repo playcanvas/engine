@@ -1658,10 +1658,6 @@ class Application extends EventHandler {
     }
 
     _firstBatch() {
-        if (this.scene._needsStaticPrepare) {
-            this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
-            this.scene._needsStaticPrepare = false;
-        }
         this.batcher.generate();
     }
 
