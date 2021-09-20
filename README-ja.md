@@ -5,7 +5,9 @@
 # PlayCanvas WebGL Game Engine
 [Docs](https://developer.playcanvas.com) | [Examples](https://playcanvas.github.io) | [Forum](https://forum.playcanvas.com) | [Blog](https://blog.playcanvas.com)
 
-PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
+PlayCanvasは、オープンソースのゲームエンジンです。
+
+HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテンツをモバイルやデスクトップのブラウザで実行できます。
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
@@ -17,41 +19,42 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 [中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
 [日本語](https://github.com/playcanvas/engine/blob/master/README-ja.md)
 
-## Project Showcase
+## ショーケース
 
-[Many games and apps](https://github.com/playcanvas/awesome-playcanvas#awesome-playcanvas-
-) have been published using the PlayCanvas engine. Here is a small selection:
+PlayCanvasエンジンを使って[多くのゲームやアプリ](https://github.com/playcanvas/awesome-playcanvas#awesome-playcanvas-
+) 公開されています。ここではその一部をご紹介します。
+
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
 [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
 [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](http://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/ )  
 
 
+他のゲームは[PlayCanvasのウェブサイト](https://playcanvas.com/explore)で見ることができます。
 
-You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
 </div>
 
-## Users
+## 利用実績
 
-PlayCanvas is used by leading companies in video games, advertising and visualization such as:  
+PlayCanvasは、ビデオゲーム、広告、ビジュアライゼーションの分野で大手企業に採用されています。
 **Animech, Arm, BMW, Disney, Facebook, Famobi, Funday Factory, IGT, King, Miniclip, Leapfrog, Mojiworks, Mozilla, Nickelodeon, Nordeus, NOWWA, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
 
-## Features
+## 機能
 
-PlayCanvas is a fully featured game engine.
+PlayCanvasはフル機能のゲームエンジンです。
 
-* 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL 1 & 2.
-* 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
-* ⚛️ **Physics** - Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
-* 🎮 **Input** - Mouse, keyboard, touch, gamepad and VR controller APIs
-* 🔊 **Sound** - 3D positional sounds built on the Web Audio API
-* 📦 **Assets** - Asynchronous streaming system built on [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) and [Basis](https://github.com/BinomialLLC/basis_universal) compression
-* 📜 **Scripts** - Write game behaviors in Typescript or JavaScript
+* 🧊 **グラフィックス** -  WebGL 1.0 & 2.0で構築された高度な2D + 3Dグラフィックスエンジン。
+* 🏃 **アニメーション** - キャラクターやシーンに対する強力なステートベースのアニメーション
+* ⚛️ **物理** - 3Dリジッドボディ物理エンジン [ammo.js](https://github.com/kripken/ammo.js)
+* 🎮 **インプット** - マウス、キーボード、タッチ、ゲームパッド、VRコントローラのAPI
+* 🔊 **サウンド** - Web Audio APIを利用した3D位置情報サウンド
+* 📦 **アセット** - [glTF 2.0](https://www.khronos.org/gltf/)、[Draco](https://google.github.io/draco/)、[Basis](https://github.com/BinomialLLC/basis_universal) の圧縮技術を利用した非同期型ストリーミングシステム
+* 📜 **スクリプト** - TypeScriptとJavaScriptをサポート
 
-## Usage
+## 使用方法
 
-Here's a super-simple Hello World example - a spinning cube!
+シンプルなHello Worldの例です。
 
 ```html
 <!DOCTYPE html>
@@ -74,21 +77,17 @@ Here's a super-simple Hello World example - a spinning cube!
         // create a PlayCanvas application
         const canvas = document.getElementById('application');
         const app = new pc.Application(canvas);
-
         // fill the available space at full resolution
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
         // ensure canvas is resized when window changes size
         window.addEventListener('resize', () => app.resizeCanvas());
-
         // create box entity
         const box = new pc.Entity('cube');
         box.addComponent('model', {
             type: 'box'
         });
         app.root.addChild(box);
-
         // create camera entity
         const camera = new pc.Entity('camera');
         camera.addComponent('camera', {
@@ -96,81 +95,79 @@ Here's a super-simple Hello World example - a spinning cube!
         });
         app.root.addChild(camera);
         camera.setPosition(0, 0, 3);
-
         // create directional light entity
         const light = new pc.Entity('light');
         light.addComponent('light');
         app.root.addChild(light);
         light.setEulerAngles(45, 0, 0);
-
         // rotate the box according to the delta time since the last frame
         app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
-
         app.start();
     </script>
 </body>
 </html>
 ```
+このコードを自分で試すには[CodePen](https://codepen.io/playcanvas/pen/NPbxMj)をクリックします。
 
-Want to play with the code yourself? Edit it on [CodePen](https://codepen.io/playcanvas/pen/NPbxMj).
+## ビルドの手順
 
-## How to build
-
-Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
+Node.jsがインストールされていることを確認します。
+次に、必要なNode.jsの依存関係をすべてインストールします。
 
     npm install
 
-Now you can run various build options:
+これで、様々なオプションでビルドを実行できるようになりました。
 
-| Command                | Description                               | Outputs                          |
+| コマンド                | 説明                               | 出力ファイル                          |
 |------------------------|-------------------------------------------|----------------------------------|
-| `npm run build`        | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run tsd`          | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run docs`         | Build engine [API reference docs][docs]   | `docs`                           |
+| `npm run build`        | リリース用、デバッグ用、プロファイラー用エンジンをビルドする | `build\playcanvas[.dbg/.prf].js` |
+| `npm run tsd`          | TypeScript型定義ファイルをビルドする          | `build\playcanvas.d.ts`          |
+| `npm run docs`         |  [APIリファレンス][docs] をビルドする| `docs`                           |
 
-Pre-built versions of the engine are also available.
 
-Latest development release (head revision of master branch):
+また、ビルド済みのエンジンも利用できます。
+
+最新版のビルド(masterブランチのHEADリビジョン)
 
 * https://code.playcanvas.com/playcanvas-latest.js
 * https://code.playcanvas.com/playcanvas-latest.min.js
 
-Latest stable release:
-
+最新安定版のビルド
 * https://code.playcanvas.com/playcanvas-stable.js
 * https://code.playcanvas.com/playcanvas-stable.min.js
 
-Specific engine versions:
-
+特定のバージョンのビルド
 * https://code.playcanvas.com/playcanvas-1.38.4.js
 * https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
 ### Generate Source Maps
 
-To build the source map to allow for easier engine debugging, you can add `-- -m` to any engine build command. For example:
+エンジンのデバッグがしやすいようにソースマップを構築するには、任意のエンジン構築コマンドに`-- -m`を追加します。例えば、以下のようになります。
+
 
     npm run build -- -m
 
-This will output to `build/output/playcanvas.js.map`
+これにより`build/output/playcanvas.js.map`が出力されます。
 
-Note: The preprocessor is ignored when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
+注意: ソースマップを生成する際、プリプロセッサはマッピングを破壊するため無視されます。つまり、ソースマップの生成時には、すべてのデバッグコードとプロファイリングコードがエンジンのビルドに含まれます。
 
-## How to run tests
+## テスト
 
-PlayCanvas uses of Karma for unit testing. There are two ways of running the tests:
+PlayCanvasではユニットテストにKarmaを使用しています。テストを実行する方法は2つあります。
 
-| Command                | Description                                                                           |
+| コマンド                | 説明                                                                           |
 |------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | Runs unit tests on a built `playcanvas.js`                                            |
-| `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
+| `npm run test`         | ビルドされた `playcanvas.js` に対してユニットテストを実行します。                                              |
+| `npm run test:watch`   | 変更が検出されたときにユニットテストを再実行する - open http://localhost:9876/debug.html  |
 
-## PlayCanvas Editor
+## PlayCanvasエディター
 
-The PlayCanvas Engine is an open source engine which you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):
+PlayCanvas エンジンは、HTML5 アプリやゲームを作成するためのオープンソースのエンジンです。エンジンに加えて、[PlayCanvasエディター](https://playcanvas.com/)があります。
 
 [![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
-For Editor related bugs and issues, please refer to the [Editor's repo](https://github.com/playcanvas/editor).
+エディター関連のバグや問題については、[Editor's repo](https://github.com/playcanvas/editor)を参照してください。
+
 
 [npm-badge]: https://img.shields.io/npm/v/playcanvas
 [npm-url]: https://www.npmjs.com/package/playcanvas

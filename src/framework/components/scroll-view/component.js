@@ -10,6 +10,7 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
+import { EVENT_MOUSEWHEEL } from '../../../input/constants.js';
 
 var _tempScrollValue = new Vec2();
 
@@ -32,6 +33,8 @@ var _tempScrollValue = new Vec2();
  *
  * @property {number} bounceAmount Controls how far the content should move before bouncing back.
  * @property {number} friction Controls how freely the content should move if thrown, i.e. By flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
+ * @property {boolean} useMouseWheel Whether to use mouse wheel for scrolling (horizontally and vertically).
+ * @property {Vec2} mouseWheelSensitivity Mouse wheel horizontal and vertical sensitivity. Only used if useMouseWheel is set. Setting a direction to 0 will disable mouse wheel scrolling in that direction. 1 is a default sensitivity that is considered to feel good. The values can be set higher or lower than 1 to tune the sensitivity. Defaults to [1, 1].
  * @property {number} horizontalScrollbarVisibility Controls whether the horizontal scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
  * @property {number} verticalScrollbarVisibility Controls whether the vertical scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
  * @property {Entity} viewportEntity The entity to be used as the masked viewport area, within which the content will scroll. This entity must have an ElementGroup component.
@@ -86,8 +89,6 @@ class ScrollViewComponent extends Component {
 
         system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
         system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
-
-        // TODO Handle scrollwheel events
     }
 
     _toggleElementListeners(onOrOff) {
@@ -97,6 +98,7 @@ class ScrollViewComponent extends Component {
             }
 
             this.entity.element[onOrOff]('resize', this._onSetContentOrViewportSize, this);
+            this.entity.element[onOrOff](EVENT_MOUSEWHEEL, this._onMouseWheel, this);
 
             this._hasElementListeners = (onOrOff === 'on');
         }
@@ -471,9 +473,6 @@ class ScrollViewComponent extends Component {
                 }
             }
 
-            this._velocity.x *= (1 - this.friction);
-            this._velocity.y *= (1 - this.friction);
-
             if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
                 var position = this._contentReference.entity.getLocalPosition();
                 position.x += this._velocity.x;
@@ -482,6 +481,9 @@ class ScrollViewComponent extends Component {
 
                 this._setScrollFromContentPosition(position);
             }
+
+            this._velocity.x *= (1 - this.friction);
+            this._velocity.y *= (1 - this.friction);
         }
     }
 
@@ -577,6 +579,22 @@ class ScrollViewComponent extends Component {
     _setContentDraggingEnabled(enabled) {
         if (this._contentDragHelper) {
             this._contentDragHelper.enabled = enabled;
+        }
+    }
+
+    _onMouseWheel(event) {
+        if (this.useMouseWheel) {
+            const wheelEvent = event.event;
+
+            // wheelEvent's delta variables are screen space, so they need to be normalized first
+            const normalizedDeltaX = (wheelEvent.deltaX / this._contentReference.entity.element.calculatedWidth) * this.mouseWheelSensitivity.x;
+            const normalizedDeltaY = (wheelEvent.deltaY / this._contentReference.entity.element.calculatedHeight) * this.mouseWheelSensitivity.y;
+
+            // update scroll positions, clamping to [0, maxScrollValue] to always prevent over-shooting
+            const scrollX = math.clamp(this._scroll.x + normalizedDeltaX, 0, this._getMaxScrollValue(ORIENTATION_HORIZONTAL));
+            const scrollY = math.clamp(this._scroll.y + normalizedDeltaY, 0, this._getMaxScrollValue(ORIENTATION_VERTICAL));
+
+            this.scroll = new Vec2(scrollX, scrollY);
         }
     }
 
