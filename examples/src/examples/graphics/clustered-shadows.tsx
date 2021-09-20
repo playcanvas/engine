@@ -95,6 +95,7 @@ class ClusteredShadowsExample extends Example {
                 range: 80,
                 castShadows: true,
                 shadowBias: 0.4,
+                normalOffsetBias: 0.1,
                 shadowResolution: 512      // only used when clustering is off
             });
 
