@@ -310,7 +310,7 @@ function createTorus(device, opts) {
     var rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
     var segments = opts && opts.segments !== undefined ? opts.segments : 30;
     var sides = opts && opts.sides !== undefined ? opts.sides : 20;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var i, j;
@@ -356,7 +356,7 @@ function createTorus(device, opts) {
         indices: indices
     };
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -617,12 +617,12 @@ function createCylinder(device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = _createConeData(radius, radius, height, heightSegments, capSegments, false);
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -656,12 +656,12 @@ function createCapsule(device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
     var sides = opts && opts.sides !== undefined ? opts.sides : 20;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = _createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -697,11 +697,11 @@ function createCone(device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var options = _createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -732,7 +732,7 @@ function createSphere(device, opts) {
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
     var longitudeBands = opts && opts.longitudeBands !== undefined ? opts.longitudeBands : 16;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var lon, lat;
@@ -784,7 +784,7 @@ function createSphere(device, opts) {
         indices: indices
     };
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -816,7 +816,7 @@ function createPlane(device, opts) {
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new Vec2(0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var i, j;
@@ -865,7 +865,7 @@ function createPlane(device, opts) {
         indices: indices
     };
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -898,7 +898,7 @@ function createBox(device, opts) {
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
-    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    var calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var corners = [
         new Vec3(-he.x, -he.y, he.z),
@@ -1000,7 +1000,7 @@ function createBox(device, opts) {
         indices: indices
     };
 
-    if (calculateTangents) {
+    if (calcTangents) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
