@@ -81,8 +81,15 @@ class SoundManager extends EventHandler {
     }
 
     resume() {
-        this.suspended = false;
-        this.fire('resume');
+        const resumeFunction = function () {
+            this.suspended = false;
+            this.fire('resume');
+        }.bind(this);
+
+        if (platform.ios && (hasAudioContext() || this._forceWebAudioApi))
+            this.context.resume().then(resumeFunction);
+        else
+            resumeFunction();
     }
 
     destroy() {
