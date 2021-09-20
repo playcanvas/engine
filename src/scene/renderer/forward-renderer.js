@@ -1089,8 +1089,6 @@ class ForwardRenderer {
             this._shadowRenderer.render(lights[i], camera);
         }
 
-        this._shadowRenderer.restoreRenderState(device);
-
         device.grabPassAvailable = true;
 
         // #if _PROFILER

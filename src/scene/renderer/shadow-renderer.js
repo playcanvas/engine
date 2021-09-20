@@ -569,6 +569,8 @@ class ShadowRenderer {
                 this.applyVsmBlur(light, camera);
             }
 
+            this.restoreRenderState(device);
+
             // #if _DEBUG
             this.device.popMarker();
             // #endif
