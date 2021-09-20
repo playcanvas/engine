@@ -81,14 +81,18 @@ class SoundManager extends EventHandler {
     }
 
     resume() {
-        const resumeFunction = function () {
+        const resumeFunction = () => {
             this.suspended = false;
             this.fire('resume');
-        }.bind(this);
+        };
 
-        if (platform.ios && (hasAudioContext() || this._forceWebAudioApi))
+        // On iOS safari, switching tab or minimizing the browser will set the AudioContext state as 'interrupted'.
+        // On other browsers, AudioContext state will be set to 'suspended'.
+        // In those situations, the .resume() API must be called explicitly
+        if ((hasAudioContext() || this._forceWebAudioApi) &&
+            (this.context.state === 'interrupted' || this.context.state === 'suspended')) {
             this.context.resume().then(resumeFunction);
-        else
+        } else
             resumeFunction();
     }
 
