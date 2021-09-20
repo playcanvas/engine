@@ -1281,7 +1281,7 @@ var standard = {
 
         if (numShadowLights > 0 || LayerComposition.clusteredLightingEnabled) {
             if (shadowedDirectionalLightUsed) {
-                code += shaderChunks.shadowCascadesPS;
+                code += chunks.shadowCascadesPS;
             }
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
