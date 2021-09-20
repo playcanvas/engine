@@ -90,6 +90,7 @@ const _tempMaterialSet = new Set();
 class ForwardRenderer {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        this.scene = null;
 
         this._shadowDrawCalls = 0;
         this._forwardDrawCalls = 0;
