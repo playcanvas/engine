@@ -103,7 +103,8 @@ class SceneDepth {
             id: LAYERID_DEPTH,
 
             onEnable: function () {
-                // allocate / resize esting RT as needed
+                // allocate / resize existing RT as needed
+                self.releaseRenderTarget(this.renderTarget);
                 this.renderTarget = self.allocateRenderTarget(this.renderTarget, app.graphicsDevice, "rt-depth2", PIXELFORMAT_DEPTHSTENCIL, true);
             },
 
@@ -164,7 +165,8 @@ class SceneDepth {
             shaderPass: SHADER_DEPTH,
 
             onEnable: function () {
-                // allocate / resize esting RT as needed
+                // allocate / resize existing RT as needed
+                self.releaseRenderTarget(this.renderTarget);
                 this.renderTarget = self.allocateRenderTarget(this.renderTarget, app.graphicsDevice, "rt-depth1", PIXELFORMAT_R8_G8_B8_A8, false);
             },
 

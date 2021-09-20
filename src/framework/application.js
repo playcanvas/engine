@@ -1655,10 +1655,6 @@ class Application extends EventHandler {
     }
 
     _firstBatch() {
-        if (this.scene._needsStaticPrepare) {
-            this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
-            this.scene._needsStaticPrepare = false;
-        }
         this.batcher.generate();
     }
 
@@ -1992,11 +1988,13 @@ class Application extends EventHandler {
         }
         this.xr.end();
 
-        this.graphicsDevice.destroy();
-        this.graphicsDevice = null;
+        ParticleEmitter.staticDestroy();
 
         this.renderer.destroy();
         this.renderer = null;
+
+        this.graphicsDevice.destroy();
+        this.graphicsDevice = null;
 
         this.tick = null;
 
@@ -2008,9 +2006,6 @@ class Application extends EventHandler {
         }
 
         script.app = null;
-
-        // remove default particle texture
-        ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
         Application._applications[canvasId] = null;
 
