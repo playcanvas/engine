@@ -121,6 +121,9 @@ class ShadowRenderer {
         this.forwardRenderer = forwardRenderer;
         const scope = this.device.scope;
 
+        this.polygonOffsetId = scope.resolve("polygonOffset");
+        this.polygonOffset = new Float32Array(2);
+
         // VSM
         this.sourceId = scope.resolve("source");
         this.pixelOffsetId = scope.resolve("pixelOffset");
@@ -389,16 +392,14 @@ class ShadowRenderer {
                 device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
             }
         } else if (device.extStandardDerivatives) {
-            const forwardRenderer = this.forwardRenderer;
-
             if (light._type === LIGHTTYPE_OMNI) {
-                forwardRenderer.polygonOffset[0] = 0;
-                forwardRenderer.polygonOffset[1] = 0;
-                forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
+                this.polygonOffset[0] = 0;
+                this.polygonOffset[1] = 0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
             } else {
-                forwardRenderer.polygonOffset[0] = light.shadowBias * -1000.0;
-                forwardRenderer.polygonOffset[1] = light.shadowBias * -1000.0;
-                forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
+                this.polygonOffset[0] = light.shadowBias * -1000.0;
+                this.polygonOffset[1] = light.shadowBias * -1000.0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
             }
         }
 
@@ -411,6 +412,17 @@ class ShadowRenderer {
             device.setColorWrite(false, false, false, false);
         } else {
             device.setColorWrite(true, true, true, true);
+        }
+    }
+
+    restoreRenderState(device) {
+
+        if (device.webgl2) {
+            device.setDepthBias(false);
+        } else if (device.extStandardDerivatives) {
+            this.polygonOffset[0] = 0;
+            this.polygonOffset[1] = 0;
+            this.polygonOffsetId.setValue(this.polygonOffset);
         }
     }
 

@@ -193,9 +193,6 @@ class ForwardRenderer {
 
         this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
 
-        this.polygonOffsetId = scope.resolve("polygonOffset");
-        this.polygonOffset = new Float32Array(2);
-
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
 
@@ -1092,13 +1089,7 @@ class ForwardRenderer {
             this._shadowRenderer.render(lights[i], camera);
         }
 
-        if (device.webgl2) {
-            device.setDepthBias(false);
-        } else if (device.extStandardDerivatives) {
-            this.polygonOffset[0] = 0;
-            this.polygonOffset[1] = 0;
-            this.polygonOffsetId.setValue(this.polygonOffset);
-        }
+        this._shadowRenderer.restoreRenderState(device);
 
         device.grabPassAvailable = true;
 
