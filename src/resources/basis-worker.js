@@ -158,6 +158,10 @@ function BasisWorker() {
     };
 
     const transcodeKTX2 = (url, data, options) => {
+        if (!basis.KTX2File) {
+            throw new Error('Basis transcoder module does not include support for KTX2.');
+        }
+
         const funcStart = performanceNow();
         const basisFile = new basis.KTX2File(new Uint8Array(data));
 
