@@ -2085,11 +2085,13 @@ class Application extends EventHandler {
         }
         this.xr.end();
 
-        this.graphicsDevice.destroy();
-        this.graphicsDevice = null;
+        ParticleEmitter.staticDestroy();
 
         this.renderer.destroy();
         this.renderer = null;
+
+        this.graphicsDevice.destroy();
+        this.graphicsDevice = null;
 
         this.tick = null;
 
@@ -2101,9 +2103,6 @@ class Application extends EventHandler {
         }
 
         script.app = null;
-
-        // remove default particle texture
-        ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
         Application._applications[canvasId] = null;
 
