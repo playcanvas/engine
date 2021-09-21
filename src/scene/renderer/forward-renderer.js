@@ -2009,9 +2009,6 @@ class ForwardRenderer {
             // #endif
         }
     }
-
-    prepareStaticMeshes(meshInstances, lights) {
-    }
 }
 
 export { ForwardRenderer };
