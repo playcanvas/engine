@@ -12,7 +12,7 @@ const random = {
 
     /**
      * @function
-     * @name math.circlePoint
+     * @name random.circlePoint
      * @description Return a pseudo-random 2D point inside a unit circle with uniform distribution.
      * @param {Vec2} point - the returned generated point.
      */
@@ -25,7 +25,7 @@ const random = {
 
     /**
      * @function
-     * @name math.circlePointDeterministic
+     * @name random.circlePointDeterministic
      * @description Generates evenly distributed deterministic points inside a unit circle using Fermat's spiral and Vogel's method.
      * @param {Vec2} point - the returned generated point.
      * @param {number} index - index of the point to generate, in the range from 0 to numPoints - 1.
@@ -42,7 +42,7 @@ const random = {
     /**
      * @function
      * @private
-     * @name math.spherePointDeterministic
+     * @name random.spherePointDeterministic
      * @description Generates evenly distributed deterministic points on a unit sphere using Fibonacci sphere algorithm. It also allows
      * the points to cover only part of the sphere by specifying start and end parameters, representing value from 0 (top of the sphere) and
      * 1 (bottom of the sphere). For example by specifying 0.4 and 0.6 and start and end, a band around the equator would be generated.
