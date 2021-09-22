@@ -9,10 +9,6 @@
 
 #define SHADER_NAME BilateralDeNoise
 
-float normpdf(in float x, in float sigma) {
-    return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;
-}
-
 float normpdf3(in vec3 v, in float sigma) {
     return 0.39894 * exp(-0.5 * dot(v, v) / (sigma * sigma)) / sigma;
 }
@@ -45,6 +41,8 @@ varying vec2 vUv0;
 uniform sampler2D source;
 uniform vec2 pixelOffset;
 uniform vec2 sigmas;
+uniform float bZnorm;
+uniform float kernel[MSIZE];
 
 void main(void) {
     
@@ -64,19 +62,12 @@ void main(void) {
     // domain sigma - controls blurriness based on a pixel similarity (to preserve edges)
     float bSigma = sigmas.y;
 
-    // create the 1-D kernel
-    const int kSize = (MSIZE-1)/2;
-    float kernel[MSIZE];
-    for (int j = 0; j <= kSize; ++j) {
-        kernel[kSize+j] = kernel[kSize-j] = normpdf(float(j), sigma);
-    }
-
     vec3 pixelHdr = decodeRGBM(pixelRgbm);
     vec3 accumulatedHdr = vec3(0.0);
     float accumulatedFactor = 0.0;
-    float bZnorm = 1.0 / normpdf(0.0, bSigma);
 
     // read out the texels
+    const int kSize = (MSIZE-1)/2;
     for (int i = -kSize; i <= kSize; ++i) {
         for (int j = -kSize; j <= kSize; ++j) {
             

@@ -831,8 +831,13 @@ class Lightmapper {
     postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 1; // 1 or 2 dilates (depending on filter being enabled)
-        const filterLightmap = this.scene.lightmapFilterEnabled;
         const dilateShader = this.lightmapFilters.shaderDilate;
+
+        // bilateral denoise filter - runs as a first pass, before dilate
+        const filterLightmap = this.scene.lightmapFilterEnabled;
+        if (filterLightmap) {
+            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
+        }
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
@@ -850,11 +855,6 @@ class Lightmapper {
                 const tempTex = tempRT.colorBuffer;
 
                 this.lightmapFilters.prepare(lightmap.width, lightmap.height);
-
-                // bilateral filter - runs as a first pass, before dilate
-                if (filterLightmap) {
-                    this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
-                }
 
                 // bounce dilate between textures, execute denoise on the first pass
                 for (let i = 0; i < numDilates2x; i++) {
