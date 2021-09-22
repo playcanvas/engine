@@ -38,7 +38,7 @@ class BakeLightAmbient extends BakeLight {
     prepareVirtualLight(index, numVirtualLights) {
 
         // directional points down the negative Y-axis
-        random.spiralSpherePoint(_tempPoint, index, numVirtualLights, 0, this.scene.ambientBakeSpherePart);
+        random.spherePointDeterministic(_tempPoint, index, numVirtualLights, 0, this.scene.ambientBakeSpherePart);
         this.light._node.lookAt(_tempPoint.mulScalar(-1));
         this.light._node.rotateLocal(90, 0, 0);
 

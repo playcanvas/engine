@@ -25,7 +25,7 @@ class BakeLightSimple extends BakeLight {
         // random adjustment to the directional light facing
         if (index > 0) {
             const directionalSpreadAngle = light.bakeArea;
-            random.spiralCirclePoint(_tempPoint, index, numVirtualLights);
+            random.circlePointDeterministic(_tempPoint, index, numVirtualLights);
             _tempPoint.mulScalar(directionalSpreadAngle * 0.5);
             light._node.rotateLocal(_tempPoint.x, 0, _tempPoint.y);
         }
