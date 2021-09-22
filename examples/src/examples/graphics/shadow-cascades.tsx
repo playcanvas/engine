@@ -22,6 +22,8 @@ class ShadowCascadesExample extends Example {
     load() {
         return <>
             <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='terrain' type='container' url='static/assets/models/terrain.glb' />
+            <AssetLoader name='helipad' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -78,46 +80,20 @@ class ShadowCascadesExample extends Example {
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
+        // setup skydome
+        app.scene.skyboxMip = 3;
+        app.scene.setSkybox(assets.helipad.resources);
+        app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+        app.scene.gammaCorrection = pc.GAMMA_SRGB;
+        app.scene.toneMapping = pc.TONEMAP_ACES;
 
-        function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
+        // instantiate the terrain
+        const terrain = assets.terrain.resource.instantiateRenderEntity();
+        terrain.setLocalScale(30, 30, 30);
+        app.root.addChild(terrain);
 
-            // create a material
-            const material = new pc.StandardMaterial();
-
-            if (primitiveType === "capsule") {
-                material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
-                material.shininess = 70;
-                material.metalness = 0.4;
-                material.useMetalness = true;
-            }
-            material.update();
-
-            // create the primitive using the material
-            const primitive = new pc.Entity();
-            primitive.addComponent('render', {
-                type: primitiveType,
-                material: material
-            });
-
-            // set position and scale and add it to scene
-            primitive.setLocalPosition(position);
-            primitive.setLocalScale(scale);
-            app.root.addChild(primitive);
-
-            return primitive;
-        }
-
-        // create ground plane
-        const limit = 200;
-        const groundEntity = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(3 * limit, 3 * limit, 3 * limit));
-
-        // populate it with capsules
-        for (let x = -limit; x <= limit; x += 50) {
-            for (let z = -limit; z <= limit; z += 50) {
-                createPrimitive("capsule", new pc.Vec3(x, 15, z), new pc.Vec3(12, 22, 12));
-            }
-        }
+        // find a tree in the middle to use as a focus point
+        const tree = terrain.findOne("name", "Arbol 2.002");
 
         // create an Entity with a camera component
         const camera = new pc.Entity();
@@ -127,15 +103,15 @@ class ShadowCascadesExample extends Example {
         });
 
         // and position it in the world
-        camera.setLocalPosition(20, 30, 150);
+        camera.setLocalPosition(300, 60, 25);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
         camera.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2,
-                focusEntity: groundEntity,
-                distanceMax: 330
+                focusEntity: tree,
+                distanceMax: 600
             }
         });
         camera.script.create("orbitCameraInputMouse");
@@ -159,13 +135,22 @@ class ShadowCascadesExample extends Example {
             ...data.get('settings.light')
         });
         app.root.addChild(dirLight);
-        dirLight.setLocalEulerAngles(45, -20, 20);
+        dirLight.setLocalEulerAngles(45, 350, 20);
 
         // handle HUD changes - update properties on the light
         data.on('*:set', (path: string, value: any) => {
             const pathArray = path.split('.');
             // @ts-ignore
             dirLight.light[pathArray[2]] = value;
+        });
+
+        // on the first frame, when camera is updated, move it further away from the focus tree
+        let firstFrame = true;
+        app.on("update", function (dt) {
+            if (firstFrame) {
+                firstFrame = false;
+                camera.script.orbitCamera.distance = 320;
+            }
         });
     }
 }

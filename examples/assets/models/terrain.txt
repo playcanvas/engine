@@ -1,0 +1,8 @@
+The house model has been obtained from this address:
+https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/
+
+Modifications done to it:
+- converted to glb format
