@@ -1,4 +1,3 @@
-import { version, revision } from '../core/core.js';
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
