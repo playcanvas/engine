@@ -537,13 +537,16 @@ class Lightmapper {
             this.bakeInternal(passCount, bakeNodes, allNodes);
 
             // Enable new lightmaps
-            let shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
+            let shaderDefs = SHADERDEF_LM;
+
+            if (mode === BAKE_COLORDIR) {
+                shaderDefs |= SHADERDEF_DIRLM;
+            }
 
             // mark lightmap as containing ambient lighting
             if (this.scene.ambientBake) {
                 shaderDefs |= SHADERDEF_LMAMBIENT;
             }
-
             this.setLightmaping(bakeNodes, true, passCount, shaderDefs);
 
             // clean up memory
