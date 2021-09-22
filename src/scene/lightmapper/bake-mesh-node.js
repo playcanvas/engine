@@ -3,13 +3,8 @@ class BakeMeshNode {
     constructor(node, meshInstances = null) {
         this.node = node;
 
-        if (node.render) {
-            this.component = node.render;
-            meshInstances = meshInstances ? meshInstances : node.render.meshInstances;
-        } else {
-            this.component = node.model;
-            meshInstances = meshInstances ? meshInstances : node.model.meshInstances;
-        }
+        this.component = node.render || node.model;
+        meshInstances = meshInstances || this.component.meshInstances;
 
         // original component properties
         this.store();
