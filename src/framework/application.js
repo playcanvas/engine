@@ -400,8 +400,6 @@ class Application extends EventHandler {
     constructor(canvas, options = {}) {
         super();
 
-        console.log("Powered by PlayCanvas " + version + " " + revision);
-
         // Store application instance
         Application._applications[canvas.id] = this;
         setApplication(this);
