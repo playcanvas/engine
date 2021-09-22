@@ -11,6 +11,8 @@ import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
 // @ts-ignore: library file import
 import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
+import SelectInput from '@playcanvas/pcui/SelectInput/component';
+// @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
 class ShadowCascadesExample extends Example {
@@ -19,7 +21,7 @@ class ShadowCascadesExample extends Example {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/fly-camera.js' />
+            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
         </>;
     }
 
@@ -27,6 +29,15 @@ class ShadowCascadesExample extends Example {
     controls(data: Observer) {
         return <>
             <Panel headerText='Shadow Cascade Settings'>
+                {<LabelGroup text='Filtering'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowType' }} type="number" options={[
+                        { v: 0, t: 'PCF3' },
+                        { v: 1, t: 'VSM8' },
+                        { v: 2, t: 'VSM16' },
+                        { v: 3, t: 'VSM32' },
+                        { v: 4, t: 'PCF5' }
+                    ]} />
+                </LabelGroup>}
                 <LabelGroup text='Count'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.numCascades' }} min={1} max={4} precision={0}/>
                 </LabelGroup>
@@ -35,6 +46,9 @@ class ShadowCascadesExample extends Example {
                 </LabelGroup>
                 <LabelGroup text='Distribution'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.cascadeDistribution' }} min={0} max={1} precision={2}/>
+                </LabelGroup>
+                <LabelGroup text='VSM Blur'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.vsmBlurSize' }} min={1} max={25} precision={0}/>
                 </LabelGroup>
             </Panel>
         </>;
@@ -50,7 +64,9 @@ class ShadowCascadesExample extends Example {
             light: {
                 numCascades: 4,             // number of cascades
                 shadowResolution: 2048,     // shadow map resolution storing 4 cascades
-                cascadeDistribution: 0.7    // distribution of cascade distances to prefer sharpness closer to the camera
+                cascadeDistribution: 0.5,   // distribution of cascade distances to prefer sharpness closer to the camera
+                shadowType: pc.SHADOW_PCF3, // shadow filter type
+                vsmBlurSize: 11             // shader filter blur size for VSM shadows
             }
         });
 
@@ -79,7 +95,7 @@ class ShadowCascadesExample extends Example {
 
             // create the primitive using the material
             const primitive = new pc.Entity();
-            primitive.addComponent('render', {
+            primitive.addComponent('model', {
                 type: primitiveType,
                 material: material
             });
@@ -88,11 +104,13 @@ class ShadowCascadesExample extends Example {
             primitive.setLocalPosition(position);
             primitive.setLocalScale(scale);
             app.root.addChild(primitive);
+
+            return primitive;
         }
 
         // create ground plane
         const limit = 200;
-        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(3 * limit, 3 * limit, 3 * limit));
+        const groundEntity = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(3 * limit, 3 * limit, 3 * limit));
 
         // populate it with capsules
         for (let x = -limit; x <= limit; x += 50) {
@@ -107,17 +125,22 @@ class ShadowCascadesExample extends Example {
             clearColor: new pc.Color(0.9, 0.9, 0.9),
             farClip: 1000
         });
-        app.root.addChild(camera);
 
         // and position it in the world
-        camera.setLocalPosition(20, 80, 250);
-        camera.lookAt(-30, -50, 0);
+        camera.setLocalPosition(20, 30, 150);
 
-        // add the fly camera script to the camera, to allow mouse / keyboard movement
+        // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
-        camera.script.create("flyCamera");
-        // @ts-ignore
-        camera.script.flyCamera.speed = 60;
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+                focusEntity: groundEntity,
+                distanceMax: 330
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
+        app.root.addChild(camera);
 
         // Create a directional light casting cascaded shadows
         const dirLight = new pc.Entity();
@@ -131,10 +154,7 @@ class ShadowCascadesExample extends Example {
 
                 // enable shadow casting
                 castShadows: true,
-                shadowDistance: 1000,
-
-                // shadow filtering
-                shadowType: pc.SHADOW_PCF3
+                shadowDistance: 1000
             },
             ...data.get('settings.light')
         });
