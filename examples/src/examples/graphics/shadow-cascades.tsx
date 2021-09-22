@@ -95,7 +95,7 @@ class ShadowCascadesExample extends Example {
 
             // create the primitive using the material
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
+            primitive.addComponent('render', {
                 type: primitiveType,
                 material: material
             });
