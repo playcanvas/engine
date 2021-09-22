@@ -14,7 +14,6 @@ import {
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../graphics/constants.js';
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { RenderTarget } from '../../graphics/render-target.js';
@@ -40,6 +39,7 @@ import { BakeLightSimple } from './bake-light-simple.js';
 import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from './lightmap-cache.js';
+import { LightmapFilters } from './lightmap-filters.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -116,15 +116,11 @@ class Lightmapper {
         if (!this._initCalled) {
             this._initCalled = true;
 
+            // lightmap filtering shaders
+            this.lightmapFilters = new LightmapFilters(device);
+
             // shader related
-            this.dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, "lmDilate");
-            this.bilateralDeNoiseShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.bilateralDeNoisePS, "lmBilateralDeNoise");
-            this.constantTexSource = device.scope.resolve("source");
-            this.constantPixelOffset = device.scope.resolve("pixelOffset");
-            this.constantSigmas = device.scope.resolve("sigmas");
             this.constantBakeDir = device.scope.resolve("bakeDir");
-            this.pixelOffset = new Float32Array(2);
-            this.sigmas = new Float32Array(2);
             this.materials = [];
 
             // small black texture
@@ -835,13 +831,8 @@ class Lightmapper {
     postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 1; // 1 or 2 dilates (depending on filter being enabled)
-        const pixelOffset = this.pixelOffset;
-        const sigmas = this.sigmas;
-        const dilateShader = this.dilateShader;
-        const bilateralDeNoiseShader = this.bilateralDeNoiseShader;
-        const constantTexSource = this.constantTexSource;
-        const constantPixelOffset = this.constantPixelOffset;
-        const constantSigmas = this.constantSigmas;
+        const filterLightmap = this.scene.lightmapFilterEnabled;
+        const dilateShader = this.lightmapFilters.shaderDilate;
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
@@ -858,24 +849,21 @@ class Lightmapper {
                 const tempRT = this.renderTargets.get(lightmap.width);
                 const tempTex = tempRT.colorBuffer;
 
-                // inverse texture size
-                pixelOffset[0] = 1 / lightmap.width;
-                pixelOffset[1] = 1 / lightmap.height;
-                constantPixelOffset.setValue(pixelOffset);
+                this.lightmapFilters.prepare(lightmap.width, lightmap.height);
 
                 // bilateral filter - runs as a first pass, before dilate
-                sigmas[0] = this.scene.lightmapFilterRange;
-                sigmas[1] = this.scene.lightmapFilterSmoothness;
-                constantSigmas.setValue(sigmas);
+                if (filterLightmap) {
+                    this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
+                }
 
                 // bounce dilate between textures, execute denoise on the first pass
                 for (let i = 0; i < numDilates2x; i++) {
 
-                    constantTexSource.setValue(lightmap);
-                    const bilateralFilterEnabled = this.scene.lightmapFilterEnabled && pass === 0 && i === 0;
-                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? bilateralDeNoiseShader : dilateShader);
+                    this.lightmapFilters.setSourceTexture(lightmap);
+                    const bilateralFilterEnabled = filterLightmap && pass === 0 && i === 0;
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? this.lightmapFilters.shaderDenoise : dilateShader);
 
-                    constantTexSource.setValue(tempTex);
+                    this.lightmapFilters.setSourceTexture(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);
                 }
             }

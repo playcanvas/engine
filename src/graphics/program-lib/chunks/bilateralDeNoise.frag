@@ -50,12 +50,6 @@ void main(void) {
     
     vec4 pixelRgbm = texture2D(source, vUv0);
 
-    // range sigma - controls blurriness based on a pixel distance
-    float sigma = sigmas.x;
-
-    // domain sigma - controls blurriness based on a pixel similarity (to preserve edges)
-    float bSigma = sigmas.y;
-
     // lightmap specific optimization - skip pixels that were not baked
     // this also allows dilate filter that work on the output of this to work correctly, as it depeonds on .a being zero
     // to dilate, which the following blur filter would otherwise modify
@@ -63,6 +57,12 @@ void main(void) {
         gl_FragColor = pixelRgbm;
         return ;
     }
+
+    // range sigma - controls blurriness based on a pixel distance
+    float sigma = sigmas.x;
+
+    // domain sigma - controls blurriness based on a pixel similarity (to preserve edges)
+    float bSigma = sigmas.y;
 
     // create the 1-D kernel
     const int kSize = (MSIZE-1)/2;
