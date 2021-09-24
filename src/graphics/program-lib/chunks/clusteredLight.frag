@@ -57,6 +57,8 @@ struct ClusterLightData {
 
     // true if the light has a cookie texture
     bool isCookie;
+
+    float cookieIntensity;
 };
 
 vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
@@ -170,48 +172,55 @@ void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
     clusterLightData.shadowNormalBias = bytes2float2(biases.zw);
 }
 
+void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
+
+    vec4 cookieA = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_A * lightsTextureInvSize.z, clusterLightData.lightV));
+    clusterLightData.cookieIntensity = cookieA.x;
+
+    vec4 cookieB = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_B * lightsTextureInvSize.z, clusterLightData.lightV));
+}
+
 void evaluateLight(ClusterLightData light) {
+
+    dAtten3 = vec3(1.0);
 
     // evaluate omni part of the light
     getLightDirPoint(light.position);
     dAtten = getFalloffLinear(light.range);
     if (dAtten > 0.00001) {
 
-        // spot light
+        dAtten *= getLightDiffuse();
+
+        // spot light falloff
         if (light.isSpot) {
             decodeClusterLightSpot(light);
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
 
-        dAtten3 = vec3(1.0);
+        if (dAtten > 0.00001) {
 
-        // shadow or cookie
-        if (light.castShadows || light.isCookie) {
+            // shadow / cookie
+            if (light.castShadows || light.isCookie) {
+                decodeClusterLightProjectionMatrixData(light);
 
-            // shadow / cookie matrix
-            decodeClusterLightProjectionMatrixData(light);
+                // cookie
+                if (light.isCookie) {
+                    decodeClusterLightCookieData(light);
+                    dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, light.cookieIntensity).aaa;
+                }
 
-            // shadow
-            if (light.castShadows) {
-                decodeClusterLightShadowData(light);
+                // shadow
+                if (light.castShadows) {
+                    decodeClusterLightShadowData(light);
 
-                float shadowTextureResolution = shadowAtlasParams;
-                vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
-                getShadowCoordPerspZbufferNormalOffset(light.lightProjectionMatrix, shadowParams);
-                dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
-            }
-
-            // cookie
-            if (light.isCookie) {
-
-                // todo - need to decode shadow matrix here if no shadows
-                float cookieIntensity = 1.0;
-
-                dAtten3 = getCookie2D(cookieAtlasTexture, light.lightProjectionMatrix, cookieIntensity).aaa;
+                    float shadowTextureResolution = shadowAtlasParams;
+                    vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
+                    getShadowCoordPerspZbufferNormalOffset(light.lightProjectionMatrix, shadowParams);
+                    dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
+                }
             }
         }
 
-        dAtten *= getLightDiffuse();
         dDiffuseLight += dAtten * light.color * dAtten3;
     }
 }

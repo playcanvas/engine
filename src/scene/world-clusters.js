@@ -24,37 +24,39 @@ const TextureIndex8 = {
     COLOR_B: 2,                 // color.b, color.b, useCookie, -
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
     SHADOW_BIAS: 4,             // bias, bias, normalBias, normalBias
+    COOKIE_A: 5,
+    COOKIE_B: 6,
 
     // leave in between
-    COUNT_ALWAYS: 5,
+    COUNT_ALWAYS: 7,
 
     // 8bit texture data used when float texture is not supported
-    POSITION_X: 5,              // position.x
-    POSITION_Y: 6,              // position.y
-    POSITION_Z: 7,              // position.z
-    RANGE: 8,                   // range
-    SPOT_DIRECTION_X: 9,        // spot direction x
-    SPOT_DIRECTION_Y: 10,       // spot direction y
-    SPOT_DIRECTION_Z: 11,       // spot direction z
-    PROJ_MAT_00: 12,            // light projection matrix, mat4, 16 floats
-    PROJ_MAT_01: 13,
-    PROJ_MAT_02: 14,
-    PROJ_MAT_03: 15,
-    PROJ_MAT_10: 16,
-    PROJ_MAT_11: 17,
-    PROJ_MAT_12: 18,
-    PROJ_MAT_13: 19,
-    PROJ_MAT_20: 20,
-    PROJ_MAT_21: 21,
-    PROJ_MAT_22: 22,
-    PROJ_MAT_23: 23,
-    PROJ_MAT_30: 24,
-    PROJ_MAT_31: 25,
-    PROJ_MAT_32: 26,
-    PROJ_MAT_33: 27,
+    POSITION_X: 7,              // position.x
+    POSITION_Y: 8,              // position.y
+    POSITION_Z: 9,              // position.z
+    RANGE: 10,                   // range
+    SPOT_DIRECTION_X: 11,        // spot direction x
+    SPOT_DIRECTION_Y: 12,       // spot direction y
+    SPOT_DIRECTION_Z: 13,       // spot direction z
+    PROJ_MAT_00: 14,            // light projection matrix, mat4, 16 floats
+    PROJ_MAT_01: 15,
+    PROJ_MAT_02: 16,
+    PROJ_MAT_03: 17,
+    PROJ_MAT_10: 18,
+    PROJ_MAT_11: 19,
+    PROJ_MAT_12: 20,
+    PROJ_MAT_13: 21,
+    PROJ_MAT_20: 22,
+    PROJ_MAT_21: 23,
+    PROJ_MAT_22: 24,
+    PROJ_MAT_23: 25,
+    PROJ_MAT_30: 26,
+    PROJ_MAT_31: 27,
+    PROJ_MAT_32: 28,
+    PROJ_MAT_33: 29,
 
     // leave last
-    COUNT: 28
+    COUNT: 30
 };
 
 // format of the float texture
@@ -99,7 +101,7 @@ class WorldClusters {
     static init(device) {
 
         // precision for texture storage
-        WorldClusters.lightTextureFormat = device.extTextureFloat ? WorldClusters.FORMAT_FLOAT : WorldClusters.FORMAT_8BIT;
+        //WorldClusters.lightTextureFormat = device.extTextureFloat ? WorldClusters.FORMAT_FLOAT : WorldClusters.FORMAT_8BIT;
 
         WorldClusters.initShaderDefines();
     }
@@ -372,6 +374,10 @@ class WorldClusters {
         }
     }
 
+    addLightDataCookies(data8, index, light) {
+        data8[index + 0] = Math.floor(light.cookieIntensity * 255);
+    }
+
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex, gammaCorrection) {
 
@@ -397,6 +403,11 @@ class WorldClusters {
         // shadow biases
         if (light.castShadows) {
             this.addLightDataShadowBias(data8, data8Start + 4 * TextureIndex8.SHADOW_BIAS, light);
+        }
+
+        // cookie properties
+        if (isCookie) {
+            this.addLightDataCookies(data8, data8Start + 4 * TextureIndex8.COOKIE_A, light);
         }
 
         // high precision data stored using float texture
