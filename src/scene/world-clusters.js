@@ -24,8 +24,8 @@ const TextureIndex8 = {
     COLOR_B: 2,                 // color.b, color.b, useCookie, -
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
     SHADOW_BIAS: 4,             // bias, bias, normalBias, normalBias
-    COOKIE_A: 5,
-    COOKIE_B: 6,
+    COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
+    COOKIE_B: 6,                // cookieChannelMask.xyzw
 
     // leave in between
     COUNT_ALWAYS: 7,
@@ -62,7 +62,7 @@ const TextureIndex8 = {
 // format of the float texture
 const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
-    SPOT_DIRECTION: 1,              // spot direction.xyz, UNUSED
+    SPOT_DIRECTION: 1,              // spot direction.xyz, -
     PROJ_MAT_0: 2,                  // projection matrix raw 0
     PROJ_MAT_1: 3,                  // projection matrix raw 0
     PROJ_MAT_2: 4,                  // projection matrix raw 0
@@ -101,7 +101,7 @@ class WorldClusters {
     static init(device) {
 
         // precision for texture storage
-        //WorldClusters.lightTextureFormat = device.extTextureFloat ? WorldClusters.FORMAT_FLOAT : WorldClusters.FORMAT_8BIT;
+        WorldClusters.lightTextureFormat = device.extTextureFloat ? WorldClusters.FORMAT_FLOAT : WorldClusters.FORMAT_8BIT;
 
         WorldClusters.initShaderDefines();
     }
@@ -375,7 +375,18 @@ class WorldClusters {
     }
 
     addLightDataCookies(data8, index, light) {
+        const isRgb = light._cookieChannel === "rgb";
         data8[index + 0] = Math.floor(light.cookieIntensity * 255);
+        data8[index + 1] = isRgb ? 255 : 0;
+        // we have two unused bytes here
+
+        if (!isRgb) {
+            const channel = light._cookieChannel;
+            data8[index + 4] = channel === "rrr" ? 255 : 0;
+            data8[index + 5] = channel === "ggg" ? 255 : 0;
+            data8[index + 6] = channel === "bbb" ? 255 : 0;
+            data8[index + 7] = channel === "aaa" ? 255 : 0;
+        }
     }
 
     // fill up both float and 8bit texture data with light properties

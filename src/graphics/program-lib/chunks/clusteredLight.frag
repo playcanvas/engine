@@ -58,7 +58,14 @@ struct ClusterLightData {
     // true if the light has a cookie texture
     bool isCookie;
 
+    // true if cookie texture is rgb, false is using a single channel selectable by cookieChannelMask
+    bool isCookieRgb;
+
+    // invensity of the cookie
     float cookieIntensity;
+
+    // channel mask - one of the channels has 1, the others are 0
+    vec4 cookieChannelMask;
 };
 
 vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
@@ -176,8 +183,9 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
 
     vec4 cookieA = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_A * lightsTextureInvSize.z, clusterLightData.lightV));
     clusterLightData.cookieIntensity = cookieA.x;
+    clusterLightData.isCookieRgb = cookieA.y > 0.5;
 
-    vec4 cookieB = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_B * lightsTextureInvSize.z, clusterLightData.lightV));
+    clusterLightData.cookieChannelMask = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_B * lightsTextureInvSize.z, clusterLightData.lightV));
 }
 
 void evaluateLight(ClusterLightData light) {
@@ -206,7 +214,7 @@ void evaluateLight(ClusterLightData light) {
                 // cookie
                 if (light.isCookie) {
                     decodeClusterLightCookieData(light);
-                    dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, light.cookieIntensity).aaa;
+                    dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask);
                 }
 
                 // shadow

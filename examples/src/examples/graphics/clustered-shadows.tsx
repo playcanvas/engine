@@ -10,7 +10,7 @@ class ClusteredShadowsExample extends Example {
 
     load() {
         return <>
-            <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
+            <AssetLoader name="channels" type="texture" url="static/assets/textures/channels.png" />
         </>;
     }
 
@@ -81,7 +81,7 @@ class ClusteredShadowsExample extends Example {
         }
 
         // create many spot lights
-        const count = 8;
+        const count = 64;
         const spotLightList: Array<pc.Entity> = [];
         for (let i = 0; i < count; i++) {
             const intensity = 1.5;
@@ -98,14 +98,10 @@ class ClusteredShadowsExample extends Example {
                 normalOffsetBias: 0.1,
                 shadowResolution: 512,      // only used when clustering is off
 
-
-
-                // heart texture's alpha channel as a cookie texture
-                cookie: assets.heart.resource,
-                cookieChannel: "a",
-                cookieIntensity: Math.random()
-
-                
+                // cookie texture
+                cookie: assets.channels.resource,
+                cookieChannel: Math.random() < 0.5 ? "g" : "a",
+                cookieIntensity: 0.2 + Math.random()
             });
 
             // attach a render component with a small cone to each light
