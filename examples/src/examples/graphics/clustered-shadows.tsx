@@ -10,12 +10,12 @@ class ClusteredShadowsExample extends Example {
 
     load() {
         return <>
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
         </>;
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -81,7 +81,7 @@ class ClusteredShadowsExample extends Example {
         }
 
         // create many spot lights
-        const count = 64;
+        const count = 8;
         const spotLightList: Array<pc.Entity> = [];
         for (let i = 0; i < count; i++) {
             const intensity = 1.5;
@@ -96,7 +96,16 @@ class ClusteredShadowsExample extends Example {
                 castShadows: true,
                 shadowBias: 0.4,
                 normalOffsetBias: 0.1,
-                shadowResolution: 512      // only used when clustering is off
+                shadowResolution: 512,      // only used when clustering is off
+
+
+
+                // heart texture's alpha channel as a cookie texture
+                cookie: assets.heart.resource,
+                cookieChannel: "a",
+                cookieIntensity: Math.random()
+
+                
             });
 
             // attach a render component with a small cone to each light
@@ -147,9 +156,10 @@ class ClusteredShadowsExample extends Example {
             camera.lookAt(new pc.Vec3(0, 0, 0));
 
             // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-            // if (spotLightList[0].light.light.shadowMap) {
-            //     app.renderTexture(-0.7, 0.7, 0.4, 0.4, spotLightList[0].light.light.shadowMap.texture);
-            // }
+            // app.renderTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
+
+            // display cookie texture (debug feature)
+            app.renderTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
         });
     }
 }

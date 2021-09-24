@@ -398,7 +398,7 @@ function _defineProps() {
         this.light.cookie = newValue;
     });
     _defineProperty("cookieIntensity", 1, function (newValue, oldValue) {
-        this.light.cookieIntensity = newValue;
+        this.light.cookieIntensity = math.clamp(newValue, 0, 1);
     });
     _defineProperty("cookieFalloff", true, function (newValue, oldValue) {
         this.light.cookieFalloff = newValue;

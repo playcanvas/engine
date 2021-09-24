@@ -36,6 +36,7 @@ import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
+import { CookieRenderer } from './cookie-renderer.js';
 
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
@@ -121,6 +122,9 @@ class ForwardRenderer {
         // shadows
         this._shadowRenderer = new ShadowRenderer(this);
 
+        // cookies
+        this._cookieRenderer = new CookieRenderer(device);
+
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);
 
@@ -202,6 +206,9 @@ class ForwardRenderer {
     destroy() {
         this._shadowRenderer.destroy();
         this._shadowRenderer = null;
+
+        this._cookieRenderer.destroy();
+        this._cookieRenderer = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
@@ -1096,6 +1103,14 @@ class ForwardRenderer {
         // #endif
     }
 
+    renderCookies(lights) {
+
+        const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
+        for (let i = 0; i < lights.length; i++) {
+            this._cookieRenderer.render(lights[i], cookieRenderTarget);
+        }
+    }
+
     updateShader(meshInstance, objDefs, staticLightList, pass, sortedLights) {
         meshInstance.material._scene = this.scene;
 
@@ -1824,9 +1839,14 @@ class ForwardRenderer {
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
-        // update shadow / cookie atlas allocation for the visible lights
-        if (LayerComposition.clusteredLightingEnabled)
+        if (LayerComposition.clusteredLightingEnabled) {
+
+            // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(comp);
+
+            // render cookies for all local visible lights (only handling spot lights)
+            this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
+        }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);

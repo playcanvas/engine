@@ -31,3 +31,17 @@ vec4 getCookie2DClipXform(sampler2D tex, mat4 transform, float intensity, vec4 c
 vec4 getCookieCube(samplerCube tex, mat4 transform, float intensity) {
     return mix(vec4(1.0), textureCube(tex, dLightDirNormW * mat3(transform)), intensity);
 }
+
+
+// !!!!!!!! use any
+
+
+
+// getCookie2D and getCookie2DClip combined for clustered lighting
+vec4 getCookie2DClustered(sampler2D tex, mat4 transform, float intensity, bool falloff) {
+    vec4 projPos = transform * vec4(vPositionW, 1.0);
+    projPos.xy /= projPos.w;
+    if (falloff && (projPos.x < 0.0 || projPos.x > 1.0 || projPos.y < 0.0 || projPos.y > 1.0 || projPos.z < 0.0))
+        return vec4(0.0);
+    return mix(vec4(1.0), texture2D(tex, projPos.xy), intensity);
+}

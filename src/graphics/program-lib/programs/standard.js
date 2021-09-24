@@ -1403,11 +1403,10 @@ var standard = {
             usesSpot = true;
             hasPointLights = true;
             usesLinearFalloff = true;
+            usesCookie = true;
 
             code += chunks.floatUnpackingPS;
-
-            const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
-            code += `\n#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += WorldClusters.shaderDefines;
             code += chunks.clusteredLightPS;
         }
 
