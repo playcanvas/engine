@@ -5,7 +5,7 @@ import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { GraphNode } from '../../scene/graph-node.js';
 
-var identityGraphNode = new GraphNode();
+const identityGraphNode = new GraphNode();
 
 // helper class storing data for a single batch of line rendering using a single material
 class ImmediateBatch {
