@@ -33,18 +33,6 @@ class ReadStream {
         return this.offset - amount;
     }
 
-    readChar() {
-        return String.fromCharCode(this.dataView.getUint8(this.offset++));
-    }
-
-    readChars(numChars) {
-        let result = '';
-        for (let i = 0; i < numChars; ++i) {
-            result += this.readChar();
-        }
-        return result;
-    }
-
     readU8() {
         return this.dataView.getUint8(this.offset++);
     }
@@ -90,6 +78,4 @@ class ReadStream {
     }
 }
 
-export {
-    ReadStream
-};
+export { ReadStream };
