@@ -99,11 +99,11 @@ class ScrollbarComponent extends Component {
     }
 
     _updateHandlePositionAndSize() {
-        var handleEntity = this._handleReference.entity;
-        var handleElement = handleEntity && handleEntity.element;
+        const handleEntity = this._handleReference.entity;
+        const handleElement = handleEntity && handleEntity.element;
 
         if (handleEntity) {
-            var position = handleEntity.getLocalPosition();
+            const position = handleEntity.getLocalPosition();
             position[this._getAxis()] = this._getHandlePosition();
             this._handleReference.entity.setLocalPosition(position);
         }

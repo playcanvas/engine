@@ -73,7 +73,7 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        const data = {
             stateGraphAsset: entity.anim.stateGraphAsset,
             animationAssets: entity.anim.animationAssets,
             speed: entity.anim.speed,

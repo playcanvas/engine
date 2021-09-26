@@ -6,7 +6,7 @@ import { Entity } from '../../entity.js';
 import { SCALEMODE_BLEND, SCALEMODE_NONE } from './constants.js';
 import { Component } from '../component.js';
 
-var _transform = new Mat4();
+const _transform = new Mat4();
 
 /**
  * @component
@@ -64,7 +64,7 @@ class ScreenComponent extends Component {
         }
 
         if (e.element) {
-            var prevDrawOrder = e.element.drawOrder;
+            const prevDrawOrder = e.element.drawOrder;
             e.element.drawOrder = i++;
 
             if (e.element._batchGroupId >= 0 && prevDrawOrder !== e.element.drawOrder) {
@@ -77,8 +77,8 @@ class ScreenComponent extends Component {
             e.particlesystem.drawOrder = i++;
         }
 
-        var children = e.children;
-        for (var j = 0; j < children.length; j++) {
+        const children = e.children;
+        for (let j = 0; j < children.length; j++) {
             i = this._recurseDrawOrderSync(children[j], i);
         }
 
@@ -86,7 +86,7 @@ class ScreenComponent extends Component {
     }
 
     _processDrawOrderSync() {
-        var i = 1;
+        const i = 1;
 
         this._recurseDrawOrderSync(this.entity, i);
 
@@ -95,20 +95,15 @@ class ScreenComponent extends Component {
     }
 
     _calcProjectionMatrix() {
-        var left;
-        var right;
-        var bottom;
-        var top;
-        var near = 1;
-        var far = -1;
+        const w = this._resolution.x / this.scale;
+        const h = this._resolution.y / this.scale;
 
-        var w = this._resolution.x / this.scale;
-        var h = this._resolution.y / this.scale;
-
-        left = 0;
-        right = w;
-        bottom = -h;
-        top = 0;
+        const left = 0;
+        const right = w;
+        const bottom = -h;
+        const top = 0;
+        const near = 1;
+        const far = -1;
 
         this._screenMatrix.setOrtho(left, right, bottom, top, near, far);
 
@@ -126,8 +121,8 @@ class ScreenComponent extends Component {
         // Using log of scale values
         // This produces a nicer outcome where if you have a xscale = 2 and yscale = 0.5
         // the combined scale is 1 for an even blend
-        var lx = Math.log2(resolution.x / referenceResolution.x);
-        var ly = Math.log2(resolution.y / referenceResolution.y);
+        const lx = Math.log2(resolution.x / referenceResolution.x);
+        const ly = Math.log2(resolution.y / referenceResolution.y);
         return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
     }
 

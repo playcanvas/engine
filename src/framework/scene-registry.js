@@ -50,9 +50,9 @@ class SceneRegistry {
             return false;
         }
 
-        var item = new SceneRegistryItem(name, url);
+        const item = new SceneRegistryItem(name, url);
 
-        var i = this._list.push(item);
+        const i = this._list.push(item);
         this._index[item.name] = i - 1;
         this._urlIndex[item.url] = i - 1;
 
@@ -96,18 +96,18 @@ class SceneRegistry {
      */
     remove(name) {
         if (this._index.hasOwnProperty(name)) {
-            var i = this._index[name];
-            var item = this._list[i];
+            const idx = this._index[name];
+            let item = this._list[idx];
 
             delete this._urlIndex[item.url];
             // remove from index
             delete this._index[name];
 
             // remove from list
-            this._list.splice(i, 1);
+            this._list.splice(idx, 1);
 
             // refresh index
-            for (i = 0; i < this._list.length; i++) {
+            for (let i = 0; i < this._list.length; i++) {
                 item = this._list[i];
                 this._index[item.name] = i;
                 this._urlIndex[item.url] = i;
@@ -126,7 +126,7 @@ class SceneRegistry {
         // If it's just a URL then attempt to find the scene item in
         // the registry else create a temp SceneRegistryItem to use
         // for this function
-        var url = sceneItem;
+        let url = sceneItem;
 
         if (sceneItem instanceof SceneRegistryItem) {
             url = sceneItem.url;
@@ -150,7 +150,7 @@ class SceneRegistry {
 
         // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
         // Split loading into load and open
-        var handler = this._app.loader.getHandler("hierarchy");
+        const handler = this._app.loader.getHandler("hierarchy");
 
         // include asset prefix if present
         if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
@@ -164,7 +164,7 @@ class SceneRegistry {
                 sceneItem.data = data;
                 sceneItem._loading = false;
 
-                for (var i = 0; i < sceneItem._onLoadedCallbacks.length; i++) {
+                for (let i = 0; i < sceneItem._onLoadedCallbacks.length; i++) {
                     sceneItem._onLoadedCallbacks[i](err, sceneItem);
                 }
 
@@ -243,11 +243,11 @@ class SceneRegistry {
      * });
      */
     loadSceneHierarchy(sceneItem, callback) {
-        var self = this;
+        const self = this;
 
         // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
         // Split loading into load and open
-        var handler = this._app.loader.getHandler("hierarchy");
+        const handler = this._app.loader.getHandler("hierarchy");
 
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (err) {
@@ -255,13 +255,13 @@ class SceneRegistry {
                 return;
             }
 
-            var url = sceneItem.url;
-            var data = sceneItem.data;
+            const url = sceneItem.url;
+            const data = sceneItem.data;
 
             // called after scripts are preloaded
-            var _loaded = function () {
+            const _loaded = function () {
                 self._app.systems.script.preloading = true;
-                var entity = handler.open(url, data);
+                const entity = handler.open(url, data);
 
                 self._app.systems.script.preloading = false;
 
@@ -302,7 +302,7 @@ class SceneRegistry {
      * });
      */
     loadSceneSettings(sceneItem, callback) {
-        var self = this;
+        const self = this;
 
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (!err) {
@@ -329,9 +329,9 @@ class SceneRegistry {
      * {@link Scene}.
      */
     loadScene(url, callback) {
-        var self = this;
+        const self = this;
 
-        var handler = this._app.loader.getHandler("scene");
+        const handler = this._app.loader.getHandler("scene");
 
         // include asset prefix if present
         if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
@@ -340,13 +340,13 @@ class SceneRegistry {
 
         handler.load(url, function (err, data) {
             if (!err) {
-                var _loaded = function () {
+                const _loaded = function () {
                     // parse and create scene
                     self._app.systems.script.preloading = true;
-                    var scene = handler.open(url, data);
+                    const scene = handler.open(url, data);
 
                     // Cache the data as we are loading via URL only
-                    var sceneItem = self.findByUrl(url);
+                    const sceneItem = self.findByUrl(url);
                     if (sceneItem && !sceneItem.loaded) {
                         sceneItem.data = data;
                     }

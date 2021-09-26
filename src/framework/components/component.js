@@ -36,15 +36,15 @@ class Component extends EventHandler {
         schema.forEach(function (descriptor) {
             // If the property descriptor is an object, it should have a `name`
             // member. If not, it should just be the plain property name.
-            var name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
+            const name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
 
             Object.defineProperty(obj, name, {
                 get: function () {
                     return this.data[name];
                 },
                 set: function (value) {
-                    var data = this.data;
-                    var oldValue = data[name];
+                    const data = this.data;
+                    const oldValue = data[name];
                     data[name] = value;
                     this.fire('set', name, oldValue, value);
                 },
@@ -89,7 +89,7 @@ class Component extends EventHandler {
      * modifying this data directly will not fire 'set' events.
      */
     get data() {
-        var record = this.system.store[this.entity.getGuid()];
+        const record = this.system.store[this.entity.getGuid()];
         return record ? record.data : null;
     }
 }

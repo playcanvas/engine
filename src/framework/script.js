@@ -10,13 +10,13 @@ import { getApplication } from './globals.js';
  * @description The script namespace holds the createLoadingScreen function that
  * is used to override the default PlayCanvas loading screen.
  */
-var _legacy = false;
+let _legacy = false;
 
 // flag to avoid creating multiple loading screens e.g. when
 // loading screen scripts are reloaded
-var _createdLoadingScreen = false;
+let _createdLoadingScreen = false;
 
-var script = {
+const script = {
     // set during script load to be used for initializing script
     app: null,
 
@@ -50,7 +50,7 @@ var script = {
             return;
 
         // get the ScriptType from the callback
-        var ScriptType = callback(script.app);
+        const ScriptType = callback(script.app);
 
         // store the script name
         ScriptType._pcScriptName = name;
@@ -137,7 +137,7 @@ var script = {
 
         _createdLoadingScreen = true;
 
-        var app = getApplication();
+        const app = getApplication();
         callback(app);
     }
 };

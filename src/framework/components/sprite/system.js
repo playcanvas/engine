@@ -53,17 +53,17 @@ class SpriteComponentSystem extends ComponentSystem {
 
     get defaultMaterial() {
         if (!this._defaultMaterial) {
-            var texture = new Texture(this.app.graphicsDevice, {
+            const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
                 format: PIXELFORMAT_R8_G8_B8_A8
             });
-            var pixels = new Uint8Array(texture.lock());
+            const pixels = new Uint8Array(texture.lock());
             pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
             texture.name = 'sprite';
             texture.unlock();
 
-            var material = new StandardMaterial();
+            const material = new StandardMaterial();
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
             material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
             material.emissiveMap = texture;
@@ -94,7 +94,7 @@ class SpriteComponentSystem extends ComponentSystem {
 
     get default9SlicedMaterialSlicedMode() {
         if (!this._default9SlicedMaterialSlicedMode) {
-            var material = this.defaultMaterial.clone();
+            const material = this.defaultMaterial.clone();
             material.nineSlicedMode = SPRITE_RENDERMODE_SLICED;
             material.update();
 
@@ -109,7 +109,7 @@ class SpriteComponentSystem extends ComponentSystem {
 
     get default9SlicedMaterialTiledMode() {
         if (!this._default9SlicedMaterialTiledMode) {
-            var material = this.defaultMaterial.clone();
+            const material = this.defaultMaterial.clone();
             material.nineSlicedMode = SPRITE_RENDERMODE_TILED;
             material.update();
 
@@ -190,7 +190,7 @@ class SpriteComponentSystem extends ComponentSystem {
         }
 
         if (data.clips) {
-            for (var name in data.clips) {
+            for (const name in data.clips) {
                 component.addClip(data.clips[name]);
             }
         }
@@ -209,7 +209,7 @@ class SpriteComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var source = entity.sprite;
+        const source = entity.sprite;
 
         return this.addComponent(clone, {
             enabled: source.enabled,
@@ -231,14 +231,14 @@ class SpriteComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
+                const component = components[id];
                 // if sprite component is enabled advance its current clip
                 if (component.data.enabled && component.entity.enabled) {
-                    var sprite = component.entity.sprite;
+                    const sprite = component.entity.sprite;
                     if (sprite._currentClip) {
                         sprite._currentClip._update(dt);
                     }

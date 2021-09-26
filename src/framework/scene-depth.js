@@ -181,8 +181,8 @@ class SceneDepth {
                 const visibleObjects = this.instances.visibleOpaque[cameraPass];
                 const visibleList = visibleObjects.list;
                 const layerComposition = app.scene.layers;
-                var subLayerEnabled = layerComposition.subLayerEnabled;
-                var isTransparent = layerComposition.subLayerList;
+                const subLayerEnabled = layerComposition.subLayerEnabled;
+                const isTransparent = layerComposition.subLayerList;
 
                 // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
                 const rt = app.scene.layers.getLayerById(LAYERID_WORLD).renderTarget;

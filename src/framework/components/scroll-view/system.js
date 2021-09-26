@@ -65,11 +65,11 @@ class ScrollViewComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
-            var entity = components[id].entity;
-            var component = entity.scrollview;
+        for (const id in components) {
+            const entity = components[id].entity;
+            const component = entity.scrollview;
             if (component.enabled && entity.enabled) {
                 component.onUpdate();
             }

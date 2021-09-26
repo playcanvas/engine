@@ -86,7 +86,7 @@ class ZoneComponent extends Component {
     }
 
     _checkState() {
-        var state = this.enabled && this.entity.enabled;
+        const state = this.enabled && this.entity.enabled;
         if (state === this._oldState)
             return;
 

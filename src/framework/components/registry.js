@@ -18,9 +18,9 @@ class ComponentSystemRegistry {
      * @param {object} system - The {@link ComponentSystem} instance.
      */
     add(system) {
-        var id = system.id;
+        const id = system.id;
         if (this[id]) {
-            throw new Error("ComponentSystem name '" + id + "' already registered or not allowed");
+            throw new Error(`ComponentSystem name '${id}' already registered or not allowed`);
         }
 
         this[id] = system;
@@ -37,15 +37,15 @@ class ComponentSystemRegistry {
      * @param {object} system - The {@link ComponentSystem} instance.
      */
     remove(system) {
-        var id = system.id;
+        const id = system.id;
         if (!this[id]) {
-            throw new Error("No ComponentSystem named '" + id + "' registered");
+            throw new Error(`No ComponentSystem named '${id}' registered`);
         }
 
         delete this[id];
 
         // Update the component system array
-        var index = this.list.indexOf(this[id]);
+        const index = this.list.indexOf(this[id]);
         if (index !== -1) {
             this.list.splice(index, 1);
         }
