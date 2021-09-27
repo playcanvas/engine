@@ -56,7 +56,7 @@ struct ClusterLightData {
     // range of the light
     float range;
 
-    // spot light inner and outher angle cosine
+    // spot light inner and outer angle cosine
     float innerConeAngleCos;
     float outerConeAngleCos;
 
