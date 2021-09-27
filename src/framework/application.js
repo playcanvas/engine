@@ -29,7 +29,7 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
-import { Lightmapper } from '../scene/lightmapper.js';
+import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';

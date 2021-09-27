@@ -92,6 +92,8 @@ var _lightPropsDefault = [];
  * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects.
  * @property {boolean} affectLightmapped If enabled the light will affect lightmapped objects.
  * @property {boolean} bake If enabled the light will be rendered into lightmaps.
+ * @property {number} bakeNumSamples If bake is true, this specifies the number of samples used to bake this light into the lightmap. Defaults to 1. Maximum value is 255.
+ * @property {number} bakeArea If bake is true and the light type is {@link LIGHTTYPE_DIRECTIONAL}, this specifies the penumbra angle in degrees, allowing a soft shadow boundary. Defaults to 0.
  * @property {boolean} bakeDir If enabled and bake=true, the light's direction will contribute to directional lightmaps.
  * Be aware, that directional lightmap is an approximation and can only hold single direction per pixel.
  * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
@@ -342,6 +344,12 @@ function _defineProps() {
     _defineProperty("numCascades", 1, function (newValue, oldValue) {
         this.light.numCascades = math.clamp(Math.floor(newValue), 1, 4);
     });
+    _defineProperty("bakeNumSamples", 1, function (newValue, oldValue) {
+        this.light.bakeNumSamples = math.clamp(Math.floor(newValue), 1, 255);
+    });
+    _defineProperty("bakeArea", 0, function (newValue, oldValue) {
+        this.light.bakeArea = math.clamp(newValue, 0, 180);
+    });
     _defineProperty("cascadeDistribution", 0.5, function (newValue, oldValue) {
         this.light.cascadeDistribution = math.clamp(newValue, 0, 1);
     });
@@ -470,6 +478,7 @@ function _defineProps() {
             this.light.mask &= ~MASK_LIGHTMAP;
             if (this.affectLightmapped) this.light.mask |= MASK_BAKED;
         }
+        this.light.layersDirty();
     });
     _defineProperty("bakeDir", true, function (newValue, oldValue) {
         this.light.bakeDir = newValue;

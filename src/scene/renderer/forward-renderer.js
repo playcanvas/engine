@@ -77,6 +77,7 @@ const _tempMaterialSet = new Set();
  * @class
  * @name ForwardRenderer
  * @classdesc The forward renderer render scene objects.
+ * @hideconstructor
  * @description Creates a new forward renderer object.
  * @hideconstructor
  * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
@@ -1773,10 +1774,7 @@ class ForwardRenderer {
         const device = this.device;
 
         // update the skybox, since this might change _meshInstances
-        if (this.scene.updateSkybox) {
-            this.scene._updateSkybox(device);
-            this.scene.updateSkybox = false;
-        }
+        this.scene._updateSkybox(device);
 
         this.beginLayers(comp);
 

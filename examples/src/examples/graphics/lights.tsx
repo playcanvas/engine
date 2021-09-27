@@ -110,7 +110,6 @@ class LightsExample extends Example {
         app.root.addChild(ground);
 
         // setup light data
-
         data.set('lights', {
             spot: {
                 enabled: true,
