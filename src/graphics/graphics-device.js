@@ -3406,13 +3406,13 @@ class GraphicsDevice extends EventHandler {
         // Check for errors
         if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glVertexShader);
-            const errorCode = this._addLineNumbers(definition.vshader, infoLog));
+            const errorCode = this._addLineNumbers(definition.vshader, infoLog);
             console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${errorCode}`);
             return false;
         }
         if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glFragmentShader);
-            const errorCode = this._addLineNumbers(definition.fshader, infoLog));
+            const errorCode = this._addLineNumbers(definition.fshader, infoLog);
             console.error(`Failed to compile fragment shader:\n\n${infoLog}\n${errorCode}`);
             return false;
         }
