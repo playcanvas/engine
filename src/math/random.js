@@ -12,6 +12,7 @@ const random = {
 
     /**
      * @function
+     * @private
      * @name random.circlePoint
      * @description Return a pseudo-random 2D point inside a unit circle with uniform distribution.
      * @param {Vec2} point - the returned generated point.
@@ -25,6 +26,7 @@ const random = {
 
     /**
      * @function
+     * @private
      * @name random.circlePointDeterministic
      * @description Generates evenly distributed deterministic points inside a unit circle using Fermat's spiral and Vogel's method.
      * @param {Vec2} point - the returned generated point.
