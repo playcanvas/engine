@@ -25,21 +25,15 @@ import {
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT,
-    PROJECTION_PERSPECTIVE
+    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LayerComposition } from '../composition/layer-composition.js';
-import { Camera } from '../camera.js';
-import { GraphNode } from '../graph-node.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
-
-const shadowCamView = new Mat4();
-const shadowCamViewProj = new Mat4();
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -222,20 +216,6 @@ class ForwardRenderer {
 
     static skipRenderAfter = 0;
     // #endif
-
-    // temporary camera to calculate spot light cookie view-projection matrix
-    static spotCookieCamera = null;
-
-    static getSpotCookieCamera() {
-        if (!this.spotCookieCamera) {
-            this.spotCookieCamera = new Camera();
-            this.spotCookieCamera.projection = PROJECTION_PERSPECTIVE;
-            this.spotCookieCamera.aspectRatio = 1;
-            this.spotCookieCamera.node = new GraphNode();
-        }
-
-        return this.spotCookieCamera;
-    }
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {
@@ -730,7 +710,6 @@ class ForwardRenderer {
         this.lightDir[cnt][2] = spot._direction.z;
         this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
-        let cookieMatrix;
         if (spot.castShadows) {
 
             // shadow map
@@ -747,28 +726,17 @@ class ForwardRenderer {
             params[2] = biases.x;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
-
-            cookieMatrix = lightRenderData.shadowMatrix;
         }
 
         if (spot._cookie) {
-            this.lightCookieId[cnt].setValue(spot._cookie);
+
+            // if shadow is not rendered, we need to evaluate light projection matrix
             if (!spot.castShadows) {
-                const cookieCam = ForwardRenderer.getSpotCookieCamera();
-                cookieCam.fov = spot._outerConeAngle * 2;
-
-                const cookieNode = cookieCam._node;
-                cookieNode.setPosition(spot._node.getPosition());
-                cookieNode.setRotation(spot._node.getRotation());
-                cookieNode.rotateLocal(-90, 0, 0);
-
-                shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
-                shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
-
-                cookieMatrix = spot.cookieMatrix;
-                cookieMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+                const cookieMatrix = CookieRenderer.evalCookieMatrix(spot);
+                this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
             }
-            this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
+
+            this.lightCookieId[cnt].setValue(spot._cookie);
             this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
             if (spot._cookieTransform) {
                 spot._cookieTransformUniform[0] = spot._cookieTransform.x;

@@ -80,6 +80,8 @@ class ClusteredShadowsExample extends Example {
             createPrimitive("box", pos, new pc.Vec3(scale, scale, scale));
         }
 
+        const cookieChannels = ["r", "g", "b", "a", "rgb"];
+
         // create many spot lights
         const count = 64;
         const spotLightList: Array<pc.Entity> = [];
@@ -87,6 +89,8 @@ class ClusteredShadowsExample extends Example {
             const intensity = 1.5;
             const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
             const lightSpot = new pc.Entity("Spot" + i);
+            const cookieChannel = cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
+
             lightSpot.addComponent("light", {
                 type: "spot",
                 color: color,
@@ -100,7 +104,7 @@ class ClusteredShadowsExample extends Example {
 
                 // cookie texture
                 cookie: assets.channels.resource,
-                cookieChannel: Math.random() < 0.5 ? "g" : "a",
+                cookieChannel: cookieChannel,
                 cookieIntensity: 0.2 + Math.random()
             });
 
@@ -155,7 +159,7 @@ class ClusteredShadowsExample extends Example {
             // app.renderTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
 
             // display cookie texture (debug feature)
-            app.renderTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
+            // app.renderTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
         });
     }
 }

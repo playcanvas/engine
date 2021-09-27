@@ -5,6 +5,7 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT } from './constants.js';
+import { CookieRenderer } from './renderer/cookie-renderer.js';
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -364,9 +365,8 @@ class WorldClusters {
         floatPacking.float2Bytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, index + 8, 4);
     }
 
-    addLightDataLightProjMatrix(data8, index, light) {
-        const lightRenderData = light.getRenderData(null, 0);
-        const matData = lightRenderData.shadowMatrix.data;
+    addLightDataLightProjMatrix(data8, index, lightProjectionMatrix) {
+        const matData = lightProjectionMatrix.data;
         for (let m = 0; m < 12; m++)    // these are in -2..2 range
             floatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
         for (let m = 12; m < 16; m++) {  // these are full float range
@@ -394,7 +394,19 @@ class WorldClusters {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;
         const isCookie = !!light._cookie;
+        const castShadows = light.castShadows;
         const pos = light._node.getPosition();
+
+        // light projection matrix - used for shadow map and cookie
+        let lightProjectionMatrix = null;
+        if (isSpot) {
+            if (castShadows) {
+                const lightRenderData = light.getRenderData(null, 0);
+                lightProjectionMatrix = lightRenderData.shadowMatrix;
+            } else if (isCookie) {
+                lightProjectionMatrix = CookieRenderer.evalCookieMatrix(light);
+            }
+        }
 
         // data always stored in 8bit texture
         const data8 = this.lights8;
@@ -442,10 +454,9 @@ class WorldClusters {
                 // here we have unused float
             }
 
-            // shadow matrix
-            if (light.castShadows) {
-                const lightRenderData = light.getRenderData(null, 0);
-                const matData = lightRenderData.shadowMatrix.data;
+            // light projection matrix
+            if (lightProjectionMatrix) {
+                const matData = lightProjectionMatrix.data;
                 for (let m = 0; m < 16; m++)
                     dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
             }
@@ -460,8 +471,8 @@ class WorldClusters {
             }
 
             // light projection matrix
-            if (light.castShadows) {
-                this.addLightDataLightProjMatrix(data8, data8Start + 4 * TextureIndex8.PROJ_MAT_00, light);
+            if (lightProjectionMatrix) {
+                this.addLightDataLightProjMatrix(data8, data8Start + 4 * TextureIndex8.PROJ_MAT_00, lightProjectionMatrix);
             }
         }
     }

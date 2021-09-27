@@ -1,9 +1,15 @@
+import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
+import { Mat4 } from '../../math/mat4.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
 import { Texture } from "../../graphics/texture.js";
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+
+import { PROJECTION_PERSPECTIVE } from '../constants.js';
+import { Camera } from '../camera.js';
+import { GraphNode } from '../graph-node.js';
 
 const textureBlitVertexShader = `
     attribute vec2 vertex_position;
@@ -21,6 +27,9 @@ const textureBlitFragmentShader = `
     }`;
 
 const _viewport = new Vec4();
+const _viewMat = new Mat4();
+const _viewProjMat = new Mat4();
+const _viewportMatrix = new Mat4();
 
 class CookieRenderer {
     constructor(device) {
@@ -60,6 +69,39 @@ class CookieRenderer {
         return texture;
     }
 
+    // temporary camera to calculate spot light cookie view-projection matrix
+    static _cookieCamera = null;
+
+    static evalCookieMatrix(light) {
+
+        let cookieCamera = CookieRenderer._cookieCamera;
+        if (!cookieCamera) {
+            cookieCamera = new Camera();
+            cookieCamera.projection = PROJECTION_PERSPECTIVE;
+            cookieCamera.aspectRatio = 1;
+            cookieCamera.node = new GraphNode();
+            CookieRenderer._cookieCamera = cookieCamera;
+        }
+
+        cookieCamera.fov = light._outerConeAngle * 2;
+
+        const cookieNode = cookieCamera._node;
+        cookieNode.setPosition(light._node.getPosition());
+        cookieNode.setRotation(light._node.getRotation());
+        cookieNode.rotateLocal(-90, 0, 0);
+
+        _viewMat.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
+        _viewProjMat.mul2(cookieCamera.projectionMatrix, _viewMat);
+
+        const cookieMatrix = light.cookieMatrix;
+
+        const rectViewport = light.cookieViewport;
+        _viewportMatrix.setViewport(rectViewport.x, rectViewport.y, rectViewport.z, rectViewport.w);
+        cookieMatrix.mul2(_viewportMatrix, _viewProjMat);
+
+        return cookieMatrix;
+    }
+
     render(light, renderTarget) {
 
         if (light.enabled && light.cookie && light.visibleThisFrame) {
@@ -77,9 +119,8 @@ class CookieRenderer {
                 // source texture
                 this.blitTextureId.setValue(light.cookie);
 
-                // render it viewport of the target
-                const lightRenderData = light.getRenderData(null, face);
-                _viewport.copy(lightRenderData.shadowViewport).mulScalar(renderTarget.colorBuffer.width);
+                // render it to a viewport of the target
+                _viewport.copy(light.cookieViewport).mulScalar(renderTarget.colorBuffer.width);
                 drawQuadWithShader(device, renderTarget, shader, _viewport);
             }
 

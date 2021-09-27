@@ -150,8 +150,6 @@ class ShadowRenderer {
         this.shadowMapCache = null;
     }
 
-    static scaleShiftMatrix = new Mat4().setViewport(0, 0, 1, 1);
-
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(device, shadowType, type, face) {
 

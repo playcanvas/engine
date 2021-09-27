@@ -7,6 +7,7 @@ import { CookieRenderer } from '../renderer/cookie-renderer.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
+const _viewport = new Vec4();
 
 // A class handling runtime allocation of slots in a texture. Used to allocate slots in the shadow map,
 // and will be used to allocate slots in the cookie texture atlas as well.
@@ -161,7 +162,8 @@ class LightTextureAtlas {
 
         const lights = this.collectLights(spotLights, omniLights);
         if (lights.length > 0) {
-            // leave gap between individual tiles to avoid shadow sampling other tiles (4 pixels - should be enough for PCF5)
+
+            // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (4 pixels - should be enough for PCF5)
             // note that this only fades / removes shadows on the edges, which is still not correct - a shader clipping is needed?
             const scissorOffset = 4 / this.shadowMapResolution;
             const scissorVec = new Vec4(scissorOffset, scissorOffset, -2 * scissorOffset, -2 * scissorOffset);
@@ -181,14 +183,24 @@ class LightTextureAtlas {
                     const slot = this.slots[usedCount];
                     usedCount++;
 
-                    // slot viewport
-                    const lightRenderData = light.getRenderData(null, face);
-                    lightRenderData.shadowViewport.copy(slot);
-                    lightRenderData.shadowScissor.copy(slot);
+                    // setup slot for shadow and cookie
+                    if (light.castShadows || light._cookie) {
 
-                    // for spot lights in the atlas, make viewport slightly smaller to avoid sampling past the edges
-                    if (light._type === LIGHTTYPE_SPOT) {
-                        lightRenderData.shadowViewport.add(scissorVec);
+                        // for spot lights in the atlas, make viewport slightly smaller to avoid sampling past the edges
+                        _viewport.copy(slot);
+                        if (light._type === LIGHTTYPE_SPOT) {
+                            _viewport.add(scissorVec);
+                        }
+
+                        if (light.castShadows) {
+                            const lightRenderData = light.getRenderData(null, face);
+                            lightRenderData.shadowViewport.copy(_viewport);
+                            lightRenderData.shadowScissor.copy(slot);
+                        }
+
+                        if (light._cookie) {
+                            light.cookieViewport.copy(_viewport);
+                        }
                     }
                 }
             }
