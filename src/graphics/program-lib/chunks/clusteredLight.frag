@@ -22,12 +22,7 @@ uniform vec3 clusterCellsMax;
 uniform vec2 clusterCompressionLimit0;
 uniform float shadowAtlasParams;
 
-
-// TODO: document the fields
-
-
-
-
+// structure storing light properties of a clustered light
 struct ClusterLightData {
 
     // v coordinate to look up the light textures
@@ -36,23 +31,36 @@ struct ClusterLightData {
     // true if spot light, false for omni light
     bool isSpot;
 
+    // area light shape
     float shape;
+
+    // light follow mode
     float falloffMode;
 
     // true if the light is shadow casting
     bool castShadows;
 
+    // shadow bias values
     float shadowBias;
     float shadowNormalBias;
 
     // shadow / cookie projection matrix
     mat4 lightProjectionMatrix;
 
+    // world space position
     vec3 position;
+
+    // world space direction (spot light only)
     vec3 direction;
+
+    // range of the light
     float range;
+
+    // spot light inner and outher angle cosine
     float innerConeAngleCos;
     float outerConeAngleCos;
+
+    // color
     vec3 color;
 
     // true if the light has a cookie texture
