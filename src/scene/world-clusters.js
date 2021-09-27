@@ -28,15 +28,15 @@ const TextureIndex8 = {
     COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
     COOKIE_B: 6,                // cookieChannelMask.xyzw
 
-    // leave in between
+    // leave in-between
     COUNT_ALWAYS: 7,
 
     // 8bit texture data used when float texture is not supported
     POSITION_X: 7,              // position.x
     POSITION_Y: 8,              // position.y
     POSITION_Z: 9,              // position.z
-    RANGE: 10,                   // range
-    SPOT_DIRECTION_X: 11,        // spot direction x
+    RANGE: 10,                  // range
+    SPOT_DIRECTION_X: 11,       // spot direction x
     SPOT_DIRECTION_Y: 12,       // spot direction y
     SPOT_DIRECTION_Z: 13,       // spot direction z
     PROJ_MAT_00: 14,            // light projection matrix, mat4, 16 floats
@@ -107,6 +107,7 @@ class WorldClusters {
         WorldClusters.initShaderDefines();
     }
 
+    // creates list of defines specifying texture coordinates for decoding lights
     static initShaderDefines() {
         const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
         WorldClusters.shaderDefines = `
