@@ -135,7 +135,7 @@ class ModelComponentSystem extends ComponentSystem {
         }
 
         if (entity.model.customAabb) {
-            component.customAabb = entity.model.aabb.clone();
+            component.customAabb = entity.model.customAabb.clone();
         }
     }
 

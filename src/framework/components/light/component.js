@@ -109,7 +109,7 @@ var _lightPropsDefault = [];
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps:
  * * {@link BLUR_BOX}: Box filter.
  * * {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
- * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
+ * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
  * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
  * @property {Texture} cookie Projection texture. Must be 2D for spot and cubemap for omni light (ignored if incorrect type is used).
  * @property {number} cookieIntensity Projection texture intensity (default is 1).
