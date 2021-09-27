@@ -31,6 +31,7 @@ const _viewMat = new Mat4();
 const _viewProjMat = new Mat4();
 const _viewportMatrix = new Mat4();
 
+// helper class used by clustered lighting system to render cookies into the texture atlas, similarly to shadow renderer
 class CookieRenderer {
     constructor(device) {
         this.device = device;
