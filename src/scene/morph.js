@@ -1,6 +1,6 @@
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../math/vec3.js';
-import { math } from '../math/math.js';
+import { floatPacking } from '../math/float-packing.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
@@ -160,7 +160,7 @@ class Morph extends RefCountedObject {
         // texture format based vars
         let halfFloat = false;
         let numComponents = 3;  // RGB32 is used
-        const float2Half = math.float2Half;
+        const float2Half = floatPacking.float2Half;
         if (this._textureFormat === Morph.FORMAT_HALF_FLOAT) {
             halfFloat = true;
             numComponents = 4;  // RGBA16 is used, RGB16 does not work

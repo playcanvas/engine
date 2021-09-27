@@ -32,6 +32,7 @@ import { Material } from '../materials/material.js';
 import { LayerComposition } from '../composition/layer-composition.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
+import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
@@ -89,6 +90,7 @@ const _tempMaterialSet = new Set();
 class ForwardRenderer {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        this.scene = null;
 
         this._shadowDrawCalls = 0;
         this._forwardDrawCalls = 0;
@@ -118,6 +120,9 @@ class ForwardRenderer {
 
         // shadows
         this._shadowRenderer = new ShadowRenderer(this);
+
+        // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
+        this.lightTextureAtlas = new LightTextureAtlas(device);
 
         // Uniforms
         const scope = device.scope;
@@ -188,9 +193,6 @@ class ForwardRenderer {
 
         this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
 
-        this.polygonOffsetId = scope.resolve("polygonOffset");
-        this.polygonOffset = new Float32Array(2);
-
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
 
@@ -200,6 +202,9 @@ class ForwardRenderer {
     destroy() {
         this._shadowRenderer.destroy();
         this._shadowRenderer = null;
+
+        this.lightTextureAtlas.destroy();
+        this.lightTextureAtlas = null;
     }
 
     // #if _PROFILER
@@ -310,7 +315,7 @@ class ForwardRenderer {
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    setCamera(camera, target, clear, cullBorder) {
+    setCamera(camera, target, clear) {
         const vrDisplay = camera.vrDisplay;
         let transform;
 
@@ -469,19 +474,6 @@ class ForwardRenderer {
         this.cameraParamsId.setValue(this.cameraParams);
 
         this.clearView(camera, target, clear, false);
-
-        const device = this.device;
-        const pixelWidth = target ? target.width : device.width;
-        const pixelHeight = target ? target.height : device.height;
-
-        const scissorRect = camera.scissorRect;
-        const x = Math.floor(scissorRect.x * pixelWidth);
-        const y = Math.floor(scissorRect.y * pixelHeight);
-        const w = Math.floor(scissorRect.z * pixelWidth);
-        const h = Math.floor(scissorRect.w * pixelHeight);
-        device.setScissor(x, y, w, h);
-
-        if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
     }
 
     clearView(camera, target, clear, forceWrite, options) {
@@ -494,14 +486,24 @@ class ForwardRenderer {
             device.setDepthWrite(true);
         }
 
-        const rect = camera.rect;
         const pixelWidth = target ? target.width : device.width;
         const pixelHeight = target ? target.height : device.height;
-        const x = Math.floor(rect.x * pixelWidth);
-        const y = Math.floor(rect.y * pixelHeight);
-        const w = Math.floor(rect.z * pixelWidth);
-        const h = Math.floor(rect.w * pixelHeight);
+
+        const rect = camera.rect;
+        let x = Math.floor(rect.x * pixelWidth);
+        let y = Math.floor(rect.y * pixelHeight);
+        let w = Math.floor(rect.z * pixelWidth);
+        let h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
+
+        // by default clear is using viewport rectangle. Use scissor rectangle when required.
+        if (camera._scissorRectClear) {
+            const scissorRect = camera.scissorRect;
+            x = Math.floor(scissorRect.x * pixelWidth);
+            y = Math.floor(scissorRect.y * pixelHeight);
+            w = Math.floor(scissorRect.z * pixelWidth);
+            h = Math.floor(scissorRect.w * pixelHeight);
+        }
         device.setScissor(x, y, w, h);
 
         if (clear) {
@@ -516,7 +518,7 @@ class ForwardRenderer {
                        (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
                        (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
                 stencil: camera._clearStencil
-            }); // clear full RT
+            });
         }
     }
 
@@ -614,22 +616,7 @@ class ForwardRenderer {
             if (directional.castShadows) {
 
                 const lightRenderData = directional.getRenderData(camera, 0);
-
-                // make bias dependent on far plane because it's not constant for direct light
-                // clip distance used is based on the nearest shadow cascade
-                const farClip = lightRenderData.shadowCamera._farClip;
-                let bias;
-                if (directional._isVsm) {
-                    bias = -0.00001 * 20;
-                } else {
-                    bias = (directional.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) {
-                        bias *= -100;
-                    }
-                }
-                const normalBias = directional._isVsm ?
-                    directional.vsmBias / (farClip / 7.0) :
-                    directional._normalOffsetBias;
+                const biases = directional._getUniformBiasValues(lightRenderData);
 
                 this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
@@ -641,8 +628,8 @@ class ForwardRenderer {
                 const params = directional._shadowRenderParams;
                 params.length = 3;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = normalBias;
-                params[2] = bias;
+                params[1] = biases.y;
+                params[2] = biases.x;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
             cnt++;
@@ -690,11 +677,12 @@ class ForwardRenderer {
             const lightRenderData = omni.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
+            const biases = omni._getUniformBiasValues(lightRenderData);
             const params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
-            params[1] = omni._normalOffsetBias;
-            params[2] = omni.shadowBias;
+            params[1] = biases.y;
+            params[2] = biases.x;
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
@@ -737,27 +725,19 @@ class ForwardRenderer {
 
         let cookieMatrix;
         if (spot.castShadows) {
-            let bias;
-            if (spot._isVsm) {
-                bias = -0.00001 * 20;
-            } else {
-                bias = spot.shadowBias * 20; // approx remap from old bias values
-                if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
-            }
-            const normalBias = spot._isVsm ?
-                spot.vsmBias / (spot.attenuationEnd / 7.0) :
-                spot._normalOffsetBias;
 
             // shadow map
             const lightRenderData = spot.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
             this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
+
+            const biases = spot._getUniformBiasValues(lightRenderData);
             const params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
-            params[1] = normalBias;
-            params[2] = bias;
+            params[1] = biases.y;
+            params[2] = biases.x;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
 
@@ -1107,14 +1087,6 @@ class ForwardRenderer {
 
         for (let i = 0; i < lights.length; i++) {
             this._shadowRenderer.render(lights[i], camera);
-        }
-
-        if (device.webgl2) {
-            device.setDepthBias(false);
-        } else if (device.extStandardDerivatives) {
-            this.polygonOffset[0] = 0;
-            this.polygonOffset[1] = 0;
-            this.polygonOffsetId.setValue(this.polygonOffset);
         }
 
         device.grabPassAvailable = true;
@@ -1793,6 +1765,10 @@ class ForwardRenderer {
         // #endif
     }
 
+    updateLightTextureAtlas(comp) {
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI]);
+    }
+
     updateClusters(comp) {
 
         // #if _PROFILER
@@ -1845,17 +1821,20 @@ class ForwardRenderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
-        // update light clusters
-        this.updateClusters(comp);
-
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
+        // update shadow / cookie atlas allocation for the visible lights
+        if (LayerComposition.clusteredLightingEnabled)
+            this.updateLightTextureAtlas(comp);
+
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
-        if (!LayerComposition.clusteredLightingEnabled) {
-            this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
-            this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+
+        // update light clusters
+        if (LayerComposition.clusteredLightingEnabled) {
+            this.updateClusters(comp);
         }
 
         // Rendering
@@ -1951,7 +1930,7 @@ class ForwardRenderer {
 
                 // upload clustered lights uniforms
                 if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
-                    renderAction.lightClusters.activate();
+                    renderAction.lightClusters.activate(this.lightTextureAtlas);
                 }
 
                 // enable flip faces if either the camera has _flipFaces enabled or the render target

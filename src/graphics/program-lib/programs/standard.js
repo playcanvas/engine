@@ -1272,7 +1272,14 @@ var standard = {
             }
         }
 
-        if (numShadowLights > 0) {
+        // clustered lighting
+        if (LayerComposition.clusteredLightingEnabled) {
+            // always include shadow chunks clustered lights support
+            shadowTypeUsed[SHADOW_PCF3] = true;
+            usePerspZbufferShadow = true;
+        }
+
+        if (numShadowLights > 0 || LayerComposition.clusteredLightingEnabled) {
             if (shadowedDirectionalLightUsed) {
                 code += chunks.shadowCascadesPS;
             }
@@ -1298,8 +1305,8 @@ var standard = {
             if (!(device.webgl2 || device.extStandardDerivatives)) {
                 code += chunks.biasConstPS;
             }
-            // otherwise bias is applied on render
 
+            // otherwise bias is applied on render
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
         }
@@ -1396,6 +1403,8 @@ var standard = {
             usesSpot = true;
             hasPointLights = true;
             usesLinearFalloff = true;
+
+            code += chunks.floatUnpackingPS;
 
             const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
             code += `\n#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
@@ -1539,7 +1548,7 @@ var standard = {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
-                code += chunks.clusteredLightLoopPS;
+                code += '   addClusteredLights();';
             }
 
             for (i = 0; i < options.lights.length; i++) {

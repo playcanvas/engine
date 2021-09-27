@@ -122,7 +122,7 @@ class VertexFormat {
         }, 0);
 
         let offset = 0, elementSize;
-        for (var i = 0, len = description.length; i < len; i++) {
+        for (let i = 0, len = description.length; i < len; i++) {
             const elementDesc = description[i];
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)

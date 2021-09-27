@@ -1,5 +1,6 @@
 import { Vec3 } from '../math/vec3.js';
 import { math } from '../math/math.js';
+import { floatPacking } from '../math/float-packing.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
@@ -11,31 +12,7 @@ const tempMax3 = new Vec3();
 const tempBox = new BoundingBox();
 
 const epsilon = 0.000001;
-const oneDiv255 = 1 / 255;
 const maxTextureSize = 4096;    // maximum texture size allowed to work on all devices
-
-// packs a float value in [0..1) range to specified number of bytes and stores them in an array with start offset
-// based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
-// Note: calls to Math.round are only needed on iOS, precision is somehow really bad without it,
-// looks like an issue with their implementation of Uint8ClampedArray
-function packFloatToBytes(value, array, offset, numBytes) {
-    const enc1 = (255.0 * value) % 1;
-    array[offset + 0] = Math.round(((value % 1) - oneDiv255 * enc1) * 255);
-
-    if (numBytes > 1) {
-        const enc2 = (65025.0 * value) % 1;
-        array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
-
-        if (numBytes > 2) {
-            const enc3 = (16581375.0 * value) % 1;
-            array[offset + 2] = Math.round((enc2 - oneDiv255 * enc3) * 255);
-
-            if (numBytes > 3) {
-                array[offset + 3] = Math.round(enc3 * 255);
-            }
-        }
-    }
-}
 
 // helper class to store properties of a light used by clustering
 class ClusterLight {
@@ -217,11 +194,12 @@ class WorldClusters {
         this.maxLights = 255;
 
         // shared 8bit texture pixels:
-        // 0: lightType, -, -, -
+        // 0: lightType, lightShape, follofMode, castShadows
         // 1: color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
         // 2: color.b, color.b, -, -
         // 3: spotInner, spotInner, spotOuter, spotOuter
-        let pixelsPerLight8 = 4;
+        // 4: bias, bias, normalBias, normalBias
+        let pixelsPerLight8 = 5;
         let pixelsPerLightFloat = 0;
 
         // float texture format
@@ -229,19 +207,16 @@ class WorldClusters {
 
             // 0: pos.x, pos.y, pos.z, attenuationEnd
             // 1: spotDir.x, spotDir.y, spotDir.z, unused
-            pixelsPerLightFloat = 2;
+            // 2, 3, 4, 5: shadow matrix
+            pixelsPerLightFloat = 6;
 
         } else { // 8bit texture
 
-            // each line is a pixel
-            //  4:  pos.x
-            //  5:  pox.y
-            //  6:  pos.z
-            //  7:  attenuationEnd
-            //  8:  spotDir.x
-            //  9:  spotDir.y
-            // 10:  spotDir.z
-            pixelsPerLight8 = 11;
+            // 4, 5, 6:  pos (vec3)
+            // 7:  attenuationEnd
+            // 8, 9, 10:  spotDir (vec3)
+            // 11 - 26 (16 pixels to store shadow matrix)
+            pixelsPerLight8 = 27;
         }
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
@@ -289,24 +264,33 @@ class WorldClusters {
 
         // light type & shape && falloffMode
         data8[data8Index + 0] = isSpot ? 255 : 0;
-        data8[data8Index + 1] = light._shape * 255;
+        data8[data8Index + 1] = light._shape * 255;         // this need different encoding as value is 0..2
         data8[data8Index + 2] = light._falloffMode * 255;   // we should consider making this global instead of per light
-        // here we still have unused byte
+        data8[data8Index + 3] = light.castShadows ? 255 : 0;
         data8Index += 4;
 
         // light color
         const invMaxColorValue = 1.0 / this._maxColorValue;
         const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
-        packFloatToBytes(color[0] * invMaxColorValue, data8, data8Index + 0, 2);
-        packFloatToBytes(color[1] * invMaxColorValue, data8, data8Index + 2, 2);
-        packFloatToBytes(color[2] * invMaxColorValue, data8, data8Index + 4, 2);
+        floatPacking.float2Bytes(color[0] * invMaxColorValue, data8, data8Index + 0, 2);
+        floatPacking.float2Bytes(color[1] * invMaxColorValue, data8, data8Index + 2, 2);
+        floatPacking.float2Bytes(color[2] * invMaxColorValue, data8, data8Index + 4, 2);
         // here we still have unused 2 bytes
         data8Index += 8;
 
         // spot light angles, 2 bytes each
         if (isSpot) {
-            packFloatToBytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 2);
-            packFloatToBytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 2, 2);
+            floatPacking.float2Bytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 2);
+            floatPacking.float2Bytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, data8Index + 2, 2);
+        }
+        data8Index += 4;
+
+        // shadow biases
+        if (light.castShadows) {
+            const lightRenderData = light.getRenderData(null, 0);
+            const biases = light._getUniformBiasValues(lightRenderData);
+            floatPacking.float2BytesRange(biases.x, data8, data8Index, -1, 20, 2);  // bias: -1 to 20 range
+            floatPacking.float2Bytes(biases.y, data8, data8Index + 2, 2);           // normalBias: 0 to 1 range
         }
         data8Index += 4;
 
@@ -314,39 +298,61 @@ class WorldClusters {
         if (WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT) {
 
             const dataFloat = this.lightsFloat;
-            const dataFloatIndex = lightIndex * this.lightsTextureFloat.width * 4;
+            let dataFloatIndex = lightIndex * this.lightsTextureFloat.width * 4;
 
             // pos and range
             dataFloat[dataFloatIndex + 0] = pos.x;
             dataFloat[dataFloatIndex + 1] = pos.y;
             dataFloat[dataFloatIndex + 2] = pos.z;
             dataFloat[dataFloatIndex + 3] = light.attenuationEnd;
+            dataFloatIndex += 4;
 
             // spot direction
             if (isSpot) {
                 this.getSpotDirection(tempVec3, light);
-                dataFloat[dataFloatIndex + 4] = tempVec3.x;
-                dataFloat[dataFloatIndex + 5] = tempVec3.y;
-                dataFloat[dataFloatIndex + 6] = tempVec3.z;
+                dataFloat[dataFloatIndex + 0] = tempVec3.x;
+                dataFloat[dataFloatIndex + 1] = tempVec3.y;
+                dataFloat[dataFloatIndex + 2] = tempVec3.z;
+                // here we have unused float
             }
-            // here we have unused float
+            dataFloatIndex += 4;
+
+            // shadow matrix
+            if (light.castShadows) {
+                const lightRenderData = light.getRenderData(null, 0);
+                const matData = lightRenderData.shadowMatrix.data;
+                for (let m = 0; m < 16; m++)
+                    dataFloat[dataFloatIndex + m] = matData[m];
+            }
 
         } else {    // high precision data stored using 8bit texture
 
             // position and range scaled to 0..1 range
             const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
-            packFloatToBytes(normPos.x, data8, data8Index + 0, 4);
-            packFloatToBytes(normPos.y, data8, data8Index + 4, 4);
-            packFloatToBytes(normPos.z, data8, data8Index + 8, 4);
-            packFloatToBytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 12, 4);
+            floatPacking.float2Bytes(normPos.x, data8, data8Index + 0, 4);
+            floatPacking.float2Bytes(normPos.y, data8, data8Index + 4, 4);
+            floatPacking.float2Bytes(normPos.z, data8, data8Index + 8, 4);
+            floatPacking.float2Bytes(light.attenuationEnd / this._maxAttenuation, data8, data8Index + 12, 4);
             data8Index += 16;
 
             // spot direction
             if (isSpot) {
                 this.getSpotDirection(tempVec3, light);
-                packFloatToBytes(tempVec3.x * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 4);
-                packFloatToBytes(tempVec3.y * (0.5 - epsilon) + 0.5, data8, data8Index + 4, 4);
-                packFloatToBytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, data8Index + 8, 4);
+                floatPacking.float2Bytes(tempVec3.x * (0.5 - epsilon) + 0.5, data8, data8Index + 0, 4);
+                floatPacking.float2Bytes(tempVec3.y * (0.5 - epsilon) + 0.5, data8, data8Index + 4, 4);
+                floatPacking.float2Bytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, data8Index + 8, 4);
+            }
+            data8Index += 12;
+
+            // shadow matrix
+            if (light.castShadows) {
+                const lightRenderData = light.getRenderData(null, 0);
+                const matData = lightRenderData.shadowMatrix.data;
+                for (let m = 0; m < 12; m++)    // these are in -2..2 range
+                    floatPacking.float2BytesRange(matData[m], data8, data8Index + 4 * m, -2, 2, 4);
+                for (let m = 12; m < 16; m++) {  // these are full float range
+                    floatPacking.float2MantisaExponent(matData[m], data8, data8Index + 4 * m, 4);
+                }
             }
         }
     }
