@@ -76,7 +76,7 @@ class LightTextureAtlas {
             this.cookieRenderTarget = new RenderTarget({
                 colorBuffer: this.cookieMap,
                 depth: false,
-                flipY: true // ///// ????
+                flipY: true
             });
         }
     }
