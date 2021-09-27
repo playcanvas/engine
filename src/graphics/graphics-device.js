@@ -3358,6 +3358,23 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    _isShaderCompiled(shader, glShader, source) {
+        const gl = this.gl;
+
+        if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
+            const infoLog = gl.getShaderInfoLog(glShader);
+            const [code, error] = this._processError(source, infoLog);
+            // #if _DEBUG
+            error.shader = shader;
+            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`, error);
+            // #else
+            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`);
+            // #endif
+            return false;
+        }
+        return true;
+    }
+
     _processError(src, infoLog) {
         if (!src)
             return "";
@@ -3393,8 +3410,6 @@ class GraphicsDevice extends EventHandler {
     postLink(shader) {
         const gl = this.gl;
 
-        const glVertexShader = shader._glVertexShader;
-        const glFragmentShader = shader._glFragmentShader;
         const glProgram = shader._glProgram;
 
         const definition = shader.definition;
@@ -3407,29 +3422,13 @@ class GraphicsDevice extends EventHandler {
         });
         // #endif
 
-        // Check for errors
-        if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
-            const infoLog = gl.getShaderInfoLog(glVertexShader);
-            const [code, error] = this._processError(definition.vshader, infoLog);
-            // #if _DEBUG
-            error.shader = shader;
-            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`, error);
-            // #else
-            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`);
-            // #endif
+        // Check for compilation errors
+        if (! this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader))
             return false;
-        }
-        if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
-            const infoLog = gl.getShaderInfoLog(glFragmentShader);
-            const [code, error] = this._processError(definition.fshader, infoLog);
-            // #if _DEBUG
-            error.shader = shader;
-            console.error(`Failed to compile fragment shader:\n\n${infoLog}\n${code}`, error);
-            // #else
-            console.error(`Failed to compile fragment shader:\n\n${infoLog}\n${code}`);
-            // #endif
+
+        if (! this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader))
             return false;
-        }
+
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
             console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
             return false;
