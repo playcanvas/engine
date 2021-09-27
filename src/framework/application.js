@@ -435,7 +435,9 @@ class Application extends EventHandler {
         if (! options.graphicsDeviceOptions)
             options.graphicsDeviceOptions = { };
 
-        options.graphicsDeviceOptions.xrCompatible = true;
+        if (platform.browser && !!navigator.xr) {
+            options.graphicsDeviceOptions.xrCompatible = true;
+        }
 
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
