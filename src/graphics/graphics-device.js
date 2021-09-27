@@ -3358,18 +3358,32 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    _addLineNumbers(src) {
+    _addLineNumbers(src, infoLog) {
         if (!src)
             return "";
 
-        const lines = src.split("\n");
+        const lines = src.split('\n');
+        let code = '';
+        let from = 0;
+        let to = lines.length;
+        let errorLine = 0;
 
-        // Chrome reports shader errors on lines indexed from 1
-        for (let i = 0, len = lines.length; i < len; i++) {
-            lines[i] = (i + 1) + ":\t" + lines[i];
+        // if error is in the code, only show nearby lines instead of whole shader code
+        if (infoLog && infoLog.startsWith('ERROR:')) {
+            const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):/);
+            if (match) {
+                errorLine = parseInt(match[2], 10);
+                from = Math.max(0, errorLine - 6);
+                to = Math.min(lines.length, errorLine + 5);
+            }
         }
 
-        return lines.join("\n");
+        // Chrome reports shader errors on lines indexed from 1
+        for (let i = from; i < to; i++) {
+            code += (i + 1) + ":\t" + lines[i] + '\n';
+        }
+
+        return code;
     }
 
     postLink(shader) {
@@ -3391,11 +3405,13 @@ class GraphicsDevice extends EventHandler {
 
         // Check for errors
         if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
-            console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
+            const infoLog = gl.getShaderInfoLog(glVertexShader);
+            console.error("Failed to compile vertex shader:\n\n" + infoLog + "\n" + this._addLineNumbers(definition.vshader, infoLog));
             return false;
         }
         if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
-            console.error("Failed to compile fragment shader:\n\n" + this._addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(glFragmentShader));
+            const infoLog = gl.getShaderInfoLog(glFragmentShader);
+            console.error("Failed to compile fragment shader:\n\n" + infoLog + "\n" + this._addLineNumbers(definition.fshader, infoLog));
             return false;
         }
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
