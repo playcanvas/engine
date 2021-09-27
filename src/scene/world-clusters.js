@@ -345,8 +345,8 @@ class WorldClusters {
     addLightDataShadowBias(data8, index, light) {
         const lightRenderData = light.getRenderData(null, 0);
         const biases = light._getUniformBiasValues(lightRenderData);
-        FloatPacking.float2BytesRange(biases.x, data8, index, -1, 20, 2);  // bias: -1 to 20 range
-        FloatPacking.float2Bytes(biases.y, data8, index + 2, 2);           // normalBias: 0 to 1 range
+        FloatPacking.float2BytesRange(biases.bias, data8, index, -1, 20, 2);  // bias: -1 to 20 range
+        FloatPacking.float2Bytes(biases.normalBias, data8, index + 2, 2);     // normalBias: 0 to 1 range
     }
 
     addLightDataPositionRange(data8, index, light, pos) {

@@ -615,8 +615,8 @@ class ForwardRenderer {
                 const params = directional._shadowRenderParams;
                 params.length = 3;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = biases.y;
-                params[2] = biases.x;
+                params[1] = biases.normalBias;
+                params[2] = biases.bias;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
             cnt++;
@@ -668,8 +668,8 @@ class ForwardRenderer {
             const params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
-            params[1] = biases.y;
-            params[2] = biases.x;
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
@@ -722,8 +722,8 @@ class ForwardRenderer {
             const params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
-            params[1] = biases.y;
-            params[2] = biases.x;
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
