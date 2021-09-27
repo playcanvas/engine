@@ -15,7 +15,7 @@ const tempBox = new BoundingBox();
 const epsilon = 0.000001;
 const maxTextureSize = 4096;    // maximum texture size allowed to work on all devices
 
-// format of a raw in 8 bit texture used to encode light data
+// format of a row in 8 bit texture used to encode light data
 // this is used to store data in the texture correctly, and also use to generate defines for the shader
 const TextureIndex8 = {
 
