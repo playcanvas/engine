@@ -3412,7 +3412,8 @@ class GraphicsDevice extends EventHandler {
         }
         if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glFragmentShader);
-            console.error("Failed to compile fragment shader:\n\n" + infoLog + "\n" + this._addLineNumbers(definition.fshader, infoLog));
+            const errorCode = this._addLineNumbers(definition.fshader, infoLog));
+            console.error(`Failed to compile fragment shader:\n\n${infoLog}\n${errorCode}`);
             return false;
         }
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
