@@ -25,20 +25,15 @@ import {
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT,
-    PROJECTION_PERSPECTIVE
+    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LayerComposition } from '../composition/layer-composition.js';
-import { Camera } from '../camera.js';
-import { GraphNode } from '../graph-node.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
-
-const shadowCamView = new Mat4();
-const shadowCamViewProj = new Mat4();
+import { CookieRenderer } from './cookie-renderer.js';
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -120,6 +115,9 @@ class ForwardRenderer {
 
         // shadows
         this._shadowRenderer = new ShadowRenderer(this);
+
+        // cookies
+        this._cookieRenderer = new CookieRenderer(device);
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);
@@ -203,6 +201,9 @@ class ForwardRenderer {
         this._shadowRenderer.destroy();
         this._shadowRenderer = null;
 
+        this._cookieRenderer.destroy();
+        this._cookieRenderer = null;
+
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
     }
@@ -215,20 +216,6 @@ class ForwardRenderer {
 
     static skipRenderAfter = 0;
     // #endif
-
-    // temporary camera to calculate spot light cookie view-projection matrix
-    static spotCookieCamera = null;
-
-    static getSpotCookieCamera() {
-        if (!this.spotCookieCamera) {
-            this.spotCookieCamera = new Camera();
-            this.spotCookieCamera.projection = PROJECTION_PERSPECTIVE;
-            this.spotCookieCamera.aspectRatio = 1;
-            this.spotCookieCamera.node = new GraphNode();
-        }
-
-        return this.spotCookieCamera;
-    }
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {
@@ -628,8 +615,8 @@ class ForwardRenderer {
                 const params = directional._shadowRenderParams;
                 params.length = 3;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = biases.y;
-                params[2] = biases.x;
+                params[1] = biases.normalBias;
+                params[2] = biases.bias;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
             cnt++;
@@ -681,8 +668,8 @@ class ForwardRenderer {
             const params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
-            params[1] = biases.y;
-            params[2] = biases.x;
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
@@ -723,7 +710,6 @@ class ForwardRenderer {
         this.lightDir[cnt][2] = spot._direction.z;
         this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
-        let cookieMatrix;
         if (spot.castShadows) {
 
             // shadow map
@@ -736,32 +722,21 @@ class ForwardRenderer {
             const params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
-            params[1] = biases.y;
-            params[2] = biases.x;
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
-
-            cookieMatrix = lightRenderData.shadowMatrix;
         }
 
         if (spot._cookie) {
-            this.lightCookieId[cnt].setValue(spot._cookie);
+
+            // if shadow is not rendered, we need to evaluate light projection matrix
             if (!spot.castShadows) {
-                const cookieCam = ForwardRenderer.getSpotCookieCamera();
-                cookieCam.fov = spot._outerConeAngle * 2;
-
-                const cookieNode = cookieCam._node;
-                cookieNode.setPosition(spot._node.getPosition());
-                cookieNode.setRotation(spot._node.getRotation());
-                cookieNode.rotateLocal(-90, 0, 0);
-
-                shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
-                shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
-
-                cookieMatrix = spot.cookieMatrix;
-                cookieMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+                const cookieMatrix = CookieRenderer.evalCookieMatrix(spot);
+                this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
             }
-            this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
+
+            this.lightCookieId[cnt].setValue(spot._cookie);
             this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
             if (spot._cookieTransform) {
                 spot._cookieTransformUniform[0] = spot._cookieTransform.x;
@@ -1094,6 +1069,14 @@ class ForwardRenderer {
         // #if _PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
+    }
+
+    renderCookies(lights) {
+
+        const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
+        for (let i = 0; i < lights.length; i++) {
+            this._cookieRenderer.render(lights[i], cookieRenderTarget);
+        }
     }
 
     updateShader(meshInstance, objDefs, staticLightList, pass, sortedLights) {
@@ -1824,9 +1807,14 @@ class ForwardRenderer {
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
-        // update shadow / cookie atlas allocation for the visible lights
-        if (LayerComposition.clusteredLightingEnabled)
+        if (LayerComposition.clusteredLightingEnabled) {
+
+            // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(comp);
+
+            // render cookies for all local visible lights (only handling spot lights)
+            this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
+        }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
@@ -1987,9 +1975,6 @@ class ForwardRenderer {
             layer._renderTime += now() - drawTime;
             // #endif
         }
-    }
-
-    prepareStaticMeshes(meshInstances, lights) {
     }
 }
 

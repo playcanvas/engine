@@ -10,12 +10,12 @@ class ClusteredShadowsExample extends Example {
 
     load() {
         return <>
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name="channels" type="texture" url="static/assets/textures/channels.png" />
         </>;
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -80,6 +80,8 @@ class ClusteredShadowsExample extends Example {
             createPrimitive("box", pos, new pc.Vec3(scale, scale, scale));
         }
 
+        const cookieChannels = ["r", "g", "b", "a", "rgb"];
+
         // create many spot lights
         const count = 64;
         const spotLightList: Array<pc.Entity> = [];
@@ -87,6 +89,8 @@ class ClusteredShadowsExample extends Example {
             const intensity = 1.5;
             const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
             const lightSpot = new pc.Entity("Spot" + i);
+            const cookieChannel = cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
+
             lightSpot.addComponent("light", {
                 type: "spot",
                 color: color,
@@ -96,7 +100,12 @@ class ClusteredShadowsExample extends Example {
                 castShadows: true,
                 shadowBias: 0.4,
                 normalOffsetBias: 0.1,
-                shadowResolution: 512      // only used when clustering is off
+                shadowResolution: 512,      // only used when clustering is off
+
+                // cookie texture
+                cookie: assets.channels.resource,
+                cookieChannel: cookieChannel,
+                cookieIntensity: 0.2 + Math.random()
             });
 
             // attach a render component with a small cone to each light
@@ -147,9 +156,10 @@ class ClusteredShadowsExample extends Example {
             camera.lookAt(new pc.Vec3(0, 0, 0));
 
             // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-            // if (spotLightList[0].light.light.shadowMap) {
-            //     app.renderTexture(-0.7, 0.7, 0.4, 0.4, spotLightList[0].light.light.shadowMap.texture);
-            // }
+            // app.renderTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
+
+            // display cookie texture (debug feature)
+            // app.renderTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
         });
     }
 }

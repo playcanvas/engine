@@ -114,7 +114,7 @@ var _lightPropsDefault = [];
  * @property {Texture} cookie Projection texture. Must be 2D for spot and cubemap for omni light (ignored if incorrect type is used).
  * @property {number} cookieIntensity Projection texture intensity (default is 1).
  * @property {boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
- * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb".
  * @property {number} cookieAngle Angle for spotlight cookie rotation.
  * @property {Vec2} cookieScale Spotlight cookie scale.
  * @property {Vec2} cookieOffset Spotlight cookie position offset.
@@ -398,7 +398,7 @@ function _defineProps() {
         this.light.cookie = newValue;
     });
     _defineProperty("cookieIntensity", 1, function (newValue, oldValue) {
-        this.light.cookieIntensity = newValue;
+        this.light.cookieIntensity = math.clamp(newValue, 0, 1);
     });
     _defineProperty("cookieFalloff", true, function (newValue, oldValue) {
         this.light.cookieFalloff = newValue;

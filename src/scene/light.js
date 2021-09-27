@@ -18,7 +18,10 @@ import { ShadowRenderer } from './renderer/shadow-renderer.js';
 const spotCenter = new Vec3();
 const spotEndPoint = new Vec3();
 const tmpVec = new Vec3();
-const tmpVec2 = new Vec2();
+const tmpBiases = {
+    bias: 0,
+    normalBias: 0
+};
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
@@ -161,6 +164,9 @@ class Light {
         // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
         this._cookieMatrix = null;
 
+        // viewport of the cookie texture in the atlas
+        this._cookieViewport = null;
+
         this._scene = null;
         this._node = null;
 
@@ -278,32 +284,32 @@ class Light {
 
         switch (this._type) {
             case LIGHTTYPE_OMNI:
-                tmpVec2.x = this.shadowBias;
-                tmpVec2.y = this._normalOffsetBias;
+                tmpBiases.bias = this.shadowBias;
+                tmpBiases.normalBias = this._normalOffsetBias;
                 break;
             case LIGHTTYPE_SPOT:
                 if (this._isVsm) {
-                    tmpVec2.x = -0.00001 * 20;
+                    tmpBiases.bias = -0.00001 * 20;
                 } else {
-                    tmpVec2.x = this.shadowBias * 20; // approx remap from old bias values
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpVec2.x *= -100;
+                    tmpBiases.bias = this.shadowBias * 20; // approx remap from old bias values
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
-                tmpVec2.y = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
+                tmpBiases.normalBias = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
                 break;
             case LIGHTTYPE_DIRECTIONAL:
                 // make bias dependent on far plane because it's not constant for direct light
                 // clip distance used is based on the nearest shadow cascade
                 if (this._isVsm) {
-                    tmpVec2.x = -0.00001 * 20;
+                    tmpBiases.bias = -0.00001 * 20;
                 } else {
-                    tmpVec2.x = (this.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpVec2.x *= -100;
+                    tmpBiases.bias = (this.shadowBias / farClip) * 100;
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
-                tmpVec2.y = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
+                tmpBiases.normalBias = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
                 break;
         }
 
-        return tmpVec2;
+        return tmpBiases;
     }
 
     get numCascades() {
@@ -667,6 +673,13 @@ class Light {
             this._cookieMatrix = new Mat4();
         }
         return this._cookieMatrix;
+    }
+
+    get cookieViewport() {
+        if (!this._cookieViewport) {
+            this._cookieViewport = new Vec4(0, 0, 1, 1);
+        }
+        return this._cookieViewport;
     }
 
     get cookie() {
