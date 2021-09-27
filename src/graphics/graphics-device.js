@@ -3406,7 +3406,8 @@ class GraphicsDevice extends EventHandler {
         // Check for errors
         if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glVertexShader);
-            console.error("Failed to compile vertex shader:\n\n" + infoLog + "\n" + this._addLineNumbers(definition.vshader, infoLog));
+            const errorCode = this._addLineNumbers(definition.vshader, infoLog));
+            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${errorCode}`);
             return false;
         }
         if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
