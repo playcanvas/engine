@@ -1,6 +1,6 @@
 import { Vec3 } from '../math/vec3.js';
 import { math } from '../math/math.js';
-import { floatPacking } from '../math/float-packing.js';
+import { FloatPacking } from '../math/float-packing.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
@@ -326,9 +326,9 @@ class WorldClusters {
     addLightDataColor(data8, index, light, gammaCorrection, isCookie) {
         const invMaxColorValue = 1.0 / this._maxColorValue;
         const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
-        floatPacking.float2Bytes(color[0] * invMaxColorValue, data8, index + 0, 2);
-        floatPacking.float2Bytes(color[1] * invMaxColorValue, data8, index + 2, 2);
-        floatPacking.float2Bytes(color[2] * invMaxColorValue, data8, index + 4, 2);
+        FloatPacking.float2Bytes(color[0] * invMaxColorValue, data8, index + 0, 2);
+        FloatPacking.float2Bytes(color[1] * invMaxColorValue, data8, index + 2, 2);
+        FloatPacking.float2Bytes(color[2] * invMaxColorValue, data8, index + 4, 2);
 
         // cookie
         data8[index + 6] = isCookie ? 255 : 0;
@@ -338,39 +338,39 @@ class WorldClusters {
 
     addLightDataSpotAngles(data8, index, light) {
         // 2 bytes each
-        floatPacking.float2Bytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, index + 0, 2);
-        floatPacking.float2Bytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, index + 2, 2);
+        FloatPacking.float2Bytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, index + 0, 2);
+        FloatPacking.float2Bytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, index + 2, 2);
     }
 
     addLightDataShadowBias(data8, index, light) {
         const lightRenderData = light.getRenderData(null, 0);
         const biases = light._getUniformBiasValues(lightRenderData);
-        floatPacking.float2BytesRange(biases.x, data8, index, -1, 20, 2);  // bias: -1 to 20 range
-        floatPacking.float2Bytes(biases.y, data8, index + 2, 2);           // normalBias: 0 to 1 range
+        FloatPacking.float2BytesRange(biases.x, data8, index, -1, 20, 2);  // bias: -1 to 20 range
+        FloatPacking.float2Bytes(biases.y, data8, index + 2, 2);           // normalBias: 0 to 1 range
     }
 
     addLightDataPositionRange(data8, index, light, pos) {
         // position and range scaled to 0..1 range
         const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
-        floatPacking.float2Bytes(normPos.x, data8, index + 0, 4);
-        floatPacking.float2Bytes(normPos.y, data8, index + 4, 4);
-        floatPacking.float2Bytes(normPos.z, data8, index + 8, 4);
-        floatPacking.float2Bytes(light.attenuationEnd / this._maxAttenuation, data8, index + 12, 4);
+        FloatPacking.float2Bytes(normPos.x, data8, index + 0, 4);
+        FloatPacking.float2Bytes(normPos.y, data8, index + 4, 4);
+        FloatPacking.float2Bytes(normPos.z, data8, index + 8, 4);
+        FloatPacking.float2Bytes(light.attenuationEnd / this._maxAttenuation, data8, index + 12, 4);
     }
 
     addLightDataSpotDirection(data8, index, light) {
         this.getSpotDirection(tempVec3, light);
-        floatPacking.float2Bytes(tempVec3.x * (0.5 - epsilon) + 0.5, data8, index + 0, 4);
-        floatPacking.float2Bytes(tempVec3.y * (0.5 - epsilon) + 0.5, data8, index + 4, 4);
-        floatPacking.float2Bytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, index + 8, 4);
+        FloatPacking.float2Bytes(tempVec3.x * (0.5 - epsilon) + 0.5, data8, index + 0, 4);
+        FloatPacking.float2Bytes(tempVec3.y * (0.5 - epsilon) + 0.5, data8, index + 4, 4);
+        FloatPacking.float2Bytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, index + 8, 4);
     }
 
     addLightDataLightProjMatrix(data8, index, lightProjectionMatrix) {
         const matData = lightProjectionMatrix.data;
         for (let m = 0; m < 12; m++)    // these are in -2..2 range
-            floatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
+            FloatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
         for (let m = 12; m < 16; m++) {  // these are full float range
-            floatPacking.float2MantisaExponent(matData[m], data8, index + 4 * m, 4);
+            FloatPacking.float2MantisaExponent(matData[m], data8, index + 4 * m, 4);
         }
     }
 

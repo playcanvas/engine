@@ -6,7 +6,7 @@ const floatView = new Float32Array(1);
 const int32View = new Int32Array(floatView.buffer);
 
 // utility static class providing functionality to pack float values to various storage representations
-class floatPacking {
+class FloatPacking {
     // packs a float to 16bit half float representation used by GPU
     static float2Half(val) {
 
@@ -89,7 +89,7 @@ class floatPacking {
         // #endif
 
         value = math.clamp((value - min) / (max - min), 0, 1);
-        floatPacking.float2Bytes(value, array, offset, numBytes);
+        FloatPacking.float2Bytes(value, array, offset, numBytes);
     }
 
     // packs a float into specified number of bytes, using 1 byte for exponent and the remaining bytes for the mantisa.
@@ -100,11 +100,11 @@ class floatPacking {
         value /= Math.pow(2, exponent);
 
         // value is now in -1..1 range, store it using specified number of bytes less one
-        floatPacking.float2BytesRange(value, array, offset, -1, 1, numBytes - 1);
+        FloatPacking.float2BytesRange(value, array, offset, -1, 1, numBytes - 1);
 
         // last byte for the exponent (positive or negative)
         array[offset + numBytes - 1] = Math.round(exponent + 127);
     }
 }
 
-export { floatPacking };
+export { FloatPacking };
