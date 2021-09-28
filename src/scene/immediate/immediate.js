@@ -1,5 +1,3 @@
-import { Vec3 } from '../../math/vec3.js';
-
 import {
     SEMANTIC_POSITION,
     PRIMITIVE_TRISTRIP
