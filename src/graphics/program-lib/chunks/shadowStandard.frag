@@ -113,7 +113,7 @@ float getShadowSpotPCF3x3(sampler2D shadowMap, vec4 shadowParams) {
 #endif
 
 
-// ----- Point Sampling -----
+// ----- Omni Sampling -----
 
 float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 
