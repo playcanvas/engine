@@ -4,9 +4,9 @@ import * as pc from 'playcanvas/build/playcanvas.prf.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ClusteredShadowsExample extends Example {
+class ClusteredSpotShadowsExample extends Example {
     static CATEGORY = 'Graphics';
-    static NAME = 'Clustered Shadows';
+    static NAME = 'Clustered Spot Shadows';
 
     load() {
         return <>
@@ -164,4 +164,4 @@ class ClusteredShadowsExample extends Example {
     }
 }
 
-export default ClusteredShadowsExample;
+export default ClusteredSpotShadowsExample;
