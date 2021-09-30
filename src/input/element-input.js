@@ -848,7 +848,6 @@ class ElementInput {
         for (var i = 0, len = this._elements.length; i < len; i++) {
             var element = this._elements[i];
             var screen = false;
-            var ray;
 
             // cache rays
             if (element.screen && element.screen.screen.screenSpace) {
@@ -859,14 +858,15 @@ class ElementInput {
                         rayScreen = null;
                     }
                 }
-                ray = rayScreen;
                 screen = true;
 
-                // break on the first element that hit
-                const hit = this._checkElement(ray, element, screen) > 0;
-                if (ray && hit === true) {
-                    result = element;
-                    break;
+                if (rayScreen) {
+                    // break on the first element that hit
+                    const hit = this._checkElement(rayScreen, element, screen) >= 0;
+                    if (hit === true) {
+                        result = element;
+                        break;
+                    }
                 }
             } else {
                 // 3d
@@ -876,13 +876,14 @@ class ElementInput {
                         ray3d = null;
                     }
                 }
-                ray = ray3d;
 
-                // continue looking through all elements, only storing the closest one
-                const currentDistance = this._checkElement(ray, element, screen);
-                if (ray && currentDistance > 0 && currentDistance < closestDistance3d) {
-                    result = element;
-                    closestDistance3d = currentDistance;
+                if (ray3d) {
+                    // continue looking through all elements, only storing the closest one
+                    const currentDistance = this._checkElement(ray3d, element, screen);
+                    if (currentDistance >= 0 && currentDistance < closestDistance3d) {
+                        result = element;
+                        closestDistance3d = currentDistance;
+                    }
                 }
             }
         }
@@ -904,7 +905,7 @@ class ElementInput {
             var element = this._elements[i];
 
             if (! element.screen || ! element.screen.screen.screenSpace) {
-                if (this._checkElement(rayA, element, false) > 0) {
+                if (this._checkElement(rayA, element, false) >= 0) {
                     result = element;
                     break;
                 }
