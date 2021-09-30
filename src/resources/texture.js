@@ -11,7 +11,8 @@ import { Texture } from '../graphics/texture.js';
 import { BasisParser } from './parser/texture/basis.js';
 import { ImgParser } from './parser/texture/img.js';
 import { KtxParser } from './parser/texture/ktx.js';
-import { LegacyDdsParser } from './parser/texture/legacy-dds.js';
+import { Ktx2Parser } from './parser/texture/ktx2.js';
+import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
 const JSON_ADDRESS_MODE = {
@@ -167,8 +168,9 @@ class TextureHandler {
         this.imgParser = new ImgParser(assets);
 
         this.parsers = {
-            dds: new LegacyDdsParser(assets),
+            dds: new DdsParser(assets),
             ktx: new KtxParser(assets),
+            ktx2: new Ktx2Parser(assets, device),
             basis: new BasisParser(assets, device),
             hdr: new HdrParser(assets)
         };
@@ -288,14 +290,9 @@ class TextureHandler {
             texture.type = JSON_TEXTURE_TYPE[assetData.type];
         } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
             texture.type = TEXTURETYPE_RGBM;
-        } else if (asset.file && asset.getPreferredFile) {
+        } else if (asset.file && (asset.file.opt & 8) !== 0) {
             // basis normalmaps flag the variant as swizzled
-            const preferredFile = asset.getPreferredFile();
-            if (preferredFile) {
-                if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
-                    texture.type = TEXTURETYPE_SWIZZLEGGGR;
-                }
-            }
+            texture.type = TEXTURETYPE_SWIZZLEGGGR;
         }
     }
 }

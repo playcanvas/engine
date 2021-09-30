@@ -307,7 +307,7 @@ class Material {
         }
     }
 
-    updateUniforms() {
+    updateUniforms(device, scene) {
     }
 
     updateShader(device, scene, objDefs) {

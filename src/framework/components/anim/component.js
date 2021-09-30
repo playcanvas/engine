@@ -42,6 +42,7 @@ class AnimComponent extends Component {
         this._parameters = {};
         // a collection of animated property targets
         this._targets = {};
+        this._consumedTriggers = new Set();
     }
 
     get stateGraphAsset() {
@@ -245,7 +246,8 @@ class AnimComponent extends Component {
             transitions,
             this._parameters,
             this._activate,
-            this
+            this,
+            this._consumedTriggers
         );
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = order;
@@ -656,9 +658,13 @@ class AnimComponent extends Component {
      * @name AnimComponent#setTrigger
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
      * @param {string} name - The name of the parameter to set.
+     * @param {boolean} [singleFrame] - If true, this trigger will be set back to false at the end of the animation update. Defaults to false.
      */
-    setTrigger(name) {
+    setTrigger(name, singleFrame = false) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, true);
+        if (singleFrame) {
+            this._consumedTriggers.add(name);
+        }
     }
 
     /**
@@ -674,6 +680,24 @@ class AnimComponent extends Component {
     onBeforeRemove() {
         if (Number.isFinite(this._stateGraphAsset)) {
             this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
+        }
+    }
+
+    update(dt) {
+        for (let i = 0; i < this.layers.length; i++) {
+            this.layers[i].update(dt * this.speed);
+        }
+        this._consumedTriggers.forEach((trigger) => {
+            this.parameters[trigger].value = false;
+        });
+        this._consumedTriggers.clear();
+    }
+
+    resolveDuplicatedEntityReferenceProperties(oldAnim, duplicatedIdsMap) {
+        if (oldAnim.rootBone && duplicatedIdsMap[oldAnim.rootBone.getGuid()]) {
+            this.rootBone = duplicatedIdsMap[oldAnim.rootBone.getGuid()];
+        } else {
+            this.rebind();
         }
     }
 }

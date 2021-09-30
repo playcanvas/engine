@@ -5,6 +5,7 @@ import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
+import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
@@ -83,6 +84,17 @@ import { StandardMaterial } from './materials/standard-material.js';
  * light direction.
  *
  * Defaults to {@link BAKE_COLORDIR}.
+ * @property {boolean} lightmapFilterEnabled Enables bilateral filter on runtime baked color lightmaps, which removes the noise and banding while preserving the edges. Defaults to false;
+ * Note that the filtering takes place in the image space of the lightmap, and it does not filter across lightmap UV space seams, often making the seams more visible. It's important to balance the strength of the filter with number of samples used
+ * for lightmap baking to limit the visible artifacts.
+ * @property {number} lightmapFilterRange A range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value applies more widespread blur. This needs to be a positive non-zero value. Defaults to 10.
+ * @property {number} lightmapFilterSmoothness A spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value blurs less similar colors. This needs to be a positive non-zero value. Defaults to 0.2.
+ * @property {boolean} ambientBake If enabled, the ambient lighting will be baked into lightmaps. This will be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
+ * @property {number} ambientBakeNumSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
+ * @property {number} ambientBakeSpherePart If {@link Scene#ambientBake} is true, this specifies a part of the sphere which represents the source of ambient light. The valid range is 0..1, representing a part of the sphere from top to the bottom.
+ * A value of 0.5 represents the upper hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller upper hemisphere as this requires fewer samples to bake.
+ * @property {number} ambientBakeOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+ * @property {number} ambientBakeOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
  * @property {StandardMaterial} defaultMaterial The default material used in case no
@@ -126,9 +138,19 @@ class Scene extends EventHandler {
 
         this._skyboxIsRenderTarget = false;
 
+        // ambient light lightmapping properties
+        this._ambientBake = false;
+        this._ambientBakeNumSamples = 1;
+        this._ambientBakeSpherePart = 0.4;
+        this.ambientBakeOcclusionContrast = 0;
+        this.ambientBakeOcclusionBrightness = 0;
+
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
         this.lightmapMode = BAKE_COLORDIR;
+        this.lightmapFilterEnabled = false;
+        this._lightmapFilterRange = 10;
+        this._lightmapFilterSmoothness = 0.2;
 
         this._stats = {
             meshInstances: 0,
@@ -217,6 +239,46 @@ class Scene extends EventHandler {
         this._skyboxIntensity = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
+    }
+
+    get ambientBake() {
+        return this._ambientBake;
+    }
+
+    set ambientBake(value) {
+        this._ambientBake = value;
+    }
+
+    get ambientBakeNumSamples() {
+        return this._ambientBakeNumSamples;
+    }
+
+    set ambientBakeNumSamples(value) {
+        this._ambientBakeNumSamples = math.clamp(Math.floor(value), 1, 255);
+    }
+
+    get ambientBakeSpherePart() {
+        return this._ambientBakeSpherePart;
+    }
+
+    set ambientBakeSpherePart(value) {
+        this._ambientBakeSpherePart = math.clamp(value, 0.001, 1);
+    }
+
+    get lightmapFilterRange() {
+        return this._lightmapFilterRange;
+    }
+
+    set lightmapFilterRange(value) {
+        this._lightmapFilterRange = Math.max(value, 0.001);
+    }
+
+    get lightmapFilterSmoothness() {
+        return this._lightmapFilterSmoothness;
+    }
+
+    set lightmapFilterSmoothness(value) {
+        this._lightmapFilterSmoothness = Math.max(value, 0.001);
     }
 
     get skyboxRotation() {
@@ -372,6 +434,11 @@ class Scene extends EventHandler {
     }
 
     _updateSkybox(device) {
+        if (!this.updateSkybox) {
+            return;
+        }
+        this.updateSkybox = false;
+
         // Create skybox
         if (!this.skyboxModel) {
 
@@ -435,6 +502,9 @@ class Scene extends EventHandler {
                 var meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
+
+                // disable picker, the material has custom update shader and does not handle picker variant
+                meshInstance.pick = false;
 
                 var model = new Model();
                 model.graph = node;

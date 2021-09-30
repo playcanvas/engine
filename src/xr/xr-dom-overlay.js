@@ -1,8 +1,11 @@
+import { platform } from "../core/platform.js";
+
 /**
  * @class
  * @name XrDomOverlay
  * @classdesc DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It requires that the root DOM element is provided for session start. That way, input source select events are first tested against DOM Elements and then propagated down to the XR Session. If this propagation is not desirable, use the `beforexrselect` event on a DOM element and the `preventDefault` function to stop propagation.
  * @description DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It requires that the root DOM element is provided for session start. That way, input source select events are first tested against DOM Elements and then propagated down to the XR Session. If this propagation is not desirable, use the `beforexrselect` event on a DOM element and the `preventDefault` function to stop propagation.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if DOM Overlay is supported.
  * @property {boolean} available True if DOM Overlay is available. It can only be available if it is supported, during a valid WebXR session and if a valid root element is provided.
@@ -25,7 +28,7 @@
 class XrDomOverlay {
     constructor(manager) {
         this._manager = manager;
-        this._supported = !! window.XRDOMOverlayState;
+        this._supported = platform.browser && !!window.XRDOMOverlayState;
         this._root = null;
     }
 

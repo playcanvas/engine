@@ -11,8 +11,12 @@ function UntarScope(isWorker) {
     let asciiDecoder;
 
     if (typeof TextDecoder !== 'undefined') {
-        utfDecoder = new TextDecoder('utf-8');
-        asciiDecoder = new TextDecoder('windows-1252');
+        try {
+            utfDecoder = new TextDecoder('utf-8');
+            asciiDecoder = new TextDecoder('windows-1252');
+        } catch (e) {
+            console.warn('TextDecoder not supported - pc.Untar module will not work');
+        }
     } else {
         console.warn('TextDecoder not supported - pc.Untar module will not work');
     }

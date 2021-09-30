@@ -80,7 +80,7 @@ class MorphTarget {
 
     _initVertexBuffers(graphicsDevice) {
 
-        var options = this.options;
+        const options = this.options;
         this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
         this._vertexBufferNormals = this._createVertexBuffer(graphicsDevice, options.deltaNormals, options.deltaNormalsType);
 
@@ -95,7 +95,7 @@ class MorphTarget {
         if (data) {
 
             // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
-            var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
+            const formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
             return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
         }
 

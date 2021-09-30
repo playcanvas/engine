@@ -1,6 +1,7 @@
 import { Color } from '../../math/color.js';
 import { Vec2 } from '../../math/vec2.js';
-import { Vec4 } from '../../math/vec4.js';
+import { Quat } from '../../math/quat.js';
+import { math } from '../../math/math.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
@@ -17,26 +18,16 @@ import {
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
-import { getApplication } from '../../framework/globals.js';
-
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
-import { Quat } from '../../math/quat.js';
 
-const _propsSerial = [];
-const _propsSerialDefaultVal = [];
-const _propsInternalNull = [];
-const _propsInternalVec3 = [];
-const _prop2Uniform = {};
-const _propsColor = [];
+// properties that get created on a standard material
+const _props = {};
 
-class Chunks {
-    copy(from) {
-        for (const p in from) {
-            if (from.hasOwnProperty(p) && p !== 'copy')
-                this[p] = from[p];
-        }
-    }
-}
+// special uniform functions on a standard material
+const _uniforms = {};
+
+// temporary set of params
+let _params = new Set();
 
 /**
  * @class
@@ -57,6 +48,7 @@ class Chunks {
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
  * @property {Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
  * @property {Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each component is between 0 and 1.
+ * @property {number} diffuseMapRotation Controls the 2D rotation (in degrees) of the main (primary) diffuse map.
  * @property {string} diffuseMapChannel Color channels of the main (primary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
  * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -65,6 +57,7 @@ class Chunks {
  * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
  * @property {Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse map.
  * @property {Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
+ * @property {number} diffuseDetailMapRotation Controls the 2D rotation (in degrees) of the main (secondary) diffuse map.
  * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {string} diffuseDetailMode Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
  * * {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
@@ -83,6 +76,7 @@ class Chunks {
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
  * @property {Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
+ * @property {number} specularMapRotation Controls the 2D rotation (in degrees) of the specular map.
  * @property {string} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -98,6 +92,7 @@ class Chunks {
  * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
  * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
  * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each component is between 0 and 1.
+ * @property {number} clearCoatMapRotation Controls the 2D rotation (in degrees) of the clear coat intensity map.
  * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can be "r", "g", "b" or "a".
  * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If clearCoatMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat intensity. Can be "r", "g", "b" or "a".
@@ -106,6 +101,7 @@ class Chunks {
  * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
  * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
  * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map. Each component is between 0 and 1.
+ * @property {number} clearCoatGlossMapRotation Controls the 2D rotation (in degrees) of the clear coat gloss map.
  * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use. Can be "r", "g", "b" or "a".
  * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness. If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat glossiness. Can be "r", "g", "b" or "a".
@@ -113,6 +109,7 @@ class Chunks {
  * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
  * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal map.
  * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal map. Each component is between 0 and 1.
+ * @property {number} clearCoatNormalMapRotation Controls the 2D rotation (in degrees) of the main clear coat map.
  * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales the assigned main clear coat normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
@@ -126,6 +123,7 @@ class Chunks {
  * @property {number} metalnessMapUv Metalness map UV channel.
  * @property {Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
  * @property {Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
+ * @property {number} metalnessMapRotation Controls the 2D rotation (in degrees) of the metalness map.
  * @property {string} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
  * @property {boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
@@ -138,6 +136,7 @@ class Chunks {
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
  * @property {Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
+ * @property {number} glossMapRotation Controls the 2D rotation (in degrees) of the gloss map.
  * @property {boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
  * @property {string} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
  *
@@ -154,6 +153,7 @@ class Chunks {
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
  * @property {Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
+ * @property {number} emissiveMapRotation Controls the 2D rotation (in degrees) of the emissive map.
  * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -167,6 +167,7 @@ class Chunks {
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
  * @property {Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
+ * @property {number} opacityMapRotation Controls the 2D rotation (in degrees) of the opacity map.
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
@@ -178,6 +179,7 @@ class Chunks {
  * @property {number} normalMapUv Main (primary) normal map UV channel.
  * @property {Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
  * @property {Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each component is between 0 and 1.
+ * @property {number} normalMapRotation Controls the 2D rotation (in degrees) of the main (primary) normal map.
  * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main (primary) normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
@@ -185,6 +187,7 @@ class Chunks {
  * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
  * @property {Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal map.
  * @property {Vec2} normalDetailMapOffset Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and 1.
+ * @property {number} normalDetailMapRotation Controls the 2D rotation (in degrees) of the detail (secondary) normal map.
  * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
  * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
@@ -195,6 +198,7 @@ class Chunks {
  * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} heightMapTiling Controls the 2D tiling of the height map.
  * @property {Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
+ * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
  *
  * @property {Texture|null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
@@ -212,6 +216,7 @@ class Chunks {
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
  * @property {Vec2} lightMapOffset Controls the 2D offset of the lightmap. Each component is between 0 and 1.
+ * @property {number} lightMapRotation Controls the 2D rotation (in degrees) of the lightmap.
  * @property {boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  *
@@ -221,6 +226,7 @@ class Chunks {
  * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} aoMapTiling Controls the 2D tiling of the AO map.
  * @property {Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0 and 1.
+ * @property {number} aoMapRotation Controls the 2D rotation (in degrees) of the AO map.
  * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
  * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
@@ -346,9 +352,14 @@ class StandardMaterial extends Material {
     constructor() {
         super();
 
+        this._dirtyShader = true;
+
         // storage for texture and cubemap asset references
         this._assetReferences = {};
         this._validator = null;
+
+        this._activeParams = new Set();
+        this._activeLightingParams = new Set();
 
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
@@ -356,21 +367,13 @@ class StandardMaterial extends Material {
     }
 
     reset() {
-        for (let i = 0; i < _propsSerial.length; i++) {
-            const defVal = _propsSerialDefaultVal[i];
-            this[_propsSerial[i]] = defVal ? (defVal.clone ? defVal.clone() : defVal) : defVal;
-        }
-        for (let i = 0; i < _propsInternalNull.length; i++) {
-            this[_propsInternalNull[i]] = null;
-        }
-        for (let i = 0; i < _propsInternalVec3.length; i++) {
-            this[_propsInternalVec3[i]] = new Float32Array(3);
-        }
+        // set default values
+        Object.keys(_props).forEach((name) => {
+            this[`_${name}`] = _props[name].value();
+        });
 
-        this._chunks = new Chunks();
-
-        this.cubeMapMinUniform = new Float32Array(3);
-        this.cubeMapMaxUniform = new Float32Array(3);
+        this._chunks = { };
+        this._uniformCache = { };
     }
 
     /**
@@ -382,48 +385,45 @@ class StandardMaterial extends Material {
      */
     clone() {
         const clone = new StandardMaterial();
+
         this._cloneInternal(clone);
 
-        for (let i = 0; i < _propsSerial.length; i++) {
-            const pname = _propsSerial[i];
-            if (this[pname] !== undefined) {
-                if (this[pname] && this[pname].copy) {
-                    if (clone[pname]) {
-                        clone[pname].copy(this[pname]);
-                    } else {
-                        clone[pname] = this[pname].clone();
-                    }
-                } else {
-                    clone[pname] = this[pname];
-                }
-            }
+        // set properties
+        Object.keys(_props).forEach((k) => {
+            clone[k] = this[k];
+        });
+
+        // clone chunks
+        for (const p in this._chunks) {
+            if (this._chunks.hasOwnProperty(p))
+                clone._chunks[p] = this._chunks[p];
         }
 
         return clone;
     }
 
-    _updateMapTransform(transform, tiling, offset) {
-        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
-            return null;
-        }
-
-        transform = transform || new Vec4();
-        transform.set(tiling.x, tiling.y, offset.x, 1.0 - tiling.y - offset.y);
-        return transform;
-    }
-
     _setParameter(name, value) {
-        if (!this.parameters[name])
-            this._propsSet.push(name);
+        _params.add(name);
         this.setParameter(name, value);
     }
 
-    _clearParameters() {
-        const props = this._propsSet;
-        for (let i = 0; i < props.length; i++) {
-            delete this.parameters[props[i]];
+    _setParameters(parameters) {
+        parameters.forEach((v) => {
+            this._setParameter(v.name, v.value);
+        });
+    }
+
+    _processParameters(paramsName) {
+        const prevParams = this[paramsName];
+        for (const param of prevParams) {
+            if (!_params.has(param)) {
+                delete this.parameters[param];
+            }
         }
-        this._propsSet = [];
+
+        this[paramsName] = _params;
+        _params = prevParams;
+        _params.clear();
     }
 
     _updateMap(p) {
@@ -432,52 +432,42 @@ class StandardMaterial extends Material {
         if (map) {
             this._setParameter("texture_" + mname, map);
 
-            // update transform
             const tname = mname + "Transform";
-            this[tname] = this._updateMapTransform(
-                this[tname],
-                this[mname + "Tiling"],
-                this[mname + "Offset"]
-            );
-
-            // update uniform
-            const transform = this[tname];
-            if (transform) {
-                const uname = mname + "TransformUniform";
-                let uniform = this[uname];
-                if (!uniform) {
-                    uniform = new Float32Array(4);
-                    this[uname] = uniform;
-                }
-                uniform[0] = transform.x;
-                uniform[1] = transform.y;
-                uniform[2] = transform.z;
-                uniform[3] = transform.w;
-                this._setParameter('texture_' + tname, uniform);
+            const uniform = this.getUniform(tname);
+            if (uniform) {
+                this._setParameters(uniform);
             }
         }
     }
 
-    getUniform(varName, value, changeMat) {
-        const func = _prop2Uniform[varName];
-        if (func) {
-            return func(this, value, changeMat);
+    // allocate a uniform if it doesn't already exist in the uniform cache
+    _allocUniform(name, allocFunc) {
+        let uniform = this._uniformCache[name];
+        if (!uniform) {
+            uniform = allocFunc();
+            this._uniformCache[name] = uniform;
         }
-        return null;
+        return uniform;
     }
 
-    updateUniforms() {
-        this._clearParameters();
+    getUniform(name, device, scene) {
+        return _uniforms[name](this, device, scene);
+    }
 
-        this._setParameter('material_ambient', this.ambientUniform);
+    updateUniforms(device, scene) {
+        const getUniform = (name) => {
+            return this.getUniform(name, device, scene);
+        };
+
+        this._setParameter('material_ambient', getUniform('ambient'));
 
         if (!this.diffuseMap || this.diffuseTint) {
-            this._setParameter('material_diffuse', this.diffuseUniform);
+            this._setParameter('material_diffuse', getUniform('diffuse'));
         }
 
         if (!this.useMetalness) {
             if (!this.specularMap || this.specularTint) {
-                this._setParameter('material_specular', this.specularUniform);
+                this._setParameter('material_specular', getUniform('specular'));
             }
         } else {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -496,11 +486,10 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        let uniform = this.getUniform("shininess", this.shininess, true);
-        this._setParameter(uniform.name, uniform.value);
+        this._setParameter("material_shininess", getUniform('shininess'));
 
         if (!this.emissiveMap || this.emissiveTint) {
-            this._setParameter('material_emissive', this.emissiveUniform);
+            this._setParameter('material_emissive', getUniform('emissive'));
         }
         if (this.emissiveMap) {
             this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
@@ -522,7 +511,7 @@ class StandardMaterial extends Material {
         }
 
         if (this.cubeMapProjection === CUBEPROJ_BOX) {
-            this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
+            this._setParameter(getUniform("cubeMapProjectionBox"));
         }
 
         for (const p in _matTex2D) {
@@ -542,48 +531,11 @@ class StandardMaterial extends Material {
         }
 
         if (this.heightMap) {
-            uniform = this.getUniform('heightMapFactor', this.heightMapFactor, true);
-            this._setParameter(uniform.name, uniform.value);
+            this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
         if (this.cubeMap) {
             this._setParameter('texture_cubeMap', this.cubeMap);
-        }
-
-        if (this.prefilteredCubeMap128) {
-            this._setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
-        } else if (this._scene && this._scene._skyboxPrefiltered[0]) {
-            this._setParameter('texture_prefilteredCubeMap128', this._scene._skyboxPrefiltered[0]);
-        }
-
-        if (this.prefilteredCubeMap64) {
-            this._setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
-        } else if (this._scene && this._scene._skyboxPrefiltered[1]) {
-            this._setParameter('texture_prefilteredCubeMap64', this._scene._skyboxPrefiltered[1]);
-        }
-
-        if (this.prefilteredCubeMap32) {
-            this._setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
-        } else if (this._scene && this._scene._skyboxPrefiltered[2]) {
-            this._setParameter('texture_prefilteredCubeMap32', this._scene._skyboxPrefiltered[2]);
-        }
-
-        if (this.prefilteredCubeMap16) {
-            this._setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
-        } else if (this._scene && this._scene._skyboxPrefiltered[3]) {
-            this._setParameter('texture_prefilteredCubeMap16', this._scene._skyboxPrefiltered[3]);
-        }
-
-        if (this.prefilteredCubeMap8) {
-            this._setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
-        } else if (this._scene && this._scene._skyboxPrefiltered[4]) {
-            this._setParameter('texture_prefilteredCubeMap8', this._scene._skyboxPrefiltered[4]);
-        }
-
-        if (this.prefilteredCubeMap4) {
-            this._setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
-        } else if (this._scene && this._scene._skyboxPrefiltered[5]) {
-            this._setParameter('texture_prefilteredCubeMap4', this._scene._skyboxPrefiltered[5]);
         }
 
         if (this.sphereMap) {
@@ -592,53 +544,18 @@ class StandardMaterial extends Material {
         if (this.dpAtlas) {
             this._setParameter('texture_sphereMap', this.dpAtlas);
         }
-       // if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
         this._setParameter('material_reflectivity', this.reflectivity);
-       // }
 
-        if (this.dirtyShader || !this._scene) {
+        // remove unused params
+        this._processParameters('_activeParams');
+
+        if (this._dirtyShader) {
             this.shader = null;
             this.clearVariants();
         }
-
-        this._processColor();
     }
 
-    _processColor() {
-        if (!this.dirtyColor) return;
-        if (!this._scene && this.useGammaTonemap) return;
-        let gammaCorrection = false;
-        if (this.useGammaTonemap) gammaCorrection = this._scene.gammaCorrection;
-
-       // Gamma correct colors
-        for (let i = 0; i < _propsColor.length; i++) {
-            const clr = this["_" + _propsColor[i]];
-            const arr = this[_propsColor[i] + "Uniform"];
-            if (gammaCorrection) {
-                arr[0] = Math.pow(clr.r, 2.2);
-                arr[1] = Math.pow(clr.g, 2.2);
-                arr[2] = Math.pow(clr.b, 2.2);
-            } else {
-                arr[0] = clr.r;
-                arr[1] = clr.g;
-                arr[2] = clr.b;
-            }
-        }
-        for (let c = 0; c < 3; c++) {
-            this.emissiveUniform[c] *= this.emissiveIntensity;
-        }
-        this.dirtyColor = false;
-    }
-
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        if (!this._colorProcessed && this._scene) {
-            this._colorProcessed = true;
-            this._processColor();
-        }
-
-        const useTexCubeLod = device.useTexCubeLod;
-        const useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
-
+    updateLightingUniforms(device, scene) {
         let globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
         if (this.useSkybox) {
             globalSky128 = scene._skyboxPrefiltered[0];
@@ -664,31 +581,39 @@ class StandardMaterial extends Material {
                          prefilteredCubeMap8 &&
                          prefilteredCubeMap4;
 
-            if (useDp && allMips) {
+            // no basic extension? likely slow device, attempt tp use dual paraboloid map with spherical harmonic ambient
+            const useDp = !device.extTextureLod && allMips;
+
+            // if prefilteredCubeMap16 is not the correct format or doesn't have CPU-side data
+            // then shFromCubemap will fail. here we check that the spherical harmonic is
+            // successfully generated before committing to dual paraboloid lighting.
+            const sh = useDp ? prefilteredCubeMap128.sh || shFromCubemap(device, prefilteredCubeMap16) : null;
+
+            if (useDp && sh) {
                 if (!prefilteredCubeMap128.dpAtlas) {
                     const atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
                         prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
                     prefilteredCubeMap128.dpAtlas = generateDpAtlas(device, atlas);
-                    prefilteredCubeMap128.sh = shFromCubemap(device, prefilteredCubeMap16);
+                    prefilteredCubeMap128.sh = sh;
                 }
                 this.dpAtlas = prefilteredCubeMap128.dpAtlas;
                 this.ambientSH = prefilteredCubeMap128.sh;
                 this._setParameter('ambientSH[0]', this.ambientSH);
                 this._setParameter('texture_sphereMap', this.dpAtlas);
-            } else if (useTexCubeLod) {
+            } else if (device.useTexCubeLod) {
                 if (prefilteredCubeMap128._levels.length < 6) {
                     if (allMips) {
-                       // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
+                        // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                         this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                     } else {
-                        console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                        console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                     }
                 } else {
-                   // Single (able to use single cubemap with texCubeLod)
+                    // Single (able to use single cubemap with texCubeLod)
                     this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                 }
             } else if (allMips) {
-               // Multiple (no texCubeLod, but able to use cubemap per mip)
+                // Multiple (no texCubeLod, but able to use cubemap per mip)
                 this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                 this._setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
                 this._setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
@@ -696,13 +621,22 @@ class StandardMaterial extends Material {
                 this._setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
                 this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
             } else {
-                console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
             if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
+
+        // remove unused lighting params
+        this._processParameters('_activeLightingParams');
+    }
+
+    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+        // update prefiltered lighting data
+        this.updateLightingUniforms(device, scene);
+        const prefilteredCubeMap128 = this.prefilteredCubeMap128 || (this.useSkybox && scene._skyboxPrefiltered[0]);
 
         // Minimal options for Depth and Shadow passes
         const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
@@ -725,7 +659,7 @@ class StandardMaterial extends Material {
             this.variants[0] = this.shader;
         }
 
-        this.dirtyShader = false;
+        this._dirtyShader = false;
     }
 
     /**
@@ -745,284 +679,234 @@ class StandardMaterial extends Material {
     }
 }
 
-function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMode) {
-    var privMap = "_" + name + "Map";
-    var privMapTiling = privMap + "Tiling";
-    var privMapOffset = privMap + "Offset";
-    var mapTransform = privMap.substring(1) + "Transform";
-    var mapTransformUniform = mapTransform + "Uniform";
-    var privMapUv = privMap + "Uv";
-    var privMapChannel = privMap + "Channel";
-    var privMapVertexColor = "_" + name + "VertexColor";
-    var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
-    var privMapDetailMode = "_" + name + "Mode";
+// define a uniform get function
+const defineUniform = (name, getUniformFunc) => {
+    _uniforms[name] = getUniformFunc;
+};
 
-    obj[privMap] = null;
-    obj[privMapTiling] = new Vec2(1, 1);
-    obj[privMapOffset] = new Vec2(0, 0);
-    obj[mapTransform] = null;
-    obj[mapTransformUniform] = null;
-    obj[privMapUv] = uv;
-    if (channels > 0) {
-        var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
-        obj[privMapChannel] = channel;
-        if (vertexColor) obj[privMapVertexColorChannel] = channel;
+// define a standard material property
+const defineProp = (prop) => {
+    const name = prop.name;
+    const internalName = `_${name}`;
+    const defaultValue = prop.defaultValue;
+    const dirtyShaderFunc = prop.dirtyShaderFunc || null;
+    const getUniformFunc = prop.getUniformFunc || null;
+
+    const aggFuncs = {
+        equals: (a, b) => a.equals(b),
+        clone: (a) => a.clone(),
+        copy: (dest, src) => dest.copy(src)
+    };
+
+    const valueFuncs = {
+        equals: (a, b) => a === b,
+        clone: (a) => a,
+        copy: (dest, src) => src
+    };
+
+    const funcs = defaultValue && defaultValue.clone ? aggFuncs : valueFuncs;
+    const isColor = prop.default instanceof Color;
+
+    Object.defineProperty(StandardMaterial.prototype, name, {
+        get: function () {
+            if (isColor) {
+                // HACK: since we can't detect whether a user is going to set a color property
+                // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
+                // the worst and flag the shader as dirty.
+                // This means currently animating a material colour is horribly slow.
+                this._dirtyShader = true;
+            }
+            return this[internalName];
+        },
+        set: function (value) {
+            const oldValue = this[internalName];
+            if (!funcs.equals(oldValue, value)) {
+                if (!this._dirtyShader) {
+                    this._dirtyShader = dirtyShaderFunc ? dirtyShaderFunc(oldValue, value) : true;
+                }
+                this[internalName] = funcs.copy(oldValue, value);
+            }
+        }
+    });
+
+    _props[name] = {
+        value: () => {
+            return funcs.clone(defaultValue);
+        }
+    };
+
+    if (getUniformFunc) {
+        defineUniform(name, getUniformFunc);
     }
-    if (vertexColor) obj[privMapVertexColor] = false;
-    if (detailMode) obj[privMapDetailMode] = DETAILMODE_MUL;
+};
 
+function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
+    // store texture name
     _matTex2D[name] = channels;
 
-    Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
-        get: function () {
-            return this[privMap];
-        },
-        set: function (value) {
-            var oldVal = this[privMap];
-            if (!!oldVal ^ !!value) this.dirtyShader = true;
-            if (oldVal && value) {
-                if (oldVal.type !== value.type || oldVal.fixCubemapSeams !== value.fixCubemapSeams || oldVal.format !== value.format) {
-                    this.dirtyShader = true;
-                }
-            }
-
-            this[privMap] = value;
+    defineProp({
+        name: `${name}Map`,
+        defaultValue: null,
+        dirtyShaderFunc: (oldValue, newValue) => {
+            return !!oldValue !== !!newValue ||
+                oldValue && (oldValue.type !== newValue.type ||
+                             oldValue.fixCubemapSeams !== newValue.fixCubemapSeams ||
+                             oldValue.format !== newValue.format);
         }
     });
 
-    var mapTiling = privMapTiling.substring(1);
-    var mapOffset = privMapOffset.substring(1);
+    defineProp({
+        name: `${name}MapTiling`,
+        defaultValue: new Vec2(1, 1)
+    });
 
-    Object.defineProperty(StandardMaterial.prototype, mapTiling, {
-        get: function () {
-            return this[privMapTiling];
-        },
-        set: function (value) {
-            this.dirtyShader = true;
-            this[privMapTiling] = value;
-        }
+    defineProp({
+        name: `${name}MapOffset`,
+        defaultValue: new Vec2(0, 0)
     });
-    _prop2Uniform[mapTiling] = function (mat, val, changeMat) {
-        var tform = mat._updateMapTransform(
-            changeMat ? mat[mapTransform] : null,
-            val,
-            mat[privMapOffset]
-        );
-        return { name: ("texture_" + mapTransform), value: tform.data };
-    };
 
-    Object.defineProperty(StandardMaterial.prototype, mapOffset, {
-        get: function () {
-            return this[privMapOffset];
-        },
-        set: function (value) {
-            this.dirtyShader = true;
-            this[privMapOffset] = value;
-        }
+    defineProp({
+        name: `${name}MapRotation`,
+        defaultValue: 0
     });
-    _prop2Uniform[mapOffset] = function (mat, val, changeMat) {
-        var tform = mat._updateMapTransform(
-            changeMat ? mat[mapTransform] : null,
-            mat[privMapTiling],
-            val
-        );
-        return { name: ("texture_" + mapTransform), value: tform.data };
-    };
 
-    Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
-        get: function () {
-            return this[privMapUv];
-        },
-        set: function (value) {
-            if (this[privMapUv] !== value) this.dirtyShader = true;
-            this[privMapUv] = value;
-        }
+    defineProp({
+        name: `${name}MapUv`,
+        defaultValue: uv
     });
-    Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
-        get: function () {
-            return this[privMapChannel];
-        },
-        set: function (value) {
-            if (this[privMapChannel] !== value) this.dirtyShader = true;
-            this[privMapChannel] = value;
-        }
-    });
+
+    if (channels > 0) {
+        defineProp({
+            name: `${name}MapChannel`,
+            defaultValue: defChannel ? defChannel : (channels > 1 ? "rgb" : "g")
+        });
+    }
 
     if (vertexColor) {
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function () {
-                return this[privMapVertexColor];
-            },
-            set: function (value) {
-                this.dirtyShader = true;
-                this[privMapVertexColor] = value;
-            }
+        defineProp({
+            name: `${name}VertexColor`,
+            defaultValue: false
         });
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function () {
-                return this[privMapVertexColorChannel];
-            },
-            set: function (value) {
-                if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
-                this[privMapVertexColorChannel] = value;
-            }
-        });
+
+        if (channels > 0) {
+            defineProp({
+                name: `${name}VertexColorChannel`,
+                defaultValue: defChannel ? defChannel : (channels > 1 ? "rgb" : "g")
+            });
+        }
     }
 
     if (detailMode) {
-        Object.defineProperty(StandardMaterial.prototype, privMapDetailMode.substring(1), {
-            get: function () {
-                return this[privMapDetailMode];
-            },
-            set: function (value) {
-                this.dirtyShader = true;
-                this[privMapDetailMode] = value;
-            }
+        defineProp({
+            name: `${name}Mode`,
+            defaultValue: DETAILMODE_MUL
         });
     }
 
-    _propsSerial.push(privMap.substring(1));
-    _propsSerial.push(privMapTiling.substring(1));
-    _propsSerial.push(privMapOffset.substring(1));
-    _propsSerial.push(privMapUv.substring(1));
-    _propsSerial.push(privMapChannel.substring(1));
-    if (vertexColor) {
-        _propsSerial.push(privMapVertexColor.substring(1));
-        _propsSerial.push(privMapVertexColorChannel.substring(1));
-    }
-    if (detailMode) {
-        _propsSerial.push(privMapDetailMode.substring(1));
-    }
-    _propsInternalNull.push(mapTransform);
+    // construct the transform uniform
+    const mapTiling = `${name}MapTiling`;
+    const mapOffset = `${name}MapOffset`;
+    const mapRotation = `${name}MapRotation`;
+    const mapTransform = `${name}MapTransform`;
+    defineUniform(mapTransform, (material, device, scene) => {
+        const tiling = material[mapTiling];
+        const offset = material[mapOffset];
+        const rotation = material[mapRotation];
+
+        if (tiling.x === 1 && tiling.y === 1 &&
+            offset.x === 0 && offset.y === 0 &&
+            rotation === 0) {
+            return null;
+        }
+
+        const uniform = material._allocUniform(mapTransform, () => {
+            return [{
+                name: `texture_${mapTransform}0`,
+                value: new Float32Array(3)
+            }, {
+                name: `texture_${mapTransform}1`,
+                value: new Float32Array(3)
+            }];
+        });
+
+        const cr = Math.cos(rotation * math.DEG_TO_RAD);
+        const sr = Math.sin(rotation * math.DEG_TO_RAD);
+
+        const uniform0 = uniform[0].value;
+        uniform0[0] = cr * tiling.x;
+        uniform0[1] = -sr * tiling.y;
+        uniform0[2] = offset.x;
+
+        const uniform1 = uniform[1].value;
+        uniform1[0] = sr * tiling.x;
+        uniform1[1] = cr * tiling.y;
+        uniform1[2] = 1.0 - tiling.y - offset.y;
+
+        return uniform;
+    });
 }
 
-function _defineColor(obj, name, defaultValue, hasMultiplier) {
-    var priv = "_" + name;
-    var uform = name + "Uniform";
-    var mult = name + "Intensity";
-    var pmult = "_" + mult;
-    obj[priv] = defaultValue;
-    obj[uform] = new Float32Array(3);
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            this.dirtyColor = true;
-            this.dirtyShader = true;
-            return this[priv];
-        },
-        set: function (newValue) {
-            var oldValue = this[priv];
-            var wasRound = (oldValue.r === 0 && oldValue.g === 0 && oldValue.b === 0) || (oldValue.r === 1 && oldValue.g === 1 && oldValue.b === 1);
-            var isRound = (newValue.r === 0 && newValue.g === 0 && newValue.b === 0) || (newValue.r === 1 && newValue.g === 1 && newValue.b === 1);
-            if (wasRound ^ isRound) this.dirtyShader = true;
-            this.dirtyColor = true;
-            this[priv] = newValue;
-        }
-    });
-    _propsSerial.push(name);
-    _propsInternalVec3.push(uform);
-    _propsColor.push(name);
-    _prop2Uniform[name] = function (mat, val, changeMat) {
-        var arr = changeMat ? mat[uform] : new Float32Array(3);
-        var gammaCorrection = false;
-        if (mat.useGammaTonemap) {
-            var scene = mat._scene || getApplication().scene;
-            gammaCorrection = scene.gammaCorrection;
-        }
-        for (var c = 0; c < 3; c++) {
-            if (gammaCorrection) {
-                arr[c] = Math.pow(val.data[c], 2.2);
+function _defineColor(name, defaultValue, hasIntensity) {
+    const intensityName = `${name}Intensity`;
+
+    defineProp({
+        name: name,
+        defaultValue: defaultValue,
+        getUniformFunc: (material, device, scene) => {
+            const uniform = material._allocUniform(name, () => new Float32Array(3));
+            const color = material[name];
+            const intensity = hasIntensity ? material[intensityName] : 1.0;
+            const gamma = material.useGammaTonemap && scene.gammaCorrection;
+
+            if (gamma) {
+                uniform[0] = Math.pow(color.r, 2.2) * intensity;
+                uniform[1] = Math.pow(color.g, 2.2) * intensity;
+                uniform[2] = Math.pow(color.b, 2.2) * intensity;
             } else {
-                arr[c] = val.data[c];
+                uniform[0] = color.r * intensity;
+                uniform[1] = color.g * intensity;
+                uniform[2] = color.b * intensity;
             }
-            if (hasMultiplier) arr[c] *= mat[pmult];
-        }
-        return { name: ("material_" + name), value: arr };
-    };
 
-    if (hasMultiplier) {
-        obj[pmult] = 1;
-        Object.defineProperty(StandardMaterial.prototype, mult, {
-            get: function () {
-                return this[pmult];
-            },
-            set: function (newValue) {
-                var oldValue = this[pmult];
-                var wasRound = oldValue === 0 || oldValue === 1;
-                var isRound = newValue === 0 || newValue === 1;
-                if (wasRound ^ isRound) this.dirtyShader = true;
-                this.dirtyColor = true;
-                this[pmult] = newValue;
-            }
+            return uniform;
+        }
+    });
+
+    if (hasIntensity) {
+        defineProp({
+            name: intensityName,
+            defaultValue: 1
         });
-        _propsSerial.push(mult);
-        _prop2Uniform[mult] = function (mat, val, changeMat) {
-            var arr = changeMat ? mat[uform] : new Float32Array(3);
-            var gammaCorrection = false;
-            if (mat.useGammaTonemap) {
-                var scene = mat._scene || getApplication().scene;
-                gammaCorrection = scene.gammaCorrection;
-            }
-            for (var c = 0; c < 3; c++) {
-                if (gammaCorrection) {
-                    arr[c] = Math.pow(mat[priv].data[c], 2.2);
-                } else {
-                    arr[c] = mat[priv].data[c];
-                }
-                arr[c] *= mat[pmult];
-            }
-            return { name: ("material_" + name), value: arr };
-        };
     }
 }
 
-function _defineFloat(obj, name, defaultValue, func) {
-    var priv = "_" + name;
-    obj[priv] = defaultValue;
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            return this[priv];
+function _defineFloat(name, defaultValue, getUniformFunc) {
+    defineProp({
+        name: `${name}`,
+        defaultValue: defaultValue,
+        dirtyShaderFunc: (oldValue, newValue) => {
+            // This is not always optimal and will sometimes trigger redundant shader
+            // recompilation. However, no number property on a standard material
+            // triggers a shader recompile if the previous and current values both
+            // have a fractional part.
+            return (oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1);
         },
-        set: function (newValue) {
-            var oldValue = this[priv];
-            if (oldValue === newValue) return;
-            this[priv] = newValue;
-
-           // This is not always optimal and will sometimes trigger redundant shader
-           // recompilation. However, no number property on a standard material
-           // triggers a shader recompile if the previous and current values both
-           // have a fractional part.
-            var wasRound = oldValue === 0 || oldValue === 1;
-            var isRound = newValue === 0 || newValue === 1;
-            if (wasRound || isRound) this.dirtyShader = true;
-        }
+        getUniformFunc: getUniformFunc
     });
-    _propsSerial.push(name);
-    _prop2Uniform[name] = func !== undefined ? func : function (mat, val, changeMat) {
-        return {
-            name: "material_" + name,
-            value: val
-        };
-    };
 }
 
-function _defineObject(obj, name, func) {
-    var priv = "_" + name;
-    obj[priv] = null;
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            return this[priv];
+function _defineObject(name, getUniformFunc) {
+    defineProp({
+        name: name,
+        defaultValue: null,
+        dirtyShaderFunc: (oldValue, newValue) => {
+            return !!oldValue === !!newValue;
         },
-        set: function (value) {
-            var oldVal = this[priv];
-            if (!!oldVal ^ !!value) this.dirtyShader = true;
-            this[priv] = value;
-        }
+        getUniformFunc: getUniformFunc
     });
-    _propsSerial.push(name);
-    _prop2Uniform[name] = func;
 }
 
-function _defineAlias(obj, newName, oldName) {
+function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {
         get: function () {
             return this[newName];
@@ -1033,172 +917,155 @@ function _defineAlias(obj, newName, oldName) {
     });
 }
 
-function _defineChunks(obj) {
+function _defineChunks() {
     Object.defineProperty(StandardMaterial.prototype, "chunks", {
         get: function () {
-            this.dirtyShader = true;
+            this._dirtyShader = true;
             return this._chunks;
         },
         set: function (value) {
-            this.dirtyShader = true;
+            this._dirtyShader = true;
             this._chunks = value;
         }
     });
-    _propsSerial.push("chunks");
 }
 
-function _defineFlag(obj, name, defaultValue) {
-    var priv = "_" + name;
-    obj[priv] = defaultValue;
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            return this[priv];
-        },
-        set: function (value) {
-            if (this[priv] !== value) this.dirtyShader = true;
-            this[priv] = value;
-        }
+function _defineFlag(name, defaultValue) {
+    defineProp({
+        name: name,
+        defaultValue: defaultValue
     });
-    _propsSerial.push(name);
 }
 
-function _defineMaterialProps(obj) {
-    obj.dirtyShader = true;
-    obj.dirtyColor = true;
-    obj._scene = null;
-    obj._colorProcessed = false;
+function _defineMaterialProps() {
+    _defineColor("ambient", new Color(0.7, 0.7, 0.7));
+    _defineColor("diffuse", new Color(1, 1, 1));
+    _defineColor("specular", new Color(0, 0, 0));
+    _defineColor("emissive", new Color(0, 0, 0), true);
 
-    _defineColor(obj, "ambient", new Color(0.7, 0.7, 0.7));
-    _defineColor(obj, "diffuse", new Color(1, 1, 1));
-    _defineColor(obj, "specular", new Color(0, 0, 0));
-    _defineColor(obj, "emissive", new Color(0, 0, 0), true);
-
-    _defineFloat(obj, "shininess", 25, function (mat, shininess) {
-       // Shininess is 0-100 value
-       // which is actually a 0-1 glossiness value.
-       // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-        let value;
-        if (mat.shadingModel === SPECULAR_PHONG) {
-            value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power
-        } else {
-            value = shininess * 0.01; // correct
-        }
-        return { name: "material_shininess", value: value };
+    _defineFloat("shininess", 25, (material, device, scene) => {
+        // Shininess is 0-100 value which is actually a 0-1 glossiness value.
+        return material.shadingModel === SPECULAR_PHONG ?
+            // legacy: expand back to specular power
+            Math.pow(2, material.shininess * 0.01 * 11) :
+            material.shininess * 0.01;
     });
-    _defineFloat(obj, "heightMapFactor", 1, function (mat, height) {
-        return { name: 'material_heightMapFactor', value: height * 0.025 };
+    _defineFloat("heightMapFactor", 1, (material, device, scene) => {
+        return material.heightMapFactor * 0.025;
     });
-    _defineFloat(obj, "opacity", 1);
-    _defineFloat(obj, "alphaFade", 1);
-    _defineFloat(obj, "alphaTest", 0);
-    _defineFloat(obj, "bumpiness", 1);
-    _defineFloat(obj, "normalDetailMapBumpiness", 1);
-    _defineFloat(obj, "reflectivity", 1);
-    _defineFloat(obj, "occludeSpecularIntensity", 1);
-    _defineFloat(obj, "refraction", 0);
-    _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
-    _defineFloat(obj, "metalness", 1);
-    _defineFloat(obj, "anisotropy", 0);
-    _defineFloat(obj, "clearCoat", 0);
-    _defineFloat(obj, "clearCoatGlossiness", 1);
-    _defineFloat(obj, "clearCoatBumpiness", 1);
-    _defineFloat(obj, "aoUvSet", 0, null); // legacy
+    _defineFloat("opacity", 1);
+    _defineFloat("alphaFade", 1);
+    _defineFloat("alphaTest", 0);       // NOTE: overwrites Material.alphaTest
+    _defineFloat("bumpiness", 1);
+    _defineFloat("normalDetailMapBumpiness", 1);
+    _defineFloat("reflectivity", 1);
+    _defineFloat("occludeSpecularIntensity", 1);
+    _defineFloat("refraction", 0);
+    _defineFloat("refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat("metalness", 1);
+    _defineFloat("anisotropy", 0);
+    _defineFloat("clearCoat", 0);
+    _defineFloat("clearCoatGlossiness", 1);
+    _defineFloat("clearCoatBumpiness", 1);
+    _defineFloat("aoUvSet", 0, null); // legacy
 
-    _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
-        return { name: "ambientSH[0]", value: val };
+    _defineObject("ambientSH");
+
+    _defineObject("cubeMapProjectionBox", (material, device, scene) => {
+        const uniform = material._allocUniform('cubeMapProjectionBox', () => {
+            return [{
+                name: 'envBoxMin',
+                value: new Float32Array(3)
+            }, {
+                name: 'envBoxMax',
+                value: new Float32Array(3)
+            }];
+        });
+
+        const bboxMin = material.cubeMapProjectionBox.getMin();
+        const minUniform = uniform[0].value;
+        minUniform[0] = bboxMin.x;
+        minUniform[1] = bboxMin.y;
+        minUniform[2] = bboxMin.z;
+
+        const bboxMax = material.cubeMapProjectionBox.getMax();
+        const maxUniform = uniform[1].value;
+        maxUniform[0] = bboxMax.x;
+        maxUniform[1] = bboxMax.y;
+        maxUniform[2] = bboxMax.z;
+
+        return uniform;
     });
 
-    _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
-        const bmin = changeMat ? mat.cubeMapMinUniform : new Float32Array(3);
-        const bmax = changeMat ? mat.cubeMapMaxUniform : new Float32Array(3);
+    _defineChunks();
 
-        bmin[0] = val.center.x - val.halfExtents.x;
-        bmin[1] = val.center.y - val.halfExtents.y;
-        bmin[2] = val.center.z - val.halfExtents.z;
+    _defineFlag("ambientTint", false);
+    _defineFlag("diffuseTint", false);
+    _defineFlag("specularTint", false);
+    _defineFlag("emissiveTint", false);
+    _defineFlag("fastTbn", false);
+    _defineFlag("specularAntialias", false);
+    _defineFlag("useMetalness", false);
+    _defineFlag("enableGGXSpecular", false);
+    _defineFlag("occludeDirect", false);
+    _defineFlag("normalizeNormalMap", true);
+    _defineFlag("conserveEnergy", true);
+    _defineFlag("opacityFadesSpecular", true);
+    _defineFlag("occludeSpecular", SPECOCC_AO);
+    _defineFlag("shadingModel", SPECULAR_BLINN);
+    _defineFlag("fresnelModel", FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
+    _defineFlag("cubeMapProjection", CUBEPROJ_NONE);
+    _defineFlag("customFragmentShader", null);
+    _defineFlag("forceFragmentPrecision", null);
+    _defineFlag("useFog", true);
+    _defineFlag("useLighting", true);
+    _defineFlag("useGammaTonemap", true);
+    _defineFlag("useSkybox", true);
+    _defineFlag("forceUv1", false);
+    _defineFlag("pixelSnap", false);
+    _defineFlag("twoSidedLighting", false);
+    _defineFlag("nineSlicedMode", undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
 
-        bmax[0] = val.center.x + val.halfExtents.x;
-        bmax[1] = val.center.y + val.halfExtents.y;
-        bmax[2] = val.center.z + val.halfExtents.z;
+    _defineTex2D("diffuse", 0, 3, "", true);
+    _defineTex2D("specular", 0, 3, "", true);
+    _defineTex2D("emissive", 0, 3, "", true);
+    _defineTex2D("normal", 0, -1, "", false);
+    _defineTex2D("metalness", 0, 1, "", true);
+    _defineTex2D("gloss", 0, 1, "", true);
+    _defineTex2D("opacity", 0, 1, "a", true);
+    _defineTex2D("height", 0, 1, "", false);
+    _defineTex2D("ao", 0, 1, "", true);
+    _defineTex2D("light", 1, 3, "", true);
+    _defineTex2D("msdf", 0, 3, "", false);
+    _defineTex2D("diffuseDetail", 0, 3, "", false, true);
+    _defineTex2D("normalDetail", 0, -1, "", false);
+    _defineTex2D("clearCoat", 0, 1, "", true);
+    _defineTex2D("clearCoatGloss", 0, 1, "", true);
+    _defineTex2D("clearCoatNormal", 0, -1, "", false);
 
-        return [{ name: "envBoxMin", value: bmin }, { name: "envBoxMax", value: bmax }];
-    });
+    _defineObject("cubeMap");
+    _defineObject("sphereMap");
+    _defineObject("dpAtlas");
+    _defineObject("prefilteredCubeMap128");
+    _defineObject("prefilteredCubeMap64");
+    _defineObject("prefilteredCubeMap32");
+    _defineObject("prefilteredCubeMap16");
+    _defineObject("prefilteredCubeMap8");
+    _defineObject("prefilteredCubeMap4");
 
-    _defineChunks(obj);
-
-    _defineFlag(obj, "ambientTint", false);
-
-    _defineFlag(obj, "diffuseTint", false);
-    _defineFlag(obj, "specularTint", false);
-    _defineFlag(obj, "emissiveTint", false);
-    _defineFlag(obj, "fastTbn", false);
-    _defineFlag(obj, "specularAntialias", false);
-    _defineFlag(obj, "useMetalness", false);
-    _defineFlag(obj, "enableGGXSpecular", false);
-    _defineFlag(obj, "occludeDirect", false);
-    _defineFlag(obj, "normalizeNormalMap", true);
-    _defineFlag(obj, "conserveEnergy", true);
-    _defineFlag(obj, "opacityFadesSpecular", true);
-    _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
-    _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
-    _defineFlag(obj, "fresnelModel", FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
-    _defineFlag(obj, "cubeMapProjection", CUBEPROJ_NONE);
-    _defineFlag(obj, "customFragmentShader", null);
-    _defineFlag(obj, "forceFragmentPrecision", null);
-    _defineFlag(obj, "useFog", true);
-    _defineFlag(obj, "useLighting", true);
-    _defineFlag(obj, "useGammaTonemap", true);
-    _defineFlag(obj, "useSkybox", true);
-    _defineFlag(obj, "forceUv1", false);
-    _defineFlag(obj, "pixelSnap", false);
-    _defineFlag(obj, "twoSidedLighting", false);
-    _defineFlag(obj, "nineSlicedMode", undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
-
-    _defineTex2D(obj, "diffuse", 0, 3, "", true);
-    _defineTex2D(obj, "specular", 0, 3, "", true);
-    _defineTex2D(obj, "emissive", 0, 3, "", true);
-    _defineTex2D(obj, "normal", 0, -1, "", false);
-    _defineTex2D(obj, "metalness", 0, 1, "", true);
-    _defineTex2D(obj, "gloss", 0, 1, "", true);
-    _defineTex2D(obj, "opacity", 0, 1, "a", true);
-    _defineTex2D(obj, "height", 0, 1, "", false);
-    _defineTex2D(obj, "ao", 0, 1, "", true);
-    _defineTex2D(obj, "light", 1, 3, "", true);
-    _defineTex2D(obj, "msdf", 0, 3, "", false);
-    _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, true);
-    _defineTex2D(obj, "normalDetail", 0, -1, "", false);
-    _defineTex2D(obj, "clearCoat", 0, 1, "", true);
-    _defineTex2D(obj, "clearCoatGloss", 0, 1, "", true);
-    _defineTex2D(obj, "clearCoatNormal", 0, -1, "", false);
-
-    _defineObject(obj, "cubeMap");
-    _defineObject(obj, "sphereMap");
-    _defineObject(obj, "dpAtlas");
-    _defineObject(obj, "prefilteredCubeMap128");
-    _defineObject(obj, "prefilteredCubeMap64");
-    _defineObject(obj, "prefilteredCubeMap32");
-    _defineObject(obj, "prefilteredCubeMap16");
-    _defineObject(obj, "prefilteredCubeMap8");
-    _defineObject(obj, "prefilteredCubeMap4");
-
-    _defineAlias(obj, "diffuseTint", "diffuseMapTint");
-    _defineAlias(obj, "specularTint", "specularMapTint");
-    _defineAlias(obj, "emissiveTint", "emissiveMapTint");
-    _defineAlias(obj, "aoVertexColor", "aoMapVertexColor");
-    _defineAlias(obj, "diffuseVertexColor", "diffuseMapVertexColor");
-    _defineAlias(obj, "specularVertexColor", "specularMapVertexColor");
-    _defineAlias(obj, "emissiveVertexColor", "emissiveMapVertexColor");
-    _defineAlias(obj, "metalnessVertexColor", "metalnessMapVertexColor");
-    _defineAlias(obj, "glossVertexColor", "glossMapVertexColor");
-    _defineAlias(obj, "opacityVertexColor", "opacityMapVertexColor");
-    _defineAlias(obj, "lightVertexColor", "lightMapVertexColor");
-
-    for (let i = 0; i < _propsSerial.length; i++) {
-        _propsSerialDefaultVal[i] = obj[_propsSerial[i]];
-    }
-
-    obj._propsSet = [];
+    _defineAlias("diffuseTint", "diffuseMapTint");
+    _defineAlias("specularTint", "specularMapTint");
+    _defineAlias("emissiveTint", "emissiveMapTint");
+    _defineAlias("aoVertexColor", "aoMapVertexColor");
+    _defineAlias("diffuseVertexColor", "diffuseMapVertexColor");
+    _defineAlias("specularVertexColor", "specularMapVertexColor");
+    _defineAlias("emissiveVertexColor", "emissiveMapVertexColor");
+    _defineAlias("metalnessVertexColor", "metalnessMapVertexColor");
+    _defineAlias("glossVertexColor", "glossMapVertexColor");
+    _defineAlias("opacityVertexColor", "opacityMapVertexColor");
+    _defineAlias("lightVertexColor", "lightMapVertexColor");
 }
 
-_defineMaterialProps(StandardMaterial.prototype);
+_defineMaterialProps();
 
 export { StandardMaterial };

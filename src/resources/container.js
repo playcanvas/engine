@@ -1,13 +1,7 @@
 import { path } from '../core/path.js';
-
-import { http, Http } from '../net/http.js';
-
 import { Asset } from '../asset/asset.js';
-
 import { GlbParser } from './parser/glb-parser.js';
-
 import { Entity } from '../framework/entity.js';
-
 import { MeshInstance } from '../scene/mesh-instance.js';
 import { MorphInstance } from '../scene/morph-instance.js';
 import { SkinInstance } from '../scene/skin-instance.js';
@@ -88,12 +82,21 @@ class ContainerResource {
      * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
      * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
      * @example
-     * // load a glb file and instantiate an entity with a model component based on it
+     * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
      *     var entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
+     *
+     *     // find all render components containing mesh instances, and change blend mode on their materials
+     *     var renders = entity.findComponents("render");
+     *     renders.forEach(function (render) {
+     *         render.meshInstances.forEach(function (meshInstance) {
+     *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
+     *             meshInstance.material.update();
+     *         });
+     *     });
      * });
      */
     instantiateRenderEntity(options) {
@@ -158,10 +161,20 @@ class ContainerResource {
                     }
 
                     // light - clone (additional child) entity with the light component
+                    // cannot clone the component as additional entity has a rotation to handle different light direction
                     if (glb.lights) {
                         const lightEntity = glb.lights.get(gltfNode);
                         if (lightEntity) {
                             entity.addChild(lightEntity.clone());
+                        }
+                    }
+
+                    // camera
+                    if (glb.cameras) {
+                        const cameraEntity = glb.cameras.get(gltfNode);
+                        if (cameraEntity) {
+                            // clone camera component into the entity
+                            cameraEntity.camera.system.cloneComponent(cameraEntity, entity);
                         }
                     }
                 }
@@ -171,7 +184,8 @@ class ContainerResource {
             if (attachedMi) {
                 entity.addComponent("render", Object.assign({
                     type: "asset",
-                    meshInstances: attachedMi
+                    meshInstances: attachedMi,
+                    rootBone: root
                 }, options));
             }
 
@@ -339,6 +353,7 @@ class ContainerResource {
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
  * | light       |      x      |      x      |             |      x      |
+ * | camera      |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | image       |      x      |             |      x      |      x      |
@@ -377,48 +392,27 @@ class ContainerHandler {
             };
         }
 
-        const options = {
-            responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        };
-
-        const self = this;
-
-        // parse downloaded file data
-        const parseData = function (arrayBuffer) {
-            GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                 path.extractPath(url.load),
-                                 arrayBuffer,
-                                 self._device,
-                                 asset.registry,
-                                 asset.options,
-                                 function (err, result) {
-                                     if (err) {
-                                         callback(err);
-                                     } else {
-                                         // return everything
-                                         callback(null, new ContainerResource(result));
-                                     }
-                                 });
-        };
-
-        if (asset && asset.file && asset.file.contents) {
-            // file data supplied by caller
-            parseData(asset.file.contents);
-        } else {
-            // data requires download
-            http.get(url.load, options, function (err, response) {
-                if (!callback)
-                    return;
-
-                if (err) {
-                    callback("Error loading model: " + url.original + " [" + err + "]");
-                } else {
-                    parseData(response);
-                }
-            });
-        }
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                GlbParser.parseAsync(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new ContainerResource(result));
+                        }
+                    });
+            }
+        }, asset, this.maxRetries);
     }
 
     open(url, data, asset) {

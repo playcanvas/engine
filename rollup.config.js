@@ -93,13 +93,6 @@ const es5Options = {
                 }
             }
         ]
-    ],
-    plugins: [
-        [
-            '@babel/plugin-proposal-class-properties', {
-                loose: true
-            }
-        ]
     ]
 };
 
@@ -118,13 +111,6 @@ const moduleOptions = {
                 targets: {
                     esmodules: true
                 }
-            }
-        ]
-    ],
-    plugins: [
-        [
-            '@babel/plugin-proposal-class-properties', {
-                loose: true
             }
         ]
     ]

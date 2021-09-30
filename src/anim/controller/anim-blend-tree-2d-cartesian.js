@@ -33,7 +33,7 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
         for (i = 0; i < this._children.length; i++) {
             const child = this._children[i];
             pi = child.point;
-            AnimBlendTreeCartesian2D._pip.set(...AnimBlendTreeCartesian2D._p.data).sub(pi);
+            AnimBlendTreeCartesian2D._pip.set(AnimBlendTreeCartesian2D._p.x, AnimBlendTreeCartesian2D._p.y).sub(pi);
             minj = Number.MAX_VALUE;
             for (j = 0; j < this._children.length; j++) {
                 if (i === j) continue;

@@ -157,8 +157,101 @@ function BasisWorker() {
         return testInOrder(hasAlpha ? rgbaPriority : rgbPriority);
     };
 
+    const transcodeKTX2 = (url, data, options) => {
+        if (!basis.KTX2File) {
+            throw new Error('Basis transcoder module does not include support for KTX2.');
+        }
+
+        const funcStart = performanceNow();
+        const basisFile = new basis.KTX2File(new Uint8Array(data));
+
+        const width = basisFile.getWidth();
+        const height = basisFile.getHeight();
+        const levels = basisFile.getLevels();
+        const hasAlpha = !!basisFile.getHasAlpha();
+        const isUASTC = basisFile.isUASTC && basisFile.isUASTC();
+
+        if (!width || !height || !levels) {
+            basisFile.close();
+            basisFile.delete();
+            throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' levels=' + levels);
+        }
+
+        // choose the target format
+        const format = chooseTargetFormat(options.deviceDetails, hasAlpha, isUASTC);
+
+        // unswizzle gggr textures under pvr compression
+        const unswizzle = !!options.isGGGR && format === 'pvr';
+
+        // convert to basis format taking into consideration platform restrictions
+        let basisFormat;
+        if (unswizzle) {
+            // in order to unswizzle we need gggr8888
+            basisFormat = BASIS_FORMAT.cTFRGBA32;
+        } else {
+            // select output format based on supported formats
+            basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+
+            // transcode to uncompressed format if the texture is PVRTC or webgl1, and has invalid dimensions
+            const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
+            const notPOT = ((width & (width - 1)) !== 0) || ((height & (height - 1)) !== 0);
+            const notSquare = (width !== height);
+            if ((isPVRTC && (notPOT || notSquare)) || (!options.deviceDetails.webgl2 && notPOT)) {
+                basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
+            }
+        }
+
+        if (!basisFile.startTranscoding()) {
+            basisFile.close();
+            basisFile.delete();
+            throw new Error('Failed to start transcoding url=' + url);
+        }
+
+        let i;
+
+        const levelData = [];
+        for (let mip = 0; mip < levels; ++mip) {
+            const dstSize = basisFile.getImageTranscodedSizeInBytes(mip, 0, 0, basisFormat);
+            const dst = new Uint8Array(dstSize);
+
+            if (!basisFile.transcodeImage(dst, mip, 0, 0, basisFormat, 0, -1, -1)) {
+                basisFile.close();
+                basisFile.delete();
+                throw new Error('Failed to transcode image url=' + url);
+            }
+
+            const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
+
+            levelData.push(is16BitFormat ? new Uint16Array(dst.buffer) : dst);
+        }
+
+        basisFile.close();
+        basisFile.delete();
+
+        // handle unswizzle option
+        if (unswizzle) {
+            basisFormat = BASIS_FORMAT.cTFRGB565;
+            for (i = 0; i < levelData.length; ++i) {
+                levelData[i] = pack565(unswizzleGGGR(levelData[i]));
+            }
+        }
+
+        const compressedFormat = isCompressedFormat(basisFormat);
+
+        return {
+            format: basisToEngineMapping(basisFormat, options.deviceDetails),
+            width: compressedFormat ? ((width + 3) & ~3) : width,
+            height: compressedFormat ? ((height + 3) & ~3) : height,
+            levels: levelData,
+            cubemap: false,
+            transcodeTime: performanceNow() - funcStart,
+            url: url,
+            unswizzledGGGR: unswizzle
+        };
+    };
+
     // transcode the basis super-compressed data into one of the runtime gpu native formats
-    const transcode = (url, data, options) => {
+    const transcodeBasis = (url, data, options) => {
         const funcStart = performanceNow();
         const basisFile = new basis.BasisFile(new Uint8Array(data));
 
@@ -212,7 +305,7 @@ function BasisWorker() {
             const dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
             const dst = new Uint8Array(dstSize);
 
-            if (!basisFile.transcodeImage(dst, 0, mip, basisFormat, 1, 0)) {
+            if (!basisFile.transcodeImage(dst, 0, mip, basisFormat, 0, 0)) {
                 basisFile.close();
                 basisFile.delete();
                 throw new Error('Failed to transcode image url=' + url);
@@ -242,25 +335,25 @@ function BasisWorker() {
             height: compressedFormat ? ((height + 3) & ~3) : height,
             levels: levelData,
             cubemap: false,
-            mipmaps: true,
             transcodeTime: performanceNow() - funcStart,
             url: url,
             unswizzledGGGR: unswizzle
         };
     };
 
+    const transcode = (url, data, options) => {
+        return options.isKTX2 ? transcodeKTX2(url, data, options) : transcodeBasis(url, data, options);
+    };
+
     // download and transcode the file given the basis module and
     // file url
     const workerTranscode = (url, data, options) => {
         try {
-            // texture data has been provided
             const result = transcode(url, data, options);
-            result.levels = result.levels.map(function (v) {
-                return v.buffer;
-            });
+            result.levels = result.levels.map((v) => v.buffer);
             self.postMessage({ url: url, data: result }, result.levels);
         } catch (err) {
-            self.postMessage({ url: url, err: err });
+            self.postMessage({ url: url, err: err }, null);
         }
     };
 
@@ -295,7 +388,7 @@ function BasisWorker() {
 
     // handle incoming worker requests
     const queue = [];
-    self.onmessage = function (message) {
+    self.onmessage = (message) => {
         const data = message.data;
         switch (data.type) {
             case 'init':

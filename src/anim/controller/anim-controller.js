@@ -20,13 +20,16 @@ import {
  * @param {object[]} transitions - The list of transitions used to form the controller state graph.
  * @param {object[]} parameters - The anim components parameters.
  * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
+ * @param {EventHandler} eventHandler - The event handler which should be notified with anim events
+ * @param {Set} consumedTriggers - Used to set triggers back to their default state after they have been consumed by a transition
  */
 class AnimController {
-    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler) {
+    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
+        this._consumedTriggers = consumedTriggers;
         for (let i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
@@ -321,7 +324,9 @@ class AnimController {
         let state;
         let animation;
         let clip;
-        this.previousState = transition.from;
+        // If transition.from is set, transition from the active state irregardless of the transition.from value (this could be the previous, active or ANY states).
+        // Otherwise the previousState is cleared.
+        this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
 
         // turn off any triggers which were required to activate this transition
@@ -329,7 +334,7 @@ class AnimController {
             const condition = transition.conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
-                parameter.value = false;
+                this._consumedTriggers.add(condition.parameterName);
             }
         }
 

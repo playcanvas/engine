@@ -11,10 +11,10 @@ import {
 } from './constants.js';
 
 // pre-allocated temp variables
-var _deviceCoord = new Vec3();
-var _halfSize = new Vec3();
-var _point = new Vec3();
-var _invViewProjMat = new Mat4();
+const _deviceCoord = new Vec3();
+const _halfSize = new Vec3();
+const _point = new Vec3();
+const _invViewProjMat = new Mat4();
 
 /**
  * @private
@@ -49,6 +49,7 @@ class Camera {
         this._rect = new Vec4(0, 0, 1, 1);
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
+        this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
         this._vrDisplay = null;
 
         this._projMat = new Mat4();
@@ -294,7 +295,7 @@ class Camera {
 
     get viewMatrix() {
         if (this._viewMatDirty) {
-            var wtm = this._node.getWorldTransform();
+            const wtm = this._node.getWorldTransform();
             this._viewMat.copy(wtm).invert();
             this._viewMatDirty = false;
         }
@@ -362,9 +363,7 @@ class Camera {
 
     _updateViewProjMat() {
         if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
-            var projMat = this.projectionMatrix;
-            var viewMat = this.viewMatrix;
-            this._viewProjMat.mul2(projMat, viewMat);
+            this._viewProjMat.mul2(this.projectionMatrix, this.viewMatrix);
             this._viewProjMatDirty = false;
         }
     }
@@ -385,8 +384,8 @@ class Camera {
         this._viewProjMat.transformPoint(worldCoord, screenCoord);
 
         // calculate w co-coord
-        var vpm = this._viewProjMat.data;
-        var w = worldCoord.x * vpm[3] +
+        const vpm = this._viewProjMat.data;
+        const w = worldCoord.x * vpm[3] +
                 worldCoord.y * vpm[7] +
                 worldCoord.z * vpm[11] +
                            1 * vpm[15];
@@ -413,7 +412,7 @@ class Camera {
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
-        var range = this._farClip - this._nearClip;
+        const range = this._farClip - this._nearClip;
         _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
         _deviceCoord.mulScalar(2);
         _deviceCoord.sub(Vec3.ONE);
@@ -428,12 +427,12 @@ class Camera {
             _halfSize.y *= _deviceCoord.y;
 
             // transform to world space
-            var invView = this._node.getWorldTransform();
+            const invView = this._node.getWorldTransform();
             _halfSize.z = -this._nearClip;
             invView.transformPoint(_halfSize, _point);
 
             // point along camera->_point ray at distance z from the camera
-            var cameraPos = this._node.getPosition();
+            const cameraPos = this._node.getPosition();
             worldCoord.sub2(_point, cameraPos);
             worldCoord.normalize();
             worldCoord.mulScalar(z);
@@ -457,8 +456,8 @@ class Camera {
                 this._projMat.setPerspective(this._fov, this._aspectRatio, this._nearClip, this._farClip, this._horizontalFov);
                 this._projMatSkybox.copy(this._projMat);
             } else {
-                var y = this._orthoHeight;
-                var x = y * this._aspectRatio;
+                const y = this._orthoHeight;
+                const x = y * this._aspectRatio;
                 this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
                 this._projMatSkybox.setPerspective(this._fov, this._aspectRatio, this._nearClip, this._farClip);
             }

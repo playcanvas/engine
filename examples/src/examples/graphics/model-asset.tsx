@@ -34,6 +34,12 @@ class ModelAssetExample extends Example {
 
         app.root.addChild(entity);
 
+        // clone a small version of the entity
+        const clone = entity.clone();
+        clone.setLocalScale(0.2, 0.2, 0.2);
+        clone.setLocalPosition(-4, 12, 0);
+        app.root.addChild(clone);
+
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {

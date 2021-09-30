@@ -235,12 +235,15 @@ var standard = {
     },
 
     _setMapTransform: function (codes, name, id, uv) {
-        codes[0] += "uniform vec4 texture_" + name + "MapTransform;\n";
+        const varName = `texture_${name}MapTransform`;
+        const checkId = id + uv * 100;
 
-        var checkId = id + uv * 100;
+        // upload a 3x2 matrix and manually perform the multiplication
+        codes[0] += `uniform vec3 ${varName}0;\n`;
+        codes[0] += `uniform vec3 ${varName}1;\n`;
         if (!codes[3][checkId]) {
-            codes[1] += "varying vec2 vUV" + uv + "_" + id + ";\n";
-            codes[2] += "   vUV" + uv + "_" + id + " = uv" + uv + " * texture_" + name + "MapTransform.xy + texture_" + name + "MapTransform.zw;\n";
+            codes[1] += `varying vec2 vUV${uv}_${id};\n`;
+            codes[2] += `   vUV${uv}_${id} = vec2(dot(vec3(uv${uv}, 1), ${varName}0), dot(vec3(uv${uv}, 1), ${varName}1));\n`;
             codes[3][checkId] = true;
         }
         return codes;
@@ -1129,7 +1132,8 @@ var standard = {
 
                 if (!options.hasTangents) {
                     // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
-                    var normalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    const transformPropName = options.normalMap ? "normalMapTransform" : "clearCoatNormalMapTransform";
+                    const normalMapUv = this._getUvSourceExpression(transformPropName, "normalMapUv", options);
                     tbn = tbn.replace(/\$UV/g, normalMapUv);
                 }
                 code += tbn;
@@ -1268,9 +1272,16 @@ var standard = {
             }
         }
 
-        if (numShadowLights > 0) {
+        // clustered lighting
+        if (LayerComposition.clusteredLightingEnabled) {
+            // always include shadow chunks clustered lights support
+            shadowTypeUsed[SHADOW_PCF3] = true;
+            usePerspZbufferShadow = true;
+        }
+
+        if (numShadowLights > 0 || LayerComposition.clusteredLightingEnabled) {
             if (shadowedDirectionalLightUsed) {
-                code += shaderChunks.shadowCascadesPS;
+                code += chunks.shadowCascadesPS;
             }
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
@@ -1294,8 +1305,8 @@ var standard = {
             if (!(device.webgl2 || device.extStandardDerivatives)) {
                 code += chunks.biasConstPS;
             }
-            // otherwise bias is applied on render
 
+            // otherwise bias is applied on render
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
         }
@@ -1392,9 +1403,10 @@ var standard = {
             usesSpot = true;
             hasPointLights = true;
             usesLinearFalloff = true;
+            usesCookie = true;
 
-            const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
-            code += `\n#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += chunks.floatUnpackingPS;
+            code += WorldClusters.shaderDefines;
             code += chunks.clusteredLightPS;
         }
 
@@ -1499,6 +1511,14 @@ var standard = {
 
         if (addAmbient) {
             code += "   addAmbient();\n";
+
+            // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
+            if (options.separateAmbient) {
+                code += `
+                    vec3 dAmbientLight = dDiffuseLight;
+                    dDiffuseLight = vec3(0);
+                `;
+            }
         }
         if (options.ambientTint && !useOldAmbient) {
             code += "   dDiffuseLight *= material_ambient;\n";
@@ -1535,7 +1555,7 @@ var standard = {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
-                code += chunks.clusteredLightLoopPS;
+                code += '   addClusteredLights();';
             }
 
             for (i = 0; i < options.lights.length; i++) {

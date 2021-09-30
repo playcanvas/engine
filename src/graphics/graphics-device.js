@@ -1,6 +1,7 @@
-import '../polyfill/OESVertexArrayObject.js';
+import { setupVertexArrayObject } from '../polyfill/OESVertexArrayObject.js';
 import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
+import { platform } from '../core/platform.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -309,18 +310,21 @@ class GraphicsDevice extends EventHandler {
             throw new Error("WebGL not supported");
         }
 
+        const isChrome = platform.browser && !!window.chrome;
+        const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
+
         this.gl = gl;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        const isChrome = !!window.chrome;
-        const isMac = navigator.appVersion.indexOf("Mac") !== -1;
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
-        // init polyfill for VAOs
-        window.setupVertexArrayObject(gl);
+        // init polyfill for VAOs under webgl1
+        if (!this.webgl2) {
+            setupVertexArrayObject(gl);
+        }
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
@@ -694,6 +698,29 @@ class GraphicsDevice extends EventHandler {
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
+    }
+
+    destroy() {
+        const gl = this.gl;
+
+        this.destroyGrabPass();
+
+        if (this.webgl2 && this.feedback) {
+            gl.deleteTransformFeedback(this.feedback);
+        }
+
+        this.clearShaderCache();
+        this.clearVertexArrayObjectCache();
+
+        this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
+        this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
+
+        this._contextLostHandler = null;
+        this._contextRestoredHandler = null;
+
+        this.scope = null;
+        this.canvas = null;
+        this.gl = null;
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
@@ -1550,8 +1577,10 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
-        this.boundVao = null;
-        this.gl.bindVertexArray(null);
+        if (this.boundVao) {
+            this.boundVao = null;
+            this.gl.bindVertexArray(null);
+        }
 
         // Unset the render target
         const target = this.renderTarget;
@@ -3329,25 +3358,58 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    _addLineNumbers(src) {
+    _isShaderCompiled(shader, glShader, source) {
+        const gl = this.gl;
+
+        if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
+            const infoLog = gl.getShaderInfoLog(glShader);
+            const [code, error] = this._processError(source, infoLog);
+            // #if _DEBUG
+            error.shader = shader;
+            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`, error);
+            // #else
+            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`);
+            // #endif
+            return false;
+        }
+        return true;
+    }
+
+    _processError(src, infoLog) {
         if (!src)
             return "";
 
-        const lines = src.split("\n");
+        const lines = src.split('\n');
+        const error = { };
+        let code = '';
+        let from = 0;
+        let to = lines.length;
 
-        // Chrome reports shader errors on lines indexed from 1
-        for (let i = 0, len = lines.length; i < len; i++) {
-            lines[i] = (i + 1) + ":\t" + lines[i];
+        // if error is in the code, only show nearby lines instead of whole shader code
+        if (infoLog && infoLog.startsWith('ERROR:')) {
+            const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
+            if (match) {
+                error.message = match[3];
+                error.line = parseInt(match[2], 10);
+
+                from = Math.max(0, error.line - 6);
+                to = Math.min(lines.length, error.line + 5);
+            }
         }
 
-        return lines.join("\n");
+        // Chrome reports shader errors on lines indexed from 1
+        for (let i = from; i < to; i++) {
+            code += (i + 1) + ":\t" + lines[i] + '\n';
+        }
+
+        error.source = src;
+
+        return [code, error];
     }
 
     postLink(shader) {
         const gl = this.gl;
 
-        const glVertexShader = shader._glVertexShader;
-        const glFragmentShader = shader._glFragmentShader;
         const glProgram = shader._glProgram;
 
         const definition = shader.definition;
@@ -3360,15 +3422,13 @@ class GraphicsDevice extends EventHandler {
         });
         // #endif
 
-        // Check for errors
-        if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
-            console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
+        // Check for compilation errors
+        if (! this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader))
             return false;
-        }
-        if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
-            console.error("Failed to compile fragment shader:\n\n" + this._addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(glFragmentShader));
+
+        if (! this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader))
             return false;
-        }
+
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
             console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
             return false;
@@ -3509,7 +3569,7 @@ class GraphicsDevice extends EventHandler {
         this._width = width;
         this._height = height;
 
-        const ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 
@@ -3564,28 +3624,6 @@ class GraphicsDevice extends EventHandler {
 
     removeShaderFromCache(shader) {
         this.programLib.removeFromCache(shader);
-    }
-
-    destroy() {
-        const gl = this.gl;
-
-        this.destroyGrabPass();
-
-        if (this.webgl2 && this.feedback) {
-            gl.deleteTransformFeedback(this.feedback);
-        }
-
-        this.clearShaderCache();
-        this.clearVertexArrayObjectCache();
-
-        this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
-        this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
-
-        this._contextLostHandler = null;
-        this._contextRestoredHandler = null;
-
-        this.canvas = null;
-        this.gl = null;
     }
 
     /**

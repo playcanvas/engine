@@ -1,4 +1,5 @@
 import { version, revision } from '../core/core.js';
+import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
@@ -28,7 +29,7 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
-import { Lightmapper } from '../scene/lightmapper.js';
+import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
@@ -434,7 +435,9 @@ class Application extends EventHandler {
         if (! options.graphicsDeviceOptions)
             options.graphicsDeviceOptions = { };
 
-        options.graphicsDeviceOptions.xrCompatible = true;
+        if (platform.browser && !!navigator.xr) {
+            options.graphicsDeviceOptions.xrCompatible = true;
+        }
 
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
@@ -1657,10 +1660,6 @@ class Application extends EventHandler {
     }
 
     _firstBatch() {
-        if (this.scene._needsStaticPrepare) {
-            this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
-            this.scene._needsStaticPrepare = false;
-        }
         this.batcher.generate();
     }
 
@@ -1971,12 +1970,14 @@ class Application extends EventHandler {
         var canvasId = this.graphicsDevice.canvas.id;
 
         this.off('librariesloaded');
-        document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+        }
         this._visibilityChangeHandler = null;
-        this.onVisibilityChange = null;
 
         this.root.destroy();
         this.root = null;
@@ -2082,11 +2083,13 @@ class Application extends EventHandler {
         }
         this.xr.end();
 
-        this.graphicsDevice.destroy();
-        this.graphicsDevice = null;
+        ParticleEmitter.staticDestroy();
 
         this.renderer.destroy();
         this.renderer = null;
+
+        this.graphicsDevice.destroy();
+        this.graphicsDevice = null;
 
         this.tick = null;
 
@@ -2098,9 +2101,6 @@ class Application extends EventHandler {
         }
 
         script.app = null;
-
-        // remove default particle texture
-        ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
         Application._applications[canvasId] = null;
 
@@ -2158,7 +2158,7 @@ var makeTick = function (_app) {
         } else if (application.xr.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = window.requestAnimationFrame(application.tick);
+            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)

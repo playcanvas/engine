@@ -3,7 +3,7 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
-import { Button } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 
 const animClipStaticLightData = {
     "name": "staticLight",

@@ -223,29 +223,7 @@ class ParticleEmitter {
 
         this._addTimeTime = 0;
 
-
-        if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
-            // White radial gradient
-            var resolution = 16;
-            var centerPoint = resolution * 0.5 + 0.5;
-            var dtex = new Float32Array(resolution * resolution * 4);
-            var x, y, xgrad, ygrad, p, c;
-            for (y = 0; y < resolution; y++) {
-                for (x = 0; x < resolution; x++) {
-                    xgrad = (x + 1) - centerPoint;
-                    ygrad = (y + 1) - centerPoint;
-                    c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
-                    p = y * resolution + x;
-                    dtex[p * 4] =     1;
-                    dtex[p * 4 + 1] = 1;
-                    dtex[p * 4 + 2] = 1;
-                    dtex[p * 4 + 3] = c;
-                }
-            }
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE = _createTexture(gd, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.minFilter = FILTER_LINEAR;
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.magFilter = FILTER_LINEAR;
-        }
+        ParticleEmitter.staticInit(gd);
 
         // Global system parameters
         setPropertyTarget = this;
@@ -403,6 +381,41 @@ class ParticleEmitter {
         this._layer = null;
 
         this.rebuild();
+    }
+
+    static DEFAULT_PARAM_TEXTURE = null;
+
+    static staticInit(device) {
+
+        // White radial gradient
+        if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
+            const resolution = 16;
+            const centerPoint = resolution * 0.5 + 0.5;
+            const dtex = new Float32Array(resolution * resolution * 4);
+            for (let y = 0; y < resolution; y++) {
+                for (let x = 0; x < resolution; x++) {
+                    const xgrad = (x + 1) - centerPoint;
+                    const ygrad = (y + 1) - centerPoint;
+                    const c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
+                    const p = y * resolution + x;
+                    dtex[p * 4] =     1;
+                    dtex[p * 4 + 1] = 1;
+                    dtex[p * 4 + 2] = 1;
+                    dtex[p * 4 + 3] = c;
+                }
+            }
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE = _createTexture(device, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.minFilter = FILTER_LINEAR;
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.magFilter = FILTER_LINEAR;
+        }
+    }
+
+    static staticDestroy() {
+
+        if (ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.destroy();
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+        }
     }
 
     onChangeCamera() {
@@ -1054,7 +1067,7 @@ class ParticleEmitter {
                     data[i * 6 + 2] = meshData[vert * stride + 2];
                     data[i * 6 + 3] = id;
                     data[i * 6 + 4] = meshData[vert * stride + texCoordOffset + 0];
-                    data[i * 6 + 5] = meshData[vert * stride + texCoordOffset + 1];
+                    data[i * 6 + 5] = 1.0 - meshData[vert * stride + texCoordOffset + 1];
                 }
             }
 

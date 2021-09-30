@@ -31,7 +31,7 @@ class Batch {
 
     addToLayers(scene, layers) {
         for (let i = 0; i < layers.length; i++) {
-            var layer = scene.layers.getLayerById(layers[i]);
+            const layer = scene.layers.getLayerById(layers[i]);
             if (layer) {
                 layer.addMeshInstances([this.meshInstance]);
             }
@@ -40,7 +40,7 @@ class Batch {
 
     removeFromLayers(scene, layers) {
         for (let i = 0; i < layers.length; i++) {
-            var layer = scene.layers.getLayerById(layers[i]);
+            const layer = scene.layers.getLayerById(layers[i]);
             if (layer) {
                 layer.removeMeshInstances([this.meshInstance]);
             }
@@ -50,7 +50,7 @@ class Batch {
     // Updates bounding box for a batch
     updateBoundingBox() {
         this._aabb.copy(this.origMeshInstances[0].aabb);
-        for (var i = 1; i < this.origMeshInstances.length; i++) {
+        for (let i = 1; i < this.origMeshInstances.length; i++) {
             this._aabb.add(this.origMeshInstances[i].aabb);
         }
         this.meshInstance.aabb = this._aabb;

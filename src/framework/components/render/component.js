@@ -98,8 +98,11 @@ class RenderComponent extends Component {
         // material asset references
         this._materialReferences = [];
 
+        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy) added or removed from the parent
         entity.on('remove', this.onRemoveChild, this);
+        entity.on('removehierarchy', this.onRemoveChild, this);
         entity.on('insert', this.onInsertChild, this);
+        entity.on('inserthierarchy', this.onInsertChild, this);
     }
 
     _onSetRootBone(entity) {
@@ -111,7 +114,9 @@ class RenderComponent extends Component {
     _onRootBoneChanged() {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
-        this._cloneSkinInstances();
+        if (this.enabled && this.entity.enabled) {
+            this._cloneSkinInstances();
+        }
     }
 
     destroyMeshInstances() {
@@ -199,6 +204,8 @@ class RenderComponent extends Component {
         var scene = app.scene;
 
         this._rootBone.onParentComponentEnable();
+
+        this._cloneSkinInstances();
 
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
@@ -740,6 +747,13 @@ class RenderComponent extends Component {
         if (this._assetReference.asset) {
             this._onRenderAssetAdded();
         }
+    }
+
+    resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {
+        if (oldRender.rootBone && duplicatedIdsMap[oldRender.rootBone]) {
+            this.rootBone = duplicatedIdsMap[oldRender.rootBone];
+        }
+        this._clearSkinInstances();
     }
 }
 

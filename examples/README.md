@@ -94,7 +94,7 @@ example(canvas: HTMLCanvasElement, TWEEN: any) {
 ### `controls` function
 This function allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 ```tsx
-import { Button } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 controls(data: any) {
     return <>
         <Button text='Flash' onClick={() => {
@@ -112,3 +112,12 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
     console.log(data.get('flash'));
 }
 ```
+## Deployment
+
+Build the latest examples browser using `npm run build`.
+
+Run `npm run thumbnails` to create the thumbnails directory for browser. This may take a while depending on the number of new examples or if this is first time it has been run locally.
+
+Run `npm run build:directory` to build the static html directory structure for the project.
+
+Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository and submit a PR with the changes. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.

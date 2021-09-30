@@ -56,7 +56,7 @@ class BasicMaterial extends Material {
         return clone;
     }
 
-    updateUniforms() {
+    updateUniforms(device, scene) {
         this.clearParameters();
 
         this.colorUniform[0] = this.color.r;

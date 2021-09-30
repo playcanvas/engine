@@ -20,7 +20,6 @@ import blurVSMPS from './blurVSM.frag';
 import clearCoatPS from './clearCoat.frag';
 import clearCoatGlossPS from './clearCoatGloss.frag';
 import clearCoatNormalPS from './clearCoatNormal.frag';
-import clusteredLightLoopPS from './clusteredLightLoop.frag';
 import clusteredLightPS from './clusteredLight.frag';
 import combineClearCoatPS from './combineClearCoat.frag';
 import combineDiffusePS from './combineDiffuse.frag';
@@ -37,6 +36,7 @@ import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
 import dilatePS from './dilate.frag';
+import bilateralDeNoisePS from './bilateralDeNoise.frag';
 import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
@@ -49,6 +49,7 @@ import falloffInvSquaredPS from './falloffInvSquared.frag';
 import falloffLinearPS from './falloffLinear.frag';
 import fixCubemapSeamsNonePS from './fixCubemapSeamsNone.frag';
 import fixCubemapSeamsStretchPS from './fixCubemapSeamsStretch.frag';
+import floatUnpackingPS from './float-unpacking.frag';
 import fogExpPS from './fogExp.frag';
 import fogExp2PS from './fogExp2.frag';
 import fogLinearPS from './fogLinear.frag';
@@ -224,7 +225,6 @@ const shaderChunks = {
     clearCoatPS: clearCoatPS,
     clearCoatGlossPS: clearCoatGlossPS,
     clearCoatNormalPS: clearCoatNormalPS,
-    clusteredLightLoopPS: clusteredLightLoopPS,
     clusteredLightPS: clusteredLightPS,
     combineClearCoatPS: combineClearCoatPS,
     combineDiffusePS: combineDiffusePS,
@@ -241,6 +241,7 @@ const shaderChunks = {
     diffusePS: diffusePS,
     diffuseDetailMapPS: diffuseDetailMapPS,
     dilatePS: dilatePS,
+    bilateralDeNoisePS: bilateralDeNoisePS,
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
@@ -253,6 +254,7 @@ const shaderChunks = {
     falloffLinearPS: falloffLinearPS,
     fixCubemapSeamsNonePS: fixCubemapSeamsNonePS,
     fixCubemapSeamsStretchPS: fixCubemapSeamsStretchPS,
+    floatUnpackingPS: floatUnpackingPS,
     fogExpPS: fogExpPS,
     fogExp2PS: fogExp2PS,
     fogLinearPS: fogLinearPS,

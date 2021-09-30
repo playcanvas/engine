@@ -3,9 +3,17 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
 // @ts-ignore: library file import
-import { Panel, SliderInput, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
-import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 class LightsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -102,7 +110,6 @@ class LightsExample extends Example {
         app.root.addChild(ground);
 
         // setup light data
-
         data.set('lights', {
             spot: {
                 enabled: true,
@@ -175,6 +182,7 @@ class LightsExample extends Example {
                 type: "directional",
                 color: pc.Color.CYAN,
                 range: 100,
+                shadowDistance: 50,
                 castShadows: true,
                 shadowBias: 0.1,
                 normalOffsetBias: 0.2
@@ -222,7 +230,7 @@ class LightsExample extends Example {
                 lights[pathArray[1]].enabled = value;
             } else {
                 // @ts-ignore
-                lights[pathArray[1]][pathArray[2]] = value;
+                lights[pathArray[1]].light[pathArray[2]] = value;
             }
         });
     }
