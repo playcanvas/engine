@@ -847,22 +847,17 @@ class ElementInput {
 
         for (var i = 0, len = this._elements.length; i < len; i++) {
             var element = this._elements[i];
-            var screen = false;
 
             // cache rays
             if (element.screen && element.screen.screen.screenSpace) {
                 // 2D screen
                 if (rayScreen === undefined) {
-                    rayScreen = rayA;
-                    if (this._calculateRayScreen(x, y, camera, rayScreen) === false) {
-                        rayScreen = null;
-                    }
+                    rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
                 }
-                screen = true;
 
                 if (rayScreen) {
                     // break on the first element that hit
-                    const hit = this._checkElement(rayScreen, element, screen) >= 0;
+                    const hit = this._checkElement(rayScreen, element, true) >= 0;
                     if (hit === true) {
                         result = element;
                         break;
@@ -871,15 +866,12 @@ class ElementInput {
             } else {
                 // 3d
                 if (ray3d === undefined) {
-                    ray3d = rayB;
-                    if (this._calculateRay3d(x, y, camera, ray3d) === false) {
-                        ray3d = null;
-                    }
+                    ray3d = this._calculateRay3d(x, y, camera, rayB) ? rayB : null;
                 }
 
                 if (ray3d) {
                     // continue looking through all elements, only storing the closest one
-                    const currentDistance = this._checkElement(ray3d, element, screen);
+                    const currentDistance = this._checkElement(ray3d, element, false);
                     if (currentDistance >= 0 && currentDistance < closestDistance3d) {
                         result = element;
                         closestDistance3d = currentDistance;
