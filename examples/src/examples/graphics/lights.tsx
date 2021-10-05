@@ -110,7 +110,6 @@ class LightsExample extends Example {
         app.root.addChild(ground);
 
         // setup light data
-
         data.set('lights', {
             spot: {
                 enabled: true,
@@ -183,6 +182,7 @@ class LightsExample extends Example {
                 type: "directional",
                 color: pc.Color.CYAN,
                 range: 100,
+                shadowDistance: 50,
                 castShadows: true,
                 shadowBias: 0.1,
                 normalOffsetBias: 0.2

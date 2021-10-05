@@ -158,6 +158,10 @@ class AnimController {
         return this._stateNames;
     }
 
+    assignMask(mask) {
+        this._animEvaluator.assignMask(mask);
+    }
+
     _findState(stateName) {
         return this._states[stateName];
     }

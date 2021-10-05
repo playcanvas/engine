@@ -28,6 +28,10 @@ var _pb = new Vec3();
 var _pc = new Vec3();
 var _pd = new Vec3();
 var _m = new Vec3();
+var _au = new Vec3();
+var _bv = new Vec3();
+var _cw = new Vec3();
+var _ir = new Vec3();
 var _sct = new Vec3();
 var _accumulatedScale = new Vec2();
 var _paddingTop = new Vec3();
@@ -46,8 +50,8 @@ function scalarTriple(p1, p2, p3) {
     return _sct.cross(p1, p2).dot(p3);
 }
 
-// Given line pq and ccw corners of a quad, return whether the line
-// intersects it. (from Real-Time Collision Detection book)
+// Given line pq and ccw corners of a quad, return the square distance to the intersection point.
+// If the line and quad do not intersect, return -1. (from Real-Time Collision Detection book)
 function intersectLineQuad(p, q, corners) {
     _pq.sub2(q, p);
     _pa.sub2(corners[0], p);
@@ -56,30 +60,53 @@ function intersectLineQuad(p, q, corners) {
 
     // Determine which triangle to test against by testing against diagonal first
     _m.cross(_pc, _pq);
-    var v = _pa.dot(_m);
+    let v = _pa.dot(_m);
+    let u;
+    let w;
+
     if (v >= 0) {
         // Test intersection against triangle abc
-        if (-_pb.dot(_m) < 0)
-            return false;
+        u = -_pb.dot(_m);
+        if (u < 0)
+            return -1;
 
-        if (scalarTriple(_pq, _pb, _pa) < 0)
-            return false;
+        w = scalarTriple(_pq, _pb, _pa);
+        if (w < 0)
+            return -1;
+
+        const denom = 1.0 / (u + v + w);
+
+        _au.copy(corners[0]).mulScalar(u * denom);
+        _bv.copy(corners[1]).mulScalar(v * denom);
+        _cw.copy(corners[2]).mulScalar(w * denom);
+        _ir.copy(_au).add(_bv).add(_cw);
     } else {
         // Test intersection against triangle dac
         _pd.sub2(corners[3], p);
-        if (_pd.dot(_m) < 0)
-            return false;
+        u = _pd.dot(_m);
+        if (u < 0)
+            return -1;
 
-        if (scalarTriple(_pq, _pa, _pd) < 0)
-            return false;
+        w = scalarTriple(_pq, _pa, _pd);
+        if (w < 0)
+            return -1;
+
+        v = -v;
+
+        const denom = 1.0 / (u + v + w);
+
+        _au.copy(corners[0]).mulScalar(u * denom);
+        _bv.copy(corners[3]).mulScalar(v * denom);
+        _cw.copy(corners[2]).mulScalar(w * denom);
+        _ir.copy(_au).add(_bv).add(_cw);
     }
 
     // The algorithm above doesn't work if all the corners are the same
     // So do that test here by checking if the diagonals are 0 (since these are rectangles we're checking against)
-    if (_pq.sub2(corners[0], corners[2]).lengthSq() < 0.0001 * 0.0001) return false;
-    if (_pq.sub2(corners[1], corners[3]).lengthSq() < 0.0001 * 0.0001) return false;
+    if (_pq.sub2(corners[0], corners[2]).lengthSq() < 0.0001 * 0.0001) return -1;
+    if (_pq.sub2(corners[1], corners[3]).lengthSq() < 0.0001 * 0.0001) return -1;
 
-    return true;
+    return _ir.sub(p).lengthSq();
 }
 
 /**
@@ -811,6 +838,7 @@ class ElementInput {
 
     _getTargetElement(camera, x, y) {
         var result = null;
+        let closestDistance3d = Infinity;
 
         // sort elements
         this._elements.sort(this._sortHandler);
@@ -819,34 +847,36 @@ class ElementInput {
 
         for (var i = 0, len = this._elements.length; i < len; i++) {
             var element = this._elements[i];
-            var screen = false;
-            var ray;
 
             // cache rays
             if (element.screen && element.screen.screen.screenSpace) {
                 // 2D screen
                 if (rayScreen === undefined) {
-                    rayScreen = rayA;
-                    if (this._calculateRayScreen(x, y, camera, rayScreen) === false) {
-                        rayScreen = null;
+                    rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
+                }
+
+                if (rayScreen) {
+                    // break on the first element that hit
+                    const hit = this._checkElement(rayScreen, element, true) >= 0;
+                    if (hit === true) {
+                        result = element;
+                        break;
                     }
                 }
-                ray = rayScreen;
-                screen = true;
             } else {
                 // 3d
                 if (ray3d === undefined) {
-                    ray3d = rayB;
-                    if (this._calculateRay3d(x, y, camera, ray3d) === false) {
-                        ray3d = null;
+                    ray3d = this._calculateRay3d(x, y, camera, rayB) ? rayB : null;
+                }
+
+                if (ray3d) {
+                    // continue looking through all elements, only storing the closest one
+                    const currentDistance = this._checkElement(ray3d, element, false);
+                    if (currentDistance >= 0 && currentDistance < closestDistance3d) {
+                        result = element;
+                        closestDistance3d = currentDistance;
                     }
                 }
-                ray = ray3d;
-            }
-
-            if (ray && this._checkElement(ray, element, screen)) {
-                result = element;
-                break;
             }
         }
 
@@ -867,7 +897,7 @@ class ElementInput {
             var element = this._elements[i];
 
             if (! element.screen || ! element.screen.screen.screenSpace) {
-                if (this._checkElement(rayA, element, false)) {
+                if (this._checkElement(rayA, element, false) >= 0) {
                     result = element;
                     break;
                 }
@@ -996,8 +1026,9 @@ class ElementInput {
     _checkElement(ray, element, screen) {
         // ensure click is contained by any mask first
         if (element.maskedBy) {
-            var result = this._checkElement(ray, element.maskedBy.element, screen);
-            if (!result) return false;
+            if (this._checkElement(ray, element.maskedBy.element, screen) < 0) {
+                return -1;
+            }
         }
 
         var scale;
@@ -1010,10 +1041,7 @@ class ElementInput {
 
         var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
 
-        if (intersectLineQuad(ray.origin, ray.end, corners))
-            return true;
-
-        return false;
+        return intersectLineQuad(ray.origin, ray.end, corners);
     }
 
     get enabled() {

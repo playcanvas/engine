@@ -10,7 +10,7 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR,
+    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_LINEAR
 } from '../constants.js';
 
@@ -48,7 +48,7 @@ StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (option
     options.chunks = stdMat.chunks || "";
     options.blendType = stdMat.blendType;
     options.forceUv1 = stdMat.forceUv1;
-
+    options.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
     options.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
     options.skin = objDefs && (objDefs & SHADERDEF_SKIN) !== 0;
     options.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
@@ -215,6 +215,11 @@ StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options
             options.useRgbm = true;
             if ((objDefs & SHADERDEF_DIRLM) !== 0) {
                 options.dirLightMap = true;
+            }
+
+            // if lightmaps contain baked ambient light, disable real-time ambient light
+            if ((objDefs & SHADERDEF_LMAMBIENT) !== 0) {
+                options.lightMapWithoutAmbient = false;
             }
         }
     }

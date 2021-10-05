@@ -40,6 +40,8 @@ class AnimComponent extends Component {
         this._layers = [];
         this._layerIndices = {};
         this._parameters = {};
+        // a collection of animated property targets
+        this._targets = {};
         this._consumedTriggers = new Set();
     }
 
@@ -186,6 +188,14 @@ class AnimComponent extends Component {
         this._parameters = value;
     }
 
+    get targets() {
+        return this._targets;
+    }
+
+    set targets(value) {
+        this._targets = value;
+    }
+
     /**
      * @name AnimComponent#playable
      * @type {boolean}
@@ -214,14 +224,21 @@ class AnimComponent extends Component {
         return null;
     }
 
-    _addLayer(name, states, transitions, order) {
+    dirtifyTargets() {
+        const targets = Object.values(this._targets);
+        for (let i = 0; i < targets.length; i++) {
+            targets[i].dirty = true;
+        }
+    }
+
+    _addLayer({ name, states, transitions, order, weight, mask, blendType }) {
         let graph;
         if (this.rootBone) {
             graph = this.rootBone;
         } else {
             graph = this.entity;
         }
-        const animBinder = new AnimComponentBinder(this, graph);
+        const animBinder = new AnimComponentBinder(this, graph, name, mask, order);
         const animEvaluator = new AnimEvaluator(animBinder);
         const controller = new AnimController(
             animEvaluator,
@@ -232,7 +249,7 @@ class AnimComponent extends Component {
             this,
             this._consumedTriggers
         );
-        this._layers.push(new AnimComponentLayer(name, controller, this));
+        this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = order;
     }
 
@@ -240,10 +257,13 @@ class AnimComponent extends Component {
      * @name AnimComponent#addLayer
      * @returns {AnimComponentLayer} - The created anim component layer
      * @description Adds a new anim component layer to the anim component.
-     * @param {string} layerName - The name of the layer to create.
+     * @param {string} name - The name of the layer to create.
+     * @param {number} [weight] - The blending weight of the layer. Defaults to 1.
+     * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in this layer. If omitted the full model is used. Defaults to null.
+     * @param {string} [blendType] - Defines how properties animated by this layer blend with animaions of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
      */
-    addLayer(layerName) {
-        const layer = this.findAnimationLayer(layerName);
+    addLayer(name, weight, mask, blendType) {
+        const layer = this.findAnimationLayer(name);
         if (layer) return layer;
         const states = [
             {
@@ -252,7 +272,7 @@ class AnimComponent extends Component {
             }
         ];
         const transitions = [];
-        this._addLayer(layerName, states, transitions, this._layers.length);
+        this._addLayer({ name, states, transitions, order: this._layers.length, weight, mask, blendType });
     }
 
     /**
@@ -303,7 +323,7 @@ class AnimComponent extends Component {
 
         for (let i = 0; i < stateGraph.layers.length; i++) {
             const layer = stateGraph.layers[i];
-            this._addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
+            this._addLayer.bind(this)({ ...layer, order: i });
         }
         this.setupAnimationAssets();
     }
@@ -414,11 +434,11 @@ class AnimComponent extends Component {
      * @function
      * @name AnimComponent#findAnimationLayer
      * @description Finds a {@link AnimComponentLayer} in this component.
-     * @param {string} layerName - The name of the anim component layer to find.
+     * @param {string} name - The name of the anim component layer to find.
      * @returns {AnimComponentLayer} Layer.
      */
-    findAnimationLayer(layerName) {
-        const layerIndex = this._layerIndices[layerName];
+    findAnimationLayer(name) {
+        const layerIndex = this._layerIndices[name];
         return this._layers[layerIndex] || null;
     }
 
