@@ -221,7 +221,7 @@ vec2 getCubemapFaceCoordinates(const vec3 dir, out float faceIndex, out vec2 til
 	return uv * ma + 0.5;
 }
 
-// converts unnormaized direction vector to a texture coordinate for a cubemap face stored within texture atlas described by the viewport
+// converts unnormalized direction vector to a texture coordinate for a cubemap face stored within texture atlas described by the viewport
 vec2 getCubemapAtlasCoordinates(const vec3 omniAtlasViewport, float shadowEdgePixels, float shadowTextureResolution, const vec3 dir) {
 
     float faceIndex;
