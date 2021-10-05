@@ -137,8 +137,8 @@ class EntityReference extends EventHandler {
     }
 
     _configureEventListeners(externalEventConfig, internalEventConfig) {
-        var externalEventListenerConfigs = this._parseEventListenerConfig(externalEventConfig, 'external', this._parentComponent);
-        var internalEventListenerConfigs = this._parseEventListenerConfig(internalEventConfig, 'internal', this);
+        const externalEventListenerConfigs = this._parseEventListenerConfig(externalEventConfig, 'external', this._parentComponent);
+        const internalEventListenerConfigs = this._parseEventListenerConfig(internalEventConfig, 'internal', this);
 
         this._eventListenerConfigs = externalEventListenerConfigs.concat(internalEventListenerConfigs);
         this._listenerStatusFlags = {};
@@ -148,10 +148,10 @@ class EntityReference extends EventHandler {
 
     _parseEventListenerConfig(eventConfig, prefix, scope) {
         return Object.keys(eventConfig).map(function (listenerDescription, index) {
-            var listenerDescriptionParts = listenerDescription.split('#');
-            var sourceName = listenerDescriptionParts[0];
-            var eventName = listenerDescriptionParts[1];
-            var callback = eventConfig[listenerDescription];
+            const listenerDescriptionParts = listenerDescription.split('#');
+            const sourceName = listenerDescriptionParts[0];
+            const eventName = listenerDescriptionParts[1];
+            const callback = eventConfig[listenerDescription];
 
             if (listenerDescriptionParts.length !== 2 ||
                 typeof sourceName !== 'string' || sourceName.length === 0 ||
@@ -182,11 +182,11 @@ class EntityReference extends EventHandler {
 
         // For any event listeners that relate to the gain/loss of a component, register
         // listeners that will forward the add/remove component events
-        var allComponentSystems = [];
+        const allComponentSystems = [];
 
-        for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
-            var config = this._eventListenerConfigs[i];
-            var componentSystem = this._app.systems[config.sourceName];
+        for (let i = 0; i < this._eventListenerConfigs.length; ++i) {
+            const config = this._eventListenerConfigs[i];
+            const componentSystem = this._app.systems[config.sourceName];
 
             if (componentSystem) {
                 if (allComponentSystems.indexOf(componentSystem) === -1) {
@@ -203,9 +203,9 @@ class EntityReference extends EventHandler {
             }
         }
 
-        for (var j = 0; j < allComponentSystems.length; ++j) {
-            allComponentSystems[j][onOrOff]('add', this._onComponentAdd, this);
-            allComponentSystems[j][onOrOff]('beforeremove', this._onComponentRemove, this);
+        for (let i = 0; i < allComponentSystems.length; ++i) {
+            allComponentSystems[i][onOrOff]('add', this._onComponentAdd, this);
+            allComponentSystems[i][onOrOff]('beforeremove', this._onComponentRemove, this);
         }
     }
 
@@ -254,8 +254,8 @@ class EntityReference extends EventHandler {
     }
 
     _updateEntityReference() {
-        var nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
-        var nextEntity;
+        let nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
+        let nextEntity;
 
         if (nextEntityGuid instanceof Entity) {
             // if value is set to a Entity itself replace value with the GUID
@@ -263,13 +263,13 @@ class EntityReference extends EventHandler {
             nextEntityGuid = nextEntity.getGuid();
             this._parentComponent.data[this._entityPropertyName] = nextEntityGuid;
         } else {
-            var root = this._parentComponent.system.app.root;
-            var isOnSceneGraph = this._parentComponent.entity.isDescendantOf(root);
+            const root = this._parentComponent.system.app.root;
+            const isOnSceneGraph = this._parentComponent.entity.isDescendantOf(root);
 
             nextEntity = (isOnSceneGraph && nextEntityGuid) ? root.findByGuid(nextEntityGuid) : null;
         }
 
-        var hasChanged = this._entity !== nextEntity;
+        const hasChanged = this._entity !== nextEntity;
 
         if (hasChanged) {
             if (this._entity) {
@@ -297,7 +297,7 @@ class EntityReference extends EventHandler {
     }
 
     _onComponentAdd(entity, component) {
-        var componentName = component.system.id;
+        const componentName = component.system.id;
 
         if (entity === this._entity) {
             this._callGainOrLoseListener(componentName, this._gainListeners);
@@ -306,7 +306,7 @@ class EntityReference extends EventHandler {
     }
 
     _onComponentRemove(entity, component) {
-        var componentName = component.system.id;
+        const componentName = component.system.id;
 
         if (entity === this._entity) {
             this._callGainOrLoseListener(componentName, this._loseListeners);
@@ -315,29 +315,29 @@ class EntityReference extends EventHandler {
     }
 
     _callAllGainOrLoseListeners(listenerMap) {
-        for (var componentName in this._entity.c) {
+        for (const componentName in this._entity.c) {
             this._callGainOrLoseListener(componentName, listenerMap);
         }
     }
 
     _callGainOrLoseListener(componentName, listenerMap) {
         if (this._entity.c.hasOwnProperty(componentName) && listenerMap[componentName]) {
-            var config = listenerMap[componentName];
+            const config = listenerMap[componentName];
             config.callback.call(config.scope);
         }
     }
 
     _toggleEntityListeners(onOrOff, isDestroying) {
         if (this._entity) {
-            for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
+            for (let i = 0; i < this._eventListenerConfigs.length; ++i) {
                 this._safeToggleListener(onOrOff, this._eventListenerConfigs[i], isDestroying);
             }
         }
     }
 
     _toggleComponentListeners(onOrOff, componentName, isDestroying) {
-        for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
-            var config = this._eventListenerConfigs[i];
+        for (let i = 0; i < this._eventListenerConfigs.length; ++i) {
+            const config = this._eventListenerConfigs[i];
 
             if (config.sourceName === componentName) {
                 this._safeToggleListener(onOrOff, config, isDestroying);
@@ -346,14 +346,14 @@ class EntityReference extends EventHandler {
     }
 
     _safeToggleListener(onOrOff, config, isDestroying) {
-        var isAdding = (onOrOff === 'on');
+        const isAdding = (onOrOff === 'on');
 
         // Prevent duplicate listeners
         if (isAdding && this._listenerStatusFlags[config.id]) {
             return;
         }
 
-        var source = this._getEventSource(config.sourceName, isDestroying);
+        const source = this._getEventSource(config.sourceName, isDestroying);
 
         if (source) {
             source[onOrOff](config.eventName, config.callback, config.scope);
@@ -369,7 +369,7 @@ class EntityReference extends EventHandler {
             return this._entity;
         }
 
-        var component = this._entity[sourceName];
+        const component = this._entity[sourceName];
 
         if (component) {
             return component;

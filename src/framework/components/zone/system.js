@@ -44,7 +44,7 @@ class ZoneComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        const data = {
             size: entity.zone.size
         };
 

@@ -166,17 +166,17 @@ class LayoutGroupComponent extends Component {
     }
 
     reflow() {
-        var container = getElement(this.entity);
-        var elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
+        const container = getElement(this.entity);
+        const elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
 
         if (!container || elements.length === 0) {
             return;
         }
 
-        var containerWidth = Math.max(container.calculatedWidth, 0);
-        var containerHeight = Math.max(container.calculatedHeight, 0);
+        const containerWidth = Math.max(container.calculatedWidth, 0);
+        const containerHeight = Math.max(container.calculatedHeight, 0);
 
-        var options = {
+        const options = {
             orientation: this._orientation,
             reverseX: this._reverseX,
             reverseY: this._reverseY,
@@ -193,7 +193,7 @@ class LayoutGroupComponent extends Component {
         // a child element triggers another reflow on the next frame, and so on)
         // we flag that a reflow is currently in progress.
         this._isPerformingReflow = true;
-        var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
+        const layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
         this._isPerformingReflow = false;
 
         this.fire('reflow', layoutInfo);
@@ -221,7 +221,7 @@ class LayoutGroupComponent extends Component {
 }
 
 function defineReflowSchedulingProperty(name) {
-    var _name = '_' + name;
+    const _name = '_' + name;
 
     Object.defineProperty(LayoutGroupComponent.prototype, name, {
         get: function () {

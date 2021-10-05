@@ -32,7 +32,7 @@ class LayoutChildComponent extends Component {
 }
 
 function defineResizeProperty(name) {
-    var _name = '_' + name;
+    const _name = '_' + name;
 
     Object.defineProperty(LayoutChildComponent.prototype, name, {
         get: function () {

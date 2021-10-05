@@ -390,7 +390,7 @@ class Progress {
  * @type {Application|undefined}
  * @description Gets the current application, if any.
  */
-var app = null;
+let app = null;
 
 class Application extends EventHandler {
     constructor(canvas, options = {}) {
@@ -464,7 +464,7 @@ class Application extends EventHandler {
 
         this.scenes = new SceneRegistry(this);
 
-        var self = this;
+        const self = this;
         this.defaultLayerWorld = new Layer({
             name: "World",
             id: LAYERID_WORLD
@@ -508,9 +508,9 @@ class Application extends EventHandler {
 
         // Default layers patch
         this.scene.on('set:layers', function (oldComp, newComp) {
-            var list = newComp.layerList;
-            var layer;
-            for (var i = 0; i < list.length; i++) {
+            const list = newComp.layerList;
+            let layer;
+            for (let i = 0; i < list.length; i++) {
                 layer = list[i];
                 switch (layer.id) {
                     case LAYERID_DEPTH:
@@ -696,16 +696,16 @@ class Application extends EventHandler {
      * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
-        var self = this;
+        const self = this;
         http.get(url, function (err, response) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            var props = response.application_properties;
-            var scenes = response.scenes;
-            var assets = response.assets;
+            const props = response.application_properties;
+            const scenes = response.scenes;
+            const assets = response.assets;
 
             self._parseApplicationProperties(props, function (err) {
                 self._parseScenes(scenes);
@@ -726,22 +726,21 @@ class Application extends EventHandler {
      * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
      */
     preload(callback) {
-        var self = this;
-        var i, total;
+        const self = this;
 
         self.fire("preload:start");
 
         // get list of assets to preload
-        var assets = this.assets.list({
+        const assets = this.assets.list({
             preload: true
         });
 
-        var _assets = new Progress(assets.length);
+        const _assets = new Progress(assets.length);
 
-        var _done = false;
+        let _done = false;
 
         // check if all loading is done
-        var done = function () {
+        const done = function () {
             // do not proceed if application destroyed
             if (!self.graphicsDevice) {
                 return;
@@ -755,13 +754,13 @@ class Application extends EventHandler {
         };
 
         // totals loading progress of assets
-        total = assets.length;
-        var count = function () {
+        const total = assets.length;
+        const count = function () {
             return _assets.count;
         };
 
         if (_assets.length) {
-            var onAssetLoad = function (asset) {
+            const onAssetLoad = function (asset) {
                 _assets.inc();
                 self.fire('preload:progress', count() / total);
 
@@ -769,7 +768,7 @@ class Application extends EventHandler {
                     done();
             };
 
-            var onAssetError = function (err, asset) {
+            const onAssetError = function (err, asset) {
                 _assets.inc();
                 self.fire('preload:progress', count() / total);
 
@@ -778,7 +777,7 @@ class Application extends EventHandler {
             };
 
             // for each asset
-            for (i = 0; i < assets.length; i++) {
+            for (let i = 0; i < assets.length; i++) {
                 if (!assets[i].loaded) {
                     assets[i].once('load', onAssetLoad);
                     assets[i].once('error', onAssetError);
@@ -803,19 +802,19 @@ class Application extends EventHandler {
             return;
         }
 
-        var self = this;
+        const self = this;
 
         self.systems.script.preloading = true;
 
-        var scripts = this._getScriptReferences(sceneData);
+        const scripts = this._getScriptReferences(sceneData);
 
-        var i = 0, l = scripts.length;
-        var progress = new Progress(l);
-        var scriptUrl;
-        var regex = /^http(s)?:\/\//;
+        const l = scripts.length;
+        const progress = new Progress(l);
+        let scriptUrl;
+        const regex = /^http(s)?:\/\//;
 
         if (l) {
-            var onLoad = function (err, ScriptType) {
+            const onLoad = function (err, ScriptType) {
                 if (err)
                     console.error(err);
 
@@ -826,7 +825,7 @@ class Application extends EventHandler {
                 }
             };
 
-            for (i = 0; i < l; i++) {
+            for (let i = 0; i < l; i++) {
                 scriptUrl = scripts[i];
                 // support absolute URLs (for now)
                 if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
@@ -842,7 +841,7 @@ class Application extends EventHandler {
 
     // handle area light property
     _handleAreaLightDataProperty(prop) {
-        var asset = this.assets.get(prop);
+        const asset = this.assets.get(prop);
         if (asset) {
             this.setAreaLightLuts(asset);
         } else {
@@ -852,9 +851,6 @@ class Application extends EventHandler {
 
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
-        var i;
-        var len;
-
         // configure retrying assets
         if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
             this.loader.enableRetry(props.maxAssetRetries);
@@ -879,11 +875,11 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition(this.graphicsDevice, "application");
+            const composition = new LayerComposition(this.graphicsDevice, "application");
 
-            var layers = {};
-            for (var key in props.layers) {
-                var data = props.layers[key];
+            const layers = {};
+            for (const key in props.layers) {
+                const data = props.layers[key];
                 data.id = parseInt(key, 10);
                 // depth layer should only be enabled when needed
                 // by incrementing its ref counter
@@ -891,9 +887,9 @@ class Application extends EventHandler {
                 layers[key] = new Layer(data);
             }
 
-            for (i = 0, len = props.layerOrder.length; i < len; i++) {
-                var sublayer = props.layerOrder[i];
-                var layer = layers[sublayer.layer];
+            for (let i = 0, len = props.layerOrder.length; i < len; i++) {
+                const sublayer = props.layerOrder[i];
+                const layer = layers[sublayer.layer];
                 if (!layer) continue;
 
                 if (sublayer.transparent) {
@@ -910,11 +906,10 @@ class Application extends EventHandler {
 
         // add batch groups
         if (props.batchGroups) {
-            for (i = 0, len = props.batchGroups.length; i < len; i++) {
-                var grp = props.batchGroups[i];
+            for (let i = 0, len = props.batchGroups.length; i < len; i++) {
+                const grp = props.batchGroups[i];
                 this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
             }
-
         }
 
         // set localization assets
@@ -930,14 +925,14 @@ class Application extends EventHandler {
     }
 
     _loadLibraries(urls, callback) {
-        var len = urls.length;
-        var count = len;
-        var self = this;
+        const len = urls.length;
+        let count = len;
+        const self = this;
 
-        var regex = /^http(s)?:\/\//;
+        const regex = /^http(s)?:\/\//;
 
         if (len) {
-            var onLoad = function (err, script) {
+            const onLoad = function (err, script) {
                 count--;
                 if (err) {
                     callback(err);
@@ -947,8 +942,8 @@ class Application extends EventHandler {
                 }
             };
 
-            for (var i = 0; i < len; ++i) {
-                var url = urls[i];
+            for (let i = 0; i < len; ++i) {
+                let url = urls[i];
 
                 if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
                     url = path.join(self._scriptPrefix, url);
@@ -965,23 +960,22 @@ class Application extends EventHandler {
     _parseScenes(scenes) {
         if (!scenes) return;
 
-        for (var i = 0; i < scenes.length; i++) {
+        for (let i = 0; i < scenes.length; i++) {
             this.scenes.add(scenes[i].name, scenes[i].url);
         }
     }
 
     // insert assets into registry
     _parseAssets(assets) {
-        var i, id;
-        var list = [];
+        const list = [];
 
-        var scriptsIndex = {};
-        var bundlesIndex = {};
+        const scriptsIndex = {};
+        const bundlesIndex = {};
 
         if (!script.legacy) {
             // add scripts in order of loading first
-            for (i = 0; i < this.scriptsOrder.length; i++) {
-                id = this.scriptsOrder[i];
+            for (let i = 0; i < this.scriptsOrder.length; i++) {
+                const id = this.scriptsOrder[i];
                 if (!assets[id])
                     continue;
 
@@ -991,7 +985,7 @@ class Application extends EventHandler {
 
             // then add bundles
             if (this.enableBundles) {
-                for (id in assets) {
+                for (const id in assets) {
                     if (assets[id].type === 'bundle') {
                         bundlesIndex[id] = true;
                         list.push(assets[id]);
@@ -1000,7 +994,7 @@ class Application extends EventHandler {
             }
 
             // then add rest of assets
-            for (id in assets) {
+            for (const id in assets) {
                 if (scriptsIndex[id] || bundlesIndex[id])
                     continue;
 
@@ -1009,7 +1003,7 @@ class Application extends EventHandler {
         } else {
             if (this.enableBundles) {
                 // add bundles
-                for (id in assets) {
+                for (const id in assets) {
                     if (assets[id].type === 'bundle') {
                         bundlesIndex[id] = true;
                         list.push(assets[id]);
@@ -1017,9 +1011,8 @@ class Application extends EventHandler {
                 }
             }
 
-
             // then add rest of assets
-            for (id in assets) {
+            for (const id in assets) {
                 if (bundlesIndex[id])
                     continue;
 
@@ -1027,9 +1020,9 @@ class Application extends EventHandler {
             }
         }
 
-        for (i = 0; i < list.length; i++) {
-            var data = list[i];
-            var asset = new Asset(data.name, data.type, data.file, data.data);
+        for (let i = 0; i < list.length; i++) {
+            const data = list[i];
+            const asset = new Asset(data.name, data.type, data.file, data.data);
             asset.id = parseInt(data.id, 10);
             asset.preload = data.preload ? data.preload : false;
             // if this is a script asset and has already been embedded in the page then
@@ -1039,7 +1032,7 @@ class Application extends EventHandler {
             asset.tags.add(data.tags);
             // i18n
             if (data.i18n) {
-                for (var locale in data.i18n) {
+                for (const locale in data.i18n) {
                     asset.addLocalizedAssetId(locale, data.i18n[locale]);
                 }
             }
@@ -1049,31 +1042,29 @@ class Application extends EventHandler {
     }
 
     _getScriptReferences(scene) {
-        var i, key;
-
-        var priorityScripts = [];
+        let priorityScripts = [];
         if (scene.settings.priority_scripts) {
             priorityScripts = scene.settings.priority_scripts;
         }
 
-        var _scripts = [];
-        var _index = {};
+        const _scripts = [];
+        const _index = {};
 
         // first add priority scripts
-        for (i = 0; i < priorityScripts.length; i++) {
+        for (let i = 0; i < priorityScripts.length; i++) {
             _scripts.push(priorityScripts[i]);
             _index[priorityScripts[i]] = true;
         }
 
         // then iterate hierarchy to get referenced scripts
-        var entities = scene.entities;
-        for (key in entities) {
+        const entities = scene.entities;
+        for (const key in entities) {
             if (!entities[key].components.script) {
                 continue;
             }
 
-            var scripts = entities[key].components.script.scripts;
-            for (i = 0; i < scripts.length; i++) {
+            const scripts = entities[key].components.script.scripts;
+            for (let i = 0; i < scripts.length; i++) {
                 if (_index[scripts[i].url])
                     continue;
                 _scripts.push(scripts[i].url);
@@ -1205,7 +1196,7 @@ class Application extends EventHandler {
 
     _fillFrameStatsBasic(now, dt, ms) {
         // Timing stats
-        var stats = this.stats.frame;
+        const stats = this.stats.frame;
         stats.dt = dt;
         stats.ms = ms;
         if (now > stats._timeToCountFrames) {
@@ -1222,7 +1213,7 @@ class Application extends EventHandler {
     }
 
     _fillFrameStats() {
-        var stats = this.stats.frame;
+        let stats = this.stats.frame;
 
         // Render stats
         stats.cameras = this.renderer._camerasRendered;
@@ -1232,7 +1223,7 @@ class Application extends EventHandler {
         stats.shadowMapTime = this.renderer._shadowMapTime;
         stats.depthMapTime = this.renderer._depthMapTime;
         stats.forwardTime = this.renderer._forwardTime;
-        var prims = this.graphicsDevice._primsPerFrame;
+        const prims = this.graphicsDevice._primsPerFrame;
         stats.triangles = prims[PRIMITIVE_TRIANGLES] / 3 +
             Math.max(prims[PRIMITIVE_TRISTRIP] - 2, 0) +
             Math.max(prims[PRIMITIVE_TRIFAN] - 2, 0);
@@ -1244,7 +1235,7 @@ class Application extends EventHandler {
         stats.lightClusters = this.renderer._lightClusters;
         stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
-        for (var i = 0; i < prims.length; i++) {
+        for (let i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
                 stats.otherPrimitives += prims[i];
             }
@@ -1376,12 +1367,12 @@ class Application extends EventHandler {
         if (this.xr && this.xr.session)
             return;
 
-        var windowWidth = window.innerWidth;
-        var windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
 
         if (this._fillMode === FILLMODE_KEEP_ASPECT) {
-            var r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
-            var winR = windowWidth / windowHeight;
+            const r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
+            const winR = windowWidth / windowHeight;
 
             if (r > winR) {
                 width = windowWidth;
@@ -1512,10 +1503,10 @@ class Application extends EventHandler {
      * app.applySceneSettings(settings);
      */
     applySceneSettings(settings) {
-        var asset;
+        let asset;
 
         if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-            var gravity = settings.physics.gravity;
+            const gravity = settings.physics.gravity;
             this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
         }
 
@@ -1872,8 +1863,7 @@ class Application extends EventHandler {
             return;
         }
 
-        var i, l;
-        var canvasId = this.graphicsDevice.canvas.id;
+        const canvasId = this.graphicsDevice.canvas.id;
 
         this.off('librariesloaded');
 
@@ -1915,8 +1905,8 @@ class Application extends EventHandler {
             this.controller = null;
         }
 
-        var systems = this.systems.list;
-        for (i = 0, l = systems.length; i < l; i++) {
+        const systems = this.systems.list;
+        for (let i = 0, l = systems.length; i < l; i++) {
             systems[i].destroy();
         }
 
@@ -1928,8 +1918,8 @@ class Application extends EventHandler {
         }
 
         // destroy all texture resources
-        var assets = this.assets.list();
-        for (i = 0; i < assets.length; i++) {
+        const assets = this.assets.list();
+        for (let i = 0; i < assets.length; i++) {
             assets[i].unload();
             assets[i].off();
         }
@@ -1943,9 +1933,9 @@ class Application extends EventHandler {
         this.i18n.destroy();
         this.i18n = null;
 
-        for (var key in this.loader.getHandler('script')._cache) {
-            var element = this.loader.getHandler('script')._cache[key];
-            var parent = element.parentNode;
+        for (const key in this.loader.getHandler('script')._cache) {
+            const element = this.loader.getHandler('script')._cache[key];
+            const parent = element.parentNode;
             if (parent) parent.removeChild(element);
         }
         this.loader.getHandler('script')._cache = {};
@@ -2029,12 +2019,12 @@ class Application extends EventHandler {
 }
 
 // static data
-var _frameEndData = {};
+const _frameEndData = {};
 
 // create tick function to be wrapped in closure
-var makeTick = function (_app) {
-    var application = _app;
-    var frameRequest;
+const makeTick = function (_app) {
+    const application = _app;
+    let frameRequest;
 
     return function (timestamp, frame) {
         if (!application.graphicsDevice)
@@ -2050,9 +2040,9 @@ var makeTick = function (_app) {
         // have current application pointer in pc
         app = application;
 
-        var currentTime = application._processTimestamp(timestamp) || now();
-        var ms = currentTime - (application._time || currentTime);
-        var dt = ms / 1000.0;
+        const currentTime = application._processTimestamp(timestamp) || now();
+        const ms = currentTime - (application._time || currentTime);
+        let dt = ms / 1000.0;
         dt = math.clamp(dt, 0, application.maxDeltaTime);
         dt *= application.timeScale;
 

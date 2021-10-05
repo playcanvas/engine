@@ -9,26 +9,26 @@ import { Component } from '../component.js';
 
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 
-var VisualState = {
+const VisualState = {
     DEFAULT: 'DEFAULT',
     HOVER: 'HOVER',
     PRESSED: 'PRESSED',
     INACTIVE: 'INACTIVE'
 };
 
-var STATES_TO_TINT_NAMES = {};
+const STATES_TO_TINT_NAMES = {};
 STATES_TO_TINT_NAMES[VisualState.DEFAULT] = '_defaultTint';
 STATES_TO_TINT_NAMES[VisualState.HOVER] = 'hoverTint';
 STATES_TO_TINT_NAMES[VisualState.PRESSED] = 'pressedTint';
 STATES_TO_TINT_NAMES[VisualState.INACTIVE] = 'inactiveTint';
 
-var STATES_TO_SPRITE_ASSET_NAMES = {};
+const STATES_TO_SPRITE_ASSET_NAMES = {};
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.DEFAULT] = '_defaultSpriteAsset';
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.HOVER] = 'hoverSpriteAsset';
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.PRESSED] = 'pressedSpriteAsset';
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.INACTIVE] = 'inactiveSpriteAsset';
 
-var STATES_TO_SPRITE_FRAME_NAMES = {};
+const STATES_TO_SPRITE_FRAME_NAMES = {};
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.DEFAULT] = '_defaultSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.HOVER] = 'hoverSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.PRESSED] = 'pressedSpriteFrame';
@@ -144,7 +144,7 @@ class ButtonComponent extends Component {
 
     _toggleHitElementListeners(onOrOff) {
         if (this.entity.element) {
-            var isAdding = (onOrOff === 'on');
+            const isAdding = (onOrOff === 'on');
 
             // Prevent duplicate listeners
             if (isAdding && this._hasHitElementListeners) {
@@ -337,8 +337,8 @@ class ButtonComponent extends Component {
     }
 
     _updateVisualState(force) {
-        var oldVisualState = this._visualState;
-        var newVisualState = this._determineVisualState();
+        const oldVisualState = this._visualState;
+        const newVisualState = this._determineVisualState();
 
         if ((oldVisualState !== newVisualState || force) && this.enabled) {
             this._visualState = newVisualState;
@@ -360,19 +360,20 @@ class ButtonComponent extends Component {
             }
 
             switch (this.transitionMode) {
-                case BUTTON_TRANSITION_MODE_TINT:
-                    var tintName = STATES_TO_TINT_NAMES[this._visualState];
-                    var tintColor = this[tintName];
+                case BUTTON_TRANSITION_MODE_TINT: {
+                    const tintName = STATES_TO_TINT_NAMES[this._visualState];
+                    const tintColor = this[tintName];
                     this._applyTint(tintColor);
                     break;
-
-                case BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                    var spriteAssetName = STATES_TO_SPRITE_ASSET_NAMES[this._visualState];
-                    var spriteFrameName = STATES_TO_SPRITE_FRAME_NAMES[this._visualState];
-                    var spriteAsset = this[spriteAssetName];
-                    var spriteFrame = this[spriteFrameName];
+                }
+                case BUTTON_TRANSITION_MODE_SPRITE_CHANGE: {
+                    const spriteAssetName = STATES_TO_SPRITE_ASSET_NAMES[this._visualState];
+                    const spriteFrameName = STATES_TO_SPRITE_FRAME_NAMES[this._visualState];
+                    const spriteAsset = this[spriteAssetName];
+                    const spriteFrame = this[spriteFrameName];
                     this._applySprite(spriteAsset, spriteFrame);
                     break;
+                }
             }
         }
     }
@@ -446,8 +447,8 @@ class ButtonComponent extends Component {
 
     _applyTintWithTween(tintColor) {
         if (this._imageReference.hasComponent('element') && tintColor) {
-            var color = this._imageReference.entity.element.color;
-            var opacity = this._imageReference.entity.element.opacity;
+            const color = this._imageReference.entity.element.color;
+            const opacity = this._imageReference.entity.element.opacity;
 
             this._tweenInfo = {
                 startTime: now(),
@@ -459,12 +460,12 @@ class ButtonComponent extends Component {
     }
 
     _updateTintTween() {
-        var elapsedTime = now() - this._tweenInfo.startTime;
-        var elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
+        const elapsedTime = now() - this._tweenInfo.startTime;
+        let elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
         elapsedProportion = math.clamp(elapsedProportion, 0, 1);
 
         if (Math.abs(elapsedProportion - 1) > 1e-5) {
-            var lerpColor = this._tweenInfo.lerpColor;
+            const lerpColor = this._tweenInfo.lerpColor;
             lerpColor.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
             this._applyTintImmediately(new Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a));
         } else {
