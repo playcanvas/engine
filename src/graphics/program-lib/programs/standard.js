@@ -548,7 +548,7 @@ var standard = {
         } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
             code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
 
-            // clustered omni light is using shadow sampler and neesd to write custom depth
+            // clustered omni light is using shadow sampler and needs to write custom depth
             if (isClustered && lightType === LIGHTTYPE_OMNI && device.webgl2) {
                 code += "   gl_FragDepth = depth;\n";
             }
