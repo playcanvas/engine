@@ -362,13 +362,14 @@ class Lightmapper {
         }
     }
 
-    calculateLightmapSize(node) {
-        let data, parent;
+    calculateLightmapSize(bakeNode) {
+        let data;
         const sizeMult = this.scene.lightmapSizeMultiplier || 16;
         const scale = tempVec;
 
         let srcArea, lightmapSizeMultiplier;
 
+        const node = bakeNode.node;
         if (node.model) {
             lightmapSizeMultiplier = node.model.lightmapSizeMultiplier;
             if (node.model.asset) {
@@ -392,9 +393,6 @@ class Lightmapper {
                     }
                 }
             }
-            // OTHERWISE: TODO: render asset type should provide the area data - which describe size of mesh to allow
-            // auto-scaling of assigned lightmap resolution
-
         }
 
         // copy area
@@ -411,25 +409,17 @@ class Lightmapper {
         area.y *= areaMult;
         area.z *= areaMult;
 
-        scale.copy(node.localScale);
-        parent = node._parent;
-        while (parent) {
-            scale.mul(parent.localScale);
-            parent = parent._parent;
-        }
-
-        // Negatively scaled nodes still need full size lightmaps.
-        scale.x = Math.abs(scale.x);
-        scale.y = Math.abs(scale.y);
-        scale.z = Math.abs(scale.z);
-
+        // total area in the lightmap is based on the world space bounds of the mesh
+        scale.copy(bakeNode.bounds.halfExtents);
         let totalArea = area.x * scale.y * scale.z +
                         area.y * scale.x * scale.z +
                         area.z * scale.x * scale.y;
         totalArea /= area.uv;
         totalArea = Math.sqrt(totalArea);
 
-        return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || MAX_LIGHTMAP_SIZE);
+        const lightmapSize = Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || MAX_LIGHTMAP_SIZE);
+
+        return lightmapSize;
     }
 
     setLightmaping(nodes, value, passCount, shaderDefs) {
@@ -580,7 +570,7 @@ class Lightmapper {
 
             // required lightmap size
             const bakeNode = bakeNodes[i];
-            const size = this.calculateLightmapSize(bakeNode.node);
+            const size = this.calculateLightmapSize(bakeNode);
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
@@ -888,6 +878,9 @@ class Lightmapper {
         // update layer composition
         scene.layers._update();
 
+        // compute bounding boxes for nodes
+        this.computeNodeBounds(bakeNodes);
+
         // Calculate lightmap sizes and allocate textures
         this.allocateTextures(bakeNodes, passCount);
 
@@ -904,9 +897,6 @@ class Lightmapper {
         // update skinned and morphed meshes
         this.renderer.updateCpuSkinMatrices(casters);
         this.renderer.gpuUpdate(casters);
-
-        // compute bounding boxes for nodes
-        this.computeNodeBounds(bakeNodes);
 
         // compound bounding box for all casters, used to compute shared directional light shadow
         const casterBounds = this.computeBounds(casters);
