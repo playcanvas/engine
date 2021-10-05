@@ -166,8 +166,8 @@ class Light {
         // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
         this._cookieMatrix = null;
 
-        // viewport of the cookie texture in the atlas
-        this._cookieViewport = null;
+        // viewport of the cookie texture / shadow in the atlas
+        this._atlasViewport = null;
 
         this._scene = null;
         this._node = null;
@@ -677,11 +677,11 @@ class Light {
         return this._cookieMatrix;
     }
 
-    get cookieViewport() {
-        if (!this._cookieViewport) {
-            this._cookieViewport = new Vec4(0, 0, 1, 1);
+    get atlasViewport() {
+        if (!this._atlasViewport) {
+            this._atlasViewport = new Vec4(0, 0, 1, 1);
         }
-        return this._cookieViewport;
+        return this._atlasViewport;
     }
 
     get cookie() {

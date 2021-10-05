@@ -37,5 +37,5 @@ vec3 getCookie2DClustered(sampler2D tex, mat4 transform, float intensity, bool i
     vec4 projPos = transform * vec4(vPositionW, 1.0);
     projPos.xy /= projPos.w;
     vec4 pixel = mix(vec4(1.0), texture2D(tex, projPos.xy), intensity);
-    return isRgb ? pixel.rgb : vec3(dot(pixel, cookieChannel));
+    return isRgb == true ? pixel.rgb : vec3(dot(pixel, cookieChannel));
 }

@@ -64,51 +64,62 @@ class ClusteredShadowsOmniExample extends Example {
         }
 
         // create the ground plane from the boxes
-        createPrimitive("box", new pc.Vec3(0, -5, 0), new pc.Vec3(800, 2, 800));
+        createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800));
+        createPrimitive("box", new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800));
 
-        // create the towers from the boxes
-        let scale = 16;
-        for (let y = 0; y <= 7; y++) {
-            for (let x = -1; x <= 1; x += 2) {
-                for (let z = -5; z <= 5; z += 2) {
-                    const prim = createPrimitive("box", new pc.Vec3(x * 70, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale));
-                    prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-                }
+        // walls
+        createPrimitive("box", new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800));
+        createPrimitive("box", new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800));
+        createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0));
+        createPrimitive("box", new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0));
+
+        const numTowers = 7;
+        for (let i = 0; i < numTowers; i++) {
+            let scale = 25;
+            const fraction = i / numTowers * Math.PI * 2;
+            const radius = (i % 2) ? 340 : 210;
+            for (let y = 0; y <= 7; y++) {
+                const prim = createPrimitive("box", new pc.Vec3(radius * Math.sin(fraction), 2 + y * 25, radius * Math.cos(fraction)), new pc.Vec3(scale, scale, scale));
+                prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
             }
             scale -= 1.5;
         }
 
+        const omniLights: Array<pc.Entity> = [];
+        const numLights = 10;
+        for (let i = 0; i < numLights; i++) {
+            const lightOmni = new pc.Entity("Omni");
+            lightOmni.addComponent("light", {
+                type: "omni",
+                color: pc.Color.WHITE,
+                intensity: 8 / numLights,
+                range: 350,
+                castShadows: true,
+                shadowBias: 0.2,
+                normalOffsetBias: 0.07
+            });
 
+            // attach a render component with a small sphere to it
+            const material = new pc.StandardMaterial();
+            material.emissive = pc.Color.WHITE;
+            material.update();
 
-        const lightOmni = new pc.Entity("Omni");
-        lightOmni.addComponent("light", {
-            type: "omni",
-            color: pc.Color.WHITE,
-            range: 600,
-            castShadows: true,
-            shadowBias: 0.4,
-            normalOffsetBias: 0.1
-        });
+            lightOmni.addComponent('render', {
+                type: "sphere",
+                material: material,
+                castShadows: false
+            });
+            lightOmni.setPosition(0, 120, 0);
+            lightOmni.setLocalScale(5, 5, 5);
+            app.root.addChild(lightOmni);
 
-        // attach a render component with a small sphere to it
-        const material = new pc.StandardMaterial();
-        material.emissive = pc.Color.WHITE;
-        material.update();
-
-        lightOmni.addComponent('render', {
-            type: "sphere",
-            material: material,
-            castShadows: false
-        });
-        lightOmni.setPosition(0, 120, 0);
-        lightOmni.setLocalScale(5, 5, 5);
-        app.root.addChild(lightOmni);
-
-
+            omniLights.push(lightOmni);
+        }
 
         // create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
+            fov: 80,
             clearColor: new pc.Color(0.9, 0.9, 0.9),
             farClip: 1500
         });
@@ -122,7 +133,7 @@ class ClusteredShadowsOmniExample extends Example {
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: app.root,
-                distanceMax: 600
+                distanceMax: 400
             }
         });
         camera.script.create("orbitCameraInputMouse");
@@ -130,10 +141,17 @@ class ClusteredShadowsOmniExample extends Example {
         app.root.addChild(camera);
 
         // Set an update function on the app's update event
+        let time = 0;
         app.on("update", function (dt: number) {
+            time += dt * 0.3;
+            const radius = 250;
+            for (let i = 0; i < omniLights.length; i++) {
+                const fraction = i / omniLights.length * Math.PI * 2;
+                omniLights[i].setPosition(radius * Math.sin(time + fraction), 190 + Math.sin(time + fraction) * 150, radius * Math.cos(time + fraction));
+            }
 
             // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-            app.renderTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
+            // app.renderTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
         });
     }
 }

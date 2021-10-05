@@ -1,13 +1,25 @@
+import { Vec2 } from '../../math/vec2.js';
 import { Vec4 } from '../../math/vec4.js';
 
 import { RenderTarget } from '../../graphics/render-target.js';
 
-import { LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
+import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
 import { CookieRenderer } from '../renderer/cookie-renderer.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
 const _viewport = new Vec4();
+const _scissor = new Vec4();
+
+// offsets to individual faces of a cubemap inside 3x3 grid in an atlas slot
+const _cubeSlotsOffsets = [
+    new Vec2(0, 0),
+    new Vec2(0, 1),
+    new Vec2(1, 0),
+    new Vec2(1, 1),
+    new Vec2(2, 0),
+    new Vec2(2, 1)
+];
 
 // A class handling runtime allocation of slots in a texture. Used to allocate slots in the shadow map,
 // and will be used to allocate slots in the cookie texture atlas as well.
@@ -22,6 +34,10 @@ class LightTextureAtlas {
 
         this.shadowMapResolution = 2048;
         this.shadowMap = null;
+
+        // number of additional pixels to render past the required shadow camera angle (90deg for omno, outer for spot) of the shadow camera for clustered lights.
+        // This needs to be a pixel more than a shadow filter needs to access.
+        this.shadowEdgePixels = 3;
 
         this.cookieMapResolution = 2048;
         this.cookieMap = null;
@@ -84,6 +100,7 @@ class LightTextureAtlas {
     allocateUniforms() {
         this._shadowAtlasTextureId = this.device.scope.resolve("shadowAtlasTexture");
         this._shadowAtlasParamsId = this.device.scope.resolve("shadowAtlasParams");
+        this._shadowAtlasParams = new Float32Array(2);
 
         this._cookieAtlasTextureId = this.device.scope.resolve("cookieAtlasTexture");
     }
@@ -98,7 +115,9 @@ class LightTextureAtlas {
         this._shadowAtlasTextureId.setValue(shadowBuffer);
 
         // shadow atlas params
-        this._shadowAtlasParamsId.setValue(this.shadowMapResolution);
+        this._shadowAtlasParams[0] = this.shadowMapResolution;
+        this._shadowAtlasParams[1] = this.shadowEdgePixels;
+        this._shadowAtlasParamsId.setValue(this._shadowAtlasParams);
 
         // cookie atlas textures
         this._cookieAtlasTextureId.setValue(this.cookieMap);
@@ -130,17 +149,23 @@ class LightTextureAtlas {
         let needsCookie = false;
         const lights = _tempArray;
         lights.length = 0;
-        for (let i = 0; i < spotLights.length; i++) {
-            const light = spotLights[i];
-            if (light.visibleThisFrame) {
-                needsShadow ||= light.castShadows;
-                needsCookie ||= light.cookie;
 
-                if (needsShadow || needsCookie) {
-                    lights.push(light);
+        const processLights = (list) => {
+            for (let i = 0; i < list.length; i++) {
+                const light = list[i];
+                if (light.visibleThisFrame) {
+                    needsShadow ||= light.castShadows;
+                    needsCookie ||= !!light.cookie;
+
+                    if (needsShadow || needsCookie) {
+                        lights.push(light);
+                    }
                 }
             }
-        }
+        };
+
+        processLights(spotLights);
+        processLights(omniLights);
 
         if (needsShadow) {
             this.allocateShadowMap(this.shadowMapResolution);
@@ -177,29 +202,43 @@ class LightTextureAtlas {
                 if (light.castShadows)
                     light._shadowMap = this.shadowMap;
 
+                // use a single slot for spot, and single slot for all 6 faces of cubemap as well
+                const slot = this.slots[usedCount];
+                usedCount++;
+
+                light.atlasViewport.copy(slot);
+
                 const faceCount = light.numShadowFaces;
                 for (let face = 0; face < faceCount; face++) {
-
-                    const slot = this.slots[usedCount];
-                    usedCount++;
 
                     // setup slot for shadow and cookie
                     if (light.castShadows || light._cookie) {
 
-                        // for spot lights in the atlas, make viewport slightly smaller to avoid sampling past the edges
                         _viewport.copy(slot);
+                        _scissor.copy(slot);
+
+                        // for spot lights in the atlas, make viewport slightly smaller to avoid sampling past the edges
                         if (light._type === LIGHTTYPE_SPOT) {
                             _viewport.add(scissorVec);
+                        }
+
+                        // for cube map, allocate part of the slot
+                        if (light._type === LIGHTTYPE_OMNI) {
+
+                            const smallSize = _viewport.z / 3;
+                            const offset = _cubeSlotsOffsets[face];
+                            _viewport.x += smallSize * offset.x;
+                            _viewport.y += smallSize * offset.y;
+                            _viewport.z = smallSize;
+                            _viewport.w = smallSize;
+
+                            _scissor.copy(_viewport);
                         }
 
                         if (light.castShadows) {
                             const lightRenderData = light.getRenderData(null, face);
                             lightRenderData.shadowViewport.copy(_viewport);
-                            lightRenderData.shadowScissor.copy(slot);
-                        }
-
-                        if (light._cookie) {
-                            light.cookieViewport.copy(_viewport);
+                            lightRenderData.shadowScissor.copy(_scissor);
                         }
                     }
                 }

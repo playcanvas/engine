@@ -96,7 +96,7 @@ class CookieRenderer {
 
         const cookieMatrix = light.cookieMatrix;
 
-        const rectViewport = light.cookieViewport;
+        const rectViewport = light.atlasViewport;
         _viewportMatrix.setViewport(rectViewport.x, rectViewport.y, rectViewport.z, rectViewport.w);
         cookieMatrix.mul2(_viewportMatrix, _viewProjMat);
 
@@ -121,7 +121,7 @@ class CookieRenderer {
                 this.blitTextureId.setValue(light.cookie);
 
                 // render it to a viewport of the target
-                _viewport.copy(light.cookieViewport).mulScalar(renderTarget.colorBuffer.width);
+                _viewport.copy(light.atlasViewport).mulScalar(renderTarget.colorBuffer.width);
                 drawQuadWithShader(device, renderTarget, shader, _viewport);
             }
 
