@@ -50,7 +50,7 @@ import { VertexBuffer } from './graphics/vertex-buffer.js';
 import { VertexFormat } from './graphics/vertex-format.js';
 import { VertexIterator } from './graphics/vertex-iterator.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from './scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY } from './scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 import { partitionSkin } from './scene/skin-partition.js';
 import { BasicMaterial } from './scene/materials/basic-material.js';
@@ -981,6 +981,111 @@ Application.prototype.loadSceneSettings = function (url, callback) {
     console.warn("DEPRECATED: pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
     // #endif
     this.scenes.loadSceneSettings(url, callback);
+};
+
+Application.prototype._addLines = function (positions, colors, options) {
+    var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
+    var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
+
+    const batch = this._immediate.getBatch(layer, depthTest);
+    batch.addLines(positions, colors);
+};
+
+Application.prototype.renderLine = function (start, end, color) {
+
+    // #if _DEBUG
+    console.warn("DEPRECATED: pc.Application.renderLine is deprecated. Use pc.Application.drawLine.");
+    // #endif
+
+    var endColor = color;
+    var options;
+
+    var arg3 = arguments[3];
+    var arg4 = arguments[4];
+
+    if (arg3 instanceof Color) {
+        // passed in end color
+        endColor = arg3;
+
+        if (typeof arg4 === 'number') {
+            // compatibility: convert linebatch id into options
+            if (arg4 === LINEBATCH_OVERLAY) {
+                options = {
+                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+                    depthTest: false
+                };
+            } else {
+                options = {
+                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+                    depthTest: true
+                };
+            }
+        } else {
+            // use passed in options
+            options = arg4;
+        }
+    } else if (typeof arg3 === 'number') {
+        endColor = color;
+
+        // compatibility: convert linebatch id into options
+        if (arg3 === LINEBATCH_OVERLAY) {
+            options = {
+                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+                depthTest: false
+            };
+        } else {
+            options = {
+                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+                depthTest: true
+            };
+        }
+    } else if (arg3) {
+        // options passed in
+        options = arg3;
+    }
+
+    this._addLines([start, end], [color, endColor], options);
+};
+
+Application.prototype.renderLines = function (position, color, options) {
+
+    // #if _DEBUG
+    console.warn("DEPRECATED: pc.Application.renderLines is deprecated. Use pc.Application.drawLines.");
+    // #endif
+
+    if (!options) {
+        // default option
+        options = {
+            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+            depthTest: true
+        };
+    } else if (typeof options === 'number') {
+        // backwards compatibility, LINEBATCH_OVERLAY lines have depthtest disabled
+        if (options === LINEBATCH_OVERLAY) {
+            options = {
+                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+                depthTest: false
+            };
+        } else {
+            options = {
+                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
+                depthTest: true
+            };
+        }
+    }
+
+    var multiColor = !!color.length;
+    if (multiColor) {
+        if (position.length !== color.length) {
+            console.error("renderLines: position/color arrays have different lengths");
+            return;
+        }
+    }
+    if (position.length % 2 !== 0) {
+        console.error("renderLines: array length is not divisible by 2");
+        return;
+    }
+    this._addLines(position, color, options);
 };
 
 Object.defineProperty(CameraComponent.prototype, "node", {

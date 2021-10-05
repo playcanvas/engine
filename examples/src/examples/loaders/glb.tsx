@@ -26,7 +26,7 @@ class GLBExample extends Example {
             const entity = asset.resource.instantiateRenderEntity();
             app.root.addChild(entity);
 
-            // find all cameras - by default there are disabled
+            // find all cameras - by default they are disabled
             // set their aspect ratio to automatic to work with any window size
             camerasComponents = entity.findComponents("camera");
             camerasComponents.forEach((component) => {

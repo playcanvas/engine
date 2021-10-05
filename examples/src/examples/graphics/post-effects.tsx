@@ -297,7 +297,7 @@ class PostEffectsExample extends Example {
             // display the depth textur if bokeh is enabled
             if (camera.script.bokeh.enabled) {
                 // @ts-ignore engine-tsd
-                app.renderDepthTexture(0.7, -0.7, 0.5, 0.5);
+                app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
             }
         });
 
@@ -306,7 +306,7 @@ class PostEffectsExample extends Example {
             if (pathArray[0] === 'scripts') {
                 camera.script[pathArray[1]][pathArray[2]] = value;
             } else {
-                camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI
+                camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
             }
         });
     }

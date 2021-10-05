@@ -20,13 +20,12 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    LINEBATCH_OVERLAY,
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
+import { Immediate } from '../scene/immediate/immediate.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
-import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
@@ -133,8 +132,6 @@ class Progress {
         return (this.count === this.length);
     }
 }
-
-var _deprecationWarning = false;
 
 /**
  * @class
@@ -640,8 +637,10 @@ class Application extends EventHandler {
             }
         }
 
-        // bind tick function to current scope
+        // immediate rendering
+        this._immediate = new Immediate(this.graphicsDevice, this);
 
+        // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
@@ -1192,8 +1191,7 @@ class Application extends EventHandler {
         this.stats.frame.renderStart = now();
         // #endif
 
-        this.fire("prerender");
-
+        this.fire('prerender');
         this.root.syncHierarchy();
         this.batcher.updateAll();
 
@@ -1201,8 +1199,7 @@ class Application extends EventHandler {
         ForwardRenderer._skipRenderCounter = 0;
         // #endif
         this.renderer.renderComposition(this.scene.layers);
-
-        this.fire("postrender");
+        this.fire('postrender');
 
         // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
@@ -1667,162 +1664,60 @@ class Application extends EventHandler {
         return timestamp;
     }
 
-    // IMMEDIATE MODE API
-    _preRenderImmediate() {
-        this._immediateData.finalize();
-    }
-
-    _postRenderImmediate() {
-        this._immediateData.clear();
-    }
-
-    _initImmediate() {
-        // Init global line drawing data once
-        if (!this._immediateData) {
-            this._immediateData = new ImmediateData(this.graphicsDevice);
-
-            this.on('prerender', this._preRenderImmediate, this);
-            this.on('postrender', this._postRenderImmediate, this);
-        }
-    }
-
-    _addLines(position, color, options) {
-        var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
-        var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
-        var mask = (options && options.mask) ? options.mask : undefined;
-
-        this._initImmediate();
-        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
-
-        // Append
-        lineBatch.addLines(position, color);
+    // returns the default layer used by the line drawing functions
+    _getDefaultDrawLayer() {
+        return this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     }
 
     /**
      * @function
-     * @name Application#renderLine
-     * @description Renders a line. Line start and end coordinates are specified in
-     * world-space. If a single color is supplied, the line will be flat-shaded with
-     * that color. If two colors are supplied, the line will be smooth shaded between
-     * those colors. It is also possible to control which scene layer the line is
-     * rendered into. By default, lines are rendered into the immediate layer
-     * {@link LAYERID_IMMEDIATE}.
+     * @name Application#drawLine
+     * @description Draws a single line. Line start and end coordinates are specified in world-space.
+     * The line will be flat-shaded with the specified color.
      * @param {Vec3} start - The start world-space coordinate of the line.
      * @param {Vec3} end - The end world-space coordinate of the line.
-     * @param {Color} color - The start color of the line.
-     * @param {Color} [endColor] - The end color of the line.
-     * @param {object} [options] - Options to set rendering properties.
-     * @param {Layer} [options.layer] - The layer to render the line into. Defaults
-     * to {@link LAYERID_IMMEDIATE}.
+     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {boolean} [depthTest] - Specifies if the line is depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
      * var start = new pc.Vec3(0, 0, 0);
      * var end = new pc.Vec3(1, 0, 0);
-     * var color = new pc.Color(1, 1, 1);
-     * app.renderLine(start, end, color);
+     * app.drawLine(start, end);
      * @example
-     * // Render a 1-unit long line that is smooth-shaded from white to red
+     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
      * var start = new pc.Vec3(0, 0, 0);
      * var end = new pc.Vec3(1, 0, 0);
-     * var startColor = new pc.Color(1, 1, 1);
-     * var endColor = new pc.Color(1, 0, 0);
-     * app.renderLine(start, end, startColor, endColor);
+     * app.drawLine(start, end, pc.Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
      * var start = new pc.Vec3(0, 0, 0);
      * var end = new pc.Vec3(1, 0, 0);
-     * var color = new pc.Color(1, 1, 1);
      * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.renderLine(start, end, color, {
-     *     layer: worldLayer
-     * });
-     * @example
-     * // Render a 1-unit long line that is smooth-shaded from white to red into the world layer
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
-     * var startColor = new pc.Color(1, 1, 1);
-     * var endColor = new pc.Color(1, 0, 0);
-     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.renderLine(start, end, color, {
-     *     layer: worldLayer
-     * });
+     * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
-    renderLine(start, end, color) {
-        var endColor = color;
-        var options;
-
-        var arg3 = arguments[3];
-        var arg4 = arguments[4];
-
-        if (arg3 instanceof Color) {
-            // passed in end color
-            endColor = arg3;
-
-            if (typeof arg4 === 'number') {
-                if (!_deprecationWarning) {
-                    console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
-                    _deprecationWarning = true;
-                }
-                // compatibility: convert linebatch id into options
-                if (arg4 === LINEBATCH_OVERLAY) {
-                    options = {
-                        layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                        depthTest: false
-                    };
-                } else {
-                    options = {
-                        layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                        depthTest: true
-                    };
-                }
-            } else {
-                // use passed in options
-                options = arg4;
-            }
-        } else if (typeof arg3 === 'number') {
-            if (!_deprecationWarning) {
-                console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
-                _deprecationWarning = true;
-            }
-
-            endColor = color;
-
-            // compatibility: convert linebatch id into options
-            if (arg3 === LINEBATCH_OVERLAY) {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: false
-                };
-            } else {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: true
-                };
-            }
-        } else if (arg3) {
-            // options passed in
-            options = arg3;
-        }
-
-        this._addLines([start, end], [color, endColor], options);
+    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLines([start, end], [color, color]);
     }
 
     /**
      * @function
-     * @name Application#renderLines
-     * @description Renders an arbitrary number of discrete line segments. The lines
-     * are not connected by each subsequent point in the array. Instead, they are
-     * individual segments specified by two points. Therefore, the lengths of the
-     * supplied position and color arrays must be the same and also must be a multiple
-     * of 2. The colors of the ends of each line segment will be interpolated along
-     * the length of each line.
-     * @param {Vec3[]} position - An array of points to draw lines between. The
-     * length of the array must be a multiple of 2.
-     * @param {Color[]} color - An array of colors to color the lines. This
-     * must be the same length as the position array. The length of the array must
-     * also be a multiple of 2.
-     * @param {object} [options] - Options to set rendering properties.
-     * @param {Layer} [options.layer] - The layer to render the lines into.
+     * @name Application#drawLines
+     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
+     * point in the array. Instead, they are individual segments specified by two points. Therefore, the lengths of the
+     * supplied position and color arrays must be the same and also must be a multiple of 2. The colors of the ends of each
+     * line segment will be interpolated along the length of each line.
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same length as the position array.
+     * The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a single line, with unique colors for each point
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
      * var points = [
@@ -1841,90 +1736,106 @@ class Application extends EventHandler {
      *     pc.Color.CYAN,
      *     pc.Color.BLUE
      * ];
-     * app.renderLines(points, colors);
+     * app.drawLines(points, colors);
      */
-    renderLines(position, color, options) {
-        if (!options) {
-            // default option
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                depthTest: true
-            };
-        } else if (typeof options === 'number') {
-            if (!_deprecationWarning) {
-                console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
-                _deprecationWarning = true;
-            }
-
-            // backwards compatibility, LINEBATCH_OVERLAY lines have depthtest disabled
-            if (options === LINEBATCH_OVERLAY) {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: false
-                };
-            } else {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: true
-                };
-            }
-        }
-
-        var multiColor = !!color.length;
-        if (multiColor) {
-            if (position.length !== color.length) {
-                console.error("renderLines: position/color arrays have different lengths");
-                return;
-            }
-        }
-        if (position.length % 2 !== 0) {
-            console.error("renderLines: array length is not divisible by 2");
-            return;
-        }
-        this._addLines(position, color, options);
+    drawLines(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLines(positions, colors);
     }
 
-    _getDefaultImmediateOptions(depthTest = false) {
-        return {
-            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-            depthTest: depthTest
-        };
+    /**
+     * @function
+     * @name Application#drawLineArrays
+     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
+     * point in the array. Instead, they are individual segments specified by two points.
+     * @param {number[]} positions - An array of points to draw lines between. Each point is represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same length as the position array.
+     * The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render 2 discrete line segments
+     * var points = [
+     *     // Line 1
+     *     0, 0, 0,
+     *     1, 0, 0,
+     *     // Line 2
+     *     1, 1, 0,
+     *     1, 1, 1
+     * ];
+     * var colors = [
+     *     // Line 1
+     *     1, 0, 0, 1,  // red
+     *     0, 1, 0, 1,  // green
+     *     // Line 2
+     *     0, 0, 1, 1,  // blue
+     *     1, 1, 1, 1   // white
+     * ];
+     * app.drawLineArrays(points, colors);
+     */
+    drawLineArrays(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLinesArrays(positions, colors);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    renderWireCube(matrix, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireCube(matrix, color, options);
+    /**
+     * @function
+     * @private
+     * @name Application#drawWireSphere
+     * @description Draws a wireframe sphere with center, radius and color.
+     * @param {Vec3} center - The center of the sphere.
+     * @param {number} radius - The radius of the sphere.
+     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
+     * @param {number} [segments] - Number of line segments used to render the circles forming the sphere. Defaults to 20.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a red wire sphere with radius of 1
+     * var center = new pc.Vec3(0, 0, 0);
+     * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     */
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
-    // Draw lines forming sphere at this frame
-    renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireSphere(center, radius, color, options);
+    /**
+     * @function
+     * @private
+     * @name Application#drawWireAlignedBox
+     * @description Draws a wireframe axis aligned box specified by min and max points and color.
+     * @param {Vec3} minPoint - The min corner point of the box.
+     * @param {Vec3} maxPoint - The max corner point of the box.
+     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a red wire aligned box
+     * var min = new pc.Vec3(-1, -1, -1);
+     * var max = new pc.Vec3(1, 1, 1);
+     * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     */
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
     // Draw meshInstance at this frame
-    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderMesh(null, null, null, meshInstance, options);
+    drawMeshInstance(meshInstance, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawMesh(null, null, null, meshInstance, layer);
     }
 
     // Draw mesh at this frame
-    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderMesh(material, matrix, mesh, null, options);
+    drawMesh(mesh, material, matrix, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawMesh(material, matrix, mesh, null, layer);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    renderQuad(matrix, material, options = this._getDefaultImmediateOptions()) {
-        this._initImmediate();
-        this._immediateData.renderMesh(material, matrix, this._immediateData.getQuadMesh(), null, options);
+    drawQuad(matrix, material, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawMesh(material, matrix, this._immediate.getQuadMesh(), null, layer);
     }
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    renderTexture(x, y, width, height, texture, material, options) {
-        this._initImmediate();
+    drawTexture(x, y, width, height, texture, material, layer = this._getDefaultDrawLayer()) {
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1933,23 +1844,21 @@ class Application extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this._immediateData.getTextureShader();
+            material.shader = this._immediate.getTextureShader();
             material.update();
         }
 
-        this.renderQuad(matrix, material, options);
+        this.drawQuad(matrix, material, layer);
     }
 
     // draws a depth texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    renderDepthTexture(x, y, width, height, options) {
-        this._initImmediate();
-
+    drawDepthTexture(x, y, width, height, layer = this._getDefaultDrawLayer()) {
         const material = new Material();
-        material.shader = this._immediateData.getDepthTextureShader();
+        material.shader = this._immediate.getDepthTextureShader();
         material.update();
 
-        this.renderTexture(x, y, width, height, null, material, options);
+        this.drawTexture(x, y, width, height, null, material, layer);
     }
 
     /**
