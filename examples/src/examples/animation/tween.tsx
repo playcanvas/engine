@@ -122,7 +122,7 @@ class TweenExample extends Example {
         app.root.addChild(camera);
 
         app.on('update', function () {
-            app.renderLines(points, colors);
+            app.drawLines(points, colors);
         });
     }
 }
