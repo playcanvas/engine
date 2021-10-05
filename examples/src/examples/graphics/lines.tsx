@@ -90,9 +90,6 @@ class LinesExample extends Example {
         const worldLayer = app.scene.layers.getLayerByName("World");
         const immediateLayer = app.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
 
-        // bounding box of the meshes
-        const bounds = new pc.BoundingBox();
-
         // Set an update function on the app's update event
         let time = 0;
         app.on("update", function (dt) {
@@ -157,14 +154,6 @@ class LinesExample extends Example {
                     30 + 20 * Math.cos(time * 0.2 + offset)
                 );
 
-                // add up bounds of all the meshes
-                const thisBounds = entity.render.meshInstances[0].aabb;
-                if (i === 0) {
-                    bounds.copy(thisBounds);
-                } else {
-                    bounds.add(thisBounds);
-                }
-
                 // half of them uses depth testing, the others do not, and so lines show through the mesh
                 const depthTest = i < 0.5 * numMeshes;
 
@@ -173,9 +162,6 @@ class LinesExample extends Example {
 
                 // rotate the meshes
                 entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
-
-                // render wiframe sphere around the objects
-                app.drawWireSphere(entity.getLocalPosition(), 3, pc.Color.YELLOW, 30, depthTest, layer);
 
                 // draw a single magenta line from this mesh to the next mesh
                 const nextEntity = meshes[(i + 1) % meshes.length];
@@ -188,9 +174,6 @@ class LinesExample extends Example {
 
             // render all gray lines
             app.drawLines(grayLinePositions, grayLineColors);
-
-            // wireframe box for the bounds around all meshes
-            app.drawWireAlignedBox(bounds.getMin(), bounds.getMax(), pc.Color.WHITE);
         });
     }
 }

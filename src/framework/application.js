@@ -1780,6 +1780,7 @@ class Application extends EventHandler {
 
     /**
      * @function
+     * @private
      * @name Application#drawWireSphere
      * @description Draws a wireframe sphere with center, radius and color.
      * @param {Vec3} center - The center of the sphere.
@@ -1799,6 +1800,7 @@ class Application extends EventHandler {
 
     /**
      * @function
+     * @private
      * @name Application#drawWireAlignedBox
      * @description Draws a wireframe axis aligned box specified by min and max points and color.
      * @param {Vec3} minPoint - The min corner point of the box.
