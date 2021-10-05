@@ -1,4 +1,3 @@
-import { version, revision } from '../core/core.js';
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
@@ -396,8 +395,6 @@ var app = null;
 class Application extends EventHandler {
     constructor(canvas, options = {}) {
         super();
-
-        console.log("Powered by PlayCanvas " + version + " " + revision);
 
         // Store application instance
         Application._applications[canvas.id] = this;
