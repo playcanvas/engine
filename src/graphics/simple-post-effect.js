@@ -24,6 +24,11 @@ const _postEffectQuadDraw = {
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
+
+    // #if _DEBUG
+    device.pushMarker("drawQuadWithShader");
+    // #endif
+
     if (_postEffectQuadVB === null) {
         const vertexFormat = new VertexFormat(device, [{
             semantic: SEMANTIC_POSITION,
@@ -114,6 +119,10 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
 
     device.setViewport(oldVx, oldVy, oldVw, oldVh);
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
+
+    // #if _DEBUG
+    device.popMarker();
+    // #endif
 }
 
 function destroyPostEffectQuad() {

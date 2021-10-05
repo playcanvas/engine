@@ -28,7 +28,7 @@ import { Immediate } from '../scene/immediate/immediate.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
-import { Lightmapper } from '../scene/lightmapper.js';
+import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
@@ -432,7 +432,9 @@ class Application extends EventHandler {
         if (! options.graphicsDeviceOptions)
             options.graphicsDeviceOptions = { };
 
-        options.graphicsDeviceOptions.xrCompatible = true;
+        if (platform.browser && !!navigator.xr) {
+            options.graphicsDeviceOptions.xrCompatible = true;
+        }
 
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 

@@ -49,6 +49,7 @@ class Camera {
         this._rect = new Vec4(0, 0, 1, 1);
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
+        this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
         this._vrDisplay = null;
 
         this._projMat = new Mat4();
