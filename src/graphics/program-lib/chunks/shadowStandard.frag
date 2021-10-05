@@ -183,7 +183,7 @@ float getShadowPointPCF3x3(samplerCube shadowMap, vec4 shadowParams) {
 
 // ----- Clustered Omni Sampling using atlas -----
 
-// Converts unnormaized direction vector to a cubemap face index [0..5] and uv coordinates within the face in [0..1] range.
+// Converts unnormalized direction vector to a cubemap face index [0..5] and uv coordinates within the face in [0..1] range.
 // Additionally offset to a tile in atlas within 3x3 subdivision is provided
 vec2 getCubemapFaceCoordinates(const vec3 dir, out float faceIndex, out vec2 tileOffset)
 {
