@@ -116,9 +116,10 @@ function getDepthKey(meshInstance) {
 }
 
 class ShadowRenderer {
-    constructor(forwardRenderer) {
+    constructor(forwardRenderer, lightTextureAtlas) {
         this.device = forwardRenderer.device;
         this.forwardRenderer = forwardRenderer;
+        this.lightTextureAtlas = lightTextureAtlas;
         const scope = this.device.scope;
 
         this.polygonOffsetId = scope.resolve("polygonOffset");
@@ -178,7 +179,7 @@ class ShadowRenderer {
 
         // don't clear the color buffer if rendering a depth map
         let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
-        if (type === LIGHTTYPE_OMNI) {
+        if (type === LIGHTTYPE_OMNI && !LayerComposition.clusteredLightingEnabled) {
             hwPcf = false;
         }
 
@@ -251,6 +252,18 @@ class ShadowRenderer {
                 // Camera looks down the negative Z, and spot light points down the negative Y
                 shadowCamNode.setRotation(lightNode.getRotation());
                 shadowCamNode.rotateLocal(-90, 0, 0);
+
+            } else if (type === LIGHTTYPE_OMNI) {
+
+                // when rendering omni shadows to an atlas, use larger fov by few pixels to allow shadow filtering to stay on a single face
+                if (LayerComposition.clusteredLightingEnabled) {
+                    const tileSize = this.lightTextureAtlas.shadowMapResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
+                    const texelSize = 2 / tileSize;
+                    const filterSize = texelSize * this.lightTextureAtlas.shadowEdgePixels;
+                    shadowCam.fov = Math.atan(1 + filterSize) * math.RAD_TO_DEG * 2;
+                } else {
+                    shadowCam.fov = 90;
+                }
             }
 
             // cull shadow casters
@@ -381,9 +394,11 @@ class ShadowRenderer {
 
     setupRenderState(device, light) {
 
+        const isClustered = LayerComposition.clusteredLightingEnabled;
+
         // depth bias
         if (device.webgl2) {
-            if (light._type === LIGHTTYPE_OMNI) {
+            if (light._type === LIGHTTYPE_OMNI && !isClustered) {
                 device.setDepthBias(false);
             } else {
                 device.setDepthBias(true);
@@ -406,7 +421,11 @@ class ShadowRenderer {
         device.setDepthWrite(true);
         device.setDepthTest(true);
         device.setDepthFunc(FUNC_LESSEQUAL);
-        if (light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI) {
+
+        const useShadowSampler = isClustered ?
+            light._isPcf && device.webgl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
+            light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
+        if (useShadowSampler) {
             device.setColorWrite(false, false, false, false);
         } else {
             device.setColorWrite(true, true, true, true);

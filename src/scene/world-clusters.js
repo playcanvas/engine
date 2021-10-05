@@ -39,8 +39,13 @@ const TextureIndex8 = {
     SPOT_DIRECTION_X: 11,       // spot direction x
     SPOT_DIRECTION_Y: 12,       // spot direction y
     SPOT_DIRECTION_Z: 13,       // spot direction z
+
     PROJ_MAT_00: 14,            // light projection matrix, mat4, 16 floats
+    ATLAS_VIEWPORT_A: 14,       // viewport.x, viewport.x, viewport.y, viewport.y
+
     PROJ_MAT_01: 15,
+    ATLAS_VIEWPORT_B: 15,       // viewport.z, viewport.z, -, -
+
     PROJ_MAT_02: 16,
     PROJ_MAT_03: 17,
     PROJ_MAT_10: 18,
@@ -64,10 +69,13 @@ const TextureIndex8 = {
 const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
     SPOT_DIRECTION: 1,              // spot direction.xyz, -
-    PROJ_MAT_0: 2,                  // projection matrix raw 0
-    PROJ_MAT_1: 3,                  // projection matrix raw 0
-    PROJ_MAT_2: 4,                  // projection matrix raw 0
-    PROJ_MAT_3: 5,                  // projection matrix raw 0
+
+    PROJ_MAT_0: 2,                  // projection matrix raw 0 (spot light)
+    ATLAS_VIEWPORT: 2,              // atlas viewport data (omni light)
+
+    PROJ_MAT_1: 3,                  // projection matrix raw 1 (spot light)
+    PROJ_MAT_2: 4,                  // projection matrix raw 2 (spot light)
+    PROJ_MAT_3: 5,                  // projection matrix raw 3 (spot light)
 
     // leave last
     COUNT: 6
@@ -390,6 +398,14 @@ class WorldClusters {
         }
     }
 
+    addLightAtlasViewport(data8, index, atlasViewport) {
+        // all these are in 0..1 range
+        FloatPacking.float2Bytes(atlasViewport.x, data8, index + 0, 2);
+        FloatPacking.float2Bytes(atlasViewport.y, data8, index + 2, 2);
+        FloatPacking.float2Bytes(atlasViewport.z / 3, data8, index + 4, 2);
+        // we have two unused bytes here
+    }
+
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex, gammaCorrection) {
 
@@ -398,14 +414,18 @@ class WorldClusters {
         const castShadows = light.castShadows;
         const pos = light._node.getPosition();
 
-        // light projection matrix - used for shadow map and cookie
-        let lightProjectionMatrix = null;
+        let lightProjectionMatrix = null;   // light projection matrix - used for shadow map and cookie of spot light
+        let atlasViewport = null;   // atlas viewport info - used for shadow map and cookie of omni light
         if (isSpot) {
             if (castShadows) {
                 const lightRenderData = light.getRenderData(null, 0);
                 lightProjectionMatrix = lightRenderData.shadowMatrix;
             } else if (isCookie) {
                 lightProjectionMatrix = CookieRenderer.evalCookieMatrix(light);
+            }
+        } else {
+            if (castShadows || isCookie) {
+                atlasViewport = light.atlasViewport;
             }
         }
 
@@ -462,6 +482,12 @@ class WorldClusters {
                     dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
             }
 
+            if (atlasViewport) {
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 0] = atlasViewport.x;
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 1] = atlasViewport.y;
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 2] = atlasViewport.z / 3; // size of a face slot (3x3 grid)
+            }
+
         } else {    // high precision data stored using 8bit texture
 
             this.addLightDataPositionRange(data8, data8Start + 4 * TextureIndex8.POSITION_X, light, pos);
@@ -474,6 +500,10 @@ class WorldClusters {
             // light projection matrix
             if (lightProjectionMatrix) {
                 this.addLightDataLightProjMatrix(data8, data8Start + 4 * TextureIndex8.PROJ_MAT_00, lightProjectionMatrix);
+            }
+
+            if (atlasViewport) {
+                this.addLightAtlasViewport(data8, data8Start + 4 * TextureIndex8.ATLAS_VIEWPORT_A, atlasViewport);
             }
         }
     }

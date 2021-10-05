@@ -477,6 +477,92 @@ var standard = {
         return code;
     },
 
+    _buildShadowPassFragmentCode: function (code, device, chunks, options, varyings) {
+
+        const isClustered = LayerComposition.clusteredLightingEnabled;
+        const smode = options.pass - SHADER_SHADOW;
+        const numShadowModes = SHADOW_COUNT;
+        const lightType = Math.floor(smode / numShadowModes);
+        const shadowType = smode - lightType * numShadowModes;
+
+        if (device.extStandardDerivatives && !device.webgl2) {
+            code += 'uniform vec2 polygonOffset;\n';
+        }
+
+        if (shadowType === SHADOW_VSM32) {
+            if (device.textureFloatHighPrecision) {
+                code += '#define VSM_EXPONENT 15.0\n\n';
+            } else {
+                code += '#define VSM_EXPONENT 5.54\n\n';
+            }
+        } else if (shadowType === SHADOW_VSM16) {
+            code += '#define VSM_EXPONENT 5.54\n\n';
+        }
+
+        if (lightType !== LIGHTTYPE_DIRECTIONAL) {
+            code += 'uniform vec3 view_position;\n';
+            code += 'uniform float light_radius;\n';
+        }
+
+        code += varyings;
+        if (options.alphaTest) {
+            code += "float dAlpha;\n";
+            code += this._addMap("opacity", "opacityPS", options, chunks);
+            code += chunks.alphaTestPS;
+        }
+
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
+            code += chunks.packDepthPS;
+        } else if (shadowType === SHADOW_VSM8) {
+            code += "vec2 encodeFloatRG( float v ) {\n";
+            code += "    vec2 enc = vec2(1.0, 255.0) * v;\n";
+            code += "    enc = fract(enc);\n";
+            code += "    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n";
+            code += "    return enc;\n";
+            code += "}\n\n";
+        }
+
+        code += begin();
+
+        if (options.alphaTest) {
+            code += "   getOpacity();\n";
+            code += "   alphaTest(dAlpha);\n";
+        }
+
+        const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
+
+        if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
+            code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
+        } else {
+            code += "   float depth = gl_FragCoord.z;\n";
+        }
+
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !isClustered))) {
+            if (device.extStandardDerivatives && !device.webgl2) {
+                code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
+                code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
+                code += "   gl_FragColor = packFloat(depth);\n";
+            } else {
+                code += "   gl_FragColor = packFloat(depth);\n";
+            }
+        } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
+            code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
+
+            // clustered omni light is using shadow sampler and needs to write custom depth
+            if (isClustered && lightType === LIGHTTYPE_OMNI && device.webgl2) {
+                code += "   gl_FragDepth = depth;\n";
+            }
+        } else if (shadowType === SHADOW_VSM8) {
+            code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
+        } else {
+            code += chunks.storeEVSMPS;
+        }
+
+        code += end();
+
+        return code;
+    },
+
     createShaderDefinition: function (device, options) {
         var i, p;
         var lighting = options.lights.length > 0;
@@ -890,85 +976,10 @@ var standard = {
 
         } else if (shadowPass) {
             // ##### SHADOW PASS #####
-            const smode = options.pass - SHADER_SHADOW;
-            const numShadowModes = SHADOW_COUNT;
-            lightType = Math.floor(smode / numShadowModes);
-            var shadowType = smode - lightType * numShadowModes;
-
-            if (device.extStandardDerivatives && !device.webgl2) {
-                code += 'uniform vec2 polygonOffset;\n';
-            }
-
-            if (shadowType === SHADOW_VSM32) {
-                if (device.textureFloatHighPrecision) {
-                    code += '#define VSM_EXPONENT 15.0\n\n';
-                } else {
-                    code += '#define VSM_EXPONENT 5.54\n\n';
-                }
-            } else if (shadowType === SHADOW_VSM16) {
-                code += '#define VSM_EXPONENT 5.54\n\n';
-            }
-
-            if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-                code += 'uniform vec3 view_position;\n';
-                code += 'uniform float light_radius;\n';
-            }
-
-            code += varyings;
-            if (options.alphaTest) {
-                code += "float dAlpha;\n";
-                code += this._addMap("opacity", "opacityPS", options, chunks);
-                code += chunks.alphaTestPS;
-            }
-
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
-                code += chunks.packDepthPS;
-            } else if (shadowType === SHADOW_VSM8) {
-                code += "vec2 encodeFloatRG( float v ) {\n";
-                code += "    vec2 enc = vec2(1.0, 255.0) * v;\n";
-                code += "    enc = fract(enc);\n";
-                code += "    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n";
-                code += "    return enc;\n";
-                code += "}\n\n";
-            }
-
-            code += begin();
-
-            if (options.alphaTest) {
-                code += "   getOpacity();\n";
-                code += "   alphaTest(dAlpha);\n";
-            }
-
-            var isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-
-            if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
-                code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
-            } else {
-                code += "   float depth = gl_FragCoord.z;\n";
-            }
-
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
-                if (device.extStandardDerivatives && !device.webgl2) {
-                    code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-                    code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
-                    code += "   gl_FragColor = packFloat(depth);\n";
-                } else {
-                    code += "   gl_FragColor = packFloat(depth);\n";
-                }
-            } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
-                code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
-            } else if (shadowType === SHADOW_VSM8) {
-                code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
-            } else {
-                code += chunks.storeEVSMPS;
-            }
-
-            code += end();
-
             return {
                 attributes: attributes,
                 vshader: vshader,
-                fshader: code
+                fshader: this._buildShadowPassFragmentCode(code, device, chunks, options, varyings)
             };
         }
 

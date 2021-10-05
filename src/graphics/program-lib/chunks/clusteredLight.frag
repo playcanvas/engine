@@ -3,7 +3,7 @@ uniform sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
 #ifdef GL2
-    // TODO: when VSM shadow is supported, it needs to use sampler2D even in webgl2
+    // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
     uniform sampler2DShadow shadowAtlasTexture;
 #else
     uniform sampler2D shadowAtlasTexture;
@@ -20,7 +20,7 @@ uniform vec3 clusterBoundsDelta;
 uniform vec3 clusterCellsDot;
 uniform vec3 clusterCellsMax;
 uniform vec2 clusterCompressionLimit0;
-uniform float shadowAtlasParams;
+uniform vec2 shadowAtlasParams;
 
 // structure storing light properties of a clustered light
 struct ClusterLightData {
@@ -44,7 +44,7 @@ struct ClusterLightData {
     float shadowBias;
     float shadowNormalBias;
 
-    // shadow / cookie projection matrix
+    // shadow (spot light only) / cookie projection matrix
     mat4 lightProjectionMatrix;
 
     // world space position
@@ -62,6 +62,9 @@ struct ClusterLightData {
 
     // color
     vec3 color;
+
+    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
+    vec3 omniAtlasViewport;
 
     // true if the light has a cookie texture
     bool isCookie;
@@ -85,21 +88,29 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     );
 }
 
+vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
+    return texture2D(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV));
+}
+
+vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
+    return texture2D(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV));
+}
+
 void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
 
     // read omni light properties
     clusterLightData.lightV = (lightIndex + 0.5) * lightsTextureInvSize.w;
 
     // shared data from 8bit texture
-    vec4 lightInfo = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_FLAGS * lightsTextureInvSize.z, clusterLightData.lightV));
+    vec4 lightInfo = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_FLAGS);
     clusterLightData.isSpot = lightInfo.x > 0.5;
     clusterLightData.shape = lightInfo.y;
     clusterLightData.falloffMode = lightInfo.z;
     clusterLightData.castShadows = lightInfo.w > 0.5;
 
     // color
-    vec4 colorA = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COLOR_A * lightsTextureInvSize.z, clusterLightData.lightV));
-    vec4 colorB = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COLOR_B * lightsTextureInvSize.z, clusterLightData.lightV));
+    vec4 colorA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_A);
+    vec4 colorB = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_B);
     clusterLightData.color = vec3(bytes2float2(colorA.xy), bytes2float2(colorA.zw), bytes2float2(colorB.xy)) * clusterCompressionLimit0.y;
 
     // isCookie
@@ -107,28 +118,28 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 
     #ifdef CLUSTER_TEXTURE_FLOAT
 
-        vec4 lightPosRange = texture2D(lightsTextureFloat, vec2(CLUSTER_TEXTURE_F_POSITION_RANGE * lightsTextureInvSize.x, clusterLightData.lightV));
+        vec4 lightPosRange = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_POSITION_RANGE);
         clusterLightData.position = lightPosRange.xyz;
         clusterLightData.range = lightPosRange.w;
 
         // spot light direction
-        vec4 lightDir_Unused = texture2D(lightsTextureFloat, vec2(CLUSTER_TEXTURE_F_SPOT_DIRECTION * lightsTextureInvSize.x, clusterLightData.lightV));
+        vec4 lightDir_Unused = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_SPOT_DIRECTION);
         clusterLightData.direction = lightDir_Unused.xyz;
 
     #else   // 8bit
 
-        vec4 encPosX = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_POSITION_X * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 encPosY = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_POSITION_Y * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 encPosZ = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_POSITION_Z * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 encPosX = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_POSITION_X);
+        vec4 encPosY = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_POSITION_Y);
+        vec4 encPosZ = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_POSITION_Z);
         clusterLightData.position = vec3(bytes2float4(encPosX), bytes2float4(encPosY), bytes2float4(encPosZ)) * clusterBoundsDelta + clusterBoundsMin;
 
-        vec4 encRange = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_RANGE * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 encRange = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_RANGE);
         clusterLightData.range = bytes2float4(encRange) * clusterCompressionLimit0.x;
 
         // spot light direction
-        vec4 encDirX = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_SPOT_DIRECTION_X * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 encDirY = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_SPOT_DIRECTION_Y * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 encDirZ = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_SPOT_DIRECTION_Z * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 encDirX = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_SPOT_DIRECTION_X);
+        vec4 encDirY = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_SPOT_DIRECTION_Y);
+        vec4 encDirZ = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_SPOT_DIRECTION_Z);
         clusterLightData.direction = vec3(bytes2float4(encDirX), bytes2float4(encDirY), bytes2float4(encDirZ)) * 2.0 - 1.0;
 
     #endif
@@ -137,42 +148,52 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
 
     // spot light cos angles
-    vec4 coneAngle = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_SPOT_ANGLES * lightsTextureInvSize.z, clusterLightData.lightV));
+    vec4 coneAngle = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_SPOT_ANGLES);
     clusterLightData.innerConeAngleCos = bytes2float2(coneAngle.xy) * 2.0 - 1.0;
     clusterLightData.outerConeAngleCos = bytes2float2(coneAngle.zw) * 2.0 - 1.0;
+}
+
+void decodeClusterLightOmniAtlasViewport(inout ClusterLightData clusterLightData) {
+    #ifdef CLUSTER_TEXTURE_FLOAT
+        clusterLightData.omniAtlasViewport = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_PROJ_MAT_0).xyz;
+    #else
+        vec4 viewportA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_ATLAS_VIEWPORT_A);
+        vec4 viewportB = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_ATLAS_VIEWPORT_B);
+        clusterLightData.omniAtlasViewport = vec3(bytes2float2(viewportA.xy), bytes2float2(viewportA.zw), bytes2float2(viewportB.xy));
+    #endif
 }
 
 void decodeClusterLightProjectionMatrixData(inout ClusterLightData clusterLightData) {
     
     // shadow matrix
     #ifdef CLUSTER_TEXTURE_FLOAT
-        vec4 m0 = texture2D(lightsTextureFloat, vec2(CLUSTER_TEXTURE_F_PROJ_MAT_0 * lightsTextureInvSize.x, clusterLightData.lightV));
-        vec4 m1 = texture2D(lightsTextureFloat, vec2(CLUSTER_TEXTURE_F_PROJ_MAT_1 * lightsTextureInvSize.x, clusterLightData.lightV));
-        vec4 m2 = texture2D(lightsTextureFloat, vec2(CLUSTER_TEXTURE_F_PROJ_MAT_2 * lightsTextureInvSize.x, clusterLightData.lightV));
-        vec4 m3 = texture2D(lightsTextureFloat, vec2(CLUSTER_TEXTURE_F_PROJ_MAT_3 * lightsTextureInvSize.x, clusterLightData.lightV));
+        vec4 m0 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_PROJ_MAT_0);
+        vec4 m1 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_PROJ_MAT_1);
+        vec4 m2 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_PROJ_MAT_2);
+        vec4 m3 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_PROJ_MAT_3);
     #else
-        vec4 m00 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_00 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m01 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_01 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m02 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_02 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m03 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_03 * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 m00 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_00);
+        vec4 m01 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_01);
+        vec4 m02 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_02);
+        vec4 m03 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_03);
         vec4 m0 = decodeClusterLowRange4Vec4(m00, m01, m02, m03);
 
-        vec4 m10 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_10 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m11 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_11 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m12 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_12 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m13 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_13 * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 m10 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_10);
+        vec4 m11 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_11);
+        vec4 m12 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_12);
+        vec4 m13 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_13);
         vec4 m1 = decodeClusterLowRange4Vec4(m10, m11, m12, m13);
 
-        vec4 m20 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_20 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m21 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_21 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m22 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_22 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m23 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_23 * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 m20 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_20);
+        vec4 m21 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_21);
+        vec4 m22 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_22);
+        vec4 m23 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_23);
         vec4 m2 = decodeClusterLowRange4Vec4(m20, m21, m22, m23);
 
-        vec4 m30 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_30 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m31 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_31 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m32 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_32 * lightsTextureInvSize.z, clusterLightData.lightV));
-        vec4 m33 = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_PROJ_MAT_33 * lightsTextureInvSize.z, clusterLightData.lightV));
+        vec4 m30 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_30);
+        vec4 m31 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_31);
+        vec4 m32 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_32);
+        vec4 m33 = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_PROJ_MAT_33);
         vec4 m3 = vec4(mantisaExponent2Float(m30), mantisaExponent2Float(m31), mantisaExponent2Float(m32), mantisaExponent2Float(m33));
     #endif
     
@@ -182,18 +203,18 @@ void decodeClusterLightProjectionMatrixData(inout ClusterLightData clusterLightD
 void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
     
     // shadow biases
-    vec4 biases = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_SHADOW_BIAS * lightsTextureInvSize.z, clusterLightData.lightV));
+    vec4 biases = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_SHADOW_BIAS);
     clusterLightData.shadowBias = bytes2floatRange2(biases.xy, -1.0, 20.0),
     clusterLightData.shadowNormalBias = bytes2float2(biases.zw);
 }
 
 void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
 
-    vec4 cookieA = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_A * lightsTextureInvSize.z, clusterLightData.lightV));
+    vec4 cookieA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_A);
     clusterLightData.cookieIntensity = cookieA.x;
     clusterLightData.isCookieRgb = cookieA.y > 0.5;
 
-    clusterLightData.cookieChannelMask = texture2D(lightsTexture8, vec2(CLUSTER_TEXTURE_8_COOKIE_B * lightsTextureInvSize.z, clusterLightData.lightV));
+    clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
 
 void evaluateLight(ClusterLightData light) {
@@ -208,7 +229,7 @@ void evaluateLight(ClusterLightData light) {
         dAtten *= getLightDiffuse();
 
         // spot light falloff
-        if (light.isSpot) {
+        if (light.isSpot == true) {
             decodeClusterLightSpot(light);
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
@@ -216,23 +237,41 @@ void evaluateLight(ClusterLightData light) {
         if (dAtten > 0.00001) {
 
             // shadow / cookie
-            if (light.castShadows || light.isCookie) {
-                decodeClusterLightProjectionMatrixData(light);
+            if (light.castShadows == true || light.isCookie == true) {
+
+                // shared shadow / cookie data depends on light type
+                if (light.isSpot == true) {
+                    decodeClusterLightProjectionMatrixData(light);
+                } else {
+                    decodeClusterLightOmniAtlasViewport(light);
+                }
 
                 // cookie
-                if (light.isCookie) {
+                if (light.isCookie == true) {
                     decodeClusterLightCookieData(light);
                     dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask);
                 }
 
                 // shadow
-                if (light.castShadows) {
+                if (light.castShadows== true) {
                     decodeClusterLightShadowData(light);
 
-                    float shadowTextureResolution = shadowAtlasParams;
+                    float shadowTextureResolution = shadowAtlasParams.x;
+                    float shadowEdgePixels = shadowAtlasParams.y;
                     vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
-                    getShadowCoordPerspZbufferNormalOffset(light.lightProjectionMatrix, shadowParams);
-                    dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
+
+                    if (light.isSpot == true) {
+
+                        // spot shadow
+                        getShadowCoordPerspZbufferNormalOffset(light.lightProjectionMatrix, shadowParams);
+                        dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
+
+                    } else {
+
+                        // omni shadow
+                        normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
+                        dAtten *= getShadowOmniClusteredPCF3x3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                    }
                 }
             }
         }
