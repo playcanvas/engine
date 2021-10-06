@@ -3358,7 +3358,7 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    _isShaderCompiled(shader, glShader, source) {
+    _isShaderCompiled(shader, glShader, source, shaderType) {
         const gl = this.gl;
 
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
@@ -3366,9 +3366,9 @@ class GraphicsDevice extends EventHandler {
             const [code, error] = this._processError(source, infoLog);
             // #if _DEBUG
             error.shader = shader;
-            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`, error);
+            console.error(`Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`, error);
             // #else
-            console.error(`Failed to compile vertex shader:\n\n${infoLog}\n${code}`);
+            console.error(`Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`);
             // #endif
             return false;
         }
@@ -3423,10 +3423,10 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         // Check for compilation errors
-        if (! this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader))
+        if (! this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader, "vertex"))
             return false;
 
-        if (! this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader))
+        if (! this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader, "fragment"))
             return false;
 
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
