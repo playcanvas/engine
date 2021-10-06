@@ -23,6 +23,12 @@ class LightsExample extends Example {
         return <>
             <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
             <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
+            <AssetLoader name="xmas_negx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negx.png" />
+            <AssetLoader name="xmas_negy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negy.png" />
+            <AssetLoader name="xmas_negz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negz.png" />
+            <AssetLoader name="xmas_posx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posx.png" />
+            <AssetLoader name="xmas_posy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posy.png" />
+            <AssetLoader name="xmas_posz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posz.png" />
         </>;
     }
 
@@ -142,7 +148,6 @@ class LightsExample extends Example {
                 shadowResolution: 2048,
                 // heart texture's alpha channel as a cookie texture
                 cookie: assets.heart.resource,
-                // cookie: assets.heart.asset.resource,
                 cookieChannel: "a"
             },
             ...data.get('lights.spot')
@@ -157,6 +162,22 @@ class LightsExample extends Example {
         lights.spot.addChild(cone);
         app.root.addChild(lights.spot);
 
+
+
+        debugger;
+        // construct the cubemap asset
+        const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
+            assetIds: [
+                assets.xmas_posx.id, assets.xmas_negx.id,
+                assets.xmas_posy.id, assets.xmas_negy.id,
+                assets.xmas_posz.id, assets.xmas_negz.id
+            ]
+        });
+        cubemapAsset.loadFaces = true;
+        app.assets.add(cubemapAsset);
+        app.assets.load(cubemapAsset);
+
+
         // Create a omni light
         lights.omni = new pc.Entity();
         lights.omni.addComponent("light", {
@@ -164,7 +185,11 @@ class LightsExample extends Example {
                 type: "omni",
                 color: pc.Color.YELLOW,
                 castShadows: true,
-                range: 100
+                range: 100,
+
+
+                cookie: cubemapAsset.resource,
+                cookieChannel: "rgb"
             },
             ...data.get('lights.omni')
         });
