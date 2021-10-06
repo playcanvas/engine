@@ -42,6 +42,9 @@ class LightsExample extends Example {
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
                 </LabelGroup>
+                <LabelGroup text='cookie'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.cookieIntensity' }}/>
+                </LabelGroup>
             </Panel>
             <Panel headerText='SPOT LIGHT [KEY_2]'>
                 <LabelGroup text='enabled'>
@@ -49,6 +52,9 @@ class LightsExample extends Example {
                 </LabelGroup>
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='cookie'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.cookieIntensity' }}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='DIRECTIONAL LIGHT [KEY_3]'>
@@ -119,11 +125,13 @@ class LightsExample extends Example {
         data.set('lights', {
             spot: {
                 enabled: true,
-                intensity: 0.6
+                intensity: 0.6,
+                cookieIntensity: 1
             },
             omni: {
                 enabled: true,
-                intensity: 0.6
+                intensity: 0.6,
+                cookieIntensity: 1
             },
             directional: {
                 enabled: true,
@@ -162,9 +170,17 @@ class LightsExample extends Example {
         lights.spot.addChild(cone);
         app.root.addChild(lights.spot);
 
-
-
-
+        // construct the cubemap asset for the omni light cookie texture
+        // Note: the textures array could contain 6 texture asset names to load instead as well
+        const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
+            textures: [
+                assets.xmas_posx.id, assets.xmas_negx.id,
+                assets.xmas_posy.id, assets.xmas_negy.id,
+                assets.xmas_posz.id, assets.xmas_negz.id
+            ]
+        });
+        cubemapAsset.loadFaces = true;
+        app.assets.add(cubemapAsset);
 
         // Create a omni light
         lights.omni = new pc.Entity();
@@ -173,11 +189,9 @@ class LightsExample extends Example {
                 type: "omni",
                 color: pc.Color.YELLOW,
                 castShadows: true,
-                range: 100,
-
-
-                // cookie: cubemapAsset.resource,
-                // cookieChannel: "rgb"
+                range: 111,
+                cookieAsset: cubemapAsset,
+                cookieChannel: "rgb"
             },
             ...data.get('lights.omni')
         });
@@ -187,30 +201,6 @@ class LightsExample extends Example {
             material: createMaterial({ diffuse: pc.Color.BLACK, emissive: pc.Color.YELLOW })
         });
         app.root.addChild(lights.omni);
-
-
-
-
-        // construct the cubemap asset
-        const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
-            assetIds: [
-                assets.xmas_posx.id, assets.xmas_negx.id,
-                assets.xmas_posy.id, assets.xmas_negy.id,
-                assets.xmas_posz.id, assets.xmas_negz.id
-            ]
-        });
-        cubemapAsset.loadFaces = true;
-        app.assets.add(cubemapAsset);
-
-        cubemapAsset.on('load', function (asset) {
-            debugger;
-            lights.omni.cookie = asset.resource;
-        });
-
-
-        app.assets.load(cubemapAsset);
-        
-
 
         // Create a directional light
         lights.directional = new pc.Entity();
@@ -256,6 +246,7 @@ class LightsExample extends Example {
                 lights.spot.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
 
                 lights.omni.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                lights.omni.rotate(0, 50 * dt, 0);
 
                 lights.directional.setLocalEulerAngles(45, -60 * angleRad, 0);
             }
