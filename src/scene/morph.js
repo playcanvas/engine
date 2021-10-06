@@ -9,6 +9,9 @@ import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
 
+// value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
+const _floatRounding = 0.2;
+
 /**
  * @class
  * @name Morph
@@ -131,12 +134,12 @@ class Morph extends RefCountedObject {
             }
 
             if (vertexUsed) {
-                ids.push(freeIndex);
+                ids.push(freeIndex + _floatRounding);
                 usedDataIndices.push(v / 3);
                 freeIndex++;
             } else {
                 // non morphed vertices would be all mapped to pixel 0 of texture
-                ids.push(0);
+                ids.push(0 + _floatRounding);
             }
         }
 
