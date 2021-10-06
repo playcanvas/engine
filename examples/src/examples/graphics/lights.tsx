@@ -164,18 +164,6 @@ class LightsExample extends Example {
 
 
 
-        debugger;
-        // construct the cubemap asset
-        const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
-            assetIds: [
-                assets.xmas_posx.id, assets.xmas_negx.id,
-                assets.xmas_posy.id, assets.xmas_negy.id,
-                assets.xmas_posz.id, assets.xmas_negz.id
-            ]
-        });
-        cubemapAsset.loadFaces = true;
-        app.assets.add(cubemapAsset);
-        app.assets.load(cubemapAsset);
 
 
         // Create a omni light
@@ -188,8 +176,8 @@ class LightsExample extends Example {
                 range: 100,
 
 
-                cookie: cubemapAsset.resource,
-                cookieChannel: "rgb"
+                // cookie: cubemapAsset.resource,
+                // cookieChannel: "rgb"
             },
             ...data.get('lights.omni')
         });
@@ -199,6 +187,30 @@ class LightsExample extends Example {
             material: createMaterial({ diffuse: pc.Color.BLACK, emissive: pc.Color.YELLOW })
         });
         app.root.addChild(lights.omni);
+
+
+
+
+        // construct the cubemap asset
+        const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
+            assetIds: [
+                assets.xmas_posx.id, assets.xmas_negx.id,
+                assets.xmas_posy.id, assets.xmas_negy.id,
+                assets.xmas_posz.id, assets.xmas_negz.id
+            ]
+        });
+        cubemapAsset.loadFaces = true;
+        app.assets.add(cubemapAsset);
+
+        cubemapAsset.on('load', function (asset) {
+            debugger;
+            lights.omni.cookie = asset.resource;
+        });
+
+
+        app.assets.load(cubemapAsset);
+        
+
 
         // Create a directional light
         lights.directional = new pc.Entity();
