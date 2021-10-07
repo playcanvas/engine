@@ -29,7 +29,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
         this.manager = manager;
         this.current = null;
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.bind('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

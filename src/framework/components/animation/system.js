@@ -44,7 +44,7 @@ class AnimationComponentSystem extends ComponentSystem {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.bind('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

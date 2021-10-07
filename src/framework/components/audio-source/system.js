@@ -49,8 +49,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
 
         this.initialized = false;
 
-        ComponentSystem.bind('initialize', this.onInitialize, this);
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.bind('initialize', this.onInitialize, this);
+        this.bind('update', this.onUpdate, this);
 
         this.on('remove', this.onRemove, this);
     }

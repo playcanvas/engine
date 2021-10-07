@@ -25,93 +25,93 @@ class ComponentSystem extends EventHandler {
     }
 
     // Static class methods
-    static _helper(a, p) {
-        for (let i = 0, l = a.length; i < l; i++) {
-            a[i].f.call(a[i].s, p);
+    _helper(callbacks, parameter) {
+        for (let i = 0, l = callbacks.length; i < l; i++) {
+            callbacks[i].func.call(callbacks[i].scope, parameter);
         }
     }
 
-    static initialize(root) {
+    initialize(root) {
         this._helper(this._init, root);
     }
 
-    static postInitialize(root) {
+    postInitialize(root) {
         this._helper(this._postInit, root);
 
         // temp, this is for internal use on entity-references until a better system is found
         this.fire('postinitialize', root);
     }
 
-    // Update all ComponentSystems
-    static update(dt, inTools) {
+    // Update all application ComponentSystems
+    update(dt, inTools) {
         this._helper(inTools ? this._toolsUpdate : this._update, dt);
     }
 
-    static animationUpdate(dt, inTools) {
+    animationUpdate(dt, inTools) {
         this._helper(this._animationUpdate, dt);
     }
 
-    // Update all ComponentSystems
-    static fixedUpdate(dt, inTools) {
+    // Update all application ComponentSystems
+    fixedUpdate(dt, inTools) {
         this._helper(this._fixedUpdate, dt);
     }
 
-    // Update all ComponentSystems
-    static postUpdate(dt, inTools) {
+    // Update all application ComponentSystems
+    postUpdate(dt, inTools) {
         this._helper(this._postUpdate, dt);
     }
 
-    static _init = [];
+    _init = [];
 
-    static _postInit = [];
+    _postInit = [];
 
-    static _toolsUpdate = [];
+    _toolsUpdate = [];
 
-    static _update = [];
+    _update = [];
 
-    static _animationUpdate = [];
+    _animationUpdate = [];
 
-    static _fixedUpdate =[];
+    _fixedUpdate =[];
 
-    static _postUpdate = [];
+    _postUpdate = [];
 
-    static bind(event, func, scope) {
+    bind(event, func, scope) {
         switch (event) {
             case 'initialize':
-                this._init.push({ f: func, s: scope });
+                this._init.push({ func, scope });
                 break;
             case 'postInitialize':
-                this._postInit.push({ f: func, s: scope });
+                this._postInit.push({ func, scope });
                 break;
             case 'update':
-                this._update.push({ f: func, s: scope });
+                this._update.push({ func, scope });
                 break;
             case 'animationUpdate':
-                this._animationUpdate.push({ f: func, s: scope });
+                this._animationUpdate.push({ func, scope });
                 break;
             case 'postUpdate':
-                this._postUpdate.push({ f: func, s: scope });
+                this._postUpdate.push({ func, scope });
                 break;
             case 'fixedUpdate':
-                this._fixedUpdate.push({ f: func, s: scope });
+                this._fixedUpdate.push({ func, scope });
                 break;
             case 'toolsUpdate':
-                this._toolsUpdate.push({ f: func, s: scope });
+                this._toolsUpdate.push({ func, scope });
                 break;
             default:
                 console.error('Component System does not support event', event);
         }
     }
 
-    static _erase(a, f, s) {
-        for (let i = 0; i < a.length; i++) {
-            if (a[i].f === f && a[i].s === s) {
-                a.splice(i--, 1);
+    _erase(callbacks, func, scope) {
+        for (let i = 0; i < callbacks.length; i++) {
+            if (callbacks[i].func === func && callbacks[i].scope === scope) {
+                callbacks.splice(i--, 1);
             }
         }
     }
 
-    static unbind(event, func, scope) {
+    unbind(event, func, scope) {
         switch (event) {
             case 'initialize':
                 this._erase(this._init, func, scope);
@@ -277,6 +277,14 @@ class ComponentSystem extends EventHandler {
 
     destroy() {
         this.off();
+
+        this._init = [];
+        this._postInit = [];
+        this._toolsUpdate = [];
+        this._update = [];
+        this._animationUpdate = [];
+        this._fixedUpdate = [];
+        this._postUpdate = [];
     }
 }
 
@@ -324,23 +332,5 @@ function convertValue(value, type) {
 
 // Add event support
 events.attach(ComponentSystem);
-
-ComponentSystem.destroy = function () {
-    ComponentSystem.off('initialize');
-    ComponentSystem.off('postInitialize');
-    ComponentSystem.off('toolsUpdate');
-    ComponentSystem.off('update');
-    ComponentSystem.off('animationUpdate');
-    ComponentSystem.off('fixedUpdate');
-    ComponentSystem.off('postUpdate');
-
-    ComponentSystem._init = [];
-    ComponentSystem._postInit = [];
-    ComponentSystem._toolsUpdate = [];
-    ComponentSystem._update = [];
-    ComponentSystem._animationUpdate = [];
-    ComponentSystem._fixedUpdate = [];
-    ComponentSystem._postUpdate = [];
-};
 
 export { ComponentSystem };

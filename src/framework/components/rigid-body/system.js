@@ -195,10 +195,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.contactResultPool = new ObjectPool(ContactResult, 1);
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
-            ComponentSystem.bind('update', this.onUpdate, this);
+            this.bind('update', this.onUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
-            ComponentSystem.unbind('update', this.onUpdate, this);
+            this.unbind('update', this.onUpdate, this);
         }
     }
 

@@ -50,6 +50,43 @@ class ComponentSystemRegistry {
             this.list.splice(index, 1);
         }
     }
+
+    _systemsCaller(functionName, ...args) {
+        for (let i = 0, l = this.list.length; i < l; i++) {
+            if (!this.list[i][functionName])
+                continue;
+
+            this.list[i][functionName](...args);
+        }
+    }
+
+    initialize(root) {
+        this._systemsCaller('initialize', root);
+    }
+
+    postInitialize(root) {
+        this._systemsCaller('postInitialize', root);
+    }
+
+    update(dt, inTools) {
+        this._systemsCaller('update', dt, inTools);
+    }
+
+    animationUpdate(dt, inTools) {
+        this._systemsCaller('animationUpdate', dt, inTools);
+    }
+
+    fixedUpdate(dt, inTools) {
+        this._systemsCaller('fixedUpdate', dt, inTools);
+    }
+
+    postUpdate(dt, inTools) {
+        this._systemsCaller('postUpdate', dt, inTools);
+    }
+
+    destroy() {
+        this._systemsCaller('destroy');
+    }
 }
 
 export { ComponentSystemRegistry };

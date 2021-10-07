@@ -58,10 +58,10 @@ class ScriptComponentSystem extends ComponentSystem {
         this.preloading = true;
 
         this.on('beforeremove', this._onBeforeRemove, this);
-        ComponentSystem.bind('initialize', this._onInitialize, this);
-        ComponentSystem.bind('postInitialize', this._onPostInitialize, this);
-        ComponentSystem.bind('update', this._onUpdate, this);
-        ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
+        this.bind('initialize', this._onInitialize, this);
+        this.bind('postInitialize', this._onPostInitialize, this);
+        this.bind('update', this._onUpdate, this);
+        this.bind('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data) {

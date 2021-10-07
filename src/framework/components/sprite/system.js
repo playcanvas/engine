@@ -47,7 +47,7 @@ class SpriteComponentSystem extends ComponentSystem {
         // material used for 9-slicing in tiled mode
         this._default9SlicedMaterialTiledMode = null;
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.bind('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     }
 

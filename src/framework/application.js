@@ -1102,10 +1102,10 @@ class Application extends EventHandler {
             this.onLibrariesLoaded();
         }
 
-        ComponentSystem.initialize(this.root);
+        this.systems.initialize(this.root);
         this.fire("initialize");
 
-        ComponentSystem.postInitialize(this.root);
+        this.systems.postInitialize(this.root);
         this.fire("postinitialize");
 
         this.tick();
@@ -1149,11 +1149,11 @@ class Application extends EventHandler {
 
         // Perform ComponentSystem update
         if (script.legacy)
-            ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            this.systems.fixedUpdate(1.0 / 60.0, this._inTools);
 
-        ComponentSystem.update(dt, this._inTools);
-        ComponentSystem.animationUpdate(dt, this._inTools);
-        ComponentSystem.postUpdate(dt, this._inTools);
+        this.systems.update(dt, this._inTools);
+        this.systems.animationUpdate(dt, this._inTools);
+        this.systems.postUpdate(dt, this._inTools);
 
         // fire update event
         this.fire("update", dt);
@@ -1905,12 +1905,7 @@ class Application extends EventHandler {
             this.controller = null;
         }
 
-        const systems = this.systems.list;
-        for (let i = 0, l = systems.length; i < l; i++) {
-            systems[i].destroy();
-        }
-
-        ComponentSystem.destroy();
+        this.systems.destroy();
 
         // layer composition
         if (this.scene.layers) {
@@ -1946,7 +1941,7 @@ class Application extends EventHandler {
         this.scene.destroy();
         this.scene = null;
 
-        this.systems = [];
+        this.systems = null;
         this.context = null;
 
         // script registry
