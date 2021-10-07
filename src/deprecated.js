@@ -111,8 +111,10 @@ import { RigidBodyComponent } from './framework/components/rigid-body/component.
 import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
 import { basisInitialize } from './resources/basis.js';
 
+// #if _DEBUG
 // function responsible for logging each unique deprecated message one time
 const _loggedDeprecatedMessages = new Set();
+// #endif
 
 function deprecatedWarn(message) {
     // #if _DEBUG
