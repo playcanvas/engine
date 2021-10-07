@@ -865,9 +865,21 @@ Application.prototype.loadSceneSettings = function (url, callback) {
     this.scenes.loadSceneSettings(url, callback);
 };
 
+Application.prototype.renderMeshInstance = function (meshInstance, options) {
+    deprecatedWarn("DEPRECATED: pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.");
+    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
+    this._immediate.drawMesh(null, null, null, meshInstance, layer);
+};
+
+Application.prototype.renderMesh = function(mesh, material, matrix, options) {
+    deprecatedWarn("DEPRECATED: pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
+    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
+    this._immediate.drawMesh(material, matrix, mesh, null, layer);
+};
+
 Application.prototype._addLines = function (positions, colors, options) {
-    var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
-    var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
+    const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
+    const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
 
     const batch = this._immediate.getBatch(layer, depthTest);
     batch.addLines(positions, colors);
@@ -877,11 +889,11 @@ Application.prototype.renderLine = function (start, end, color) {
 
     deprecatedWarn("DEPRECATED: pc.Application.renderLine is deprecated. Use pc.Application.drawLine.");
 
-    var endColor = color;
-    var options;
+    let endColor = color;
+    let options;
 
-    var arg3 = arguments[3];
-    var arg4 = arguments[4];
+    const arg3 = arguments[3];
+    const arg4 = arguments[4];
 
     if (arg3 instanceof Color) {
         // passed in end color
@@ -952,7 +964,7 @@ Application.prototype.renderLines = function (position, color, options) {
         }
     }
 
-    var multiColor = !!color.length;
+    const multiColor = !!color.length;
     if (multiColor) {
         if (position.length !== color.length) {
             console.error("renderLines: position/color arrays have different lengths");
