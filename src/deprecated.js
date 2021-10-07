@@ -871,7 +871,7 @@ Application.prototype.renderMeshInstance = function (meshInstance, options) {
     this._immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
-Application.prototype.renderMesh = function(mesh, material, matrix, options) {
+Application.prototype.renderMesh = function (mesh, material, matrix, options) {
     deprecatedWarn("DEPRECATED: pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
     const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
     this._immediate.drawMesh(material, matrix, mesh, null, layer);
