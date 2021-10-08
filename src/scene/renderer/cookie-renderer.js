@@ -100,17 +100,10 @@ class CookieRenderer {
             CookieRenderer._invViewProjMatrices = [];
 
             for (let face = 0; face < 6; face++) {
-
-                const camera = LightCamera.create("OmnoCookieCamera", LIGHTTYPE_OMNI, face);
+                const camera = LightCamera.create(null, LIGHTTYPE_OMNI, face);
                 const projMat = camera.projectionMatrix;
                 const viewMat = camera.node.getLocalTransform().clone().invert();
-                const viewProjMat = new Mat4();
-                viewProjMat.mul2(projMat, viewMat);
-
-                const invViewProjMat = new Mat4();
-                invViewProjMat.copy(viewProjMat).invert();
-
-                CookieRenderer._invViewProjMatrices[face] = invViewProjMat;
+                CookieRenderer._invViewProjMatrices[face] = new Mat4().mul2(projMat, viewMat).invert();
             }
         }
     }
