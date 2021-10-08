@@ -92,7 +92,7 @@ class CookieRenderer {
         return texture;
     }
 
-    // for rendering of cookies, store inverse view projection matrixes for 6 faces, allowing cubemap faces to be copied into the atlas
+    // for rendering of cookies, store inverse view projection matrices for 6 faces, allowing cubemap faces to be copied into the atlas
     static _invViewProjMatrices = null;
 
     initInvViewProjMatrices() {
