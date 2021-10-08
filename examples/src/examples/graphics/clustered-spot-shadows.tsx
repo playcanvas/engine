@@ -156,10 +156,10 @@ class ClusteredSpotShadowsExample extends Example {
             camera.lookAt(new pc.Vec3(0, 0, 0));
 
             // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-            // app.renderTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
+            // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
 
             // display cookie texture (debug feature)
-            // app.renderTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
+            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
         });
     }
 }

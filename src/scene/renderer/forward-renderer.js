@@ -34,6 +34,7 @@ import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
+import { LightCamera } from './light-camera.js';
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -121,7 +122,7 @@ class ForwardRenderer {
         this._shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
 
         // cookies
-        this._cookieRenderer = new CookieRenderer(device);
+        this._cookieRenderer = new CookieRenderer(device, this.lightTextureAtlas);
 
         // Uniforms
         const scope = device.scope;
@@ -733,7 +734,7 @@ class ForwardRenderer {
 
             // if shadow is not rendered, we need to evaluate light projection matrix
             if (!spot.castShadows) {
-                const cookieMatrix = CookieRenderer.evalCookieMatrix(spot);
+                const cookieMatrix = LightCamera.evalSpotCookieMatrix(spot);
                 this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
             }
 
@@ -1812,6 +1813,7 @@ class ForwardRenderer {
 
             // render cookies for all local visible lights (only handling spot lights)
             this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
+            this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
