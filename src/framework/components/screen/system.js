@@ -36,8 +36,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
-        this.bind('update', this._onUpdate, this);
-
+        this.on('update', this._onUpdate, this);
         this.on('beforeremove', this.onRemoveComponent, this);
     }
 

@@ -51,41 +51,38 @@ class ComponentSystemRegistry {
         }
     }
 
-    _systemsCaller(functionName, ...args) {
+    _fireOnSystems(event, ...args) {
         for (let i = 0, l = this.list.length; i < l; i++) {
-            if (!this.list[i][functionName])
-                continue;
-
-            this.list[i][functionName](...args);
+            this.list[i].fire(event, ...args);
         }
     }
 
     initialize(root) {
-        this._systemsCaller('initialize', root);
+        this._fireOnSystems('initialize', root);
     }
 
     postInitialize(root) {
-        this._systemsCaller('postInitialize', root);
+        this._fireOnSystems('postInitialize', root);
     }
 
     update(dt, inTools) {
-        this._systemsCaller('update', dt, inTools);
+        this._fireOnSystems(inTools ? 'toolsUpdate' : 'update', dt);
     }
 
-    animationUpdate(dt, inTools) {
-        this._systemsCaller('animationUpdate', dt, inTools);
+    animationUpdate(dt) {
+        this._fireOnSystems('animationUpdate', dt);
     }
 
-    fixedUpdate(dt, inTools) {
-        this._systemsCaller('fixedUpdate', dt, inTools);
+    fixedUpdate(dt) {
+        this._fireOnSystems('fixedUpdate', dt);
     }
 
-    postUpdate(dt, inTools) {
-        this._systemsCaller('postUpdate', dt, inTools);
+    postUpdate(dt) {
+        this._fireOnSystems('postUpdate', dt);
     }
 
     destroy() {
-        this._systemsCaller('destroy');
+        this._fireOnSystems('destroy');
     }
 }
 

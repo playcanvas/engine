@@ -35,8 +35,7 @@ class CameraComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
-
-        this.bind('update', this.onUpdate, this);
+        this.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

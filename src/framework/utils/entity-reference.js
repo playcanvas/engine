@@ -177,7 +177,7 @@ class EntityReference extends EventHandler {
         this._parentComponent[onOrOff]('set_' + this._entityPropertyName, this._onSetEntity, this);
         this._parentComponent.system[onOrOff]('beforeremove', this._onParentComponentRemove, this);
 
-        ComponentSystem[onOrOff]('postinitialize', this._onPostInitialize, this);
+        this._app[onOrOff]('postinitialize', this._onPostInitialize, this);
         this._app[onOrOff]('tools:sceneloaded', this._onSceneLoaded, this);
 
         // For any event listeners that relate to the gain/loss of a component, register

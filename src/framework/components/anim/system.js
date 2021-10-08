@@ -28,7 +28,7 @@ class AnimComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.bind('animationUpdate', this.onAnimationUpdate, this);
+        this.on('animationUpdate', this.onAnimationUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

@@ -52,13 +52,13 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
         this.instancesWithPostUpdate = [];
         this.instancesWithToolsUpdate = [];
 
+        this.on(INITIALIZE, this.onInitialize, this);
+        this.on(POST_INITIALIZE, this.onPostInitialize, this);
+        this.on(UPDATE, this.onUpdate, this);
+        this.on(FIXED_UPDATE, this.onFixedUpdate, this);
+        this.on(POST_UPDATE, this.onPostUpdate, this);
+        this.on(TOOLS_UPDATE, this.onToolsUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.bind(INITIALIZE, this.onInitialize, this);
-        this.bind(POST_INITIALIZE, this.onPostInitialize, this);
-        this.bind(UPDATE, this.onUpdate, this);
-        this.bind(FIXED_UPDATE, this.onFixedUpdate, this);
-        this.bind(POST_UPDATE, this.onPostUpdate, this);
-        this.bind(TOOLS_UPDATE, this.onToolsUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

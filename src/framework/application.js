@@ -1149,11 +1149,11 @@ class Application extends EventHandler {
 
         // Perform ComponentSystem update
         if (script.legacy)
-            this.systems.fixedUpdate(1.0 / 60.0, this._inTools);
+            this.systems.fixedUpdate(1.0 / 60.0);
 
         this.systems.update(dt, this._inTools);
-        this.systems.animationUpdate(dt, this._inTools);
-        this.systems.postUpdate(dt, this._inTools);
+        this.systems.animationUpdate(dt);
+        this.systems.postUpdate(dt);
 
         // fire update event
         this.fire("update", dt);

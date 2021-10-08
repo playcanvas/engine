@@ -24,121 +24,6 @@ class ComponentSystem extends EventHandler {
         this.schema = [];
     }
 
-    // Static class methods
-    _helper(callbacks, parameter) {
-        for (let i = 0, l = callbacks.length; i < l; i++) {
-            callbacks[i].func.call(callbacks[i].scope, parameter);
-        }
-    }
-
-    initialize(root) {
-        this._helper(this._init, root);
-    }
-
-    postInitialize(root) {
-        this._helper(this._postInit, root);
-
-        // temp, this is for internal use on entity-references until a better system is found
-        this.fire('postinitialize', root);
-    }
-
-    // Update all application ComponentSystems
-    update(dt, inTools) {
-        this._helper(inTools ? this._toolsUpdate : this._update, dt);
-    }
-
-    animationUpdate(dt, inTools) {
-        this._helper(this._animationUpdate, dt);
-    }
-
-    // Update all application ComponentSystems
-    fixedUpdate(dt, inTools) {
-        this._helper(this._fixedUpdate, dt);
-    }
-
-    // Update all application ComponentSystems
-    postUpdate(dt, inTools) {
-        this._helper(this._postUpdate, dt);
-    }
-
-    _init = [];
-
-    _postInit = [];
-
-    _toolsUpdate = [];
-
-    _update = [];
-
-    _animationUpdate = [];
-
-    _fixedUpdate =[];
-
-    _postUpdate = [];
-
-    bind(event, func, scope) {
-        switch (event) {
-            case 'initialize':
-                this._init.push({ func, scope });
-                break;
-            case 'postInitialize':
-                this._postInit.push({ func, scope });
-                break;
-            case 'update':
-                this._update.push({ func, scope });
-                break;
-            case 'animationUpdate':
-                this._animationUpdate.push({ func, scope });
-                break;
-            case 'postUpdate':
-                this._postUpdate.push({ func, scope });
-                break;
-            case 'fixedUpdate':
-                this._fixedUpdate.push({ func, scope });
-                break;
-            case 'toolsUpdate':
-                this._toolsUpdate.push({ func, scope });
-                break;
-            default:
-                console.error('Component System does not support event', event);
-        }
-    }
-
-    _erase(callbacks, func, scope) {
-        for (let i = 0; i < callbacks.length; i++) {
-            if (callbacks[i].func === func && callbacks[i].scope === scope) {
-                callbacks.splice(i--, 1);
-            }
-        }
-    }
-
-    unbind(event, func, scope) {
-        switch (event) {
-            case 'initialize':
-                this._erase(this._init, func, scope);
-                break;
-            case 'postInitialize':
-                this._erase(this._postInit, func, scope);
-                break;
-            case 'update':
-                this._erase(this._update, func, scope);
-                break;
-            case 'animationUpdate':
-                this._erase(this._animationUpdate, func, scope);
-                break;
-            case 'postUpdate':
-                this._erase(this._postUpdate, func, scope);
-                break;
-            case 'fixedUpdate':
-                this._erase(this._fixedUpdate, func, scope);
-                break;
-            case 'toolsUpdate':
-                this._erase(this._toolsUpdate, func, scope);
-                break;
-            default:
-                console.error('Component System does not support event', event);
-        }
-    }
-
     // Instance methods
     /**
      * @private
@@ -277,14 +162,6 @@ class ComponentSystem extends EventHandler {
 
     destroy() {
         this.off();
-
-        this._init = [];
-        this._postInit = [];
-        this._toolsUpdate = [];
-        this._update = [];
-        this._animationUpdate = [];
-        this._fixedUpdate = [];
-        this._postUpdate = [];
     }
 }
 
