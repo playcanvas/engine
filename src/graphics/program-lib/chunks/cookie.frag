@@ -1,3 +1,4 @@
+// light cookie funcionality for non-clustered lights
 vec4 getCookie2D(sampler2D tex, mat4 transform, float intensity) {
     vec4 projPos = transform * vec4(vPositionW, 1.0);
     projPos.xy /= projPos.w;
@@ -30,12 +31,4 @@ vec4 getCookie2DClipXform(sampler2D tex, mat4 transform, float intensity, vec4 c
 
 vec4 getCookieCube(samplerCube tex, mat4 transform, float intensity) {
     return mix(vec4(1.0), textureCube(tex, dLightDirNormW * mat3(transform)), intensity);
-}
-
-// getCookie2D for clustered lighting including channel selector
-vec3 getCookie2DClustered(sampler2D tex, mat4 transform, float intensity, bool isRgb, vec4 cookieChannel) {
-    vec4 projPos = transform * vec4(vPositionW, 1.0);
-    projPos.xy /= projPos.w;
-    vec4 pixel = mix(vec4(1.0), texture2D(tex, projPos.xy), intensity);
-    return isRgb == true ? pixel.rgb : vec3(dot(pixel, cookieChannel));
 }

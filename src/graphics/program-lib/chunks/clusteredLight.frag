@@ -246,18 +246,24 @@ void evaluateLight(ClusterLightData light) {
                     decodeClusterLightOmniAtlasViewport(light);
                 }
 
+                float shadowTextureResolution = shadowAtlasParams.x;
+                float shadowEdgePixels = shadowAtlasParams.y;
+
                 // cookie
                 if (light.isCookie == true) {
                     decodeClusterLightCookieData(light);
-                    dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask);
+
+                    if (light.isSpot == true) {
+                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, vPositionW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask);
+                    } else {
+                        dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                    }
                 }
 
                 // shadow
                 if (light.castShadows== true) {
                     decodeClusterLightShadowData(light);
 
-                    float shadowTextureResolution = shadowAtlasParams.x;
-                    float shadowEdgePixels = shadowAtlasParams.y;
                     vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
 
                     if (light.isSpot == true) {

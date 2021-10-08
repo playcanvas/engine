@@ -1285,6 +1285,11 @@ var standard = {
 
         // clustered lighting
         if (LayerComposition.clusteredLightingEnabled) {
+
+            // include this before shadow / cookie code
+            code += chunks.clusteredLightUtilsPS;
+            code += chunks.clusteredLightCookiesPS;
+
             // always include shadow chunks clustered lights support
             shadowTypeUsed[SHADOW_PCF3] = true;
             usePerspZbufferShadow = true;
@@ -1320,6 +1325,10 @@ var standard = {
             // otherwise bias is applied on render
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
+        }
+
+        if (LayerComposition.clusteredLightingEnabled) {
+            code += chunks.clusteredLightShadowsPS;
         }
 
         if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";

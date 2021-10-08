@@ -11,16 +11,6 @@ const _tempArray = [];
 const _viewport = new Vec4();
 const _scissor = new Vec4();
 
-// offsets to individual faces of a cubemap inside 3x3 grid in an atlas slot
-const _cubeSlotsOffsets = [
-    new Vec2(0, 0),
-    new Vec2(0, 1),
-    new Vec2(1, 0),
-    new Vec2(1, 1),
-    new Vec2(2, 0),
-    new Vec2(2, 1)
-];
-
 // A class handling runtime allocation of slots in a texture. Used to allocate slots in the shadow map,
 // and will be used to allocate slots in the cookie texture atlas as well.
 // Note: this will be improved in the future to allocate different size for lights of different priority and screen size,
@@ -45,6 +35,16 @@ class LightTextureAtlas {
 
         // available slots
         this.slots = [];
+
+        // offsets to individual faces of a cubemap inside 3x3 grid in an atlas slot
+        this.cubeSlotsOffsets = [
+            new Vec2(0, 0),
+            new Vec2(0, 1),
+            new Vec2(1, 0),
+            new Vec2(1, 1),
+            new Vec2(2, 0),
+            new Vec2(2, 1)
+        ];
 
         this.allocateShadowMap(1);  // placeholder as shader requires it
         this.allocateCookieMap(1);  // placeholder as shader requires it
@@ -226,7 +226,7 @@ class LightTextureAtlas {
                         if (light._type === LIGHTTYPE_OMNI) {
 
                             const smallSize = _viewport.z / 3;
-                            const offset = _cubeSlotsOffsets[face];
+                            const offset = this.cubeSlotsOffsets[face];
                             _viewport.x += smallSize * offset.x;
                             _viewport.y += smallSize * offset.y;
                             _viewport.z = smallSize;

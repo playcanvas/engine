@@ -5,7 +5,7 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT } from './constants.js';
-import { CookieRenderer } from './renderer/cookie-renderer.js';
+import { LightCamera } from './renderer/light-camera.js';
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -421,7 +421,7 @@ class WorldClusters {
                 const lightRenderData = light.getRenderData(null, 0);
                 lightProjectionMatrix = lightRenderData.shadowMatrix;
             } else if (isCookie) {
-                lightProjectionMatrix = CookieRenderer.evalCookieMatrix(light);
+                lightProjectionMatrix = LightCamera.evalSpotCookieMatrix(light);
             }
         } else {
             if (castShadows || isCookie) {
