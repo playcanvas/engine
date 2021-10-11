@@ -57,11 +57,11 @@ class ScriptComponentSystem extends ComponentSystem {
         // if true then we are currently preloading scripts
         this.preloading = true;
 
-        this.on('initialize', this._onInitialize, this);
-        this.on('postInitialize', this._onPostInitialize, this);
-        this.on('update', this._onUpdate, this);
-        this.on('postUpdate', this._onPostUpdate, this);
         this.on('beforeremove', this._onBeforeRemove, this);
+        this.app.systems.on('initialize', this._onInitialize, this);
+        this.app.systems.on('postInitialize', this._onPostInitialize, this);
+        this.app.systems.on('update', this._onUpdate, this);
+        this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data) {

@@ -45,8 +45,9 @@ class ScrollViewComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
-        this.on('update', this.onUpdate, this);
         this.on('beforeremove', this._onRemoveComponent, this);
+
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

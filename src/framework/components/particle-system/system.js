@@ -119,7 +119,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         };
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, _data, properties) {

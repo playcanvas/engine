@@ -272,8 +272,8 @@ class SceneRegistry {
                 self._app.root.addChild(entity);
 
                 // initialize components
-                self._app.systems.initialize(entity);
-                self._app.systems.postInitialize(entity);
+                self._app.systems.fire('initialize', entity);
+                self._app.systems.fire('postInitialize', entity);
 
                 if (callback) callback(err, entity);
             };

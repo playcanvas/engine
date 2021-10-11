@@ -42,7 +42,8 @@ class ButtonComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
-        this.on('update', this.onUpdate, this);
+
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {

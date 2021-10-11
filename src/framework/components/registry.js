@@ -1,11 +1,15 @@
+import { EventHandler } from '../../core/event-handler.js';
+
 /**
  * @class
  * @name ComponentSystemRegistry
  * @classdesc Store, access and delete instances of the various ComponentSystems.
  * @description Create a new ComponentSystemRegistry.
  */
-class ComponentSystemRegistry {
+class ComponentSystemRegistry extends EventHandler {
     constructor() {
+        super();
+
         // An array of pc.ComponentSystem objects
         this.list = [];
     }
@@ -51,38 +55,8 @@ class ComponentSystemRegistry {
         }
     }
 
-    _fireOnSystems(event, ...args) {
-        for (let i = 0, l = this.list.length; i < l; i++) {
-            this.list[i].fire(event, ...args);
-        }
-    }
-
-    initialize(root) {
-        this._fireOnSystems('initialize', root);
-    }
-
-    postInitialize(root) {
-        this._fireOnSystems('postInitialize', root);
-    }
-
-    update(dt, inTools) {
-        this._fireOnSystems(inTools ? 'toolsUpdate' : 'update', dt);
-    }
-
-    animationUpdate(dt) {
-        this._fireOnSystems('animationUpdate', dt);
-    }
-
-    fixedUpdate(dt) {
-        this._fireOnSystems('fixedUpdate', dt);
-    }
-
-    postUpdate(dt) {
-        this._fireOnSystems('postUpdate', dt);
-    }
-
     destroy() {
-        this._fireOnSystems('destroy');
+        this.off();
     }
 }
 

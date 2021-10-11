@@ -15,7 +15,7 @@ describe("pc.LayoutGroupComponentSystem", function () {
         entity0.addChild(entity0_0);
         entity0_0.addChild(entity0_0_0);
 
-        app.systems.postUpdate();
+        app.systems.fire('postUpdate');
 
         sinon.spy(entity0.layoutgroup, 'reflow');
         sinon.spy(entity0_0.layoutgroup, 'reflow');
@@ -41,7 +41,7 @@ describe("pc.LayoutGroupComponentSystem", function () {
         system.scheduleReflow(entity0.layoutgroup);
         system.scheduleReflow(entity0_0_0.layoutgroup);
 
-        app.systems.postUpdate();
+        app.systems.fire('postUpdate');
 
         expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
         expect(entity0_0.layoutgroup.reflow.callCount).to.equal(1);
@@ -65,7 +65,7 @@ describe("pc.LayoutGroupComponentSystem", function () {
             }
         }.bind(this));
 
-        app.systems.postUpdate();
+        app.systems.fire('postUpdate');
 
         expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
         expect(entity0_0.layoutgroup.reflow.callCount).to.equal(1);
@@ -79,7 +79,7 @@ describe("pc.LayoutGroupComponentSystem", function () {
         system.scheduleReflow(entity0.layoutgroup);
         system.scheduleReflow(entity0.layoutgroup);
 
-        app.systems.postUpdate();
+        app.systems.fire('postUpdate');
 
         expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
     });
@@ -94,10 +94,9 @@ describe("pc.LayoutGroupComponentSystem", function () {
             system.scheduleReflow(entity0.layoutgroup);
         }.bind(this));
 
-        app.systems.postUpdate();
+        app.systems.fire('postUpdate');
 
         expect(entity0.layoutgroup.reflow.callCount).to.equal(100);
         expect(console.warn.getCall(0).args[0]).to.equal('Max reflow iterations limit reached, bailing.');
     });
 });
-

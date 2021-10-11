@@ -34,7 +34,8 @@ class SoundComponentSystem extends ComponentSystem  {
 
         this.manager = manager;
 
-        this.on('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
+
         this.on('beforeremove', this.onBeforeRemove, this);
     }
 

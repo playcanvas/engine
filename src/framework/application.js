@@ -1102,11 +1102,11 @@ class Application extends EventHandler {
             this.onLibrariesLoaded();
         }
 
-        this.systems.initialize(this.root);
-        this.fire("initialize");
+        this.systems.fire('initialize', this.root);
+        this.fire('initialize');
 
-        this.systems.postInitialize(this.root);
-        this.fire("postinitialize");
+        this.systems.fire('postInitialize', this.root);
+        this.fire('postinitialize');
 
         this.tick();
     }
@@ -1149,11 +1149,11 @@ class Application extends EventHandler {
 
         // Perform ComponentSystem update
         if (script.legacy)
-            this.systems.fixedUpdate(1.0 / 60.0);
+            this.systems.fire('fixedUpdate', 1.0 / 60.0);
 
-        this.systems.update(dt, this._inTools);
-        this.systems.animationUpdate(dt);
-        this.systems.postUpdate(dt);
+        this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
+        this.systems.fire('animationUpdate', dt);
+        this.systems.fire('postUpdate', dt);
 
         // fire update event
         this.fire("update", dt);
