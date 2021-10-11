@@ -53,10 +53,6 @@ class LayoutChildComponentSystem extends ComponentSystem {
             excludeFromLayout: layoutChild.excludeFromLayout
         });
     }
-
-    destroy() {
-        super.destroy();
-    }
 }
 
 Component._buildAccessors(LayoutChildComponent.prototype, _schema);

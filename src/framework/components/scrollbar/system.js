@@ -41,10 +41,6 @@ class ScrollbarComponentSystem extends ComponentSystem {
     _onRemoveComponent(entity, component) {
         component.onRemove();
     }
-
-    destroy() {
-        super.destroy();
-    }
 }
 
 Component._buildAccessors(ScrollbarComponent.prototype, _schema);

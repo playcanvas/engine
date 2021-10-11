@@ -110,10 +110,6 @@ class LightComponentSystem extends ComponentSystem {
             component.light.type = lightTypes[newValue];
         }
     }
-
-    destroy() {
-        super.destroy();
-    }
 }
 
 export { LightComponentSystem };

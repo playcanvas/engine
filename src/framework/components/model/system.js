@@ -142,10 +142,6 @@ class ModelComponentSystem extends ComponentSystem {
     onRemove(entity, component) {
         component.onRemove();
     }
-
-    destroy() {
-        super.destroy();
-    }
 }
 
 Component._buildAccessors(ModelComponent.prototype, _schema);

@@ -108,10 +108,6 @@ class RenderComponentSystem extends ComponentSystem {
     onRemove(entity, component) {
         component.onRemove();
     }
-
-    destroy() {
-        super.destroy();
-    }
 }
 
 Component._buildAccessors(RenderComponent.prototype, _schema);
