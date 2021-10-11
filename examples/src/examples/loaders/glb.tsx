@@ -8,41 +8,52 @@ class GLBExample extends Example {
     // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
+        // The example demonstrates loading of glb file, which contains meshes,
+        // lights and cameras, and switches between the cameras every 2 seconds.
+
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        // the array will store loaded cameras
+        let camerasComponents: Array<pc.CameraComponent> = null;
 
         // Load a glb file as a container
-        const url = "static/assets/models/playcanvas-cube.glb";
+        const url = "static/assets/models/geometry-camera-light.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
             // create an instance using render component
-            const entity = asset.resource.instantiateRenderEntity({
-                castShadows: true
-            });
+            const entity = asset.resource.instantiateRenderEntity();
             app.root.addChild(entity);
 
-            // Create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.2, 0.2, 0.2)
+            // find all cameras - by default they are disabled
+            // set their aspect ratio to automatic to work with any window size
+            camerasComponents = entity.findComponents("camera");
+            camerasComponents.forEach((component) => {
+                component.aspectRatioMode = pc.ASPECT_AUTO;
             });
-            camera.translate(0, 0, 4);
-            app.root.addChild(camera);
 
-            // Create an entity with a omni light component
-            const light = new pc.Entity();
-            light.addComponent("light", {
-                type: "omni"
+            // enable all lights from the glb
+            const lightComponents: Array<pc.LightComponent> = entity.findComponents("light");
+            lightComponents.forEach((component) => {
+                component.enabled = true;
             });
-            light.setLocalPosition(1, 1, 5);
-            app.root.addChild(light);
 
+            let time = 0;
+            let activeCamera = 0;
             app.on("update", function (dt) {
-                if (entity) {
-                    entity.rotate(4 * dt, -20 * dt, 0);
+                time -= dt;
+
+                // change the camera every few seconds 
+                if (time <= 0) {
+                    time = 2;
+
+                    // disable current camera
+                    camerasComponents[activeCamera].enabled = false;
+
+                    // activate next camera
+                    activeCamera = (activeCamera + 1) % camerasComponents.length;
+                    camerasComponents[activeCamera].enabled = true;
                 }
             });
         });

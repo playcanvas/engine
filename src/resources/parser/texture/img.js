@@ -18,21 +18,40 @@ class ImgParser {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
-        // disable ImageBitmap
+        // As of today (9 Jul 2021) ImageBitmap only works on Chrome:
+        // - Firefox doesn't support options parameter to createImageBitmap (see https://bugzilla.mozilla.org/show_bug.cgi?id=1533680)
+        // - Safari supports ImageBitmap only as experimental feature.
         this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
     }
 
     load(url, callback, asset) {
+        const hasContents = !!asset?.file?.contents;
+
+        if (hasContents) {
+            url = {
+                load: URL.createObjectURL(new Blob([asset.file.contents])),
+                original: url.original
+            };
+        }
+
+        const handler = (err, result) => {
+            if (hasContents) {
+                URL.revokeObjectURL(url.load);
+            }
+            callback(err, result);
+        };
+
         let crossOrigin;
         if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
             crossOrigin = asset.options.crossOrigin;
         } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
+
         if (this.useImageBitmap) {
-            this._loadImageBitmap(url.load, url.original, crossOrigin, callback);
+            this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
         } else {
-            this._loadImage(url.load, url.original, crossOrigin, callback);
+            this._loadImage(url.load, url.original, crossOrigin, handler);
         }
     }
 
@@ -105,8 +124,7 @@ class ImgParser {
                 callback(err);
             } else {
                 createImageBitmap(blob, {
-                    premultiplyAlpha: 'none',
-                    imageOrientation: 'flipY'
+                    premultiplyAlpha: 'none'
                 })
                     .then(function (imageBitmap) {
                         callback(null, imageBitmap);

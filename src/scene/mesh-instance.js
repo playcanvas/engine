@@ -1,4 +1,3 @@
-import { RefCountedCache } from '../core/ref-counted-cache.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { BoundingSphere } from '../shape/bounding-sphere.js';
 
@@ -9,11 +8,13 @@ import {
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM, SHADERDEF_DIRLM,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
     SORTKEY_FORWARD
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
+import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
@@ -172,20 +173,6 @@ class MeshInstance {
     // shader uniform names for lightmaps
     static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
 
-    // cache of lightmaps internally created by baking using Lightmapper
-    // this allows us to automatically release realtime baked lightmaps when mesh instances using them are destroyed
-    static _lightmapCache = new RefCountedCache();
-
-    // add texture reference to lightmap cache
-    static incRefLightmap(texture) {
-        this._lightmapCache.incRef(texture);
-    }
-
-    // remove texture reference from lightmap cache
-    static decRefLightmap(texture) {
-        this._lightmapCache.decRef(texture);
-    }
-
     get renderStyle() {
         return this._renderStyle;
     }
@@ -326,26 +313,23 @@ class MeshInstance {
     }
 
     set material(material) {
-        var i;
-        for (i = 0; i < this._shader.length; i++) {
+        for (let i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
-        }
-        // Remove the material's reference to this mesh instance
-        if (this._material) {
-            var meshInstances = this._material.meshInstances;
-            i = meshInstances.indexOf(this);
-            if (i !== -1) {
-                meshInstances.splice(i, 1);
-            }
         }
 
         var prevMat = this._material;
 
+        // Remove the material's reference to this mesh instance
+        if (prevMat) {
+            prevMat.removeMeshInstanceRef(this);
+        }
+
         this._material = material;
 
         if (this._material) {
+
             // Record that the material is referenced by this mesh instance
-            this._material.meshInstances.push(this);
+            this._material.addMeshInstanceRef(this);
 
             this.updateKey();
 
@@ -520,14 +504,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            var pos = this.aabb.center;
-            if (this._aabb._radiusVer !== this._aabbVer) {
-                this._aabb._radius = this._aabb.halfExtents.length();
-                this._aabb._radiusVer = this._aabbVer;
-            }
-
-            _tempSphere.radius = this._aabb._radius;
-            _tempSphere.center = pos;
+            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
+            _tempSphere.radius = this._aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere);
         }
@@ -634,12 +612,12 @@ class MeshInstance {
 
         // remove old
         if (old) {
-            MeshInstance.decRefLightmap(old.data);
+            LightmapCache.decRef(old.data);
         }
 
         // assign new
         if (texture) {
-            MeshInstance.incRefLightmap(texture);
+            LightmapCache.incRef(texture);
             this.setParameter(name, texture);
         } else {
             this.deleteParameter(name);
@@ -678,7 +656,7 @@ class MeshInstance {
         } else {
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
-            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
+            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM | SHADERDEF_LMAMBIENT);
             this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     }

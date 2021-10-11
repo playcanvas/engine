@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @private

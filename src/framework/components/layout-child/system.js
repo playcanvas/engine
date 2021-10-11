@@ -40,7 +40,7 @@ class LayoutChildComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var layoutChild = entity.layoutchild;
+        const layoutChild = entity.layoutchild;
 
         return this.addComponent(clone, {
             enabled: layoutChild.enabled,

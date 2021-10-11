@@ -1,3 +1,4 @@
+import { platform } from "../core/platform.js";
 import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
@@ -6,6 +7,7 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * @name XrImageTracking
  * @classdesc Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
  * @description Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
+ * @hideconstructor
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Image Tracking is supported.
  * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for the AR session or there was an error processing the provided images.
@@ -16,7 +18,7 @@ class XrImageTracking extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = !! window.XRImageTrackingResult;
+        this._supported = platform.browser && !!window.XRImageTrackingResult;
         this._available = false;
 
         this._images = [];

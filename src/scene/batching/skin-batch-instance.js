@@ -6,7 +6,7 @@ class SkinBatchInstance extends SkinInstance {
 
         super();
 
-        var numBones = nodes.length;
+        const numBones = nodes.length;
         this.init(device, numBones);
 
         this.device = device;
@@ -20,16 +20,14 @@ class SkinBatchInstance extends SkinInstance {
     }
 
     updateMatrixPalette(rootNode, skinUpdateIndex) {
-        var pe;
-        var mp = this.matrixPalette;
-        var base;
+        const mp = this.matrixPalette;
 
-        var count = this.bones.length;
-        for (var i = 0; i < count; i++) {
-            pe = this.bones[i].getWorldTransform().data;
+        const count = this.bones.length;
+        for (let i = 0; i < count; i++) {
+            const pe = this.bones[i].getWorldTransform().data;
 
             // Copy the matrix into the palette, ready to be sent to the vertex shader, transpose matrix from 4x4 to 4x3 format as well
-            base = i * 12;
+            const base = i * 12;
             mp[base] = pe[0];
             mp[base + 1] = pe[4];
             mp[base + 2] = pe[8];

@@ -52,7 +52,7 @@ class MaterialClearCoatExample extends Example {
         const createSphere = function (x: number, y: number, z: number, material: pc.Material) {
             const sphere = new pc.Entity();
 
-            sphere.addComponent("model", {
+            sphere.addComponent("render", {
                 material: material,
                 type: "sphere"
             });

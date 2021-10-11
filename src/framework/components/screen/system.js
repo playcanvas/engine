@@ -75,9 +75,9 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     _onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components[id].entity.screen.update) components[id].entity.screen.update(dt);
         }
     }
@@ -88,7 +88,7 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var screen = entity.screen;
+        const screen = entity.screen;
 
         return this.addComponent(clone, {
             enabled: screen.enabled,
@@ -104,10 +104,10 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     processDrawOrderSyncQueue() {
-        var list = this._drawOrderSyncQueue.list();
+        const list = this._drawOrderSyncQueue.list();
 
-        for (var i = 0; i < list.length; i++) {
-            var item = list[i];
+        for (let i = 0; i < list.length; i++) {
+            const item = list[i];
             item.callback.call(item.scope);
         }
         this._drawOrderSyncQueue.clear();

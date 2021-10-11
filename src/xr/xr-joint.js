@@ -1,8 +1,9 @@
+import { platform } from "../core/platform.js";
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-const tipJointIds = window.XRHand ? [
+const tipJointIds = platform.browser && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
     'middle-finger-tip',
@@ -21,6 +22,7 @@ for (let i = 0; i < tipJointIds.length; i++) {
  * @name XrJoint
  * @classdesc Represents joint of a finger.
  * @description Represents joint of a finger.
+ * @hideconstructor
  * @param {number} index - Index of a joint within a finger.
  * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
  * @param {XrHand} hand - Hand that joint relates to.

@@ -40,10 +40,10 @@ class AudioListenerComponentSystem extends ComponentSystem {
 
     onUpdate(dt) {
         if (this.current) {
-            var position = this.current.getPosition();
+            const position = this.current.getPosition();
             this.manager.listener.setPosition(position);
 
-            var wtm = this.current.getWorldTransform();
+            const wtm = this.current.getWorldTransform();
             this.manager.listener.setOrientation(wtm);
         }
     }

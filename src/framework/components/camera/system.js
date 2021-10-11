@@ -34,7 +34,7 @@ class CameraComponentSystem extends ComponentSystem {
         this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.app.on("prerender", this.onAppPrerender, this);
+        this.app.on('prerender', this.onAppPrerender, this);
 
         ComponentSystem.bind('update', this.onUpdate, this);
     }
@@ -65,10 +65,10 @@ class CameraComponentSystem extends ComponentSystem {
             'scissorRect'
         ];
 
-        for (var i = 0; i < properties.length; i++) {
-            var property = properties[i];
+        for (let i = 0; i < properties.length; i++) {
+            const property = properties[i];
             if (data.hasOwnProperty(property)) {
-                var value = data[property];
+                const value = data[property];
                 switch (property) {
                     case 'rect':
                     case 'scissorRect':
@@ -96,7 +96,7 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var c = entity.camera;
+        const c = entity.camera;
         this.addComponent(clone, {
             aspectRatio: c.aspectRatio,
             aspectRatioMode: c.aspectRatioMode,
@@ -107,6 +107,7 @@ class CameraComponentSystem extends ComponentSystem {
             clearDepthBuffer: c.clearDepthBuffer,
             clearStencilBuffer: c.clearStencilBuffer,
             cullFaces: c.cullFaces,
+            enabled: c.enabled,
             farClip: c.farClip,
             flipFaces: c.flipFaces,
             fov: c.fov,
@@ -129,14 +130,14 @@ class CameraComponentSystem extends ComponentSystem {
 
     onUpdate(dt) {
         if (this.app.vr) {
-            var components = this.store;
+            const components = this.store;
 
-            for (var id in components) {
-                var component = components[id];
+            for (const id in components) {
+                const component = components[id];
 
                 if (component.data.enabled && component.entity.enabled) {
-                    var cameraComponent = component.entity.camera;
-                    var vrDisplay = cameraComponent.vrDisplay;
+                    const cameraComponent = component.entity.camera;
+                    const vrDisplay = cameraComponent.vrDisplay;
                     if (vrDisplay) {
                         // Change WebVR near/far planes based on the stereo camera
                         vrDisplay.setClipPlanes(cameraComponent.nearClip, cameraComponent.farClip);
@@ -154,7 +155,7 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     onAppPrerender() {
-        for (var i = 0, len = this.cameras.length; i < len; i++) {
+        for (let i = 0, len = this.cameras.length; i < len; i++) {
             this.cameras[i].onAppPrerender();
         }
     }
@@ -165,7 +166,7 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     removeCamera(camera) {
-        var index = this.cameras.indexOf(camera);
+        const index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
             this.sortCamerasByPriority();

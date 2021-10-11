@@ -9,6 +9,7 @@ let ids = 0;
  * @name XrPlane
  * @classdesc Detected Plane instance that provides position, rotation and polygon points. Plane is a subject to change during its lifetime.
  * @description Detected Plane instance that provides position, rotation and polygon points. Plane is a subject to change during its lifetime.
+ * @hideconstructor
  * @param {XrPlaneDetection} planeDetection - Plane detection system.
  * @param {object} xrPlane - XRPlane that is instantiated by WebXR system.
  * @property {number} id Unique identifier of a plane.
@@ -122,7 +123,7 @@ class XrPlane extends EventHandler {
      *     transform.transformPoint(vecB, vecB);
      *
      *     // render line
-     *     app.renderLine(vecA, vecB, color);
+     *     app.drawLine(vecA, vecB, color);
      * }
      */
     get points() {

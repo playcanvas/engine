@@ -77,7 +77,7 @@ var _blockSizeTable = null;
  * seam fixing shader code to look right. Defaults to false.
  * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
  * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
- * pixel data. Defaults to true.
+ * pixel data. Defaults to false.
  * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color
  * channels. Defaults to false.
  * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL},
@@ -128,7 +128,7 @@ class Texture {
         this._cubemap = false;
         this._volume = false;
         this.fixCubemapSeams = false;
-        this._flipY = true;
+        this._flipY = false;
         this._premultiplyAlpha = false;
 
         this._isRenderTarget = false;

@@ -96,7 +96,7 @@ Object.defineProperty(OrbitCamera.prototype, "pivotPoint", {
 // Moves the camera to look at an entity and all its children so they are all in the view
 OrbitCamera.prototype.focus = function (focusEntity) {
     // Calculate an bounding box that encompasses all the models to frame in the camera view
-    this._buildAabb(focusEntity, 0);
+    this._buildAabb(focusEntity);
 
     var halfExtents = this._modelsAabb.halfExtents;
     var radius = Math.max(halfExtents.x, Math.max(halfExtents.y, halfExtents.z));
@@ -137,7 +137,7 @@ OrbitCamera.prototype.resetAndLookAtPoint = function (resetPoint, lookAtPoint) {
 // Set camera position to a world position and look at an entity in the scene
 // Useful if you have multiple models to swap between in a scene
 OrbitCamera.prototype.resetAndLookAtEntity = function (resetPoint, entity) {
-    this._buildAabb(entity, 0);
+    this._buildAabb(entity);
     this.resetAndLookAtPoint(resetPoint, this._modelsAabb.center);
 };
 
@@ -166,7 +166,7 @@ OrbitCamera.prototype.initialize = function () {
 
     // Find all the models in the scene that are under the focused entity
     this._modelsAabb = new pc.BoundingBox();
-    this._buildAabb(this.focusEntity || this.app.root, 0);
+    this._buildAabb(this.focusEntity || this.app.root);
 
     this.entity.lookAt(this._modelsAabb.center);
 
@@ -279,27 +279,32 @@ OrbitCamera.prototype._checkAspectRatio = function () {
 };
 
 
-OrbitCamera.prototype._buildAabb = function (entity, modelsAdded) {
-    var i = 0;
+OrbitCamera.prototype._buildAabb = function (entity) {
+    var i, m, meshInstances = [];
 
-    if (entity.model) {
-        var mi = entity.model.meshInstances;
-        for (i = 0; i < mi.length; i++) {
-            if (modelsAdded === 0) {
-                this._modelsAabb.copy(mi[i].aabb);
-            } else {
-                this._modelsAabb.add(mi[i].aabb);
-            }
-
-            modelsAdded += 1;
+    var renders = entity.findComponents("render");
+    for (i = 0; i < renders.length; i++) {
+        var render = renders[i];
+        for (m = 0; m < render.meshInstances.length; m++) {
+            meshInstances.push(render.meshInstances[m]);
         }
     }
 
-    for (i = 0; i < entity.children.length; ++i) {
-        modelsAdded += this._buildAabb(entity.children[i], modelsAdded);
+    var models = entity.findComponents("model");
+    for (i = 0; i < models.length; i++) {
+        var model = models[i];
+        for (m = 0; m < model.meshInstances.length; m++) {
+            meshInstances.push(model.meshInstances[m]);
+        }
     }
 
-    return modelsAdded;
+    for (i = 0; i < meshInstances.length; i++) {
+        if (i === 0) {
+            this._modelsAabb.copy(meshInstances[i].aabb);
+        } else {
+            this._modelsAabb.add(meshInstances[i].aabb);
+        }
+    }
 };
 
 

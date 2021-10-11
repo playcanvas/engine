@@ -3,6 +3,7 @@
 /docs
 node_modules/
 .idea/
+.vscode/
 npm-debug.log
 .java-version
 release.py

@@ -312,12 +312,12 @@ class PostEffectQueue {
                             fx.effect.render(fx.inputTarget, destTarget, rect);
 
                             // #if _DEBUG
-                            self.app.graphicsDevice.popMarker("");
+                            self.app.graphicsDevice.popMarker();
                             // #endif
                         }
 
                         // #if _DEBUG
-                        self.app.graphicsDevice.popMarker("");
+                        self.app.graphicsDevice.popMarker();
                         // #endif
                     }
                 }

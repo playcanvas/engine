@@ -10,10 +10,10 @@ import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-var ammoRayStart, ammoRayEnd;
+let ammoRayStart, ammoRayEnd;
 
-var collisions = {};
-var frameCollisions = {};
+const collisions = {};
+let frameCollisions = {};
 
 /**
  * @class

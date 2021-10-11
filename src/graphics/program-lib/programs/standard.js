@@ -22,7 +22,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { WorldClusters } from '../../../scene/world-clusters.js';
-import { LayerComposition } from '../../../scene/layer-composition.js';
+import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -235,12 +235,15 @@ var standard = {
     },
 
     _setMapTransform: function (codes, name, id, uv) {
-        codes[0] += "uniform vec4 texture_" + name + "MapTransform;\n";
+        const varName = `texture_${name}MapTransform`;
+        const checkId = id + uv * 100;
 
-        var checkId = id + uv * 100;
+        // upload a 3x2 matrix and manually perform the multiplication
+        codes[0] += `uniform vec3 ${varName}0;\n`;
+        codes[0] += `uniform vec3 ${varName}1;\n`;
         if (!codes[3][checkId]) {
-            codes[1] += "varying vec2 vUV" + uv + "_" + id + ";\n";
-            codes[2] += "   vUV" + uv + "_" + id + " = uv" + uv + " * texture_" + name + "MapTransform.xy + texture_" + name + "MapTransform.zw;\n";
+            codes[1] += `varying vec2 vUV${uv}_${id};\n`;
+            codes[2] += `   vUV${uv}_${id} = vec2(dot(vec3(uv${uv}, 1), ${varName}0), dot(vec3(uv${uv}, 1), ${varName}1));\n`;
             codes[3][checkId] = true;
         }
         return codes;
@@ -470,6 +473,92 @@ var standard = {
         } else if (options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
             code += chunks.startNineSlicedTiledPS;
         }
+
+        return code;
+    },
+
+    _buildShadowPassFragmentCode: function (code, device, chunks, options, varyings) {
+
+        const isClustered = LayerComposition.clusteredLightingEnabled;
+        const smode = options.pass - SHADER_SHADOW;
+        const numShadowModes = SHADOW_COUNT;
+        const lightType = Math.floor(smode / numShadowModes);
+        const shadowType = smode - lightType * numShadowModes;
+
+        if (device.extStandardDerivatives && !device.webgl2) {
+            code += 'uniform vec2 polygonOffset;\n';
+        }
+
+        if (shadowType === SHADOW_VSM32) {
+            if (device.textureFloatHighPrecision) {
+                code += '#define VSM_EXPONENT 15.0\n\n';
+            } else {
+                code += '#define VSM_EXPONENT 5.54\n\n';
+            }
+        } else if (shadowType === SHADOW_VSM16) {
+            code += '#define VSM_EXPONENT 5.54\n\n';
+        }
+
+        if (lightType !== LIGHTTYPE_DIRECTIONAL) {
+            code += 'uniform vec3 view_position;\n';
+            code += 'uniform float light_radius;\n';
+        }
+
+        code += varyings;
+        if (options.alphaTest) {
+            code += "float dAlpha;\n";
+            code += this._addMap("opacity", "opacityPS", options, chunks);
+            code += chunks.alphaTestPS;
+        }
+
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
+            code += chunks.packDepthPS;
+        } else if (shadowType === SHADOW_VSM8) {
+            code += "vec2 encodeFloatRG( float v ) {\n";
+            code += "    vec2 enc = vec2(1.0, 255.0) * v;\n";
+            code += "    enc = fract(enc);\n";
+            code += "    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n";
+            code += "    return enc;\n";
+            code += "}\n\n";
+        }
+
+        code += begin();
+
+        if (options.alphaTest) {
+            code += "   getOpacity();\n";
+            code += "   alphaTest(dAlpha);\n";
+        }
+
+        const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
+
+        if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
+            code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
+        } else {
+            code += "   float depth = gl_FragCoord.z;\n";
+        }
+
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !isClustered))) {
+            if (device.extStandardDerivatives && !device.webgl2) {
+                code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
+                code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
+                code += "   gl_FragColor = packFloat(depth);\n";
+            } else {
+                code += "   gl_FragColor = packFloat(depth);\n";
+            }
+        } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
+            code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
+
+            // clustered omni light is using shadow sampler and needs to write custom depth
+            if (isClustered && lightType === LIGHTTYPE_OMNI && device.webgl2) {
+                code += "   gl_FragDepth = depth;\n";
+            }
+        } else if (shadowType === SHADOW_VSM8) {
+            code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
+        } else {
+            code += chunks.storeEVSMPS;
+        }
+
+        code += end();
 
         return code;
     },
@@ -887,85 +976,10 @@ var standard = {
 
         } else if (shadowPass) {
             // ##### SHADOW PASS #####
-            const smode = options.pass - SHADER_SHADOW;
-            const numShadowModes = SHADOW_COUNT;
-            lightType = Math.floor(smode / numShadowModes);
-            var shadowType = smode - lightType * numShadowModes;
-
-            if (device.extStandardDerivatives && !device.webgl2) {
-                code += 'uniform vec2 polygonOffset;\n';
-            }
-
-            if (shadowType === SHADOW_VSM32) {
-                if (device.textureFloatHighPrecision) {
-                    code += '#define VSM_EXPONENT 15.0\n\n';
-                } else {
-                    code += '#define VSM_EXPONENT 5.54\n\n';
-                }
-            } else if (shadowType === SHADOW_VSM16) {
-                code += '#define VSM_EXPONENT 5.54\n\n';
-            }
-
-            if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-                code += 'uniform vec3 view_position;\n';
-                code += 'uniform float light_radius;\n';
-            }
-
-            code += varyings;
-            if (options.alphaTest) {
-                code += "float dAlpha;\n";
-                code += this._addMap("opacity", "opacityPS", options, chunks);
-                code += chunks.alphaTestPS;
-            }
-
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
-                code += chunks.packDepthPS;
-            } else if (shadowType === SHADOW_VSM8) {
-                code += "vec2 encodeFloatRG( float v ) {\n";
-                code += "    vec2 enc = vec2(1.0, 255.0) * v;\n";
-                code += "    enc = fract(enc);\n";
-                code += "    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n";
-                code += "    return enc;\n";
-                code += "}\n\n";
-            }
-
-            code += begin();
-
-            if (options.alphaTest) {
-                code += "   getOpacity();\n";
-                code += "   alphaTest(dAlpha);\n";
-            }
-
-            var isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-
-            if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
-                code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
-            } else {
-                code += "   float depth = gl_FragCoord.z;\n";
-            }
-
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
-                if (device.extStandardDerivatives && !device.webgl2) {
-                    code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-                    code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
-                    code += "   gl_FragColor = packFloat(depth);\n";
-                } else {
-                    code += "   gl_FragColor = packFloat(depth);\n";
-                }
-            } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
-                code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
-            } else if (shadowType === SHADOW_VSM8) {
-                code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
-            } else {
-                code += chunks.storeEVSMPS;
-            }
-
-            code += end();
-
             return {
                 attributes: attributes,
                 vshader: vshader,
-                fshader: code
+                fshader: this._buildShadowPassFragmentCode(code, device, chunks, options, varyings)
             };
         }
 
@@ -1129,7 +1143,8 @@ var standard = {
 
                 if (!options.hasTangents) {
                     // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
-                    var normalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    const transformPropName = options.normalMap ? "normalMapTransform" : "clearCoatNormalMapTransform";
+                    const normalMapUv = this._getUvSourceExpression(transformPropName, "normalMapUv", options);
                     tbn = tbn.replace(/\$UV/g, normalMapUv);
                 }
                 code += tbn;
@@ -1268,9 +1283,21 @@ var standard = {
             }
         }
 
-        if (numShadowLights > 0) {
+        // clustered lighting
+        if (LayerComposition.clusteredLightingEnabled) {
+
+            // include this before shadow / cookie code
+            code += chunks.clusteredLightUtilsPS;
+            code += chunks.clusteredLightCookiesPS;
+
+            // always include shadow chunks clustered lights support
+            shadowTypeUsed[SHADOW_PCF3] = true;
+            usePerspZbufferShadow = true;
+        }
+
+        if (numShadowLights > 0 || LayerComposition.clusteredLightingEnabled) {
             if (shadowedDirectionalLightUsed) {
-                code += shaderChunks.shadowCascadesPS;
+                code += chunks.shadowCascadesPS;
             }
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
@@ -1294,10 +1321,14 @@ var standard = {
             if (!(device.webgl2 || device.extStandardDerivatives)) {
                 code += chunks.biasConstPS;
             }
-            // otherwise bias is applied on render
 
+            // otherwise bias is applied on render
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
+        }
+
+        if (LayerComposition.clusteredLightingEnabled) {
+            code += chunks.clusteredLightShadowsPS;
         }
 
         if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
@@ -1392,9 +1423,10 @@ var standard = {
             usesSpot = true;
             hasPointLights = true;
             usesLinearFalloff = true;
+            usesCookie = true;
 
-            const clusterTextureFormat = WorldClusters.lightTextureFormat === WorldClusters.FORMAT_FLOAT ? "FLOAT" : "8BIT";
-            code += `\n#define CLUSTER_TEXTURE_${clusterTextureFormat}\n`;
+            code += chunks.floatUnpackingPS;
+            code += WorldClusters.shaderDefines;
             code += chunks.clusteredLightPS;
         }
 
@@ -1499,6 +1531,14 @@ var standard = {
 
         if (addAmbient) {
             code += "   addAmbient();\n";
+
+            // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
+            if (options.separateAmbient) {
+                code += `
+                    vec3 dAmbientLight = dDiffuseLight;
+                    dDiffuseLight = vec3(0);
+                `;
+            }
         }
         if (options.ambientTint && !useOldAmbient) {
             code += "   dDiffuseLight *= material_ambient;\n";
@@ -1535,7 +1575,7 @@ var standard = {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
-                code += chunks.clusteredLightLoopPS;
+                code += '   addClusteredLights();';
             }
 
             for (i = 0; i < options.lights.length; i++) {

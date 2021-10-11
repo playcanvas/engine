@@ -48,7 +48,7 @@ class JsonStandardMaterialParser {
         }
 
         if (data.chunks) {
-            material.chunks.copy(data.chunks);
+            material.chunks = { ...data.chunks };
         }
 
         // initialize material values from the input data

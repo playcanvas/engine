@@ -86,9 +86,9 @@ export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
-export { LayerComposition } from './scene/layer-composition.js';
+export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
-export { Lightmapper } from './scene/lightmapper.js';
+export { Lightmapper } from './scene/lightmapper/lightmapper.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance, Command } from './scene/mesh-instance.js';
@@ -144,7 +144,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisInitialize, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';

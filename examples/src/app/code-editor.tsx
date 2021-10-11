@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 // @ts-ignore: library file import
-import { Panel, Container, Button } from '@playcanvas/pcui/pcui-react';
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Button from '@playcanvas/pcui/Button/component';
 import { playcanvasTypeDefs } from './helpers/raw-file-loading';
 import { File } from './helpers/types';
 
@@ -43,7 +47,8 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     const onValidate = (markers: Array<any>) => {
-        if (markers.length === 0) {
+        // filter out markers which are warnings
+        if (markers.filter((m) => m.severity > 1).length === 0) {
             props.setFiles(files);
             props.setLintErrors(false);
         } else {
@@ -64,10 +69,15 @@ const CodeEditor = (props: CodeEditorProps) => {
     };
 
     useEffect(() => {
+        const codePane = document.getElementById('codePane');
+        if (files.length > 1) {
+            codePane.classList.add('multiple-files');
+        } else {
+            codePane.classList.remove('multiple-files');
+        }
         if (!files[selectedFile]) setSelectedFile(0);
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
-        const codePane = document.getElementById('codePane');
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
@@ -91,6 +101,11 @@ const CodeEditor = (props: CodeEditorProps) => {
             onMount={editorDidMount}
             onChange={onChange}
             onValidate={onValidate}
+            options={{
+                scrollbar: {
+                    horizontal: 'visible'
+                }
+            }}
         />
     </Panel>;
 };

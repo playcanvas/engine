@@ -37,7 +37,7 @@ class PositionalExample extends Example {
         material.update();
 
         const ground = new pc.Entity();
-        ground.addComponent("model", {
+        ground.addComponent("render", {
             type: "box",
             material: material
         });

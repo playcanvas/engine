@@ -97,8 +97,16 @@ class AnimState {
         return this._speed;
     }
 
+    set speed(value) {
+        this._speed = value;
+    }
+
     get loop() {
         return this._loop;
+    }
+
+    set loop(value) {
+        this._loop = value;
     }
 
     get nodeCount() {

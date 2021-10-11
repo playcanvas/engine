@@ -2,6 +2,18 @@ import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 class PostEffectsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -13,13 +25,83 @@ class PostEffectsExample extends Example {
             <AssetLoader name='bokeh' type='script' url='static/scripts/posteffects/posteffect-bokeh.js' />
             <AssetLoader name='sepia' type='script' url='static/scripts/posteffects/posteffect-sepia.js' />
             <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-vignette.js' />
+            <AssetLoader name='ssao' type='script' url='static/scripts/posteffects/posteffect-ssao.js' />
             <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
     // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='BLOOM [KEY_1]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.bloomIntensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='threshold'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.bloomThreshold' }}/>
+                </LabelGroup>
+                <LabelGroup text='blur amount'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.blurAmount' }} min={1} max={30}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='SEPIA [KEY_2]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.sepia.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='amount'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.sepia.amount' }}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='VIGNETTE [KEY_3]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='darkness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.darkness' }}/>
+                </LabelGroup>
+                <LabelGroup text='offset'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.offset' }} max={2}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='BOKEH [KEY_4]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='aperture'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.aperture' }} max={0.2}/>
+                </LabelGroup>
+                <LabelGroup text='max blur'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.maxBlur' }} max={0.1}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='SSAO [KEY_5]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='radius'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.radius' }} max={10}/>
+                </LabelGroup>
+                <LabelGroup text='samples'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.samples' }} max={32}/>
+                </LabelGroup>
+                <LabelGroup text='brightness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.brightness' }}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='POST-PROCESS UI [KEY_6]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.postProcessUI.enabled' }}/>
+                </LabelGroup>
+            </Panel>
+        </>;
+    }
+
+    // @ts-ignore: override class function
+    example(canvas: HTMLCanvasElement, assets: any, data: any): void {
         const app = new pc.Application(canvas, {
             keyboard: new pc.Keyboard(window)
         });
@@ -74,13 +156,14 @@ class PostEffectsExample extends Example {
 
         // create the towers from the boxes
         let scale = 16;
-        for (let y = 0; y <= 6; y++) {
+        for (let y = 0; y <= 7; y++) {
             for (let x = -1; x <= 1; x += 2) {
                 for (let z = 0; z <= 10; z += 2) {
-                    createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random());
+                    const prim = createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random());
+                    prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
                 }
             }
-            scale -= 2;
+            scale -= 1.5;
         }
 
         // create a sphere which represents the point of focus for the bokeh filter
@@ -104,29 +187,39 @@ class PostEffectsExample extends Example {
             farClip: 500
         });
         camera.addComponent("script");
-        camera.script.create("bloom", {
-            attributes: {
+        data.set('scripts', {
+            ssao: {
+                enabled: true,
+                radius: 5,
+                samples: 16,
+                brightness: 0
+            },
+            bloom: {
+                enabled: true,
                 bloomIntensity: 0.8,
                 bloomThreshold: 0.8,
                 blurAmount: 15
-            }
-        });
-        camera.script.create("sepia", {
-            attributes: {
+            },
+            sepia: {
+                enabled: true,
                 amount: 0.4
-            }
-        });
-        camera.script.create("vignette", {
-            attributes: {
+            },
+            vignette: {
+                enabled: true,
                 darkness: 1,
                 offset: 1.2
-            }
-        });
-        camera.script.create("bokeh", {
-            attributes: {
+            },
+            bokeh: {
+                enabled: true,
                 aperture: 0.1,
                 maxBlur: 0.01
             }
+        });
+
+        Object.keys(data.get('scripts')).forEach((key) => {
+            camera.script.create(key, {
+                attributes: data.get(`scripts.${key}`)
+            });
         });
 
         // position the camera in the world
@@ -136,25 +229,26 @@ class PostEffectsExample extends Example {
 
         // Allow user to toggle individual post effects
         app.keyboard.on("keydown", function (e) {
+            // if the user is editing an input field, ignore key presses
+            if (e.element.constructor.name === 'HTMLInputElement') return;
             switch (e.key) {
                 case pc.KEY_1:
-                    // @ts-ignore engine-tsd
-                    camera.script.bloom.enabled = !camera.script.bloom.enabled;
+                    data.set('scripts.bloom.enabled', !data.get('scripts.bloom.enabled'));
                     break;
                 case pc.KEY_2:
-                    // @ts-ignore engine-tsd
-                    camera.script.sepia.enabled = !camera.script.sepia.enabled;
+                    data.set('scripts.sepia.enabled', !data.get('scripts.sepia.enabled'));
                     break;
                 case pc.KEY_3:
-                    // @ts-ignore engine-tsd
-                    camera.script.vignette.enabled = !camera.script.vignette.enabled;
+                    data.set('scripts.vignette.enabled', !data.get('scripts.vignette.enabled'));
                     break;
                 case pc.KEY_4:
-                    // @ts-ignore engine-tsd
-                    camera.script.bokeh.enabled = !camera.script.bokeh.enabled;
+                    data.set('scripts.bokeh.enabled', !data.get('scripts.bokeh.enabled'));
                     break;
                 case pc.KEY_5:
-                    camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
+                    data.set('scripts.ssao.enabled', !data.get('scripts.ssao.enabled'));
+                    break;
+                case pc.KEY_6:
+                    data.set('data.postProcessUI.enabled', !data.get('data.postProcessUI.enabled'));
                     break;
             }
         }, this);
@@ -181,6 +275,9 @@ class PostEffectsExample extends Example {
         });
         screen.addChild(text);
 
+        // Display some UI text which the post processing can be tested against
+        text.element.text = 'Test UI Text';
+
         // update things every frame
         let angle = 0;
         app.on("update", function (dt) {
@@ -197,18 +294,19 @@ class PostEffectsExample extends Example {
             // - it's a negative distance between the camera and the focus sphere
             camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
-            // update text showing which post effects are enabled
-            text.element.text =
-                `[Key 1] Bloom: ${camera.script.bloom.enabled}\n` +
-                `[Key 2] Sepia: ${camera.script.sepia.enabled}\n` +
-                `[Key 3] Vignette: ${camera.script.vignette.enabled}\n` +
-                `[Key 4] Bokeh: ${camera.script.bokeh.enabled}\n` +
-                `[Key 5] Post-process UI: ${camera.camera.disablePostEffectsLayer !== pc.LAYERID_UI}\n`;
-
             // display the depth textur if bokeh is enabled
             if (camera.script.bokeh.enabled) {
                 // @ts-ignore engine-tsd
-                app.renderDepthTexture(0.7, -0.7, 0.5, 0.5);
+                app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
+            }
+        });
+
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+            if (pathArray[0] === 'scripts') {
+                camera.script[pathArray[1]][pathArray[2]] = value;
+            } else {
+                camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
             }
         });
     }

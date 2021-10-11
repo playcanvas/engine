@@ -3,9 +3,13 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
-import { SliderInput, LabelGroup } from '@playcanvas/pcui/pcui-react';
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
 // @ts-ignore: library file import
-import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 // create an anim state graph
 const animStateGraphData = {

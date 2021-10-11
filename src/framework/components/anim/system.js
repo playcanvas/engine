@@ -5,10 +5,7 @@ import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
 
 const _schema = [
-    'enabled',
-    'speed',
-    'activate',
-    'playing'
+    'enabled'
 ];
 
 /**
@@ -35,34 +32,72 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        properties = ['activate', 'enabled', 'speed', 'playing'];
-        super.initializeComponentData(component, data, properties);
-        if (data.stateGraphAsset) {
-            component.stateGraphAsset = data.stateGraphAsset;
+        properties = ['activate', 'speed', 'playing'];
+        super.initializeComponentData(component, data, _schema);
+        const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
+        Object.keys(data).forEach((key) => {
+            // these properties will be initialised manually below
+            if (complexProperties.includes(key)) return;
+            component[key] = data[key];
+        });
+        if (data.stateGraph) {
+            component.stateGraph = data.stateGraph;
+            component.loadStateGraph(component.stateGraph);
         }
-        if (data.animationAssets) {
-            component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
+        if (data.layers) {
+            data.layers.forEach((layer, i) => {
+                layer._controller.states.forEach((stateKey) => {
+                    layer._controller._states[stateKey]._animationList.forEach((node) => {
+                        component.layers[i].assignAnimation(node.name, node.animTrack);
+                    });
+                });
+            });
+        } else if (data.animationAssets) {
+            component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
         }
-        if (data.rootBone) {
-            component.rootBone = data.rootBone;
+
+        if (data.masks) {
+            Object.keys(data.masks).forEach((key) => {
+                if (component.layers[key]) {
+                    component.layers[key].assignMask(data.masks[key].mask);
+                }
+            });
         }
     }
 
     onAnimationUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
-                var componentData = component.data;
+                const component = components[id].entity.anim;
+                const componentData = component.data;
 
-                if (componentData.enabled && component.entity.enabled && componentData.playing) {
-                    for (var i = 0; i < componentData.layers.length; i++) {
-                        componentData.layers[i].update(dt * componentData.speed);
-                    }
+                if (componentData.enabled && component.entity.enabled && component.playing) {
+                    component.update(dt);
                 }
             }
         }
+    }
+
+    cloneComponent(entity, clone) {
+        const data = {
+            stateGraphAsset: entity.anim.stateGraphAsset,
+            animationAssets: entity.anim.animationAssets,
+            speed: entity.anim.speed,
+            activate: entity.anim.activate,
+            playing: entity.anim.playing,
+            rootBone: entity.anim.rootBone,
+            stateGraph: entity.anim.stateGraph,
+            layers: entity.anim.layers,
+            layerIndices: entity.anim.layerIndices,
+            parameters: entity.anim.parameters
+        };
+        this.addComponent(clone, data);
+    }
+
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 }
 

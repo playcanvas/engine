@@ -25,7 +25,7 @@ class ShadowMap {
 
         // an array of render targets:
         // 1 for directional and spot light
-        // 6 for point light
+        // 6 for omni light
         this.renderTargets = targets;
     }
 
@@ -75,6 +75,20 @@ class ShadowMap {
             shadowMap = this.createCubemap(device, light._shadowResolution);
         } else {
             shadowMap = this.create2dMap(device, light._shadowResolution, light._shadowType);
+        }
+
+        return shadowMap;
+    }
+
+    // creates a shadow map which is used by the light texture atlas for clustered lighting
+    static createAtlas(device, resolution, shadowType) {
+        const shadowMap = this.create2dMap(device, resolution, shadowType);
+
+        // copy the target 5 more times to allow unified access for point light faces
+        const targets = shadowMap.renderTargets;
+        const rt = targets[0];
+        for (let i = 0; i < 5; i++) {
+            targets.push(rt);
         }
 
         return shadowMap;

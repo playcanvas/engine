@@ -14,7 +14,7 @@ class AudioListenerComponent extends Component {
     setCurrentListener() {
         if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
             this.system.current = this.entity;
-            var position = this.system.current.getPosition();
+            const position = this.system.current.getPosition();
             this.system.manager.listener.setPosition(position);
         }
     }

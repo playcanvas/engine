@@ -29,6 +29,8 @@ npm run thumbnails
 ### Local engine development
 By default, the local build uses whichever version of PlayCanvas is listed in the package.json file. If you'd like to use the locally built version of PlayCanvas in the engines build directory you can replace the `npm run build:watch` script above with `npm run local` or `npm run local:dbg` for the debug version.
 
+By default, example code is executed as an anonymous function in the browser (in order to support live code editing). However this limits the usefulness of debugging tools as the callstack for the example code is obscured. To run examples with a full callstack, allowing line by line debugging of an example, you can use the debug path for each example. Where `/#/misc/hello-world` becomes `/#/debug/misc/hello-world`. A full list of debug paths can be found at [http://localhost:5000/debug-directory]().
+
 ## Creating an example
 
 The available examples are written as classes in TypeScript under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.
@@ -92,7 +94,7 @@ example(canvas: HTMLCanvasElement, TWEEN: any) {
 ### `controls` function
 This function allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 ```tsx
-import { Button } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 controls(data: any) {
     return <>
         <Button text='Flash' onClick={() => {
@@ -110,3 +112,12 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
     console.log(data.get('flash'));
 }
 ```
+## Deployment
+
+Build the latest examples browser using `npm run build`.
+
+Run `npm run thumbnails` to create the thumbnails directory for browser. This may take a while depending on the number of new examples or if this is first time it has been run locally.
+
+Run `npm run build:directory` to build the static html directory structure for the project.
+
+Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository and submit a PR with the changes. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
