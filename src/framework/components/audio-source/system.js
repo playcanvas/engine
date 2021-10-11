@@ -117,6 +117,13 @@ class AudioSourceComponentSystem extends ComponentSystem {
     setVolume(volume) {
         this.manager.setVolume(volume);
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('initialize', this.onInitialize, this);
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(AudioSourceComponent.prototype, _schema);

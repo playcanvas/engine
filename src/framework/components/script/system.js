@@ -193,6 +193,15 @@ class ScriptComponentSystem extends ComponentSystem {
         // remove from components array
         this._components.remove(component);
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('initialize', this._onInitialize, this);
+        this.app.systems.off('postInitialize', this._onPostInitialize, this);
+        this.app.systems.off('update', this._onUpdate, this);
+        this.app.systems.off('postUpdate', this._onPostUpdate, this);
+    }
 }
 
 export { ScriptComponentSystem };

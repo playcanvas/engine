@@ -123,6 +123,10 @@ class SpriteComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (this._defaultTexture) {
             this._defaultTexture.destroy();
             this._defaultTexture = null;

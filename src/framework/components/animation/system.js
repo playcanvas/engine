@@ -157,6 +157,12 @@ class AnimationComponentSystem extends ComponentSystem {
             }
         }
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(AnimationComponent.prototype, _schema);

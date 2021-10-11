@@ -270,6 +270,12 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(ParticleSystemComponent.prototype, _schema);

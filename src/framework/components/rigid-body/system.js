@@ -760,6 +760,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);
             Ammo.destroy(this.solver);

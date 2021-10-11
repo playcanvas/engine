@@ -47,6 +47,12 @@ class AudioListenerComponentSystem extends ComponentSystem {
             this.manager.listener.setOrientation(wtm);
         }
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(AudioListenerComponent.prototype, _schema);

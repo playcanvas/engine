@@ -54,6 +54,10 @@ class ZoneComponentSystem extends ComponentSystem {
     _onBeforeRemove(entity, component) {
         component._onBeforeRemove();
     }
+
+    destroy() {
+        super.destroy();
+    }
 }
 
 Component._buildAccessors(ZoneComponent.prototype, _schema);

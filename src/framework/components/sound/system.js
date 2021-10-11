@@ -134,6 +134,12 @@ class SoundComponentSystem extends ComponentSystem  {
         component.onRemove();
     }
 
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
+
     get volume() {
         return this.manager.volume;
     }

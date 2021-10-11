@@ -80,6 +80,12 @@ class ScrollViewComponentSystem extends ComponentSystem {
     _onRemoveComponent(entity, component) {
         component.onRemove();
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(ScrollViewComponent.prototype, _schema);

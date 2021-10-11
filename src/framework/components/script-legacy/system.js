@@ -519,6 +519,17 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
             /* eslint-enable no-self-assign */
         }
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off(INITIALIZE, this.onInitialize, this);
+        this.app.systems.off(POST_INITIALIZE, this.onPostInitialize, this);
+        this.app.systems.off(UPDATE, this.onUpdate, this);
+        this.app.systems.off(FIXED_UPDATE, this.onFixedUpdate, this);
+        this.app.systems.off(POST_UPDATE, this.onPostUpdate, this);
+        this.app.systems.off(TOOLS_UPDATE, this.onToolsUpdate, this);
+    }
 }
 
 Component._buildAccessors(ScriptLegacyComponent.prototype, _schema);

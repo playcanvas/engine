@@ -178,6 +178,12 @@ class CameraComponentSystem extends ComponentSystem {
             return a.priority - b.priority;
         });
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(CameraComponent.prototype, _schema);

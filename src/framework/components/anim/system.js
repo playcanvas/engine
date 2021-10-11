@@ -99,6 +99,12 @@ class AnimComponentSystem extends ComponentSystem {
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('animationUpdate', this.onAnimationUpdate, this);
+    }
 }
 
 Component._buildAccessors(AnimComponent.prototype, _schema);

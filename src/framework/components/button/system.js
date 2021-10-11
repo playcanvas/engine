@@ -65,6 +65,12 @@ class ButtonComponentSystem extends ComponentSystem {
     _onRemoveComponent(entity, component) {
         component.onRemove();
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+    }
 }
 
 Component._buildAccessors(ButtonComponent.prototype, _schema);

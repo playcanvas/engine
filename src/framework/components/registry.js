@@ -57,6 +57,10 @@ class ComponentSystemRegistry extends EventHandler {
 
     destroy() {
         this.off();
+
+        for (let i = 0; i < this.list.length; i++) {
+            this.list[i].destroy();
+        }
     }
 }
 

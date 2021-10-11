@@ -31,6 +31,10 @@ class JointComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         component.initFromData(data);
     }
+
+    destroy() {
+        super.destroy();
+    }
 }
 
 Component._buildAccessors(JointComponent.prototype, _schema);
