@@ -1068,7 +1068,4 @@ function _defineMaterialProps() {
 
 _defineMaterialProps();
 
-Material.defaultMaterial = new StandardMaterial();
-Material.defaultMaterial.name = "Default Material";
-
 export { StandardMaterial };

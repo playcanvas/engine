@@ -2,8 +2,6 @@ import { path } from '../core/path.js';
 
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
-import { ComponentSystem } from './components/system.js';
-
 import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**

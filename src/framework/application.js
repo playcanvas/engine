@@ -82,7 +82,6 @@ import { ButtonComponentSystem } from './components/button/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { CollisionComponentSystem } from './components/collision/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { ComponentSystem } from './components/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
 import { JointComponentSystem } from './components/joint/system.js';
 import { LayoutChildComponentSystem } from './components/layout-child/system.js';

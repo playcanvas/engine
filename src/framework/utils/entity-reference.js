@@ -1,5 +1,4 @@
 import { Component } from '../components/component.js';
-import { ComponentSystem } from '../components/system.js';
 import { Entity } from '../entity.js';
 
 import { EventHandler } from '../../core/event-handler.js';
