@@ -1060,11 +1060,11 @@ export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
         fallbackUrl: fallbackUrl,
         lazyInit: true
     });
+}
+
 export class AssetListLoader extends EventHandler {
     constructor(assetList, assetRegistry) {
-        // #if _DEBUG
-        console.warn('DEPRECATED: pc.AssetListLoader is deprecated.');
-        // #endif
+        deprecatedWarn('DEPRECATED: pc.AssetListLoader is deprecated.');
 
         super();
 
@@ -1096,9 +1096,7 @@ export class AssetListLoader extends EventHandler {
     }
 
     destroy() {
-        // #if _DEBUG
-        console.warn('DEPRECATED: pc.AssetListLoader is deprecated.');
-        // #endif
+        deprecatedWarn('DEPRECATED: pc.AssetListLoader is deprecated.');
 
         // remove any outstanding listeners
         var self = this;
@@ -1124,9 +1122,7 @@ export class AssetListLoader extends EventHandler {
      *
      */
     load(done, scope) {
-        // #if _DEBUG
-        console.warn('DEPRECATED: pc.AssetListLoader is deprecated.');
-        // #endif
+        deprecatedWarn('DEPRECATED: pc.AssetListLoader is deprecated.');
 
         var i = 0;
         var l = this._assets.length;
