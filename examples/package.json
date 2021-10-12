@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cross-env ENVIRONMENT=production ENGINE_PATH=../build/playcanvas.js EXTRAS_PATH=../build/playcanvas-extras.js webpack --config webpack.config.js",
     "build:watch": "cross-env ENGINE_PATH=../build/playcanvas.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others webpack --config webpack.config.js --watch",
-    "local:dbg": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others webpack --config webpack.config.js --watch",
-    "local:prf": "cross-env ENGINE_PATH=../build/playcanvas.prf.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others webpack --config webpack.config.js --watch",
+    "build:debug": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others webpack --config webpack.config.js --watch",
+    "build:profiler": "cross-env ENGINE_PATH=../build/playcanvas.prf.js EXTRAS_PATH=../build/playcanvas-extras.js concurrently --kill-others webpack --config webpack.config.js --watch",
     "serve": "serve dist",
     "thumbnails": "node ./thumbnails.js",
     "build:directory": "node ./example-directory.js"

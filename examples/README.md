@@ -29,7 +29,7 @@ npm run thumbnails
 Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
 
 ### Debug and performance engine development
-By default, the examples app uses the local version of the playcanvas engine. If you'd like to use the debug or performance versions of the engine instead, you can run `npm run local:dbg` or `npm run local:prf`.
+By default, the examples app uses the local version of the playcanvas engine. If you'd like to use the debug or performance versions of the engine instead, you can run `npm run build:debug` or `npm run build:profiler`.
 
 By default, example code is executed as an anonymous function in the browser (in order to support live code editing). However this limits the usefulness of debugging tools as the callstack for the example code is obscured. To run examples with a full callstack, allowing line by line debugging of an example, you can use the debug path for each example. Where `/#/misc/hello-world` becomes `/#/debug/misc/hello-world`. A full list of debug paths can be found at [http://localhost:5000/debug-directory]().
 
