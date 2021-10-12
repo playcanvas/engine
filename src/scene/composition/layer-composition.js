@@ -100,6 +100,8 @@ class LayerComposition extends EventHandler {
         // clustered lighting parameters
         this._clusteredLightingCells = new Vec3(10, 3, 10);
         this._clusteredLightingMaxLights = 64;
+        this._clusteredLightingCookiesEnabled = true;
+        this._clusteredLightingShadowsEnabled = true;
     }
 
     destroy() {
@@ -137,11 +139,43 @@ class LayerComposition extends EventHandler {
         }
     }
 
+    get clusteredLightingCookiesEnabled() {
+        return this._clusteredLightingCookiesEnabled;
+    }
+
+    set clusteredLightingCookiesEnabled(value) {
+        if (this._clusteredLightingCookiesEnabled !== value) {
+            this._clusteredLightingCookiesEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLights = true;
+
+            this.updateWorldClusters();
+        }
+    }
+
+    get clusteredLightingShadowsEnabled() {
+        return this._clusteredLightingShadowsEnabled;
+    }
+
+    set clusteredLightingShadowsEnabled(value) {
+        if (this._clusteredLightingShadowsEnabled !== value) {
+            this._clusteredLightingShadowsEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLights = true;
+
+            this.updateWorldClusters();
+        }
+    }
+
     // update clusters with parameter changes
     updateWorldClusters() {
         this._worldClusters.forEach((cluster) => {
             cluster.cells = this._clusteredLightingCells;
             cluster.maxCellLightCount = this._clusteredLightingMaxLights;
+            cluster.cookiesEnabled = this._clusteredLightingCookiesEnabled;
+            cluster.shadowsEnabled = this._clusteredLightingShadowsEnabled;
         });
     }
 
@@ -566,7 +600,8 @@ class LayerComposition extends EventHandler {
 
                         // create new cluster
                         if (!clusters) {
-                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights);
+                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights,
+                                                         this._clusteredLightingCookiesEnabled, this._clusteredLightingShadowsEnabled);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;

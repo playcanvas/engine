@@ -2,14 +2,18 @@ uniform sampler2D clusterWorldTexture;
 uniform sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
-#ifdef GL2
-    // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
-    uniform sampler2DShadow shadowAtlasTexture;
-#else
-    uniform sampler2D shadowAtlasTexture;
+#ifdef CLUSTER_SHADOWS
+    #ifdef GL2
+        // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
+        uniform sampler2DShadow shadowAtlasTexture;
+    #else
+        uniform sampler2D shadowAtlasTexture;
+    #endif
 #endif
 
-uniform sampler2D cookieAtlasTexture;
+#ifdef CLUSTER_COOKIES
+    uniform sampler2D cookieAtlasTexture;
+#endif
 
 uniform float clusterPixelsPerCell;
 uniform vec3 clusterCellsCountByBoundsSize;
@@ -234,6 +238,8 @@ void evaluateLight(ClusterLightData light) {
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
 
+        #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
+
         if (dAtten > 0.00001) {
 
             // shadow / cookie
@@ -249,6 +255,8 @@ void evaluateLight(ClusterLightData light) {
                 float shadowTextureResolution = shadowAtlasParams.x;
                 float shadowEdgePixels = shadowAtlasParams.y;
 
+                #ifdef CLUSTER_COOKIES
+
                 // cookie
                 if (light.isCookie == true) {
                     decodeClusterLightCookieData(light);
@@ -259,6 +267,9 @@ void evaluateLight(ClusterLightData light) {
                         dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
+
+                #endif
+                #ifdef CLUSTER_SHADOWS
 
                 // shadow
                 if (light.castShadows== true) {
@@ -279,8 +290,12 @@ void evaluateLight(ClusterLightData light) {
                         dAtten *= getShadowOmniClusteredPCF3x3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                     }
                 }
+
+                #endif
             }
         }
+
+        #endif
 
         dDiffuseLight += dAtten * light.color * dAtten3;
     }
