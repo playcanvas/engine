@@ -42,7 +42,7 @@ Each example extends the `Example` parent class and can implement three methods 
 
 ### `example` function
 ```tsx
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas/build/playcanvas.js';
 example(canvas: HTMLCanvasElement) {
     const app = new pc.Application(canvas, {});
 }
