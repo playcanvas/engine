@@ -46,7 +46,7 @@ class ReadStream {
     }
 
     readU64() {
-        return this.dataView.getBigUint64(this._inc(8), true);
+        return this.readU32() + 2 ** 32 * this.readU32();
     }
 
     // big-endian
