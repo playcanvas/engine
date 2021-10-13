@@ -1048,7 +1048,7 @@ var standard = {
             light = options.lights[i];
             lightType = light._type;
 
-            // skin uniform generation for local lights if clustered lighting is enabled
+            // skip uniform generation for local lights if clustered lighting is enabled
             if (isClustered && lightType !== LIGHTTYPE_DIRECTIONAL)
                 continue;
 
