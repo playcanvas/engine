@@ -8,6 +8,7 @@ import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
+import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 // get a coding string for texture based on its type and pixel format.
 function getCoding(texture) {
@@ -68,9 +69,8 @@ function reprojectTexture(source, target, options = {}) {
             specularPower: arguments[3] === undefined ? 1 : arguments[3],
             numSamples: arguments[4] === undefined ? 1024 : arguments[4]
         };
-        // #if _DEBUG
-        console.warn('DEPRECATED: please use the updated pc.reprojectTexture API.');
-        // #endif
+
+        DeprecatedLog.log('DEPRECATED: please use the updated pc.reprojectTexture API.');
     }
 
     // extract options
