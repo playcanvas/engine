@@ -9,7 +9,7 @@ import { SoundInstance } from '../../../sound/instance.js';
 import { SoundInstance3d } from '../../../sound/instance3d.js';
 
 // temporary object for creating instances
-var instanceOptions = {
+const instanceOptions = {
     volume: 0,
     pitch: 0,
     loop: false,
@@ -116,14 +116,14 @@ class SoundSlot extends EventHandler {
             return;
         }
 
-        var instance = this._createInstance();
+        const instance = this._createInstance();
         this.instances.push(instance);
 
         // if not loaded then load first
         // and then set sound resource on the created instance
         if (!this.isLoaded) {
-            var onLoad = function (sound) {
-                var playWhenLoaded = instance._playWhenLoaded;
+            const onLoad = function (sound) {
+                const playWhenLoaded = instance._playWhenLoaded;
                 instance.sound = sound;
                 if (playWhenLoaded) {
                     instance.play();
@@ -147,10 +147,10 @@ class SoundSlot extends EventHandler {
      * @returns {boolean} True if the sound instances paused successfully, false otherwise.
      */
     pause() {
-        var paused = false;
+        let paused = false;
 
-        var instances = this.instances;
-        for (var i = 0, len = instances.length; i < len; i++) {
+        const instances = this.instances;
+        for (let i = 0, len = instances.length; i < len; i++) {
             if (instances[i].pause()) {
                 paused = true;
             }
@@ -166,9 +166,9 @@ class SoundSlot extends EventHandler {
      * @returns {boolean} True if any instances were resumed.
      */
     resume() {
-        var resumed = false;
-        var instances = this.instances;
-        for (var i = 0, len = instances.length; i < len; i++) {
+        let resumed = false;
+        const instances = this.instances;
+        for (let i = 0, len = instances.length; i < len; i++) {
             if (instances[i].resume())
                 resumed = true;
         }
@@ -183,9 +183,9 @@ class SoundSlot extends EventHandler {
      * @returns {boolean} True if any instances were stopped.
      */
     stop() {
-        var stopped = false;
-        var instances = this.instances;
-        var i = instances.length;
+        let stopped = false;
+        const instances = this.instances;
+        let i = instances.length;
         // do this in reverse order because as each instance
         // is stopped it will be removed from the instances array
         // by the instance stop event handler
@@ -208,7 +208,7 @@ class SoundSlot extends EventHandler {
         if (!this._hasAsset())
             return;
 
-        var asset = this._assets.get(this._asset);
+        const asset = this._assets.get(this._asset);
         if (!asset) {
             this._assets.off('add:' + this._asset, this._onAssetAdd, this);
             this._assets.once('add:' + this._asset, this._onAssetAdd, this);
@@ -264,8 +264,8 @@ class SoundSlot extends EventHandler {
 
         // update instances if not overlapping
         if (!this._overlap) {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
+            const instances = this.instances;
+            for (let i = 0, len = instances.length; i < len; i++) {
                 instances[i].setExternalNodes(firstNode, lastNode);
             }
         }
@@ -282,8 +282,8 @@ class SoundSlot extends EventHandler {
 
         // update instances if not overlapping
         if (!this._overlap) {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
+            const instances = this.instances;
+            for (let i = 0, len = instances.length; i < len; i++) {
                 instances[i].clearExternalNodes();
             }
         }
@@ -318,22 +318,22 @@ class SoundSlot extends EventHandler {
      * @returns {SoundInstance} The new instance.
      */
     _createInstance() {
-        var instance = null;
+        let instance = null;
 
-        var component = this._component;
+        const component = this._component;
 
-        var sound = null;
+        let sound = null;
 
         // get sound resource
         if (this._hasAsset()) {
-            var asset = this._assets.get(this._asset);
+            const asset = this._assets.get(this._asset);
             if (asset) {
                 sound = asset.resource;
             }
         }
 
         // initialize instance options
-        var data = instanceOptions;
+        const data = instanceOptions;
         data.volume = this._volume * component.volume;
         data.pitch = this._pitch * component.pitch;
         data.loop = this._loop;
@@ -392,7 +392,7 @@ class SoundSlot extends EventHandler {
 
     _onInstanceStop(instance) {
         // remove instance that stopped
-        var idx = this.instances.indexOf(instance);
+        const idx = this.instances.indexOf(instance);
         if (idx !== -1) {
             this.instances.splice(idx, 1);
         }
@@ -406,7 +406,7 @@ class SoundSlot extends EventHandler {
 
     _onInstanceEnd(instance) {
         // remove instance that ended
-        var idx = this.instances.indexOf(instance);
+        const idx = this.instances.indexOf(instance);
         if (idx !== -1) {
             this.instances.splice(idx, 1);
         }
@@ -433,8 +433,8 @@ class SoundSlot extends EventHandler {
     }
 
     updatePosition(position) {
-        var instances = this.instances;
-        for (var i = 0, len = instances.length; i < len; i++) {
+        const instances = this.instances;
+        for (let i = 0, len = instances.length; i < len; i++) {
             instances[i].position = position;
         }
     }
@@ -448,8 +448,8 @@ class SoundSlot extends EventHandler {
 
         // update instances if non overlapping
         if (!this._overlap) {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
+            const instances = this.instances;
+            for (let i = 0, len = instances.length; i < len; i++) {
                 instances[i].volume = this._volume * this._component.volume;
             }
         }
@@ -464,8 +464,8 @@ class SoundSlot extends EventHandler {
 
         // update instances if non overlapping
         if (!this._overlap) {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
+            const instances = this.instances;
+            for (let i = 0, len = instances.length; i < len; i++) {
                 instances[i].pitch = this.pitch * this._component.pitch;
             }
         }
@@ -479,8 +479,8 @@ class SoundSlot extends EventHandler {
         this._loop = !!value;
 
         // update instances if non overlapping
-        var instances = this.instances;
-        for (var i = 0, len = instances.length; i < len; i++) {
+        const instances = this.instances;
+        for (let i = 0, len = instances.length; i < len; i++) {
             instances[i].loop = this._loop;
         }
     }
@@ -510,17 +510,17 @@ class SoundSlot extends EventHandler {
 
         // update instances if non overlapping
         if (!this._overlap) {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
+            const instances = this.instances;
+            for (let i = 0, len = instances.length; i < len; i++) {
                 instances[i].startTime = this._startTime;
             }
         }
     }
 
     get duration() {
-        var assetDuration = 0;
+        let assetDuration = 0;
         if (this._hasAsset()) {
-            var asset = this._assets.get(this._asset);
+            const asset = this._assets.get(this._asset);
             assetDuration = asset.resource ? asset.resource.duration : 0;
         }
 
@@ -536,8 +536,8 @@ class SoundSlot extends EventHandler {
 
         // update instances if non overlapping
         if (!this._overlap) {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
+            const instances = this.instances;
+            for (let i = 0, len = instances.length; i < len; i++) {
                 instances[i].duration = this._duration;
             }
         }
@@ -548,11 +548,11 @@ class SoundSlot extends EventHandler {
     }
 
     set asset(value) {
-        var old = this._asset;
+        const old = this._asset;
 
         if (old) {
             this._assets.off('add:' + old, this._onAssetAdd, this);
-            var oldAsset = this._assets.get(old);
+            const oldAsset = this._assets.get(old);
             if (oldAsset) {
                 oldAsset.off('remove', this._onAssetRemoved, this);
             }
@@ -571,7 +571,7 @@ class SoundSlot extends EventHandler {
 
     get isLoaded() {
         if (this._hasAsset()) {
-            var asset = this._assets.get(this._asset);
+            const asset = this._assets.get(this._asset);
             if (asset) {
                 return !!asset.resource;
             }
@@ -581,8 +581,8 @@ class SoundSlot extends EventHandler {
     }
 
     get isPlaying() {
-        var instances = this.instances;
-        for (var i = 0, len = instances.length; i < len; i++) {
+        const instances = this.instances;
+        for (let i = 0, len = instances.length; i < len; i++) {
             if (instances[i].isPlaying)
                 return true;
         }
@@ -591,12 +591,12 @@ class SoundSlot extends EventHandler {
     }
 
     get isPaused() {
-        var instances = this.instances;
-        var len = instances.length;
+        const instances = this.instances;
+        const len = instances.length;
         if (len === 0)
             return false;
 
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if (!instances[i].isPaused)
                 return false;
         }
@@ -605,8 +605,8 @@ class SoundSlot extends EventHandler {
     }
 
     get isStopped() {
-        var instances = this.instances;
-        for (var i = 0, len = instances.length; i < len; i++) {
+        const instances = this.instances;
+        for (let i = 0, len = instances.length; i < len; i++) {
             if (!instances[i].isStopped)
                 return false;
         }

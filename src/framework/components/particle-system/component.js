@@ -84,7 +84,7 @@ const ASSET_PROPERTIES = [
     'renderAsset'
 ];
 
-var depthLayer;
+let depthLayer;
 
 /**
  * @component
@@ -231,9 +231,8 @@ class ParticleSystemComponent extends Component {
 
     addModelToLayers() {
         if (!this.data.model) return;
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
             layer.addMeshInstances(this.data.model.meshInstances);
             this.emitter._layer = layer;
@@ -242,9 +241,8 @@ class ParticleSystemComponent extends Component {
 
     removeModelFromLayers(model) {
         if (!this.data.model) return;
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
             layer.removeMeshInstances(this.data.model.meshInstances);
         }
@@ -252,15 +250,14 @@ class ParticleSystemComponent extends Component {
 
     onSetLayers(name, oldValue, newValue) {
         if (!this.data.model) return;
-        var i, layer;
-        for (i = 0; i < oldValue.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+        for (let i = 0; i < oldValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
             layer.removeMeshInstances(this.data.model.meshInstances);
         }
         if (!this.enabled || !this.entity.enabled) return;
-        for (i = 0; i < newValue.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+        for (let i = 0; i < newValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             layer.addMeshInstances(this.data.model.meshInstances);
         }
@@ -276,14 +273,14 @@ class ParticleSystemComponent extends Component {
 
     onLayerAdded(layer) {
         if (!this.data.model) return;
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances(this.data.model.meshInstances);
     }
 
     onLayerRemoved(layer) {
         if (!this.data.model) return;
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances(this.data.model.meshInstances);
     }
@@ -326,11 +323,10 @@ class ParticleSystemComponent extends Component {
     }
 
     onSetColorMapAsset(name, oldValue, newValue) {
-        var self = this;
-        var asset;
-        var assets = this.system.app.assets;
+        const self = this;
+        const assets = this.system.app.assets;
         if (oldValue) {
-            asset = assets.get(oldValue);
+            const asset = assets.get(oldValue);
             if (asset) {
                 this._unbindColorMapAsset(asset);
             }
@@ -342,7 +338,7 @@ class ParticleSystemComponent extends Component {
                 newValue = newValue.id;
             }
 
-            asset = assets.get(newValue);
+            const asset = assets.get(newValue);
             if (asset) {
                 self._bindColorMapAsset(asset);
             } else {
@@ -393,12 +389,11 @@ class ParticleSystemComponent extends Component {
     }
 
     onSetNormalMapAsset(name, oldValue, newValue) {
-        var self = this;
-        var asset;
-        var assets = this.system.app.assets;
+        const self = this;
+        const assets = this.system.app.assets;
 
         if (oldValue) {
-            asset = assets.get(oldValue);
+            const asset = assets.get(oldValue);
             if (asset) {
                 this._unbindNormalMapAsset(asset);
             }
@@ -410,7 +405,7 @@ class ParticleSystemComponent extends Component {
                 newValue = newValue.id;
             }
 
-            asset = assets.get(newValue);
+            const asset = assets.get(newValue);
             if (asset) {
                 self._bindNormalMapAsset(asset);
             } else {
@@ -461,11 +456,10 @@ class ParticleSystemComponent extends Component {
     }
 
     onSetMeshAsset(name, oldValue, newValue) {
-        var asset;
-        var assets = this.system.app.assets;
+        const assets = this.system.app.assets;
 
         if (oldValue) {
-            asset = assets.get(oldValue);
+            const asset = assets.get(oldValue);
             if (asset) {
                 this._unbindMeshAsset(asset);
             }
@@ -477,7 +471,7 @@ class ParticleSystemComponent extends Component {
                 newValue = newValue.id;
             }
 
-            asset = assets.get(newValue);
+            const asset = assets.get(newValue);
             if (asset) {
                 this._bindMeshAsset(asset);
             }
@@ -517,11 +511,10 @@ class ParticleSystemComponent extends Component {
     }
 
     onSetRenderAsset(name, oldValue, newValue) {
-        var asset;
-        var assets = this.system.app.assets;
+        const assets = this.system.app.assets;
 
         if (oldValue) {
-            asset = assets.get(oldValue);
+            const asset = assets.get(oldValue);
             if (asset) {
                 this._unbindRenderAsset(asset);
             }
@@ -533,7 +526,7 @@ class ParticleSystemComponent extends Component {
                 newValue = newValue.id;
             }
 
-            asset = assets.get(newValue);
+            const asset = assets.get(newValue);
             if (asset) {
                 this._bindRenderAsset(asset);
             }
@@ -672,14 +665,14 @@ class ParticleSystemComponent extends Component {
 
     onEnable() {
         // get data store once
-        var data = this.data;
+        const data = this.data;
 
         // load any assets that haven't been loaded yet
-        for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
-            var asset = data[ASSET_PROPERTIES[i]];
+        for (let i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
+            let asset = data[ASSET_PROPERTIES[i]];
             if (asset) {
                 if (!(asset instanceof Asset)) {
-                    var id = parseInt(asset, 10);
+                    const id = parseInt(asset, 10);
                     if (id >= 0) {
                         asset = this.system.app.assets.get(asset);
                     } else {
@@ -694,7 +687,7 @@ class ParticleSystemComponent extends Component {
         }
 
         if (!this.emitter) {
-            var mesh = data.mesh;
+            let mesh = data.mesh;
 
             // mesh might be an asset id of an asset
             // that hasn't been loaded yet
@@ -828,7 +821,7 @@ class ParticleSystemComponent extends Component {
             this.enabled = false;
         }
 
-        var data = this.data;
+        const data = this.data;
         if (data.model) {
             this.entity.removeChild(data.model.getGraph());
             data.model.destroy();
@@ -841,8 +834,8 @@ class ParticleSystemComponent extends Component {
         }
 
         // clear all asset properties to remove any event listeners
-        for (var i = 0; i < ASSET_PROPERTIES.length; i++) {
-            var prop = ASSET_PROPERTIES[i];
+        for (let i = 0; i < ASSET_PROPERTIES.length; i++) {
+            const prop = ASSET_PROPERTIES[i];
 
             if (data[prop]) {
                 this[prop] = null;
@@ -934,7 +927,7 @@ class ParticleSystemComponent extends Component {
      * @description Rebuilds all data used by this particle system.
      */
     rebuild() {
-        var enabled = this.enabled;
+        const enabled = this.enabled;
         this.enabled = false;
         if (this.emitter) {
             this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders

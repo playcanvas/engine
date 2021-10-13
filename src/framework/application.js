@@ -401,7 +401,7 @@ class Application extends EventHandler {
         super();
 
         // #if _DEBUG
-        console.log("Powered by PlayCanvas " + version + " " + revision);
+        console.log(`Powered by PlayCanvas ${version} ${revision}`);
         // #endif
 
         // Store application instance
