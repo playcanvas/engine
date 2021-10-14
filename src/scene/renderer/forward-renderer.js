@@ -72,6 +72,12 @@ let _autoInstanceBuffer = null;
 
 let _skinUpdateIndex = 0;
 
+const _drawCallList = {
+    drawCalls: [],
+    isNewMaterial: [],
+    lightMaskChanged: []
+};
+
 const _tempMaterialSet = new Set();
 
 /**
@@ -1193,50 +1199,58 @@ class ForwardRenderer {
         this.viewPosId.setValue(vp);
     }
 
-    renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+    // execute first pass over draw calls, in order to update materials / shaders
+    // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
+    // where instaed of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
+    // take place in parallel
+    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
+
+        const addCall = (drawCall, isNewMaterial, lightMaskChanged) => {
+            _drawCallList.drawCalls.push(drawCall);
+            _drawCallList.isNewMaterial.push(isNewMaterial);
+            _drawCallList.lightMaskChanged.push(lightMaskChanged);
+        };
+
+        // start with empty arrays
+        _drawCallList.drawCalls.length = 0;
+        _drawCallList.isNewMaterial.length = 0;
+        _drawCallList.lightMaskChanged.length = 0;
+
         const device = this.device;
         const scene = this.scene;
-        const vrDisplay = camera.vrDisplay;
         const lightHash = layer ? layer._lightHash : 0;
-        const passFlag = 1 << pass;
+        let prevMaterial = null, prevObjDefs, prevStatic, prevLightMask;
 
-        // #if _PROFILER
-        const forwardStartTime = now();
-        // #endif
-
-        let prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
-
-        const halfWidth = device.width * 0.5;
-
-        // Render the scene
         for (let i = 0; i < drawCallsCount; i++) {
 
             const drawCall = drawCalls[i];
-            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask)) continue; // apply visibility override
+
+            // apply visibility override
+            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
+                continue;
 
             if (drawCall.command) {
-                // We have a command
-                drawCall.command();
+
+                addCall(drawCall, false, false);
+
             } else {
 
                 // #if _PROFILER
                 if (camera === ForwardRenderer.skipRenderCamera) {
-                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) continue;
+                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
+                        continue;
                     ForwardRenderer._skipRenderCounter++;
                 }
                 if (layer) {
-                    if (layer._skipRenderCounter >= layer.skipRenderAfter) continue;
+                    if (layer._skipRenderCounter >= layer.skipRenderAfter)
+                        continue;
                     layer._skipRenderCounter++;
                 }
                 // #endif
 
-                // We have a mesh instance
-                const mesh = drawCall.mesh;
                 const material = drawCall.material;
                 const objDefs = drawCall._shaderDefs;
                 const lightMask = drawCall.mask;
-
-                this.setSkinning(device, drawCall, material);
 
                 if (material && material === prevMaterial && objDefs !== prevObjDefs) {
                     prevMaterial = null; // force change shader if the object uses a different variant of the same material
@@ -1268,6 +1282,56 @@ class ForwardRenderer {
                         drawCall._shaderDefs = objDefs;
                         drawCall._lightHash = lightHash;
                     }
+                }
+
+                addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
+
+                prevMaterial = material;
+                prevObjDefs = objDefs;
+                prevLightMask = lightMask;
+                prevStatic = drawCall.isStatic;
+
+            }
+        }
+
+        return _drawCallList;
+    }
+
+    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+        const device = this.device;
+        const scene = this.scene;
+        const vrDisplay = camera.vrDisplay;
+        const passFlag = 1 << pass;
+        const halfWidth = device.width * 0.5;
+
+        // #if _PROFILER
+        const forwardStartTime = now();
+        // #endif
+
+        // run first pass over draw calls and handle material / shader updates
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
+
+        // Render the scene
+        const preparedCallsCount = preparedCalls.drawCalls.length;
+        for (let i = 0; i < preparedCallsCount; i++) {
+
+            const drawCall = preparedCalls.drawCalls[i];
+
+            if (drawCall.command) {
+
+                // We have a command
+                drawCall.command();
+
+            } else {
+
+                // We have a mesh instance
+                const newMaterial = preparedCalls.isNewMaterial[i];
+                const lightMaskChanged = preparedCalls.lightMaskChanged[i];
+                const material = drawCall.material;
+                const objDefs = drawCall._shaderDefs;
+                const lightMask = drawCall.mask;
+
+                if (newMaterial) {
 
                     if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
                         // #if _DEBUG
@@ -1279,7 +1343,7 @@ class ForwardRenderer {
                     // Uniforms I: material
                     material.setParameters(device);
 
-                    if (!prevMaterial || lightMask !== prevLightMask) {
+                    if (lightMaskChanged) {
                         const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                     }
@@ -1354,11 +1418,14 @@ class ForwardRenderer {
                     device.setStencilTest(false);
                 }
 
+                const mesh = drawCall.mesh;
+
                 // Uniforms II: meshInstance overrides
                 drawCall.setParameters(device, passFlag);
 
                 this.setVertexBuffers(device, mesh);
                 this.setMorphing(device, drawCall.morphInstance);
+                this.setSkinning(device, drawCall, material);
 
                 const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
@@ -1423,17 +1490,13 @@ class ForwardRenderer {
                 }
 
                 // Unset meshInstance overrides back to material values if next draw call will use the same material
-                if (i < drawCallsCount - 1 && drawCalls[i + 1].material === material) {
+                if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
                     material.setParameters(device, drawCall.parameters);
                 }
-
-                prevMaterial = material;
-                prevObjDefs = objDefs;
-                prevLightMask = lightMask;
-                prevStatic = drawCall.isStatic;
             }
         }
         device.updateEnd();
+        _drawCallList.length = 0;
 
         // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
