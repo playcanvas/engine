@@ -854,9 +854,9 @@ class ElementInput {
                 }
                 if (!rayScreen) continue;
 
-                // 2d screen elements take precedence
-                const hit = this._checkElement(rayScreen, element, true) >= 0;
-                if (hit === true) {
+                // 2d screen elements take precedence - if hit, immediately return
+                const currentDistance = this._checkElement(rayScreen, element, true);
+                if (currentDistance >= 0) {
                     result = element;
                     break;
                 }
