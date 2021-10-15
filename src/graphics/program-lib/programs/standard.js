@@ -1022,6 +1022,7 @@ var standard = {
         var useVsm = false;
         var usePerspZbufferShadow = false;
         var light;
+        const isClustered = LayerComposition.clusteredLightingEnabled;
 
         var hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
@@ -1046,6 +1047,10 @@ var standard = {
         for (i = 0; i < options.lights.length; i++) {
             light = options.lights[i];
             lightType = light._type;
+
+            // skip uniform generation for local lights if clustered lighting is enabled
+            if (isClustered && lightType !== LIGHTTYPE_DIRECTIONAL)
+                continue;
 
             if (hasAreaLights && light._shape) {
                 lightShape = light._shape;

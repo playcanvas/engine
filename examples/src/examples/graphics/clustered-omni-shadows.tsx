@@ -106,6 +106,7 @@ class ClusteredShadowsOmniExample extends Example {
                 assets.xmas_posz.id, assets.xmas_negz.id
             ]
         });
+        // @ts-ignore engine-tsd
         cubemapAsset.loadFaces = true;
         app.assets.add(cubemapAsset);
 

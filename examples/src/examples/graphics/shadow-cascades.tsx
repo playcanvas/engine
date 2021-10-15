@@ -149,6 +149,7 @@ class ShadowCascadesExample extends Example {
         app.on("update", function (dt) {
             if (firstFrame) {
                 firstFrame = false;
+                // @ts-ignore engine-tsd
                 camera.script.orbitCamera.distance = 320;
             }
         });

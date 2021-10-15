@@ -24,9 +24,6 @@ class AnimTarget {
         this._type = type;
         this._components = components;
         this._targetPath = targetPath;
-        this._isTransform = (this._targetPath.substring(this._targetPath.length - 13) === 'localRotation') ||
-        (this._targetPath.substring(this._targetPath.length - 13) === 'localPosition') ||
-        (this._targetPath.substring(this._targetPath.length - 10) === 'localScale');
     }
 
     get func() {
@@ -43,10 +40,6 @@ class AnimTarget {
 
     get targetPath() {
         return this._targetPath;
-    }
-
-    get isTransform() {
-        return this._isTransform;
     }
 }
 

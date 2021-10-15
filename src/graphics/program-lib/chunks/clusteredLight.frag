@@ -311,6 +311,13 @@ void evaluateClusterLight(float lightIndex) {
     evaluateLight(clusterLightData);
 }
 
+const vec4 channelSelector[4] = vec4[4] (
+    vec4(1., 0., 0., 0.),
+    vec4(0., 1., 0., 0.),
+    vec4(0., 0., 1., 0.),
+    vec4(0., 0., 0., 1.)
+);
+
 void addClusteredLights() {
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
@@ -333,25 +340,14 @@ void addClusteredLights() {
             vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
             vec4 indices = lightIndices * 255.0;
 
-            if (indices.x <= 0.0)
-                break;
+            // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
+            for (int i = 0; i < 4; i++) {
+                float index = dot(channelSelector[i], indices);
+                if (index <= 0.0)
+                    return;
 
-            evaluateClusterLight(indices.x);
-
-            if (indices.y <= 0.0)
-                break;
-
-            evaluateClusterLight(indices.y);
-
-            if (indices.z <= 0.0)
-                break;
-
-            evaluateClusterLight(indices.z);
-
-            if (indices.w <= 0.0)
-                break;
-
-            evaluateClusterLight(indices.w);
+                evaluateClusterLight(index); 
+            }
 
             // end of the cell array
             if (lightCellIndex > clusterPixelsPerCell) {
