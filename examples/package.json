@@ -63,6 +63,7 @@
     "error-overlay-webpack-plugin": "^0.4.2",
     "eslint": "^7.30.0",
     "html-webpack-plugin": "^5.3.2",
+    "js-beautify": "^1.14.0",
     "monaco-editor": "^0.25.2",
     "monaco-editor-webpack-plugin": "^4.0.0",
     "playcanvas": "file:../",
