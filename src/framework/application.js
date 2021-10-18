@@ -591,7 +591,7 @@ class Application extends EventHandler {
         this.loader.addHandler("textureatlas", new TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new SpriteHandler(this.assets, this.graphicsDevice));
         this.loader.addHandler("template", new TemplateHandler(this));
-        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.scene.defaultMaterial));
+        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.assets, this.scene.defaultMaterial));
 
         this.systems = new ComponentSystemRegistry();
         this.systems.add(new RigidBodyComponentSystem(this));

@@ -51,6 +51,8 @@ import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '.
 
 import { Asset } from '../../asset/asset.js';
 
+import { ContainerResource } from './container-resource.js';
+
 // resources loaded from GLB file that the parser returns
 class GlbResources {
     constructor(gltf) {
@@ -2306,6 +2308,49 @@ class GlbParser {
         });
 
         return result;
+    }
+
+    constructor(device, assets, defaultMaterial, maxRetries) {
+        this._device = device;
+        this._assets = assets;
+        this._defaultMaterial = defaultMaterial;
+        this._maxRetries = maxRetries;
+    }
+
+    _getUrlWithoutParams(url) {
+        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+    }
+
+    load(url, callback, asset) {
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                GlbParser.parseAsync(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new ContainerResource(result, asset, this._assets, this._defaultMaterial));
+                        }
+                    });
+            }
+        }, asset, this._maxRetries);
+    }
+
+    open(url, data, asset) {
+        return data;
+    }
+
+    patch(asset, assets) {
+
     }
 }
 

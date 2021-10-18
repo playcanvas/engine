@@ -1,5 +1,5 @@
 import { Material } from '../../scene/materials/material.js';
-import { ContainerResource } from '../container.js';
+import { ContainerResource } from './container-resource.js';
 import { GlbParser } from './glb-parser.js';
 
 class GlbModelParser {
