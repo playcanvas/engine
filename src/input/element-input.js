@@ -33,7 +33,7 @@ var _bv = new Vec3();
 var _cw = new Vec3();
 var _ir = new Vec3();
 var _sct = new Vec3();
-var _accumulatedScale = new Vec2();
+var _accumulatedScale = new Vec3();
 var _paddingTop = new Vec3();
 var _paddingBottom = new Vec3();
 var _paddingLeft = new Vec3();
@@ -914,7 +914,7 @@ class ElementInput {
     // screen corners. However, in cases where the element has additional hit
     // padding specified, we need to expand the screenCorners to incorporate the
     // padding.
-    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY) {
+    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY, scaleZ) {
         var hitCorners = screenOrWorldCorners;
         var button = element.entity && element.entity.button;
 
@@ -939,6 +939,38 @@ class ElementInput {
             hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
         }
 
+        // make sure the corners are in the right order [bl, br, tr, tl]
+        // for x and y: simply invert what is considered "left/right" and "top/bottom"
+        if (scaleX < 0) {
+            var left = hitCorners[2].x;
+            var right = hitCorners[0].x;
+            hitCorners[0].x = left;
+            hitCorners[1].x = right;
+            hitCorners[2].x = right;
+            hitCorners[3].x = left;
+        }
+        if (scaleY < 0) {
+            var bottom = hitCorners[2].y;
+            var top = hitCorners[0].y;
+            hitCorners[0].y = bottom;
+            hitCorners[1].y = bottom;
+            hitCorners[2].y = top;
+            hitCorners[3].y = top;
+        }
+        // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
+        if (scaleZ < 0) {
+            var x = hitCorners[2].x;
+            var y = hitCorners[2].y;
+            var z = hitCorners[2].z;
+
+            hitCorners[2].x = hitCorners[0].x;
+            hitCorners[2].y = hitCorners[0].y;
+            hitCorners[2].z = hitCorners[0].z;
+            hitCorners[0].x = x;
+            hitCorners[0].y = y;
+            hitCorners[0].z = z;
+        }
+
         return hitCorners;
     }
 
@@ -946,9 +978,22 @@ class ElementInput {
         var current = element.entity;
         var screenScale = element.screen.screen.scale;
 
-        _accumulatedScale.set(screenScale, screenScale);
+        _accumulatedScale.set(screenScale, screenScale, screenScale);
 
         while (current && !current.screen) {
+            _accumulatedScale.mul(current.getLocalScale());
+            current = current.parent;
+        }
+
+        return _accumulatedScale;
+    }
+
+    _calculateScaleToWorld(element) {
+        var current = element.entity;
+
+        _accumulatedScale.set(1, 1, 1);
+
+        while (current) {
             _accumulatedScale.mul(current.getLocalScale());
             current = current.parent;
         }
@@ -1039,10 +1084,10 @@ class ElementInput {
         if (screen) {
             scale = this._calculateScaleToScreen(element);
         } else {
-            scale = element.entity.getWorldTransform().getScale();
+            scale = this._calculateScaleToWorld(element);
         }
 
-        var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
+        var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
 
         return intersectLineQuad(ray.origin, ray.end, corners);
     }
