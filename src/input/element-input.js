@@ -941,16 +941,16 @@ class ElementInput {
         // make sure the corners are in the right order [bl, br, tr, tl]
         // for x and y: simply invert what is considered "left/right" and "top/bottom"
         if (scaleX < 0) {
-            var left = hitCorners[2].x;
-            var right = hitCorners[0].x;
+            const left = hitCorners[2].x;
+            const right = hitCorners[0].x;
             hitCorners[0].x = left;
             hitCorners[1].x = right;
             hitCorners[2].x = right;
             hitCorners[3].x = left;
         }
         if (scaleY < 0) {
-            var bottom = hitCorners[2].y;
-            var top = hitCorners[0].y;
+            const bottom = hitCorners[2].y;
+            const top = hitCorners[0].y;
             hitCorners[0].y = bottom;
             hitCorners[1].y = bottom;
             hitCorners[2].y = top;
@@ -958,9 +958,9 @@ class ElementInput {
         }
         // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
         if (scaleZ < 0) {
-            var x = hitCorners[2].x;
-            var y = hitCorners[2].y;
-            var z = hitCorners[2].z;
+            const x = hitCorners[2].x;
+            const y = hitCorners[2].y;
+            const z = hitCorners[2].z;
 
             hitCorners[2].x = hitCorners[0].x;
             hitCorners[2].y = hitCorners[0].y;
@@ -1078,7 +1078,6 @@ class ElementInput {
         }
 
         var scale;
-
         if (screen) {
             scale = this._calculateScaleToScreen(element);
         } else {
