@@ -1,6 +1,5 @@
 import { platform } from '../core/platform.js';
 
-import { Vec2 } from '../math/vec2.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
@@ -990,7 +989,6 @@ class ElementInput {
 
     _calculateScaleToWorld(element) {
         var current = element.entity;
-
         _accumulatedScale.set(1, 1, 1);
 
         while (current) {
