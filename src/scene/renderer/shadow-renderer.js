@@ -271,6 +271,12 @@ class ShadowRenderer {
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
 
+            // assign render target
+            // Note: this is done during rendering for all shadow maps, but do it here for the case shadow rendering for the directional light
+            // is disabled - we need shadow map to be assigned for rendering to work even in this case. This needs further refactoring - as when
+            // shadow rendering is set to SHADOWUPDATE_NONE, we should not even execute shadow map culling
+            shadowCam.renderTarget = light._shadowMap.renderTargets[0];
+
             // viewport
             lightRenderData.shadowViewport.copy(light.cascades[cascade]);
             lightRenderData.shadowScissor.copy(light.cascades[cascade]);
