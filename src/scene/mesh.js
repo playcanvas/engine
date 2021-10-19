@@ -22,7 +22,7 @@ import { getApplication } from '../framework/globals.js';
 
 let id = 0;
 
-// Helper class used to store vertex / index data streams and related properties, when mesh is programatically modified
+// Helper class used to store vertex / index data streams and related properties, when mesh is programmatically modified
 class GeometryData {
     constructor() {
         this.initDefaults();
@@ -60,7 +60,7 @@ class GeometryData {
 
         // #if _DEBUG
         if (this.vertexCount !== count) {
-            console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
+            console.error(`Vertex stream ${semantic} has ${count} vertices, which does not match already set streams with ${this.vertexCount} vertices.`);
         }
         // #endif
     }
@@ -560,7 +560,7 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#setIndices
      * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 vertices are specified, in which case 32-bit format is used.
-     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indicies that define primitives (lines, triangles, etc.).
+     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indices that define primitives (lines, triangles, etc.).
      * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
     setIndices(indices, numIndices) {
