@@ -107,27 +107,25 @@ const config = {
         }),
         new MonacoWebpackPlugin({
             languages: ['javascript', 'typescript']
-        })
-    ]
-};
-
-if (process.env.ENGINE_PATH) {
-    config.plugins.push(
+        }),
         new webpack.NormalModuleReplacementPlugin(
             /^playcanvas\/build\/playcanvas\.js$/,
-            path.resolve(__dirname, process.env.ENGINE_PATH)
-        )
-    );
-}
-
-if (process.env.EXTRAS_PATH) {
-    config.plugins.push(
+            path.resolve(__dirname, process.env.ENGINE_PATH || '../build/playcanvas.js')
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+            /^playcanvas\/build\/playcanvas\.dbg\.js$/,
+            path.resolve(__dirname, process.env.ENGINE_DBG_PATH || '../build/playcanvas.dbg.js')
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+            /^playcanvas\/build\/playcanvas\.prf\.js$/,
+            path.resolve(__dirname, process.env.ENGINE_PRF_PATH || '../build/playcanvas.prf.js')
+        ),
         new webpack.NormalModuleReplacementPlugin(
             /^playcanvas\/build\/playcanvas-extras\.js$/,
-            path.resolve(__dirname, process.env.EXTRAS_PATH)
+            path.resolve(__dirname, process.env.EXTRAS_PATH || '../build/playcanvas-extras.js')
         )
-    );
-}
+    ]
+};
 
 if (process.env.ANALYZE_BUNDLE) {
     config.plugins.push(

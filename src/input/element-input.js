@@ -840,7 +840,7 @@ class ElementInput {
         var result = null;
         let closestDistance3d = Infinity;
 
-        // sort elements
+        // sort elements based on layers and draw order
         this._elements.sort(this._sortHandler);
 
         var rayScreen, ray3d;
@@ -848,33 +848,36 @@ class ElementInput {
         for (var i = 0, len = this._elements.length; i < len; i++) {
             var element = this._elements[i];
 
-            // cache rays
             if (element.screen && element.screen.screen.screenSpace) {
-                // 2D screen
                 if (rayScreen === undefined) {
                     rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
                 }
+                if (!rayScreen) continue;
 
-                if (rayScreen) {
-                    // break on the first element that hit
-                    const hit = this._checkElement(rayScreen, element, true) >= 0;
-                    if (hit === true) {
-                        result = element;
-                        break;
-                    }
+                // 2d screen elements take precedence - if hit, immediately return
+                const currentDistance = this._checkElement(rayScreen, element, true);
+                if (currentDistance >= 0) {
+                    result = element;
+                    break;
                 }
             } else {
-                // 3d
                 if (ray3d === undefined) {
                     ray3d = this._calculateRay3d(x, y, camera, rayB) ? rayB : null;
                 }
+                if (!ray3d) continue;
 
-                if (ray3d) {
-                    // continue looking through all elements, only storing the closest one
-                    const currentDistance = this._checkElement(ray3d, element, false);
-                    if (currentDistance >= 0 && currentDistance < closestDistance3d) {
+                const currentDistance = this._checkElement(ray3d, element, false);
+                if (currentDistance >= 0) {
+                    // store the closest one in world space
+                    if (currentDistance < closestDistance3d) {
                         result = element;
                         closestDistance3d = currentDistance;
+                    }
+
+                    // if the element is on a Screen, it takes precedence
+                    if (element.screen) {
+                        result = element;
+                        break;
                     }
                 }
             }
