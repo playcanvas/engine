@@ -323,7 +323,6 @@ class ParticleSystemComponent extends Component {
     }
 
     onSetColorMapAsset(name, oldValue, newValue) {
-        const self = this;
         const assets = this.system.app.assets;
         if (oldValue) {
             const asset = assets.get(oldValue);
@@ -340,10 +339,10 @@ class ParticleSystemComponent extends Component {
 
             const asset = assets.get(newValue);
             if (asset) {
-                self._bindColorMapAsset(asset);
+                this._bindColorMapAsset(asset);
             } else {
-                assets.once("add:" + newValue, function (asset) {
-                    self._bindColorMapAsset(asset);
+                assets.once("add:" + newValue, (asset) => {
+                    this._bindColorMapAsset(asset);
                 });
             }
         } else {
@@ -389,7 +388,6 @@ class ParticleSystemComponent extends Component {
     }
 
     onSetNormalMapAsset(name, oldValue, newValue) {
-        const self = this;
         const assets = this.system.app.assets;
 
         if (oldValue) {
@@ -407,10 +405,10 @@ class ParticleSystemComponent extends Component {
 
             const asset = assets.get(newValue);
             if (asset) {
-                self._bindNormalMapAsset(asset);
+                this._bindNormalMapAsset(asset);
             } else {
-                assets.once("add:" + newValue, function (asset) {
-                    self._bindNormalMapAsset(asset);
+                assets.once("add:" + newValue, (asset) => {
+                    this._bindNormalMapAsset(asset);
                 });
             }
         } else {

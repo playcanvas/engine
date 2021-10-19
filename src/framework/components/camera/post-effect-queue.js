@@ -265,7 +265,6 @@ class PostEffectQueue {
         if (!this.enabled && this.effects.length) {
             this.enabled = true;
 
-            const self = this;
             this._requestDepthMaps();
 
             this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
@@ -277,45 +276,45 @@ class PostEffectQueue {
             this.camera.renderTarget = this.effects[0].inputTarget;
 
             // callback when postprocessing takes place
-            this.camera.onPostprocessing = function (camera) {
+            this.camera.onPostprocessing = (camera) => {
 
-                if (self.enabled) {
+                if (this.enabled) {
                     let rect = null;
-                    const len = self.effects.length;
+                    const len = this.effects.length;
                     if (len) {
 
                         // #if _DEBUG
-                        self.app.graphicsDevice.pushMarker("Postprocess");
+                        this.app.graphicsDevice.pushMarker("Postprocess");
                         // #endif
 
                         for (let i = 0; i < len; i++) {
-                            const fx = self.effects[i];
+                            const fx = this.effects[i];
 
                             let destTarget = fx.outputTarget;
 
                             // last effect
                             if (i === len - 1) {
-                                rect = self.camera.rect;
+                                rect = this.camera.rect;
 
                                 // if camera originally rendered to a render target, render last effect to it
-                                if (self.destinationRenderTarget) {
-                                    destTarget = self.destinationRenderTarget;
+                                if (this.destinationRenderTarget) {
+                                    destTarget = this.destinationRenderTarget;
                                 }
                             }
 
                             // #if _DEBUG
-                            self.app.graphicsDevice.pushMarker(fx.name);
+                            this.app.graphicsDevice.pushMarker(fx.name);
                             // #endif
 
                             fx.effect.render(fx.inputTarget, destTarget, rect);
 
                             // #if _DEBUG
-                            self.app.graphicsDevice.popMarker();
+                            this.app.graphicsDevice.popMarker();
                             // #endif
                         }
 
                         // #if _DEBUG
-                        self.app.graphicsDevice.popMarker();
+                        this.app.graphicsDevice.popMarker();
                         // #endif
                     }
                 }

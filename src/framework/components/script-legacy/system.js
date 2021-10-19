@@ -404,7 +404,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
             type: attribute.type
         };
 
-        self._convertAttributeValue(attribute);
+        this._convertAttributeValue(attribute);
 
         Object.defineProperty(instance.instance, attribute.name, {
             get: function () {

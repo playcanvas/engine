@@ -445,7 +445,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             assets.once("add:" + id, (asset) => {
                 asset.ready((asset) => {
                     data[property] = asset.resource;
-                    self.doRecreatePhysicalShape(component);
+                    this.doRecreatePhysicalShape(component);
                 });
                 assets.load(asset);
             });
