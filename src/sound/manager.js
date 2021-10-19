@@ -54,8 +54,8 @@ class SoundManager extends EventHandler {
 
                     const context = this.context;
                     if (context) {
-                        let buffer = context.createBuffer(1, 1, 44100);
-                        let source = context.createBufferSource();
+                        const buffer = context.createBuffer(1, 1, 44100);
+                        const source = context.createBufferSource();
                         source.buffer = buffer;
                         source.connect(context.destination);
                         source.start(0);

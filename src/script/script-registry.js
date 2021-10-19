@@ -40,22 +40,21 @@ class ScriptRegistry extends EventHandler {
      */
     /* eslint-enable jsdoc/no-undefined-types */
     add(script) {
-        var self = this;
-        var scriptName = script.__name;
+        const scriptName = script.__name;
 
         if (this._scripts.hasOwnProperty(scriptName)) {
-            setTimeout(function () {
+            setTimeout(() => {
                 if (script.prototype.swap) {
                     // swapping
-                    var old = self._scripts[scriptName];
-                    var ind = self._list.indexOf(old);
-                    self._list[ind] = script;
-                    self._scripts[scriptName] = script;
+                    const old = this._scripts[scriptName];
+                    const ind = this._list.indexOf(old);
+                    this._list[ind] = script;
+                    this._scripts[scriptName] = script;
 
-                    self.fire('swap', scriptName, script);
-                    self.fire('swap:' + scriptName, script);
+                    this.fire('swap', scriptName, script);
+                    this.fire('swap:' + scriptName, script);
                 } else {
-                    console.warn('script registry already has \'' + scriptName + '\' script, define \'swap\' method for new script type to enable code hot swapping');
+                    console.warn(`script registry already has '${scriptName}' script, define 'swap' method for new script type to enable code hot swapping`);
                 }
             });
             return false;
@@ -69,31 +68,30 @@ class ScriptRegistry extends EventHandler {
 
         // for all components awaiting Script Type
         // create script instance
-        setTimeout(function () {
-            if (!self._scripts.hasOwnProperty(scriptName))
+        setTimeout(() => {
+            if (!this._scripts.hasOwnProperty(scriptName))
                 return;
-
 
             // this is a check for a possible error
             // that might happen if the app has been destroyed before
             // setTimeout has finished
-            if (!self.app || !self.app.systems || !self.app.systems.script) {
+            if (!this.app || !this.app.systems || !this.app.systems.script) {
                 return;
             }
 
-            var components = self.app.systems.script._components;
-            var i, scriptInstance, attributes;
-            var scriptInstances = [];
-            var scriptInstancesInitialized = [];
+            const components = this.app.systems.script._components;
+            let attributes;
+            const scriptInstances = [];
+            const scriptInstancesInitialized = [];
 
             for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
-                var component = components.items[components.loopIndex];
+                const component = components.items[components.loopIndex];
                 // check if awaiting for script
                 if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
                     if (component._scriptsData && component._scriptsData[scriptName])
                         attributes = component._scriptsData[scriptName].attributes;
 
-                    scriptInstance = component.create(scriptName, {
+                    const scriptInstance = component.create(scriptName, {
                         preloading: true,
                         ind: component._scriptsIndex[scriptName].ind,
                         attributes: attributes
@@ -105,11 +103,11 @@ class ScriptRegistry extends EventHandler {
             }
 
             // initialize attributes
-            for (i = 0; i < scriptInstances.length; i++)
+            for (let i = 0; i < scriptInstances.length; i++)
                 scriptInstances[i].__initializeAttributes();
 
             // call initialize()
-            for (i = 0; i < scriptInstances.length; i++) {
+            for (let i = 0; i < scriptInstances.length; i++) {
                 if (scriptInstances[i].enabled) {
                     scriptInstances[i]._initialized = true;
 
@@ -121,7 +119,7 @@ class ScriptRegistry extends EventHandler {
             }
 
             // call postInitialize()
-            for (i = 0; i < scriptInstancesInitialized.length; i++) {
+            for (let i = 0; i < scriptInstancesInitialized.length; i++) {
                 if (!scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
                     continue;
                 }
@@ -148,8 +146,8 @@ class ScriptRegistry extends EventHandler {
      */
     /* eslint-enable jsdoc/no-undefined-types */
     remove(nameOrType) {
-        var scriptType = nameOrType;
-        var scriptName = nameOrType;
+        let scriptType = nameOrType;
+        let scriptName = nameOrType;
 
         if (typeof scriptName !== 'string') {
             scriptName = scriptType.__name;
@@ -161,7 +159,7 @@ class ScriptRegistry extends EventHandler {
             return false;
 
         delete this._scripts[scriptName];
-        var ind = this._list.indexOf(scriptType);
+        const ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
         this.fire('remove', scriptName, scriptType);
@@ -204,7 +202,7 @@ class ScriptRegistry extends EventHandler {
         }
 
         if (!nameOrType) return false;
-        var scriptName = nameOrType.__name;
+        const scriptName = nameOrType.__name;
         return this._scripts[scriptName] === nameOrType;
     }
 

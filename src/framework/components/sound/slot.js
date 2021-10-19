@@ -34,8 +34,8 @@ const instanceOptions = {
  * @classdesc The SoundSlot controls playback of an audio asset.
  * @description Create a new SoundSlot.
  * @param {SoundComponent} component - The Component that created this slot.
- * @param {string} name - The name of the slot.
- * @param {object} options - Settings for the slot.
+ * @param {string} [name] - The name of the slot. Defaults to 'Untitled'.
+ * @param {object} [options] - Settings for the slot.
  * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
  * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
  * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
@@ -60,16 +60,15 @@ const instanceOptions = {
  * @property {SoundInstance[]} instances An array that contains all the {@link SoundInstance}s currently being played by the slot.
  */
 class SoundSlot extends EventHandler {
-    constructor(component, name, options) {
+    constructor(component, name = 'Untitled', options = {}) {
         super();
 
         this._component = component;
         this._assets = component.system.app.assets;
         this._manager = component.system.manager;
 
-        this.name = name || 'Untitled';
+        this.name = name;
 
-        options = options || {};
         this._volume = options.volume !== undefined ? math.clamp(Number(options.volume) || 0, 0, 1) : 1;
         this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
         this._loop = !!(options.loop !== undefined ? options.loop : false);
@@ -111,7 +110,7 @@ class SoundSlot extends EventHandler {
         // If not loaded and doesn't have asset - then we cannot play it.  Warn and exit.
         if (!this.isLoaded && !this._hasAsset()) {
             // #if _DEBUG
-            console.warn("Trying to play SoundSlot " + this.name + " but it is not loaded and doesn't have an asset.");
+            console.warn(`Trying to play SoundSlot ${this.name} but it is not loaded and doesn't have an asset.`);
             // #endif
             return;
         }
@@ -167,6 +166,7 @@ class SoundSlot extends EventHandler {
      */
     resume() {
         let resumed = false;
+
         const instances = this.instances;
         for (let i = 0, len = instances.length; i < len; i++) {
             if (instances[i].resume())
@@ -184,6 +184,7 @@ class SoundSlot extends EventHandler {
      */
     stop() {
         let stopped = false;
+
         const instances = this.instances;
         let i = instances.length;
         // do this in reverse order because as each instance
