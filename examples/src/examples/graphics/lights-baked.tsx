@@ -5,7 +5,6 @@ class LightsBakedExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop

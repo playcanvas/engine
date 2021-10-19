@@ -20,7 +20,6 @@ class TextureBasisExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { color: pc.Asset, gloss: pc.Asset, normal: pc.Asset, helipad: pc.Asset }): void {
 
         // Create the application and start the update loop

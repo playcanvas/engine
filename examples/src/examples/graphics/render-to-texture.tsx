@@ -13,7 +13,6 @@ class RenderToTextureExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { 'helipad.dds': pc.Asset }): void {
 
         // Overview:

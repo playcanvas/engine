@@ -27,7 +27,6 @@ class ShadowCascadesExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
             <Panel headerText='Shadow Cascade Settings'>
@@ -56,7 +55,6 @@ class ShadowCascadesExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any, data:any): void {
 
         const app = new pc.Application(canvas, {});

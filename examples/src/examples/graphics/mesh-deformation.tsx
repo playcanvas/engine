@@ -14,7 +14,6 @@ class MeshDeformationExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, 'helipad.dds': pc.Asset }): void {
 
         // Create the app

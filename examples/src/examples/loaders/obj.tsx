@@ -5,7 +5,6 @@ class OBJExample extends Example {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the app and start the update loop

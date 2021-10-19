@@ -5,7 +5,6 @@ class CompoundCollisionExample extends Example {
     static CATEGORY = 'Physics';
     static NAME = 'Compound Collision';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, wasmSupported: any, loadWasmModuleAsync: any): void {
         if (wasmSupported()) {
             loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);

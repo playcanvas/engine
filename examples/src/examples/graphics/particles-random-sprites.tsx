@@ -15,7 +15,6 @@ class ParticlesRandomSpritesExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { particlesCoinsTexture: pc.Asset, particlesBonusTexture: pc.Asset }): void {
 
         const app = new pc.Application(canvas, {
