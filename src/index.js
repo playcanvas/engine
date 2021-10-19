@@ -303,4 +303,4 @@ export { XrPlaneDetection } from './xr/xr-plane-detection.js';
 export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
-export * from './deprecated.js';
+export * from './deprecated/deprecated.js';
