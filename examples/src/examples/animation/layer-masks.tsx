@@ -149,6 +149,7 @@ class LayerMasksExample extends Example {
         modelEntity.anim.findAnimationLayer('UpperBody').assignAnimation('Idle', idleTrack);
         modelEntity.anim.findAnimationLayer('UpperBody').assignAnimation('Dance', danceTrack);
 
+        // respond to changes in the data object made by the control panel
         data.on('*:set', (path: string, value: any) => {
             if (path === 'fullBodyLayer.state') {
                 modelEntity.anim.baseLayer.transition(value, 0.4);
