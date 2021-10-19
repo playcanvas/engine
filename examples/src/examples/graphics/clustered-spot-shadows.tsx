@@ -83,7 +83,7 @@ class ClusteredSpotShadowsExample extends Example {
         const cookieChannels = ["r", "g", "b", "a", "rgb"];
 
         // create many spot lights
-        const count = 64;
+        const count = 10;
         const spotLightList: Array<pc.Entity> = [];
         for (let i = 0; i < count; i++) {
             const intensity = 1.5;

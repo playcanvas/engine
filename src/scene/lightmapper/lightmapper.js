@@ -362,14 +362,15 @@ class Lightmapper {
         }
     }
 
-    calculateLightmapSize(bakeNode) {
+    // Note: this function is also called by the Editor to display estimated LM size in the inspector,
+    // do not change its signature.
+    calculateLightmapSize(node) {
         let data;
         const sizeMult = this.scene.lightmapSizeMultiplier || 16;
         const scale = tempVec;
 
         let srcArea, lightmapSizeMultiplier;
 
-        const node = bakeNode.node;
         if (node.model) {
             lightmapSizeMultiplier = node.model.lightmapSizeMultiplier;
             if (node.model.asset) {
@@ -409,8 +410,12 @@ class Lightmapper {
         area.y *= areaMult;
         area.z *= areaMult;
 
+        // bounds of the component
+        const component = node.render || node.model;
+        const bounds = this.computeNodeBounds(component.meshInstances);
+
         // total area in the lightmap is based on the world space bounds of the mesh
-        scale.copy(bakeNode.bounds.halfExtents);
+        scale.copy(bounds.halfExtents);
         let totalArea = area.x * scale.y * scale.z +
                         area.y * scale.x * scale.z +
                         area.z * scale.x * scale.y;
@@ -570,7 +575,7 @@ class Lightmapper {
 
             // required lightmap size
             const bakeNode = bakeNodes[i];
-            const size = this.calculateLightmapSize(bakeNode);
+            const size = this.calculateLightmapSize(bakeNode.node);
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
@@ -670,21 +675,27 @@ class Lightmapper {
         }
     }
 
-    // compute bounding box for each node
-    computeNodeBounds(nodes) {
+    // compute bounding box for a single node
+    computeNodeBounds(meshInstances) {
 
         const bounds = new BoundingBox();
 
+        if (meshInstances.length > 0) {
+            bounds.copy(meshInstances[0].aabb);
+            for (let m = 1; m < meshInstances.length; m++) {
+                bounds.add(meshInstances[m].aabb);
+            }
+        }
+
+        return bounds;
+    }
+
+    // compute bounding box for each node
+    computeNodesBounds(nodes) {
+
         for (let i = 0; i < nodes.length; i++) {
             const meshInstances = nodes[i].meshInstances;
-            if (meshInstances.length > 0) {
-                bounds.copy(meshInstances[0].aabb);
-                for (let m = 1; m < meshInstances.length; m++) {
-                    bounds.add(meshInstances[m].aabb);
-                }
-            }
-
-            nodes[i].bounds = bounds.clone();
+            nodes[i].bounds = this.computeNodeBounds(meshInstances);
         }
     }
 
@@ -879,7 +890,7 @@ class Lightmapper {
         scene.layers._update();
 
         // compute bounding boxes for nodes
-        this.computeNodeBounds(bakeNodes);
+        this.computeNodesBounds(bakeNodes);
 
         // Calculate lightmap sizes and allocate textures
         this.allocateTextures(bakeNodes, passCount);
