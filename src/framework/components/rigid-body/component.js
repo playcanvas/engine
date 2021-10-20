@@ -11,8 +11,8 @@ import {
 import { Component } from '../component.js';
 
 // Shared math variable to avoid excessive allocation
-var ammoTransform;
-var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
+let ammoTransform;
+let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 
 /**
  * @component

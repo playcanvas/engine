@@ -48,7 +48,6 @@ class ShaderWobbleExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any): void {
         let time = 0;
 

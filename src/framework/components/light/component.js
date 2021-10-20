@@ -16,8 +16,8 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-var _lightProps = [];
-var _lightPropsDefault = [];
+const _lightProps = [];
+const _lightPropsDefault = [];
 
 /**
  * @component
@@ -135,9 +135,8 @@ class LightComponent extends Component {
     }
 
     addLightToLayers() {
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.addLight(this);
             }
@@ -145,9 +144,8 @@ class LightComponent extends Component {
     }
 
     removeLightFromLayers() {
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.removeLight(this);
             }
@@ -165,23 +163,22 @@ class LightComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
         }
     }
 
     onLayerRemoved(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index >= 0) {
             layer.removeLight(this);
         }
     }
 
     refreshProperties() {
-        var name;
-        for (var i = 0; i < _lightProps.length; i++) {
-            name = _lightProps[i];
+        for (let i = 0; i < _lightProps.length; i++) {
+            const name = _lightProps[i];
 
             /* eslint-disable no-self-assign */
             this[name] = this[name];
@@ -196,7 +193,7 @@ class LightComponent extends Component {
     }
 
     onCookieAssetSet() {
-        var forceLoad = false;
+        let forceLoad = false;
 
         if (this._cookieAsset.type === 'cubemap' && !this._cookieAsset.loadFaces) {
             this._cookieAsset.loadFaces = true;
@@ -290,7 +287,7 @@ class LightComponent extends Component {
 }
 
 function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
-    var c = LightComponent.prototype;
+    const c = LightComponent.prototype;
     _lightProps.push(name);
     _lightPropsDefault.push(defaultValue);
 
@@ -299,8 +296,8 @@ function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
             return this.data[name];
         },
         set: function (value) {
-            var data = this.data;
-            var oldValue = data[name];
+            const data = this.data;
+            const oldValue = data[name];
             if (!skipEqualsCheck && oldValue === value) return;
             data[name] = value;
             if (setFunc) setFunc.call(this, value, oldValue);
@@ -393,7 +390,7 @@ function _defineProps() {
             this.onCookieAssetAdd(newValue);
         } else if (typeof newValue === 'number') {
             this._cookieAssetId = newValue;
-            var asset = this.system.app.assets.get(newValue);
+            const asset = this.system.app.assets.get(newValue);
             if (asset) {
                 this.onCookieAssetAdd(asset);
             } else {
@@ -417,14 +414,14 @@ function _defineProps() {
     _defineProperty("cookieAngle", 0, function (newValue, oldValue) {
         if (newValue !== 0 || this.cookieScale !== null) {
             if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
-            var scx = 1;
-            var scy = 1;
+            let scx = 1;
+            let scy = 1;
             if (this.cookieScale) {
                 scx = this.cookieScale.x;
                 scy = this.cookieScale.y;
             }
-            var c = Math.cos(newValue * math.DEG_TO_RAD);
-            var s = Math.sin(newValue * math.DEG_TO_RAD);
+            const c = Math.cos(newValue * math.DEG_TO_RAD);
+            const s = Math.sin(newValue * math.DEG_TO_RAD);
             this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
             this.light.cookieTransform = this._cookieMatrix;
         } else {
@@ -434,10 +431,10 @@ function _defineProps() {
     _defineProperty("cookieScale", null, function (newValue, oldValue) {
         if (newValue !== null || this.cookieAngle !== 0) {
             if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
-            var scx = newValue.x;
-            var scy = newValue.y;
-            var c = Math.cos(this.cookieAngle * math.DEG_TO_RAD);
-            var s = Math.sin(this.cookieAngle * math.DEG_TO_RAD);
+            const scx = newValue.x;
+            const scy = newValue.y;
+            const c = Math.cos(this.cookieAngle * math.DEG_TO_RAD);
+            const s = Math.sin(this.cookieAngle * math.DEG_TO_RAD);
             this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
             this.light.cookieTransform = this._cookieMatrix;
         } else {
@@ -449,7 +446,7 @@ function _defineProps() {
     }, true);
     _defineProperty("shadowUpdateMode", SHADOWUPDATE_REALTIME, function (newValue, oldValue) {
         this.light.shadowUpdateMode = newValue;
-    });
+    }, true);
     _defineProperty("mask", 1, function (newValue, oldValue) {
         this.light.mask = newValue;
     });
@@ -487,14 +484,13 @@ function _defineProps() {
         this.light.isStatic = newValue;
     });
     _defineProperty("layers", [LAYERID_WORLD], function (newValue, oldValue) {
-        var i, layer;
-        for (i = 0; i < oldValue.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+        for (let i = 0; i < oldValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
             layer.removeLight(this);
         }
-        for (i = 0; i < newValue.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+        for (let i = 0; i < newValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             if (this.enabled && this.entity.enabled) {
                 layer.addLight(this);

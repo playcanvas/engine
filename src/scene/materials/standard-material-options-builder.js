@@ -192,6 +192,12 @@ StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, 
     options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
 
     options.useRightHandedCubeMap = stdMat.cubeMap ? stdMat.cubeMap._isRenderTarget : (!stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene._skyboxIsRenderTarget);
+
+    // clustered lighting features
+    if (scene.layers) {
+        options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
+        options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
+    }
 };
 
 StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options, stdMat, objDefs, sortedLights, staticLightList) {

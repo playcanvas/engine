@@ -51,7 +51,7 @@ class MorphInstance {
             this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
 
             // create render targets to morph targets into
-            const createRT = function (name, textureVar) {
+            const createRT = (name, textureVar) => {
 
                 // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
                 const format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
@@ -60,7 +60,7 @@ class MorphInstance {
                     colorBuffer: this[textureVar],
                     depth: false
                 });
-            }.bind(this);
+            };
 
             if (morph.morphPositions) {
                 this.rtPositions = createRT("MorphRTPos", "texturePositions");
@@ -226,7 +226,7 @@ class MorphInstance {
         const device = this.device;
 
         // blend curently set up textures to render target
-        const submitBatch = function (usedCount, blending) {
+        const submitBatch = (usedCount, blending) => {
 
             // factors
             this.morphFactor.setValue(this._shaderMorphWeights);
@@ -241,8 +241,7 @@ class MorphInstance {
             // render quad with shader for required number of textures
             const shader = this._getShader(usedCount);
             drawQuadWithShader(device, renderTarget, shader, undefined, undefined, blending);
-
-        }.bind(this);
+        };
 
         // set up parameters for active blend targets
         let usedCount = 0;

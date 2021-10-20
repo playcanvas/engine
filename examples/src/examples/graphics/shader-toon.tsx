@@ -71,7 +71,6 @@ class ShaderToonExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the application and start the update loop

@@ -18,7 +18,6 @@ class AreaLightsExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the app and start the update loop

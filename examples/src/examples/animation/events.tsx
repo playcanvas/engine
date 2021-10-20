@@ -16,8 +16,7 @@ class EventsExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { orbitScript: pc.Asset, bloom: pc.Asset, model: pc.Asset, walkAnim, 'helipad.dds': pc.Asset }): void {
+    example(canvas: HTMLCanvasElement, assets: { orbitScript: pc.Asset, bloom: pc.Asset, model: pc.Asset, walkAnim: pc.Asset, 'helipad.dds': pc.Asset }): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

@@ -200,10 +200,9 @@ class CameraComponent extends Component {
     }
 
     set layers(newValue) {
-        var i, layer;
-        var layers = this._camera.layers;
-        for (i = 0; i < layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(layers[i]);
+        const layers = this._camera.layers;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (!layer) continue;
             layer.removeCamera(this);
         }
@@ -212,8 +211,8 @@ class CameraComponent extends Component {
 
         if (!this.enabled || !this.entity.enabled) return;
 
-        for (i = 0; i < newValue.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+        for (let i = 0; i < newValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             layer.addCamera(this);
         }
@@ -298,9 +297,9 @@ class CameraComponent extends Component {
      * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
-        var device = this.system.app.graphicsDevice;
-        var w = device.clientRect.width;
-        var h = device.clientRect.height;
+        const device = this.system.app.graphicsDevice;
+        const w = device.clientRect.width;
+        const h = device.clientRect.height;
         return this._camera.screenToWorld(screenx, screeny, cameraz, w, h, worldCoord);
     }
 
@@ -313,9 +312,9 @@ class CameraComponent extends Component {
      * @returns {Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, screenCoord) {
-        var device = this.system.app.graphicsDevice;
-        var w = device.clientRect.width;
-        var h = device.clientRect.height;
+        const device = this.system.app.graphicsDevice;
+        const w = device.clientRect.width;
+        const h = device.clientRect.height;
         return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
     }
 
@@ -326,9 +325,9 @@ class CameraComponent extends Component {
     }
 
     addCameraToLayers() {
-        var layers = this.layers;
-        for (var i = 0; i < layers.length; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(layers[i]);
+        const layers = this.layers;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (layer) {
                 layer.addCamera(this);
             }
@@ -336,9 +335,9 @@ class CameraComponent extends Component {
     }
 
     removeCameraFromLayers() {
-        var layers = this.layers;
-        for (var i = 0; i < layers.length; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(layers[i]);
+        const layers = this.layers;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (layer) {
                 layer.removeCamera(this);
             }
@@ -354,21 +353,21 @@ class CameraComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addCamera(this);
     }
 
     onLayerRemoved(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeCamera(this);
     }
 
     onEnable() {
-        var system = this.system;
-        var scene = system.app.scene;
-        var layers = scene.layers;
+        const system = this.system;
+        const scene = system.app.scene;
+        const layers = scene.layers;
 
         system.addCamera(this);
 
@@ -386,9 +385,9 @@ class CameraComponent extends Component {
     }
 
     onDisable() {
-        var system = this.system;
-        var scene = system.app.scene;
-        var layers = scene.layers;
+        const system = this.system;
+        const scene = system.app.scene;
+        const layers = scene.layers;
 
         this.postEffects.disable();
 
@@ -417,8 +416,8 @@ class CameraComponent extends Component {
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
-        var src = rt ? rt : this.system.app.graphicsDevice;
-        var rect = this.rect;
+        const src = rt ? rt : this.system.app.graphicsDevice;
+        const rect = this.rect;
         return (src.width * rect.z) / (src.height * rect.w);
     }
 
@@ -501,7 +500,7 @@ class CameraComponent extends Component {
         }
 
         if (display) {
-            var self = this;
+            const self = this;
             if (display.capabilities.canPresent) {
                 // try and present
                 display.requestPresent(function (err) {
@@ -549,7 +548,7 @@ class CameraComponent extends Component {
     exitVr(callback) {
         if (this.vrDisplay) {
             if (this.vrDisplay.capabilities.canPresent) {
-                var display = this.vrDisplay;
+                const display = this.vrDisplay;
                 this.vrDisplay = null;
                 display.exitPresent(callback);
             } else {
@@ -667,8 +666,8 @@ class CameraComponent extends Component {
 
 // for common properties, create getters and setters which use this._camera as a storage for their values
 properties.forEach(function (property) {
-    var name = property.name;
-    var options = {};
+    const name = property.name;
+    const options = {};
 
     // getter
     options.get = function () {

@@ -20,7 +20,7 @@ const maxTextureSize = 4096;    // maximum texture size allowed to work on all d
 const TextureIndex8 = {
 
     // always 8bit texture data, regardless of float texture support
-    FLAGS: 0,                   // lightType, lightShape, follofMode, castShadows
+    FLAGS: 0,                   // lightType, lightShape, fallofMode, castShadows
     COLOR_A: 1,                 // color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
     COLOR_B: 2,                 // color.b, color.b, useCookie, -
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
@@ -125,7 +125,7 @@ class WorldClusters {
         `;
     }
 
-    // converts object with properies to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
+    // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
     static buildShaderDefines(object, prefix) {
         let str = "";
         Object.keys(object).forEach((key) => {
@@ -134,9 +134,13 @@ class WorldClusters {
         return str;
     }
 
-    constructor(device, cells, maxCellLightCount) {
+    constructor(device, cells, maxCellLightCount, cookiesEnabled = false, shadowsEnabled = false) {
         this.device = device;
         this.name = "Untitled";
+
+        // features
+        this.cookiesEnabled = cookiesEnabled;
+        this.shadowsEnabled = shadowsEnabled;
 
         // number of times a warning was reported
         this.reportCount = 0;
@@ -166,7 +170,7 @@ class WorldClusters {
         // internal list of lights (of type ClusterLight)
         this._usedLights = [];
 
-        // light 0 is always reserverd for 'no light' index
+        // light 0 is always reserved for 'no light' index
         this._usedLights.push(new ClusterLight());
 
         // register shader uniforms
@@ -410,8 +414,8 @@ class WorldClusters {
     addLightData(light, lightIndex, gammaCorrection) {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;
-        const isCookie = !!light._cookie;
-        const castShadows = light.castShadows;
+        const isCookie = this.cookiesEnabled && !!light._cookie;
+        const castShadows = this.shadowsEnabled && light.castShadows;
         const pos = light._node.getPosition();
 
         let lightProjectionMatrix = null;   // light projection matrix - used for shadow map and cookie of spot light

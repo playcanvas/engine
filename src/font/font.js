@@ -50,7 +50,7 @@ class Font {
             }];
 
             if (this._data.chars) {
-                for (var key in this._data.chars) {
+                for (const key in this._data.chars) {
                     this._data.chars[key].map = 0;
                 }
             }

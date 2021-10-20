@@ -4,7 +4,7 @@ import { ScriptComponent } from '../framework/components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
-var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
  * @class
@@ -52,7 +52,7 @@ class ScriptType extends EventHandler {
     }
 
     initScriptType(args) {
-        var script = this.constructor; // get script type, i.e. function (class)
+        const script = this.constructor; // get script type, i.e. function (class)
 
         // #if _DEBUG
         if (!args || !args.app || !args.entity) {
@@ -89,7 +89,7 @@ class ScriptType extends EventHandler {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
         if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-        var match = ("" + constructorFn).match(funcNameRegex);
+        const match = ("" + constructorFn).match(funcNameRegex);
         return match ? match[1] : undefined;
     }
 
@@ -133,7 +133,7 @@ class ScriptType extends EventHandler {
             return;
 
         // set attributes values
-        for (var key in this.__scriptType.attributes.index) {
+        for (const key in this.__scriptType.attributes.index) {
             if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                 this[key] = this.__attributesRaw[key];
             } else if (!this.__attributes.hasOwnProperty(key)) {
@@ -168,7 +168,7 @@ class ScriptType extends EventHandler {
      * });
      */
     static extend(methods) {
-        for (var key in methods) {
+        for (const key in methods) {
             if (!methods.hasOwnProperty(key))
                 continue;
 

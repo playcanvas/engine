@@ -116,6 +116,8 @@ class ShadowMap {
 
         let target = null;
         if (shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2)) {
+
+            // enable hadrware PCF when sampling the depth texture
             texture.compareOnRead = true;
             texture.compareFunc = FUNC_LESS;
 

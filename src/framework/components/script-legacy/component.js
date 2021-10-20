@@ -12,9 +12,9 @@ class ScriptLegacyComponent extends Component {
         // #if _DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
         // #endif
-        var args = Array.prototype.slice.call(arguments, 2);
-        var instances = this.entity.script.instances;
-        var fn;
+        const args = Array.prototype.slice.call(arguments, 2);
+        const instances = this.entity.script.instances;
+        let fn;
 
         if (instances && instances[name]) {
             fn = instances[name].instance[functionName];
@@ -62,8 +62,8 @@ class ScriptLegacyComponent extends Component {
             this.data.areScriptsLoaded = false;
 
             // get the urls
-            var scripts = newValue;
-            var urls = scripts.map(function (s) {
+            const scripts = newValue;
+            const urls = scripts.map(function (s) {
                 return s.url;
             });
 
@@ -80,13 +80,12 @@ class ScriptLegacyComponent extends Component {
     // Check if only script attributes need updating in which
     // case just update the attributes and return otherwise return false
     _updateScriptAttributes(oldValue, newValue) {
-        var onlyUpdateAttributes = true;
+        let onlyUpdateAttributes = true;
 
         if (oldValue.length !== newValue.length) {
             onlyUpdateAttributes = false;
         } else {
-            var i, len = newValue.length;
-            for (i = 0; i < len; i++) {
+            for (let i = 0, len = newValue.length; i < len; i++) {
                 if (oldValue[i].url !== newValue[i].url) {
                     onlyUpdateAttributes = false;
                     break;
@@ -95,7 +94,7 @@ class ScriptLegacyComponent extends Component {
         }
 
         if (onlyUpdateAttributes) {
-            for (var key in this.instances) {
+            for (const key in this.instances) {
                 if (this.instances.hasOwnProperty(key)) {
                     this.system._updateAccessors(this.entity, this.instances[key]);
                 }
@@ -108,19 +107,18 @@ class ScriptLegacyComponent extends Component {
     // Load each url from the cache synchronously. If one of the urls is not in the cache
     // then stop and return false.
     _loadFromCache(urls) {
-        var i, len;
-        var cached = [];
+        const cached = [];
 
-        var prefix = this.system.app._scriptPrefix || "";
-        var regex = /^http(s)?:\/\//i;
+        const prefix = this.system.app._scriptPrefix || "";
+        const regex = /^http(s)?:\/\//i;
 
-        for (i = 0, len = urls.length; i < len; i++) {
-            var url = urls[i];
+        for (let i = 0, len = urls.length; i < len; i++) {
+            let url = urls[i];
             if (!regex.test(url)) {
                 url = path.join(prefix, url);
             }
 
-            var type = this.system.app.loader.getFromCache(url, 'script');
+            const type = this.system.app.loader.getFromCache(url, 'script');
 
             // if we cannot find the script in the cache then return and load
             // all scripts with the resource loader
@@ -131,8 +129,8 @@ class ScriptLegacyComponent extends Component {
             cached.push(type);
         }
 
-        for (i = 0, len = cached.length; i < len; i++) {
-            var ScriptType = cached[i];
+        for (let i = 0, len = cached.length; i < len; i++) {
+            const ScriptType = cached[i];
 
             // check if this is a regular JS file
             if (ScriptType === true) {
@@ -145,7 +143,7 @@ class ScriptLegacyComponent extends Component {
                 // Make sure that we haven't already instantiated another identical script while loading
                 // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
                 if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                    var instance = new ScriptType(this.entity);
+                    const instance = new ScriptType(this.entity);
                     this.system._preRegisterInstance(this.entity, urls[i], ScriptType._pcScriptName, instance);
                 }
             }
@@ -166,13 +164,13 @@ class ScriptLegacyComponent extends Component {
     }
 
     _loadScripts(urls) {
-        var count = urls.length;
+        let count = urls.length;
 
-        var prefix = this.system.app._scriptPrefix || "";
+        const prefix = this.system.app._scriptPrefix || "";
 
-        urls.forEach(function (url) {
-            var _url = null;
-            var _unprefixed = null;
+        urls.forEach((url) => {
+            let _url = null;
+            let _unprefixed = null;
             // support absolute URLs (for now)
             if (url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")) {
                 _unprefixed = url;
@@ -181,13 +179,13 @@ class ScriptLegacyComponent extends Component {
                 _unprefixed = url;
                 _url = path.join(prefix, url);
             }
-            this.system.app.loader.load(_url, "script", function (err, ScriptType) {
+            this.system.app.loader.load(_url, "script", (err, ScriptType) => {
                 count--;
                 if (!err) {
                     // ScriptType is null if the script is not a PlayCanvas script
                     if (ScriptType && this.entity.script) {
                         if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                            var instance = new ScriptType(this.entity);
+                            const instance = new ScriptType(this.entity);
                             this.system._preRegisterInstance(this.entity, _unprefixed, ScriptType._pcScriptName, instance);
                         }
                     }
@@ -204,8 +202,8 @@ class ScriptLegacyComponent extends Component {
                         this.system.onPostInitialize(this.entity);
                     }
                 }
-            }.bind(this));
-        }.bind(this));
+            });
+        });
     }
 }
 

@@ -6,7 +6,6 @@ class PortalExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Portal';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
 

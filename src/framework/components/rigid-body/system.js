@@ -9,6 +9,7 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
+import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
 
 let ammoRayStart, ammoRayEnd;
 
@@ -195,10 +196,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.contactResultPool = new ObjectPool(ContactResult, 1);
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
-            ComponentSystem.bind('update', this.onUpdate, this);
+            this.app.systems.on('update', this.onUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
-            ComponentSystem.unbind('update', this.onUpdate, this);
+            this.app.systems.off('update', this.onUpdate, this);
         }
     }
 
@@ -336,9 +337,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    // #if _DEBUG
-                    console.warn('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
-                    // #endif
+                    DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
 
                     const callback = arguments[2];
                     callback(result);
@@ -760,6 +759,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);
             Ammo.destroy(this.solver);

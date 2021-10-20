@@ -36,7 +36,7 @@ class CameraComponentSystem extends ComponentSystem {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -177,6 +177,12 @@ class CameraComponentSystem extends ComponentSystem {
         this.cameras.sort(function (a, b) {
             return a.priority - b.priority;
         });
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

@@ -2,7 +2,7 @@ import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SP
 import { math } from './math.js';
 
 class CurveEvaluator {
-    constructor(curve, time) {
+    constructor(curve, time = 0) {
         this._curve = curve;
         this._left = -Infinity;
         this._right = Infinity;
@@ -11,7 +11,7 @@ class CurveEvaluator {
         this._p1 = 0;
         this._m0 = 0;
         this._m1 = 0;
-        this._reset(time || 0);
+        this._reset(time);
     }
 
     // Evaluate the curve at the given time. Specify forceReset if the

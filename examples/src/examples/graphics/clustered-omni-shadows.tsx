@@ -19,7 +19,6 @@ class ClusteredShadowsOmniExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the application and start the update loop
@@ -42,6 +41,15 @@ class ClusteredShadowsOmniExample extends Example {
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
         app.scene.layers.clusteredLightingMaxLights = 80;
+
+        // enable clustered shadows (it's enabled by default as well)
+        // @ts-ignore engine-tsd
+        app.scene.layers.clusteredLightingShadowsEnabled = true;
+
+        // enable clustered cookies (it's enabled by default as well)
+        // @ts-ignore engine-tsd
+        app.scene.layers.clusteredLightingCookiesEnabled = true;
+
 
         // helper function to create a 3d primitive including its material
         function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {

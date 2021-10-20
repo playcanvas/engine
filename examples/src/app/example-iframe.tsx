@@ -32,7 +32,8 @@ interface ExampleIframeProps {
     assets: any,
     files: Array<File>,
     engine: string,
-    debugExample?: any
+    debugExample?: any,
+    useTypescript: boolean
 }
 
 const ExampleIframe = (props: ExampleIframeProps) => {
@@ -109,7 +110,8 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         }
         // strip the function closure
         script = script.substring(script.indexOf("\n") + 1);
-        script = script.substring(script.lastIndexOf("\n") + 1, -1);
+        script = script.substring(0, script.lastIndexOf("}"));
+
         // transform the code using babel
         let transformedScript = Babel.transform(script, { filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
         // strip the PlayCanvas app initialization
@@ -222,10 +224,10 @@ const ExampleIframe = (props: ExampleIframeProps) => {
                     wasmUrl: 'static/lib/basis/basis.wasm.wasm',
                     fallbackUrl: 'static/lib/basis/basis.js'
                 });
-                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
+                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[props.useTypescript ? 1 : 0].text, props.assets, observer);
             } else {
 
-                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[0].text, props.assets, observer);
+                build(document.getElementById('application-canvas') as HTMLCanvasElement, files[props.useTypescript ? 1 : 0].text, props.assets, observer);
             }
         }
     });
