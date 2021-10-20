@@ -267,7 +267,7 @@ class AnimEvaluator {
     }
 
     assignMask(mask) {
-        this._binder.assignMask(mask);
+        return this._binder.assignMask(mask);
     }
 
     /**

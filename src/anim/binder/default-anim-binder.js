@@ -243,7 +243,11 @@ class DefaultAnimBinder {
     }
 
     assignMask(mask) {
-        this._mask = mask;
+        if (mask !== this._mask) {
+            this._mask = mask;
+            return true;
+        }
+        return false;
     }
 }
 
