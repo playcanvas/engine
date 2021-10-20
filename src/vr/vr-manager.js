@@ -19,8 +19,6 @@ class VrManager extends EventHandler {
     constructor(app) {
         super();
 
-        var self = this;
-
         this.isSupported = VrManager.isSupported;
 
         this._index = {};
@@ -33,18 +31,18 @@ class VrManager extends EventHandler {
         this._onDisplayConnect = this._onDisplayConnect.bind(this);
         this._onDisplayDisconnect = this._onDisplayDisconnect.bind(this);
 
-        self._attach();
+        this._attach();
 
-        this._getDisplays(function (err, displays) {
+        this._getDisplays((err, displays) => {
             if (err) {
                 // webvr not available
-                self.fire('error', err);
+                this.fire('error', err);
             } else {
-                for (var i = 0; i < displays.length; i++) {
-                    self._addDisplay(displays[i]);
+                for (let i = 0; i < displays.length; i++) {
+                    this._addDisplay(displays[i]);
                 }
 
-                self.fire('ready', self.displays);
+                this.fire('ready', this.displays);
             }
         });
     }
@@ -114,9 +112,9 @@ class VrManager extends EventHandler {
      * @description Called once per frame to poll all attached displays.
      */
     poll() {
-        var l = this.displays.length;
+        const l = this.displays.length;
         if (!l) return;
-        for (var i = 0; i < l; i++) {
+        for (let i = 0; i < l; i++) {
             if (this.displays[i]._camera) this.displays[i].poll();
         }
     }
@@ -135,7 +133,7 @@ class VrManager extends EventHandler {
         if (this._index[vrDisplay.displayId])
             return;
 
-        var display = new VrDisplay(this._app, vrDisplay);
+        const display = new VrDisplay(this._app, vrDisplay);
         this._index[display.id] = display;
         this.displays.push(display);
 
@@ -156,7 +154,7 @@ class VrManager extends EventHandler {
     }
 
     _onDisplayDisconnect(e) {
-        var id;
+        let id;
         if (e.detail && e.detail.display) {
             // polyfill has different event format
             id = e.detail.display.displayId;
@@ -165,7 +163,7 @@ class VrManager extends EventHandler {
             id = e.display.displayId;
         }
 
-        var display = this._index[id];
+        const display = this._index[id];
         if (!display)
             return;
 
@@ -173,7 +171,7 @@ class VrManager extends EventHandler {
 
         delete this._index[display.id];
 
-        var ind = this.displays.indexOf(display);
+        const ind = this.displays.indexOf(display);
         this.displays.splice(ind, 1);
 
         if (this.display === display) {

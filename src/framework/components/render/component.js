@@ -121,14 +121,14 @@ class RenderComponent extends Component {
 
     destroyMeshInstances() {
 
-        var meshInstances = this._meshInstances;
+        const meshInstances = this._meshInstances;
         if (meshInstances) {
             this.removeFromLayers();
 
             // destroy mesh instances separately to allow them to be removed from the cache
             this._clearSkinInstances();
 
-            for (var i = 0; i < meshInstances.length; i++) {
+            for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].destroy();
             }
             this._meshInstances.length = 0;
@@ -137,7 +137,7 @@ class RenderComponent extends Component {
 
     addToLayers() {
         const layers = this.system.app.scene.layers;
-        for (var i = 0; i < this._layers.length; i++) {
+        for (let i = 0; i < this._layers.length; i++) {
             const layer = layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addMeshInstances(this._meshInstances);
@@ -146,12 +146,10 @@ class RenderComponent extends Component {
     }
 
     removeFromLayers() {
-
         if (this._meshInstances && this._meshInstances.length) {
-
-            var layer, layers = this.system.app.scene.layers;
-            for (var i = 0; i < this._layers.length; i++) {
-                layer = layers.getLayerById(this._layers[i]);
+            const layers = this.system.app.scene.layers;
+            for (let i = 0; i < this._layers.length; i++) {
+                const layer = layers.getLayerById(this._layers[i]);
                 if (layer) {
                     layer.removeMeshInstances(this._meshInstances);
                 }
@@ -188,20 +186,20 @@ class RenderComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances(this._meshInstances);
     }
 
     onLayerRemoved(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances(this._meshInstances);
     }
 
     onEnable() {
-        var app = this.system.app;
-        var scene = app.scene;
+        const app = this.system.app;
+        const scene = app.scene;
 
         this._rootBone.onParentComponentEnable();
 
@@ -213,7 +211,7 @@ class RenderComponent extends Component {
             scene.layers.on("remove", this.onLayerRemoved, this);
         }
 
-        var isAsset = (this._type === 'asset');
+        const isAsset = (this._type === 'asset');
         if (this._meshInstances && this._meshInstances.length) {
             this.addToLayers();
         } else if (isAsset && this.asset) {
@@ -221,7 +219,7 @@ class RenderComponent extends Component {
         }
 
         // load materials
-        for (var i = 0; i < this._materialReferences.length; i++) {
+        for (let i = 0; i < this._materialReferences.length; i++) {
             if (this._materialReferences[i].asset) {
                 this.system.app.assets.load(this._materialReferences[i].asset);
             }
@@ -233,8 +231,8 @@ class RenderComponent extends Component {
     }
 
     onDisable() {
-        var app = this.system.app;
-        var scene = app.scene;
+        const app = this.system.app;
+        const scene = app.scene;
 
         scene.off("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
@@ -259,7 +257,7 @@ class RenderComponent extends Component {
      */
     hide() {
         if (this._meshInstances) {
-            for (var i = 0; i < this._meshInstances.length; i++) {
+            for (let i = 0; i < this._meshInstances.length; i++) {
                 this._meshInstances[i].visible = false;
             }
         }
@@ -273,7 +271,7 @@ class RenderComponent extends Component {
      */
     show() {
         if (this._meshInstances) {
-            for (var i = 0; i < this._meshInstances.length; i++) {
+            for (let i = 0; i < this._meshInstances.length; i++) {
                 this._meshInstances[i].visible = true;
             }
         }
@@ -295,7 +293,7 @@ class RenderComponent extends Component {
         this.destroyMeshInstances();
 
         if (this._assetReference.asset) {
-            var render = this._assetReference.asset.resource;
+            const render = this._assetReference.asset.resource;
             render.off('set:meshes', this._onSetMeshes, this);
             render.on('set:meshes', this._onSetMeshes, this);
             if (render.meshes) {
@@ -310,7 +308,7 @@ class RenderComponent extends Component {
 
     _clearSkinInstances() {
 
-        for (var i = 0; i < this._meshInstances.length; i++) {
+        for (let i = 0; i < this._meshInstances.length; i++) {
             const meshInstance = this._meshInstances[i];
 
             // remove it from the cache
@@ -340,14 +338,14 @@ class RenderComponent extends Component {
         if (meshes && meshes.length) {
 
             // cloned mesh instances
-            var meshInstances = [];
+            const meshInstances = [];
 
-            for (var i = 0; i < meshes.length; i++) {
+            for (let i = 0; i < meshes.length; i++) {
 
                 // mesh instance
-                var mesh = meshes[i];
-                var material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
-                var meshInst = new MeshInstance(mesh, material || this.system.defaultMaterial, this.entity);
+                const mesh = meshes[i];
+                const material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
+                const meshInst = new MeshInstance(mesh, material || this.system.defaultMaterial, this.entity);
                 meshInstances.push(meshInst);
 
                 // morph instance
@@ -426,9 +424,9 @@ class RenderComponent extends Component {
         this._customAabb = value;
 
         // set it on meshInstances
-        var mi = this._meshInstances;
+        const mi = this._meshInstances;
         if (mi) {
-            for (var i = 0; i < mi.length; i++) {
+            for (let i = 0; i < mi.length; i++) {
                 mi[i].setCustomAabb(this._customAabb);
             }
         }
@@ -447,14 +445,14 @@ class RenderComponent extends Component {
             this.destroyMeshInstances();
 
             if (value !== 'asset') {
-                var material = this._material;
+                let material = this._material;
                 if (!material || material === this.system.defaultMaterial) {
                     material = this._materialReferences[0] &&
                                 this._materialReferences[0].asset &&
                                 this._materialReferences[0].asset.resource;
                 }
 
-                var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
+                const primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
                 this.meshInstances = [new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)];
             }
@@ -474,7 +472,7 @@ class RenderComponent extends Component {
         if (this._meshInstances) {
 
             const mi = this._meshInstances;
-            for (var i = 0; i < mi.length; i++) {
+            for (let i = 0; i < mi.length; i++) {
 
                 // if mesh instance was created without a node, assign it here
                 if (!mi[i].node) {
@@ -503,9 +501,9 @@ class RenderComponent extends Component {
         if (value !== this._lightmapped) {
             this._lightmapped = value;
 
-            var mi = this._meshInstances;
+            const mi = this._meshInstances;
             if (mi) {
-                for (var i = 0; i < mi.length; i++) {
+                for (let i = 0; i < mi.length; i++) {
                     mi[i].setLightmapped(value);
                 }
             }
@@ -519,27 +517,27 @@ class RenderComponent extends Component {
     set castShadows(value) {
         if (this._castShadows !== value) {
 
-            var i, layer, mi = this._meshInstances;
+            const mi = this._meshInstances;
 
             if (mi) {
-                var layers = this.layers;
-                var scene = this.system.app.scene;
+                const layers = this.layers;
+                const scene = this.system.app.scene;
                 if (this._castShadows && !value) {
-                    for (i = 0; i < layers.length; i++) {
-                        layer = scene.layers.getLayerById(this.layers[i]);
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(this.layers[i]);
                         if (layer) {
                             layer.removeShadowCasters(mi);
                         }
                     }
                 }
 
-                for (i = 0; i < mi.length; i++) {
+                for (let i = 0; i < mi.length; i++) {
                     mi[i].castShadow = value;
                 }
 
                 if (!this._castShadows && value) {
-                    for (i = 0; i < layers.length; i++) {
-                        layer = scene.layers.getLayerById(layers[i]);
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
                         if (layer) {
                             layer.addShadowCasters(mi);
                         }
@@ -560,9 +558,9 @@ class RenderComponent extends Component {
 
             this._receiveShadows = value;
 
-            var mi = this._meshInstances;
+            const mi = this._meshInstances;
             if (mi) {
-                for (var i = 0; i < mi.length; i++) {
+                for (let i = 0; i < mi.length; i++) {
                     mi[i].receiveShadow = value;
                 }
             }
@@ -593,9 +591,9 @@ class RenderComponent extends Component {
         if (this._isStatic !== value) {
             this._isStatic = value;
 
-            var mi = this._meshInstances;
+            const mi = this._meshInstances;
             if (mi) {
-                for (var i = 0; i < mi.length; i++) {
+                for (let i = 0; i < mi.length; i++) {
                     mi[i].isStatic = value;
                 }
             }
@@ -607,12 +605,12 @@ class RenderComponent extends Component {
     }
 
     set layers(value) {
-
-        var i, layer, layers = this.system.app.scene.layers;
+        const layers = this.system.app.scene.layers;
+        let layer;
 
         if (this._meshInstances) {
             // remove all meshinstances from old layers
-            for (i = 0; i < this._layers.length; i++) {
+            for (let i = 0; i < this._layers.length; i++) {
                 layer = layers.getLayerById(this._layers[i]);
                 if (layer) {
                     layer.removeMeshInstances(this._meshInstances);
@@ -622,7 +620,7 @@ class RenderComponent extends Component {
 
         // set the layer list
         this._layers.length = 0;
-        for (i = 0; i < value.length; i++) {
+        for (let i = 0; i < value.length; i++) {
             this._layers[i] = value[i];
         }
 
@@ -630,7 +628,7 @@ class RenderComponent extends Component {
         if (!this.enabled || !this.entity.enabled || !this._meshInstances) return;
 
         // add all mesh instances to new layers
-        for (i = 0; i < this._layers.length; i++) {
+        for (let i = 0; i < this._layers.length; i++) {
             layer = layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addMeshInstances(this._meshInstances);
@@ -645,7 +643,7 @@ class RenderComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId !== value) {
 
-            var batcher = this.system.app.batcher;
+            const batcher = this.system.app.batcher;
             if (this.entity.enabled && this._batchGroupId >= 0) {
                 batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
             }
@@ -671,7 +669,7 @@ class RenderComponent extends Component {
             this._material = value;
 
             if (this._meshInstances && this._type !== 'asset') {
-                for (var i = 0; i < this._meshInstances.length; i++) {
+                for (let i = 0; i < this._meshInstances.length; i++) {
                     this._meshInstances[i].material = value;
                 }
             }
@@ -684,17 +682,15 @@ class RenderComponent extends Component {
         });
     }
 
-    set materialAssets(value) {
-        var i;
-        value = value || [];
+    set materialAssets(value = []) {
         if (this._materialReferences.length > value.length) {
-            for (i = value.length; i < this._materialReferences.length; i++) {
+            for (let i = value.length; i < this._materialReferences.length; i++) {
                 this._materialReferences[i].id = null;
             }
             this._materialReferences.length = value.length;
         }
 
-        for (i = 0; i < value.length; i++) {
+        for (let i = 0; i < value.length; i++) {
             if (!this._materialReferences[i]) {
                 this._materialReferences.push(
                     new AssetReference(
@@ -712,7 +708,7 @@ class RenderComponent extends Component {
             }
 
             if (value[i]) {
-                var id = value[i] instanceof Asset ? value[i].id : value[i];
+                const id = value[i] instanceof Asset ? value[i].id : value[i];
                 if (this._materialReferences[i].id !== id) {
                     this._materialReferences[i].id = id;
                 }
@@ -735,7 +731,7 @@ class RenderComponent extends Component {
     }
 
     set asset(value) {
-        var id = (value instanceof Asset ? value.id : value);
+        const id = (value instanceof Asset ? value.id : value);
         if (this._assetReference.id === id) return;
 
         if (this._assetReference.asset && this._assetReference.asset.resource) {

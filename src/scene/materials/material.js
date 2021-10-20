@@ -13,7 +13,7 @@ import {
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
 
-var id = 0;
+let id = 0;
 
 /**
  * @class
@@ -184,7 +184,7 @@ class Material {
     }
 
     set blendType(type) {
-        var prevBlend = this.blend;
+        const prevBlend = this.blend;
         switch (type) {
             case BLEND_NONE:
                 this.blend = false;
@@ -297,14 +297,14 @@ class Material {
     }
 
     clone() {
-        var clone = new Material();
+        const clone = new Material();
         this._cloneInternal(clone);
         return clone;
     }
 
     _updateMeshInstanceKeys() {
-        var i, meshInstances = this.meshInstances;
-        for (i = 0; i < meshInstances.length; i++) {
+        const meshInstances = this.meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
             meshInstances[i].updateKey();
         }
     }
@@ -336,12 +336,10 @@ class Material {
     }
 
     clearVariants() {
-        var meshInstance;
         this.variants = {};
-        var j;
-        for (var i = 0; i < this.meshInstances.length; i++) {
-            meshInstance = this.meshInstances[i];
-            for (j = 0; j < meshInstance._shader.length; j++) {
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            const meshInstance = this.meshInstances[i];
+            for (let j = 0; j < meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
         }
@@ -368,9 +366,9 @@ class Material {
     setParameter(name, data) {
 
         if (data === undefined && typeof name === 'object') {
-            var uniformObject = name;
+            const uniformObject = name;
             if (uniformObject.length) {
-                for (var i = 0; i < uniformObject.length; i++) {
+                for (let i = 0; i < uniformObject.length; i++) {
                     this.setParameter(uniformObject[i]);
                 }
                 return;
@@ -379,7 +377,7 @@ class Material {
             data = uniformObject.value;
         }
 
-        var param = this.parameters[name];
+        const param = this.parameters[name];
         if (param) {
             param.data = data;
         } else {
@@ -405,10 +403,10 @@ class Material {
     // used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
     // optional list of parameter names to be set can be specified, otherwise all parameters are set
     setParameters(device, names) {
-        var parameter, parameters = this.parameters;
+        const parameters = this.parameters;
         if (names === undefined) names = parameters;
-        for (var paramName in names) {
-            parameter = parameters[paramName];
+        for (const paramName in names) {
+            const parameter = parameters[paramName];
             if (parameter) {
                 if (!parameter.scopeId) {
                     parameter.scopeId = device.scope.resolve(paramName);

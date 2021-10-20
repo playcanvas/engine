@@ -1,5 +1,6 @@
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
+import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
 
 /**
@@ -10,12 +11,15 @@ import { AnimTransition } from '../../../anim/controller/anim-transition.js';
  * @param {string} name - The name of the layer.
  * @param {object} controller - The controller to manage this layers animations.
  * @param {AnimComponent} component - The component that this layer is a member of.
+ * @param {number} weight - The weight of this layer. Defaults to 1.
  */
 class AnimComponentLayer {
-    constructor(name, controller, component) {
+    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;
         this._component = component;
+        this._weight = weight;
+        this._blendType = blendType;
     }
 
     /**
@@ -61,6 +65,27 @@ class AnimComponentLayer {
 
     /**
      * @function
+     * @name AnimComponentLayer#assignMask
+     * @description Add a mask to this layer.
+     * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask in the layer will be removed.
+     * @example
+     * entity.anim.baseLayer.assignMask({
+     *     // include the spine of the current model and all of it's children
+     *     "path/to/spine": {
+     *         children: true
+     *     },
+     *     // include the hip of the current model but not all of it's children
+     *     "path/to/hip": true
+     * });
+     */
+    assignMask(mask) {
+        if (this._controller.assignMask(mask)) {
+            this._component.rebind();
+        }
+    }
+
+    /**
+     * @function
      * @name AnimComponentLayer#assignAnimation
      * @description Assigns an animation track to a state in the current graph. If a state for the given nodeName doesn't exist, it will be created. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the node that this animation should be associated with.
@@ -76,6 +101,12 @@ class AnimComponentLayer {
             return;
         }
         this._controller.assignAnimation(nodeName, animTrack, speed, loop);
+        if (this._controller._transitions.length === 0) {
+            this._controller._transitions.push(new AnimTransition({
+                from: 'START',
+                to: nodeName
+            }));
+        }
         if (this._component.activate && this._component.playable) {
             this._component.playing = true;
         }
@@ -227,6 +258,31 @@ class AnimComponentLayer {
      */
     get states() {
         return this._controller.states;
+    }
+
+    /**
+     * @name AnimComponentLayer#weight
+     * @type {number}
+     * @description The blending weight of this layer. Used when calculating the value of properties that are animated by more than one layer.
+     */
+    get weight() {
+        return this._weight;
+    }
+
+    set weight(value) {
+        this._weight = value;
+        this._component.dirtifyTargets();
+    }
+
+    get blendType() {
+        return this._blendType;
+    }
+
+    set blendType(value) {
+        if (value !== this._blendType) {
+            this._blendType = value;
+            this._component.rebind();
+        }
     }
 }
 

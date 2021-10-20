@@ -100,9 +100,9 @@ class LayoutGroupComponent extends Component {
         this._listenForReflowEvents(this.entity, 'on');
 
         // Listen to existing children being resized
-        this.entity.children.forEach(function (child) {
+        this.entity.children.forEach((child) => {
             this._listenForReflowEvents(child, 'on');
-        }.bind(this));
+        });
 
         // Listen to newly added children being resized
         this.entity.on('childinsert', this._onChildInsert, this);
@@ -209,9 +209,9 @@ class LayoutGroupComponent extends Component {
 
         this._listenForReflowEvents(this.entity, 'off');
 
-        this.entity.children.forEach(function (child) {
+        this.entity.children.forEach((child) => {
             this._listenForReflowEvents(child, 'off');
-        }.bind(this));
+        });
 
         this.system.app.systems.element.off('add', this._onElementOrLayoutComponentAdd, this);
         this.system.app.systems.element.off('beforeremove', this._onElementOrLayoutComponentRemove, this);
