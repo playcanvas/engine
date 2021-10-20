@@ -277,6 +277,13 @@ class AnimComponentLayer {
     get blendType() {
         return this._blendType;
     }
+
+    set blendType(value) {
+        if (value !== this._blendType) {
+            this._blendType = value;
+            this._component.rebind();
+        }
+    }
 }
 
 export { AnimComponentLayer };
