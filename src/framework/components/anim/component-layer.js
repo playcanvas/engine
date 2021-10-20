@@ -63,8 +63,25 @@ class AnimComponentLayer {
         this._controller.update(dt);
     }
 
+    /**
+     * @function
+     * @name AnimComponentLayer#assignMask
+     * @description Add a mask to this layer.
+     * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask in the layer will be removed.
+     * @example
+     * entity.anim.baseLayer.assignMask({
+     *     // include the spine of the current model and all of it's children
+     *     "path/to/spine": {
+     *         children: true
+     *     },
+     *     // include the hip of the current model but not all of it's children
+     *     "path/to/hip": true
+     * });
+     */
     assignMask(mask) {
-        this._controller.assignMask(mask);
+        if (this._controller.assignMask(mask)) {
+            this._component.rebind();
+        }
     }
 
     /**
@@ -84,6 +101,12 @@ class AnimComponentLayer {
             return;
         }
         this._controller.assignAnimation(nodeName, animTrack, speed, loop);
+        if (this._controller._transitions.length === 0) {
+            this._controller._transitions.push(new AnimTransition({
+                from: 'START',
+                to: nodeName
+            }));
+        }
         if (this._component.activate && this._component.playable) {
             this._component.playing = true;
         }
@@ -253,6 +276,13 @@ class AnimComponentLayer {
 
     get blendType() {
         return this._blendType;
+    }
+
+    set blendType(value) {
+        if (value !== this._blendType) {
+            this._blendType = value;
+            this._component.rebind();
+        }
     }
 }
 

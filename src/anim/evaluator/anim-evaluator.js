@@ -267,7 +267,7 @@ class AnimEvaluator {
     }
 
     assignMask(mask) {
-        this._binder.assignMask(mask);
+        return this._binder.assignMask(mask);
     }
 
     /**
@@ -348,10 +348,10 @@ class AnimEvaluator {
                     if (animTarget.counter === animTarget.layerCounter) {
                         animTarget.counter = 0;
                     }
-                    // if this anim layer is in the mask, add this layers value onto the target value
-                    if (animTarget.mask[binder.layerIndex]) {
-                        animTarget.updateValue(binder.layerIndex, target.value);
-                    }
+
+                    // Add this layers value onto the target value
+                    animTarget.updateValue(binder.layerIndex, target.value);
+
                     // get the updated value from the target which has been weighted and normalised using the layer mask and weights
                     targetValue[0] = animTarget.value.x;
                     targetValue[1] = animTarget.value.y;

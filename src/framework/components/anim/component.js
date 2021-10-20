@@ -231,14 +231,15 @@ class AnimComponent extends Component {
         }
     }
 
-    _addLayer({ name, states, transitions, order, weight, mask, blendType }) {
+    _addLayer({ name, states, transitions, weight, mask, blendType }) {
         let graph;
         if (this.rootBone) {
             graph = this.rootBone;
         } else {
             graph = this.entity;
         }
-        const animBinder = new AnimComponentBinder(this, graph, name, mask, order);
+        const layerIndex = this._layers.length;
+        const animBinder = new AnimComponentBinder(this, graph, name, mask, layerIndex);
         const animEvaluator = new AnimEvaluator(animBinder);
         const controller = new AnimController(
             animEvaluator,
@@ -250,7 +251,8 @@ class AnimComponent extends Component {
             this._consumedTriggers
         );
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
-        this._layerIndices[name] = order;
+        this._layerIndices[name] = layerIndex;
+        return this._layers[layerIndex];
     }
 
     /**
@@ -272,7 +274,7 @@ class AnimComponent extends Component {
             }
         ];
         const transitions = [];
-        this._addLayer({ name, states, transitions, order: this._layers.length, weight, mask, blendType });
+        return this._addLayer({ name, states, transitions, weight, mask, blendType });
     }
 
     /**
@@ -323,7 +325,7 @@ class AnimComponent extends Component {
 
         for (let i = 0; i < stateGraph.layers.length; i++) {
             const layer = stateGraph.layers[i];
-            this._addLayer.bind(this)({ ...layer, order: i });
+            this._addLayer.bind(this)({ ...layer });
         }
         this.setupAnimationAssets();
     }
