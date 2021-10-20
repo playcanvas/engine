@@ -130,11 +130,8 @@ class ModelComponent extends Component {
     }
 
     onRemove() {
-        if (this.type === 'asset') {
-            this.asset = null;
-        } else {
-            this.model = null;
-        }
+        this.asset = null;
+        this.model = null;
         this.materialAsset = null;
         this._unsetMaterialEvents();
 

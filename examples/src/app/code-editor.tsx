@@ -11,7 +11,9 @@ import { File } from './helpers/types';
 
 const FILE_TYPE_LANGUAGES: any = {
     'json': 'json',
-    'shader': null
+    'shader': null,
+    'javascript': 'javascript',
+    'typescript': 'typescript'
 };
 
 
@@ -21,6 +23,7 @@ interface CodeEditorProps {
     files: Array<File>,
     setFiles: (value: Array<File>) => void,
     setLintErrors: (value: boolean) => void,
+    useTypescript: boolean
 }
 
 const CodeEditor = (props: CodeEditorProps) => {
@@ -40,10 +43,8 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     const onChange = (value: string) => {
         files[selectedFile].text = value;
-        if (selectedFile !== 0) {
-            props.setFiles(files);
-            props.setLintErrors(false);
-        }
+        props.setFiles(files);
+        props.setLintErrors(false);
     };
 
     const onValidate = (markers: Array<any>) => {
@@ -70,12 +71,17 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     useEffect(() => {
         const codePane = document.getElementById('codePane');
-        if (files.length > 1) {
+        if (files.length > 2) {
             codePane.classList.add('multiple-files');
         } else {
             codePane.classList.remove('multiple-files');
         }
-        if (!files[selectedFile]) setSelectedFile(0);
+        if (!files[selectedFile]) setSelectedFile(props.useTypescript ? 1 : 0);
+        if (props.useTypescript && selectedFile === 0) {
+            selectFile(1);
+        } else if (!props.useTypescript && selectedFile === 1) {
+            selectFile(0);
+        }
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
@@ -88,14 +94,15 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') !== 'false' ? 'collapsed' : null}>
         <div className='panel-toggle' id='codePane-panel-toggle'/>
-        { props.files && props.files.length > 1 && <Container class='tabs-container'>
+        { props.files && props.files.length > 2 && <Container class='tabs-container'>
             {props.files.map((file: File, index: number) => {
-                return <Button key={index} id={`code-editor-file-tab-${index}`} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : ''} onClick={() => selectFile(index)}/>;
+                const hidden = (props.useTypescript && index === 0 || !props.useTypescript && index === 1);
+                return <Button key={index} id={`code-editor-file-tab-${index}`} hidden={hidden} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : ''} onClick={() => selectFile(index)}/>;
             })}
         </Container>
         }
         <MonacoEditor
-            language={selectedFile === 0 ? "typescript" : FILE_TYPE_LANGUAGES[files[selectedFile]?.type]}
+            language={FILE_TYPE_LANGUAGES[files[selectedFile]?.type]}
             value={files[selectedFile]?.text}
             beforeMount={beforeMount}
             onMount={editorDidMount}

@@ -1,3 +1,7 @@
+// #if _DEBUG
+import { version, revision } from '../core/core.js';
+// #endif
+
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
@@ -394,6 +398,10 @@ let app = null;
 class Application extends EventHandler {
     constructor(canvas, options = {}) {
         super();
+
+        // #if _DEBUG
+        console.log("Powered by PlayCanvas " + version + " " + revision);
+        // #endif
 
         // Store application instance
         Application._applications[canvas.id] = this;

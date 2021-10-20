@@ -1,6 +1,5 @@
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
-import { Quat } from '../../math/quat.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Color } from '../../math/color.js';
 
@@ -9,16 +8,13 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32, SHADOW_COUNT,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    SORTKEY_DEPTH,
-    ASPECT_MANUAL
+    SORTKEY_DEPTH
 } from '../constants.js';
-import { Camera } from '../camera.js';
-import { GraphNode } from '../graph-node.js';
 import { LayerComposition } from '../composition/layer-composition.js';
+import { LightCamera } from './light-camera.js';
 
 import { FUNC_LESSEQUAL } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
@@ -27,16 +23,6 @@ import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { Frustum } from '../../shape/frustum.js';
-
-// camera rotation angles used when rendering cubemap faces
-const pointLightRotations = [
-    new Quat().setFromEulerAngles(0, 90, 180),
-    new Quat().setFromEulerAngles(0, -90, 180),
-    new Quat().setFromEulerAngles(90, 0, 0),
-    new Quat().setFromEulerAngles(-90, 0, 0),
-    new Quat().setFromEulerAngles(0, 180, 180),
-    new Quat().setFromEulerAngles(0, 0, 180)
-];
 
 const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),
@@ -154,28 +140,7 @@ class ShadowRenderer {
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(device, shadowType, type, face) {
 
-        const shadowCam = new Camera();
-        shadowCam.node = new GraphNode("ShadowCamera");
-        shadowCam.aspectRatio = 1;
-        shadowCam.aspectRatioMode = ASPECT_MANUAL;
-        shadowCam._scissorRectClear = true;
-
-        // set up constant settings based on light type
-        switch (type) {
-            case LIGHTTYPE_OMNI:
-                shadowCam.node.setRotation(pointLightRotations[face]);
-                shadowCam.fov = 90;
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                break;
-
-            case LIGHTTYPE_SPOT:
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                break;
-
-            case LIGHTTYPE_DIRECTIONAL:
-                shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
-                break;
-        }
+        const shadowCam = LightCamera.create("ShadowCamera", type, face);
 
         // don't clear the color buffer if rendering a depth map
         let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
@@ -305,6 +270,12 @@ class ShadowRenderer {
 
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
+
+            // assign render target
+            // Note: this is done during rendering for all shadow maps, but do it here for the case shadow rendering for the directional light
+            // is disabled - we need shadow map to be assigned for rendering to work even in this case. This needs further refactoring - as when
+            // shadow rendering is set to SHADOWUPDATE_NONE, we should not even execute shadow map culling
+            shadowCam.renderTarget = light._shadowMap.renderTargets[0];
 
             // viewport
             lightRenderData.shadowViewport.copy(light.cascades[cascade]);

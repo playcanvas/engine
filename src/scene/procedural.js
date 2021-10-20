@@ -7,7 +7,7 @@ import {
 } from '../graphics/constants.js';
 
 import { Mesh } from './mesh.js';
-
+import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 const primitiveUv1Padding = 4.0 / 64;
 const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
@@ -606,7 +606,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 function createCylinder(device, opts) {
     // #if _DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
-        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        DeprecatedLog.log('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     }
     // #endif
 

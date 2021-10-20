@@ -497,8 +497,16 @@ body {
     font-size: 20px;
 }
 
+#menu #language-button {
+    font-weight: 900;
+    width: 34px;
+}
+
 @media only screen and (max-width: 600px) {
     #menu #play-button {
+        display: none;
+    }
+    #menu #language-button {
         display: none;
     }
 }

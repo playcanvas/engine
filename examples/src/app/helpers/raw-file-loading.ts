@@ -1,4 +1,8 @@
 import { File } from './types';
+// @ts-ignore: library file import
+import * as Babel from '@babel/standalone';
+// @ts-ignore: library file import
+import beautify from 'js-beautify';
 
 export const playcanvasTypeDefs = (() => {
     // @ts-ignore: use of require context
@@ -78,12 +82,32 @@ export const examples = (() => {
                 })
                 .join('\n');
 
+
             const files: Array<File> = [
                 {
                     name: 'example.ts',
-                    text: functionText
+                    text: functionText,
+                    type: 'typescript'
                 }
             ];
+
+            functionText = functionText.split('\n')
+                .map((line: string) => {
+                    if (line.includes('@ts-ignore')) return '';
+                    return line + '\n';
+                })
+                .join('');
+
+            functionText = Babel.transform(functionText, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
+            functionText = beautify(functionText);
+
+            files.unshift(
+                {
+                    name: 'example.js',
+                    text: functionText,
+                    type: 'javascript'
+                }
+            );
             // @ts-ignore
             if (example.load) {
                 // @ts-ignore
