@@ -1431,6 +1431,12 @@ var standard = {
             usesCookie = true;
 
             code += chunks.floatUnpackingPS;
+
+            if (options.clusteredLightingCookiesEnabled)
+                code += "\n#define CLUSTER_COOKIES";
+            if (options.clusteredLightingShadowsEnabled)
+                code += "\n#define CLUSTER_SHADOWS";
+
             code += WorldClusters.shaderDefines;
             code += chunks.clusteredLightPS;
         }

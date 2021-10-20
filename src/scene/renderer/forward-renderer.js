@@ -1814,7 +1814,8 @@ class ForwardRenderer {
     }
 
     updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI]);
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI],
+                                      comp.clusteredLightingCookiesEnabled, comp.clusteredLightingShadowsEnabled);
     }
 
     updateClusters(comp) {
@@ -1875,13 +1876,17 @@ class ForwardRenderer {
             this.updateLightTextureAtlas(comp);
 
             // render cookies for all local visible lights (only handling spot lights)
-            this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
-            this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
+            if (comp.clusteredLightingCookiesEnabled) {
+                this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
+                this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
+            }
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        if (!LayerComposition.clusteredLightingEnabled || (LayerComposition.clusteredLightingEnabled && comp.clusteredLightingShadowsEnabled)) {
+            this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+            this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
+        }
 
         // update light clusters
         if (LayerComposition.clusteredLightingEnabled) {
