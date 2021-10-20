@@ -251,6 +251,7 @@ class AnimComponent extends Component {
         );
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = order;
+        return this._layers[order];
     }
 
     /**
@@ -272,7 +273,7 @@ class AnimComponent extends Component {
             }
         ];
         const transitions = [];
-        this._addLayer({ name, states, transitions, order: this._layers.length, weight, mask, blendType });
+        return this._addLayer({ name, states, transitions, order: this._layers.length, weight, mask, blendType });
     }
 
     /**
