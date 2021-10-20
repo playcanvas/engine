@@ -34,7 +34,7 @@ class SoundComponentSystem extends ComponentSystem  {
 
         this.manager = manager;
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
     }
@@ -132,6 +132,12 @@ class SoundComponentSystem extends ComponentSystem  {
         }
 
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 
     get volume() {

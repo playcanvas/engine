@@ -2,8 +2,6 @@ import { path } from '../core/path.js';
 
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
-import { ComponentSystem } from './components/system.js';
-
 import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**
@@ -272,8 +270,8 @@ class SceneRegistry {
                 self._app.root.addChild(entity);
 
                 // initialize components
-                ComponentSystem.initialize(entity);
-                ComponentSystem.postInitialize(entity);
+                self._app.systems.fire('initialize', entity);
+                self._app.systems.fire('postInitialize', entity);
 
                 if (callback) callback(err, entity);
             };

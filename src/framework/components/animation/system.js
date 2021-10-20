@@ -42,9 +42,7 @@ class AnimationComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('update', this.onUpdate, this);
-
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -158,6 +156,12 @@ class AnimationComponentSystem extends ComponentSystem {
                 }
             }
         }
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 
