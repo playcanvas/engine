@@ -77,6 +77,8 @@ class ElementComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
         this._defaultTexture.destroy();
     }
 

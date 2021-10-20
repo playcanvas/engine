@@ -49,8 +49,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
 
         this.initialized = false;
 
-        ComponentSystem.bind('initialize', this.onInitialize, this);
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('initialize', this.onInitialize, this);
+        this.app.systems.on('update', this.onUpdate, this);
 
         this.on('remove', this.onRemove, this);
     }
@@ -116,6 +116,13 @@ class AudioSourceComponentSystem extends ComponentSystem {
      */
     setVolume(volume) {
         this.manager.setVolume(volume);
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('initialize', this.onInitialize, this);
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

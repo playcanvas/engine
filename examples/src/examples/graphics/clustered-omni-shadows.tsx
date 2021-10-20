@@ -42,6 +42,15 @@ class ClusteredShadowsOmniExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.layers.clusteredLightingMaxLights = 80;
 
+        // enable clustered shadows (it's enabled by default as well)
+        // @ts-ignore engine-tsd
+        app.scene.layers.clusteredLightingShadowsEnabled = true;
+
+        // enable clustered cookies (it's enabled by default as well)
+        // @ts-ignore engine-tsd
+        app.scene.layers.clusteredLightingCookiesEnabled = true;
+
+
         // helper function to create a 3d primitive including its material
         function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
 

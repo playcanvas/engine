@@ -35,7 +35,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         this.on('beforeremove', this._onRemoveComponent, this);
 
         // Perform reflow when running in the engine
-        ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
+        this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -147,6 +147,12 @@ class LayoutGroupComponentSystem extends ComponentSystem {
 
     _onRemoveComponent(entity, component) {
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
 

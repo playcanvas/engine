@@ -348,6 +348,7 @@ class AnimEvaluator {
                     if (animTarget.counter === animTarget.layerCounter) {
                         animTarget.counter = 0;
                     }
+
                     // Add this layers value onto the target value
                     animTarget.updateValue(binder.layerIndex, target.value);
 
