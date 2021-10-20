@@ -316,8 +316,8 @@ class Http {
      * @returns {XMLHttpRequest} The request object.
      */
     request(method, url, options, callback) {
-        var uri, query, timestamp, postdata, xhr;
-        var errored = false;
+        let uri, query, postdata;
+        let errored = false;
 
         if (typeof options === "function") {
             callback = options;
@@ -354,7 +354,7 @@ class Http {
                 postdata = options.postdata;
             } else if (options.postdata instanceof Object) {
                 // Now to work out how to encode the post data based on the headers
-                var contentType = options.headers["Content-Type"];
+                let contentType = options.headers["Content-Type"];
 
                 // If there is no type then default to form-encoded
                 if (contentType === undefined) {
@@ -362,13 +362,13 @@ class Http {
                     contentType = options.headers["Content-Type"];
                 }
                 switch (contentType) {
-                    case Http.ContentType.FORM_URLENCODED:
+                    case Http.ContentType.FORM_URLENCODED: {
                         // Normal URL encoded form data
                         postdata = "";
-                        var bFirstItem = true;
+                        let bFirstItem = true;
 
                         // Loop round each entry in the map and encode them into the post data
-                        for (var key in options.postdata) {
+                        for (const key in options.postdata) {
                             if (options.postdata.hasOwnProperty(key)) {
                                 if (bFirstItem) {
                                     bFirstItem = false;
@@ -379,6 +379,7 @@ class Http {
                             }
                         }
                         break;
+                    }
                     default:
                     case Http.ContentType.JSON:
                         if (contentType == null) {
@@ -394,7 +395,7 @@ class Http {
 
         if (options.cache === false) {
             // Add timestamp to url to prevent browser caching file
-            timestamp = now();
+            const timestamp = now();
 
             uri = new URI(url);
             if (!uri.query) {
@@ -412,26 +413,26 @@ class Http {
             url = uri.toString();
         }
 
-        xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open(method, url, options.async);
         xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : false;
         xhr.responseType = options.responseType || this._guessResponseType(url);
 
         // Set the http headers
-        for (var header in options.headers) {
+        for (const header in options.headers) {
             if (options.headers.hasOwnProperty(header)) {
                 xhr.setRequestHeader(header, options.headers[header]);
             }
         }
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = () => {
             this._onReadyStateChange(method, url, options, xhr);
-        }.bind(this);
+        };
 
-        xhr.onerror = function () {
+        xhr.onerror = () => {
             this._onError(method, url, options, xhr);
             errored = true;
-        }.bind(this);
+        };
 
         try {
             xhr.send(postdata);
@@ -448,8 +449,8 @@ class Http {
     }
 
     _guessResponseType(url) {
-        var uri = new URI(url);
-        var ext = path.getExtension(uri.path);
+        const uri = new URI(url);
+        const ext = path.getExtension(uri.path);
 
         if (Http.binaryExtensions.indexOf(ext) >= 0) {
             return Http.ResponseType.ARRAY_BUFFER;
@@ -463,7 +464,7 @@ class Http {
     }
 
     _isBinaryContentType(contentType) {
-        var binTypes = [
+        const binTypes = [
             Http.ContentType.MP4,
             Http.ContentType.WAV,
             Http.ContentType.OGG,
@@ -513,14 +514,12 @@ class Http {
     }
 
     _onSuccess(method, url, options, xhr) {
-        var response;
-        var header;
-        var contentType;
-        var parts;
-        header = xhr.getResponseHeader("Content-Type");
+        let response;
+        let contentType;
+        const header = xhr.getResponseHeader("Content-Type");
         if (header) {
             // Split up header into content type and parameter
-            parts = header.split(";");
+            const parts = header.split(";");
             contentType = parts[0].trim();
         }
         try {
@@ -567,13 +566,13 @@ class Http {
         if (options.retry && options.retries < options.maxRetries) {
             options.retries++;
             options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
-            var retryDelay = math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
+            const retryDelay = math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
             console.log(method + ': ' + url + ' - Error ' + xhr.status + '. Retrying in ' + retryDelay + ' ms');
 
-            setTimeout(function () {
+            setTimeout(() => {
                 options.retrying = false;
                 this.request(method, url, options, options.callback);
-            }.bind(this), retryDelay);
+            }, retryDelay);
         } else {
             // no more retries or not retry so just fail
             options.callback(xhr.status === 0 ? 'Network error' : xhr.status, null);

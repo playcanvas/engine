@@ -400,7 +400,7 @@ class Application extends EventHandler {
         super();
 
         // #if _DEBUG
-        console.log("Powered by PlayCanvas " + version + " " + revision);
+        console.log(`Powered by PlayCanvas ${version} ${revision}`);
         // #endif
 
         // Store application instance
@@ -703,8 +703,7 @@ class Application extends EventHandler {
      * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
-        const self = this;
-        http.get(url, function (err, response) {
+        http.get(url, (err, response) => {
             if (err) {
                 callback(err);
                 return;
@@ -714,9 +713,9 @@ class Application extends EventHandler {
             const scenes = response.scenes;
             const assets = response.assets;
 
-            self._parseApplicationProperties(props, function (err) {
-                self._parseScenes(scenes);
-                self._parseAssets(assets);
+            this._parseApplicationProperties(props, (err) => {
+                this._parseScenes(scenes);
+                this._parseAssets(assets);
                 if (!err) {
                     callback(null);
                 } else {
@@ -733,53 +732,48 @@ class Application extends EventHandler {
      * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
      */
     preload(callback) {
-        const self = this;
-
-        self.fire("preload:start");
+        this.fire("preload:start");
 
         // get list of assets to preload
         const assets = this.assets.list({
             preload: true
         });
 
-        const _assets = new Progress(assets.length);
+        const progress = new Progress(assets.length);
 
         let _done = false;
 
         // check if all loading is done
-        const done = function () {
+        const done = () => {
             // do not proceed if application destroyed
-            if (!self.graphicsDevice) {
+            if (!this.graphicsDevice) {
                 return;
             }
 
-            if (!_done && _assets.done()) {
+            if (!_done && progress.done()) {
                 _done = true;
-                self.fire("preload:end");
+                this.fire("preload:end");
                 callback();
             }
         };
 
         // totals loading progress of assets
         const total = assets.length;
-        const count = function () {
-            return _assets.count;
-        };
 
-        if (_assets.length) {
-            const onAssetLoad = function (asset) {
-                _assets.inc();
-                self.fire('preload:progress', count() / total);
+        if (progress.length) {
+            const onAssetLoad = (asset) => {
+                progress.inc();
+                this.fire('preload:progress', progress.count / total);
 
-                if (_assets.done())
+                if (progress.done())
                     done();
             };
 
-            const onAssetError = function (err, asset) {
-                _assets.inc();
-                self.fire('preload:progress', count() / total);
+            const onAssetError = (err, asset) => {
+                progress.inc();
+                this.fire('preload:progress', progress.count / total);
 
-                if (_assets.done())
+                if (progress.done())
                     done();
             };
 
@@ -791,10 +785,10 @@ class Application extends EventHandler {
 
                     this.assets.load(assets[i]);
                 } else {
-                    _assets.inc();
-                    self.fire("preload:progress", count() / total);
+                    progress.inc();
+                    this.fire("preload:progress", progress.count / total);
 
-                    if (_assets.done())
+                    if (progress.done())
                         done();
                 }
             }
@@ -809,39 +803,36 @@ class Application extends EventHandler {
             return;
         }
 
-        const self = this;
-
-        self.systems.script.preloading = true;
+        this.systems.script.preloading = true;
 
         const scripts = this._getScriptReferences(sceneData);
 
         const l = scripts.length;
         const progress = new Progress(l);
-        let scriptUrl;
         const regex = /^http(s)?:\/\//;
 
         if (l) {
-            const onLoad = function (err, ScriptType) {
+            const onLoad = (err, ScriptType) => {
                 if (err)
                     console.error(err);
 
                 progress.inc();
                 if (progress.done()) {
-                    self.systems.script.preloading = false;
+                    this.systems.script.preloading = false;
                     callback();
                 }
             };
 
             for (let i = 0; i < l; i++) {
-                scriptUrl = scripts[i];
+                let scriptUrl = scripts[i];
                 // support absolute URLs (for now)
-                if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
+                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
                     scriptUrl = path.join(self._scriptPrefix, scripts[i]);
 
                 this.loader.load(scriptUrl, 'script', onLoad);
             }
         } else {
-            self.systems.script.preloading = false;
+            this.systems.script.preloading = false;
             callback();
         }
     }
@@ -934,17 +925,16 @@ class Application extends EventHandler {
     _loadLibraries(urls, callback) {
         const len = urls.length;
         let count = len;
-        const self = this;
 
         const regex = /^http(s)?:\/\//;
 
         if (len) {
-            const onLoad = function (err, script) {
+            const onLoad = (err, script) => {
                 count--;
                 if (err) {
                     callback(err);
                 } else if (count === 0) {
-                    self.onLibrariesLoaded();
+                    this.onLibrariesLoaded();
                     callback(null);
                 }
             };
@@ -952,13 +942,13 @@ class Application extends EventHandler {
             for (let i = 0; i < len; ++i) {
                 let url = urls[i];
 
-                if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
-                    url = path.join(self._scriptPrefix, url);
+                if (!regex.test(url.toLowerCase()) && this._scriptPrefix)
+                    url = path.join(this._scriptPrefix, url);
 
                 this.loader.load(url, 'script', onLoad);
             }
         } else {
-            self.onLibrariesLoaded();
+            this.onLibrariesLoaded();
             callback(null);
         }
     }
@@ -1543,7 +1533,7 @@ class Application extends EventHandler {
     setAreaLightLuts(asset) {
         if (asset) {
             const device = this.graphicsDevice;
-            asset.ready(function (asset) {
+            asset.ready((asset) => {
                 AreaLightLuts.set(device, asset.resource);
             });
             this.assets.load(asset);

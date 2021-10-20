@@ -20,7 +20,7 @@ const maxTextureSize = 4096;    // maximum texture size allowed to work on all d
 const TextureIndex8 = {
 
     // always 8bit texture data, regardless of float texture support
-    FLAGS: 0,                   // lightType, lightShape, follofMode, castShadows
+    FLAGS: 0,                   // lightType, lightShape, fallofMode, castShadows
     COLOR_A: 1,                 // color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
     COLOR_B: 2,                 // color.b, color.b, useCookie, -
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
@@ -125,7 +125,7 @@ class WorldClusters {
         `;
     }
 
-    // converts object with properies to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
+    // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
     static buildShaderDefines(object, prefix) {
         let str = "";
         Object.keys(object).forEach((key) => {
@@ -170,7 +170,7 @@ class WorldClusters {
         // internal list of lights (of type ClusterLight)
         this._usedLights = [];
 
-        // light 0 is always reserverd for 'no light' index
+        // light 0 is always reserved for 'no light' index
         this._usedLights.push(new ClusterLight());
 
         // register shader uniforms

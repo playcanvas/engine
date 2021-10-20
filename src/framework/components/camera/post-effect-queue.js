@@ -27,8 +27,6 @@ class PostEffect {
  */
 class PostEffectQueue {
     constructor(app, camera) {
-        var self = this;
-
         this.app = app;
         this.camera = camera;
 
@@ -50,19 +48,19 @@ class PostEffectQueue {
         this.resizeTimeout = null;
         this.resizeLast = 0;
 
-        this._resizeTimeoutCallback = function () {
-            self.resizeRenderTargets();
+        this._resizeTimeoutCallback = () => {
+            this.resizeRenderTargets();
         };
 
         camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
     _allocateColorBuffer(format, name) {
-        var rect = this.camera.rect;
-        var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
-        var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
+        const rect = this.camera.rect;
+        const width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
+        const height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
-        var colorBuffer = new Texture(this.app.graphicsDevice, {
+        const colorBuffer = new Texture(this.app.graphicsDevice, {
             format: format,
             width: width,
             height: height,
@@ -88,14 +86,14 @@ class PostEffectQueue {
      */
     _createOffscreenTarget(useDepth, hdr) {
 
-        var device = this.app.graphicsDevice;
+        const device = this.app.graphicsDevice;
         const format = hdr ? device.getHdrFormat() : PIXELFORMAT_R8_G8_B8_A8;
         const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
 
-        var useStencil =  this.app.graphicsDevice.supportsStencil;
-        var samples = useDepth ? device.samples : 1;
+        const useStencil =  this.app.graphicsDevice.supportsStencil;
+        const samples = useDepth ? device.samples : 1;
 
         return new RenderTarget({
             colorBuffer: colorBuffer,
@@ -166,8 +164,8 @@ class PostEffectQueue {
     removeEffect(effect) {
 
         // find index of effect
-        var i, len, index = -1;
-        for (i = 0, len = this.effects.length; i < len; i++) {
+        let index = -1;
+        for (let i = 0, len = this.effects.length; i < len; i++) {
             if (this.effects[i].effect === effect) {
                 index = i;
                 break;
@@ -213,8 +211,8 @@ class PostEffectQueue {
     }
 
     _requestDepthMaps() {
-        for (var i = 0, len = this.effects.length; i < len; i++) {
-            var effect = this.effects[i].effect;
+        for (let i = 0, len = this.effects.length; i < len; i++) {
+            const effect = this.effects[i].effect;
             if (this._newPostEffect === effect)
                 continue;
 
@@ -225,8 +223,8 @@ class PostEffectQueue {
     }
 
     _releaseDepthMaps() {
-        for (var i = 0, len = this.effects.length; i < len; i++) {
-            var effect = this.effects[i].effect;
+        for (let i = 0, len = this.effects.length; i < len; i++) {
+            const effect = this.effects[i].effect;
             if (effect.needsDepthBuffer) {
                 this._releaseDepthMap();
             }
@@ -249,7 +247,7 @@ class PostEffectQueue {
      */
     destroy() {
         // release memory for all effects
-        for (var i = 0, len = this.effects.length; i < len; i++) {
+        for (let i = 0, len = this.effects.length; i < len; i++) {
             this.effects[i].inputTarget.destroy();
         }
 
@@ -267,7 +265,6 @@ class PostEffectQueue {
         if (!this.enabled && this.effects.length) {
             this.enabled = true;
 
-            var self = this;
             this._requestDepthMaps();
 
             this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
@@ -279,45 +276,45 @@ class PostEffectQueue {
             this.camera.renderTarget = this.effects[0].inputTarget;
 
             // callback when postprocessing takes place
-            this.camera.onPostprocessing = function (camera) {
+            this.camera.onPostprocessing = (camera) => {
 
-                if (self.enabled) {
-                    var rect = null;
-                    var len = self.effects.length;
+                if (this.enabled) {
+                    let rect = null;
+                    const len = this.effects.length;
                     if (len) {
 
                         // #if _DEBUG
-                        self.app.graphicsDevice.pushMarker("Postprocess");
+                        this.app.graphicsDevice.pushMarker("Postprocess");
                         // #endif
 
-                        for (var i = 0; i < len; i++) {
-                            var fx = self.effects[i];
+                        for (let i = 0; i < len; i++) {
+                            const fx = this.effects[i];
 
-                            var destTarget = fx.outputTarget;
+                            let destTarget = fx.outputTarget;
 
                             // last effect
                             if (i === len - 1) {
-                                rect = self.camera.rect;
+                                rect = this.camera.rect;
 
                                 // if camera originally rendered to a render target, render last effect to it
-                                if (self.destinationRenderTarget) {
-                                    destTarget = self.destinationRenderTarget;
+                                if (this.destinationRenderTarget) {
+                                    destTarget = this.destinationRenderTarget;
                                 }
                             }
 
                             // #if _DEBUG
-                            self.app.graphicsDevice.pushMarker(fx.name);
+                            this.app.graphicsDevice.pushMarker(fx.name);
                             // #endif
 
                             fx.effect.render(fx.inputTarget, destTarget, rect);
 
                             // #if _DEBUG
-                            self.app.graphicsDevice.popMarker();
+                            this.app.graphicsDevice.popMarker();
                             // #endif
                         }
 
                         // #if _DEBUG
-                        self.app.graphicsDevice.popMarker();
+                        this.app.graphicsDevice.popMarker();
                         // #endif
                     }
                 }
@@ -346,8 +343,8 @@ class PostEffectQueue {
     }
 
     _onCanvasResized(width, height) {
-        var rect = this.camera.rect;
-        var device = this.app.graphicsDevice;
+        const rect = this.camera.rect;
+        const device = this.app.graphicsDevice;
         this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
 
         // avoid resizing the render targets too often by using a timeout
@@ -373,14 +370,14 @@ class PostEffectQueue {
 
         this.resizeLast = now();
 
-        var rect = this.camera.rect;
-        var desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
-        var desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
+        const rect = this.camera.rect;
+        const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
+        const desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
-        var effects = this.effects;
+        const effects = this.effects;
 
-        for (var i = 0, len = effects.length; i < len; i++) {
-            var fx = effects[i];
+        for (let i = 0, len = effects.length; i < len; i++) {
+            const fx = effects[i];
             if (fx.inputTarget.width !== desiredWidth ||
                 fx.inputTarget.height !== desiredHeight)  {
                 this._resizeOffscreenTarget(fx.inputTarget);

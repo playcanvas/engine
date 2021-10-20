@@ -17,7 +17,7 @@ class Decompress {
     }
 
     run() {
-        var type = Object.prototype.toString.call(this._node);
+        const type = Object.prototype.toString.call(this._node);
 
         if (type === '[object Object]') {
             this._handleMap();
@@ -35,15 +35,15 @@ class Decompress {
     _handleMap() {
         this._result = {};
 
-        var a = Object.keys(this._node);
+        const a = Object.keys(this._node);
 
         a.forEach(this._handleKey, this);
     }
 
     _handleKey(origKey) {
-        var newKey = origKey;
+        let newKey = origKey;
 
-        var len = origKey.length;
+        const len = origKey.length;
 
         if (len === 1) {
             newKey = CompressUtils.oneCharToKey(origKey, this._data);
@@ -61,7 +61,7 @@ class Decompress {
     }
 
     _handleArElt(elt) {
-        var v = new Decompress(elt, this._data).run();
+        const v = new Decompress(elt, this._data).run();
 
         this._result.push(v);
     }

@@ -256,12 +256,12 @@ class ScriptAttributes {
                 return this.__attributes[name];
             },
             set: function (raw) {
-                var evt = 'attr';
-                var evtName = 'attr:' + name;
+                const evt = 'attr';
+                const evtName = 'attr:' + name;
 
-                var old = this.__attributes[name];
+                const old = this.__attributes[name];
                 // keep copy of old for the event below
-                var oldCopy = old;
+                let oldCopy = old;
                 // json types might have a 'clone' field in their
                 // schema so make sure it's not that
                 if (old && args.type !== 'json' && old.clone) {
@@ -276,9 +276,7 @@ class ScriptAttributes {
                 if (args.array) {
                     this.__attributes[name] = [];
                     if (raw) {
-                        var i;
-                        var len;
-                        for (i = 0, len = raw.length; i < len; i++) {
+                        for (let i = 0, len = raw.length; i < len; i++) {
                             this.__attributes[name].push(rawToValue(this.app, args, raw[i], old ? old[i] : null));
                         }
                     }

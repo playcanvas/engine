@@ -45,7 +45,7 @@ class BasicMaterial extends Material {
      * @returns {BasicMaterial} A cloned Basic material.
      */
     clone() {
-        var clone = new BasicMaterial();
+        const clone = new BasicMaterial();
 
         Material.prototype._cloneInternal.call(this, clone);
 
@@ -70,7 +70,7 @@ class BasicMaterial extends Material {
     }
 
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        var options = {
+        const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
             screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
             useInstancing: objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0,
@@ -82,7 +82,7 @@ class BasicMaterial extends Material {
             diffuseMap: !!this.colorMap,
             pass: pass
         };
-        var library = device.getProgramLibrary();
+        const library = device.getProgramLibrary();
         this.shader = library.getProgram('basic', options);
     }
 }

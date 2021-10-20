@@ -37,12 +37,12 @@ class LightComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, _data) {
-        var properties = _lightProps;
+        const properties = _lightProps;
 
         // duplicate because we're modifying the data
-        var data = {};
-        for (var i = 0, len = properties.length; i < len; i++) {
-            var property = properties[i];
+        const data = {};
+        for (let i = 0, len = properties.length; i < len; i++) {
+            const property = properties[i];
             data[property] = _data[property];
         }
 
@@ -73,7 +73,7 @@ class LightComponentSystem extends ComponentSystem {
             data.shape = LIGHTSHAPE_PUNCTUAL;
         }
 
-        var light = new Light(this.app.graphicsDevice);
+        const light = new Light(this.app.graphicsDevice);
         light.type = lightTypes[data.type];
         light._node = component.entity;
         light._scene = this.app.scene;
@@ -87,12 +87,12 @@ class LightComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var light = entity.light;
+        const light = entity.light;
 
-        var data = [];
-        var name;
-        var _props = _lightProps;
-        for (var i = 0; i < _props.length; i++) {
+        const data = [];
+        let name;
+        const _props = _lightProps;
+        for (let i = 0; i < _props.length; i++) {
             name = _props[i];
             if (name === "light") continue;
             if (light[name] && light[name].clone) {

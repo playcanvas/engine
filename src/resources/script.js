@@ -38,7 +38,7 @@ class ScriptHandler {
         const self = this;
         script.app = this._app;
 
-        this._loadScript(url.load, function (err, url, extra) {
+        this._loadScript(url.load, (err, url, extra) => {
             if (!err) {
                 if (script.legacy) {
                     let Type = null;
@@ -72,7 +72,7 @@ class ScriptHandler {
             } else {
                 callback(err);
             }
-        }.bind(this));
+        });
     }
 
     open(url, data) {
