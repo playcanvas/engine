@@ -5,7 +5,6 @@ class HierarchyExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Hierarchy';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the app and start the update loop

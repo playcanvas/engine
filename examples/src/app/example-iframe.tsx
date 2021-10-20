@@ -110,7 +110,8 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         }
         // strip the function closure
         script = script.substring(script.indexOf("\n") + 1);
-        script = script.substring(script.lastIndexOf("\n") + 1, -1);
+        script = script.substring(0, script.lastIndexOf("}"));
+
         // transform the code using babel
         let transformedScript = Babel.transform(script, { filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
         // strip the PlayCanvas app initialization

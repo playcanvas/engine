@@ -13,7 +13,6 @@ class FallingShapesExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { torus: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
             // Create the application and start the update loop

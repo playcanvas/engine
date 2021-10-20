@@ -5,7 +5,6 @@ class XRPickingExample extends Example {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');

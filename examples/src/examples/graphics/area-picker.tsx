@@ -14,7 +14,6 @@ class AreaPickerExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { bloom : pc.Asset, 'helipad.dds': pc.Asset}): void {
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});

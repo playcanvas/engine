@@ -16,7 +16,6 @@ class MaterialClearCoatExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { 'helipad.dds': pc.Asset, normal: pc.Asset, diffuse: pc.Asset, other: pc.Asset }): void {
 
         // Create the application and start the update loop
