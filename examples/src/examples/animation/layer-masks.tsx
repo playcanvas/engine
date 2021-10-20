@@ -144,10 +144,10 @@ class LayerMasksExample extends Example {
         };
 
         // create a new layer for the upper body, with additive layer blending
-        modelEntity.anim.addLayer('UpperBody', data.get('options.blend'), upperBodyMask, data.get('upperBodyLayer.blendType'));
-        modelEntity.anim.findAnimationLayer('UpperBody').assignAnimation('Eager', idleEagerTrack);
-        modelEntity.anim.findAnimationLayer('UpperBody').assignAnimation('Idle', idleTrack);
-        modelEntity.anim.findAnimationLayer('UpperBody').assignAnimation('Dance', danceTrack);
+        const upperBodyLayer = modelEntity.anim.addLayer('UpperBody', data.get('options.blend'), upperBodyMask, data.get('upperBodyLayer.blendType'));
+        upperBodyLayer.assignAnimation('Eager', idleEagerTrack);
+        upperBodyLayer.assignAnimation('Idle', idleTrack);
+        upperBodyLayer.assignAnimation('Dance', danceTrack);
 
         // respond to changes in the data object made by the control panel
         data.on('*:set', (path: string, value: any) => {
@@ -155,16 +155,16 @@ class LayerMasksExample extends Example {
                 modelEntity.anim.baseLayer.transition(value, 0.4);
             }
             if (path === 'upperBodyLayer.state') {
-                modelEntity.anim.findAnimationLayer('UpperBody').transition(value, 0.4);
+                upperBodyLayer.transition(value, 0.4);
             }
             if (path === 'fullBodyLayer.blendType') {
                 modelEntity.anim.baseLayer.blendType = value;
             }
             if (path === 'upperBodyLayer.blendType') {
-                modelEntity.anim.findAnimationLayer('UpperBody').blendType = value;
+                upperBodyLayer.blendType = value;
             }
             if (path === 'upperBodyLayer.useMask') {
-                modelEntity.anim.findAnimationLayer('UpperBody').assignMask(
+                upperBodyLayer.assignMask(
                     value ? {
                         'RootNode/AVATAR/C_spine0001_bind_JNT/C_spine0002_bind_JNT': {
                             children: true
@@ -174,7 +174,7 @@ class LayerMasksExample extends Example {
             }
             if (path === 'options.blend') {
                 modelEntity.anim.baseLayer.weight = 1.0 - value;
-                modelEntity.anim.findAnimationLayer('UpperBody').weight = value;
+                upperBodyLayer.weight = value;
             }
         });
 
