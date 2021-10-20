@@ -2,7 +2,9 @@ import { File } from './types';
 // @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
 // @ts-ignore: library file import
-import beautify from 'js-beautify';
+import { parse } from '@babel/parser';
+// @ts-ignore: library file import
+import { format } from 'prettier/standalone';
 
 export const playcanvasTypeDefs = (() => {
     // @ts-ignore: use of require context
@@ -99,7 +101,7 @@ export const examples = (() => {
                 .join('');
 
             functionText = Babel.transform(functionText, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
-            functionText = beautify(functionText);
+            functionText = format(functionText, { parser: parse, tabWidth: 4 });
 
             files.unshift(
                 {
