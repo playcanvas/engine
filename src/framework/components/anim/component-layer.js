@@ -79,8 +79,9 @@ class AnimComponentLayer {
      * });
      */
     assignMask(mask) {
-        this._controller.assignMask(mask);
-        this._component.rebind();
+        if (this._controller.assignMask(mask)) {
+            this._component.rebind();
+        }
     }
 
     /**
