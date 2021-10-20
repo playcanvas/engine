@@ -63,6 +63,7 @@ class AnimTargetValue {
     }
 
     updateValue(index, value) {
+        if (!this.mask[index]) return;
         if (this.counter === 0) {
             this.value.set(0, 0, 0, 1);
         }
