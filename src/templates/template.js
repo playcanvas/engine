@@ -31,7 +31,7 @@ class Template {
     }
 
     _parseTemplate() {
-        var parser = new SceneParser(this._app, true);
+        const parser = new SceneParser(this._app, true);
 
         this._templateRoot = parser.parse(this._data);
     }

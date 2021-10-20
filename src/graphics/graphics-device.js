@@ -247,7 +247,7 @@ function testTextureFloatHighPrecision(device) {
  * @property {ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
  */
 class GraphicsDevice extends EventHandler {
-    constructor(canvas, options) {
+    constructor(canvas, options = {}) {
         super();
 
         this.canvas = canvas;
@@ -291,11 +291,10 @@ class GraphicsDevice extends EventHandler {
         };
 
         // Retrieve the WebGL context
-        const preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+        const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
         const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
-        options = options || {};
         options.stencil = true;
         for (let i = 0; i < names.length; i++) {
             gl = canvas.getContext(names[i], options);

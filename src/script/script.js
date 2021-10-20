@@ -62,7 +62,7 @@ function createScript(name, app) {
     if (reservedScriptNames.has(name))
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
-    var scriptType = function (args) {
+    const scriptType = function (args) {
         EventHandler.prototype.initEventHandler.call(this);
         ScriptType.prototype.initScriptType.call(this, args);
     };
@@ -78,7 +78,7 @@ function createScript(name, app) {
 }
 
 // Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
-var reservedAttributes = {};
+const reservedAttributes = {};
 ScriptAttributes.reservedNames.forEach((value, value2, set) => {
     reservedAttributes[value] = 1;
 });
@@ -146,7 +146,7 @@ function registerScript(script, name, app) {
     script.__name = name;
 
     // add to scripts registry
-    var registry = app ? app.scripts : Application.getApplication().scripts;
+    const registry = app ? app.scripts : Application.getApplication().scripts;
     registry.add(script);
 
     ScriptHandler._push(script);

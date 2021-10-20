@@ -12,7 +12,7 @@ import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_
 import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../input/constants.js';
 
-var _tempScrollValue = new Vec2();
+const _tempScrollValue = new Vec2();
 
 /**
  * @component
@@ -159,8 +159,8 @@ class ScrollViewComponent extends Component {
             if (!this._disabledContentInput) {
 
                 // Disable input events on content after we've moved past a threshold value
-                var dx = (position.x - this._dragStartPosition.x);
-                var dy = (position.y - this._dragStartPosition.y);
+                const dx = (position.x - this._dragStartPosition.x);
+                const dy = (position.y - this._dragStartPosition.y);
 
                 if (Math.abs(dx) > this.dragThreshold ||
                     Math.abs(dy) > this.dragThreshold) {
@@ -210,7 +210,7 @@ class ScrollViewComponent extends Component {
             this._velocity.set(0, 0, 0);
         }
 
-        var hasChanged = false;
+        let hasChanged = false;
         hasChanged |= this._updateAxis(x, 'x', ORIENTATION_HORIZONTAL);
         hasChanged |= this._updateAxis(y, 'y', ORIENTATION_VERTICAL);
 
@@ -220,7 +220,7 @@ class ScrollViewComponent extends Component {
     }
 
     _updateAxis(scrollValue, axis, orientation) {
-        var hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
+        const hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
 
         // always update if dragging because drag helper directly updates the entity position
         // always update if scrollValue === 0 because it will be clamped to 0
@@ -269,19 +269,19 @@ class ScrollViewComponent extends Component {
     }
 
     _syncContentPosition(orientation) {
-        var axis = this._getAxis(orientation);
-        var sign = this._getSign(orientation);
-        var contentEntity = this._contentReference.entity;
+        const axis = this._getAxis(orientation);
+        const sign = this._getSign(orientation);
+        const contentEntity = this._contentReference.entity;
 
         if (contentEntity) {
-            var prevContentSize = this._prevContentSizes[orientation];
-            var currContentSize = this._getContentSize(orientation);
+            const prevContentSize = this._prevContentSizes[orientation];
+            const currContentSize = this._getContentSize(orientation);
 
             // If the content size has changed, adjust the scroll value so that the content will
             // stay in the same place from the user's perspective.
             if (prevContentSize !== null && Math.abs(prevContentSize - currContentSize) > 1e-4) {
-                var prevMaxOffset = this._getMaxOffset(orientation, prevContentSize);
-                var currMaxOffset = this._getMaxOffset(orientation, currContentSize);
+                const prevMaxOffset = this._getMaxOffset(orientation, prevContentSize);
+                const currMaxOffset = this._getMaxOffset(orientation, currContentSize);
                 if (currMaxOffset === 0) {
                     this._scroll[axis] = 1;
                 } else {
@@ -289,8 +289,8 @@ class ScrollViewComponent extends Component {
                 }
             }
 
-            var offset = this._scroll[axis] * this._getMaxOffset(orientation);
-            var contentPosition = contentEntity.getLocalPosition();
+            const offset = this._scroll[axis] * this._getMaxOffset(orientation);
+            const contentPosition = contentEntity.getLocalPosition();
             contentPosition[axis] = offset * sign;
 
             contentEntity.setLocalPosition(contentPosition);
@@ -300,8 +300,8 @@ class ScrollViewComponent extends Component {
     }
 
     _syncScrollbarPosition(orientation) {
-        var axis = this._getAxis(orientation);
-        var scrollbarEntity = this._scrollbarReferences[orientation].entity;
+        const axis = this._getAxis(orientation);
+        const scrollbarEntity = this._scrollbarReferences[orientation].entity;
 
         if (scrollbarEntity && scrollbarEntity.scrollbar) {
             // Setting the value of the scrollbar will fire a 'set:value' event, which in turn
@@ -319,11 +319,11 @@ class ScrollViewComponent extends Component {
     // on whether the user has enabled horizontal/vertical scrolling on the
     // scroll view.
     _syncScrollbarEnabledState(orientation) {
-        var entity = this._scrollbarReferences[orientation].entity;
+        const entity = this._scrollbarReferences[orientation].entity;
 
         if (entity) {
-            var isScrollingEnabled = this._getScrollingEnabled(orientation);
-            var requestedVisibility = this._getScrollbarVisibility(orientation);
+            const isScrollingEnabled = this._getScrollingEnabled(orientation);
+            const requestedVisibility = this._getScrollbarVisibility(orientation);
 
             switch (requestedVisibility) {
                 case SCROLLBAR_VISIBILITY_SHOW_ALWAYS:
@@ -346,8 +346,8 @@ class ScrollViewComponent extends Component {
     }
 
     _contentPositionToScrollValue(contentPosition) {
-        var maxOffsetH = this._getMaxOffset(ORIENTATION_HORIZONTAL);
-        var maxOffsetV = this._getMaxOffset(ORIENTATION_VERTICAL);
+        const maxOffsetH = this._getMaxOffset(ORIENTATION_HORIZONTAL);
+        const maxOffsetV = this._getMaxOffset(ORIENTATION_VERTICAL);
 
         if (maxOffsetH === 0) {
             _tempScrollValue.x = 0;
@@ -367,7 +367,7 @@ class ScrollViewComponent extends Component {
     _getMaxOffset(orientation, contentSize) {
         contentSize = contentSize === undefined ? this._getContentSize(orientation) : contentSize;
 
-        var viewportSize = this._getViewportSize(orientation);
+        const viewportSize = this._getViewportSize(orientation);
 
         if (contentSize < viewportSize) {
             return -this._getViewportSize(orientation);
@@ -381,15 +381,15 @@ class ScrollViewComponent extends Component {
     }
 
     _getScrollbarHandleSize(axis, orientation) {
-        var viewportSize = this._getViewportSize(orientation);
-        var contentSize = this._getContentSize(orientation);
+        const viewportSize = this._getViewportSize(orientation);
+        const contentSize = this._getContentSize(orientation);
 
         if (Math.abs(contentSize) < 0.001) {
             return 1;
         }
 
-        var handleSize = Math.min(viewportSize / contentSize, 1);
-        var overshoot = this._toOvershoot(this._scroll[axis], orientation);
+        const handleSize = Math.min(viewportSize / contentSize, 1);
+        const overshoot = this._toOvershoot(this._scroll[axis], orientation);
 
         if (overshoot === 0) {
             return handleSize;
@@ -474,7 +474,7 @@ class ScrollViewComponent extends Component {
             }
 
             if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
-                var position = this._contentReference.entity.getLocalPosition();
+                const position = this._contentReference.entity.getLocalPosition();
                 position.x += this._velocity.x;
                 position.y += this._velocity.y;
                 this._contentReference.entity.setLocalPosition(position);
@@ -492,7 +492,7 @@ class ScrollViewComponent extends Component {
     }
 
     _toOvershoot(scrollValue, orientation) {
-        var maxScrollValue = this._getMaxScrollValue(orientation);
+        const maxScrollValue = this._getMaxScrollValue(orientation);
 
         if (scrollValue < 0) {
             return scrollValue;
@@ -504,8 +504,8 @@ class ScrollViewComponent extends Component {
     }
 
     _setVelocityFromOvershoot(scrollValue, axis, orientation) {
-        var overshootValue = this._toOvershoot(scrollValue, orientation);
-        var overshootPixels = overshootValue * this._getMaxOffset(orientation) * this._getSign(orientation);
+        const overshootValue = this._toOvershoot(scrollValue, orientation);
+        const overshootPixels = overshootValue * this._getMaxOffset(orientation) * this._getSign(orientation);
 
         if (Math.abs(overshootPixels) > 0) {
             // 50 here is just a magic number – it seems to give us a range of useful
@@ -527,7 +527,7 @@ class ScrollViewComponent extends Component {
     }
 
     _setScrollFromContentPosition(position) {
-        var scrollValue = this._contentPositionToScrollValue(position);
+        let scrollValue = this._contentPositionToScrollValue(position);
 
         if (this._isDragging()) {
             scrollValue = this._applyScrollValueTension(scrollValue);
@@ -538,12 +538,10 @@ class ScrollViewComponent extends Component {
 
     // Create nice tension effect when dragging past the extents of the viewport
     _applyScrollValueTension(scrollValue) {
-        var max;
-        var overshoot;
-        var factor = 1;
+        const factor = 1;
 
-        max = this._getMaxScrollValue(ORIENTATION_HORIZONTAL);
-        overshoot = this._toOvershoot(scrollValue.x, ORIENTATION_HORIZONTAL);
+        let max = this._getMaxScrollValue(ORIENTATION_HORIZONTAL);
+        let overshoot = this._toOvershoot(scrollValue.x, ORIENTATION_HORIZONTAL);
         if (overshoot > 0) {
             scrollValue.x = max + factor * Math.log10(1 + overshoot);
         } else if (overshoot < 0) {
@@ -601,7 +599,7 @@ class ScrollViewComponent extends Component {
     // re-enable useInput flag on any descendant that was disabled
     _enableContentInput() {
         while (this._disabledContentInputEntities.length) {
-            var e = this._disabledContentInputEntities.pop();
+            const e = this._disabledContentInputEntities.pop();
             if (e.element) {
                 e.element.useInput = true;
             }
@@ -612,26 +610,23 @@ class ScrollViewComponent extends Component {
 
     // disable useInput flag on all descendants of this contentEntity
     _disableContentInput() {
-        var self = this;
-        var _disableInput = function (e) {
+        const _disableInput = (e) => {
             if (e.element && e.element.useInput) {
-                self._disabledContentInputEntities.push(e);
+                this._disabledContentInputEntities.push(e);
                 e.element.useInput = false;
             }
 
-            var children = e.children;
-            var i, l;
-            for (i = 0, l = children.length; i < l; i++) {
+            const children = e.children;
+            for (let i = 0, l = children.length; i < l; i++) {
                 _disableInput(children[i]);
             }
         };
 
-        var contentEntity = this._contentReference.entity;
+        const contentEntity = this._contentReference.entity;
         if (contentEntity) {
             // disable input recursively for all children of the content entity
-            var children = contentEntity.children;
-            var i, l = children.length;
-            for (i = 0; i < l; i++) {
+            const children = contentEntity.children;
+            for (let i = 0, l = children.length; i < l; i++) {
                 _disableInput(children[i]);
             }
         }

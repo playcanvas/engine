@@ -1,4 +1,4 @@
-var standardMaterialParameterTypes = {
+const standardMaterialParameterTypes = {
     name: 'string',
     chunks: 'chunks',
 
@@ -204,18 +204,17 @@ var standardMaterialParameterTypes = {
     // msdfVertexColorChannel
 };
 
-var key, type;
-var standardMaterialTextureParameters = [];
-for (key in standardMaterialParameterTypes) {
-    type = standardMaterialParameterTypes[key];
+const standardMaterialTextureParameters = [];
+for (const key in standardMaterialParameterTypes) {
+    const type = standardMaterialParameterTypes[key];
     if (type === 'texture') {
         standardMaterialTextureParameters.push(key);
     }
 }
 
-var standardMaterialCubemapParameters = [];
-for (key in standardMaterialParameterTypes) {
-    type = standardMaterialParameterTypes[key];
+const standardMaterialCubemapParameters = [];
+for (const key in standardMaterialParameterTypes) {
+    const type = standardMaterialParameterTypes[key];
     if (type === 'cubemap') {
         standardMaterialCubemapParameters.push(key);
     }
