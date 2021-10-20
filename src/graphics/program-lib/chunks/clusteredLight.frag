@@ -2,14 +2,18 @@ uniform sampler2D clusterWorldTexture;
 uniform sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
-#ifdef GL2
-    // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
-    uniform sampler2DShadow shadowAtlasTexture;
-#else
-    uniform sampler2D shadowAtlasTexture;
+#ifdef CLUSTER_SHADOWS
+    #ifdef GL2
+        // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
+        uniform sampler2DShadow shadowAtlasTexture;
+    #else
+        uniform sampler2D shadowAtlasTexture;
+    #endif
 #endif
 
-uniform sampler2D cookieAtlasTexture;
+#ifdef CLUSTER_COOKIES
+    uniform sampler2D cookieAtlasTexture;
+#endif
 
 uniform float clusterPixelsPerCell;
 uniform vec3 clusterCellsCountByBoundsSize;
@@ -234,6 +238,8 @@ void evaluateLight(ClusterLightData light) {
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
 
+        #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
+
         if (dAtten > 0.00001) {
 
             // shadow / cookie
@@ -249,6 +255,8 @@ void evaluateLight(ClusterLightData light) {
                 float shadowTextureResolution = shadowAtlasParams.x;
                 float shadowEdgePixels = shadowAtlasParams.y;
 
+                #ifdef CLUSTER_COOKIES
+
                 // cookie
                 if (light.isCookie == true) {
                     decodeClusterLightCookieData(light);
@@ -259,6 +267,9 @@ void evaluateLight(ClusterLightData light) {
                         dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
+
+                #endif
+                #ifdef CLUSTER_SHADOWS
 
                 // shadow
                 if (light.castShadows== true) {
@@ -279,8 +290,12 @@ void evaluateLight(ClusterLightData light) {
                         dAtten *= getShadowOmniClusteredPCF3x3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                     }
                 }
+
+                #endif
             }
         }
+
+        #endif
 
         dDiffuseLight += dAtten * light.color * dAtten3;
     }
@@ -295,6 +310,13 @@ void evaluateClusterLight(float lightIndex) {
     // evaluate light
     evaluateLight(clusterLightData);
 }
+
+const vec4 channelSelector[4] = vec4[4] (
+    vec4(1., 0., 0., 0.),
+    vec4(0., 1., 0., 0.),
+    vec4(0., 0., 1., 0.),
+    vec4(0., 0., 0., 1.)
+);
 
 void addClusteredLights() {
     // world space position to 3d integer cell cordinates in the cluster structure
@@ -318,25 +340,14 @@ void addClusteredLights() {
             vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
             vec4 indices = lightIndices * 255.0;
 
-            if (indices.x <= 0.0)
-                break;
+            // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
+            for (int i = 0; i < 4; i++) {
+                float index = dot(channelSelector[i], indices);
+                if (index <= 0.0)
+                    return;
 
-            evaluateClusterLight(indices.x);
-
-            if (indices.y <= 0.0)
-                break;
-
-            evaluateClusterLight(indices.y);
-
-            if (indices.z <= 0.0)
-                break;
-
-            evaluateClusterLight(indices.z);
-
-            if (indices.w <= 0.0)
-                break;
-
-            evaluateClusterLight(indices.w);
+                evaluateClusterLight(index); 
+            }
 
             // end of the cell array
             if (lightCellIndex > clusterPixelsPerCell) {

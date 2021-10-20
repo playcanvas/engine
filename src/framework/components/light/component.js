@@ -446,7 +446,7 @@ function _defineProps() {
     }, true);
     _defineProperty("shadowUpdateMode", SHADOWUPDATE_REALTIME, function (newValue, oldValue) {
         this.light.shadowUpdateMode = newValue;
-    });
+    }, true);
     _defineProperty("mask", 1, function (newValue, oldValue) {
         this.light.mask = newValue;
     });

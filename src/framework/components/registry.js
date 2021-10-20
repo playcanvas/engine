@@ -1,11 +1,15 @@
+import { EventHandler } from '../../core/event-handler.js';
+
 /**
  * @class
  * @name ComponentSystemRegistry
  * @classdesc Store, access and delete instances of the various ComponentSystems.
  * @description Create a new ComponentSystemRegistry.
  */
-class ComponentSystemRegistry {
+class ComponentSystemRegistry extends EventHandler {
     constructor() {
+        super();
+
         // An array of pc.ComponentSystem objects
         this.list = [];
     }
@@ -48,6 +52,14 @@ class ComponentSystemRegistry {
         const index = this.list.indexOf(this[id]);
         if (index !== -1) {
             this.list.splice(index, 1);
+        }
+    }
+
+    destroy() {
+        this.off();
+
+        for (let i = 0; i < this.list.length; i++) {
+            this.list[i].destroy();
         }
     }
 }

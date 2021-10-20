@@ -134,9 +134,13 @@ class WorldClusters {
         return str;
     }
 
-    constructor(device, cells, maxCellLightCount) {
+    constructor(device, cells, maxCellLightCount, cookiesEnabled = false, shadowsEnabled = false) {
         this.device = device;
         this.name = "Untitled";
+
+        // features
+        this.cookiesEnabled = cookiesEnabled;
+        this.shadowsEnabled = shadowsEnabled;
 
         // number of times a warning was reported
         this.reportCount = 0;
@@ -410,8 +414,8 @@ class WorldClusters {
     addLightData(light, lightIndex, gammaCorrection) {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;
-        const isCookie = !!light._cookie;
-        const castShadows = light.castShadows;
+        const isCookie = this.cookiesEnabled && !!light._cookie;
+        const castShadows = this.shadowsEnabled && light.castShadows;
         const pos = light._node.getPosition();
 
         let lightProjectionMatrix = null;   // light projection matrix - used for shadow map and cookie of spot light

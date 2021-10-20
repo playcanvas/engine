@@ -43,6 +43,8 @@ class AnimStateGraph {
                 var dataLayer = data.layers[layerId];
                 var layer = {
                     name: dataLayer.name,
+                    blendType: dataLayer.blendType,
+                    weight: dataLayer.weight,
                     states: [],
                     transitions: []
                 };

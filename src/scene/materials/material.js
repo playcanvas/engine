@@ -74,8 +74,6 @@ let id = 0;
  * @property {number} slopeDepthBias Same as {@link Material#depthBias}, but also depends on the slope of the triangle relative to the camera.
  */
 class Material {
-    static defaultMaterial = null;
-
     constructor() {
         this.name = "Untitled";
         this.id = id++;
@@ -433,10 +431,6 @@ class Material {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            const defaultMaterial = Material.defaultMaterial;
-            if (this !== defaultMaterial) {
-                meshInstance.material = defaultMaterial;
-            }
         }
     }
 
