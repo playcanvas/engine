@@ -168,7 +168,7 @@ class ScriptLegacyComponent extends Component {
 
         const prefix = this.system.app._scriptPrefix || "";
 
-        urls.forEach(function (url) {
+        urls.forEach((url) => {
             let _url = null;
             let _unprefixed = null;
             // support absolute URLs (for now)
@@ -179,7 +179,7 @@ class ScriptLegacyComponent extends Component {
                 _unprefixed = url;
                 _url = path.join(prefix, url);
             }
-            this.system.app.loader.load(_url, "script", function (err, ScriptType) {
+            this.system.app.loader.load(_url, "script", (err, ScriptType) => {
                 count--;
                 if (!err) {
                     // ScriptType is null if the script is not a PlayCanvas script
@@ -202,8 +202,8 @@ class ScriptLegacyComponent extends Component {
                         this.system.onPostInitialize(this.entity);
                     }
                 }
-            }.bind(this));
-        }.bind(this));
+            });
+        });
     }
 }
 

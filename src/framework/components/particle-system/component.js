@@ -202,17 +202,17 @@ class ParticleSystemComponent extends Component {
         this.on("set_depthSoftening", this.onSetDepthSoftening, this);
         this.on("set_layers", this.onSetLayers, this);
 
-        SIMPLE_PROPERTIES.forEach(function (prop) {
-            this.on('set_' + prop, this.onSetSimpleProperty, this);
-        }.bind(this));
+        SIMPLE_PROPERTIES.forEach((prop) => {
+            this.on(`set_${prop}`, this.onSetSimpleProperty, this);
+        });
 
-        COMPLEX_PROPERTIES.forEach(function (prop) {
-            this.on('set_' + prop, this.onSetComplexProperty, this);
-        }.bind(this));
+        COMPLEX_PROPERTIES.forEach((prop) => {
+            this.on(`set_${prop}`, this.onSetComplexProperty, this);
+        });
 
-        GRAPH_PROPERTIES.forEach(function (prop) {
-            this.on('set_' + prop, this.onSetGraphProperty, this);
-        }.bind(this));
+        GRAPH_PROPERTIES.forEach((prop) => {
+            this.on(`set_${prop}`, this.onSetGraphProperty, this);
+        });
 
         this._requestedDepth = false;
         this._drawOrder = 0;
