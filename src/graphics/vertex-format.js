@@ -3,7 +3,7 @@ import { hashCode } from '../core/hash.js';
 import { math } from '../math/math.js';
 
 import {
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
 } from './constants.js';
 
@@ -177,10 +177,10 @@ class VertexFormat {
 
     static init(graphicsDevice) {
         const formatDesc = [
-            { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD3, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD4, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD5, components: 4, type: TYPE_FLOAT32 }
+            { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
         ];
 
         VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);

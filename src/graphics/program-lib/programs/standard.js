@@ -3,7 +3,7 @@ import { hashCode } from '../../../core/hash.js';
 import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
     PIXELFORMAT_R8_G8_B8_A8
 } from '../../constants.js';
@@ -678,10 +678,10 @@ var standard = {
         }
 
         if (options.useInstancing) {
-            attributes.instance_line1 = SEMANTIC_TEXCOORD2;
-            attributes.instance_line2 = SEMANTIC_TEXCOORD3;
-            attributes.instance_line3 = SEMANTIC_TEXCOORD4;
-            attributes.instance_line4 = SEMANTIC_TEXCOORD5;
+            attributes.instance_line1 = SEMANTIC_ATTR12;
+            attributes.instance_line2 = SEMANTIC_ATTR13;
+            attributes.instance_line3 = SEMANTIC_ATTR14;
+            attributes.instance_line4 = SEMANTIC_ATTR15;
             code += chunks.instancingVS;
         }
 
