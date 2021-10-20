@@ -32,7 +32,7 @@ function isMousePointerLocked() {
  */
 class MouseEvent {
     constructor(mouse, event) {
-        var coords = {
+        let coords = {
             x: 0,
             y: 0
         };

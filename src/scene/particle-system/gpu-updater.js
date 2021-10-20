@@ -8,9 +8,9 @@ import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 
 import { EMITTERSHAPE_BOX } from '../../scene/constants.js';
 
-var spawnMatrix3 = new Mat3();
-var emitterMatrix3 = new Mat3();
-var emitterMatrix3Inv = new Mat3();
+const spawnMatrix3 = new Mat3();
+const emitterMatrix3 = new Mat3();
+const emitterMatrix3Inv = new Mat3();
 
 // Wraps GPU particles render state and setup from ParticleEmitter
 class ParticleGPUUpdater {
@@ -88,7 +88,7 @@ class ParticleGPUUpdater {
         device.pushMarker("ParticleGPU");
         // #endif
 
-        var emitter = this._emitter;
+        const emitter = this._emitter;
 
         device.setBlending(false);
         device.setColorWrite(true, true, true, true);
@@ -107,8 +107,8 @@ class ParticleGPUUpdater {
         this.constantInternalTex2.setValue(emitter.internalTex2);
         this.constantInternalTex3.setValue(emitter.internalTex3);
 
-        var node = emitter.meshInstance.node;
-        var emitterScale = node === null ? Vec3.ONE : node.localScale;
+        const node = emitter.meshInstance.node;
+        const emitterScale = node === null ? Vec3.ONE : node.localScale;
 
         if (emitter.pack8) {
             this.worldBoundsMulUniform[0] = emitter.worldBoundsMul.x;
@@ -122,13 +122,13 @@ class ParticleGPUUpdater {
 
             this._setInputBounds();
 
-            var maxVel = emitter.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
+            let maxVel = emitter.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
             maxVel = Math.max(maxVel, 1);
             this.constantMaxVel.setValue(maxVel);
         }
 
-        var emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
-        var emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
+        const emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
+        const emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
         if (emitter.emitterShape === EMITTERSHAPE_BOX) {
             spawnMatrix3.setFromMat4(spawnMatrix);
             this.constantSpawnBounds.setValue(spawnMatrix3.data);
@@ -165,9 +165,9 @@ class ParticleGPUUpdater {
         this.constantVelocityDivMult.setValue(emitter.velocityUMax);
         this.constantRotSpeedDivMult.setValue(emitter.rotSpeedUMax[0]);
 
-        var texIN = emitter.swapTex ? emitter.particleTexOUT : emitter.particleTexIN;
+        let texIN = emitter.swapTex ? emitter.particleTexOUT : emitter.particleTexIN;
         texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
-        var texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
+        const texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
         drawQuadWithShader(
             device,

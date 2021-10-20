@@ -46,10 +46,10 @@ class Mouse extends EventHandler {
         super();
 
         // Clear the mouse state
-        this._lastX      = 0;
-        this._lastY      = 0;
-        this._buttons      = [false, false, false];
-        this._lastbuttons  = [false, false, false];
+        this._lastX = 0;
+        this._lastY = 0;
+        this._buttons = [false, false, false];
+        this._lastbuttons = [false, false, false];
 
 
         // Setup event handlers so they are bound to the correct 'this'
@@ -57,7 +57,7 @@ class Mouse extends EventHandler {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
-        this._contextMenuHandler = function (event) {
+        this._contextMenuHandler = (event) => {
             event.preventDefault();
         };
 
@@ -90,7 +90,7 @@ class Mouse extends EventHandler {
         if (this._attached) return;
         this._attached = true;
 
-        var opts = platform.passiveEvents ? { passive: false } : false;
+        const opts = platform.passiveEvents ? { passive: false } : false;
         window.addEventListener("mouseup", this._upHandler, opts);
         window.addEventListener("mousedown", this._downHandler, opts);
         window.addEventListener("mousemove", this._moveHandler, opts);
@@ -107,7 +107,7 @@ class Mouse extends EventHandler {
         this._attached = false;
         this._target = null;
 
-        var opts = platform.passiveEvents ? { passive: false } : false;
+        const opts = platform.passiveEvents ? { passive: false } : false;
         window.removeEventListener("mouseup", this._upHandler, opts);
         window.removeEventListener("mousedown", this._downHandler, opts);
         window.removeEventListener("mousemove", this._moveHandler, opts);
@@ -155,11 +155,11 @@ class Mouse extends EventHandler {
             return;
         }
 
-        var s = function () {
+        const s = () => {
             success();
             document.removeEventListener('pointerlockchange', s);
         };
-        var e = function () {
+        const e = () => {
             error();
             document.removeEventListener('pointerlockerror', e);
         };
@@ -186,7 +186,7 @@ class Mouse extends EventHandler {
             return;
         }
 
-        var s = function () {
+        const s = () => {
             success();
             document.removeEventListener('pointerlockchange', s);
         };
@@ -260,7 +260,7 @@ class Mouse extends EventHandler {
         // disable released button
         this._buttons[event.button] = false;
 
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         // send 'mouseup' event
@@ -271,14 +271,14 @@ class Mouse extends EventHandler {
         // Store which button has affected
         this._buttons[event.button] = true;
 
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEDOWN, e);
     }
 
     _handleMove(event) {
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEMOVE, e);
@@ -289,16 +289,16 @@ class Mouse extends EventHandler {
     }
 
     _handleWheel(event) {
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEWHEEL, e);
     }
 
     _getTargetCoords(event) {
-        var rect = this._target.getBoundingClientRect();
-        var left = Math.floor(rect.left);
-        var top = Math.floor(rect.top);
+        const rect = this._target.getBoundingClientRect();
+        const left = Math.floor(rect.left);
+        const top = Math.floor(rect.top);
 
         // mouse is outside of canvas
         if (event.clientX < left ||

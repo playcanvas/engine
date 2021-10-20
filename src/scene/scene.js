@@ -378,7 +378,7 @@ class Scene extends EventHandler {
     // some backwards compatibility
     // drawCalls will now return list of all active composition mesh instances
     get drawCalls() {
-        var drawCalls = this.layers._meshInstances;
+        let drawCalls = this.layers._meshInstances;
         if (!drawCalls.length) {
             this.layers._update();
             drawCalls = this.layers._meshInstances;
@@ -394,7 +394,7 @@ class Scene extends EventHandler {
     }
 
     set layers(layers) {
-        var prev = this._layers;
+        const prev = this._layers;
         this._layers = layers;
         this.fire("set:layers", prev, layers);
     }
@@ -438,10 +438,10 @@ class Scene extends EventHandler {
             // we can't simply fix this and map 3 to the correct level, since doing so has the potential
             // to change the look of existing scenes dramatically.
             // NOTE: the table skips the 32x32 mipmap
-            var skyboxMapping = [0, 1, 3, 4, 5, 6];
+            const skyboxMapping = [0, 1, 3, 4, 5, 6];
 
             // select which texture to use for the backdrop
-            var usedTex =
+            const usedTex =
                 this._skyboxMip ?
                     this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
                     this._skyboxCubeMap || this._skyboxPrefiltered[0];
@@ -455,11 +455,11 @@ class Scene extends EventHandler {
                 this._skyboxIsRenderTarget = false;
             }
 
-            var material = new Material();
-            var scene = this;
+            const material = new Material();
+            const scene = this;
             material.updateShader = function (dev, sc, defs, staticLightList, pass) {
-                var library = device.getProgramLibrary();
-                var shader = library.getProgram('skybox', {
+                const library = device.getProgramLibrary();
+                const shader = library.getProgram('skybox', {
                     rgbm: usedTex.type === TEXTURETYPE_RGBM,
                     hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity !== 1,
@@ -487,18 +487,18 @@ class Scene extends EventHandler {
             material.cull = CULLFACE_FRONT;
             material.depthWrite = false;
 
-            var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
+            const skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
             if (skyLayer) {
-                var node = new GraphNode("Skybox");
-                var mesh = createBox(device);
-                var meshInstance = new MeshInstance(mesh, material, node);
+                const node = new GraphNode("Skybox");
+                const mesh = createBox(device);
+                const meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
 
                 // disable picker, the material has custom update shader and does not handle picker variant
                 meshInstance.pick = false;
 
-                var model = new Model();
+                const model = new Model();
                 model.graph = node;
                 model.meshInstances = [meshInstance];
                 this.skyboxModel = model;
@@ -529,20 +529,19 @@ class Scene extends EventHandler {
      * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
      */
     setSkybox(cubemaps) {
-        var i;
         if (!cubemaps)
             cubemaps = [null, null, null, null, null, null, null];
 
         // check if any values actually changed
         // to prevent unnecessary recompilations
 
-        var different = false;
+        let different = false;
 
         if (this._skyboxCubeMap !== cubemaps[0])
             different = true;
 
         if (!different) {
-            for (i = 0; i < 6 && !different; i++) {
+            for (let i = 0; i < 6 && !different; i++) {
                 if (this._skyboxPrefiltered[i] !== cubemaps[i + 1])
                     different = true;
             }
@@ -553,7 +552,7 @@ class Scene extends EventHandler {
 
         // set skybox
 
-        for (i = 0; i < 6; i++)
+        for (let i = 0; i < 6; i++)
             this._skyboxPrefiltered[i] = cubemaps[i + 1];
 
         this.skybox = cubemaps[0];
@@ -562,22 +561,22 @@ class Scene extends EventHandler {
     // Backwards compatibility
     addModel(model) {
         if (this.containsModel(model)) return;
-        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
         layer.addMeshInstances(model.meshInstances);
         this._models.push(model);
     }
 
     addShadowCaster(model) {
-        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
         layer.addShadowCasters(model.meshInstances);
     }
 
     removeModel(model) {
-        var index = this._models.indexOf(model);
+        const index = this._models.indexOf(model);
         if (index !== -1) {
-            var layer = this.layers.getLayerById(LAYERID_WORLD);
+            const layer = this.layers.getLayerById(LAYERID_WORLD);
             if (!layer) return;
             layer.removeMeshInstances(model.meshInstances);
             this._models.splice(index, 1);
@@ -585,7 +584,7 @@ class Scene extends EventHandler {
     }
 
     removeShadowCasters(model) {
-        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
         layer.removeShadowCasters(model.meshInstances);
     }
