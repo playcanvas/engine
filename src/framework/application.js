@@ -86,7 +86,6 @@ import { ButtonComponentSystem } from './components/button/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { CollisionComponentSystem } from './components/collision/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { ComponentSystem } from './components/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
 import { JointComponentSystem } from './components/joint/system.js';
 import { LayoutChildComponentSystem } from './components/layout-child/system.js';
@@ -1110,11 +1109,11 @@ class Application extends EventHandler {
             this.onLibrariesLoaded();
         }
 
-        ComponentSystem.initialize(this.root);
-        this.fire("initialize");
+        this.systems.fire('initialize', this.root);
+        this.fire('initialize');
 
-        ComponentSystem.postInitialize(this.root);
-        this.fire("postinitialize");
+        this.systems.fire('postInitialize', this.root);
+        this.fire('postinitialize');
 
         this.tick();
     }
@@ -1157,11 +1156,11 @@ class Application extends EventHandler {
 
         // Perform ComponentSystem update
         if (script.legacy)
-            ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            this.systems.fire('fixedUpdate', 1.0 / 60.0);
 
-        ComponentSystem.update(dt, this._inTools);
-        ComponentSystem.animationUpdate(dt, this._inTools);
-        ComponentSystem.postUpdate(dt, this._inTools);
+        this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
+        this.systems.fire('animationUpdate', dt);
+        this.systems.fire('postUpdate', dt);
 
         // fire update event
         this.fire("update", dt);
@@ -1913,12 +1912,7 @@ class Application extends EventHandler {
             this.controller = null;
         }
 
-        const systems = this.systems.list;
-        for (let i = 0, l = systems.length; i < l; i++) {
-            systems[i].destroy();
-        }
-
-        ComponentSystem.destroy();
+        this.systems.destroy();
 
         // layer composition
         if (this.scene.layers) {
@@ -1954,7 +1948,7 @@ class Application extends EventHandler {
         this.scene.destroy();
         this.scene = null;
 
-        this.systems = [];
+        this.systems = null;
         this.context = null;
 
         // script registry

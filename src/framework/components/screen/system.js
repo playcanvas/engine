@@ -36,7 +36,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
-        ComponentSystem.bind('update', this._onUpdate, this);
+        this.app.systems.on('update', this._onUpdate, this);
 
         this.on('beforeremove', this.onRemoveComponent, this);
     }
@@ -70,8 +70,10 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        this.off();
+        super.destroy();
+
         this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+        this.app.systems.off('update', this._onUpdate, this);
     }
 
     _onUpdate(dt) {

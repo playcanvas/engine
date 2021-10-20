@@ -196,10 +196,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.contactResultPool = new ObjectPool(ContactResult, 1);
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
-            ComponentSystem.bind('update', this.onUpdate, this);
+            this.app.systems.on('update', this.onUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
-            ComponentSystem.unbind('update', this.onUpdate, this);
+            this.app.systems.off('update', this.onUpdate, this);
         }
     }
 
@@ -759,6 +759,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);
             Ammo.destroy(this.solver);

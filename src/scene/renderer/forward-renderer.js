@@ -1248,7 +1248,11 @@ class ForwardRenderer {
                 }
                 // #endif
 
+                if (!drawCall.material)
+                    drawCall.material = this.scene.defaultMaterial;
+
                 const material = drawCall.material;
+
                 const objDefs = drawCall._shaderDefs;
                 const lightMask = drawCall.mask;
 

@@ -26,8 +26,6 @@ import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 
-import { Material } from '../../scene/materials/material.js';
-
 const JSON_PRIMITIVE_TYPE = {
     "points": PRIMITIVE_POINTS,
     "lines": PRIMITIVE_LINES,
@@ -50,8 +48,9 @@ const JSON_VERTEX_ELEMENT_TYPE = {
 
 // Take PlayCanvas JSON model data and create pc.Model
 class JsonModelParser {
-    constructor(device) {
+    constructor(device, defaultMaterial) {
         this._device = device;
+        this._defaultMaterial = defaultMaterial;
     }
 
     parse(data) {
@@ -408,7 +407,7 @@ class JsonModelParser {
             const node = nodes[meshInstanceData.node];
             const mesh = meshes[meshInstanceData.mesh];
 
-            const meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
+            const meshInstance = new MeshInstance(mesh, this._defaultMaterial, node);
 
             if (mesh.skin) {
                 const skinIndex = skins.indexOf(mesh.skin);
