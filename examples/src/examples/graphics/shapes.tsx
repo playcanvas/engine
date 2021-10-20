@@ -5,7 +5,6 @@ class ShapesExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Shapes';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop

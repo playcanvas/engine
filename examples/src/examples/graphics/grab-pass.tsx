@@ -70,7 +70,6 @@ class GrabPassExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { 'shader.vert': pc.Asset, 'shader.frag': pc.Asset, normal: pc.Asset }): void {
 
         // Create the app and start the update loop

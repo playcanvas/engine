@@ -13,7 +13,6 @@ class ParticlesAnimIndexExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { particlesNumbers: pc.Asset }): void {
 
         // Create the application and start the update loop

@@ -32,7 +32,6 @@ class LightsExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
             <Panel headerText='OMNI LIGHT [KEY_1]'>

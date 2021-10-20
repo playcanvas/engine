@@ -29,7 +29,6 @@ class LightsBakedAOExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
             <Panel headerText='Lightmap Filter Settings'>
@@ -90,7 +89,6 @@ class LightsBakedAOExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any, data: any): void {
 
         // Create the app and start the update loop

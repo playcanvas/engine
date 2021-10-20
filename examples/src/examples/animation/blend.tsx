@@ -15,7 +15,6 @@ class BlendExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { model: pc.Asset, idleAnim: pc.Asset, runAnim: pc.Asset }): void {
 
         // Create the application and start the update loop

@@ -16,7 +16,6 @@ class VehicleExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { script1: pc.Asset, script2: pc.Asset, script3: pc.Asset, script4: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
