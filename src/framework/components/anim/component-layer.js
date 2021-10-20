@@ -63,10 +63,6 @@ class AnimComponentLayer {
         this._controller.update(dt);
     }
 
-    assignMask(mask) {
-        this._controller.assignMask(mask);
-    }
-
     /**
      * @function
      * @name AnimComponentLayer#assignMask
