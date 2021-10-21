@@ -33,7 +33,7 @@ class AnimCache {
     update(time, input) {
         if (time < this._left || time >= this._right) {
             // recalculate knots
-            var len = input.length;
+            const len = input.length;
             if (!len) {
                 // curve is empty
                 this._left = -Infinity;
@@ -58,11 +58,11 @@ class AnimCache {
                     this._p0 = this._p1 = len - 1;
                 } else {
                     // time falls within the bounds of the curve
-                    var index = this._findKey(time, input);
+                    const index = this._findKey(time, input);
                     this._left = input[index];
                     this._right = input[index + 1];
                     this._len = this._right - this._left;
-                    var diff = 1.0 / this._len;
+                    const diff = 1.0 / this._len;
                     this._recip = (isFinite(diff) ? diff : 0);
                     this._p0 = index;
                     this._p1 = index + 1;
@@ -77,7 +77,7 @@ class AnimCache {
 
     _findKey(time, input) {
         // TODO: start the search around the currently selected knots
-        var index = 0;
+        let index = 0;
         while (time >= input[index + 1]) {
             index++;
         }
@@ -86,35 +86,34 @@ class AnimCache {
 
     // evaluate the output anim data at the current time
     eval(result, interpolation, output) {
-        var data = output._data;
-        var comp = output._components;
-        var idx0 = this._p0 * comp;
-        var i;
+        const data = output._data;
+        const comp = output._components;
+        const idx0 = this._p0 * comp;
 
         if (interpolation === INTERPOLATION_STEP) {
-            for (i = 0; i < comp; ++i) {
+            for (let i = 0; i < comp; ++i) {
                 result[i] = data[idx0 + i];
             }
         } else {
-            var t = this._t;
-            var idx1 = this._p1 * comp;
+            const t = this._t;
+            const idx1 = this._p1 * comp;
 
             switch (interpolation) {
                 case INTERPOLATION_LINEAR:
-                    for (i = 0; i < comp; ++i) {
+                    for (let i = 0; i < comp; ++i) {
                         result[i] = math.lerp(data[idx0 + i], data[idx1 + i], t);
                     }
                     break;
 
-                case INTERPOLATION_CUBIC:
-                    var hermite = this._hermite;
+                case INTERPOLATION_CUBIC: {
+                    const hermite = this._hermite;
 
                     if (!hermite.valid) {
                         // cache hermite weights
-                        var t2 = t * t;
-                        var twot = t + t;
-                        var omt = 1 - t;
-                        var omt2 = omt * omt;
+                        const t2 = t * t;
+                        const twot = t + t;
+                        const omt = 1 - t;
+                        const omt2 = omt * omt;
 
                         hermite.valid = true;
                         hermite.p0 = (1 + twot) * omt2;
@@ -123,18 +122,19 @@ class AnimCache {
                         hermite.m1 = t2 * (t - 1);
                     }
 
-                    var p0 = (this._p0 * 3 + 1) * comp;     // point at k
-                    var m0 = (this._p0 * 3 + 2) * comp;     // out-tangent at k
-                    var p1 = (this._p1 * 3 + 1) * comp;     // point at k + 1
-                    var m1 = (this._p1 * 3 + 0) * comp;     // in-tangent at k + 1
+                    const p0 = (this._p0 * 3 + 1) * comp;     // point at k
+                    const m0 = (this._p0 * 3 + 2) * comp;     // out-tangent at k
+                    const p1 = (this._p1 * 3 + 1) * comp;     // point at k + 1
+                    const m1 = (this._p1 * 3 + 0) * comp;     // in-tangent at k + 1
 
-                    for (i = 0; i < comp; ++i) {
+                    for (let i = 0; i < comp; ++i) {
                         result[i] = hermite.p0 * data[p0 + i] +
                                     hermite.m0 * data[m0 + i] * this._len +
                                     hermite.p1 * data[p1 + i] +
                                     hermite.m1 * data[m1 + i] * this._len;
                     }
                     break;
+                }
             }
         }
     }

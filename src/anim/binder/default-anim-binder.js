@@ -102,7 +102,7 @@ class DefaultAnimBinder {
 
                 return null;
             },
-            'materialTexture': function (node, textureName) {
+            'materialTexture': (node, textureName) => {
                 const meshInstances = findMeshInstances(node);
                 if (meshInstances) {
                     let meshInstance;
@@ -113,19 +113,19 @@ class DefaultAnimBinder {
                         }
                     }
                     if (meshInstance) {
-                        const func = function (value) {
+                        const func = (value) => {
                             const textureAsset = this.animComponent.system.app.assets.get(value[0]);
                             if (textureAsset && textureAsset.resource && textureAsset.type === 'texture') {
                                 meshInstance.material[textureName] = textureAsset.resource;
                                 meshInstance.material.update();
                             }
-                        }.bind(this);
+                        };
                         return DefaultAnimBinder.createAnimTarget(func, 'vector', 1, node, 'materialTexture', 'material');
                     }
                 }
 
                 return null;
-            }.bind(this)
+            }
         };
     }
 
