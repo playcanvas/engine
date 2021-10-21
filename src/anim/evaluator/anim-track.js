@@ -62,15 +62,13 @@ class AnimTrack {
         const cache = snapshot._cache;
         const results = snapshot._results;
 
-        let i;
-
         // evaluate inputs
-        for (i = 0; i < inputs.length; ++i) {
+        for (let i = 0; i < inputs.length; ++i) {
             cache[i].update(time, inputs[i]._data);
         }
 
         // evalute outputs
-        for (i = 0; i < curves.length; ++i) {
+        for (let i = 0; i < curves.length; ++i) {
             const curve = curves[i];
             const output = outputs[curve._output];
             const result = results[i];

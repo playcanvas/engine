@@ -10,17 +10,16 @@ import { AnimBlendTree } from './anim-blend-tree.js';
 class AnimBlendTreeDirect extends AnimBlendTree {
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        let i;
         let weightSum = 0.0;
         let weightedDurationSum = 0.0;
-        for (i = 0; i < this._children.length; i++) {
+        for (let i = 0; i < this._children.length; i++) {
             weightSum += Math.max(this._parameterValues[i], 0.0);
             if (this._syncAnimations) {
                 const child = this._children[i];
                 weightedDurationSum += child.animTrack.duration / child.absoluteSpeed * child.weight;
             }
         }
-        for (i = 0; i < this._children.length; i++) {
+        for (let i = 0; i < this._children.length; i++) {
             const child = this._children[i];
             child.weight = Math.max(this._parameterValues[i], 0.0) / weightSum;
             if (this._syncAnimations) {

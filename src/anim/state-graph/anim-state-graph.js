@@ -7,7 +7,6 @@ class AnimStateGraph {
     constructor(data) {
         this._layers = [];
         this._parameters = {};
-        let i;
         if (!Array.isArray(data.layers)) {
             // Layers as an object
             // const data = {
@@ -48,10 +47,10 @@ class AnimStateGraph {
                     states: [],
                     transitions: []
                 };
-                for (i = 0; i < dataLayer.states.length; i++) {
+                for (let i = 0; i < dataLayer.states.length; i++) {
                     layer.states.push(data.states[dataLayer.states[i]]);
                 }
-                for (i = 0; i < dataLayer.transitions.length; i++) {
+                for (let i = 0; i < dataLayer.transitions.length; i++) {
                     const dataLayerTransition = data.transitions[dataLayer.transitions[i]];
                     if (dataLayerTransition.conditions && !Array.isArray(dataLayerTransition.conditions)) {
                         const conditionKeys = Object.keys(dataLayerTransition.conditions);

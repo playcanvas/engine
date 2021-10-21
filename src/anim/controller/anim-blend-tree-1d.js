@@ -18,10 +18,9 @@ class AnimBlendTree1D extends AnimBlendTree {
 
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        let i;
         let weightedDurationSum = 0.0;
         this._children[0].weight = 0.0;
-        for (i = 0; i < this._children.length; i++) {
+        for (let i = 0; i < this._children.length; i++) {
             const c1 = this._children[i];
             if (i !== this._children.length - 1) {
                 const c2 = this._children[i + 1];
@@ -43,7 +42,7 @@ class AnimBlendTree1D extends AnimBlendTree {
             }
         }
         if (this._syncAnimations) {
-            for (i = 0; i < this._children.length; i++) {
+            for (let i = 0; i < this._children.length; i++) {
                 const child = this._children[i];
                 child.weightedSpeed = child.animTrack.duration / child.absoluteSpeed / weightedDurationSum;
             }

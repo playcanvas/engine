@@ -89,10 +89,9 @@ class AnimCache {
         const data = output._data;
         const comp = output._components;
         const idx0 = this._p0 * comp;
-        let i;
 
         if (interpolation === INTERPOLATION_STEP) {
-            for (i = 0; i < comp; ++i) {
+            for (let i = 0; i < comp; ++i) {
                 result[i] = data[idx0 + i];
             }
         } else {
@@ -101,7 +100,7 @@ class AnimCache {
 
             switch (interpolation) {
                 case INTERPOLATION_LINEAR:
-                    for (i = 0; i < comp; ++i) {
+                    for (let i = 0; i < comp; ++i) {
                         result[i] = math.lerp(data[idx0 + i], data[idx1 + i], t);
                     }
                     break;
@@ -128,7 +127,7 @@ class AnimCache {
                     const p1 = (this._p1 * 3 + 1) * comp;     // point at k + 1
                     const m1 = (this._p1 * 3 + 0) * comp;     // in-tangent at k + 1
 
-                    for (i = 0; i < comp; ++i) {
+                    for (let i = 0; i < comp; ++i) {
                         result[i] = hermite.p0 * data[p0 + i] +
                                     hermite.m0 * data[m0 + i] * this._len +
                                     hermite.p1 * data[p1 + i] +

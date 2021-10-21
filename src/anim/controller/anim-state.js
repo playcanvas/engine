@@ -131,8 +131,7 @@ class AnimState {
 
     get totalWeight() {
         let sum = 0;
-        let i;
-        for (i = 0; i < this.animations.length; i++) {
+        for (let i = 0; i < this.animations.length; i++) {
             sum += this.animations[i].weight;
         }
         return sum;
@@ -140,8 +139,7 @@ class AnimState {
 
     get timelineDuration() {
         let duration = 0;
-        let i;
-        for (i = 0; i < this.animations.length; i++) {
+        for (let i = 0; i < this.animations.length; i++) {
             const animation = this.animations[i];
             if (animation.animTrack.duration > duration) {
                 duration = animation.animTrack.duration;

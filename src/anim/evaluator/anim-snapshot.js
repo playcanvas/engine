@@ -19,17 +19,15 @@ class AnimSnapshot {
         // per-curve evaluation results
         this._results = [];
 
-        let i;
-
         // pre-allocate input caches
-        for (i = 0; i < animTrack._inputs.length; ++i) {
+        for (let i = 0; i < animTrack._inputs.length; ++i) {
             this._cache[i] = new AnimCache();
         }
 
         // pre-allocate storage for evaluation results
         const curves = animTrack._curves;
         const outputs = animTrack._outputs;
-        for (i = 0; i < curves.length; ++i) {
+        for (let i = 0; i < curves.length; ++i) {
             const curve = curves[i];
             const output = outputs[curve._output];
             const storage = [];

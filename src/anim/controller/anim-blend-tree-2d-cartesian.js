@@ -26,19 +26,19 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
 
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        let i, j, pi, pipj, minj, result, weightSum, weightedDurationSum;
+        let weightSum, weightedDurationSum;
         AnimBlendTreeCartesian2D._p.set(...this._parameterValues);
         weightSum = 0.0;
         weightedDurationSum = 0.0;
-        for (i = 0; i < this._children.length; i++) {
+        for (let i = 0; i < this._children.length; i++) {
             const child = this._children[i];
-            pi = child.point;
+            const pi = child.point;
             AnimBlendTreeCartesian2D._pip.set(AnimBlendTreeCartesian2D._p.x, AnimBlendTreeCartesian2D._p.y).sub(pi);
-            minj = Number.MAX_VALUE;
-            for (j = 0; j < this._children.length; j++) {
+            let minj = Number.MAX_VALUE;
+            for (let j = 0; j < this._children.length; j++) {
                 if (i === j) continue;
-                pipj = this.pointDistanceCache(i, j);
-                result = math.clamp(1.0 - (AnimBlendTreeCartesian2D._pip.dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
+                const pipj = this.pointDistanceCache(i, j);
+                const result = math.clamp(1.0 - (AnimBlendTreeCartesian2D._pip.dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
                 if (result < minj) minj = result;
             }
             child.weight = minj;
@@ -47,7 +47,7 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
                 weightedDurationSum += child.animTrack.duration / child.absoluteSpeed * child.weight;
             }
         }
-        for (i = 0; i < this._children.length; i++) {
+        for (let i = 0; i < this._children.length; i++) {
             const child = this._children[i];
             child.weight = child._weight / weightSum;
             if (this._syncAnimations) {
