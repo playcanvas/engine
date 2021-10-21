@@ -35,7 +35,7 @@ import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
-import { WorldClusters } from '../scene/world-clusters.js';
+import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -446,7 +446,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
-        WorldClusters.init(this.graphicsDevice);
+        LightsBuffer.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
