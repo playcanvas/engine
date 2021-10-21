@@ -27,7 +27,7 @@ class AnimState {
         this._animationList = [];
         this._speed = speed || 1.0;
         this._loop = loop === undefined ? true : loop;
-        var findParameter = this._controller.findParameter.bind(this._controller);
+        const findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
             this._blendTree = this._createTree(
                 blendTree.type,
@@ -60,22 +60,22 @@ class AnimState {
     }
 
     _getNodeFromPath(path) {
-        var currNode = this._blendTree;
-        for (var i = 1; i < path.length; i++) {
+        let currNode = this._blendTree;
+        for (let i = 1; i < path.length; i++) {
             currNode = currNode.getChild(path[i]);
         }
         return currNode;
     }
 
     addAnimation(path, animTrack) {
-        var pathString = path.join('.');
-        var indexOfAnimation = this._animationList.findIndex(function (animation) {
+        const pathString = path.join('.');
+        const indexOfAnimation = this._animationList.findIndex(function (animation) {
             return animation.path === pathString;
         });
         if (indexOfAnimation >= 0) {
             this._animationList[indexOfAnimation].animTrack = animTrack;
         } else {
-            var node = this._getNodeFromPath(path);
+            const node = this._getNodeFromPath(path);
             node.animTrack = animTrack;
             this._animationList.push(node);
         }
@@ -120,8 +120,8 @@ class AnimState {
 
     get looping() {
         if (this.animations.length > 0) {
-            var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
-            var trackClip = this._controller.animEvaluator.findClip(trackClipName);
+            const trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+            const trackClip = this._controller.animEvaluator.findClip(trackClipName);
             if (trackClip) {
                 return trackClip.loop;
             }
@@ -130,8 +130,8 @@ class AnimState {
     }
 
     get totalWeight() {
-        var sum = 0;
-        var i;
+        let sum = 0;
+        let i;
         for (i = 0; i < this.animations.length; i++) {
             sum += this.animations[i].weight;
         }
@@ -139,10 +139,10 @@ class AnimState {
     }
 
     get timelineDuration() {
-        var duration = 0;
-        var i;
+        let duration = 0;
+        let i;
         for (i = 0; i < this.animations.length; i++) {
-            var animation = this.animations[i];
+            const animation = this.animations[i];
             if (animation.animTrack.duration > duration) {
                 duration = animation.animTrack.duration;
             }

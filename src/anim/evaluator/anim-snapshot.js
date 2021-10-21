@@ -19,7 +19,7 @@ class AnimSnapshot {
         // per-curve evaluation results
         this._results = [];
 
-        var i;
+        let i;
 
         // pre-allocate input caches
         for (i = 0; i < animTrack._inputs.length; ++i) {
@@ -27,13 +27,13 @@ class AnimSnapshot {
         }
 
         // pre-allocate storage for evaluation results
-        var curves = animTrack._curves;
-        var outputs = animTrack._outputs;
+        const curves = animTrack._curves;
+        const outputs = animTrack._outputs;
         for (i = 0; i < curves.length; ++i) {
-            var curve = curves[i];
-            var output = outputs[curve._output];
-            var storage = [];
-            for (var j = 0; j < output._components; ++j) {
+            const curve = curves[i];
+            const output = outputs[curve._output];
+            const storage = [];
+            for (let j = 0; j < output._components; ++j) {
                 storage[j] = 0;
             }
             this._results[i] = storage;

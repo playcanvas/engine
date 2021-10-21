@@ -7,10 +7,10 @@ class AnimStateGraph {
     constructor(data) {
         this._layers = [];
         this._parameters = {};
-        var i;
+        let i;
         if (!Array.isArray(data.layers)) {
             // Layers as an object
-            // var data = {
+            // const data = {
             //     "layers": {
             //         "0": {
             //             "name": "Base",
@@ -39,9 +39,9 @@ class AnimStateGraph {
             //     },
             //     "parameters": {}
             // };
-            for (var layerId in data.layers) {
-                var dataLayer = data.layers[layerId];
-                var layer = {
+            for (const layerId in data.layers) {
+                const dataLayer = data.layers[layerId];
+                const layer = {
                     name: dataLayer.name,
                     blendType: dataLayer.blendType,
                     weight: dataLayer.weight,
@@ -52,12 +52,12 @@ class AnimStateGraph {
                     layer.states.push(data.states[dataLayer.states[i]]);
                 }
                 for (i = 0; i < dataLayer.transitions.length; i++) {
-                    var dataLayerTransition = data.transitions[dataLayer.transitions[i]];
+                    const dataLayerTransition = data.transitions[dataLayer.transitions[i]];
                     if (dataLayerTransition.conditions && !Array.isArray(dataLayerTransition.conditions)) {
-                        var conditionKeys = Object.keys(dataLayerTransition.conditions);
-                        var conditions = [];
-                        for (var j = 0; j < conditionKeys.length; j++) {
-                            var condition = dataLayerTransition.conditions[conditionKeys[j]];
+                        const conditionKeys = Object.keys(dataLayerTransition.conditions);
+                        const conditions = [];
+                        for (let j = 0; j < conditionKeys.length; j++) {
+                            const condition = dataLayerTransition.conditions[conditionKeys[j]];
                             if (condition.parameterName) {
                                 conditions.push(condition);
                             }
@@ -76,7 +76,7 @@ class AnimStateGraph {
             }
         } else {
             // Layers as an array:
-            // var data = {
+            // const data = {
             //     "layers": [
             //         {
             //             "name": "Base",
@@ -105,8 +105,8 @@ class AnimStateGraph {
             // };
             this._layers = data.layers;
         }
-        for (var paramId in data.parameters) {
-            var param = data.parameters[paramId];
+        for (const paramId in data.parameters) {
+            const param = data.parameters[paramId];
             this._parameters[param.name] = { type: param.type, value: param.value };
         }
     }

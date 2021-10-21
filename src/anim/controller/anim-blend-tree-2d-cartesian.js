@@ -17,7 +17,7 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
     static _pip = new Vec2();
 
     pointDistanceCache(i, j) {
-        var pointKey = `${i}${j}`;
+        const pointKey = `${i}${j}`;
         if (!this._pointCache[pointKey]) {
             this._pointCache[pointKey] = this._children[j].point.clone().sub(this._children[i].point);
         }
@@ -26,7 +26,7 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
 
     calculateWeights() {
         if (this.updateParameterValues()) return;
-        var i, j, pi, pipj, minj, result, weightSum, weightedDurationSum;
+        let i, j, pi, pipj, minj, result, weightSum, weightedDurationSum;
         AnimBlendTreeCartesian2D._p.set(...this._parameterValues);
         weightSum = 0.0;
         weightedDurationSum = 0.0;

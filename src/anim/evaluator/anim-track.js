@@ -56,13 +56,13 @@ class AnimTrack {
     eval(time, snapshot) {
         snapshot._time = time;
 
-        var inputs = this._inputs;
-        var outputs = this._outputs;
-        var curves = this._curves;
-        var cache = snapshot._cache;
-        var results = snapshot._results;
+        const inputs = this._inputs;
+        const outputs = this._outputs;
+        const curves = this._curves;
+        const cache = snapshot._cache;
+        const results = snapshot._results;
 
-        var i;
+        let i;
 
         // evaluate inputs
         for (i = 0; i < inputs.length; ++i) {
@@ -71,9 +71,9 @@ class AnimTrack {
 
         // evalute outputs
         for (i = 0; i < curves.length; ++i) {
-            var curve = curves[i];
-            var output = outputs[curve._output];
-            var result = results[i];
+            const curve = curves[i];
+            const output = outputs[curve._output];
+            const result = results[i];
             cache[curve._input].eval(result, curve._interpolation, output);
         }
     }
