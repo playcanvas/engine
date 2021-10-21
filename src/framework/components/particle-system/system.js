@@ -217,6 +217,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                     // TODO: don't do for every emitter
                     if (emitter.lighting) {
                         const layers = data.layers;
+                        let lightCube;
                         for (let i = 0; i < layers.length; i++) {
                             const layer = this.app.scene.layers.getLayerById(layers[i]);
                             if (!layer) continue;
@@ -224,7 +225,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                             if (!layer._lightCube) {
                                 layer._lightCube = new Float32Array(6 * 3);
                             }
-                            const lightCube = layer._lightCube;
+                            lightCube = layer._lightCube;
                             for (let j = 0; j < 6; j++) {
                                 lightCube[j * 3] = this.app.scene.ambientLight.r;
                                 lightCube[j * 3 + 1] = this.app.scene.ambientLight.g;
