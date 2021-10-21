@@ -25,7 +25,7 @@ class AnimBlendTree extends AnimNode {
         this._findParameter = findParameter;
         this._syncAnimations = syncAnimations !== false;
         this._pointCache = {};
-        for (const i = 0; i < children.length; i++) {
+        for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (child.children) {
                 this._children.push(createTree(
@@ -55,14 +55,14 @@ class AnimBlendTree extends AnimNode {
     }
 
     getChild(name) {
-        for (const i = 0; i < this._children.length; i++) {
+        for (let i = 0; i < this._children.length; i++) {
             if (this._children[i].name === name) return this._children[i];
         }
         return null;
     }
 
     updateParameterValues() {
-        const paramsEqual = true;
+        let paramsEqual = true;
         for (let i = 0; i < this._parameterValues.length; i++) {
             const updatedParameter = this._findParameter(this._parameters[i]).value;
             if (this._parameterValues[i] !== updatedParameter) {
@@ -78,8 +78,8 @@ class AnimBlendTree extends AnimNode {
     }
 
     getNodeCount() {
-        const count = 0;
-        for (const i = 0; i < this._children.length; i++) {
+        let count = 0;
+        for (let i = 0; i < this._children.length; i++) {
             const child = this._children[i];
             if (child.constructor === AnimBlendTree) {
                 count += this._children[i].getNodeCount();
