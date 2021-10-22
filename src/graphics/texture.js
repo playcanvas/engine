@@ -16,8 +16,8 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
-var _pixelSizeTable = null;
-var _blockSizeTable = null;
+let _pixelSizeTable = null;
+let _blockSizeTable = null;
 
 /**
  * @class
@@ -498,7 +498,7 @@ class Texture {
     }
 
     get gpuSize() {
-        var mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
+        const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
         return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
     }
 
@@ -605,9 +605,9 @@ class Texture {
             _blockSizeTable[PIXELFORMAT_ATC_RGBA] = 16;
         }
 
-        var pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
-        var blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
-        var result = 0;
+        const pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
+        const blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
+        let result = 0;
 
         while (1) {
             if (pixelSize > 0) {
@@ -615,9 +615,9 @@ class Texture {
                 result += width * height * depth * pixelSize;
             } else {
                 // handle block formats
-                var blockWidth = Math.floor((width + 3) / 4);
-                var blockHeight = Math.floor((height + 3) / 4);
-                var blockDepth = Math.floor((depth + 3) / 4);
+                let blockWidth = Math.floor((width + 3) / 4);
+                const blockHeight = Math.floor((height + 3) / 4);
+                const blockDepth = Math.floor((depth + 3) / 4);
 
                 if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
                     format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {

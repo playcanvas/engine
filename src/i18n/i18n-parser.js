@@ -16,21 +16,21 @@ class I18nParser {
             throw new Error('pc.I18n#addData: "data" field must be an array');
         }
 
-        for (var i = 0, len = data.data.length; i < len; i++) {
-            var entry = data.data[i];
+        for (let i = 0, len = data.data.length; i < len; i++) {
+            const entry = data.data[i];
             if (!entry.info) {
-                throw new Error('pc.I18n#addData: missing "data[' + i + '].info" field');
+                throw new Error(`pc.I18n#addData: missing "data[${i}].info" field`);
             }
 
             if (!entry.info.locale) {
-                throw new Error('pc.I18n#addData: missing "data[' + i + '].info.locale" field');
+                throw new Error(`pc.I18n#addData: missing "data[${i}].info.locale" field`);
             }
             if (typeof entry.info.locale !== 'string') {
-                throw new Error('pc.I18n#addData: "data[' + i + '].info.locale" must be a string');
+                throw new Error(`pc.I18n#addData: "data[${i}].info.locale" must be a string`);
             }
 
             if (!entry.messages) {
-                throw new Error('pc.I18n#addData: missing "data[' + i + '].messages" field');
+                throw new Error(`pc.I18n#addData: missing "data[${i}].messages" field`);
             }
         }
     }

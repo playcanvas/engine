@@ -80,7 +80,7 @@ class ContainerResource {
      * @name ContainerResource#instantiateRenderEntity
      * @description Instantiates an entity with a render component.
      * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
-     * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
+     * @returns {Entity} A hierarchy of entities with render components on entities containing renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -146,7 +146,7 @@ class ContainerResource {
                     // mesh
                     if (gltfNode.hasOwnProperty('mesh')) {
                         const meshGroup = glb.renders[gltfNode.mesh].meshes;
-                        for (var mi = 0; mi < meshGroup.length; mi++) {
+                        for (let mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
                                 const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.skins, gltfNode);
@@ -189,7 +189,7 @@ class ContainerResource {
                 }, options));
             }
 
-            // recursivelly clone children
+            // recursively clone children
             const children = node.children;
             for (let i = 0; i < children.length; i++) {
                 const childClone = cloneHierarchy(root, children[i], glb);
@@ -210,7 +210,7 @@ class ContainerResource {
             data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
         });
 
-        // return the scene hierarachy created from scene clones
+        // return the scene hierarchy created from scene clones
         return ContainerResource.createSceneHierarchy(sceneClones, "Entity");
     }
 
@@ -279,7 +279,7 @@ class ContainerResource {
                 const gltfNode = glb.gltf.nodes[i];
                 if (gltfNode.hasOwnProperty('mesh')) {
                     const meshGroup = glb.renders[gltfNode.mesh].meshes;
-                    for (var mi = 0; mi < meshGroup.length; mi++) {
+                    for (let mi = 0; mi < meshGroup.length; mi++) {
                         const mesh = meshGroup[mi];
                         if (mesh) {
                             createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);

@@ -9,40 +9,40 @@ import { getApplication } from '../framework/globals.js';
 
 import { Mouse } from './mouse.js';
 
-var targetX, targetY;
-var vecA = new Vec3();
-var vecB = new Vec3();
+let targetX, targetY;
+const vecA = new Vec3();
+const vecB = new Vec3();
 
-var rayA = new Ray();
-var rayB = new Ray();
-var rayC = new Ray();
+const rayA = new Ray();
+const rayB = new Ray();
+const rayC = new Ray();
 
 rayA.end = new Vec3();
 rayB.end = new Vec3();
 rayC.end = new Vec3();
 
-var _pq = new Vec3();
-var _pa = new Vec3();
-var _pb = new Vec3();
-var _pc = new Vec3();
-var _pd = new Vec3();
-var _m = new Vec3();
-var _au = new Vec3();
-var _bv = new Vec3();
-var _cw = new Vec3();
-var _ir = new Vec3();
-var _sct = new Vec3();
-var _accumulatedScale = new Vec3();
-var _paddingTop = new Vec3();
-var _paddingBottom = new Vec3();
-var _paddingLeft = new Vec3();
-var _paddingRight = new Vec3();
-var _cornerBottomLeft = new Vec3();
-var _cornerBottomRight = new Vec3();
-var _cornerTopRight = new Vec3();
-var _cornerTopLeft = new Vec3();
+const _pq = new Vec3();
+const _pa = new Vec3();
+const _pb = new Vec3();
+const _pc = new Vec3();
+const _pd = new Vec3();
+const _m = new Vec3();
+const _au = new Vec3();
+const _bv = new Vec3();
+const _cw = new Vec3();
+const _ir = new Vec3();
+const _sct = new Vec3();
+const _accumulatedScale = new Vec3();
+const _paddingTop = new Vec3();
+const _paddingBottom = new Vec3();
+const _paddingLeft = new Vec3();
+const _paddingRight = new Vec3();
+const _cornerBottomLeft = new Vec3();
+const _cornerBottomRight = new Vec3();
+const _cornerTopRight = new Vec3();
+const _cornerTopLeft = new Vec3();
 
-var ZERO_VEC4 = new Vec4();
+const ZERO_VEC4 = new Vec4();
 
 // pi x p2 * p3
 function scalarTriple(p1, p2, p3) {
@@ -315,7 +315,7 @@ class ElementInput {
         this._target = domElement;
         this._attached = true;
 
-        var opts = platform.passiveEvents ? { passive: true } : false;
+        const opts = platform.passiveEvents ? { passive: true } : false;
         if (this._useMouse) {
             window.addEventListener('mouseup', this._upHandler, opts);
             window.addEventListener('mousedown', this._downHandler, opts);
@@ -354,7 +354,7 @@ class ElementInput {
         if (!this._attached) return;
         this._attached = false;
 
-        var opts = platform.passiveEvents ? { passive: true } : false;
+        const opts = platform.passiveEvents ? { passive: true } : false;
         if (this._useMouse) {
             window.removeEventListener('mouseup', this._upHandler, opts);
             window.removeEventListener('mousedown', this._downHandler, opts);
@@ -400,7 +400,7 @@ class ElementInput {
      * @param {ElementComponent} element - The ElementComponent.
      */
     removeElement(element) {
-        var idx = this._elements.indexOf(element);
+        const idx = this._elements.indexOf(element);
         if (idx !== -1)
             this._elements.splice(idx, 1);
     }
@@ -455,26 +455,26 @@ class ElementInput {
     }
 
     _determineTouchedElements(event) {
-        var touchedElements = {};
-        var cameras = this.app.systems.camera.cameras;
-        var i, j, len;
+        const touchedElements = {};
+        const cameras = this.app.systems.camera.cameras;
 
         // check cameras from last to front
         // so that elements that are drawn above others
         // receive events first
-        for (i = cameras.length - 1; i >= 0; i--) {
-            var camera = cameras[i];
+        for (let i = cameras.length - 1; i >= 0; i--) {
+            const camera = cameras[i];
 
-            var done = 0;
-            for (j = 0, len = event.changedTouches.length; j < len; j++) {
+            let done = 0;
+            const len = event.changedTouches.length;
+            for (let j = 0; j < len; j++) {
                 if (touchedElements[event.changedTouches[j].identifier]) {
                     done++;
                     continue;
                 }
 
-                var coords = this._calcTouchCoords(event.changedTouches[j]);
+                const coords = this._calcTouchCoords(event.changedTouches[j]);
 
-                var element = this._getTargetElement(camera, coords.x, coords.y);
+                const element = this._getTargetElement(camera, coords.x, coords.y);
                 if (element) {
                     done++;
                     touchedElements[event.changedTouches[j].identifier] = {
@@ -497,12 +497,12 @@ class ElementInput {
     _handleTouchStart(event) {
         if (!this._enabled) return;
 
-        var newTouchedElements = this._determineTouchedElements(event);
+        const newTouchedElements = this._determineTouchedElements(event);
 
-        for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-            var touch = event.changedTouches[i];
-            var newTouchInfo = newTouchedElements[touch.identifier];
-            var oldTouchInfo = this._touchedElements[touch.identifier];
+        for (let i = 0, len = event.changedTouches.length; i < len; i++) {
+            const touch = event.changedTouches[i];
+            const newTouchInfo = newTouchedElements[touch.identifier];
+            const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
                 this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
@@ -510,7 +510,7 @@ class ElementInput {
             }
         }
 
-        for (var touchId in newTouchedElements) {
+        for (const touchId in newTouchedElements) {
             this._touchedElements[touchId] = newTouchedElements[touchId];
         }
     }
@@ -518,26 +518,26 @@ class ElementInput {
     _handleTouchEnd(event) {
         if (!this._enabled) return;
 
-        var cameras = this.app.systems.camera.cameras;
+        const cameras = this.app.systems.camera.cameras;
 
         // clear clicked entities first then store each clicked entity
         // in _clickedEntities so that we don't fire another click
         // on it in this handler or in the mouseup handler which is
         // fired later
-        for (var key in this._clickedEntities) {
+        for (const key in this._clickedEntities) {
             delete this._clickedEntities[key];
         }
 
-        for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-            var touch = event.changedTouches[i];
-            var touchInfo = this._touchedElements[touch.identifier];
+        for (let i = 0, len = event.changedTouches.length; i < len; i++) {
+            const touch = event.changedTouches[i];
+            const touchInfo = this._touchedElements[touch.identifier];
             if (!touchInfo)
                 continue;
 
-            var element = touchInfo.element;
-            var camera = touchInfo.camera;
-            var x = touchInfo.x;
-            var y = touchInfo.y;
+            const element = touchInfo.element;
+            const camera = touchInfo.camera;
+            const x = touchInfo.x;
+            const y = touchInfo.y;
 
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
@@ -547,10 +547,10 @@ class ElementInput {
             // check if touch was released over previously touch
             // element in order to fire click event
             if (event.touches.length === 0) {
-                var coords = this._calcTouchCoords(touch);
+                const coords = this._calcTouchCoords(touch);
 
-                for (var c = cameras.length - 1; c >= 0; c--) {
-                    var hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
+                for (let c = cameras.length - 1; c >= 0; c--) {
+                    const hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
                     if (hovered === element) {
 
                         if (!this._clickedEntities[element.entity.getGuid()]) {
@@ -571,15 +571,15 @@ class ElementInput {
 
         if (!this._enabled) return;
 
-        var newTouchedElements = this._determineTouchedElements(event);
+        const newTouchedElements = this._determineTouchedElements(event);
 
-        for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-            var touch = event.changedTouches[i];
-            var newTouchInfo = newTouchedElements[touch.identifier];
-            var oldTouchInfo = this._touchedElements[touch.identifier];
+        for (let i = 0, len = event.changedTouches.length; i < len; i++) {
+            const touch = event.changedTouches[i];
+            const newTouchInfo = newTouchedElements[touch.identifier];
+            const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (oldTouchInfo) {
-                var coords = this._calcTouchCoords(touch);
+                const coords = this._calcTouchCoords(touch);
 
                 // Fire touchleave if we've left the previously touched element
                 if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
@@ -600,18 +600,18 @@ class ElementInput {
     }
 
     _onElementMouseEvent(eventType, event) {
-        var element;
+        let element;
 
-        var hovered = this._hoveredElement;
+        const hovered = this._hoveredElement;
         this._hoveredElement = null;
 
-        var cameras = this.app.systems.camera.cameras;
-        var camera;
+        const cameras = this.app.systems.camera.cameras;
+        let camera;
 
         // check cameras from last to front
         // so that elements that are drawn above others
         // receive events first
-        for (var i = cameras.length - 1; i >= 0; i--) {
+        for (let i = cameras.length - 1; i >= 0; i--) {
             camera = cameras[i];
 
             element = this._getTargetElement(camera, targetX, targetY);
@@ -675,14 +675,14 @@ class ElementInput {
     _onXrUpdate() {
         if (!this._enabled) return;
 
-        var inputSources = this.app.xr.input.inputSources;
-        for (var i = 0; i < inputSources.length; i++) {
+        const inputSources = this.app.xr.input.inputSources;
+        for (let i = 0; i < inputSources.length; i++) {
             this._onElementSelectEvent('selectmove', inputSources[i], null);
         }
     }
 
     _onXrInputRemove(inputSource) {
-        var hovered = this._selectedElements[inputSource.id];
+        const hovered = this._selectedElements[inputSource.id];
         if (hovered) {
             inputSource._elementEntity = null;
             this._fireEvent('selectleave', new ElementSelectEvent(null, hovered, null, inputSource));
@@ -703,18 +703,18 @@ class ElementInput {
     }
 
     _onElementSelectEvent(eventType, inputSource, event) {
-        var element;
+        let element;
 
-        var hoveredBefore = this._selectedElements[inputSource.id];
-        var hoveredNow;
+        const hoveredBefore = this._selectedElements[inputSource.id];
+        let hoveredNow;
 
-        var cameras = this.app.systems.camera.cameras;
-        var camera;
+        const cameras = this.app.systems.camera.cameras;
+        let camera;
 
         if (inputSource.elementInput) {
             rayC.set(inputSource.getOrigin(), inputSource.getDirection());
 
-            for (var i = cameras.length - 1; i >= 0; i--) {
+            for (let i = cameras.length - 1; i >= 0; i--) {
                 camera = cameras[i];
 
                 element = this._getTargetElementByRay(rayC, camera);
@@ -742,7 +742,7 @@ class ElementInput {
             if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
-        var pressed = this._selectedPressedElements[inputSource.id];
+        const pressed = this._selectedPressedElements[inputSource.id];
         if (! inputSource.elementInput && pressed) {
             delete this._selectedPressedElements[inputSource.id];
             if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
@@ -760,7 +760,7 @@ class ElementInput {
     }
 
     _fireEvent(name, evt) {
-        var element = evt.element;
+        let element = evt.element;
         while (true) {
             element.fire(name, evt);
             if (evt._stopPropagation)
@@ -776,9 +776,9 @@ class ElementInput {
     }
 
     _calcMouseCoords(event) {
-        var rect = this._target.getBoundingClientRect();
-        var left = Math.floor(rect.left);
-        var top = Math.floor(rect.top);
+        const rect = this._target.getBoundingClientRect();
+        const left = Math.floor(rect.left);
+        const top = Math.floor(rect.top);
 
         // mouse is outside of canvas
         if (event.clientX < left ||
@@ -796,13 +796,13 @@ class ElementInput {
     }
 
     _calcTouchCoords(touch) {
-        var totalOffsetX = 0;
-        var totalOffsetY = 0;
-        var target = touch.target;
+        let totalOffsetX = 0;
+        let totalOffsetY = 0;
+        let target = touch.target;
         while (!(target instanceof HTMLElement)) {
             target = target.parentNode;
         }
-        var currentElement = target;
+        let currentElement = target;
 
         do {
             totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
@@ -818,7 +818,7 @@ class ElementInput {
     }
 
     _sortElements(a, b) {
-        var layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
+        const layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
         if (layerOrder !== 0) return layerOrder;
 
         if (a.screen && !b.screen)
@@ -836,16 +836,16 @@ class ElementInput {
     }
 
     _getTargetElement(camera, x, y) {
-        var result = null;
+        let result = null;
         let closestDistance3d = Infinity;
 
         // sort elements based on layers and draw order
         this._elements.sort(this._sortHandler);
 
-        var rayScreen, ray3d;
+        let rayScreen, ray3d;
 
-        for (var i = 0, len = this._elements.length; i < len; i++) {
-            var element = this._elements[i];
+        for (let i = 0, len = this._elements.length; i < len; i++) {
+            const element = this._elements[i];
 
             if (element.screen && element.screen.screen.screenSpace) {
                 if (rayScreen === undefined) {
@@ -886,7 +886,7 @@ class ElementInput {
     }
 
     _getTargetElementByRay(ray, camera) {
-        var result = null;
+        let result = null;
 
         rayA.origin.copy(ray.origin);
         rayA.direction.copy(ray.direction);
@@ -895,8 +895,8 @@ class ElementInput {
         // sort elements
         this._elements.sort(this._sortHandler);
 
-        for (var i = 0, len = this._elements.length; i < len; i++) {
-            var element = this._elements[i];
+        for (let i = 0, len = this._elements.length; i < len; i++) {
+            const element = this._elements[i];
 
             if (! element.screen || ! element.screen.screen.screenSpace) {
                 if (this._checkElement(rayA, element, false) >= 0) {
@@ -914,11 +914,11 @@ class ElementInput {
     // padding specified, we need to expand the screenCorners to incorporate the
     // padding.
     _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY, scaleZ) {
-        var hitCorners = screenOrWorldCorners;
-        var button = element.entity && element.entity.button;
+        let hitCorners = screenOrWorldCorners;
+        const button = element.entity && element.entity.button;
 
         if (button) {
-            var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
+            const hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
 
             _paddingTop.copy(element.entity.up);
             _paddingBottom.copy(_paddingTop).mulScalar(-1);
@@ -974,8 +974,8 @@ class ElementInput {
     }
 
     _calculateScaleToScreen(element) {
-        var current = element.entity;
-        var screenScale = element.screen.screen.scale;
+        let current = element.entity;
+        const screenScale = element.screen.screen.scale;
 
         _accumulatedScale.set(screenScale, screenScale, screenScale);
 
@@ -988,7 +988,7 @@ class ElementInput {
     }
 
     _calculateScaleToWorld(element) {
-        var current = element.entity;
+        let current = element.entity;
         _accumulatedScale.set(1, 1, 1);
 
         while (current) {
@@ -1000,19 +1000,19 @@ class ElementInput {
     }
 
     _calculateRayScreen(x, y, camera, ray) {
-        var sw = this.app.graphicsDevice.width;
-        var sh = this.app.graphicsDevice.height;
+        const sw = this.app.graphicsDevice.width;
+        const sh = this.app.graphicsDevice.height;
 
-        var cameraWidth = camera.rect.z * sw;
-        var cameraHeight = camera.rect.w * sh;
-        var cameraLeft = camera.rect.x * sw;
-        var cameraRight = cameraLeft + cameraWidth;
+        const cameraWidth = camera.rect.z * sw;
+        const cameraHeight = camera.rect.w * sh;
+        const cameraLeft = camera.rect.x * sw;
+        const cameraRight = cameraLeft + cameraWidth;
         // camera bottom (origin is bottom left of window)
-        var cameraBottom = (1 - camera.rect.y) * sh;
-        var cameraTop = cameraBottom - cameraHeight;
+        const cameraBottom = (1 - camera.rect.y) * sh;
+        const cameraTop = cameraBottom - cameraHeight;
 
-        var _x = x * sw / this._target.clientWidth;
-        var _y = y * sh / this._target.clientHeight;
+        let _x = x * sw / this._target.clientWidth;
+        let _y = y * sh / this._target.clientHeight;
 
         if (_x >= cameraLeft && _x <= cameraRight &&
             _y <= cameraBottom && _y >= cameraTop) {
@@ -1034,19 +1034,19 @@ class ElementInput {
     }
 
     _calculateRay3d(x, y, camera, ray) {
-        var sw = this._target.clientWidth;
-        var sh = this._target.clientHeight;
+        const sw = this._target.clientWidth;
+        const sh = this._target.clientHeight;
 
-        var cameraWidth = camera.rect.z * sw;
-        var cameraHeight = camera.rect.w * sh;
-        var cameraLeft = camera.rect.x * sw;
-        var cameraRight = cameraLeft + cameraWidth;
+        const cameraWidth = camera.rect.z * sw;
+        const cameraHeight = camera.rect.w * sh;
+        const cameraLeft = camera.rect.x * sw;
+        const cameraRight = cameraLeft + cameraWidth;
         // camera bottom - origin is bottom left of window
-        var cameraBottom = (1 - camera.rect.y) * sh;
-        var cameraTop = cameraBottom - cameraHeight;
+        const cameraBottom = (1 - camera.rect.y) * sh;
+        const cameraTop = cameraBottom - cameraHeight;
 
-        var _x = x;
-        var _y = y;
+        let _x = x;
+        let _y = y;
 
         // check window coords are within camera rect
         if (x >= cameraLeft && x <= cameraRight &&
@@ -1077,14 +1077,14 @@ class ElementInput {
             }
         }
 
-        var scale;
+        let scale;
         if (screen) {
             scale = this._calculateScaleToScreen(element);
         } else {
             scale = this._calculateScaleToWorld(element);
         }
 
-        var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
+        const corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
 
         return intersectLineQuad(ray.origin, ray.end, corners);
     }
