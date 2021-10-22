@@ -1,6 +1,6 @@
 import {
     LIGHTTYPE_DIRECTIONAL
-} from './constants.js';
+} from '../constants.js';
 
 // class representing an entry in the final order of rendering of cameras and layers in the engine
 // this is populated at runtime based on LayerComposition
