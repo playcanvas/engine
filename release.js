@@ -88,7 +88,7 @@ const writePackageVersion = (version) => {
     fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
 };
 
-// ask user a question and asynchronously return the result in callback.
+// ask user a question and invoke callback if user responds yes (using enter, y or Y).
 const getUserConfirmation = (question, callback) => {
     const rl = readline.createInterface({
         input: process.stdin,
@@ -143,7 +143,7 @@ const createRelease = () => {
         // checkout release branch
         exec(`git checkout ${releaseBranch}`);
 
-        // update package version to not have '-dev'
+        // update package version build to 'preview'
         writePackageVersion({
             major: devVersion.major,
             minor: devVersion.minor,
@@ -165,20 +165,20 @@ const finalizeRelease = () => {
         console.log(`warning: current branch '${curBranch}' does not start with '${releaseBranchName}'.`);
     }
 
-    // get the current version
+    // get the current package version
     const curVersion = readPackageVersion();
 
-    // minor release branches are created with 'release' build.
+    // sanity check package version
     if (curVersion.build && curVersion.patch !== 0) {
-        console.log(`warning: version has unexpected build '${curVersion.build}'.`);
+        console.log(`warning: package version has unexpected build '${curVersion.build}'.`);
     }
 
-    // calculate the new version
+    // calculate the new version - either first minor release or patch release
     const newVersion = evolvePackageVersion(curVersion);
     const versionString = `v${newVersion.major}.${newVersion.minor}.${newVersion.patch}`;
 
     // get user confirmation
-    const question = `About to finalize and tag branch '${curBranch}' for version '${versionString}'.\nContinue? (Y/n) `;
+    const question = `About to finalize and tag branch '${curBranch}' with version '${versionString}'.\nContinue? (Y/n) `;
     getUserConfirmation(question, () => {
         writePackageVersion(newVersion);
 
