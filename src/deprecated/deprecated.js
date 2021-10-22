@@ -1069,8 +1069,8 @@ export class AssetListLoader extends EventHandler {
             this._assets = assetList;
         } else {
             // list of Asset IDs
-            for (var i = 0; i < assetList.length; i++) {
-                var asset = assetRegistry.get(assetList[i]);
+            for (let i = 0; i < assetList.length; i++) {
+                const asset = assetRegistry.get(assetList[i]);
                 if (asset) {
                     this._assets.push(asset);
                 } else {
@@ -1086,13 +1086,11 @@ export class AssetListLoader extends EventHandler {
         DeprecatedLog.log('DEPRECATED: pc.AssetListLoader is deprecated.');
 
         // remove any outstanding listeners
-        var self = this;
-
         this._registry.off("load", this._onLoad);
         this._registry.off("error", this._onError);
 
-        this._waitingAssets.forEach(function (id) {
-            self._registry.off("add:" + id, this._onAddAsset);
+        this._waitingAssets.forEach((id) => {
+            this._registry.off("add:" + id, this._onAddAsset);
         });
 
         this.off("progress");
@@ -1111,11 +1109,6 @@ export class AssetListLoader extends EventHandler {
     load(done, scope) {
         DeprecatedLog.log('DEPRECATED: pc.AssetListLoader is deprecated.');
 
-        var i = 0;
-        var l = this._assets.length;
-        var asset;
-
-        // this._total = l;
         this._count = 0;
         this._failed = [];
         this._callback = done;
@@ -1124,8 +1117,8 @@ export class AssetListLoader extends EventHandler {
         this._registry.on("load", this._onLoad, this);
         this._registry.on("error", this._onError, this);
 
-        for (i = 0; i < l; i++) {
-            asset = this._assets[i];
+        for (let i = 0, l = this._assets.length; i < l; i++) {
+            const asset = this._assets[i];
 
             if (!asset.loading && !asset.loaded) {
                 this._registry.load(asset);
@@ -1176,8 +1169,6 @@ export class AssetListLoader extends EventHandler {
 
     // called when an (any) asset is loaded
     _onLoad(asset) {
-        var self = this;
-
         // check this is an asset we care about
         if (this._assets.indexOf(asset) >= 0) {
             this._count++;
@@ -1188,16 +1179,14 @@ export class AssetListLoader extends EventHandler {
             // call next tick because we want
             // this to be fired after any other
             // asset load events
-            setTimeout(function () {
-                self._loadingComplete(self._failed);
+            setTimeout(() => {
+                this._loadingComplete(this._failed);
             }, 0);
         }
     }
 
     // called when an asset fails to load
     _onError(err, asset) {
-        var self = this;
-
         // check this is an asset we care about
         if (this._assets.indexOf(asset) >= 0) {
             this._count++;
@@ -1208,8 +1197,8 @@ export class AssetListLoader extends EventHandler {
             // call next tick because we want
             // this to be fired after any other
             // asset load events
-            setTimeout(function () {
-                self._loadingComplete(self._failed);
+            setTimeout(() => {
+                this._loadingComplete(this._failed);
             }, 0);
         }
     }
@@ -1217,15 +1206,13 @@ export class AssetListLoader extends EventHandler {
     // called when a expected asset is added to the asset registry
     _onAddAsset(asset) {
         // remove from waiting list
-        var index = this._waitingAssets.indexOf(asset);
+        const index = this._waitingAssets.indexOf(asset);
         if (index >= 0) {
             this._waitingAssets.splice(index, 1);
         }
 
         this._assets.push(asset);
-        var i;
-        var l = this._assets.length;
-        for (i = 0; i < l; i++) {
+        for (let i = 0, l = this._assets.length; i < l; i++) {
             asset = this._assets[i];
 
             if (!asset.loading && !asset.loaded) {
