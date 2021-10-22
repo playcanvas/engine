@@ -60,7 +60,7 @@ class AnimNode {
     }
 
     get normalizedWeight() {
-        var totalWeight = this._state.totalWeight;
+        const totalWeight = this._state.totalWeight;
         if (totalWeight === 0.0) return 0.0;
         return this.weight / totalWeight;
     }

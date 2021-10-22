@@ -171,7 +171,7 @@ class AssetRegistry extends EventHandler {
     list(filters) {
         filters = filters || {};
         return this._assets.filter(function (asset) {
-            var include = true;
+            let include = true;
             if (filters.preload !== undefined) {
                 include = (asset.preload === filters.preload);
             }
@@ -191,8 +191,8 @@ class AssetRegistry extends EventHandler {
      * app.assets.add(asset);
      */
     add(asset) {
-        var index = this._assets.push(asset) - 1;
-        var url;
+        const index = this._assets.push(asset) - 1;
+        let url;
 
         // id cache
         this._cache[asset.id] = index;
@@ -232,8 +232,8 @@ class AssetRegistry extends EventHandler {
      * app.assets.remove(asset);
      */
     remove(asset) {
-        var idx = this._cache[asset.id];
-        var url = asset.file ? asset.file.url : null;
+        const idx = this._cache[asset.id];
+        const url = asset.file ? asset.file.url : null;
 
         if (idx !== undefined) {
             // remove from list
@@ -249,8 +249,8 @@ class AssetRegistry extends EventHandler {
             this._urls = [];
 
             // update id cache and rebuild name cache
-            for (var i = 0, l = this._assets.length; i < l; i++) {
-                var a = this._assets[i];
+            for (let i = 0, l = this._assets.length; i < l; i++) {
+                const a = this._assets[i];
 
                 this._cache[a.id] = i;
                 if (!this._names[a.name]) {
@@ -291,7 +291,7 @@ class AssetRegistry extends EventHandler {
      * var asset = app.assets.get(100);
      */
     get(id) {
-        var idx = this._cache[id];
+        const idx = this._cache[id];
         return this._assets[idx];
     }
 
@@ -305,7 +305,7 @@ class AssetRegistry extends EventHandler {
      * var asset = app.assets.getByUrl("../path/to/image.jpg");
      */
     getByUrl(url) {
-        var idx = this._urls[url];
+        const idx = this._urls[url];
         return this._assets[idx];
     }
 
@@ -654,8 +654,8 @@ class AssetRegistry extends EventHandler {
      * console.log("Found " + assets.length + " assets, where names contains 'monster'");
      */
     filter(callback) {
-        var items = [];
-        for (var i = 0, len = this._assets.length; i < len; i++) {
+        const items = [];
+        for (let i = 0, len = this._assets.length; i < len; i++) {
             if (callback(this._assets[i]))
                 items.push(this._assets[i]);
         }
@@ -675,7 +675,7 @@ class AssetRegistry extends EventHandler {
     find(name, type) {
         // findAll returns an empty array the if the asset cannot be found so `asset` is
         // never null/undefined
-        var asset = this.findAll(name, type);
+        const asset = this.findAll(name, type);
         return asset.length > 0 ? asset[0] : null;
     }
 }

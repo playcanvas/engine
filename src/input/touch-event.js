@@ -8,13 +8,13 @@
  * @returns {object} The co-ordinates of the touch relative to the touch.target element. In the format {x, y}.
  */
 function getTouchTargetCoords(touch) {
-    var totalOffsetX = 0;
-    var totalOffsetY = 0;
-    var target = touch.target;
+    let totalOffsetX = 0;
+    let totalOffsetY = 0;
+    let target = touch.target;
     while (!(target instanceof HTMLElement)) {
         target = target.parentNode;
     }
-    var currentElement = target;
+    let currentElement = target;
 
     do {
         totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
@@ -42,7 +42,7 @@ function getTouchTargetCoords(touch) {
  */
 class Touch {
     constructor(touch) {
-        var coords = getTouchTargetCoords(touch);
+        const coords = getTouchTargetCoords(touch);
 
         this.id = touch.identifier;
 
@@ -77,13 +77,12 @@ class TouchEvent {
         this.changedTouches = [];
 
         if (event) {
-            var i, l = event.touches.length;
-            for (i = 0; i < l; i++) {
+            for (let i = 0, l = event.touches.length; i < l; i++) {
                 this.touches.push(new Touch(event.touches[i]));
             }
 
-            l = event.changedTouches.length;
-            for (i = 0; i < l; i++) {
+
+            for (let i = 0, l = event.changedTouches.length; i < l; i++) {
                 this.changedTouches.push(new Touch(event.changedTouches[i]));
             }
         }
@@ -99,8 +98,7 @@ class TouchEvent {
      * @returns {Touch} The {@link Touch} object or null.
      */
     getTouchById(id, list) {
-        var i, l = list.length;
-        for (i = 0; i < l; i++) {
+        for (let i = 0, l = list.length; i < l; i++) {
             if (list[i].id === id) {
                 return list[i];
             }

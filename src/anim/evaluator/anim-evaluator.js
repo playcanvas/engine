@@ -40,18 +40,17 @@ class AnimEvaluator {
 
     static _set(a, b, type) {
         const len  = a.length;
-        let i;
 
         if (type === 'quaternion') {
             let l = AnimEvaluator._dot(b, b);
             if (l > 0) {
                 l = 1.0 / Math.sqrt(l);
             }
-            for (i = 0; i < len; ++i) {
+            for (let i = 0; i < len; ++i) {
                 a[i] = b[i] * l;
             }
         } else {
-            for (i = 0; i < len; ++i) {
+            for (let i = 0; i < len; ++i) {
                 a[i] = b[i];
             }
         }
@@ -290,9 +289,7 @@ class AnimEvaluator {
             return clips[a].blendOrder < clips[b].blendOrder;
         });
 
-        let i, j;
-
-        for (i = 0; i < order.length; ++i) {
+        for (let i = 0; i < order.length; ++i) {
             const index = order[i];
             const clip = clips[index];
             const inputs = this._inputs[index];
@@ -309,7 +306,7 @@ class AnimEvaluator {
             let value;
 
             if (blendWeight >= 1.0) {
-                for (j = 0; j < inputs.length; ++j) {
+                for (let j = 0; j < inputs.length; ++j) {
                     input = inputs[j];
                     output = outputs[j];
                     value = output.value;
@@ -319,7 +316,7 @@ class AnimEvaluator {
                     output.blendCounter++;
                 }
             } else if (blendWeight > 0.0) {
-                for (j = 0; j < inputs.length; ++j) {
+                for (let j = 0; j < inputs.length; ++j) {
                     input = inputs[j];
                     output = outputs[j];
                     value = output.value;
