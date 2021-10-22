@@ -36,6 +36,9 @@ import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 
+/** @typedef {import("../../graphics/graphics-device.js").GraphicsDevice} GraphicsDevice */
+/** @typedef {import("../scene.js").Scene} Scene */
+
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
@@ -64,7 +67,7 @@ const worldMatZ = new Vec3();
 
 const tempSphere = new BoundingSphere();
 const boneTextureSize = [0, 0, 0, 0];
-let boneTexture, instancingData, modelMatrix, normalMatrix;
+let instancingData, modelMatrix, normalMatrix;
 
 let keyA, keyB;
 
@@ -92,7 +95,11 @@ const _tempMaterialSet = new Set();
  */
 class ForwardRenderer {
     constructor(graphicsDevice) {
+
+        /** @type {GraphicsDevice} */
         this.device = graphicsDevice;
+
+        /** @type {Scene} */
         this.scene = null;
 
         this._shadowDrawCalls = 0;
@@ -973,7 +980,7 @@ class ForwardRenderer {
         if (meshInstance.skinInstance) {
             this._skinDrawCalls++;
             if (device.supportsBoneTextures) {
-                boneTexture = meshInstance.skinInstance.boneTexture;
+                const boneTexture = meshInstance.skinInstance.boneTexture;
                 this.boneTextureId.setValue(boneTexture);
                 boneTextureSize[0] = boneTexture.width;
                 boneTextureSize[1] = boneTexture.height;
