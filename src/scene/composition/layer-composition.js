@@ -11,7 +11,7 @@ import {
 } from '../constants.js';
 
 import { RenderAction } from './render-action.js';
-import { WorldClusters } from '../world-clusters.js';
+import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
 import { getApplication } from '../../framework/globals.js';
