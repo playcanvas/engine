@@ -19,10 +19,10 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  * @property {number} height Height of depth texture or 0 if not available.
  * @example
  * // CPU path
- * var depthSensing = app.xr.depthSensing;
+ * const depthSensing = app.xr.depthSensing;
  * if (depthSensing.available) {
  *     // get depth in the middle of the screen, value is in meters
- *     var depth = depthSensing.getDepth(depthSensing.width / 2, depthSensing.height / 2);
+ *     const depth = depthSensing.getDepth(depthSensing.width / 2, depthSensing.height / 2);
  * }
  * @example
  * // GPU path, attaching texture to material
@@ -238,7 +238,7 @@ class XrDepthSensing extends EventHandler {
      * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to 1.0 (top to bottom).
      * @description Get depth value from depth information in meters. UV is in range of 0..1, with origin in top-left corner of a texture.
      * @example
-     * var depth = app.xr.depthSensing.getDepth(u, v);
+     * const depth = app.xr.depthSensing.getDepth(u, v);
      * if (depth !== null) {
      *     // depth in meters
      * }
@@ -264,7 +264,7 @@ class XrDepthSensing extends EventHandler {
      * @description True if depth sensing information is available.
      * @example
      * if (app.xr.depthSensing.available) {
-     *     var depth = app.xr.depthSensing.getDepth(x, y);
+     *     const depth = app.xr.depthSensing.getDepth(x, y);
      * }
      */
     get available() {

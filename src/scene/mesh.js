@@ -113,8 +113,8 @@ class GeometryVertexStream {
  * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
  *
  * ~~~javascript
- * var mesh = new pc.Mesh(device);
- * var positions = [
+ * const mesh = new pc.Mesh(device);
+ * const positions = [
  *     0, 0, 0, // pos 0
  *     1, 0, 0, // pos 1
  *     1, 1, 0  // pos 2
@@ -127,20 +127,20 @@ class GeometryVertexStream {
  * Float32Array is used for positions and uvs.
  *
  * ~~~javascript
- * var mesh = new pc.Mesh(device);
- * var positions = new Float32Array([
+ * const mesh = new pc.Mesh(device);
+ * const positions = new Float32Array([
  *     0, 0, 0, // pos 0
  *     1, 0, 0, // pos 1
  *     1, 1, 0, // pos 2
  *     0, 1, 0  // pos 3
  * ]);
- * var uvs = new Float32Array([
+ * const uvs = new Float32Array([
  *     0, 0, // uv 0
  *     1, 0, // uv 1
  *     1, 1, // uv 2
  *     0, 1  // uv 3
  * ]);
- * var indices = [
+ * const indices = [
  *     0, 1, 2, // triangle 0
  *     0, 2, 3  // triangle 1
  * ];

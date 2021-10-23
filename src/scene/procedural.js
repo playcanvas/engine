@@ -24,9 +24,9 @@ const shapePrimitives = [];
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
  * @example
- * var normals = pc.calculateNormals(positions, indices);
- * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
- * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
+ * const normals = pc.calculateNormals(positions, indices);
+ * const tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * const mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
 function calculateNormals(positions, indices) {
     const triangleCount = indices.length / 3;
@@ -95,8 +95,8 @@ function calculateNormals(positions, indices) {
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex tangents.
  * @example
- * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
- * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
+ * const tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * const mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
 function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel’s Method
@@ -227,7 +227,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
- * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
+ * const mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
  *     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
  *     uvs: [0, 0, 1, 0, 0, 1],
  *     indices: [0, 1, 2]

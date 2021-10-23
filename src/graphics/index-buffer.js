@@ -12,15 +12,6 @@ import {
  *
  * Typically, index buffers are set on {@link Mesh} objects.
  * @description Creates a new index buffer.
- * @example
- * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
- * // static, hinting that the buffer will never be modified.
- * var indices = new UInt16Array([0, 1, 2]);
- * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
- *                                      pc.INDEXFORMAT_UINT16,
- *                                      3,
- *                                      pc.BUFFER_STATIC,
- *                                      indices);
  * @param {GraphicsDevice} graphicsDevice - The graphics device used to
  * manage this index buffer.
  * @param {number} format - The type of each index to be stored in the index
@@ -40,6 +31,11 @@ import {
  * Defaults to {@link BUFFER_STATIC}.
  * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
  * index buffer will be initialized to zeros.
+ * @example
+ * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
+ * // static, hinting that the buffer will never be modified.
+ * const indices = new UInt16Array([0, 1, 2]);
+ * const indexBuffer = new pc.IndexBuffer(graphicsDevice, pc.INDEXFORMAT_UINT16, 3, pc.BUFFER_STATIC, indices);
  */
 class IndexBuffer {
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
@@ -183,7 +179,7 @@ class IndexBuffer {
     setData(data) {
         if (data.byteLength !== this.numBytes) {
             // #if _DEBUG
-            console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+            console.error(`IndexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
             // #endif
             return false;
         }

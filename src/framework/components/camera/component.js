@@ -43,7 +43,7 @@ const properties = [
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @example
  * // Add a pc.CameraComponent to an entity
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
@@ -51,7 +51,7 @@ const properties = [
  * });
  * @example
  * // Get the pc.CameraComponent on an entity
- * var cameraComponent = entity.camera;
+ * const cameraComponent = entity.camera;
  * @example
  * // Update a property on a camera component
  * entity.camera.nearClip = 2;
@@ -287,8 +287,8 @@ class CameraComponent extends Component {
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
-     * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
-     * var end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
+     * const start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
+     * const end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
      *
      * // Use the ray coordinates to perform a raycast
      * app.systems.rigidbody.raycastFirst(start, end, function (result) {

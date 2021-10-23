@@ -25,7 +25,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
  *
  * @example
- * var curve = new pc.Curve([
+ * const curve = new pc.Curve([
  *     0, 0,        // At 0 time, value of 0
  *     0.33, 2,     // At 0.33 time, value of 2
  *     0.66, 2.6,   // At 0.66 time, value of 2.6

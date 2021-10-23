@@ -22,8 +22,8 @@ class Mat3 {
      * @description Creates a duplicate of the specified matrix.
      * @returns {Mat3} A duplicate matrix.
      * @example
-     * var src = new pc.Mat3().translate(10, 20, 30);
-     * var dst = src.clone();
+     * const src = new pc.Mat3().translate(10, 20, 30);
+     * const dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
@@ -37,8 +37,8 @@ class Mat3 {
      * @param {Mat3} rhs - A 3x3 matrix to be copied.
      * @returns {Mat3} Self for chaining.
      * @example
-     * var src = new pc.Mat3().translate(10, 20, 30);
-     * var dst = new pc.Mat3();
+     * const src = new pc.Mat3().translate(10, 20, 30);
+     * const dst = new pc.Mat3();
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
@@ -66,7 +66,7 @@ class Mat3 {
      * @param {number[]} src - An array[9] to be copied.
      * @returns {Mat3} Self for chaining.
      * @example
-     * var dst = new pc.Mat3();
+     * const dst = new pc.Mat3();
      * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
      */
     set(src) {
@@ -92,8 +92,8 @@ class Mat3 {
      * @description Reports whether two matrices are equal.
      * @returns {boolean} True if the matrices are equal and false otherwise.
      * @example
-     * var a = new pc.Mat3().translate(10, 20, 30);
-     * var b = new pc.Mat3();
+     * const a = new pc.Mat3().translate(10, 20, 30);
+     * const b = new pc.Mat3();
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
@@ -117,7 +117,7 @@ class Mat3 {
      * @description Reports whether the specified matrix is the identity matrix.
      * @returns {boolean} True if the matrix is identity and false otherwise.
      * @example
-     * var m = new pc.Mat3();
+     * const m = new pc.Mat3();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
     isIdentity() {
@@ -165,7 +165,7 @@ class Mat3 {
      * @description Converts the matrix to string form.
      * @returns {string} The matrix in string form.
      * @example
-     * var m = new pc.Mat3();
+     * const m = new pc.Mat3();
      * // Outputs [1, 0, 0, 0, 1, 0, 0, 0, 1]
      * console.log(m.toString());
      */
@@ -185,7 +185,7 @@ class Mat3 {
      * @description Generates the transpose of the specified 3x3 matrix.
      * @returns {Mat3} Self for chaining.
      * @example
-     * var m = new pc.Mat3();
+     * const m = new pc.Mat3();
      *
      * // Transpose in place
      * m.transpose();

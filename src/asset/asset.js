@@ -39,17 +39,13 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
  * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
  * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container", cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", text", "texture"]
- * @param {object} [file] - Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
- * @example
- * var file = {
- *     filename: "filename.txt",
- *     url: "/example/filename.txt"
- * };
+ * @param {object} [file] - Details about the file the asset is made from. For assets that don't contain file data, specify null.
+ * @param {string} [file.url] - URL of the file to load. This property is required if the asset is loaded from a file.
  * @param {object} [data] - JSON object with additional data about the asset. (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
  * @param {object} [options] - The asset handler options. For container options see {@link ContainerHandler}
  * @param {boolean} [options.crossOrigin] - For use with texture resources. For browser-supported image formats only, enable cross origin.
  * @example
- * var asset = new pc.Asset("a texture", "texture", {
+ * const asset = new pc.Asset("a texture", "texture", {
  *     url: "http://example.com/my/assets/here/texture.png"
  * });
  * @property {string} name The name of the asset
@@ -164,8 +160,8 @@ class Asset extends EventHandler {
      * @description Return the URL required to fetch the file for this asset.
      * @returns {string} The URL.
      * @example
-     * var assets = app.assets.find("My Image", "texture");
-     * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
+     * const assets = app.assets.find("My Image", "texture");
+     * const img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
      */
     getFileUrl() {
         const file = this.file;
@@ -255,8 +251,8 @@ class Asset extends EventHandler {
      * @param {callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
-     * var asset = app.assets.find("My Asset");
-     * asset.ready(function (asset) {
+     * const asset = app.assets.find("My Asset");
+     * asset.ready((asset) => {
      *   // asset loaded
      * });
      * app.assets.load(asset);
@@ -286,7 +282,7 @@ class Asset extends EventHandler {
      * @name Asset#unload
      * @description Destroys the associated resource and marks asset as unloaded.
      * @example
-     * var asset = app.assets.find("My Asset");
+     * const asset = app.assets.find("My Asset");
      * asset.unload();
      * // asset.resource is null
      */

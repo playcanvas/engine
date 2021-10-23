@@ -38,12 +38,12 @@ const defaultOptions = {
  * Defaults to {@link CUBEFACE_POSX}.
  * @example
  * // Create a 512x512x24-bit render target with a depth buffer
- * var colorBuffer = new pc.Texture(graphicsDevice, {
+ * const colorBuffer = new pc.Texture(graphicsDevice, {
  *     width: 512,
  *     height: 512,
  *     format: pc.PIXELFORMAT_R8_G8_B8
  * });
- * var renderTarget = new pc.RenderTarget({
+ * const renderTarget = new pc.RenderTarget({
  *     colorBuffer: colorBuffer,
  *     depth: true
  * });

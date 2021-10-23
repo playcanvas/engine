@@ -78,18 +78,17 @@ class Command {
  * @property {boolean} visibleThisFrame Read this value in {@link Layer#onPostCull} to determine if the object is actually going to be rendered.
  * @example
  * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
- * var mesh = pc.createBox(graphicsDevice);
- * var material = new pc.StandardMaterial();
- * var node = new pc.GraphNode();
- * var meshInstance = new pc.MeshInstance(mesh, material, node);
- *
+ * const mesh = pc.createBox(graphicsDevice);
+ * const material = new pc.StandardMaterial();
+ * const node = new pc.GraphNode();
+ * const meshInstance = new pc.MeshInstance(mesh, material, node);
  * @example
  * // A script you can attach on an entity to test if it is visible on a Layer
- * var MeshVisScript = pc.createScript('meshVisScript');
+ * const MeshVisScript = pc.createScript('meshVisScript');
+ *
  * MeshVisScript.prototype.initialize = function () {
- *     var _this = this;
- *     this.app.scene.layers.getLayerByName("World").onPostCull = function (cameraIndex) {
- *         var meshInstance = _this.entity.model.model.meshInstances[0];
+ *     this.app.scene.layers.getLayerByName("World").onPostCull = (cameraIndex) => {
+ *         const meshInstance = this.entity.model.meshInstances[0];
  *         console.log("visible: " + meshInstance.visibleThisFrame);
  *     };
  * };

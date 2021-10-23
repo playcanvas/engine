@@ -16,7 +16,7 @@ class ResourceLoader {
     /**
      * @function
      * @name ResourceLoader#addHandler
-     * @description Add a {@link ResourceHandler} for a resource type. Handler should support atleast load() and open().
+     * @description Add a {@link ResourceHandler} for a resource type. Handler should support at least load() and open().
      * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
      * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
      *
@@ -35,9 +35,9 @@ class ResourceLoader {
      * * {@link ASSET_SCRIPT}
      * * {@link ASSET_CONTAINER}
      *
-     * @param {ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
+     * @param {ResourceHandler} handler - An instance of a resource handler supporting at least load() and open().
      * @example
-     * var loader = new ResourceLoader();
+     * const loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
      */
     addHandler(type, handler) {

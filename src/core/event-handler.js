@@ -4,10 +4,10 @@
  * @classdesc Abstract base class that implements functionality for event handling.
  * @description Create a new event handler.
  * @example
- * var obj = new EventHandlerSubclass();
+ * const obj = new EventHandlerSubclass();
  *
  * // subscribe to an event
- * obj.on('hello', function (str) {
+ * obj.on('hello', (str) => {
  *     console.log('event hello is fired', str);
  * });
  *
@@ -50,7 +50,7 @@ class EventHandler {
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
      * @returns {EventHandler} Self for chaining.
      * @example
-     * obj.on('test', function (a, b) {
+     * obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
@@ -71,14 +71,14 @@ class EventHandler {
      * @param {object} [scope] - Scope that was used as the this when the event is fired.
      * @returns {EventHandler} Self for chaining.
      * @example
-     * var handler = function () {
+     * const handler = () => {
      * };
      * obj.on('test', handler);
      *
      * obj.off(); // Removes all events
      * obj.off('test'); // Removes all events called 'test'
      * obj.off('test', handler); // Removes all handler functions, called 'test'
-     * obj.off('test', handler, this); // Removes all hander functions, called 'test' with scope this
+     * obj.off('test', handler, this); // Removes all handler functions, called 'test' with scope this
      */
     off(name, callback, scope) {
         if (name) {
@@ -197,7 +197,7 @@ class EventHandler {
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
      * @returns {EventHandler} Self for chaining.
      * @example
-     * obj.once('test', function (a, b) {
+     * obj.once('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
@@ -215,7 +215,10 @@ class EventHandler {
      * @param {string} name - The name of the event to test.
      * @returns {boolean} True if the object has handlers bound to the specified event name.
      * @example
-     * obj.on('test', function () { }); // bind an event to 'test'
+     * // bind an event to 'test'
+     * obj.on('test', () => {
+     *     // insert handler coder here...
+     * });
      * obj.hasEvent('test'); // returns true
      * obj.hasEvent('hello'); // returns false
      */

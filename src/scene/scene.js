@@ -611,11 +611,10 @@ class Scene extends EventHandler {
      * @param {LayerComposition} oldComp - Previously used {@link LayerComposition}.
      * @param {LayerComposition} newComp - Newly set {@link LayerComposition}.
      * @example
-     * this.app.scene.on('set:layers', function (oldComp, newComp) {
-     *     var list = newComp.layerList;
-     *     var layer;
-     *     for (var i = 0; i < list.length; i++) {
-     *         layer = list[i];
+     * this.app.scene.on('set:layers', (oldComp, newComp) => {
+     *     const list = newComp.layerList;
+     *     for (let i = 0; i < list.length; i++) {
+     *         const layer = list[i];
      *         switch (layer.name) {
      *             case 'MyLayer':
      *                 layer.onEnable = myOnEnableFunction;

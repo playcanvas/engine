@@ -15,8 +15,7 @@
  * @property {number} id Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference.
  * @property {string} url Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference.
  * @example
- *
- * var reference = new pc.AssetReference('textureAsset', this, this.app.assets, {
+ * const reference = new pc.AssetReference('textureAsset', this, this.app.assets, {
  *     load: this.onTextureAssetLoad,
  *     add: this.onTextureAssetAdd,
  *     remove: this.onTextureAssetRemove

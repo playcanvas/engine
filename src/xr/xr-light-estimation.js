@@ -62,7 +62,7 @@ class XrLightEstimation extends EventHandler {
      * @param {Error} error - Error object related to failure of light estimation start.
      * @description Fired when light estimation has failed to start.
      * @example
-     * app.xr.lightEstimation.on('error', function (ex) {
+     * app.xr.lightEstimation.on('error', (ex) => {
      *     // has failed to start
      * });
      */
@@ -84,11 +84,11 @@ class XrLightEstimation extends EventHandler {
     /**
      * @function
      * @name XrLightEstimation#start
-     * @description Start estimation of illimunation data.
+     * @description Start estimation of illumination data.
      * Availability of such data will come later and an `available` event will be fired.
      * If it failed to start estimation, an `error` event will be fired.
      * @example
-     * app.xr.on('start', function () {
+     * app.xr.on('start', () => {
      *     if (app.xr.lightEstimation.supported) {
      *         app.xr.lightEstimation.start();
      *     }
@@ -168,7 +168,7 @@ class XrLightEstimation extends EventHandler {
         vec3A.set(0, 0, 0);
         vec3B.copy(lightEstimate.primaryLightDirection);
         mat4A.setLookAt(vec3B, vec3A, Vec3.UP);
-        mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // direcitonal light is looking down
+        mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // directional light is looking down
         mat4A.mul(mat4B);
         this._rotation.setFromMat4(mat4A);
 

@@ -38,7 +38,7 @@ class XrHitTest extends EventHandler {
      * @description Fired when new {@link XrHitTestSource} is added to the list.
      * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
      * @example
-     * app.xr.hitTest.on('add', function (hitTestSource) {
+     * app.xr.hitTest.on('add', (hitTestSource) => {
      *     // new hit test source is added
      * });
      */
@@ -49,7 +49,7 @@ class XrHitTest extends EventHandler {
      * @description Fired when {@link XrHitTestSource} is removed to the list.
      * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
      * @example
-     * app.xr.hitTest.on('remove', function (hitTestSource) {
+     * app.xr.hitTest.on('remove', (hitTestSource) => {
      *     // hit test source is removed
      * });
      */
@@ -63,7 +63,7 @@ class XrHitTest extends EventHandler {
      * @param {Quat} rotation - Rotation of hit test.
      * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
      * @example
-     * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
+     * app.xr.hitTest.on('result', (hitTestSource, position, rotation, inputSource) => {
      *     target.setPosition(position);
      *     target.setRotation(rotation);
      * });
@@ -141,20 +141,20 @@ class XrHitTest extends EventHandler {
      * @example
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,
-     *     callback: function (err, hitTestSource) {
+     *     callback: (err, hitTestSource) => {
      *         if (err) return;
-     *         hitTestSource.on('result', function (position, rotation) {
+     *         hitTestSource.on('result', (position, rotation) => {
      *             // position and rotation of hit test result
      *             // based on Ray facing forward from the Viewer reference space
      *         });
      *     }
      * });
      * @example
-     * var ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
+     * const ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_LOCAL,
      *     offsetRay: ray,
-     *     callback: function (err, hitTestSource) {
+     *     callback: (err, hitTestSource) => {
      *         // hit test source that will sample real world geometry straight down
      *         // from the position where AR session started
      *     }
@@ -162,9 +162,9 @@ class XrHitTest extends EventHandler {
      * @example
      * app.xr.hitTest.start({
      *     profile: 'generic-touchscreen',
-     *     callback: function (err, hitTestSource) {
+     *     callback: (err, hitTestSource) => {
      *         if (err) return;
-     *         hitTestSource.on('result', function (position, rotation, inputSource) {
+     *         hitTestSource.on('result', (position, rotation, inputSource) => {
      *             // position and rotation of hit test result
      *             // that will be created from touch on mobile devices
      *         });

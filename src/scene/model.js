@@ -11,7 +11,7 @@ import { SkinInstance } from './skin-instance.js';
  * @description Creates a new model.
  * @example
  * // Create a new model
- * var model = new pc.Model();
+ * const model = new pc.Model();
  * @property {GraphNode} graph The root node of the model's graph node hierarchy.
  * @property {MeshInstance[]} meshInstances An array of MeshInstances contained in this model.
  * @property {SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
@@ -76,7 +76,7 @@ class Model {
      * model.
      * @returns {Model} A clone of the specified model.
      * @example
-     * var clonedModel = model.clone();
+     * const clonedModel = model.clone();
      */
     clone() {
 
@@ -181,7 +181,7 @@ class Model {
      * {@link RENDERSTYLE_WIREFRAME}.
      * @example
      * model.generateWireframe();
-     * for (var i = 0; i < model.meshInstances.length; i++) {
+     * for (let i = 0; i < model.meshInstances.length; i++) {
      *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
      * }
      */

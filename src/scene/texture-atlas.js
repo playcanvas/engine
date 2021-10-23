@@ -9,7 +9,7 @@ import { EventHandler } from '../core/event-handler.js';
  * @property {Texture} texture The texture atlas.
  * @property {object} frames Contains frames which define portions of the texture atlas.
  * @example
- * var atlas = new pc.TextureAtlas();
+ * const atlas = new pc.TextureAtlas();
  * atlas.frames = {
  *     '0': {
  *         // rect has u, v, width and height in pixels

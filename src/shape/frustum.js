@@ -11,7 +11,7 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  * create a Frustum shape directly, but instead query {@link CameraComponent#frustum}.
  * @description Creates a new frustum shape.
  * @example
- * var frustum = new pc.Frustum();
+ * const frustum = new pc.Frustum();
  */
 class Frustum {
     constructor() {
@@ -27,11 +27,11 @@ class Frustum {
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
-     * var projMat = pc.Mat4();
+     * const projMat = pc.Mat4();
      * projMat.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
-     * var frustum = new pc.Frustum();
+     * const frustum = new pc.Frustum();
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {

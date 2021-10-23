@@ -518,7 +518,7 @@ class ScriptComponent extends Component {
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
      * @example
-     * var controller = entity.script.get('playerController');
+     * const controller = entity.script.get('playerController');
      */
     /* eslint-enable jsdoc/no-undefined-types */
     get(nameOrType) {

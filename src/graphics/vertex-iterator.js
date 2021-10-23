@@ -241,7 +241,7 @@ class VertexIterator {
      * @description Moves the vertex iterator on to the next vertex.
      * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to 1.
      * @example
-     * var iterator = new pc.VertexIterator(vertexBuffer);
+     * const iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();
@@ -268,7 +268,7 @@ class VertexIterator {
      * @description Notifies the vertex buffer being iterated that writes are complete. Internally
      * the vertex buffer is unlocked and vertex data is uploaded to video memory.
      * @example
-     * var iterator = new pc.VertexIterator(vertexBuffer);
+     * const iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();

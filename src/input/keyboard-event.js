@@ -9,7 +9,7 @@
  * @property {Element} element The element that fired the keyboard event.
  * @property {KeyboardEvent} event The original browser event which was fired.
  * @example
- * var onKeyDown = function (e) {
+ * const onKeyDown = (e) => {
  *     if (e.key === pc.KEY_SPACE) {
  *         // space key pressed
  *     }

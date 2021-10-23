@@ -51,7 +51,7 @@ const _keyCodeToKeyIdentifier = {
  * @description Event fired when a key is pressed.
  * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
  * @example
- * var onKeyDown = function (e) {
+ * const onKeyDown = (e) => {
  *     if (e.key === pc.KEY_SPACE) {
  *         // space key pressed
  *     }
@@ -66,7 +66,7 @@ const _keyCodeToKeyIdentifier = {
  * @description Event fired when a key is released.
  * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
  * @example
- * var onKeyUp = function (e) {
+ * const onKeyUp = (e) => {
  *     if (e.key === pc.KEY_SPACE) {
  *         // space key released
  *     }
@@ -88,7 +88,7 @@ const _keyCodeToKeyIdentifier = {
  * @param {boolean} [options.preventDefault] - Call preventDefault() in key event handlers. This stops the default action of the event occurring. e.g. Ctrl+T will not open a new browser tab
  * @param {boolean} [options.stopPropagation] - Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
  * @example
- * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
+ * const keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
  */
 class Keyboard extends EventHandler {
     constructor(element, options = {}) {

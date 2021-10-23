@@ -32,7 +32,7 @@ class ZoneComponent extends Component {
      * @description Fired when Component becomes enabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
-     * entity.zone.on('enable', function () {
+     * entity.zone.on('enable', () => {
      *     // component is enabled
      * });
      */
@@ -44,7 +44,7 @@ class ZoneComponent extends Component {
      * @description Fired when Component becomes disabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
-     * entity.zone.on('disable', function () {
+     * entity.zone.on('disable', () => {
      *     // component is disabled
      * });
      */
@@ -57,7 +57,7 @@ class ZoneComponent extends Component {
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
-     * entity.zone.on('state', function (enabled) {
+     * entity.zone.on('state', (enabled) => {
      *     // component changed state
      * });
      */
@@ -68,7 +68,7 @@ class ZoneComponent extends Component {
      * @name ZoneComponent#remove
      * @description Fired when a zone is removed from an entity.
      * @example
-     * entity.zone.on('remove', function () {
+     * entity.zone.on('remove', () => {
      *     // zone has been removed from an entity
      * });
      */

@@ -2635,7 +2635,7 @@ class GraphicsDevice extends EventHandler {
      * @returns {RenderTarget} The current render target.
      * @example
      * // Get the current render target
-     * var renderTarget = device.getRenderTarget();
+     * const renderTarget = device.getRenderTarget();
      */
     getRenderTarget() {
         return this.renderTarget;
@@ -2647,7 +2647,7 @@ class GraphicsDevice extends EventHandler {
      * @description Queries whether depth testing is enabled.
      * @returns {boolean} True if depth testing is enabled and false otherwise.
      * @example
-     * var depthTest = device.getDepthTest();
+     * const depthTest = device.getDepthTest();
      * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
      */
     getDepthTest() {
@@ -2701,7 +2701,7 @@ class GraphicsDevice extends EventHandler {
      * @description Queries whether writes to the depth buffer are enabled.
      * @returns {boolean} True if depth writing is enabled and false otherwise.
      * @example
-     * var depthWrite = device.getDepthWrite();
+     * const depthWrite = device.getDepthWrite();
      * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
      */
     getDepthWrite() {

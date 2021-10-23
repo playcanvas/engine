@@ -39,7 +39,7 @@ import { Application } from './application.js';
  * @property {SoundComponent} [sound] Gets the {@link SoundComponent} attached to this entity. [read only]
  * @property {SpriteComponent} [sprite] Gets the {@link SpriteComponent} attached to this entity. [read only]
  * @example
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  *
  * // Add a Component to the Entity
  * entity.addComponent("camera", {
@@ -55,11 +55,11 @@ import { Application } from './application.js';
  * entity.translate(10, 0, 0);
  *
  * // Or translate it by setting it's position directly
- * var p = entity.getPosition();
+ * const p = entity.getPosition();
  * entity.setPosition(p.x + 10, p.y, p.z);
  *
  * // Change the entity's rotation in local space
- * var e = entity.getLocalEulerAngles();
+ * const e = entity.getLocalEulerAngles();
  * entity.setLocalEulerAngles(e.x, e.y + 90, e.z);
  *
  * // Or use rotateLocal
@@ -123,7 +123,7 @@ class Entity extends GraphNode {
      * @returns {Component} The new Component that was attached to the entity or null if there
      * was an error.
      * @example
-     * var entity = new pc.Entity();
+     * const entity = new pc.Entity();
      *
      * // Add a light component with default properties
      * entity.addComponent("light");
@@ -157,7 +157,7 @@ class Entity extends GraphNode {
      * @description Remove a component from the Entity.
      * @param {string} type - The name of the Component type.
      * @example
-     * var entity = new pc.Entity();
+     * const entity = new pc.Entity();
      * entity.addComponent("light"); // add new light component
      *
      * entity.removeComponent("light"); // remove light component
@@ -188,7 +188,7 @@ class Entity extends GraphNode {
      * one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
-     * var light = entity.findComponent("light");
+     * const light = entity.findComponent("light");
      */
     findComponent(type) {
         const entity = this.findOne(function (node) {
@@ -206,7 +206,7 @@ class Entity extends GraphNode {
      * Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
-     * var lights = entity.findComponents("light");
+     * const lights = entity.findComponents("light");
      */
     findComponents(type) {
         const entities = this.find(function (node) {
@@ -335,7 +335,7 @@ class Entity extends GraphNode {
      * @name Entity#destroy
      * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
      * @example
-     * var firstChild = this.entity.children[0];
+     * const firstChild = this.entity.children[0];
      * firstChild.destroy(); // delete child, all components and remove from hierarchy
      */
     destroy() {
@@ -391,7 +391,7 @@ class Entity extends GraphNode {
      * Note, this Entity is not in the hierarchy and must be added manually.
      * @returns {Entity} A new Entity which is a deep copy of the original.
      * @example
-     * var e = this.entity.clone();
+     * const e = this.entity.clone();
      *
      * // Add clone as a sibling to the original
      * this.entity.parent.addChild(e);
@@ -502,7 +502,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
  * @description Fired after the entity is destroyed.
  * @param {Entity} entity - The entity that was destroyed.
  * @example
- * entity.on("destroy", function (e) {
+ * entity.on("destroy", (e) => {
  *     console.log('entity ' + e.name + ' has been destroyed');
  * });
  */

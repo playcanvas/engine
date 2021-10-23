@@ -18,7 +18,7 @@
  * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs post-VS data to a buffer.
  * @example
  * // Create a shader that renders primitives with a solid red color
- * var shaderDefinition = {
+ * const shaderDefinition = {
  *     attributes: {
  *         aPosition: pc.SEMANTIC_POSITION
  *     },
@@ -40,7 +40,7 @@
  *     ].join("\n")
  * };
  *
- * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
+ * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
  */
 class Shader {
     constructor(graphicsDevice, definition) {

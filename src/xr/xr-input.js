@@ -34,7 +34,7 @@ class XrInput extends EventHandler {
      * @description Fired when new {@link XrInputSource} is added to the list.
      * @param {XrInputSource} inputSource - Input source that has been added.
      * @example
-     * app.xr.input.on('add', function (inputSource) {
+     * app.xr.input.on('add', (inputSource) => {
      *     // new input source is added
      * });
      */
@@ -45,7 +45,7 @@ class XrInput extends EventHandler {
      * @description Fired when {@link XrInputSource} is removed to the list.
      * @param {XrInputSource} inputSource - Input source that has been removed.
      * @example
-     * app.xr.input.on('remove', function (inputSource) {
+     * app.xr.input.on('remove', (inputSource) => {
      *     // input source is removed
      * });
      */
@@ -57,8 +57,8 @@ class XrInput extends EventHandler {
      * @param {XrInputSource} inputSource - Input source that triggered select event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
-     * var ray = new pc.Ray();
-     * app.xr.input.on('select', function (inputSource, evt) {
+     * const ray = new pc.Ray();
+     * app.xr.input.on('select', (inputSource, evt) => {
      *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
      *     if (obj.intersectsRay(ray)) {
      *         // selected an object with input source
@@ -77,7 +77,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#selectend
-     * @description Fired when {@link XrInputSource} has ended triggerring primary action.
+     * @description Fired when {@link XrInputSource} has ended triggering primary action.
      * @param {XrInputSource} inputSource - Input source that triggered selectend event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
@@ -93,11 +93,11 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#squeezestart
-     * @description Fired when {@link XrInputSource} has started to trigger sqeeze action.
+     * @description Fired when {@link XrInputSource} has started to trigger squeeze action.
      * @param {XrInputSource} inputSource - Input source that triggered squeezestart event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
-     * app.xr.input.on('squeezestart', function (inputSource, evt) {
+     * app.xr.input.on('squeezestart', (inputSource, evt) => {
      *     if (obj.containsPoint(inputSource.getPosition())) {
      *         // grabbed an object
      *     }
@@ -107,7 +107,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#squeezeend
-     * @description Fired when {@link XrInputSource} has ended triggerring sqeeze action.
+     * @description Fired when {@link XrInputSource} has ended triggering squeeze action.
      * @param {XrInputSource} inputSource - Input source that triggered squeezeend event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */

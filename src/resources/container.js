@@ -62,8 +62,8 @@ class ContainerResource {
      * @returns {Entity} A single entity with a model component. Model component internally contains a hierarchy based on {@link GraphNode}.
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateModelEntity({
+     * app.assets.loadFromUrl("statue.glb", "container", (err, asset) => {
+     *     const entity = asset.resource.instantiateModelEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
@@ -83,16 +83,16 @@ class ContainerResource {
      * @returns {Entity} A hierarchy of entities with render components on entities containing renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     * app.assets.loadFromUrl("statue.glb", "container", (err, asset) => {
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
      *
      *     // find all render components containing mesh instances, and change blend mode on their materials
-     *     var renders = entity.findComponents("render");
-     *     renders.forEach(function (render) {
-     *         render.meshInstances.forEach(function (meshInstance) {
+     *     const renders = entity.findComponents("render");
+     *     renders.forEach((render) => {
+     *         render.meshInstances.forEach((meshInstance) => {
      *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
      *             meshInstance.material.update();
      *         });
@@ -364,7 +364,7 @@ class ContainerResource {
  * ```
  * For example, to receive a texture preprocess callback:
  * ```javascript
- * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
  *         preprocess(gltfTexture) { console.log("texture preprocess"); }
  *     },

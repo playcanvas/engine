@@ -189,7 +189,7 @@ class SoundComponent extends Component {
      * @returns {SoundSlot} The new slot.
      * @example
      * // get an asset by id
-     * var asset = app.assets.get(10);
+     * const asset = app.assets.get(10);
      * // add a slot
      * this.entity.sound.addSlot('beep', {
      *     asset: asset
@@ -255,7 +255,7 @@ class SoundComponent extends Component {
      * @param {string} name - The name of the {@link SoundSlot} to play.
      * @example
      * // get asset by id
-     * var asset = app.assets.get(10);
+     * const asset = app.assets.get(10);
      * // create a slot and play it
      * this.entity.sound.addSlot('beep', {
      *     asset: asset

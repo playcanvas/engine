@@ -37,7 +37,7 @@ class XrPlane extends EventHandler {
      * @name XrPlane#remove
      * @description Fired when {@link XrPlane} is removed.
      * @example
-     * plane.once('remove', function () {
+     * plane.once('remove', () => {
      *     // plane is not available anymore
      * });
      */
@@ -47,7 +47,7 @@ class XrPlane extends EventHandler {
      * @name XrPlane#change
      * @description Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed. Position and rotation can change at any time without triggering a `change` event.
      * @example
-     * plane.on('change', function () {
+     * plane.on('change', () => {
      *     // plane has been changed
      * });
      */
@@ -106,15 +106,15 @@ class XrPlane extends EventHandler {
      * @description Array of DOMPointReadOnly objects. DOMPointReadOnly is an object with `x y z` properties that defines a local point of a plane's polygon.
      * @example
      * // prepare reusable objects
-     * var vecA = new pc.Vec3();
-     * var vecB = new pc.Vec3();
-     * var color = new pc.Color(1, 1, 1);
+     * const vecA = new pc.Vec3();
+     * const vecB = new pc.Vec3();
+     * const color = new pc.Color(1, 1, 1);
      *
      * // update Mat4 to plane position and rotation
      * transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
      *
      * // draw lines between points
-     * for (var i = 0; i < plane.points.length; i++) {
+     * for (let i = 0; i < plane.points.length; i++) {
      *     vecA.copy(plane.points[i]);
      *     vecB.copy(plane.points[(i + 1) % plane.points.length]);
      *

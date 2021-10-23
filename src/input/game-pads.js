@@ -127,8 +127,8 @@ class GamePads {
      * returned by this function.
      * @returns {object[]} An array of gamepads and mappings for the model of gamepad that is attached.
      * @example
-     * var gamepads = new pc.GamePads();
-     * var pads = gamepads.poll();
+     * const gamepads = new pc.GamePads();
+     * const pads = gamepads.poll();
      */
     poll(pads = []) {
         if (pads.length > 0) {

@@ -96,7 +96,7 @@ class XrManager extends EventHandler {
      * @param {string} type - The session type that has changed availability.
      * @param {boolean} available - True if specified session type is now available.
      * @example
-     * app.xr.on('available', function (type, available) {
+     * app.xr.on('available', (type, available) => {
      *     console.log('"' + type + '" XR session is now ' + (available ? 'available' : 'unavailable'));
      * });
      */
@@ -107,7 +107,7 @@ class XrManager extends EventHandler {
      * @description Fired when availability of specific XR type is changed.
      * @param {boolean} available - True if specified session type is now available.
      * @example
-     * app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
+     * app.xr.on('available:' + pc.XRTYPE_VR, (available) => {
      *     console.log('Immersive VR session is now ' + (available ? 'available' : 'unavailable'));
      * });
      */
@@ -117,7 +117,7 @@ class XrManager extends EventHandler {
      * @name XrManager#start
      * @description Fired when XR session is started.
      * @example
-     * app.xr.on('start', function () {
+     * app.xr.on('start', () => {
      *     // XR session has started
      * });
      */
@@ -127,7 +127,7 @@ class XrManager extends EventHandler {
      * @name XrManager#end
      * @description Fired when XR session is ended.
      * @example
-     * app.xr.on('end', function () {
+     * app.xr.on('end', () => {
      *     // XR session has ended
      * });
      */
@@ -138,7 +138,7 @@ class XrManager extends EventHandler {
      * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
      * @description Fired when XR session is updated, providing relevant XRFrame object.
      * @example
-     * app.xr.on('update', function (frame) {
+     * app.xr.on('update', (frame) => {
      *
      * });
      */
@@ -149,7 +149,7 @@ class XrManager extends EventHandler {
      * @param {Error} error - Error object related to failure of session start or check of session type support.
      * @description Fired when XR session is failed to start or failed to check for session type support.
      * @example
-     * app.xr.on('error', function (ex) {
+     * app.xr.on('error', (ex) => {
      *     // XR session has failed to start, or failed to check for session type support
      * });
      */
@@ -174,11 +174,11 @@ class XrManager extends EventHandler {
      * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
      * @example
-     * button.on('click', function () {
+     * button.on('click', () => {
      *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR);
      * });
      * @example
-     * button.on('click', function () {
+     * button.on('click', () => {
      *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
      *         depthSensing: { }
      *     });
@@ -312,7 +312,7 @@ class XrManager extends EventHandler {
      * @name XrManager#end
      * @description Attempts to end XR session and optionally fires callback when session is ended or failed to end.
      * @example
-     * app.keyboard.on('keydown', function (evt) {
+     * app.keyboard.on('keydown', (evt) => {
      *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
      *         app.xr.end();
      *     }

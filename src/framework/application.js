@@ -176,7 +176,7 @@ class Progress {
  * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
  * @example
  * // Engine-only example: create the application manually
- * var app = new pc.Application(canvas, options);
+ * const app = new pc.Application(canvas, options);
  *
  * // Start the application's main loop
  * app.start();
@@ -219,7 +219,7 @@ class Progress {
  * @description The scene registry managed by the application.
  * @example
  * // Search the scene registry for a item with the name 'racetrack1'
- * var sceneItem = this.app.scenes.find('racetrack1');
+ * const sceneItem = this.app.scenes.find('racetrack1');
  *
  * // Load the scene using the item's url
  * this.app.scenes.loadScene(sceneItem.url);
@@ -231,7 +231,7 @@ class Progress {
  * @description The asset registry managed by the application.
  * @example
  * // Search the asset registry for all assets with the tag 'vehicle'
- * var vehicleAssets = this.app.assets.findByTag('vehicle');
+ * const vehicleAssets = this.app.assets.findByTag('vehicle');
  */
 
 /**
@@ -304,7 +304,7 @@ class Progress {
  * @description The root entity of the application.
  * @example
  * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
- * var camera = this.app.root.findByName('Camera');
+ * const camera = this.app.root.findByName('Camera');
  */
 
 /**
@@ -662,7 +662,7 @@ class Application extends EventHandler {
      * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
      * @returns {Application|undefined} The running application, if any.
      * @example
-     * var app = pc.Application.getApplication();
+     * const app = pc.Application.getApplication();
      */
     static getApplication(id) {
         return id ? Application._applications[id] : getApplication();
@@ -1473,8 +1473,7 @@ class Application extends EventHandler {
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
-     *
-     * var settings = {
+     * const settings = {
      *     physics: {
      *         gravity: [0, -9.8, 0]
      *     },
@@ -1662,23 +1661,23 @@ class Application extends EventHandler {
      * @param {Vec3} start - The start world-space coordinate of the line.
      * @param {Vec3} end - The end world-space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the line is depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLine(start, end);
      * @example
      * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLine(start, end, pc.Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
-     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
     drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
@@ -1696,16 +1695,16 @@ class Application extends EventHandler {
      * @param {Vec3[]} positions - An array of points to draw lines between. The length of the array must be a multiple of 2.
      * @param {Color[]} colors - An array of colors to color the lines. This must be the same length as the position array.
      * The length of the array must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
-     * var points = [
+     * const points = [
      *     // Line 1
      *     new pc.Vec3(0, 0, 0),
      *     new pc.Vec3(1, 0, 0),
@@ -1713,7 +1712,7 @@ class Application extends EventHandler {
      *     new pc.Vec3(1, 1, 0),
      *     new pc.Vec3(1, 1, 1)
      * ];
-     * var colors = [
+     * const colors = [
      *     // Line 1
      *     pc.Color.RED,
      *     pc.Color.YELLOW,
@@ -1736,11 +1735,11 @@ class Application extends EventHandler {
      * @param {number[]} positions - An array of points to draw lines between. Each point is represented by 3 numbers - x, y and z coordinate.
      * @param {number[]} colors - An array of colors to color the lines. This must be the same length as the position array.
      * The length of the array must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render 2 discrete line segments
-     * var points = [
+     * const points = [
      *     // Line 1
      *     0, 0, 0,
      *     1, 0, 0,
@@ -1748,7 +1747,7 @@ class Application extends EventHandler {
      *     1, 1, 0,
      *     1, 1, 1
      * ];
-     * var colors = [
+     * const colors = [
      *     // Line 1
      *     1, 0, 0, 1,  // red
      *     0, 1, 0, 1,  // green
@@ -1776,7 +1775,7 @@ class Application extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
-     * var center = new pc.Vec3(0, 0, 0);
+     * const center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
      */
     drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
@@ -1795,8 +1794,8 @@ class Application extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire aligned box
-     * var min = new pc.Vec3(-1, -1, -1);
-     * var max = new pc.Vec3(1, 1, 1);
+     * const min = new pc.Vec3(-1, -1, -1);
+     * const max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      */
     drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {

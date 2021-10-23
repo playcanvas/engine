@@ -39,7 +39,7 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset completes loading.
      * @param {Asset} asset - The asset that has just loaded.
      * @example
-     * app.assets.on("load", function (asset) {
+     * app.assets.on("load", (asset) => {
      *     console.log("asset loaded: " + asset.name);
      * });
      */
@@ -50,9 +50,9 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset completes loading.
      * @param {Asset} asset - The asset that has just loaded.
      * @example
-     * var id = 123456;
-     * var asset = app.assets.get(id);
-     * app.assets.on("load:" + id, function (asset) {
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on("load:" + id, (asset) => {
      *     console.log("asset loaded: " + asset.name);
      * });
      * app.assets.load(asset);
@@ -64,9 +64,9 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset completes loading.
      * @param {Asset} asset - The asset that has just loaded.
      * @example
-     * var id = 123456;
-     * var asset = app.assets.get(id);
-     * app.assets.on("load:url:" + asset.file.url, function (asset) {
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on("load:url:" + asset.file.url, (asset) => {
      *     console.log("asset loaded: " + asset.name);
      * });
      * app.assets.load(asset);
@@ -78,7 +78,7 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset is added to the registry.
      * @param {Asset} asset - The asset that was added.
      * @example
-     * app.assets.on("add", function (asset) {
+     * app.assets.on("add", (asset) => {
      *     console.log("New asset added: " + asset.name);
      * });
      */
@@ -89,8 +89,8 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset is added to the registry.
      * @param {Asset} asset - The asset that was added.
      * @example
-     * var id = 123456;
-     * app.assets.on("add:" + id, function (asset) {
+     * const id = 123456;
+     * app.assets.on("add:" + id, (asset) => {
      *     console.log("Asset 123456 loaded");
      * });
      */
@@ -108,7 +108,7 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset is removed from the registry.
      * @param {Asset} asset - The asset that was removed.
      * @example
-     * app.assets.on("remove", function (aseet) {
+     * app.assets.on("remove", (asset) => {
      *     console.log("Asset removed: " + asset.name);
      * });
      */
@@ -119,8 +119,8 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset is removed from the registry.
      * @param {Asset} asset - The asset that was removed.
      * @example
-     * var id = 123456;
-     * app.assets.on("remove:" + id, function (asset) {
+     * const id = 123456;
+     * app.assets.on("remove:" + id, (asset) => {
      *     console.log("Asset removed: " + asset.name);
      * });
      */
@@ -139,9 +139,9 @@ class AssetRegistry extends EventHandler {
      * @param {string} err - The error message.
      * @param {Asset} asset - The asset that generated the error.
      * @example
-     * var id = 123456;
-     * var asset = app.assets.get(id);
-     * app.assets.on("error", function (err, asset) {
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on("error", (err, asset) => {
      *     console.error(err);
      * });
      * app.assets.load(asset);
@@ -153,9 +153,9 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an error occurs during asset loading.
      * @param {Asset} asset - The asset that generated the error.
      * @example
-     * var id = 123456;
-     * var asset = app.assets.get(id);
-     * app.assets.on("error:" + id, function (err, asset) {
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on("error:" + id, (err, asset) => {
      *     console.error(err);
      * });
      * app.assets.load(asset);
@@ -185,7 +185,7 @@ class AssetRegistry extends EventHandler {
      * @description Add an asset to the registry.
      * @param {Asset} asset - The asset to add.
      * @example
-     * var asset = new pc.Asset("My Asset", "texture", {
+     * const asset = new pc.Asset("My Asset", "texture", {
      *     url: "../path/to/image.jpg"
      * });
      * app.assets.add(asset);
@@ -228,7 +228,7 @@ class AssetRegistry extends EventHandler {
      * @param {Asset} asset - The asset to remove.
      * @returns {boolean} True if the asset was successfully removed and false otherwise.
      * @example
-     * var asset = app.assets.get(100);
+     * const asset = app.assets.get(100);
      * app.assets.remove(asset);
      */
     remove(asset) {
@@ -288,7 +288,7 @@ class AssetRegistry extends EventHandler {
      * @param {number} id - The id of the asset to get.
      * @returns {Asset} The asset.
      * @example
-     * var asset = app.assets.get(100);
+     * const asset = app.assets.get(100);
      */
     get(id) {
         const idx = this._cache[id];
@@ -302,7 +302,7 @@ class AssetRegistry extends EventHandler {
      * @param {string} url - The url of the asset to get.
      * @returns {Asset} The asset.
      * @example
-     * var asset = app.assets.getByUrl("../path/to/image.jpg");
+     * const asset = app.assets.getByUrl("../path/to/image.jpg");
      */
     getByUrl(url) {
         const idx = this._urls[url];
@@ -316,13 +316,13 @@ class AssetRegistry extends EventHandler {
      * @param {Asset} asset - The asset to load.
      * @example
      * // load some assets
-     * var assetsToLoad = [
+     * const assetsToLoad = [
      *     app.assets.find("My Asset"),
      *     app.assets.find("Another Asset")
      * ];
-     * var count = 0;
-     * assetsToLoad.forEach(function (assetToLoad) {
-     *     assetToLoad.ready(function (asset) {
+     * let count = 0;
+     * assetsToLoad.forEach((assetToLoad) => {
+     *     assetToLoad.ready((asset) => {
      *         count++;
      *         if (count === assetsToLoad.length) {
      *             // done
@@ -406,8 +406,8 @@ class AssetRegistry extends EventHandler {
      * @param {string} type - The type of asset to load.
      * @param {callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
      * @example
-     * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
-     *     var texture = asset.resource;
+     * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", (err, asset) => {
+     *     const texture = asset.resource;
      * });
      */
     loadFromUrl(url, type, callback) {
@@ -424,9 +424,9 @@ class AssetRegistry extends EventHandler {
      * @param {string} type - The type of asset to load.
      * @param {callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
      * @example
-     * var file = magicallyAttainAFile();
-     * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
-     *     var texture = asset.resource;
+     * const file = magicallyAttainAFile();
+     * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", (err, asset) => {
+     *     const texture = asset.resource;
      * });
      */
     loadFromUrlAndFilename(url, filename, type, callback) {
@@ -579,7 +579,7 @@ class AssetRegistry extends EventHandler {
      * @param {string} [type] - The type of the Assets to find.
      * @returns {Asset[]} A list of all Assets found.
      * @example
-     * var assets = app.assets.findAll("myTextureAsset", "texture");
+     * const assets = app.assets.findAll("myTextureAsset", "texture");
      * console.log("Found " + assets.length + " assets called " + name);
      */
     findAll(name, type) {
@@ -619,16 +619,16 @@ class AssetRegistry extends EventHandler {
      * @param {...*} query - Name of a tag or array of tags.
      * @returns {Asset[]} A list of all Assets matched query.
      * @example
-     * var assets = app.assets.findByTag("level-1");
+     * const assets = app.assets.findByTag("level-1");
      * // returns all assets that tagged by `level-1`
      * @example
-     * var assets = app.assets.findByTag("level-1", "level-2");
+     * const assets = app.assets.findByTag("level-1", "level-2");
      * // returns all assets that tagged by `level-1` OR `level-2`
      * @example
-     * var assets = app.assets.findByTag(["level-1", "monster"]);
+     * const assets = app.assets.findByTag(["level-1", "monster"]);
      * // returns all assets that tagged by `level-1` AND `monster`
      * @example
-     * var assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
+     * const assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
      * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
      */
     findByTag() {
@@ -643,7 +643,7 @@ class AssetRegistry extends EventHandler {
      * Return `true` to include an asset in the returned array.
      * @returns {Asset[]} A list of all Assets found.
      * @example
-     * var assets = app.assets.filter(function (asset) {
+     * const assets = app.assets.filter((asset) => {
      *     return asset.name.indexOf('monster') !== -1;
      * });
      * console.log("Found " + assets.length + " assets, where names contains 'monster'");
@@ -660,7 +660,7 @@ class AssetRegistry extends EventHandler {
      * @param {string} [type] - The type of the Asset to find.
      * @returns {Asset} A single Asset or null if no Asset is found.
      * @example
-     * var asset = app.assets.find("myTextureAsset", "texture");
+     * const asset = app.assets.find("myTextureAsset", "texture");
      */
     find(name, type) {
         // findAll returns an empty array the if the asset cannot be found so `asset` is

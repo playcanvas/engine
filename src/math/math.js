@@ -11,7 +11,7 @@ const math = {
      * @description Conversion factor between degrees and radians.
      * @example
      * // Convert 180 degrees to pi radians
-     * var rad = 180 * pc.math.DEG_TO_RAD;
+     * const rad = 180 * pc.math.DEG_TO_RAD;
      */
     DEG_TO_RAD: Math.PI / 180,
 
@@ -22,7 +22,7 @@ const math = {
      * @description Conversion factor between degrees and radians.
      * @example
      * // Convert pi radians to 180 degrees
-     * var deg = Math.PI * pc.math.RAD_TO_DEG;
+     * const deg = Math.PI * pc.math.RAD_TO_DEG;
      */
     RAD_TO_DEG: 180 / Math.PI,
 
@@ -49,7 +49,7 @@ const math = {
      * @returns {number[]} An array of 3 bytes.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33]
-     * var bytes = pc.math.intToBytes24(0x112233);
+     * const bytes = pc.math.intToBytes24(0x112233);
      */
     intToBytes24: function (i) {
         const r = (i >> 16) & 0xff;
@@ -67,7 +67,7 @@ const math = {
      * @param {number} i - Number holding an integer value.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33, 0x44]
-     * var bytes = pc.math.intToBytes32(0x11223344);
+     * const bytes = pc.math.intToBytes32(0x11223344);
      */
     intToBytes32: function (i) {
         const r = (i >> 24) & 0xff;
@@ -84,10 +84,10 @@ const math = {
      * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number.
      * @example
      * // Set result1 to 0x112233 from an array of 3 values
-     * var result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
+     * const result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
      *
      * // Set result2 to 0x112233 from 3 discrete values
-     * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
+     * const result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
      * @param {number} r - A single byte (0-255).
      * @param {number} g - A single byte (0-255).
      * @param {number} b - A single byte (0-255).
@@ -109,10 +109,10 @@ const math = {
      * @returns {number} A single unsigned 32bit Number.
      * @example
      * // Set result1 to 0x11223344 from an array of 4 values
-     * var result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
+     * const result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
      *
      * // Set result2 to 0x11223344 from 4 discrete values
-     * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
+     * const result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
      * @param {number} r - A single byte (0-255).
      * @param {number} g - A single byte (0-255).
      * @param {number} b - A single byte (0-255).
