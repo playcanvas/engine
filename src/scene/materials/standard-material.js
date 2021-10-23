@@ -84,8 +84,8 @@ let _params = new Set();
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires {@link StandardMaterial#enableGGXSpecular} is set to true.
  * * When anisotropy == 0, specular is isotropic.
- * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
- * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+ * * When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
+ * * When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
  *
  * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
