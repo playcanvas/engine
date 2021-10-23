@@ -1,7 +1,7 @@
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 
-// size of the kernel - needs to match the constaint in the shader
+// size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;
 
 // helper class used by lightmapper, wrapping functionality of dilate and denoise shaders

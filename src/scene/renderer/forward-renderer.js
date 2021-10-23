@@ -1201,7 +1201,7 @@ class ForwardRenderer {
 
     // execute first pass over draw calls, in order to update materials / shaders
     // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
-    // where instaed of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
+    // where instead of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
     // take place in parallel
     renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
 

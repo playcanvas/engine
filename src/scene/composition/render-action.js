@@ -39,7 +39,7 @@ class RenderAction {
         // and also store them as an array
         this.directionalLights = [];
 
-        // and also the same directional lights, stored as indicies into LayerComposition._lights
+        // and also the same directional lights, stored as indices into LayerComposition._lights
         this.directionalLightsIndices = [];
     }
 
