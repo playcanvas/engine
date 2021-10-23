@@ -245,19 +245,25 @@ class MiniStats {
     }
 
     initGraphs(app, device, options) {
-
         const graphs = [];
+
         if (options.cpu.enabled) {
-            graphs.push(new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, new CpuTimer(app)));
+            const timer = new CpuTimer(app);
+            const graph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, timer);
+            graphs.push(graph);
         }
 
         if (options.gpu.enabled && device.extDisjointTimerQuery) {
-            graphs.push(new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, new GpuTimer(app)));
+            const timer = new GpuTimer(app);
+            const graph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, timer);
+            graphs.push(graph);
         }
 
         if (options.stats) {
-            options.stats.forEach(function (entry) {
-                graphs.push(new Graph(entry.name, app, entry.watermark, options.textRefreshRate, new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier)));
+            options.stats.forEach((entry) => {
+                const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
+                const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
+                graphs.push(graph);
             });
         }
 

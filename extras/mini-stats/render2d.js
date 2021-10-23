@@ -85,10 +85,10 @@ class Render2d {
         this.quads = 0;
 
         // colors
-        const setupColor = function (name, value) {
+        const setupColor = (name, value) => {
             this[name] = new Float32Array([value.r, value.g, value.b, value.a]);
             this[name + "Id"] = device.scope.resolve(name);
-        }.bind(this);
+        };
         setupColor("col0", colors.graph0);
         setupColor("col1", colors.graph1);
         setupColor("col2", colors.graph2);
