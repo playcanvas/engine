@@ -44,7 +44,7 @@ class AnimComponentLayer {
     /**
      * @function
      * @name AnimComponentLayer#reset
-     * @description Reset the animation component to it's initial state, including all parameters. The system will be paused.
+     * @description Reset the animation component to its initial state, including all parameters. The system will be paused.
      */
     reset() {
         this._controller.reset();
@@ -70,11 +70,11 @@ class AnimComponentLayer {
      * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask in the layer will be removed.
      * @example
      * entity.anim.baseLayer.assignMask({
-     *     // include the spine of the current model and all of it's children
+     *     // include the spine of the current model and all of its children
      *     "path/to/spine": {
      *         children: true
      *     },
-     *     // include the hip of the current model but not all of it's children
+     *     // include the hip of the current model but not all of its children
      *     "path/to/hip": true
      * });
      */

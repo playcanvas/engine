@@ -54,7 +54,7 @@ import { Application } from './application.js';
  * // Move the entity
  * entity.translate(10, 0, 0);
  *
- * // Or translate it by setting it's position directly
+ * // Or translate it by setting its position directly
  * var p = entity.getPosition();
  * entity.setPosition(p.x + 10, p.y, p.z);
  *

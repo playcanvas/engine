@@ -142,7 +142,7 @@ let _params = new Set();
  *
  * @property {number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of distortion.
- * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
+ * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of its own surface.
  * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
  *
  * @property {Color} emissive The emissive color of the material. This color value is 3-component (RGB),

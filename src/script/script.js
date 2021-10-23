@@ -24,7 +24,7 @@ const reservedScriptNames = new Set([
  * @function
  * @name createScript
  * @description Create and register a new {@link ScriptType}.
- * It returns new class type (constructor function), which is auto-registered to {@link ScriptRegistry} using it's name.
+ * It returns new class type (constructor function), which is auto-registered to {@link ScriptRegistry} using its name.
  * This is the main interface to create Script Types, to define custom logic using JavaScript, that is used to create interaction for entities.
  * @param {string} name - Unique Name of a Script Type.
  * If a Script Type with the same name has already been registered and the new one has a `swap` method defined in its prototype,
