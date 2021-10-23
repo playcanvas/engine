@@ -1,7 +1,7 @@
 // render 2d textured quads
 class Render2d {
     constructor(device, colors, maxQuads = 512) {
-        var vertexShader =
+        const vertexShader =
             'attribute vec3 vertex_position;\n' +       // unnormalized
             'attribute vec4 vertex_texCoord0;\n' +      // unnormalized texture space uv, normalized uv
             'uniform vec4 screenAndTextureSize;\n' +    // xy: screen size, zw: texture size
@@ -18,7 +18,7 @@ class Render2d {
         // in the texture by white color. The graph data is specified as a single row of pixels
         // where the R channel denotes the height of the 1st graph and the G channel the height
         // of the second graph and B channel the height of the last graph
-        var fragmentShader =
+        const fragmentShader =
             'varying vec4 uv0;\n' +
             'varying float enabled;\n' +
             'uniform vec4 clr;\n' +
@@ -48,7 +48,7 @@ class Render2d {
             '    gl_FragColor = tex * clr;\n' +
             '}\n';
 
-        var format = new pc.VertexFormat(device, [{
+        const format = new pc.VertexFormat(device, [{
             semantic: pc.SEMANTIC_POSITION,
             components: 3,
             type: pc.TYPE_FLOAT32
@@ -59,8 +59,8 @@ class Render2d {
         }]);
 
         // generate quad indices
-        var indices = new Uint16Array(maxQuads * 6);
-        for (var i = 0; i < maxQuads; ++i) {
+        const indices = new Uint16Array(maxQuads * 6);
+        for (let i = 0; i < maxQuads; ++i) {
             indices[i * 6 + 0] = i * 4;
             indices[i * 6 + 1] = i * 4 + 1;
             indices[i * 6 + 2] = i * 4 + 2;
@@ -85,10 +85,10 @@ class Render2d {
         this.quads = 0;
 
         // colors
-        var setupColor = function (name, value) {
+        const setupColor = (name, value) => {
             this[name] = new Float32Array([value.r, value.g, value.b, value.a]);
             this[name + "Id"] = device.scope.resolve(name);
-        }.bind(this);
+        };
         setupColor("col0", colors.graph0);
         setupColor("col1", colors.graph1);
         setupColor("col2", colors.graph2);
@@ -104,10 +104,10 @@ class Render2d {
     }
 
     quad(texture, x, y, w, h, u, v, uw, uh, enabled) {
-        var quad = this.quads++;
+        const quad = this.quads++;
 
         // update primitive
-        var prim = this.prim;
+        let prim = this.prim;
         if (prim && prim.texture === texture) {
             prim.count += 6;
         } else {
@@ -130,12 +130,12 @@ class Render2d {
             this.prim = prim;
         }
 
-        var x1 = x + w;
-        var y1 = y + h;
-        var u1 = u + (uw === undefined ? w : uw);
-        var v1 = v + (uh === undefined ? h : uh);
+        const x1 = x + w;
+        const y1 = y + h;
+        const u1 = u + (uw === undefined ? w : uw);
+        const v1 = v + (uh === undefined ? h : uh);
 
-        var colorize = enabled ? 1 : 0;
+        const colorize = enabled ? 1 : 0;
         this.data.set([
             x,  y,  colorize, u,  v,  0, 0,
             x1, y,  colorize, u1, v,  1, 0,
@@ -145,8 +145,8 @@ class Render2d {
     }
 
     render(clr, height) {
-        var device = this.device;
-        var buffer = this.buffer;
+        const device = this.device;
+        const buffer = this.buffer;
 
         // set vertex data (swap storage)
         buffer.setData(this.data.buffer);
@@ -165,7 +165,7 @@ class Render2d {
         device.setIndexBuffer(this.indexBuffer);
         device.setShader(this.shader);
 
-        var pr = Math.min(device.maxPixelRatio, window.devicePixelRatio);
+        const pr = Math.min(device.maxPixelRatio, window.devicePixelRatio);
 
         // set shader uniforms
         this.clr.set(clr, 0);
@@ -180,8 +180,8 @@ class Render2d {
         this.watermarkId.setValue(this.watermark);
         this.backgroundId.setValue(this.background);
 
-        for (var i = 0; i <= this.primIndex; ++i) {
-            var prim = this.prims[i];
+        for (let i = 0; i <= this.primIndex; ++i) {
+            const prim = this.prims[i];
             this.screenTextureSize[2] = prim.texture.width;
             this.screenTextureSize[3] = prim.texture.height;
             this.screenTextureSizeId.setValue(this.screenTextureSize);

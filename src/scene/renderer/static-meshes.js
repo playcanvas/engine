@@ -21,44 +21,44 @@ class StaticMeshes {
 
     static prepare(device, scene, meshInstances, lights) {
         // #if _PROFILER
-        var prepareTime = now();
-        var searchTime = 0;
-        var subSearchTime = 0;
-        var triAabbTime = 0;
-        var subTriAabbTime = 0;
-        var writeMeshTime = 0;
-        var subWriteMeshTime = 0;
-        var combineTime = 0;
-        var subCombineTime = 0;
+        const prepareTime = now();
+        let searchTime = 0;
+        let subSearchTime = 0;
+        let triAabbTime = 0;
+        let subTriAabbTime = 0;
+        let writeMeshTime = 0;
+        let subWriteMeshTime = 0;
+        let combineTime = 0;
+        let subCombineTime = 0;
         // #endif
 
-        var i, j, k, v, s, index;
+        let i, j, k, v, s, index;
 
-        var drawCalls = meshInstances;
-        var drawCallsCount = drawCalls.length;
-        var drawCall, light;
+        const drawCalls = meshInstances;
+        const drawCallsCount = drawCalls.length;
+        let drawCall, light;
 
-        var newDrawCalls = [];
-        var mesh;
-        var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
-        var _x, _y, _z;
-        var minx, miny, minz, maxx, maxy, maxz;
-        var minv, maxv;
-        var minVec = new Vec3();
-        var maxVec = new Vec3();
-        var localLightBounds = new BoundingBox();
-        var invMatrix = new Mat4();
-        var triLightComb = [];
-        var triLightCombUsed;
-        var indexBuffer, vertexBuffer;
-        var combIndices, combIbName, combIb;
-        var lightTypePass;
-        var lightAabb = [];
-        var aabb;
-        var triBounds = [];
-        var staticLights = [];
-        var bit;
-        var lht;
+        const newDrawCalls = [];
+        let mesh;
+        let indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
+        let _x, _y, _z;
+        let minx, miny, minz, maxx, maxy, maxz;
+        let minv, maxv;
+        const minVec = new Vec3();
+        const maxVec = new Vec3();
+        const localLightBounds = new BoundingBox();
+        const invMatrix = new Mat4();
+        const triLightComb = [];
+        let triLightCombUsed;
+        let indexBuffer, vertexBuffer;
+        let combIndices, combIbName, combIb;
+        let lightTypePass;
+        const lightAabb = [];
+        let aabb;
+        const triBounds = [];
+        const staticLights = [];
+        let bit;
+        let lht;
         for (i = 0; i < drawCallsCount; i++) {
             drawCall = drawCalls[i];
             if (!drawCall.isStatic) {
@@ -212,8 +212,8 @@ class StaticMeshes {
 
                     for (combIbName in combIndices) {
                         combIb = combIndices[combIbName];
-                        var ib = new IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
-                        var ib2 = ib.bytesPerIndex === 2 ? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
+                        const ib = new IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
+                        const ib2 = ib.bytesPerIndex === 2 ? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
                         ib2.set(combIb);
                         ib.unlock();
 
@@ -237,10 +237,10 @@ class StaticMeshes {
                         }
                         minVec.set(minx, miny, minz);
                         maxVec.set(maxx, maxy, maxz);
-                        var chunkAabb = new BoundingBox();
+                        const chunkAabb = new BoundingBox();
                         chunkAabb.setMinMax(minVec, maxVec);
 
-                        var mesh2 = new Mesh(device);
+                        const mesh2 = new Mesh(device);
                         mesh2.vertexBuffer = vertexBuffer;
                         mesh2.indexBuffer[0] = ib;
                         mesh2.primitive[0].type = PRIMITIVE_TRIANGLES;
@@ -249,7 +249,7 @@ class StaticMeshes {
                         mesh2.primitive[0].indexed = true;
                         mesh2.aabb = chunkAabb;
 
-                        var instance = new MeshInstance(mesh2, drawCall.material, drawCall.node);
+                        const instance = new MeshInstance(mesh2, drawCall.material, drawCall.node);
                         instance.isStatic = drawCall.isStatic;
                         instance.visible = drawCall.visible;
                         instance.layer = drawCall.layer;
@@ -269,7 +269,7 @@ class StaticMeshes {
                         }
 
                         // uncomment to remove 32 lights limit
-                        // var lnames = combIbName.split("_");
+                        // let lnames = combIbName.split("_");
                         // lnames.length = lnames.length - 1;
                         // for(k = 0; k < lnames.length; k++) {
                         //     instance._staticLightList[k] = lights[parseInt(lnames[k])];

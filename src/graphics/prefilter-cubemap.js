@@ -12,10 +12,10 @@ import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
 
 function syncToCpu(device, targ, face) {
-    var tex = targ._colorBuffer;
+    const tex = targ._colorBuffer;
     if (tex.format !== PIXELFORMAT_R8_G8_B8_A8) return;
-    var pixels = new Uint8Array(tex.width * tex.height * 4);
-    var gl = device.gl;
+    const pixels = new Uint8Array(tex.width * tex.height * 4);
+    const gl = device.gl;
     device.setFramebuffer(targ._glFrameBuffer);
     gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     if (!tex._levels) tex._levels = [];
@@ -31,11 +31,11 @@ function syncToCpu(device, targ, face) {
  * @param {object} options - The options for how the cubemap is prefiltered.
  */
 function prefilterCubemap(options) {
-    var device = options.device;
-    var sourceCubemap = options.sourceCubemap;
-    var method = options.method;
-    var samples = options.samples;
-    var cpuSync = options.cpuSync;
+    const device = options.device;
+    let sourceCubemap = options.sourceCubemap;
+    const method = options.method;
+    const samples = options.samples;
+    const cpuSync = options.cpuSync;
 
     if (cpuSync && !sourceCubemap._levels[0]) {
         // #if _DEBUG
@@ -44,35 +44,33 @@ function prefilterCubemap(options) {
         return;
     }
 
-    var sourceType = sourceCubemap.type;
-    var rgbmSource = sourceType === TEXTURETYPE_RGBM;
-    var shader = createShaderFromCode(device,
-                                      shaderChunks.fullscreenQuadVS,
-                                      shaderChunks.rgbmPS + shaderChunks.prefilterCubemapPS
-                                          .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
-                                          .replace(/\$NUMSAMPLES/g, samples)
-                                          .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
-                                      "prefilter" + method + "" + samples + "" + rgbmSource);
-    var shader2 = createShaderFromCode(device,
-                                       shaderChunks.fullscreenQuadVS,
-                                       shaderChunks.outputCubemapPS,
-                                       "outputCubemap");
-    var constantTexSource = device.scope.resolve("source");
-    var constantParams = device.scope.resolve("params");
-    var params = new Float32Array(4);
-    var size = sourceCubemap.width;
-    var format = sourceCubemap.format;
+    const sourceType = sourceCubemap.type;
+    const rgbmSource = sourceType === TEXTURETYPE_RGBM;
+    const shader = createShaderFromCode(device,
+                                        shaderChunks.fullscreenQuadVS,
+                                        shaderChunks.rgbmPS + shaderChunks.prefilterCubemapPS
+                                            .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
+                                            .replace(/\$NUMSAMPLES/g, samples)
+                                            .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
+                                        "prefilter" + method + "" + samples + "" + rgbmSource);
+    const shader2 = createShaderFromCode(device,
+                                         shaderChunks.fullscreenQuadVS,
+                                         shaderChunks.outputCubemapPS,
+                                         "outputCubemap");
+    const constantTexSource = device.scope.resolve("source");
+    const constantParams = device.scope.resolve("params");
+    const params = new Float32Array(4);
+    let size = sourceCubemap.width;
+    let format = sourceCubemap.format;
 
-    var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
-    var gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25, 0.15, 0.1] : [512, 128, 32, 8, 2, 1, 1]; // TODO: calc more correct values depending on mip
-    var mipSize = [64, 32, 16, 8, 4, 2, 1]; // TODO: make non-static?
-    var numMips = 7;                        // generate all mips down to 1x1
-    var targ;
-    var i, face, pass;
+    const cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
+    const gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25, 0.15, 0.1] : [512, 128, 32, 8, 2, 1, 1]; // TODO: calc more correct values depending on mip
+    const mipSize = [64, 32, 16, 8, 4, 2, 1]; // TODO: make non-static?
+    const numMips = 7;                        // generate all mips down to 1x1
 
-    var rgbFormat = format === PIXELFORMAT_R8_G8_B8;
-    var isImg = false;
-    var nextCubemap, cubemap;
+    const rgbFormat = format === PIXELFORMAT_R8_G8_B8;
+    let isImg = false;
+    let nextCubemap;
     if (cpuSync) {
         isImg = sourceCubemap._levels[0][0] instanceof HTMLImageElement;
     }
@@ -88,8 +86,8 @@ function prefilterCubemap(options) {
             mipmaps: false
         });
         nextCubemap.name = 'prefiltered-cube';
-        for (face = 0; face < 6; face++) {
-            targ = new RenderTarget({
+        for (let face = 0; face < 6; face++) {
+            const targ = new RenderTarget({
                 colorBuffer: nextCubemap,
                 face: face,
                 depth: false
@@ -107,12 +105,12 @@ function prefilterCubemap(options) {
 
     if (size > 128) {
         // Downsample to 128 first
-        var log128 = Math.round(Math.log2(128));
-        var logSize = Math.round(Math.log2(size));
-        var steps = logSize - log128;
-        for (i = 0; i < steps; i++) {
+        const log128 = Math.round(Math.log2(128));
+        const logSize = Math.round(Math.log2(size));
+        const steps = logSize - log128;
+        for (let i = 0; i < steps; i++) {
             size = sourceCubemap.width * 0.5;
-            var sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
+            const sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
             nextCubemap = new Texture(device, {
                 cubemap: true,
                 type: sourceType,
@@ -122,8 +120,8 @@ function prefilterCubemap(options) {
                 mipmaps: false
             });
             nextCubemap.name = 'prefiltered-cube';
-            for (face = 0; face < 6; face++) {
-                targ = new RenderTarget({
+            for (let face = 0; face < 6; face++) {
+                const targ = new RenderTarget({
                     colorBuffer: nextCubemap,
                     face: face,
                     depth: false
@@ -145,7 +143,7 @@ function prefilterCubemap(options) {
     }
     options.sourceCubemap = sourceCubemap;
 
-    var sourceCubemapRgbm = null;
+    let sourceCubemapRgbm = null;
     if (!rgbmSource && options.filteredFixedRgbm) {
         nextCubemap = new Texture(device, {
             cubemap: true,
@@ -156,8 +154,8 @@ function prefilterCubemap(options) {
             mipmaps: false
         });
         nextCubemap.name = 'prefiltered-cube';
-        for (face = 0; face < 6; face++) {
-            targ = new RenderTarget({
+        for (let face = 0; face < 6; face++) {
+            const targ = new RenderTarget({
                 colorBuffer: nextCubemap,
                 face: face,
                 depth: false
@@ -173,13 +171,13 @@ function prefilterCubemap(options) {
         sourceCubemapRgbm = nextCubemap;
     }
 
-    var unblurredGloss = method === 0 ? 1 : 2048;
-    var startPass = method === 0 ? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
+    const unblurredGloss = method === 0 ? 1 : 2048;
+    const startPass = method === 0 ? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
     cmapsList[startPass] = [];
 
     // Initialize textures
-    for (i = 0; i < numMips; i++) {
-        for (pass = startPass; pass < cmapsList.length; pass++) {
+    for (let i = 0; i < numMips; i++) {
+        for (let pass = startPass; pass < cmapsList.length; pass++) {
             if (cmapsList[pass] != null) {
                 cmapsList[pass][i] = new Texture(device, {
                     cubemap: true,
@@ -201,16 +199,16 @@ function prefilterCubemap(options) {
     // Pass 1: filter + edge fixup
     // Pass 2: filter + encode to RGBM
     // Pass 3: filter + edge fixup + encode to RGBM
-    for (pass = startPass; pass < cmapsList.length; pass++) {
+    for (let pass = startPass; pass < cmapsList.length; pass++) {
         if (cmapsList[pass] != null) {
             if (pass > 1 && rgbmSource) {
                 // already RGBM
                 cmapsList[pass] = cmapsList[pass - 2];
                 continue;
             }
-            for (i = 0; i < numMips; i++) {
-                for (face = 0; face < 6; face++) {
-                    targ = new RenderTarget({ // TODO: less excessive allocations
+            for (let i = 0; i < numMips; i++) {
+                for (let face = 0; face < 6; face++) {
+                    const targ = new RenderTarget({ // TODO: less excessive allocations
                         colorBuffer: cmapsList[pass][i],
                         face: face,
                         depth: false
@@ -232,10 +230,9 @@ function prefilterCubemap(options) {
 
     options.filtered = cmapsList[0];
 
-    var mips;
     if (cpuSync && options.singleFilteredFixed) {
-        mips = [sourceCubemap].concat(options.filteredFixed);
-        cubemap = new Texture(device, {
+        const mips = [sourceCubemap].concat(options.filteredFixed);
+        const cubemap = new Texture(device, {
             cubemap: true,
             type: sourceType,
             fixCubemapSeams: true,
@@ -246,7 +243,7 @@ function prefilterCubemap(options) {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
         cubemap.name = 'prefiltered-cube';
-        for (i = 0; i < mips.length; i++)
+        for (let i = 0; i < mips.length; i++)
             cubemap._levels[i] = mips[i]._levels[0];
 
         cubemap.upload();
@@ -254,8 +251,8 @@ function prefilterCubemap(options) {
     }
 
     if (cpuSync && options.singleFilteredFixedRgbm && options.filteredFixedRgbm) {
-        mips = [sourceCubemapRgbm].concat(options.filteredFixedRgbm);
-        cubemap = new Texture(device, {
+        const mips = [sourceCubemapRgbm].concat(options.filteredFixedRgbm);
+        const cubemap = new Texture(device, {
             cubemap: true,
             type: TEXTURETYPE_RGBM,
             fixCubemapSeams: true,
@@ -266,7 +263,7 @@ function prefilterCubemap(options) {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
         cubemap.name = 'prefiltered-cube';
-        for (i = 0; i < mips.length; i++) {
+        for (let i = 0; i < mips.length; i++) {
             cubemap._levels[i] = mips[i]._levels[0];
         }
         cubemap.upload();
@@ -278,24 +275,25 @@ function prefilterCubemap(options) {
 function areaElement(x, y) {
     return Math.atan2(x * y, Math.sqrt(x * x + y * y + 1));
 }
+
 function texelCoordSolidAngle(u, v, size) {
     // Scale up to [-1, 1] range (inclusive), offset by 0.5 to point to texel center.
-    var _u = (2.0 * (u + 0.5) / size) - 1.0;
-    var _v = (2.0 * (v + 0.5) / size) - 1.0;
+    let _u = (2.0 * (u + 0.5) / size) - 1.0;
+    let _v = (2.0 * (v + 0.5) / size) - 1.0;
 
     // fixSeams
     _u *= 1.0 - 1.0 / size;
     _v *= 1.0 - 1.0 / size;
 
-    var invResolution = 1.0 / size;
+    const invResolution = 1.0 / size;
 
     // U and V are the -1..1 texture coordinate on the current face.
     // Get projected area for this texel
-    var x0 = _u - invResolution;
-    var y0 = _v - invResolution;
-    var x1 = _u + invResolution;
-    var y1 = _v + invResolution;
-    var solidAngle = areaElement(x0, y0) - areaElement(x0, y1) - areaElement(x1, y0) + areaElement(x1, y1);
+    const x0 = _u - invResolution;
+    const y0 = _v - invResolution;
+    const x1 = _u + invResolution;
+    const y1 = _v + invResolution;
+    let solidAngle = areaElement(x0, y0) - areaElement(x0, y1) - areaElement(x1, y0) + areaElement(x1, y1);
 
     // fixSeams cut
     if ((u === 0 && v === 0) || (u === size - 1 && v === 0) || (u === 0 && v === size - 1) || (u === size - 1 && v === size - 1)) {
@@ -308,10 +306,6 @@ function texelCoordSolidAngle(u, v, size) {
 }
 
 function shFromCubemap(device, source, dontFlipX) {
-    var face;
-    var cubeSize = source.width;
-    var x, y;
-
     if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
         // #if _DEBUG
         console.error("ERROR: SH: cubemap must be RGBA8");
@@ -324,20 +318,22 @@ function shFromCubemap(device, source, dontFlipX) {
         // #endif
         return null;
     }
+
+    const cubeSize = source.width;
+
     if (!source._levels[0][0].length) {
         // Cubemap is not composed of arrays
         if (source._levels[0][0] instanceof HTMLImageElement) {
             // Cubemap is made of imgs - convert to arrays
-            var gl = device.gl;
-            var shader = createShaderFromCode(device,
-                                              shaderChunks.fullscreenQuadVS,
-                                              shaderChunks.fullscreenQuadPS,
-                                              "fsQuadSimple");
-            var constantTexSource = device.scope.resolve("source");
-            for (face = 0; face < 6; face++) {
-                var img = source._levels[0][face];
+            const shader = createShaderFromCode(device,
+                                                shaderChunks.fullscreenQuadVS,
+                                                shaderChunks.fullscreenQuadPS,
+                                                "fsQuadSimple");
+            const constantTexSource = device.scope.resolve("source");
+            for (let face = 0; face < 6; face++) {
+                const img = source._levels[0][face];
 
-                var tex = new Texture(device, {
+                const tex = new Texture(device, {
                     cubemap: false,
                     type: TEXTURETYPE_DEFAULT,
                     format: source.format,
@@ -349,7 +345,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 tex._levels[0] = img;
                 tex.upload();
 
-                var tex2 = new Texture(device, {
+                const tex2 = new Texture(device, {
                     cubemap: false,
                     type: TEXTURETYPE_DEFAULT,
                     format: source.format,
@@ -359,15 +355,17 @@ function shFromCubemap(device, source, dontFlipX) {
                 });
                 tex2.name = 'prefiltered-cube';
 
-                var targ = new RenderTarget({
+                const targ = new RenderTarget({
                     colorBuffer: tex2,
                     depth: false
                 });
                 constantTexSource.setValue(tex);
                 drawQuadWithShader(device, targ, shader);
 
-                var pixels = new Uint8Array(cubeSize * cubeSize * 4);
+                const gl = device.gl;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+
+                const pixels = new Uint8Array(cubeSize * cubeSize * 4);
                 gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
                 source._levels[0][face] = pixels;
@@ -380,52 +378,52 @@ function shFromCubemap(device, source, dontFlipX) {
         }
     }
 
-    var dirs = [];
-    for (y = 0; y < cubeSize; y++) {
-        for (x = 0; x < cubeSize; x++) {
-            var u = (x / (cubeSize - 1)) * 2 - 1;
-            var v = (y / (cubeSize - 1)) * 2 - 1;
+    const dirs = [];
+    for (let y = 0; y < cubeSize; y++) {
+        for (let x = 0; x < cubeSize; x++) {
+            const u = (x / (cubeSize - 1)) * 2 - 1;
+            const v = (y / (cubeSize - 1)) * 2 - 1;
             dirs[y * cubeSize + x] = new Vec3(u, v, 1.0).normalize();
         }
     }
 
-    var sh = new Float32Array(9 * 3);
-    var coef1 = 0;
-    var coef2 = 1 * 3;
-    var coef3 = 2 * 3;
-    var coef4 = 3 * 3;
-    var coef5 = 4 * 3;
-    var coef6 = 5 * 3;
-    var coef7 = 6 * 3;
-    var coef8 = 7 * 3;
-    var coef9 = 8 * 3;
+    const sh = new Float32Array(9 * 3);
+    const coef1 = 0;
+    const coef2 = 1 * 3;
+    const coef3 = 2 * 3;
+    const coef4 = 3 * 3;
+    const coef5 = 4 * 3;
+    const coef6 = 5 * 3;
+    const coef7 = 6 * 3;
+    const coef8 = 7 * 3;
+    const coef9 = 8 * 3;
 
-    var nx = 0;
-    var px = 1;
-    var ny = 2;
-    var py = 3;
-    var nz = 4;
-    var pz = 5;
+    const nx = 0;
+    const px = 1;
+    const ny = 2;
+    const py = 3;
+    const nz = 4;
+    const pz = 5;
 
-    var addr, c, a, value, weight, dir, dx, dy, dz;
-    var weight1, weight2, weight3, weight4, weight5;
+    let accum = 0;
 
-    var accum = 0;
-    for (face = 0; face < 6; face++) {
-        for (y = 0; y < cubeSize; y++) {
-            for (x = 0; x < cubeSize; x++) {
+    for (let face = 0; face < 6; face++) {
+        for (let y = 0; y < cubeSize; y++) {
+            for (let x = 0; x < cubeSize; x++) {
 
-                addr = y * cubeSize + x;
-                weight = texelCoordSolidAngle(x, y, cubeSize);
+                const addr = y * cubeSize + x;
+                const weight = texelCoordSolidAngle(x, y, cubeSize);
 
                 // http://home.comcast.net/~tom_forsyth/blog.wiki.html#[[Spherical%20Harmonics%20in%20Actual%20Games%20notes]]
-                weight1 = weight * 4 / 17;
-                weight2 = weight * 8 / 17;
-                weight3 = weight * 15 / 17;
-                weight4 = weight * 5 / 68;
-                weight5 = weight * 15 / 68;
+                const weight1 = weight * 4 / 17;
+                const weight2 = weight * 8 / 17;
+                const weight3 = weight * 15 / 17;
+                const weight4 = weight * 5 / 68;
+                const weight5 = weight * 15 / 68;
 
-                dir = dirs[addr];
+                const dir = dirs[addr];
+
+                let dx, dy, dz;
                 if (face == nx) {
                     dx = dir.z;
                     dy = -dir.y;
@@ -454,10 +452,10 @@ function shFromCubemap(device, source, dontFlipX) {
 
                 if (!dontFlipX) dx = -dx; // flip original cubemap x instead of doing it at runtime
 
-                a = source._levels[0][face][addr * 4 + 3] / 255.0;
+                const a = source._levels[0][face][addr * 4 + 3] / 255.0;
 
-                for (c = 0; c < 3; c++) {
-                    value =  source._levels[0][face][addr * 4 + c] / 255.0;
+                for (let c = 0; c < 3; c++) {
+                    let value =  source._levels[0][face][addr * 4 + c] / 255.0;
                     if (source.type === TEXTURETYPE_RGBM) {
                         value *= a * 8.0;
                         value *= value;
@@ -483,7 +481,7 @@ function shFromCubemap(device, source, dontFlipX) {
         }
     }
 
-    for (c = 0; c < sh.length; c++) {
+    for (let c = 0; c < sh.length; c++) {
         sh[c] *= 4 * Math.PI / accum;
     }
 
