@@ -90,15 +90,15 @@ class StandardMaterialValidator {
                 }
 
             } else if (type === 'number') {
-                if (typeof(data[key]) !== 'number') {
+                if (typeof data[key] !== 'number') {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'boolean') {
-                if (typeof(data[key]) !== 'boolean') {
+                if (typeof data[key] !== 'boolean') {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'string') {
-                if (typeof(data[key]) !== 'string') {
+                if (typeof data[key] !== 'string') {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'vec2') {
@@ -111,7 +111,7 @@ class StandardMaterialValidator {
                 }
             } else if (type === 'texture') {
                 if (!pathMapping) {
-                    if (!(typeof(data[key]) === 'number' || data[key] === null)) {
+                    if (!(typeof data[key] === 'number' || data[key] === null)) {
                         if (!(data[key] instanceof Texture)) {
                             this.setInvalid(key, data);
                         }
@@ -120,7 +120,7 @@ class StandardMaterialValidator {
                     // this counts as a valid input
                     // null texture reference is also valid
                 } else {
-                    if (!(typeof(data[key]) === 'string' || data[key === null])) {
+                    if (!(typeof data[key] === 'string' || data[key === null])) {
                         if (!(data[key] instanceof Texture)) {
                             this.setInvalid(key, data);
                         }
@@ -135,7 +135,7 @@ class StandardMaterialValidator {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'cubemap') {
-                if (!(typeof(data[key]) === 'number' || data[key] === null || data[key] === undefined)) {
+                if (!(typeof data[key] === 'number' || data[key] === null || data[key] === undefined)) {
 
                     if (!(data[key] instanceof Texture && data[key].cubemap)) {
                         this.setInvalid(key, data);
@@ -147,7 +147,7 @@ class StandardMaterialValidator {
             } else if (type === 'chunks') {
                 const chunkNames = Object.keys(data[key]);
                 for (let i = 0; i < chunkNames.length; i++) {
-                    if (typeof(data[key][chunkNames[i]]) !== 'string') {
+                    if (typeof data[key][chunkNames[i]] !== 'string') {
                         this.setInvalid(chunkNames[i], data[key]);
                     }
                 }

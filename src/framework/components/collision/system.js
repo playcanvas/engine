@@ -84,9 +84,9 @@ class CollisionSystemImpl {
 
             data.shape = this.createPhysicalShape(component.entity, data);
 
-            const firstCompoundChild = ! component._compoundParent;
+            const firstCompoundChild = !component._compoundParent;
 
-            if (data.type === 'compound' && (! component._compoundParent || component === component._compoundParent)) {
+            if (data.type === 'compound' && (!component._compoundParent || component === component._compoundParent)) {
                 component._compoundParent = component;
 
                 entity.forEach(this._addEachDescendant, component);
@@ -95,7 +95,7 @@ class CollisionSystemImpl {
                     entity.forEach(this.system.implementations.compound._updateEachDescendant, component);
                 }
 
-                if (! component.rigidbody) {
+                if (!component.rigidbody) {
                     component._compoundParent = null;
                     let parent = entity.parent;
                     while (parent) {
@@ -128,8 +128,8 @@ class CollisionSystemImpl {
                 if (entity.enabled && entity.rigidbody.enabled) {
                     entity.rigidbody.enableSimulation();
                 }
-            } else if (! component._compoundParent) {
-                if (! entity.trigger) {
+            } else if (!component._compoundParent) {
+                if (!entity.trigger) {
                     entity.trigger = new Trigger(this.system.app, component, data);
                 } else {
                     entity.trigger.initialize(data);
@@ -153,7 +153,7 @@ class CollisionSystemImpl {
 
     beforeRemove(entity, component) {
         if (component.data.shape) {
-            if (component._compoundParent && ! component._compoundParent.entity._destroying) {
+            if (component._compoundParent && !component._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(component._compoundParent, component.data.shape);
 
                 if (component._compoundParent.entity.rigidbody)
@@ -528,7 +528,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _addEachDescendant(entity) {
-        if (! entity.collision || entity.rigidbody)
+        if (!entity.collision || entity.rigidbody)
             return;
 
         entity.collision._compoundParent = this;
@@ -539,7 +539,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _updateEachDescendant(entity) {
-        if (! entity.collision)
+        if (!entity.collision)
             return;
 
         if (entity.collision._compoundParent !== this)
@@ -547,13 +547,13 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 
         entity.collision._compoundParent = null;
 
-        if (entity !== this.entity && ! entity.rigidbody) {
+        if (entity !== this.entity && !entity.rigidbody) {
             entity.collision.system.recreatePhysicalShapes(entity.collision);
         }
     }
 
     _updateEachDescendantTransform(entity) {
-        if (! entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
+        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
             return;
 
         this.collision.system.updateCompoundChildTransform(entity);

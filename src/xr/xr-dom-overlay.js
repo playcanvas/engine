@@ -41,7 +41,7 @@ class XrDomOverlay {
     }
 
     get state() {
-        if (! this._supported || ! this._manager.active || ! this._manager._session.domOverlayState)
+        if (!this._supported || !this._manager.active || !this._manager._session.domOverlayState)
             return null;
 
         return this._manager._session.domOverlayState.type;
@@ -56,7 +56,7 @@ class XrDomOverlay {
      * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
      */
     set root(value) {
-        if (! this._supported || this._manager.active)
+        if (!this._supported || this._manager.active)
             return;
 
         this._root = value;

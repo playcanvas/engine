@@ -36,7 +36,7 @@ class BundleHandler {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         }, function (err, response) {
-            if (! err) {
+            if (!err) {
                 try {
                     self._untar(response, callback);
                 } catch (ex) {
@@ -64,7 +64,7 @@ class BundleHandler {
 
                 // if we have no more requests for this worker then
                 // destroy it
-                if (! self._worker.hasPendingRequests()) {
+                if (!self._worker.hasPendingRequests()) {
                     self._worker.destroy();
                     self._worker = null;
                 }

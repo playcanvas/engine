@@ -336,8 +336,8 @@ class ElementInput {
     }
 
     attachSelectEvents() {
-        if (! this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
-            if (! this._clickedEntities)
+        if (!this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
+            if (!this._clickedEntities)
                 this._clickedEntities = {};
 
             this._selectEventsAttached = true;
@@ -693,12 +693,12 @@ class ElementInput {
     }
 
     _onSelectStart(inputSource, event) {
-        if (! this._enabled) return;
+        if (!this._enabled) return;
         this._onElementSelectEvent('selectstart', inputSource, event);
     }
 
     _onSelectEnd(inputSource, event) {
-        if (! this._enabled) return;
+        if (!this._enabled) return;
         this._onElementSelectEvent('selectend', inputSource, event);
     }
 
@@ -743,7 +743,7 @@ class ElementInput {
         }
 
         const pressed = this._selectedPressedElements[inputSource.id];
-        if (! inputSource.elementInput && pressed) {
+        if (!inputSource.elementInput && pressed) {
             delete this._selectedPressedElements[inputSource.id];
             if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
         }
@@ -898,7 +898,7 @@ class ElementInput {
         for (let i = 0, len = this._elements.length; i < len; i++) {
             const element = this._elements[i];
 
-            if (! element.screen || ! element.screen.screen.screenSpace) {
+            if (!element.screen || !element.screen.screen.screenSpace) {
                 if (this._checkElement(rayA, element, false) >= 0) {
                     result = element;
                     break;

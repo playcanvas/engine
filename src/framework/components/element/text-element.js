@@ -1596,9 +1596,9 @@ class TextElement {
         if (this._aabbDirty) {
             let initialized = false;
             for (let i = 0; i < this._meshInfo.length; i++) {
-                if (! this._meshInfo[i].meshInstance) continue;
+                if (!this._meshInfo[i].meshInstance) continue;
 
-                if (! initialized) {
+                if (!initialized) {
                     this._aabb.copy(this._meshInfo[i].meshInstance.aabb);
                     initialized = true;
                 } else {

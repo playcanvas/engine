@@ -619,7 +619,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                     // fire triggerenter events for rigidbodies
                     if (e0BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e1, e0);
                         }
 
@@ -629,7 +629,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     }
 
                     if (e1BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e0, e1);
                         }
 

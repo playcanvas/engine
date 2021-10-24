@@ -84,7 +84,7 @@ class XrHitTest extends EventHandler {
     }
 
     _onSessionEnd() {
-        if (! this._session)
+        if (!this._session)
             return;
 
         this._session = null;
@@ -98,10 +98,10 @@ class XrHitTest extends EventHandler {
     isAvailable(callback, fireError) {
         let err;
 
-        if (! this._supported)
+        if (!this._supported)
             err = new Error('XR HitTest is not supported');
 
-        if (! this._session)
+        if (!this._session)
             err = new Error('XR Session is not started (1)');
 
         if (this.manager.type !== XRTYPE_AR)
@@ -174,10 +174,10 @@ class XrHitTest extends EventHandler {
     start(options) {
         options = options || { };
 
-        if (! this.isAvailable(options.callback, this))
+        if (!this.isAvailable(options.callback, this))
             return;
 
-        if (! options.profile && ! options.spaceType)
+        if (!options.profile && !options.spaceType)
             options.spaceType = XRSPACE_VIEWER;
 
         let xrRay;
@@ -188,7 +188,7 @@ class XrHitTest extends EventHandler {
 
         if (options.spaceType) {
             this._session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
-                if (! this._session) {
+                if (!this._session) {
                     const err = new Error('XR Session is not started (2)');
                     if (callback) callback(err);
                     this.fire('error', err);
@@ -224,7 +224,7 @@ class XrHitTest extends EventHandler {
     }
 
     _onHitTestSource(xrHitTestSource, transient, callback) {
-        if (! this._session) {
+        if (!this._session) {
             xrHitTestSource.cancel();
             const err = new Error('XR Session is not started (3)');
             if (callback) callback(err);

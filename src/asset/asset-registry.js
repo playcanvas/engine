@@ -559,7 +559,7 @@ class AssetRegistry extends EventHandler {
         const texParams = standardMaterialTextureParameters;
         for (let i = 0; i < texParams.length; i++) {
             const path = data[texParams[i]];
-            if (path && typeof(path) === 'string') {
+            if (path && typeof path === 'string') {
                 count++;
                 const url = materialAsset.getAbsoluteUrl(path);
                 this.loadFromUrl(url, "texture", onTextureLoaded);

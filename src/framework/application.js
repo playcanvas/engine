@@ -433,7 +433,7 @@ class Application extends EventHandler {
         // for compatibility
         this.context = this;
 
-        if (! options.graphicsDeviceOptions)
+        if (!options.graphicsDeviceOptions)
             options.graphicsDeviceOptions = { };
 
         if (platform.browser && !!navigator.xr) {

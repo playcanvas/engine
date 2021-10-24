@@ -18,7 +18,7 @@ class Trigger {
         this.component = component;
         this.app = app;
 
-        if (typeof Ammo !== 'undefined' && ! ammoVec1) {
+        if (typeof Ammo !== 'undefined' && !ammoVec1) {
             ammoVec1 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
             ammoTransform = new Ammo.btTransform();

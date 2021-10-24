@@ -183,7 +183,7 @@ class ElementComponentSystem extends ComponentSystem {
             }
             if (data.color !== undefined) {
                 color = data.color;
-                if (! (color instanceof Color)) {
+                if (!(color instanceof Color)) {
                     color = new Color(data.color[0], data.color[1], data.color[2]);
                 }
                 component.color = color;
@@ -214,7 +214,7 @@ class ElementComponentSystem extends ComponentSystem {
             }
             if (data.color !== undefined) {
                 color = data.color;
-                if (! (color instanceof Color)) {
+                if (!(color instanceof Color)) {
                     color = new Color(color[0], color[1], color[2]);
                 }
                 component.color = color;

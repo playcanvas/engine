@@ -41,7 +41,7 @@ class XrManager extends EventHandler {
 
         this.app = app;
 
-        this._supported = platform.browser && !! navigator.xr;
+        this._supported = platform.browser && !!navigator.xr;
 
         this._available = { };
 
@@ -195,10 +195,10 @@ class XrManager extends EventHandler {
     start(camera, type, spaceType, options) {
         let callback = options;
 
-        if (typeof(options) === 'object')
+        if (typeof options === 'object')
             callback = options.callback;
 
-        if (! this._available[type]) {
+        if (!this._available[type]) {
             if (callback) callback(new Error('XR is not available'));
             return;
         }
@@ -320,7 +320,7 @@ class XrManager extends EventHandler {
      * @param {callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     end(callback) {
-        if (! this._session) {
+        if (!this._session) {
             if (callback) callback(new Error('XR Session is not initialized'));
             return;
         }
@@ -403,7 +403,7 @@ class XrManager extends EventHandler {
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
 
-            if (! failed) this.fire('end');
+            if (!failed) this.fire('end');
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
@@ -449,7 +449,7 @@ class XrManager extends EventHandler {
         this._depthNear = near;
         this._depthFar = far;
 
-        if (! this._session)
+        if (!this._session)
             return;
 
         // if session is available,
@@ -461,7 +461,7 @@ class XrManager extends EventHandler {
     }
 
     update(frame) {
-        if (! this._session) return;
+        if (!this._session) return;
 
         // canvas resolution should be set on first frame availability or resolution changes
         const width = frame.session.renderState.baseLayer.framebufferWidth;
@@ -479,7 +479,7 @@ class XrManager extends EventHandler {
             // add new views into list
             for (let i = 0; i <= (lengthNew - this.views.length); i++) {
                 let view = this.viewsPool.pop();
-                if (! view) {
+                if (!view) {
                     view = {
                         viewport: new Vec4(),
                         projMat: new Mat4(),
@@ -560,7 +560,7 @@ class XrManager extends EventHandler {
     }
 
     get active() {
-        return !! this._session;
+        return !!this._session;
     }
 
     get type() {
@@ -576,7 +576,7 @@ class XrManager extends EventHandler {
     }
 
     get visibilityState() {
-        if (! this._session)
+        if (!this._session)
             return null;
 
         return this._session.visibilityState;
