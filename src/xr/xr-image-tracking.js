@@ -48,7 +48,7 @@ class XrImageTracking extends EventHandler {
      * app.xr.imageTracking.add(bookCoverImg, 0.2);
      */
     add(image, width) {
-        if (! this._supported || this._manager.active) return null;
+        if (!this._supported || this._manager.active) return null;
 
         const trackedImage = new XrTrackedImage(image, width);
         this._images.push(trackedImage);
@@ -113,7 +113,7 @@ class XrImageTracking extends EventHandler {
     }
 
     update(frame) {
-        if (! this._available) return;
+        if (!this._available) return;
 
         const results = frame.getImageTrackingResults();
         const index = { };
@@ -129,10 +129,10 @@ class XrImageTracking extends EventHandler {
         }
 
         for (let i = 0; i < this._images.length; i++) {
-            if (this._images[i]._tracking && ! index[i]) {
+            if (this._images[i]._tracking && !index[i]) {
                 this._images[i]._tracking = false;
                 this._images[i].fire('untracked');
-            } else if (! this._images[i]._tracking && index[i]) {
+            } else if (!this._images[i]._tracking && index[i]) {
                 this._images[i]._tracking = true;
                 this._images[i].fire('tracked');
             }

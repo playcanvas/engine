@@ -264,7 +264,7 @@ class CollisionComponent extends Component {
 
         if (this._compoundParent) {
             this.system.recreatePhysicalShapes(this);
-        } else if (! this.entity.rigidbody) {
+        } else if (!this.entity.rigidbody) {
             let ancestor = this.entity.parent;
             while (ancestor) {
                 if (ancestor.collision && ancestor.collision.type === 'compound') {
@@ -340,7 +340,7 @@ class CollisionComponent extends Component {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
         } else if (this._compoundParent && this !== this._compoundParent) {
-            if (! this._compoundParent.entity._destroying) {
+            if (!this._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(this._compoundParent, this.data.shape);
 
                 if (this._compoundParent.entity.rigidbody)

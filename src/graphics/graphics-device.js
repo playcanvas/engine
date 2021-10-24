@@ -3422,10 +3422,10 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         // Check for compilation errors
-        if (! this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader, "vertex"))
+        if (!this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader, "vertex"))
             return false;
 
-        if (! this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader, "fragment"))
+        if (!this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader, "fragment"))
             return false;
 
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {

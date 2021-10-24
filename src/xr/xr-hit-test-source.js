@@ -60,7 +60,7 @@ class XrHitTestSource extends EventHandler {
      * @description Stop and remove hit test source.
      */
     remove() {
-        if (! this._xrHitTestSource)
+        if (!this._xrHitTestSource)
             return;
 
         const sources = this.manager.hitTest.sources;
@@ -100,11 +100,11 @@ class XrHitTestSource extends EventHandler {
             const pose = results[i].getPose(this.manager._referenceSpace);
 
             let position = poolVec3.pop();
-            if (! position) position = new Vec3();
+            if (!position) position = new Vec3();
             position.copy(pose.transform.position);
 
             let rotation = poolQuat.pop();
-            if (! rotation) rotation = new Quat();
+            if (!rotation) rotation = new Quat();
             rotation.copy(pose.transform.orientation);
 
             this.fire('result', position, rotation, inputSource);

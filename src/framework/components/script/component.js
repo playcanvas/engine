@@ -457,7 +457,7 @@ class ScriptComponent extends Component {
         if (attribute.array) {
             // handle entity array attribute
             const len = oldValue.length;
-            if (! len) {
+            if (!len) {
                 return;
             }
 
@@ -783,13 +783,13 @@ class ScriptComponent extends Component {
         for (const scriptName in oldScriptComponent._scriptsIndex) {
             // get the script type from the script registry
             const scriptType = this.system.app.scripts.get(scriptName);
-            if (! scriptType) {
+            if (!scriptType) {
                 continue;
             }
 
             // get the script from the component's index
             const script = oldScriptComponent._scriptsIndex[scriptName];
-            if (! script || ! script.instance) {
+            if (!script || !script.instance) {
                 continue;
             }
 
@@ -800,7 +800,7 @@ class ScriptComponent extends Component {
             // and put it in the new attributes
             const newAttributesRaw = newScriptComponent[scriptName].__attributesRaw;
             const newAttributes = newScriptComponent[scriptName].__attributes;
-            if (! newAttributesRaw && ! newAttributes) {
+            if (!newAttributesRaw && !newAttributes) {
                 continue;
             }
 
@@ -810,7 +810,7 @@ class ScriptComponent extends Component {
             // get the old script attributes from the instance
             const oldAttributes = script.instance.__attributes;
             for (const attributeName in oldAttributes) {
-                if (! oldAttributes[attributeName]) {
+                if (!oldAttributes[attributeName]) {
                     continue;
                 }
 

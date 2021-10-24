@@ -55,7 +55,7 @@ class BundleRegistry {
     // Index the specified asset id and its file URLs so that
     // the registry knows that the asset is in that bundle
     _indexAssetInBundle(assetId, bundleAsset) {
-        if (! this._assetsInBundles[assetId]) {
+        if (!this._assetsInBundles[assetId]) {
             this._assetsInBundles[assetId] = [bundleAsset];
         } else {
             const bundles = this._assetsInBundles[assetId];
@@ -74,7 +74,7 @@ class BundleRegistry {
     // Index the file URLs of the specified asset
     _indexAssetFileUrls(asset) {
         const urls = this._getAssetFileUrls(asset);
-        if (! urls) return;
+        if (!urls) return;
 
         for (let i = 0, len = urls.length; i < len; i++) {
             const url = urls[i];
@@ -90,7 +90,7 @@ class BundleRegistry {
     // Get all the possible URLs of an asset
     _getAssetFileUrls(asset) {
         let url = asset.getFileUrl();
-        if (! url) return null;
+        if (!url) return null;
 
         url = this._normalizeUrl(url);
         const urls = [url];
@@ -127,7 +127,7 @@ class BundleRegistry {
                 const idx = array.indexOf(asset);
                 if (idx !== -1) {
                     array.splice(idx, 1);
-                    if (! array.length) {
+                    if (!array.length) {
                         delete this._assetsInBundles[id];
 
                         // make sure we do not leave that array in
@@ -162,7 +162,7 @@ class BundleRegistry {
     _onBundleLoaded(bundleAsset) {
         // this can happen if the bundleAsset failed
         // to create its resource
-        if (! bundleAsset.resource) {
+        if (!bundleAsset.resource) {
             this._onBundleError(`Bundle ${bundleAsset.id} failed to load`, bundleAsset);
             return;
         }
@@ -208,7 +208,7 @@ class BundleRegistry {
     _onBundleError(err, bundleAsset) {
         for (const url in this._fileRequests) {
             const bundle = this._findLoadedOrLoadingBundleForUrl(url);
-            if (! bundle) {
+            if (!bundle) {
                 const requests = this._fileRequests[url];
                 for (let i = 0, len = requests.length; i < len; i++) {
                     requests[i](err);
@@ -224,7 +224,7 @@ class BundleRegistry {
     // only returns the bundle if it's either loaded or being loaded
     _findLoadedOrLoadingBundleForUrl(url) {
         const bundles = this._urlsInBundles[url];
-        if (! bundles) return null;
+        if (!bundles) return null;
 
         // look for loaded bundle first...
         const len = bundles.length;
@@ -315,7 +315,7 @@ class BundleRegistry {
      */
     loadUrl(url, callback) {
         const bundle = this._findLoadedOrLoadingBundleForUrl(url);
-        if (! bundle) {
+        if (!bundle) {
             callback(`URL ${url} not found in any bundles`);
             return;
         }

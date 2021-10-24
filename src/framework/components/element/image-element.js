@@ -598,7 +598,7 @@ class ImageElement {
         this.mesh = nineSlice ? mesh : this._defaultMesh;
 
         if (this.mesh) {
-            if (! this._element._beingInitialized) {
+            if (!this._element._beingInitialized) {
                 this._updateMesh(this.mesh);
             } else {
                 this._meshDirty = true;
@@ -952,7 +952,7 @@ class ImageElement {
         this._rect.set(x, y, z, w);
 
         if (this._renderable.mesh) {
-            if (! this._element._beingInitialized) {
+            if (!this._element._beingInitialized) {
                 this._updateMesh(this._renderable.mesh);
             } else {
                 this._meshDirty = true;

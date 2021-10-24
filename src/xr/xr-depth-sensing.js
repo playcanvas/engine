@@ -191,7 +191,7 @@ class XrDepthSensing extends EventHandler {
     }
 
     update(frame, view) {
-        if (! this._usage)
+        if (!this._usage)
             return;
 
         let depthInfoCpu = null;
@@ -202,7 +202,7 @@ class XrDepthSensing extends EventHandler {
             depthInfoGpu = frame.getDepthInformation(view);
         }
 
-        if ((this._depthInfoCpu && ! depthInfoCpu) || (! this._depthInfoCpu && depthInfoCpu) || (this.depthInfoGpu && ! depthInfoGpu) || (! this._depthInfoGpu && depthInfoGpu)) {
+        if ((this._depthInfoCpu && !depthInfoCpu) || (!this._depthInfoCpu && depthInfoCpu) || (this.depthInfoGpu && !depthInfoGpu) || (!this._depthInfoGpu && depthInfoGpu)) {
             this._matrixDirty = true;
         }
         this._depthInfoCpu = depthInfoCpu;
@@ -222,10 +222,10 @@ class XrDepthSensing extends EventHandler {
             }
         }
 
-        if ((this._depthInfoCpu || this._depthInfoGpu) && ! this._available) {
+        if ((this._depthInfoCpu || this._depthInfoGpu) && !this._available) {
             this._available = true;
             this.fire('available');
-        } else if (! this._depthInfoCpu && ! this._depthInfoGpu && this._available) {
+        } else if (!this._depthInfoCpu && !this._depthInfoGpu && this._available) {
             this._available = false;
             this.fire('unavailable');
         }
@@ -248,7 +248,7 @@ class XrDepthSensing extends EventHandler {
         // TODO
         // GPU usage
 
-        if (! this._depthInfoCpu)
+        if (!this._depthInfoCpu)
             return null;
 
         return this._depthInfoCpu.getDepthInMeters(u, v);

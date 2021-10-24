@@ -189,7 +189,7 @@ class XrInputSource extends EventHandler {
             if (this._xrInputSource.gripSpace) {
                 const gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
-                    if (! this._grip) {
+                    if (!this._grip) {
                         this._grip = true;
 
                         this._localTransform = new Mat4();
@@ -257,7 +257,7 @@ class XrInputSource extends EventHandler {
      * @returns {Vec3|null} The world space position of handheld input source.
      */
     getPosition() {
-        if (! this._position) return null;
+        if (!this._position) return null;
 
         this._updateTransforms();
         this._worldTransform.getTranslation(this._position);
@@ -282,7 +282,7 @@ class XrInputSource extends EventHandler {
      * @returns {Quat|null} The world space rotation of handheld input source.
      */
     getRotation() {
-        if (! this._rotation) return null;
+        if (!this._rotation) return null;
 
         this._updateTransforms();
         this._rotation.setFromMat4(this._worldTransform);
@@ -438,7 +438,7 @@ class XrInputSource extends EventHandler {
 
         this._elementInput = value;
 
-        if (! this._elementInput)
+        if (!this._elementInput)
             this._elementEntity = null;
     }
 

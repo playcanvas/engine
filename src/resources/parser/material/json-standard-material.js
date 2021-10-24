@@ -63,7 +63,7 @@ class JsonStandardMaterialParser {
             } else if (type === 'texture') {
                 if (value instanceof Texture) {
                     material[key] = value;
-                } else if (!(material[key] instanceof Texture && typeof(value) === 'number' && value > 0)) {
+                } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
                     material[key] = null;
                 }
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
@@ -71,7 +71,7 @@ class JsonStandardMaterialParser {
             } else if (type === 'cubemap') {
                 if (value instanceof Texture) {
                     material[key] = value;
-                } else if (!(material[key] instanceof Texture && typeof(value) === 'number' && value > 0)) {
+                } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
                     material[key] = null;
                 }
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)

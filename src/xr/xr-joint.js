@@ -42,7 +42,7 @@ class XrJoint {
         this._hand = hand;
         this._finger = finger;
         this._wrist = id === 'wrist';
-        this._tip = this._finger && !! tipJointIdsIndex[id];
+        this._tip = this._finger && !!tipJointIdsIndex[id];
 
         this._radius = null;
 
