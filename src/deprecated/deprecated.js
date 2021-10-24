@@ -1,6 +1,6 @@
 import { revision, version } from '../core/core.js';
 import { string } from '../core/string.js';
-import { Timer, now } from "../core/time";
+import { Timer, now } from '../core/time.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';

@@ -1,4 +1,4 @@
-import { Color } from "../math/color.js";
+import { Color } from '../math/color.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
 import { GraphicsDevice } from '../graphics/graphics-device.js';
