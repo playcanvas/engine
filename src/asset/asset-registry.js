@@ -298,7 +298,7 @@ class AssetRegistry extends EventHandler {
     /**
      * @function
      * @name AssetRegistry#getByUrl
-     * @description Retrieve an asset from the registry by it's file's URL field.
+     * @description Retrieve an asset from the registry by its file's URL field.
      * @param {string} url - The url of the asset to get.
      * @returns {Asset} The asset.
      * @example

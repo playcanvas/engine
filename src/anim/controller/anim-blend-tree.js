@@ -4,7 +4,7 @@ import { AnimNode } from './anim-node.js';
  * @private
  * @class
  * @name AnimBlendTree
- * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
+ * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of its children, based on the current parameter value.
  * @description Create a new BlendTree.
  * @param {AnimState} state - The AnimState that this AnimBlendTree belongs to.
  * @param {AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the AnimNode is stored as part of a {@link AnimBlendTree} hierarchy.
@@ -12,7 +12,7 @@ import { AnimNode } from './anim-node.js';
  * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a {@link AnimBlendTree}.
  * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
  * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type {@link AnimNode} or {@link BlendTree}.
- * @param {boolean} syncAnimations - If true, the speed of each blended animation will be synchonised.
+ * @param {boolean} syncAnimations - If true, the speed of each blended animation will be synchronized.
  * @param {Function} createTree - Used to create child blend trees of varying types.
  * @param {Function} findParameter - Used at runtime to get the current parameter values.
  */

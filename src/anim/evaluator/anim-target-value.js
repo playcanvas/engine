@@ -70,7 +70,7 @@ class AnimTargetValue {
         this._currentValue.set(...value);
         switch (this.valueType) {
             case (AnimTargetValue.TYPE_QUAT): {
-                // Blend the current rotation value with the identity quaternion using it's weight
+                // Blend the current rotation value with the identity quaternion using its weight
                 const t = this.getWeight(index);
                 AnimTargetValue._weightedQuaternion.set(
                     this._currentValue.x * t,

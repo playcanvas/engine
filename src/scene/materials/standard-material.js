@@ -84,8 +84,8 @@ let _params = new Set();
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires {@link StandardMaterial#enableGGXSpecular} is set to true.
  * * When anisotropy == 0, specular is isotropic.
- * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
- * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+ * * When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
+ * * When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
  *
  * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
@@ -142,7 +142,7 @@ let _params = new Set();
  *
  * @property {number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of distortion.
- * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
+ * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of its own surface.
  * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
  *
  * @property {Color} emissive The emissive color of the material. This color value is 3-component (RGB),

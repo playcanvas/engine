@@ -419,7 +419,7 @@ class LayerComposition extends EventHandler {
                     this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
                 }
 
-                // if no render action for this camera was marked for end of posprocessing, mark last one
+                // if no render action for this camera was marked for end of postprocessing, mark last one
                 if (!postProcessMarked && lastRenderAction) {
                     lastRenderAction.triggerPostprocess = true;
                 }
@@ -676,7 +676,7 @@ class LayerComposition extends EventHandler {
         return renderAction;
     }
 
-    // executes when post-processing camera's render actions were created to propage rendering to
+    // executes when post-processing camera's render actions were created to propagate rendering to
     // render targets to previous camera as needed
     propagateRenderTarget(startIndex, fromCamera) {
 

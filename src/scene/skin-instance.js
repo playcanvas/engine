@@ -22,7 +22,7 @@ class SkinInstance {
         // optional root bone - used for cache lookup, not used for skinning
         this._rootBone = null;
 
-        // sequencial index of when the bone update was performed the last time
+        // sequential index of when the bone update was performed the last time
         this._skinUpdateIndex = -1;
 
         // true if bones need to be updated before the frustum culling (bones are needed to update bounds of the MeshInstance)
