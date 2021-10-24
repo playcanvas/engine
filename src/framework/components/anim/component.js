@@ -560,7 +560,7 @@ class AnimComponent extends Component {
             return param.value;
         }
         // #if _DEBUG
-        console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
+        console.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
         // #endif
     }
 
@@ -571,7 +571,7 @@ class AnimComponent extends Component {
             return;
         }
         // #if _DEBUG
-        console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
+        console.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
         // #endif
     }
 

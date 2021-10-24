@@ -486,7 +486,7 @@ function evaluateMarkup(symbols) {
     });
 
     if (invalidTag) {
-        console.warn("Markup error: found unclosed tag='" + invalidTag.name + "'");
+        console.warn(`Markup error: found unclosed tag='${invalidTag.name}'`);
         return {
             symbols: symbols,
             tags: null

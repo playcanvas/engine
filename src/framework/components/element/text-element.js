@@ -781,7 +781,7 @@ class TextElement {
                         }
 
                         if (!json.missingChars.has(char)) {
-                            console.warn("Character '" + char + "' is missing from the font " + json.info.face);
+                            console.warn(`Character '${char}' is missing from the font ${json.info.face}`);
                             json.missingChars.add(char);
                         }
                         // #endif
@@ -806,7 +806,7 @@ class TextElement {
                     x = (data.xoffset - kerning) * scale;
                     y = data.yoffset * scale;
                 } else {
-                    console.error("Couldn't substitute missing character: '" + char + "'");
+                    console.error(`Couldn't substitute missing character: '${char}'`);
                 }
 
                 const isWhitespace = WHITESPACE_CHAR.test(char);

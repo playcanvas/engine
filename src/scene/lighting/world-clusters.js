@@ -45,7 +45,7 @@ class WorldClusters {
 
         // number of cells along 3 axes
         this._cells = new Vec3();       // number of cells
-        this._cellsLimit = new Vec3();   // number of cells minus one
+        this._cellsLimit = new Vec3();  // number of cells minus one
         this.cells = cells;
 
         // number of lights each cell can store, and number of pixels this takes (4 lights per pixel)
@@ -291,7 +291,7 @@ class WorldClusters {
 
                     lightIndex++;
                 } else {
-                    console.warn("Clustered lighting: more than " + (maxLights - 1) + " lights in the frame, ignoring some.");
+                    console.warn(`Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`);
                     break;
                 }
             }
