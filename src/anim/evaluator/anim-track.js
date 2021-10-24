@@ -1,4 +1,4 @@
-import { AnimEvents } from "./anim-events";
+import { AnimEvents } from './anim-events.js';
 
 /**
  * @private

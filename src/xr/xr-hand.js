@@ -1,4 +1,4 @@
-import { platform } from "../core/platform.js";
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { XRHAND_LEFT } from './constants.js';

@@ -1,4 +1,4 @@
-import { AnimTargetValue } from './anim-target-value';
+import { AnimTargetValue } from './anim-target-value.js';
 
 /**
  * @private

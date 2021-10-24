@@ -1,6 +1,6 @@
 import { BoundingBox } from '../../shape/bounding-box.js';
 import { BoundingSphere } from '../../shape/bounding-sphere.js';
-import { LIGHTTYPE_DIRECTIONAL } from "../constants";
+import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 
 const tempSphere = new BoundingSphere();
 
