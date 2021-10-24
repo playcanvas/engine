@@ -606,7 +606,7 @@ class StandardMaterial extends Material {
                         // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                         this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                     } else {
-                        console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                        console.log(`Can't use prefiltered cubemap: ${allMips}, ${device.useTexCubeLod}, ${prefilteredCubeMap128._levels}`);
                     }
                 } else {
                     // Single (able to use single cubemap with texCubeLod)
@@ -621,7 +621,7 @@ class StandardMaterial extends Material {
                 this._setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
                 this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
             } else {
-                console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                console.log(`Can't use prefiltered cubemap: ${allMips}, ${device.useTexCubeLod}, ${prefilteredCubeMap128._levels}`);
             }
 
             if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {

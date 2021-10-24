@@ -711,7 +711,7 @@ export const SEMANTIC_BLENDINDICES = "BLENDINDICES";
  */
 export const SEMANTIC_COLOR = "COLOR";
 
-// private semantic used for programatic construction of individual texcoord semantics
+// private semantic used for programmatic construction of individual texcoord semantics
 export const SEMANTIC_TEXCOORD = "TEXCOORD";
 
 /**
@@ -771,7 +771,7 @@ export const SEMANTIC_TEXCOORD6 = "TEXCOORD6";
  */
 export const SEMANTIC_TEXCOORD7 = "TEXCOORD7";
 
-// private semantic used for programatic construction of individual attr semantics
+// private semantic used for programmatic construction of individual attr semantics
 export const SEMANTIC_ATTR = "ATTR";
 
 /**

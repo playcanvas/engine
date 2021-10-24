@@ -162,11 +162,11 @@ class VertexBuffer {
      * @name VertexBuffer#setData
      * @description Copies data into vertex buffer's memory.
      * @param {ArrayBuffer} [data] - Source data to copy.
-     * @returns {boolean} True if function finished successfuly, false otherwise.
+     * @returns {boolean} True if function finished successfully, false otherwise.
      */
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            console.error("VertexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+            console.error(`VertexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
             return false;
         }
         this.storage = data;

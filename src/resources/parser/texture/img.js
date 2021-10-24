@@ -92,7 +92,7 @@ class ImgParser {
 
             if (maxRetries > 0 && ++retries <= maxRetries) {
                 const retryDelay = Math.pow(2, retries) * 100;
-                console.log("Error loading Texture from: '" + originalUrl + "' - Retrying in " + retryDelay + "ms...");
+                console.log(`Error loading Texture from: '${originalUrl}' - Retrying in ${retryDelay}ms...`);
 
                 const idx = url.indexOf('?');
                 const separator = idx >= 0 ? '&' : '?';

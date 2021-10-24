@@ -1339,7 +1339,7 @@ class ForwardRenderer {
 
                     if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
                         // #if _DEBUG
-                        console.error('Error in material "' + material.name + '" with flags ' + objDefs);
+                        console.error(`Error in material "${material.name}" with flags ${objDefs}`);
                         // #endif
                         drawCall._shader[pass].failed = true;
                     }

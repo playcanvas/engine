@@ -159,7 +159,7 @@ class Skeleton {
                 const interpKey = this._interpolatedKeyDict[nodeName];
                 if (interpKey === undefined) {
                     // #if _DEBUG
-                    console.warn('Unknown skeleton node name: ' + nodeName);
+                    console.warn(`Unknown skeleton node name: ${nodeName}`);
                     // #endif
                     continue;
                 }

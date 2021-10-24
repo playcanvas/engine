@@ -28,7 +28,7 @@ import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, v
 
 const _oldChunkWarn = function (oldName, newName) {
     // #if _DEBUG
-    console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
+    console.warn(`Shader chunk ${oldName} is deprecated - override ${newName} instead`);
     // #endif
 };
 

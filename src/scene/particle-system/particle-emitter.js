@@ -229,7 +229,9 @@ class ParticleEmitter {
         setProperty("numParticles", 1);                          // Amount of particles allocated (max particles = max GL texture width at this moment)
 
         if (this.numParticles > graphicsDevice.maxTextureSize) {
-            console.warn("WARNING: can't create more than " + graphicsDevice.maxTextureSize + " particles on this device.");
+            // #if _DEBUG
+            console.warn(`WARNING: can't create more than ${graphicsDevice.maxTextureSize} particles on this device.`);
+            // #endif
             this.numParticles = graphicsDevice.maxTextureSize;
         }
 

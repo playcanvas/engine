@@ -79,7 +79,7 @@ class Http {
      * @function
      * @name Http#get
      * @variation 2
-     * @description Perform an HTTP GET request to the given url with addtional options such as headers, retries, credentials, etc.
+     * @description Perform an HTTP GET request to the given url with additional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
      * @param {object} options - Additional options.
      * @param {object} [options.headers] - HTTP headers to add to the request.
@@ -133,7 +133,7 @@ class Http {
      * @function
      * @name Http#post
      * @variation 2
-     * @description Perform an HTTP POST request to the given url with addtional options such as headers, retries, credentials, etc.
+     * @description Perform an HTTP POST request to the given url with additional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
      * @param {object} data - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -188,7 +188,7 @@ class Http {
      * @function
      * @name Http#put
      * @variation 2
-     * @description Perform an HTTP PUT request to the given url with addtional options such as headers, retries, credentials, etc.
+     * @description Perform an HTTP PUT request to the given url with additional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
      * @param {Document|object} data - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -239,7 +239,7 @@ class Http {
      * @function
      * @name Http#del
      * @variation 2
-     * @description Perform an HTTP DELETE request to the given url with addtional options such as headers, retries, credentials, etc.
+     * @description Perform an HTTP DELETE request to the given url with additional options such as headers, retries, credentials, etc.
      * @param {object} url - The URL to make the request to.
      * @param {object} options - Additional options.
      * @param {object} [options.headers] - HTTP headers to add to the request.
@@ -290,7 +290,7 @@ class Http {
      * @function
      * @name Http#request
      * @variation 2
-     * @description Make a general purpose HTTP request with addtional options such as headers, retries, credentials, etc.
+     * @description Make a general purpose HTTP request with additional options such as headers, retries, credentials, etc.
      * @param {string} method - The HTTP method "GET", "POST", "PUT", "DELETE".
      * @param {string} url - The url to make the request to.
      * @param {object} options - Additional options.
@@ -488,7 +488,7 @@ class Http {
                     // If status code 0, it is assumed that the browser has cancelled the request
 
                     // Add support for running Chrome browsers in 'allow-file-access-from-file'
-                    // This is to allow for specialised programs and libraries such as CefSharp
+                    // This is to allow for specialized programs and libraries such as CefSharp
                     // which embed Chromium in the native app.
                     if (xhr.responseURL && xhr.responseURL.startsWith('file:///')) {
                         // Assume that any file loaded from disk is fine
@@ -532,7 +532,7 @@ class Http {
             } else {
                 // #if _DEBUG
                 if (contentType) {
-                    console.warn("responseType: " + xhr.responseType + " being served with Content-Type: " + contentType);
+                    console.warn(`responseType: ${xhr.responseType} being served with Content-Type: ${contentType}`);
                 }
                 // #endif
 
@@ -567,7 +567,7 @@ class Http {
             options.retries++;
             options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
             const retryDelay = math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
-            console.log(method + ': ' + url + ' - Error ' + xhr.status + '. Retrying in ' + retryDelay + ' ms');
+            console.log(`${method}: ${url} - Error ${xhr.status}. Retrying in ${retryDelay} ms`);
 
             setTimeout(() => {
                 options.retrying = false;
