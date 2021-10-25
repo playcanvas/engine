@@ -12,7 +12,7 @@ import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
-import { Entity } from "../../entity";
+import { Entity } from "../../entity.js";
 
 /**
  * @component
