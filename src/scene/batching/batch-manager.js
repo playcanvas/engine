@@ -1,4 +1,4 @@
-import { now } from  '../../core/time.js';
+import { now } from '../../core/time.js';
 
 import { Vec3 } from '../../math/vec3.js';
 import { Mat3 } from '../../math/mat3.js';
@@ -60,7 +60,7 @@ function equalLightLists(lightList1, lightList2) {
         if (lightList1.indexOf(lightList2[k]) < 0)
             return false;
     }
-    return  true;
+    return true;
 }
 
 const mat3 = new Mat3();
@@ -851,7 +851,7 @@ class BatchManager {
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
             meshInstance.cull = batch.origMeshInstances[0].cull;
-            const  batchGroup = this._batchGroups[batchGroupId];
+            const batchGroup = this._batchGroups[batchGroupId];
             if (batchGroup && batchGroup._ui)
                 meshInstance.cull = false;
 

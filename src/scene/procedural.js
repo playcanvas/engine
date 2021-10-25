@@ -376,7 +376,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
                 const sinTheta = Math.sin(theta);
                 const cosTheta = Math.cos(theta);
                 bottom.set(sinTheta * baseRadius, -height / 2, cosTheta * baseRadius);
-                top.set(sinTheta * peakRadius,  height / 2, cosTheta * peakRadius);
+                top.set(sinTheta * peakRadius, height / 2, cosTheta * peakRadius);
                 pos.lerp(bottom, top, i / heightSegments);
                 bottomToTop.sub2(top, bottom).normalize();
                 tangent.set(cosTheta, 0, -sinTheta);

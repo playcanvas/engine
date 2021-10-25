@@ -1886,7 +1886,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         }
 
         // create and load the asset
-        const asset = new Asset(name, 'texture',  file, null, options);
+        const asset = new Asset(name, 'texture', file, null, options);
         asset.on('load', onLoad);
         asset.on('error', callback);
         registry.add(asset);

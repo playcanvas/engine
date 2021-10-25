@@ -49,7 +49,7 @@ import { Component } from '../component.js';
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
 class ModelComponent extends Component {
-    constructor(system, entity)   {
+    constructor(system, entity) {
         super(system, entity);
 
         // this.enabled = true;

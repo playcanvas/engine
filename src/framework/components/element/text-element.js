@@ -665,7 +665,7 @@ class TextElement {
             // the rendered text.
             if (numBreaksThisLine) {
                 let i = chars.length;
-                while (i-- && numBreaksThisLine > 0)  {
+                while (i-- && numBreaksThisLine > 0) {
                     if (LINE_BREAK_CHAR.test(chars[i])) {
                         chars.splice(i, 1);
                         numBreaksThisLine--;
