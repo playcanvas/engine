@@ -58,9 +58,9 @@ const properties = [
  * @property {number} projection The type of projection used to render the camera.
  * Can be:
  *
- * * {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
+ * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
  * resembles a truncated pyramid.
- * * {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
+ * - {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
  * frustum is a cuboid.
  *
  * Defaults to {@link PROJECTION_PERSPECTIVE}.
@@ -70,9 +70,9 @@ const properties = [
  * the value.
  * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
  *
- * * {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
+ * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
  * target's width divided by height.
- * * {@link ASPECT_MANUAL}: use the aspectRatio value.
+ * - {@link ASPECT_MANUAL}: use the aspectRatio value.
  *
  * Defaults to {@link ASPECT_AUTO}.
  * @property {Color} clearColor The color used to clear the canvas to before the
@@ -112,15 +112,15 @@ const properties = [
  * provide to calculate the camera transformation matrix manually. Can be used for complex
  * effects like reflections. Function is called using component's scope.
  * Arguments:
- * * {@link Mat4} transformMatrix: output of the function.
- * * {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ * - {@link Mat4} transformMatrix: output of the function.
+ * - {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
  * Left and right are only used in stereo rendering.
  * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can
  * provide to calculate the camera projection matrix manually. Can be used for complex
  * effects like doing oblique projection. Function is called using component's scope.
  * Arguments:
- * * {{@link Mat4}} transformMatrix: output of the function
- * * {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ * - {{@link Mat4}} transformMatrix: output of the function
+ * - {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
  * Left and right are only used in stereo rendering.
  * @property {boolean} cullFaces If true the camera will take material.cull into account.
  * Otherwise both front and back faces will be rendered. Defaults to true.
@@ -566,28 +566,28 @@ class CameraComponent extends Component {
      * @description Attempt to start XR session with this camera.
      * @param {string} type - The type of session. Can be one of the following:
      *
-     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has
+     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has
      * limited feature availability and is rendered into HTML element.
-     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access
+     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access
      * to the VR device with the best available tracking features.
-     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
+     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
      * to the VR/AR device that is intended to be blended with the real-world environment.
      *
      * @param {string} spaceType - Reference space type. Can be one of the following:
      *
-     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
+     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
      * tracking capabilities.
-     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native
      * origin near the viewer at the time of creation. It is meant for seated or basic
      * local XR sessions.
-     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
      * a native origin at the floor in a safe position for the user to stand. The y-axis
      * equals 0 at floor level. Floor level value might be estimated by the underlying
      * platform. It is meant for seated or basic local XR sessions.
-     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
      * with its native origin at the floor, where the user is expected to move within a
      * pre-established boundary.
-     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
      * user is expected to move freely around their environment, potentially long
      * distances from their starting point.
      *

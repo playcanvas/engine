@@ -26,12 +26,12 @@ const defaultOptions = {
  * face of the cubemap to render to. Can be:
  * @param {string} [options.name] - The name of the render target.
  *
- * * {@link CUBEFACE_POSX}
- * * {@link CUBEFACE_NEGX}
- * * {@link CUBEFACE_POSY}
- * * {@link CUBEFACE_NEGY}
- * * {@link CUBEFACE_POSZ}
- * * {@link CUBEFACE_NEGZ}
+ * - {@link CUBEFACE_POSX}
+ * - {@link CUBEFACE_NEGX}
+ * - {@link CUBEFACE_POSY}
+ * - {@link CUBEFACE_NEGY}
+ * - {@link CUBEFACE_POSZ}
+ * - {@link CUBEFACE_NEGZ}
  *
  * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default is false.
  *
@@ -283,12 +283,12 @@ class RenderTarget {
      * @description If the render target is bound to a cubemap, this property
      * specifies which face of the cubemap is rendered to. Can be:
      *
-     * * {@link CUBEFACE_POSX}
-     * * {@link CUBEFACE_NEGX}
-     * * {@link CUBEFACE_POSY}
-     * * {@link CUBEFACE_NEGY}
-     * * {@link CUBEFACE_POSZ}
-     * * {@link CUBEFACE_NEGZ}
+     * - {@link CUBEFACE_POSX}
+     * - {@link CUBEFACE_NEGX}
+     * - {@link CUBEFACE_POSY}
+     * - {@link CUBEFACE_NEGY}
+     * - {@link CUBEFACE_POSZ}
+     * - {@link CUBEFACE_NEGZ}
      */
     get face() {
         return this._face;

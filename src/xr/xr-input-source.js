@@ -24,15 +24,15 @@ let ids = 0;
  * @property {object} inputSource XRInputSource object that is associated with this input source.
  * @property {string} targetRayMode Type of ray Input Device is based on. Can be one of the following:
  *
- * * {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
- * * {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction with the canvas element associated with an inline session’s output context, such as a mouse click or touch event.
- * * {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates from either a handheld device or other hand-tracking mechanism and represents that the user is using their hands or the held device for pointing.
+ * - {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
+ * - {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction with the canvas element associated with an inline session’s output context, such as a mouse click or touch event.
+ * - {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates from either a handheld device or other hand-tracking mechanism and represents that the user is using their hands or the held device for pointing.
  *
  * @property {string} handedness Describes which hand input source is associated with. Can be one of the following:
  *
- * * {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
- * * {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
- * * {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
+ * - {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
+ * - {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
+ * - {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
  *
  * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
  * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
@@ -331,11 +331,11 @@ class XrInputSource extends EventHandler {
      * against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ].
      * Can be any combination of the following:
      *
-     * * {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
+     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
      * computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
+     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
      * computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
+     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
      * computed based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.

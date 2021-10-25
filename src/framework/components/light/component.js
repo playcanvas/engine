@@ -48,18 +48,18 @@ const _lightPropsDefault = [];
  * // Update a property on a light component
  * entity.light.range = 20;
  * @property {string} type The type of light. Can be:
- * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
- * * "omni": An omni-directional light that illuminates in all directions from the light source.
- * * "spot": An omni-directional light but is bounded by a cone.
+ * - "directional": A light that is infinitely far away and lights the entire scene from one direction.
+ * - "omni": An omni-directional light that illuminates in all directions from the light source.
+ * - "spot": An omni-directional light but is bounded by a cone.
  * Defaults to "directional".
  * @property {Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
  * @property {number} shape The light source shape. Can be:
- * * {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
- * * {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
- * * {@link pc.LIGHTSHAPE_DISK}: Disk shape.
- * * {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
+ * - {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
+ * - {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
+ * - {@link pc.LIGHTSHAPE_DISK}: Disk shape.
+ * - {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows
@@ -84,8 +84,8 @@ const _lightPropsDefault = [];
  * to 45.
  * @property {number} falloffMode Controls the rate at which a light attenuates from
  * its position. Can be:
- * * {@link LIGHTFALLOFF_LINEAR}: Linear.
- * * {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
+ * - {@link LIGHTFALLOFF_LINEAR}: Linear.
+ * - {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
  * Affects omni and spot lights only. Defaults to {@link LIGHTFALLOFF_LINEAR}.
  * @property {number} mask Defines a mask to determine which {@link MeshInstance}s are
  * lit by this light. Defaults to 1.
@@ -99,18 +99,18 @@ const _lightPropsDefault = [];
  * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
  * The error is not always visible though, and highly scene-dependent.
  * @property {number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
- * * {@link SHADOWUPDATE_NONE}: Don't render shadows.
- * * {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to {@link SHADOWUPDATE_NONE}.
- * * {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
+ * - {@link SHADOWUPDATE_NONE}: Don't render shadows.
+ * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to {@link SHADOWUPDATE_NONE}.
+ * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
  * @property {number} shadowType Type of shadows being rendered by this light. Options:
- * * {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
- * * {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
- * * {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
- * * {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
- * * {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+ * - {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
+ * - {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
+ * - {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
+ * - {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
+ * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps:
- * * {@link BLUR_BOX}: Box filter.
- * * {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
+ * - {@link BLUR_BOX}: Box filter.
+ * - {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
  * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
  * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
  * @property {Texture} cookie Projection texture. Must be 2D for spot and cubemap for omni light (ignored if incorrect type is used).

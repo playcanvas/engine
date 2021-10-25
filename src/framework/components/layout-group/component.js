@@ -29,8 +29,8 @@ function isEnabledAndHasEnabledElement(entity) {
  * @property {number} orientation Whether the layout should run horizontally or
  * vertically. Can be:
  *
- * * {@link ORIENTATION_HORIZONTAL}
- * * {@link ORIENTATION_VERTICAL}
+ * - {@link ORIENTATION_HORIZONTAL}
+ * - {@link ORIENTATION_VERTICAL}
  *
  * Defaults to {@link ORIENTATION_HORIZONTAL}.
  * @property {boolean} reverseX Reverses the order of children along the x axis.
@@ -48,8 +48,8 @@ function isEnabledAndHasEnabledElement(entity) {
  * @property {number} widthFitting Fitting logic to be applied when positioning and
  * scaling child elements. Can be:
  *
- * * {@link FITTING_NONE}: Child elements will be rendered at their natural size.
- * * {@link FITTING_STRETCH}: When the natural size of all child elements does not
+ * - {@link FITTING_NONE}: Child elements will be rendered at their natural size.
+ * - {@link FITTING_STRETCH}: When the natural size of all child elements does not
  * fill the width of the container, children will be stretched to fit. The rules for how
  * each child will be stretched are outlined below:
  *   1. Sum the {@link LayoutChildComponent#fitWidthProportion} values of each child
@@ -58,7 +58,7 @@ function isEnabledAndHasEnabledElement(entity) {
  *   3. If there is space remaining in the container, distribute it to each child based
  * on the normalized {@link LayoutChildComponent#fitWidthProportion} values, but do
  * not exceed the {@link LayoutChildComponent#maxWidth} of each child.
- * * {@link FITTING_SHRINK}: When the natural size of all child elements overflows the
+ * - {@link FITTING_SHRINK}: When the natural size of all child elements overflows the
  * width of the container, children will be shrunk to fit. The rules for how each child
  * will be stretched are outlined below:
  *   1. Sum the {@link LayoutChildComponent#fitWidthProportion} values of each child
@@ -68,7 +68,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * container, reduce each child's width proportionally based on the normalized {@link
  * LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link
  * LayoutChildComponent#minWidth} of each child.
- * * {@link FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.
+ * - {@link FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.
  *
  * Defaults to {@link FITTING_NONE}.
  * @property {number} heightFitting Identical to {@link LayoutGroupComponent#widthFitting}

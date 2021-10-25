@@ -22,13 +22,13 @@ import { Component } from '../component.js';
  * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the model. Can be one of the following:
- * * "asset": The component will render a model asset
- * * "box": The component will render a box (1 unit in each dimension)
- * * "capsule": The component will render a capsule (radius 0.5, height 2)
- * * "cone": The component will render a cone (radius 0.5, height 1)
- * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
- * * "plane": The component will render a plane (1 unit in each dimension)
- * * "sphere": The component will render a sphere (radius 0.5)
+ * - "asset": The component will render a model asset
+ * - "box": The component will render a box (1 unit in each dimension)
+ * - "capsule": The component will render a capsule (radius 0.5, height 2)
+ * - "cone": The component will render a cone (radius 0.5, height 1)
+ * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
+ * - "plane": The component will render a plane (1 unit in each dimension)
+ * - "sphere": The component will render a sphere (radius 0.5)
  * @property {Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
  * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on this model.

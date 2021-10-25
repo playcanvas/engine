@@ -143,33 +143,33 @@ let depthLayer;
  * @property {Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
  * @property {number} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
  *
- * * {@link EMITTERSHAPE_BOX}: Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.
- * * {@link EMITTERSHAPE_SPHERE}: Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.
+ * - {@link EMITTERSHAPE_BOX}: Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.
+ * - {@link EMITTERSHAPE_SPHERE}: Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.
  *
  * @property {number} sort Sorting mode. Forces CPU simulation, so be careful.
  *
- * * {@link PARTICLESORT_NONE}: No sorting, particles are drawn in arbitrary order. Can be simulated on GPU.
- * * {@link PARTICLESORT_DISTANCE}: Sorting based on distance to the camera. CPU only.
- * * {@link PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
- * * {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
+ * - {@link PARTICLESORT_NONE}: No sorting, particles are drawn in arbitrary order. Can be simulated on GPU.
+ * - {@link PARTICLESORT_DISTANCE}: Sorting based on distance to the camera. CPU only.
+ * - {@link PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
+ * - {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
  *
  * @property {Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
  * @property {number} blend Controls how particles are blended when being written to the currently active render target.
  * Can be:
  *
- * * {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination fragment and write the result to the frame buffer.
- * * {@link BLEND_ADDITIVE}: Add the color of the source fragment to the destination fragment and write the result to the frame buffer.
- * * {@link BLEND_NORMAL}: Enable simple translucency for materials such as glass. This is equivalent to enabling a source blend mode of {@link BLENDMODE_SRC_ALPHA} and a destination blend mode of {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}.
- * * {@link BLEND_NONE}: Disable blending.
- * * {@link BLEND_PREMULTIPLIED}: Similar to {@link BLEND_NORMAL} expect the source fragment is assumed to have already been multiplied by the source alpha value.
- * * {@link BLEND_MULTIPLICATIVE}: Multiply the color of the source fragment by the color of the destination fragment and write the result to the frame buffer.
- * * {@link BLEND_ADDITIVEALPHA}: Same as {@link BLEND_ADDITIVE} except the source RGB is multiplied by the source alpha.
+ * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination fragment and write the result to the frame buffer.
+ * - {@link BLEND_ADDITIVE}: Add the color of the source fragment to the destination fragment and write the result to the frame buffer.
+ * - {@link BLEND_NORMAL}: Enable simple translucency for materials such as glass. This is equivalent to enabling a source blend mode of {@link BLENDMODE_SRC_ALPHA} and a destination blend mode of {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}.
+ * - {@link BLEND_NONE}: Disable blending.
+ * - {@link BLEND_PREMULTIPLIED}: Similar to {@link BLEND_NORMAL} expect the source fragment is assumed to have already been multiplied by the source alpha value.
+ * - {@link BLEND_MULTIPLICATIVE}: Multiply the color of the source fragment by the color of the destination fragment and write the result to the frame buffer.
+ * - {@link BLEND_ADDITIVEALPHA}: Same as {@link BLEND_ADDITIVE} except the source RGB is multiplied by the source alpha.
  *
  * @property {number} orientation Sorting mode. Forces CPU simulation, so be careful.
  *
- * * {@link PARTICLEORIENTATION_SCREEN}: Particles are facing camera.
- * * {@link PARTICLEORIENTATION_WORLD}: User defines world space normal (particleNormal) to set planes orientation.
- * * {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by emitter(entity) transformation.
+ * - {@link PARTICLEORIENTATION_SCREEN}: Particles are facing camera.
+ * - {@link PARTICLEORIENTATION_WORLD}: User defines world space normal (particleNormal) to set planes orientation.
+ * - {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by emitter(entity) transformation.
  *
  * @property {Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
  * @property {CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.

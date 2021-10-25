@@ -14,10 +14,10 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @property {number} length The number of keys in the curve. [read only].
  * @property {number} type The curve interpolation scheme. Can be:
  *
- * * {@link CURVE_LINEAR}
- * * {@link CURVE_SMOOTHSTEP}
- * * {@link CURVE_SPLINE}
- * * {@link CURVE_STEP}
+ * - {@link CURVE_LINEAR}
+ * - {@link CURVE_SMOOTHSTEP}
+ * - {@link CURVE_SPLINE}
+ * - {@link CURVE_STEP}
  *
  * Defaults to {@link CURVE_SMOOTHSTEP}.
  * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated.

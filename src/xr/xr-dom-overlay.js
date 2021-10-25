@@ -11,9 +11,9 @@ import { platform } from '../core/platform.js';
  * @property {boolean} available True if DOM Overlay is available. It can only be available if it is supported, during a valid WebXR session and if a valid root element is provided.
  * @property {string|null} state State of the DOM Overlay, which defines how the root DOM element is rendered. Possible options:
  *
- * * screen: Screen - indicates that the DOM element is covering whole physical screen, matching XR viewports.
- * * floating: Floating - indicates that the underlying platform renders the DOM element as floating in space, which can move during the WebXR session or allow the application to move the element.
- * * head-locked: Head Locked - indicates that the DOM element follows the user's head movement consistently, appearing similar to a helmet heads-up display.
+ * - screen: Screen - indicates that the DOM element is covering whole physical screen, matching XR viewports.
+ * - floating: Floating - indicates that the underlying platform renders the DOM element as floating in space, which can move during the WebXR session or allow the application to move the element.
+ * - head-locked: Head Locked - indicates that the DOM element follows the user's head movement consistently, appearing similar to a helmet heads-up display.
  *
  * @example
  * app.xr.domOverlay.root = element;

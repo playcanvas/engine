@@ -141,8 +141,8 @@ class Mouse extends EventHandler {
      * Allowing raw access to mouse movement input without risking the mouse exiting the element.
      * Notes:
      *
-     * * In some browsers this will only work when the browser is running in fullscreen mode. See {@link Application#enableFullscreen}
-     * * Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+     * - In some browsers this will only work when the browser is running in fullscreen mode. See {@link Application#enableFullscreen}
+     * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
      *
      * @param {callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
      * @param {callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
@@ -214,9 +214,9 @@ class Mouse extends EventHandler {
      * @description Returns true if the mouse button is currently pressed.
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link MOUSEBUTTON_LEFT}
-     * * {@link MOUSEBUTTON_MIDDLE}
-     * * {@link MOUSEBUTTON_RIGHT}
+     * - {@link MOUSEBUTTON_LEFT}
+     * - {@link MOUSEBUTTON_MIDDLE}
+     * - {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button is current pressed.
      */
@@ -230,9 +230,9 @@ class Mouse extends EventHandler {
      * @description Returns true if the mouse button was pressed this frame (since the last call to update).
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link MOUSEBUTTON_LEFT}
-     * * {@link MOUSEBUTTON_MIDDLE}
-     * * {@link MOUSEBUTTON_RIGHT}
+     * - {@link MOUSEBUTTON_LEFT}
+     * - {@link MOUSEBUTTON_MIDDLE}
+     * - {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button was pressed since the last update.
      */
@@ -246,9 +246,9 @@ class Mouse extends EventHandler {
      * @description Returns true if the mouse button was released this frame (since the last call to update).
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link MOUSEBUTTON_LEFT}
-     * * {@link MOUSEBUTTON_MIDDLE}
-     * * {@link MOUSEBUTTON_RIGHT}
+     * - {@link MOUSEBUTTON_LEFT}
+     * - {@link MOUSEBUTTON_MIDDLE}
+     * - {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button was released since the last update.
      */

@@ -27,15 +27,15 @@ import { Component } from '../component.js';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the collision volume. Can be:
  *
- * * "box": A box-shaped collision volume.
- * * "capsule": A capsule-shaped collision volume.
- * * "compound": A compound shape. Any descendant entities with a collision component
+ * - "box": A box-shaped collision volume.
+ * - "capsule": A capsule-shaped collision volume.
+ * - "compound": A compound shape. Any descendant entities with a collision component
  * of type box, capsule, cone, cylinder or sphere will be combined into a single, rigid
  * shape.
- * * "cone": A cone-shaped collision volume.
- * * "cylinder": A cylinder-shaped collision volume.
- * * "mesh": A collision volume that uses a model asset as its shape.
- * * "sphere": A sphere-shaped collision volume.
+ * - "cone": A cone-shaped collision volume.
+ * - "cylinder": A cylinder-shaped collision volume.
+ * - "mesh": A collision volume that uses a model asset as its shape.
+ * - "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
  * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the

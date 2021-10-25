@@ -246,26 +246,26 @@ class Progress {
  * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
- * * anim ({@link AnimComponentSystem})
- * * animation ({@link AnimationComponentSystem})
- * * audiolistener ({@link AudioListenerComponentSystem})
- * * button ({@link ButtonComponentSystem})
- * * camera ({@link CameraComponentSystem})
- * * collision ({@link CollisionComponentSystem})
- * * element ({@link ElementComponentSystem})
- * * layoutchild ({@link LayoutChildComponentSystem})
- * * layoutgroup ({@link LayoutGroupComponentSystem})
- * * light ({@link LightComponentSystem})
- * * model ({@link ModelComponentSystem})
- * * particlesystem ({@link ParticleSystemComponentSystem})
- * * rigidbody ({@link RigidBodyComponentSystem})
- * * render ({@link RenderComponentSystem})
- * * screen ({@link ScreenComponentSystem})
- * * script ({@link ScriptComponentSystem})
- * * scrollbar ({@link ScrollbarComponentSystem})
- * * scrollview ({@link ScrollViewComponentSystem})
- * * sound ({@link SoundComponentSystem})
- * * sprite ({@link SpriteComponentSystem})
+ * - anim ({@link AnimComponentSystem})
+ * - animation ({@link AnimationComponentSystem})
+ * - audiolistener ({@link AudioListenerComponentSystem})
+ * - button ({@link ButtonComponentSystem})
+ * - camera ({@link CameraComponentSystem})
+ * - collision ({@link CollisionComponentSystem})
+ * - element ({@link ElementComponentSystem})
+ * - layoutchild ({@link LayoutChildComponentSystem})
+ * - layoutgroup ({@link LayoutGroupComponentSystem})
+ * - light ({@link LightComponentSystem})
+ * - model ({@link ModelComponentSystem})
+ * - particlesystem ({@link ParticleSystemComponentSystem})
+ * - rigidbody ({@link RigidBodyComponentSystem})
+ * - render ({@link RenderComponentSystem})
+ * - screen ({@link ScreenComponentSystem})
+ * - script ({@link ScriptComponentSystem})
+ * - scrollbar ({@link ScrollbarComponentSystem})
+ * - scrollview ({@link ScrollViewComponentSystem})
+ * - sound ({@link SoundComponentSystem})
+ * - sprite ({@link SpriteComponentSystem})
  * @example
  * // Set global gravity to zero
  * this.app.systems.rigidbody.gravity.set(0, 0, 0);
@@ -674,9 +674,9 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
      *
-     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      */
     get fillMode() {
         return this._fillMode;
@@ -688,8 +688,8 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
      *
-     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      */
     get resolutionMode() {
         return this._resolutionMode;
@@ -1288,9 +1288,9 @@ class Application extends EventHandler {
      * @description Controls how the canvas fills the window and resizes when the window changes.
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
-     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
      * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
@@ -1305,8 +1305,8 @@ class Application extends EventHandler {
      * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
      * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
      */
@@ -1440,25 +1440,25 @@ class Application extends EventHandler {
      * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
-     * * {@link FOG_NONE}
-     * * {@link FOG_LINEAR}
-     * * {@link FOG_EXP}
-     * * {@link FOG_EXP2}
+     * - {@link FOG_NONE}
+     * - {@link FOG_LINEAR}
+     * - {@link FOG_EXP}
+     * - {@link FOG_EXP2}
      * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
      * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
      *
-     * * {@link GAMMA_NONE}
-     * * {@link GAMMA_SRGB}
+     * - {@link GAMMA_NONE}
+     * - {@link GAMMA_SRGB}
      * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      *
-     * * {@link TONEMAP_LINEAR}
-     * * {@link TONEMAP_FILMIC}
-     * * {@link TONEMAP_HEJL}
-     * * {@link TONEMAP_ACES}
+     * - {@link TONEMAP_LINEAR}
+     * - {@link TONEMAP_FILMIC}
+     * - {@link TONEMAP_HEJL}
+     * - {@link TONEMAP_ACES}
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
@@ -1468,8 +1468,8 @@ class Application extends EventHandler {
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
      *
-     * * {@link BAKE_COLOR}: single color lightmap
-     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * - {@link BAKE_COLOR}: single color lightmap
+     * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example

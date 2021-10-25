@@ -10,9 +10,9 @@
  * @param {number} output - Index of the curve which specifies the value data.
  * @param {number} interpolation - The interpolation method to use. One of the following:
  *
- * * {@link INTERPOLATION_STEP}
- * * {@link INTERPOLATION_LINEAR}
- * * {@link INTERPOLATION_CUBIC}
+ * - {@link INTERPOLATION_STEP}
+ * - {@link INTERPOLATION_LINEAR}
+ * - {@link INTERPOLATION_CUBIC}
  */
 class AnimCurve {
     constructor(paths, input, output, interpolation) {

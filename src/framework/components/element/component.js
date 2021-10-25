@@ -73,20 +73,20 @@ const matD = new Mat4();
  * ~~~
  *
  * Relevant 'Engine-only' examples:
- * * [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
- * * [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
- * * [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
- * * [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
- * * [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
- * * [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
+ * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
+ * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
+ * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
+ * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
+ * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
+ * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
  *
  * @param {ElementComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the ElementComponent. Can be:
  *
- * * {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.
- * * {@link ELEMENTTYPE_IMAGE}: The component will render an image
- * * {@link ELEMENTTYPE_TEXT}: The component will render text
+ * - {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.
+ * - {@link ELEMENTTYPE_IMAGE}: The component will render an image
+ * - {@link ELEMENTTYPE_TEXT}: The component will render text
  *
  * @property {Entity} screen The Entity with a {@link ScreenComponent} that this component belongs to. This is automatically set when the component is a child of a ScreenComponent.
  * @property {number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components.
