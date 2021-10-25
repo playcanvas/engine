@@ -30,10 +30,10 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @classdesc An asset record of a file or data resource that can be loaded by the engine.
  * The asset contains three important fields:
  *
- * * `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
- * * `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
- * * `options`: contains a JSON blob with handler-specific load options.
- * * `resource`: contains the final resource when it is loaded. (e.g. a {@link StandardMaterial} or a {@link Texture}).
+ * - `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
+ * - `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
+ * - `options`: contains a JSON blob with handler-specific load options.
+ * - `resource`: contains the final resource when it is loaded. (e.g. a {@link StandardMaterial} or a {@link Texture}).
  *
  * See the {@link AssetRegistry} for details on loading resources from assets.
  * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.

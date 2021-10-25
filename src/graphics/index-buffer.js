@@ -26,16 +26,16 @@ import {
  * @param {number} format - The type of each index to be stored in the index
  * buffer. Can be:
  *
- * * {@link INDEXFORMAT_UINT8}
- * * {@link INDEXFORMAT_UINT16}
- * * {@link INDEXFORMAT_UINT32}
+ * - {@link INDEXFORMAT_UINT8}
+ * - {@link INDEXFORMAT_UINT16}
+ * - {@link INDEXFORMAT_UINT32}
  * @param {number} numIndices - The number of indices to be stored in the index
  * buffer.
  * @param {number} [usage] - The usage type of the vertex buffer. Can be:
  *
- * * {@link BUFFER_DYNAMIC}
- * * {@link BUFFER_STATIC}
- * * {@link BUFFER_STREAM}
+ * - {@link BUFFER_DYNAMIC}
+ * - {@link BUFFER_STATIC}
+ * - {@link BUFFER_STREAM}
  *
  * Defaults to {@link BUFFER_STATIC}.
  * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
@@ -113,9 +113,9 @@ class IndexBuffer {
      * @description Returns the data format of the specified index buffer.
      * @returns {number} The data format of the specified index buffer. Can be:
      *
-     * * {@link INDEXFORMAT_UINT8}
-     * * {@link INDEXFORMAT_UINT16}
-     * * {@link INDEXFORMAT_UINT32}
+     * - {@link INDEXFORMAT_UINT8}
+     * - {@link INDEXFORMAT_UINT16}
+     * - {@link INDEXFORMAT_UINT32}
      */
     getFormat() {
         return this.format;

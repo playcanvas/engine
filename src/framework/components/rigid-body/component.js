@@ -47,8 +47,8 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * ~~~
  *
  * Relevant 'Engine-only' examples:
- * * [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
- * * [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
+ * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
+ * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
  *
  * @description Create a new RigidBodyComponent.
  * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
@@ -81,9 +81,9 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * of 16 bits, the first 8 bits are reserved for engine use. Defaults to 65535.
  * @property {string} type The rigid body type determines how the body is simulated. Can be:
  *
- * * {@link BODYTYPE_STATIC}: infinite mass and cannot move.
- * * {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
- * * {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be moved
+ * - {@link BODYTYPE_STATIC}: infinite mass and cannot move.
+ * - {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
+ * - {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be moved
  * by setting the position and rotation of component's {@link Entity}).
  *
  * Defaults to {@link BODYTYPE_STATIC}.

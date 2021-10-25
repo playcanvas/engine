@@ -156,10 +156,10 @@ class GeometryVertexStream {
  * Arrays instead to avoid Type Array allocation overhead.
  *
  * Follow these links for more complex examples showing the functionality.
- * * {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
- * * {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
- * * {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
- * * {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
+ * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
  * ### Update Vertex and Index buffers.
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
@@ -176,13 +176,13 @@ class GeometryVertexStream {
  * mesh should be interpreted by the graphics device. For details on the primitive object, see.
  * @property {number} primitive[].type The type of primitive to render. Can be:
  *
- * * {@link PRIMITIVE_POINTS}
- * * {@link PRIMITIVE_LINES}
- * * {@link PRIMITIVE_LINELOOP}
- * * {@link PRIMITIVE_LINESTRIP}
- * * {@link PRIMITIVE_TRIANGLES}
- * * {@link PRIMITIVE_TRISTRIP}
- * * {@link PRIMITIVE_TRIFAN}
+ * - {@link PRIMITIVE_POINTS}
+ * - {@link PRIMITIVE_LINES}
+ * - {@link PRIMITIVE_LINELOOP}
+ * - {@link PRIMITIVE_LINESTRIP}
+ * - {@link PRIMITIVE_TRIANGLES}
+ * - {@link PRIMITIVE_TRISTRIP}
+ * - {@link PRIMITIVE_TRIFAN}
  *
  * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
  * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.

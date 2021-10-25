@@ -98,25 +98,25 @@ class Entity extends GraphNode {
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
      * @param {string} type - The name of the component to add. Valid strings are:
      *
-     * * "animation" - see {@link AnimationComponent}
-     * * "audiolistener" - see {@link AudioListenerComponent}
-     * * "button" - see {@link ButtonComponent}
-     * * "camera" - see {@link CameraComponent}
-     * * "collision" - see {@link CollisionComponent}
-     * * "element" - see {@link ElementComponent}
-     * * "layoutchild" - see {@link LayoutChildComponent}
-     * * "layoutgroup" - see {@link LayoutGroupComponent}
-     * * "light" - see {@link LightComponent}
-     * * "model" - see {@link ModelComponent}
-     * * "particlesystem" - see {@link ParticleSystemComponent}
-     * * "render" - see {@link RenderComponent}
-     * * "rigidbody" - see {@link RigidBodyComponent}
-     * * "screen" - see {@link ScreenComponent}
-     * * "script" - see {@link ScriptComponent}
-     * * "scrollbar" - see {@link ScrollbarComponent}
-     * * "scrollview" - see {@link ScrollViewComponent}
-     * * "sound" - see {@link SoundComponent}
-     * * "sprite" - see {@link SpriteComponent}
+     * - "animation" - see {@link AnimationComponent}
+     * - "audiolistener" - see {@link AudioListenerComponent}
+     * - "button" - see {@link ButtonComponent}
+     * - "camera" - see {@link CameraComponent}
+     * - "collision" - see {@link CollisionComponent}
+     * - "element" - see {@link ElementComponent}
+     * - "layoutchild" - see {@link LayoutChildComponent}
+     * - "layoutgroup" - see {@link LayoutGroupComponent}
+     * - "light" - see {@link LightComponent}
+     * - "model" - see {@link ModelComponent}
+     * - "particlesystem" - see {@link ParticleSystemComponent}
+     * - "render" - see {@link RenderComponent}
+     * - "rigidbody" - see {@link RigidBodyComponent}
+     * - "screen" - see {@link ScreenComponent}
+     * - "script" - see {@link ScriptComponent}
+     * - "scrollbar" - see {@link ScrollbarComponent}
+     * - "scrollview" - see {@link ScrollViewComponent}
+     * - "sound" - see {@link SoundComponent}
+     * - "sprite" - see {@link SpriteComponent}
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.

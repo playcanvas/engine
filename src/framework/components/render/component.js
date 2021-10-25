@@ -23,13 +23,13 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the render. Can be one of the following:
- * * "asset": The component will render a render asset
- * * "box": The component will render a box (1 unit in each dimension)
- * * "capsule": The component will render a capsule (radius 0.5, height 2)
- * * "cone": The component will render a cone (radius 0.5, height 1)
- * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
- * * "plane": The component will render a plane (1 unit in each dimension)
- * * "sphere": The component will render a sphere (radius 0.5)
+ * - "asset": The component will render a render asset
+ * - "box": The component will render a box (1 unit in each dimension)
+ * - "capsule": The component will render a capsule (radius 0.5, height 2)
+ * - "cone": The component will render a cone (radius 0.5, height 1)
+ * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
+ * - "plane": The component will render a plane (1 unit in each dimension)
+ * - "sphere": The component will render a sphere (radius 0.5)
  * @property {Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
  * @property {Asset[]|number[]} materialAssets The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
  * @property {Material} material The material {@link Material} that will be used to render the meshes (not used on renders of type 'asset').
@@ -47,9 +47,9 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  * @property {Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
  * @property {number} renderStyle Set rendering of all {@link MeshInstance}s to the specified render style. Can be one of the following:
- * * {@link RENDERSTYLE_SOLID}
- * * {@link RENDERSTYLE_WIREFRAME}
- * * {@link RENDERSTYLE_POINTS}
+ * - {@link RENDERSTYLE_SOLID}
+ * - {@link RENDERSTYLE_WIREFRAME}
+ * - {@link RENDERSTYLE_POINTS}
  */
 class RenderComponent extends Component {
     constructor(system, entity)   {

@@ -35,8 +35,8 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the SpriteComponent. Can be:
  *
- * * {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
- * * {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
+ * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
+ * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
  *
  * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
  * @property {number|Asset} spriteAsset The asset id or the {@link Asset} of the sprite to render. Only works for {@link SPRITETYPE_SIMPLE} sprites.

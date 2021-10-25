@@ -24,9 +24,9 @@ import { SoundSlot } from './slot.js';
  * @property {string} distanceModel Determines which algorithm to use to reduce the
  * volume of the sound as it moves away from the listener. Can be:
  *
- * * {@link DISTANCE_LINEAR}
- * * {@link DISTANCE_INVERSE}
- * * {@link DISTANCE_EXPONENTIAL}
+ * - {@link DISTANCE_LINEAR}
+ * - {@link DISTANCE_INVERSE}
+ * - {@link DISTANCE_EXPONENTIAL}
  *
  * Defaults to {@link DISTANCE_LINEAR}.
  * @property {number} refDistance The reference distance for reducing volume as the

@@ -102,29 +102,29 @@ class InstanceList {
  * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
  * Possible values are:
  *
- * * {@link SORTMODE_NONE}
- * * {@link SORTMODE_MANUAL}
- * * {@link SORTMODE_MATERIALMESH}
- * * {@link SORTMODE_BACK2FRONT}
- * * {@link SORTMODE_FRONT2BACK}
+ * - {@link SORTMODE_NONE}
+ * - {@link SORTMODE_MANUAL}
+ * - {@link SORTMODE_MATERIALMESH}
+ * - {@link SORTMODE_BACK2FRONT}
+ * - {@link SORTMODE_FRONT2BACK}
  *
  * Defaults to {@link SORTMODE_MATERIALMESH}.
  * @property {number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
  * Possible values are:
  *
- * * {@link SORTMODE_NONE}
- * * {@link SORTMODE_MANUAL}
- * * {@link SORTMODE_MATERIALMESH}
- * * {@link SORTMODE_BACK2FRONT}
- * * {@link SORTMODE_FRONT2BACK}
+ * - {@link SORTMODE_NONE}
+ * - {@link SORTMODE_MANUAL}
+ * - {@link SORTMODE_MATERIALMESH}
+ * - {@link SORTMODE_BACK2FRONT}
+ * - {@link SORTMODE_FRONT2BACK}
  *
  * Defaults to {@link SORTMODE_BACK2FRONT}.
  * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
  *
- * * {@link SHADER_FORWARD}
- * * {@link SHADER_FORWARDHDR}
- * * {@link SHADER_DEPTH}
- * * Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader} to apply shader modifications based on this value.
+ * - {@link SHADER_FORWARD}
+ * - {@link SHADER_FORWARDHDR}
+ * - {@link SHADER_DEPTH}
+ * - Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader} to apply shader modifications based on this value.
  *
  * Defaults to {@link SHADER_FORWARD}.
  * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
@@ -139,16 +139,16 @@ class InstanceList {
  * @property {Function} onEnable Custom function that is called after the layer has been enabled.
  * This happens when:
  *
- * * The layer is created with {@link Layer#enabled} set to true (which is the default value).
- * * {@link Layer#enabled} was changed from false to true
- * * {@link Layer#incrementCounter} was called and incremented the counter above zero.
+ * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
+ * - {@link Layer#enabled} was changed from false to true
+ * - {@link Layer#incrementCounter} was called and incremented the counter above zero.
  *
  * Useful for allocating resources this layer will use (e.g. creating render targets).
  * @property {Function} onDisable Custom function that is called after the layer has been disabled.
  * This happens when:
  *
- * * {@link Layer#enabled} was changed from true to false
- * * {@link Layer#decrementCounter} was called and set the counter to zero.
+ * - {@link Layer#enabled} was changed from true to false
+ * - {@link Layer#decrementCounter} was called and set the counter to zero.
  *
  * @property {Function} onPreCull Custom function that is called before visibility culling is performed for this layer.
  * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it

@@ -28,10 +28,10 @@ import { StandardMaterial } from './materials/standard-material.js';
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
  *
- * * {@link FOG_NONE}
- * * {@link FOG_LINEAR}
- * * {@link FOG_EXP}
- * * {@link FOG_EXP2}
+ * - {@link FOG_NONE}
+ * - {@link FOG_LINEAR}
+ * - {@link FOG_EXP}
+ * - {@link FOG_EXP2}
  *
  * Defaults to {@link FOG_NONE}.
  * @property {Color} fogColor The color of the fog (if enabled). Defaults to black
@@ -46,17 +46,17 @@ import { StandardMaterial } from './materials/standard-material.js';
  * @property {number} gammaCorrection The gamma correction to apply when rendering the
  * scene. Can be:
  *
- * * {@link GAMMA_NONE}
- * * {@link GAMMA_SRGB}
+ * - {@link GAMMA_NONE}
+ * - {@link GAMMA_SRGB}
  *
  * Defaults to {@link GAMMA_NONE}.
  * @property {number} toneMapping The tonemapping transform to apply when writing
  * fragments to the frame buffer. Can be:
  *
- * * {@link TONEMAP_LINEAR}
- * * {@link TONEMAP_FILMIC}
- * * {@link TONEMAP_HEJL}
- * * {@link TONEMAP_ACES}
+ * - {@link TONEMAP_LINEAR}
+ * - {@link TONEMAP_FILMIC}
+ * - {@link TONEMAP_HEJL}
+ * - {@link TONEMAP_ACES}
  *
  * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} exposure The exposure value tweaks the overall brightness of
@@ -78,8 +78,8 @@ import { StandardMaterial } from './materials/standard-material.js';
  * 2048.
  * @property {number} lightmapMode The lightmap baking mode. Can be:
  *
- * * {@link BAKE_COLOR}: single color lightmap
- * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
+ * - {@link BAKE_COLOR}: single color lightmap
+ * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
  * bump/specular). Only lights with bakeDir=true will be used for generating the dominant
  * light direction.
  *

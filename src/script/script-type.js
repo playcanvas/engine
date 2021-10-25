@@ -13,25 +13,25 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * @classdesc Represents the type of a script. It is returned by {@link createScript}.
  * Also referred to as Script Type.
  *
- * The type is to be extended using its JavaScript prototype. There is a **list of methods**
+ * The type is to be extended using its JavaScript prototype. There is a list of methods
  * that will be executed by the engine on instances of this type, such as:
  *
- * * initialize
- * * postInitialize
- * * update
- * * postUpdate
- * * swap
+ * - `initialize`
+ * - `postInitialize`
+ * - `update`
+ * - `postUpdate`
+ * - `swap`
  *
- * **initialize** and **postInitialize** - are called if defined when script is about to run
- * for the first time - postInitialize will run after all initialize methods are executed in
- * the same tick or enabling chain of actions.
+ * `initialize` and `postInitialize` - are called (if defined) when a script is about to run
+ * for the first time - `postInitialize` will run after all `initialize` methods are executed
+ * in the same tick or enabling chain of actions.
  *
- * **update** and **postUpdate** - methods are called if defined for enabled (running state)
- * scripts on each tick.
+ * `update` and `postUpdate` - are called (if defined) for enabled (running state) scripts
+ * on each tick.
  *
- * **swap** - This method will be called when a {@link ScriptType} that already exists in
- * the registry gets redefined. If the new {@link ScriptType} has a `swap` method in its
- * prototype, then it will be executed to perform hot-reload at runtime.
+ * `swap` - is called when a ScriptType that already exists in the registry gets redefined.
+ * If the new ScriptType has a `swap` method in its prototype, then it will be executed to
+ * perform hot-reload at runtime.
  * @property {Application} app The {@link Application} that the instance of this type
  * belongs to.
  * @property {Entity} entity The {@link Entity} that the instance of this type belongs to.
