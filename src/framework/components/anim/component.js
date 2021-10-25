@@ -257,13 +257,14 @@ class AnimComponent extends Component {
     }
 
     /**
+     * @function
      * @name AnimComponent#addLayer
-     * @returns {AnimComponentLayer} - The created anim component layer
      * @description Adds a new anim component layer to the anim component.
      * @param {string} name - The name of the layer to create.
      * @param {number} [weight] - The blending weight of the layer. Defaults to 1.
      * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in this layer. If omitted the full model is used. Defaults to null.
-     * @param {string} [blendType] - Defines how properties animated by this layer blend with animaions of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
+     * @param {string} [blendType] - Defines how properties animated by this layer blend with animations of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
+     * @returns {AnimComponentLayer} The created anim component layer.
      */
     addLayer(name, weight, mask, blendType) {
         const layer = this.findAnimationLayer(name);
@@ -281,7 +282,7 @@ class AnimComponent extends Component {
     /**
      * @function
      * @name AnimComponent#loadStateGraph
-     * @description Initialises component animation controllers using the provided state graph.
+     * @description Initializes component animation controllers using the provided state graph.
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
      * @example
      * entity.anim.loadStateGraph({
