@@ -12,6 +12,7 @@ import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
+import { Entity } from "../../entity";
 
 /**
  * @component
@@ -148,7 +149,7 @@ class AnimComponent extends Component {
                 console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
             }
             // #endif
-        } else if (value?.constructor.name === 'Entity') {
+        } else if (value instanceof Entity) {
             this._rootBone = value;
         } else {
             this._rootBone = null;
