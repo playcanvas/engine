@@ -105,7 +105,7 @@ class ImgParser {
                 }, retryDelay);
             } else {
                 // Call error callback with details.
-                callback("Error loading Texture from: '" + originalUrl + "'");
+                callback(`Error loading Texture from: '${originalUrl}'`);
             }
         };
 

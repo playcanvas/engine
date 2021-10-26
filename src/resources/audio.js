@@ -85,7 +85,7 @@ class AudioHandler {
 
         if (this._createSound) {
             if (!this._isSupported(url.original)) {
-                error("Audio format for " + url.original + " not supported");
+                error(`Audio format for ${url.original} not supported`);
                 return;
             }
 

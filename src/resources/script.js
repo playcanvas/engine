@@ -90,7 +90,7 @@ class ScriptHandler {
         element.async = false;
 
         element.addEventListener('error', function (e) {
-            callback("Script: " + e.target.src + " failed to load");
+            callback(`Script: ${e.target.src} failed to load`);
         }, false);
 
         let done = false;

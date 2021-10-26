@@ -20,7 +20,7 @@ class ShaderHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading shader resource: " + url.original + " [" + err + "]");
+                callback(`Error loading shader resource: ${url.original} [${err}]`);
             }
         });
     }
