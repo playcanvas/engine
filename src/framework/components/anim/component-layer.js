@@ -198,7 +198,7 @@ class AnimComponentLayer {
      * @readonly
      * @name AnimComponentLayer#activeStateProgress
      * @type {number}
-     * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
+     * @description Returns the currently active states progress as a value normalized by the states animation duration. Looped animations will return values greater than 1.
      */
     get activeStateProgress() {
         return this._controller.activeStateProgress;

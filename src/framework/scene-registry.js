@@ -362,7 +362,7 @@ class SceneRegistry {
 
                     self._app.root.addChild(scene.root);
 
-                    // Initialise pack settings
+                    // Initialize pack settings
                     if (self._app.systems.rigidbody && typeof Ammo !== 'undefined') {
                         self._app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }

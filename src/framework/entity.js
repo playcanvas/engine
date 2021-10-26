@@ -35,6 +35,7 @@ import { Application } from './application.js';
  * @property {RigidBodyComponent} [rigidbody] Gets the {@link RigidBodyComponent} attached to this entity. [read only]
  * @property {ScreenComponent} [screen] Gets the {@link ScreenComponent} attached to this entity. [read only]
  * @property {ScriptComponent} [script] Gets the {@link ScriptComponent} attached to this entity. [read only]
+ * @property {ScrollbarComponent} [scrollbar] Gets the {@link ScrollbarComponent} attached to this entity. [read only]
  * @property {ScrollViewComponent} [scrollview] Gets the {@link ScrollViewComponent} attached to this entity. [read only]
  * @property {SoundComponent} [sound] Gets the {@link SoundComponent} attached to this entity. [read only]
  * @property {SpriteComponent} [sprite] Gets the {@link SpriteComponent} attached to this entity. [read only]
@@ -98,6 +99,7 @@ class Entity extends GraphNode {
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
      * @param {string} type - The name of the component to add. Valid strings are:
      *
+     * - "anim" - see {@link AnimComponent}
      * - "animation" - see {@link AnimationComponent}
      * - "audiolistener" - see {@link AudioListenerComponent}
      * - "button" - see {@link ButtonComponent}
