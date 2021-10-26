@@ -4,7 +4,7 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * @private
  * @class
  * @name AnimBlendTreeDirect
- * @classdesc An AnimBlendTree that calculates normalised weight values based on the total weight.
+ * @classdesc An AnimBlendTree that calculates normalized weight values based on the total weight.
  * @description Create a new BlendTree1D.
  */
 class AnimBlendTreeDirect extends AnimBlendTree {

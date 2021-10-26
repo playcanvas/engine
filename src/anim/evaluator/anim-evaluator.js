@@ -167,8 +167,8 @@ class AnimEvaluator {
                 }
 
                 // binding may have failed
-                // TODO: it may be worth storing quaternions and vector targets in seperate
-                // lists. this way the update code won't be foreced to check target type before
+                // TODO: it may be worth storing quaternions and vector targets in separate
+                // lists. this way the update code won't be forced to check target type before
                 // setting/blending each target.
                 if (target) {
                     target.curves++;
@@ -349,7 +349,7 @@ class AnimEvaluator {
                     // Add this layers value onto the target value
                     animTarget.updateValue(binder.layerIndex, target.value);
 
-                    // get the updated value from the target which has been weighted and normalised using the layer mask and weights
+                    // get the updated value from the target which has been weighted and normalized using the layer mask and weights
                     targetValue[0] = animTarget.value.x;
                     targetValue[1] = animTarget.value.y;
                     targetValue[2] = animTarget.value.z;
