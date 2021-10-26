@@ -8,7 +8,7 @@
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @param {number} samples - The number of samples accumulated for ray distribution.
  */
-function GodRaysEffect(graphicsDevice, samples) {
+ function GodRaysEffect(graphicsDevice, samples) {
     pc.PostEffect.call(this, graphicsDevice);
 
     this.needsDepthBuffer = true;
@@ -18,7 +18,6 @@ function GodRaysEffect(graphicsDevice, samples) {
             aPosition: pc.SEMANTIC_POSITION
         },
         vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
             "attribute vec2 aPosition;",
             "",
             "varying vec2 vUv0;",
@@ -30,7 +29,6 @@ function GodRaysEffect(graphicsDevice, samples) {
             "}"
         ].join("\n"),
         fshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             "precision " + graphicsDevice.precision + " float;",
             pc.shaderChunks.screenDepthPS,
             "",
@@ -38,27 +36,31 @@ function GodRaysEffect(graphicsDevice, samples) {
             "",
             "uniform sampler2D uColorBuffer;",
             "uniform float uAspect;",
-            "uniform vec4 uLightPosition;",
+            "uniform vec3 uLightPosition;",
             "uniform float uIntensity;",
             "uniform float uWeight;",
             "",
             "float sun( vec2 uv, vec2 p ){",
-            "   float di = distance(uv, p) * uLightPosition.w;",
+            "   float di = distance(uv, p);",
             "   return (di <= .3333 / uWeight ? sqrt(1. - di*3./ uWeight) : 0.);",
             "}",
+            "",            
+            "float linearizeDepth(float z) {",
+                "z = z * 2.0 - 1.0;",
+                "return 1.0 / (camera_params.z * z + camera_params.w);",
+            "}",   
             "",
             "void main()",
             "{",
-            "    highp vec2 uv = vUv0; // variable_vertex.xy; // interpolated at pixel's center",
-            "    vec2 coords = uv;",
-            "",
+            "    highp vec2 uv = vUv0;",
+            "    vec2 coords = uv;",  
             "    coords.x *= uAspect;",
+            "",
             "    vec2 sunPos = uLightPosition.xy;",
             "    sunPos.x *= uAspect;",
             "    float light = sun(coords, sunPos);",
             "",
-            "    float occluders = 1.0 - getLinearScreenDepth(uv) / camera_params.y;",
-            "",
+            "    float occluders = 1.0 - linearizeDepth(texture2D(uDepthMap, uv).r);",
             "    float col = step(occluders, 0.0) * (light - occluders) * uIntensity;",
             "    gl_FragColor = vec4(col * uLightPosition.z,occluders,0.0,0.0);",
             "}"
@@ -70,7 +72,6 @@ function GodRaysEffect(graphicsDevice, samples) {
             aPosition: pc.SEMANTIC_POSITION
         },
         vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
             "attribute vec2 aPosition;",
             "",
             "varying vec2 vUv0;",
@@ -82,7 +83,6 @@ function GodRaysEffect(graphicsDevice, samples) {
             "}"
         ].join("\n"),
         fshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             "precision " + graphicsDevice.precision + " float;",
             pc.shaderChunks.screenDepthPS,
             "",
@@ -94,7 +94,7 @@ function GodRaysEffect(graphicsDevice, samples) {
             "#define SAMPLES " + samples.toFixed(0),
             "#define DENSITY .95",
             "#define WEIGHT .25",
-            "uniform vec4 uLightPosition;",
+            "uniform vec3 uLightPosition;",
             "uniform float uWeight;",
             "uniform float uDecay;",
             "uniform float uExposure;",
@@ -119,7 +119,7 @@ function GodRaysEffect(graphicsDevice, samples) {
             "    vec2 dtc = (coord - lightPos) * (1. / float(SAMPLES) * DENSITY);",
             "    float illumdecay = 1.;",
             "",
-            "    for(int i=0; i<SAMPLES; i++){",
+            "    for (int i=0; i<SAMPLES; i++) {",
             "        coord -= dtc;",
             "        float s = texture2D(uLightScatterBuffer, coord+(dtc*dither)).x;",
             "        s *= illumdecay * WEIGHT;",
@@ -155,7 +155,7 @@ function GodRaysEffect(graphicsDevice, samples) {
     this.cameraEntity = undefined;
     this.lightEntity = undefined;
     this.vec = new pc.Vec3();
-    this.lightPosition = new pc.Vec4();
+    this.lightPosition = new pc.Vec3();
     this.intensity = 2.0;
     this.weight = 0.43;
     this.decay = 0.024;
@@ -168,7 +168,7 @@ GodRaysEffect.prototype.constructor = GodRaysEffect;
 
 Object.assign(GodRaysEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
-
+        
         var device = this.device;
         var scope = device.scope;
 
@@ -177,17 +177,13 @@ Object.assign(GodRaysEffect.prototype, {
             var lightPos = this.lightEntity.getPosition();
             var vec = this.vec;
 
-            var resolutionX = device.width / window.devicePixelRatio;
-            var resolutionY = device.height / window.devicePixelRatio;
-
             this.cameraEntity.camera.worldToScreen(lightPos, vec);
-            this.lightPosition.x = vec.x / resolutionX;
-            this.lightPosition.y = 1.0 - vec.y / resolutionY;
+            this.lightPosition.x = vec.x / device.width;
+            this.lightPosition.y = 1.0 - vec.y / device.height;
             this.lightPosition.z = vec.z > 0 ? 1.0 : 0.0;
-            this.lightPosition.w = window.devicePixelRatio;
         }
 
-        scope.resolve("uLightPosition").setValue([this.lightPosition.x, this.lightPosition.y, this.lightPosition.z, this.lightPosition.w]);
+        scope.resolve("uLightPosition").setValue([this.lightPosition.x, this.lightPosition.y, this.lightPosition.z]);
         scope.resolve("uIntensity").setValue(this.intensity);
         scope.resolve("uWeight").setValue(this.weight);
         scope.resolve("uDecay").setValue(1.0 - this.decay);
