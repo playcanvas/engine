@@ -44,6 +44,7 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
+ * @property {boolean} buttonMode If set to true, the button will show an hand cursor hover button if active.
  * @property {Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
  * @property {Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
  * @property {number} transitionMode Controls how the button responds when the user hovers over it/presses it.
@@ -227,6 +228,9 @@ class ButtonComponent extends Component {
     _onMouseEnter(event) {
         this._isHovering = true;
 
+        if (this.buttonMode)
+            document.body.style.cursor = 'pointer';
+
         this._updateVisualState();
         this._fireIfActive('mouseenter', event);
     }
@@ -234,6 +238,9 @@ class ButtonComponent extends Component {
     _onMouseLeave(event) {
         this._isHovering = false;
         this._isPressed = false;
+
+        if (this.buttonMode)
+            document.body.style.cursor = 'default';
 
         this._updateVisualState();
         this._fireIfActive('mouseleave', event);

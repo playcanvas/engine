@@ -8,6 +8,7 @@ class ButtonComponentData {
         this.enabled = true;
 
         this.active = true;
+        this.buttonMode = true;
         this.imageEntity = null;
         this.hitPadding = new Vec4();
         this.transitionMode = BUTTON_TRANSITION_MODE_TINT;

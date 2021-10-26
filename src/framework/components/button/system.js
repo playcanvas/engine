@@ -7,6 +7,7 @@ import { ButtonComponentData } from './data.js';
 const _schema = [
     'enabled',
     'active',
+    'buttonMode',
     { name: 'imageEntity', type: 'entity' },
     { name: 'hitPadding', type: 'vec4' },
     'transitionMode',
