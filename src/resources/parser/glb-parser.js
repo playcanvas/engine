@@ -2094,7 +2094,7 @@ const parseGltf = function (gltfChunk, callback) {
 
     // check gltf version
     if (gltf.asset && gltf.asset.version && parseFloat(gltf.asset.version) < 2) {
-        callback("Invalid gltf version. Expected version 2.0 or above but found version '" + gltf.asset.version + "'.");
+        callback(`Invalid gltf version. Expected version 2.0 or above but found version '${gltf.asset.version}'.`);
         return;
     }
 

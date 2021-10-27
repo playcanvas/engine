@@ -167,9 +167,9 @@ class CanvasFont extends EventHandler {
         const b = Math.round(255 * color.b);
 
         if (alpha) {
-            str = "rgba(" + r + ", " + g + ", " + b + ", " + color.a + ")";
+            str = `rgba(${r}, ${g}, ${b}, ${color.a})`;
         } else {
-            str = "rgb(" + r + ", " + g + ", " + b + ")";
+            str = `rgb(${r}, ${g}, ${b})`;
         }
 
         return str;

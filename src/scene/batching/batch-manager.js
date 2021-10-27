@@ -135,7 +135,7 @@ class BatchManager {
 
         if (this._batchGroups[id]) {
             // #if _DEBUG
-            console.error("batch group with id " + id + " already exists");
+            console.error(`batch group with id ${id} already exists`);
             // #endif
             return;
         }
@@ -156,7 +156,7 @@ class BatchManager {
     removeGroup(id) {
         if (!this._batchGroups[id]) {
             // #if _DEBUG
-            console.error("batch group with id " + id + " doesn't exist");
+            console.error(`batch group with id ${id} doesn't exist`);
             // #endif
             return;
         }
@@ -164,7 +164,7 @@ class BatchManager {
         // delete batches with matching id
         const newBatchList = [];
         for (let i = 0; i < this._batchList.length; i++) {
-            if (this._batchList[i].batchGroupId == id) {
+            if (this._batchList[i].batchGroupId === id) {
                 this.destroyBatch(this._batchList[i]);
             } else {
                 newBatchList.push(this._batchList[i]);
@@ -259,7 +259,7 @@ class BatchManager {
             }
         } else {
             // #if _DEBUG
-            console.warn('Invalid batch ' + groupId + ' insertion');
+            console.warn(`Invalid batch ${groupId} insertion`);
             // #endif
         }
     }
@@ -274,7 +274,7 @@ class BatchManager {
             }
         } else {
             // #if _DEBUG
-            console.warn('Invalid batch ' + groupId + ' insertion');
+            console.warn(`Invalid batch ${groupId} insertion`);
             // #endif
         }
     }
@@ -453,7 +453,7 @@ class BatchManager {
             groupData = this._batchGroups[groupId];
             if (!groupData) {
                 // #if _DEBUG
-                console.error("batch group " + groupId + " not found");
+                console.error(`batch group ${groupId} not found`);
                 // #endif
                 continue;
             }

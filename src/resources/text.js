@@ -20,7 +20,7 @@ class TextHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading text resource: " + url.original + " [" + err + "]");
+                callback(`Error loading text resource: ${url.original} [${err}]`);
             }
         });
     }

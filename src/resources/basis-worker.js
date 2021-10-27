@@ -174,7 +174,7 @@ function BasisWorker() {
         if (!width || !height || !levels) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' levels=' + levels);
+            throw new Error(`Invalid image dimensions url=${url} width=${width} height=${height} levels=${levels}`);
         }
 
         // choose the target format
@@ -265,7 +265,7 @@ function BasisWorker() {
         if (!width || !height || !images || !levels) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' images=' + images + ' levels=' + levels);
+            throw new Error(`Invalid image dimensions url=${url} width=${width} height=${height} images=${images} levels=${levels}`);
         }
 
         // choose the target format

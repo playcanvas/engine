@@ -139,7 +139,7 @@ class ResourceLoader {
             const normalizedUrl = url.split('?')[0];
             if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
                 if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
-                    handleLoad('Bundle for ' + url + ' not loaded yet');
+                    handleLoad(`Bundle for ${url} not loaded yet`);
                     return;
                 }
 

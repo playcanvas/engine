@@ -284,7 +284,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
         if (entity.script) {
             entity.script.data._instances = entity.script.data._instances || {};
             if (entity.script.data._instances[name]) {
-                throw Error("Script name collision '" + name + "'. Scripts from '" + url + "' and '" + entity.script.data._instances[name].url + "' {" + entity.getGuid() + "}");
+                throw Error(`Script name collision '${name}'. Scripts from '${url}' and '${entity.script.data._instances[name].url}' {${entity.getGuid()}}`);
             }
             entity.script.data._instances[name] = {
                 url: url,
@@ -327,7 +327,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
 
                     // Make instance accessible from the script component of the Entity
                     if (entity.script[instanceName]) {
-                        throw Error("Script with name '" + instanceName + "' is already attached to Script Component");
+                        throw Error(`Script with name '${instanceName}' is already attached to Script Component`);
                     } else {
                         entity.script[instanceName] = instance;
                     }

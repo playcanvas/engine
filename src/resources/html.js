@@ -20,7 +20,7 @@ class HtmlHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading html resource: " + url.original + " [" + err + "]");
+                callback(`Error loading html resource: ${url.original} [${err}]`);
             }
         });
     }

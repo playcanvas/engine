@@ -140,7 +140,7 @@ class Controller {
             this._enableKeyboard();
         }
         if (this._actions[action]) {
-            throw new Error("Action: " + action + " already registered");
+            throw new Error(`Action: ${action} already registered`);
         }
 
         if (keys === undefined) {

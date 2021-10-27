@@ -424,7 +424,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 const dir = dirs[addr];
 
                 let dx, dy, dz;
-                if (face == nx) {
+                if (face === nx) {
                     dx = dir.z;
                     dy = -dir.y;
                     dz = -dir.x;
