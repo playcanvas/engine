@@ -130,7 +130,7 @@ class AnimComponentLayer {
      * @description Transition to any state in the current layers graph. Transitions can be instant or take an optional blend time.
      * @param {string} to - The state that this transition will transition to.
      * @param {number} [time] - The duration of the transition in seconds. Defaults to 0.
-     * @param {number} [transitionOffset] - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1. Defaults to null.
+     * @param {number} [transitionOffset] - If provided, the destination state will begin playing its animation at this time. Given in normalized time, based on the states duration & must be between 0 and 1. Defaults to null.
      */
     transition(to, time = 0, transitionOffset = null) {
         this._controller.updateStateFromTransition(new AnimTransition({
@@ -198,7 +198,7 @@ class AnimComponentLayer {
      * @readonly
      * @name AnimComponentLayer#activeStateProgress
      * @type {number}
-     * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
+     * @description Returns the currently active states progress as a value normalized by the states animation duration. Looped animations will return values greater than 1.
      */
     get activeStateProgress() {
         return this._controller.activeStateProgress;
