@@ -72,7 +72,7 @@ class ScreenComponent extends Component {
             }
         }
 
-        // child particle system inside 2D screen sub-hierarachy gets sorted along other 2D elements
+        // child particle system inside 2D screen sub-hierarchy gets sorted along other 2D elements
         if (e.particlesystem) {
             e.particlesystem.drawOrder = i++;
         }
@@ -258,7 +258,7 @@ class ScreenComponent extends Component {
     set priority(value) {
         if (value > 0xFF) {
             // #if _DEBUG
-            console.warn('Clamping screen priority from ' + value + ' to 255');
+            console.warn(`Clamping screen priority from ${value} to 255`);
             // #endif
             value = 0xFF;
         }
