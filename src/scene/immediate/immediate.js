@@ -252,7 +252,7 @@ class Immediate {
     onPreRender() {
 
         // update line batches
-        this.allBatches.forEach(batches => {
+        this.allBatches.forEach((batches) => {
             batches.onPreRender();
         });
 
@@ -270,7 +270,7 @@ class Immediate {
     onPostRender() {
 
         // clean up line batches
-        this.allBatches.forEach(batches => {
+        this.allBatches.forEach((batches) => {
             batches.onPostRender();
         });
         this.allBatches.clear();

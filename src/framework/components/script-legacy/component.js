@@ -168,7 +168,7 @@ class ScriptLegacyComponent extends Component {
 
         const prefix = this.system.app._scriptPrefix || "";
 
-        urls.forEach(url => {
+        urls.forEach((url) => {
             let _url = null;
             let _unprefixed = null;
             // support absolute URLs (for now)

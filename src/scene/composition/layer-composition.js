@@ -170,7 +170,7 @@ class LayerComposition extends EventHandler {
 
     // update clusters with parameter changes
     updateWorldClusters() {
-        this._worldClusters.forEach(cluster => {
+        this._worldClusters.forEach((cluster) => {
             cluster.cells = this._clusteredLightingCells;
             cluster.maxCellLightCount = this._clusteredLightingMaxLights;
             cluster.cookiesEnabled = this._clusteredLightingCookiesEnabled;

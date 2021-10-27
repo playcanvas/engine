@@ -20,7 +20,7 @@ class XrInput extends EventHandler {
         this._session = null;
         this._inputSources = [];
 
-        this._onInputSourcesChangeEvt = evt => {
+        this._onInputSourcesChangeEvt = (evt) => {
             this._onInputSourcesChange(evt);
         };
 
@@ -116,20 +116,20 @@ class XrInput extends EventHandler {
         this._session = this.manager.session;
         this._session.addEventListener('inputsourceschange', this._onInputSourcesChangeEvt);
 
-        this._session.addEventListener('select', evt => {
+        this._session.addEventListener('select', (evt) => {
             const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('select', evt);
             this.fire('select', inputSource, evt);
         });
-        this._session.addEventListener('selectstart', evt => {
+        this._session.addEventListener('selectstart', (evt) => {
             const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._selecting = true;
             inputSource.fire('selectstart', evt);
             this.fire('selectstart', inputSource, evt);
         });
-        this._session.addEventListener('selectend', evt => {
+        this._session.addEventListener('selectend', (evt) => {
             const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._selecting = false;
@@ -137,20 +137,20 @@ class XrInput extends EventHandler {
             this.fire('selectend', inputSource, evt);
         });
 
-        this._session.addEventListener('squeeze', evt => {
+        this._session.addEventListener('squeeze', (evt) => {
             const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('squeeze', evt);
             this.fire('squeeze', inputSource, evt);
         });
-        this._session.addEventListener('squeezestart', evt => {
+        this._session.addEventListener('squeezestart', (evt) => {
             const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._squeezing = true;
             inputSource.fire('squeezestart', evt);
             this.fire('squeezestart', inputSource, evt);
         });
-        this._session.addEventListener('squeezeend', evt => {
+        this._session.addEventListener('squeezeend', (evt) => {
             const inputSource = this._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource._squeezing = false;

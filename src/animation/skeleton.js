@@ -44,7 +44,7 @@ class Skeleton {
 
         this.graph = null;
 
-        const addInterpolatedKeys = node => {
+        const addInterpolatedKeys = (node) => {
             const interpKey = new InterpolatedKey();
             interpKey._name = node.name;
             this._interpolatedKeys.push(interpKey);

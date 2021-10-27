@@ -162,14 +162,14 @@ class Lightmapper {
         }
 
         // spare render targets including color buffer
-        this.renderTargets.forEach(rt => {
+        this.renderTargets.forEach((rt) => {
             destroyRT(rt);
         });
         this.renderTargets.clear();
 
         // destroy render targets from nodes (but not color buffer)
-        bakeNodes.forEach(node => {
-            node.renderTargets.forEach(rt => {
+        bakeNodes.forEach((node) => {
+            node.renderTargets.forEach((rt) => {
                 destroyRT(rt);
             });
             node.renderTargets.length = 0;

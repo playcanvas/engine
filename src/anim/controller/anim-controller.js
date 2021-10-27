@@ -40,7 +40,7 @@ class AnimController {
             );
             this._stateNames.push(states[i].name);
         }
-        this._transitions = transitions.map(transition => {
+        this._transitions = transitions.map((transition) => {
             return new AnimTransition({
                 ...transition
             });
@@ -285,7 +285,7 @@ class AnimController {
         }
 
         // filter out transitions that don't have their conditions met
-        transitions = transitions.filter(transition => {
+        transitions = transitions.filter((transition) => {
             // if the transition is moving to the already active state, ignore it
             if (transition.to === this.activeStateName) {
                 return false;

@@ -19,7 +19,7 @@ class BasisParser {
     load(url, callback, asset) {
         const device = this.device;
 
-        const transcode = data => {
+        const transcode = (data) => {
             const basisModuleFound = basisTranscode(
                 device,
                 url.load,

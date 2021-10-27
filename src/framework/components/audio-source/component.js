@@ -305,7 +305,7 @@ class AudioSourceComponent extends Component {
     }
 
     loadAudioSourceAssets(ids) {
-        const assets = ids.map(id => {
+        const assets = ids.map((id) => {
             return this.system.app.assets.get(id);
         });
 
@@ -315,7 +315,7 @@ class AudioSourceComponent extends Component {
         let count = assets.length;
 
         // make sure progress continues even if some audio doesn't load
-        const _error = e => {
+        const _error = (e) => {
             count--;
         };
 
@@ -343,7 +343,7 @@ class AudioSourceComponent extends Component {
 
                 asset.off('error', _error, this);
                 asset.on('error', _error, this);
-                asset.ready(asset => {
+                asset.ready((asset) => {
                     sources[asset.name] = asset.resource;
                     count--;
                     if (count === 0) {
@@ -360,8 +360,8 @@ class AudioSourceComponent extends Component {
                     _done();
                 }
                 // but if they are added insert them into source list
-                this.system.app.assets.on("add:" + ids[index], asset => {
-                    asset.ready(asset => {
+                this.system.app.assets.on("add:" + ids[index], (asset) => {
+                    asset.ready((asset) => {
                         this.data.sources[asset.name] = asset.resource;
                     });
 

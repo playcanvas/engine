@@ -70,7 +70,7 @@ class GlbResources {
     destroy() {
         // render needs to dec ref meshes
         if (this.renders) {
-            this.renders.forEach(render => {
+            this.renders.forEach((render) => {
                 render.meshes = null;
             });
         }
@@ -155,7 +155,7 @@ const gltfToEngineSemanticMap = {
 };
 
 // returns a function for dequantizing the data type
-const getDequantizeFunc = srcType => {
+const getDequantizeFunc = (srcType) => {
     // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
     switch (srcType) {
         case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
@@ -1749,10 +1749,10 @@ const createLights = function (gltf, nodes, options) {
 
 // link skins to the meshes
 const linkSkins = function (gltf, renders, skins) {
-    gltf.nodes.forEach(gltfNode => {
+    gltf.nodes.forEach((gltfNode) => {
         if (gltfNode.hasOwnProperty('mesh') && gltfNode.hasOwnProperty('skin')) {
             const meshGroup = renders[gltfNode.mesh].meshes;
-            meshGroup.forEach(mesh => {
+            meshGroup.forEach((mesh) => {
                 mesh.skin = skins[gltfNode.skin];
             });
         }

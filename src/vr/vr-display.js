@@ -64,7 +64,7 @@ class VrDisplay extends EventHandler {
 
         this.presenting = false;
 
-        this._presentChange = event => {
+        this._presentChange = (event) => {
             let display;
             // handle various events formats
             if (event.display) {

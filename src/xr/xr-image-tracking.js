@@ -72,13 +72,13 @@ class XrImageTracking extends EventHandler {
     }
 
     _onSessionStart() {
-        this._manager.session.getTrackedImageScores().then(images => {
+        this._manager.session.getTrackedImageScores().then((images) => {
             this._available = true;
 
             for (let i = 0; i < images.length; i++) {
                 this._images[i]._trackable = images[i] === 'trackable';
             }
-        }).catch(err => {
+        }).catch((err) => {
             this._available = false;
             this.fire('error', err);
         });

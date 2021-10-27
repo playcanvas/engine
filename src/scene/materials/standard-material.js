@@ -368,7 +368,7 @@ class StandardMaterial extends Material {
 
     reset() {
         // set default values
-        Object.keys(_props).forEach(name => {
+        Object.keys(_props).forEach((name) => {
             this[`_${name}`] = _props[name].value();
         });
 
@@ -389,7 +389,7 @@ class StandardMaterial extends Material {
         this._cloneInternal(clone);
 
         // set properties
-        Object.keys(_props).forEach(k => {
+        Object.keys(_props).forEach((k) => {
             clone[k] = this[k];
         });
 
@@ -408,7 +408,7 @@ class StandardMaterial extends Material {
     }
 
     _setParameters(parameters) {
-        parameters.forEach(v => {
+        parameters.forEach((v) => {
             this._setParameter(v.name, v.value);
         });
     }
@@ -455,7 +455,7 @@ class StandardMaterial extends Material {
     }
 
     updateUniforms(device, scene) {
-        const getUniform = name => {
+        const getUniform = (name) => {
             return this.getUniform(name, device, scene);
         };
 
@@ -685,7 +685,7 @@ const defineUniform = (name, getUniformFunc) => {
 };
 
 // define a standard material property
-const defineProp = prop => {
+const defineProp = (prop) => {
     const name = prop.name;
     const internalName = `_${name}`;
     const defaultValue = prop.defaultValue;

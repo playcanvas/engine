@@ -35,7 +35,7 @@ class AnimComponentSystem extends ComponentSystem {
         properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
         const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
-        Object.keys(data).forEach(key => {
+        Object.keys(data).forEach((key) => {
             // these properties will be initialized manually below
             if (complexProperties.includes(key)) return;
             component[key] = data[key];
@@ -46,8 +46,8 @@ class AnimComponentSystem extends ComponentSystem {
         }
         if (data.layers) {
             data.layers.forEach((layer, i) => {
-                layer._controller.states.forEach(stateKey => {
-                    layer._controller._states[stateKey]._animationList.forEach(node => {
+                layer._controller.states.forEach((stateKey) => {
+                    layer._controller._states[stateKey]._animationList.forEach((node) => {
                         component.layers[i].assignAnimation(node.name, node.animTrack);
                     });
                 });
@@ -57,7 +57,7 @@ class AnimComponentSystem extends ComponentSystem {
         }
 
         if (data.masks) {
-            Object.keys(data.masks).forEach(key => {
+            Object.keys(data.masks).forEach((key) => {
                 if (component.layers[key]) {
                     component.layers[key].assignMask(data.masks[key].mask);
                 }

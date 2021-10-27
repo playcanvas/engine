@@ -271,7 +271,7 @@ class GraphicsDevice extends EventHandler {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        this._contextLostHandler = event => {
+        this._contextLostHandler = (event) => {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
@@ -795,7 +795,7 @@ class GraphicsDevice extends EventHandler {
         let ext;
 
         const supportedExtensions = {};
-        gl.getSupportedExtensions().forEach(e => {
+        gl.getSupportedExtensions().forEach((e) => {
             supportedExtensions[e] = true;
         });
 

@@ -206,7 +206,7 @@ class ContainerResource {
         }
 
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
-        skinedMeshInstances.forEach(data => {
+        skinedMeshInstances.forEach((data) => {
             data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
         });
 

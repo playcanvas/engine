@@ -12,7 +12,7 @@ class MiniStats {
         const device = app.graphicsDevice;
 
         // handle context lost
-        this._contextLostHandler = event => {
+        this._contextLostHandler = (event) => {
             event.preventDefault();
 
             if (this.graphs) {
@@ -32,13 +32,13 @@ class MiniStats {
         let words = ["", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."];
 
         // graph names
-        graphs.forEach(graph => {
+        graphs.forEach((graph) => {
             words.push(graph.name);
         });
 
         // stats units
         if (options.stats) {
-            options.stats.forEach(stat => {
+            options.stats.forEach((stat) => {
                 if (stat.unitsName)
                     words.push(stat.unitsName);
             });
@@ -70,15 +70,15 @@ class MiniStats {
         div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
         document.body.appendChild(div);
 
-        div.addEventListener('mouseenter', event => {
+        div.addEventListener('mouseenter', (event) => {
             this.opacity = 1.0;
         });
 
-        div.addEventListener('mouseleave', event => {
+        div.addEventListener('mouseleave', (event) => {
             this.opacity = 0.5;
         });
 
-        div.addEventListener('click', event => {
+        div.addEventListener('click', (event) => {
             event.preventDefault();
             if (this._enabled) {
                 this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
@@ -260,7 +260,7 @@ class MiniStats {
         }
 
         if (options.stats) {
-            options.stats.forEach(entry => {
+            options.stats.forEach((entry) => {
                 const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
                 const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
                 graphs.push(graph);

@@ -150,7 +150,7 @@ class LightTextureAtlas {
         const lights = _tempArray;
         lights.length = 0;
 
-        const processLights = list => {
+        const processLights = (list) => {
             for (let i = 0; i < list.length; i++) {
                 const light = list[i];
                 if (light.visibleThisFrame) {

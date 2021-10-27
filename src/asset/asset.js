@@ -349,7 +349,7 @@ class Asset extends EventHandler {
                     // file for the asset
                     if (app.enableBundles) {
                         const bundles = app.bundles.listBundlesForAsset(this);
-                        if (bundles && bundles.find(b => {
+                        if (bundles && bundles.find((b) => {
                             return b?.file?.variants[variant];
                         })) {
                             break;

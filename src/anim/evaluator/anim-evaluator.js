@@ -260,7 +260,7 @@ class AnimEvaluator {
         this._targets = {};
         const clips = [...this.clips];
         this.removeClips();
-        clips.forEach(clip => {
+        clips.forEach((clip) => {
             this.addClip(clip);
         });
     }

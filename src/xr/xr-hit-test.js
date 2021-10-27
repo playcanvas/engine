@@ -187,7 +187,7 @@ class XrHitTest extends EventHandler {
         const callback = options.callback;
 
         if (options.spaceType) {
-            this._session.requestReferenceSpace(options.spaceType).then(referenceSpace => {
+            this._session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
                 if (!this._session) {
                     const err = new Error('XR Session is not started (2)');
                     if (callback) callback(err);
@@ -199,13 +199,13 @@ class XrHitTest extends EventHandler {
                     space: referenceSpace,
                     entityTypes: options.entityTypes || undefined,
                     offsetRay: xrRay
-                }).then(xrHitTestSource => {
+                }).then((xrHitTestSource) => {
                     this._onHitTestSource(xrHitTestSource, false, callback);
-                }).catch(ex => {
+                }).catch((ex) => {
                     if (callback) callback(ex);
                     this.fire('error', ex);
                 });
-            }).catch(ex => {
+            }).catch((ex) => {
                 if (callback) callback(ex);
                 this.fire('error', ex);
             });
@@ -214,9 +214,9 @@ class XrHitTest extends EventHandler {
                 profile: options.profile,
                 entityTypes: options.entityTypes || undefined,
                 offsetRay: xrRay
-            }).then(xrHitTestSource => {
+            }).then((xrHitTestSource) => {
                 this._onHitTestSource(xrHitTestSource, true, callback);
-            }).catch(ex => {
+            }).catch((ex) => {
                 if (callback) callback(ex);
                 this.fire('error', ex);
             });

@@ -1089,7 +1089,7 @@ export class AssetListLoader extends EventHandler {
         this._registry.off("load", this._onLoad);
         this._registry.off("error", this._onError);
 
-        this._waitingAssets.forEach(id => {
+        this._waitingAssets.forEach((id) => {
             this._registry.off("add:" + id, this._onAddAsset);
         });
 

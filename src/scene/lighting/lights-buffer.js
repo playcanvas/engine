@@ -102,7 +102,7 @@ class LightsBuffer {
     // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
     static buildShaderDefines(object, prefix) {
         let str = "";
-        Object.keys(object).forEach(key => {
+        Object.keys(object).forEach((key) => {
             str += `\n#define ${prefix}${key} ${object[key]}.5`;
         });
         return str;

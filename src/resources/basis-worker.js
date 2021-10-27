@@ -75,7 +75,7 @@ function BasisWorker() {
     };
 
     // unswizzle two-component gggr8888 normal data into rgba8888
-    const unswizzleGGGR = data => {
+    const unswizzleGGGR = (data) => {
         // given R and G generate B
         const genB = function (R, G) {
             const r = R * (2.0 / 255.0) - 1.0;
@@ -95,14 +95,14 @@ function BasisWorker() {
         return data;
     };
 
-    const isCompressedFormat = basisFormat => {
+    const isCompressedFormat = (basisFormat) => {
         return basisFormat !== BASIS_FORMAT.cTFRGBA32 &&
                basisFormat !== BASIS_FORMAT.cTFRGB565 &&
                basisFormat !== BASIS_FORMAT.cTFRGBA4444;
     };
 
     // pack rgba8888 data into rgb565
-    const pack565 = data => {
+    const pack565 = (data) => {
         const result = new Uint16Array(data.length / 4);
 
         for (let offset = 0; offset < data.length; offset += 4) {
@@ -144,7 +144,7 @@ function BasisWorker() {
             }
         }
 
-        const testInOrder = priority => {
+        const testInOrder = (priority) => {
             for (let i = 0; i < priority.length; ++i) {
                 const format = priority[i];
                 if (deviceDetails.formats[format]) {
@@ -364,17 +364,17 @@ function BasisWorker() {
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
             WebAssembly.instantiate(config.module, imports)
-                .then(result => {
+                .then((result) => {
                     successCallback(result);
                 })
-                .catch(reason => {
+                .catch((reason) => {
                     console.error('instantiate failed + ' + reason);
                 });
             return {};
         };
 
         self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
-            .then(instance => {
+            .then((instance) => {
                 instance.initializeBasis();
 
                 // set globals
@@ -388,7 +388,7 @@ function BasisWorker() {
 
     // handle incoming worker requests
     const queue = [];
-    self.onmessage = message => {
+    self.onmessage = (message) => {
         const data = message.data;
         switch (data.type) {
             case 'init':

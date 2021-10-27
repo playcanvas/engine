@@ -20,7 +20,7 @@ class StatsTimer {
             }, obj || this);
         };
 
-        app.on('frameupdate', ms => {
+        app.on('frameupdate', (ms) => {
             for (let i = 0; i < this.statNames.length; i++) {
 
                 // read specified stat from app.stats object
