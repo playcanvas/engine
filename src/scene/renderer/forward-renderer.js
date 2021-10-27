@@ -1,4 +1,4 @@
-import { now } from  '../../core/time.js';
+import { now } from '../../core/time.js';
 
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';

@@ -52,7 +52,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * - {@link RENDERSTYLE_POINTS}
  */
 class RenderComponent extends Component {
-    constructor(system, entity)   {
+    constructor(system, entity) {
         super(system, entity);
 
         this._type = 'asset';

@@ -172,7 +172,7 @@ class ScriptComponentSystem extends ComponentSystem {
 
     // inserts the component into the enabledComponents array
     // which finds the right slot based on component._executionOrder
-    _addComponentToEnabled(component)  {
+    _addComponentToEnabled(component) {
         this._enabledComponents.insert(component);
     }
 

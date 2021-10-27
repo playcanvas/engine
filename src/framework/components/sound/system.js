@@ -21,7 +21,7 @@ const _schema = ['enabled'];
  * @property {AudioContext} context Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
  * @property {SoundManager} manager Gets / sets the sound manager.
  */
-class SoundComponentSystem extends ComponentSystem  {
+class SoundComponentSystem extends ComponentSystem {
     constructor(app, manager) {
         super(app);
 

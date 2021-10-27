@@ -799,13 +799,13 @@ class LayerComposition extends EventHandler {
     insert(layer, index) {
         // insert both opaque and transparent at the index
         if (this._isLayerAdded(layer)) return;
-        this.layerList.splice(index, 0,    layer,  layer);
-        this.subLayerList.splice(index, 0, false,  true);
+        this.layerList.splice(index, 0, layer, layer);
+        this.subLayerList.splice(index, 0, false, true);
 
         const count = this.layerList.length;
         this._updateOpaqueOrder(index, count - 1);
         this._updateTransparentOrder(index, count - 1);
-        this.subLayerEnabled.splice(index, 0, true,  true);
+        this.subLayerEnabled.splice(index, 0, true, true);
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -872,7 +872,7 @@ class LayerComposition extends EventHandler {
     insertOpaque(layer, index) {
         // insert opaque at index
         if (this._isSublayerAdded(layer, false)) return;
-        this.layerList.splice(index, 0,    layer);
+        this.layerList.splice(index, 0, layer);
         this.subLayerList.splice(index, 0, false);
 
         const count = this.subLayerList.length;
@@ -941,7 +941,7 @@ class LayerComposition extends EventHandler {
     insertTransparent(layer, index) {
         // insert transparent at index
         if (this._isSublayerAdded(layer, true)) return;
-        this.layerList.splice(index, 0,    layer);
+        this.layerList.splice(index, 0, layer);
         this.subLayerList.splice(index, 0, true);
 
         const count = this.subLayerList.length;

@@ -583,7 +583,7 @@ class ParticleSystemComponent extends Component {
         }
     }
 
-    _onRenderSetMeshes(meshes)  {
+    _onRenderSetMeshes(meshes) {
         this._onMeshChanged(meshes && meshes[0]);
     }
 
