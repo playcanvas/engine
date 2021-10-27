@@ -645,7 +645,7 @@ class CameraComponent extends Component {
     copy(source) {
 
         // copy data driven properties
-        properties.forEach((property) => {
+        properties.forEach(property => {
             if (!property.readonly) {
                 const name = property.name;
                 this[name] = source[name];

@@ -151,7 +151,7 @@ class Picker {
 
         // return the content of the set as an array
         const selection = [];
-        tempSet.forEach((meshInstance) => selection.push(meshInstance));
+        tempSet.forEach(meshInstance => selection.push(meshInstance));
         tempSet.clear();
 
         return selection;

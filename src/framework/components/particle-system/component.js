@@ -202,15 +202,15 @@ class ParticleSystemComponent extends Component {
         this.on("set_depthSoftening", this.onSetDepthSoftening, this);
         this.on("set_layers", this.onSetLayers, this);
 
-        SIMPLE_PROPERTIES.forEach((prop) => {
+        SIMPLE_PROPERTIES.forEach(prop => {
             this.on(`set_${prop}`, this.onSetSimpleProperty, this);
         });
 
-        COMPLEX_PROPERTIES.forEach((prop) => {
+        COMPLEX_PROPERTIES.forEach(prop => {
             this.on(`set_${prop}`, this.onSetComplexProperty, this);
         });
 
-        GRAPH_PROPERTIES.forEach((prop) => {
+        GRAPH_PROPERTIES.forEach(prop => {
             this.on(`set_${prop}`, this.onSetGraphProperty, this);
         });
 
@@ -341,7 +341,7 @@ class ParticleSystemComponent extends Component {
             if (asset) {
                 this._bindColorMapAsset(asset);
             } else {
-                assets.once("add:" + newValue, (asset) => {
+                assets.once("add:" + newValue, asset => {
                     this._bindColorMapAsset(asset);
                 });
             }
@@ -407,7 +407,7 @@ class ParticleSystemComponent extends Component {
             if (asset) {
                 this._bindNormalMapAsset(asset);
             } else {
-                assets.once("add:" + newValue, (asset) => {
+                assets.once("add:" + newValue, asset => {
                     this._bindNormalMapAsset(asset);
                 });
             }

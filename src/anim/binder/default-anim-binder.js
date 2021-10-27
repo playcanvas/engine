@@ -113,7 +113,7 @@ class DefaultAnimBinder {
                         }
                     }
                     if (meshInstance) {
-                        const func = (value) => {
+                        const func = value => {
                             const textureAsset = this.animComponent.system.app.assets.get(value[0]);
                             if (textureAsset && textureAsset.resource && textureAsset.type === 'texture') {
                                 meshInstance.material[textureName] = textureAsset.resource;

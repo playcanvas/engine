@@ -350,15 +350,15 @@ class Mesh extends RefCountedObject {
         }
 
         // account for normalized positional data
-        const positionElement = this.vertexBuffer.getFormat().elements.find((e) => e.name === SEMANTIC_POSITION);
+        const positionElement = this.vertexBuffer.getFormat().elements.find(e => e.name === SEMANTIC_POSITION);
         if (positionElement && positionElement.normalize) {
             const func = (() => {
                 switch (positionElement.dataType) {
-                    case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
-                    case TYPE_UINT8: return (x) => x / 255.0;
-                    case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
-                    case TYPE_UINT16: return (x) => x / 65535.0;
-                    default: return (x) => x;
+                    case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
+                    case TYPE_UINT8: return x => x / 255.0;
+                    case TYPE_INT16: return x => Math.max(x / 32767.0, -1.0);
+                    case TYPE_UINT16: return x => x / 65535.0;
+                    default: return x => x;
                 }
             })();
 

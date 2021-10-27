@@ -100,7 +100,7 @@ class LayoutGroupComponent extends Component {
         this._listenForReflowEvents(this.entity, 'on');
 
         // Listen to existing children being resized
-        this.entity.children.forEach((child) => {
+        this.entity.children.forEach(child => {
             this._listenForReflowEvents(child, 'on');
         });
 
@@ -209,7 +209,7 @@ class LayoutGroupComponent extends Component {
 
         this._listenForReflowEvents(this.entity, 'off');
 
-        this.entity.children.forEach((child) => {
+        this.entity.children.forEach(child => {
             this._listenForReflowEvents(child, 'off');
         });
 

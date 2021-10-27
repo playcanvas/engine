@@ -483,9 +483,9 @@ const functionMap = {
 };
 
 // Define additional properties for each degree of freedom
-['linear', 'angular'].forEach((type) => {
-    ['Damping', 'Equilibrium', 'Spring', 'Stiffness'].forEach((name) => {
-        ['X', 'Y', 'Z'].forEach((axis) => {
+['linear', 'angular'].forEach(type => {
+    ['Damping', 'Equilibrium', 'Spring', 'Stiffness'].forEach(name => {
+        ['X', 'Y', 'Z'].forEach(axis => {
             const prop = type + name + axis;
             const propInternal = '_' + prop;
 

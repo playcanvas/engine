@@ -3,7 +3,7 @@ import { BasisWorker } from './basis-worker.js';
 import { http } from '../net/http.js';
 
 // get the list of the device's supported compression formats
-const getCompressionFormats = (device) => {
+const getCompressionFormats = device => {
     return {
         astc: !!device.extCompressedTextureASTC,
         atc: !!device.extCompressedTextureATC,
@@ -63,16 +63,16 @@ const prepareWorkerModules = (config, callback) => {
 
         const compileManual = () => {
             fetchPromise
-                .then((result) => result.arrayBuffer())
-                .then((buffer) => WebAssembly.compile(buffer))
-                .then((module_) => {
+                .then(result => result.arrayBuffer())
+                .then(buffer => WebAssembly.compile(buffer))
+                .then(module_ => {
                     if (basisCode) {
                         sendResponse(basisCode, module_);
                     } else {
                         module = module_;
                     }
                 })
-                .catch((err) => {
+                .catch(err => {
                     callback(err, null);
                 });
         };
@@ -80,14 +80,14 @@ const prepareWorkerModules = (config, callback) => {
         // download and compile wasm module
         if (WebAssembly.compileStreaming) {
             WebAssembly.compileStreaming(fetchPromise)
-                .then((module_) => {
+                .then(module_ => {
                     if (basisCode) {
                         sendResponse(basisCode, module_);
                     } else {
                         module = module_;
                     }
                 })
-                .catch((err) => {
+                .catch(err => {
                     // #if _DEBUG
                     console.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
                     // #endif
@@ -179,7 +179,7 @@ class BasisClient {
     constructor(queue, config, eager) {
         this.queue = queue;
         this.worker = new Worker(config.workerUrl);
-        this.worker.addEventListener('message', (message) => {
+        this.worker.addEventListener('message', message => {
             const data = message.data;
             this.queue.handleResponse(data.url, data.err, data.data);
             if (!this.eager) {

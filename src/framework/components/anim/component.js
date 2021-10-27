@@ -82,7 +82,7 @@ class AnimComponent extends Component {
             this.loadStateGraph(this._stateGraph);
             _asset.on('change', this._onStateGraphAssetChangeEvent);
         } else {
-            _asset.once('load', (asset) => {
+            _asset.once('load', asset => {
                 this._stateGraph = asset.resource;
                 this.loadStateGraph(this._stateGraph);
             });
@@ -92,7 +92,7 @@ class AnimComponent extends Component {
         this._stateGraphAsset = _id;
     }
 
-    _onStateGraphAssetChangeEvent = (asset) => {
+    _onStateGraphAssetChangeEvent = asset => {
         this._stateGraph = new AnimStateGraph(asset._data);
         this.loadStateGraph(this._stateGraph);
     }
@@ -694,7 +694,7 @@ class AnimComponent extends Component {
         for (let i = 0; i < this.layers.length; i++) {
             this.layers[i].update(dt * this.speed);
         }
-        this._consumedTriggers.forEach((trigger) => {
+        this._consumedTriggers.forEach(trigger => {
             this.parameters[trigger].value = false;
         });
         this._consumedTriggers.clear();

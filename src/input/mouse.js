@@ -57,7 +57,7 @@ class Mouse extends EventHandler {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
-        this._contextMenuHandler = (event) => {
+        this._contextMenuHandler = event => {
             event.preventDefault();
         };
 

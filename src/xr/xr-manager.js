@@ -294,9 +294,9 @@ class XrManager extends EventHandler {
     }
 
     _onStartOptionsReady(type, spaceType, options, callback) {
-        navigator.xr.requestSession(type, options).then((session) => {
+        navigator.xr.requestSession(type, options).then(session => {
             this._onSessionStart(session, spaceType, callback);
-        }).catch((ex) => {
+        }).catch(ex => {
             this._camera.camera.xr = null;
             this._camera = null;
             this._type = null;
@@ -357,14 +357,14 @@ class XrManager extends EventHandler {
     }
 
     _sessionSupportCheck(type) {
-        navigator.xr.isSessionSupported(type).then((available) => {
+        navigator.xr.isSessionSupported(type).then(available => {
             if (this._available[type] === available)
                 return;
 
             this._available[type] = available;
             this.fire('available', type, available);
             this.fire('available:' + type, available);
-        }).catch((ex) => {
+        }).catch(ex => {
             this.fire('error', ex);
         });
     }
@@ -425,7 +425,7 @@ class XrManager extends EventHandler {
         });
 
         // request reference space
-        session.requestReferenceSpace(spaceType).then((referenceSpace) => {
+        session.requestReferenceSpace(spaceType).then(referenceSpace => {
             this._referenceSpace = referenceSpace;
 
             // old requestAnimationFrame will never be triggered,
@@ -434,7 +434,7 @@ class XrManager extends EventHandler {
 
             if (callback) callback(null);
             this.fire('start');
-        }).catch((ex) => {
+        }).catch(ex => {
             failed = true;
             session.end();
             if (callback) callback(ex);

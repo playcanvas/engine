@@ -713,7 +713,7 @@ class Application extends EventHandler {
             const scenes = response.scenes;
             const assets = response.assets;
 
-            this._parseApplicationProperties(props, (err) => {
+            this._parseApplicationProperties(props, err => {
                 this._parseScenes(scenes);
                 this._parseAssets(assets);
                 if (!err) {
@@ -761,7 +761,7 @@ class Application extends EventHandler {
         const total = assets.length;
 
         if (progress.length) {
-            const onAssetLoad = (asset) => {
+            const onAssetLoad = asset => {
                 progress.inc();
                 this.fire('preload:progress', progress.count / total);
 
@@ -1533,7 +1533,7 @@ class Application extends EventHandler {
     setAreaLightLuts(asset) {
         if (asset) {
             const device = this.graphicsDevice;
-            asset.ready((asset) => {
+            asset.ready(asset => {
                 AreaLightLuts.set(device, asset.resource);
             });
             this.assets.load(asset);

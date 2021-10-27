@@ -276,7 +276,7 @@ class PostEffectQueue {
             this.camera.renderTarget = this.effects[0].inputTarget;
 
             // callback when postprocessing takes place
-            this.camera.onPostprocessing = (camera) => {
+            this.camera.onPostprocessing = camera => {
 
                 if (this.enabled) {
                     let rect = null;

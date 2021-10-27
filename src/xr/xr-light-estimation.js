@@ -117,7 +117,7 @@ class XrLightEstimation extends EventHandler {
         this._lightProbeRequested = true;
 
         this._manager.session.requestLightProbe(
-        ).then((lightProbe) => {
+        ).then(lightProbe => {
             const wasRequested = this._lightProbeRequested;
             this._lightProbeRequested = false;
 
@@ -128,7 +128,7 @@ class XrLightEstimation extends EventHandler {
             } else {
                 this.fire('error', new Error('XR session is not active'));
             }
-        }).catch((ex) => {
+        }).catch(ex => {
             this._lightProbeRequested = false;
             this.fire('error', ex);
         });

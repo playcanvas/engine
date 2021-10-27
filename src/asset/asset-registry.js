@@ -170,7 +170,7 @@ class AssetRegistry extends EventHandler {
      */
     list(filters) {
         filters = filters || {};
-        return this._assets.filter((asset) => {
+        return this._assets.filter(asset => {
             let include = true;
             if (filters.preload !== undefined) {
                 include = (asset.preload === filters.preload);
@@ -342,7 +342,7 @@ class AssetRegistry extends EventHandler {
         const file = asset.file;
 
         // open has completed on the resource
-        const _opened = (resource) => {
+        const _opened = resource => {
             if (resource instanceof Array) {
                 asset.resources = resource;
             } else {
@@ -447,8 +447,8 @@ class AssetRegistry extends EventHandler {
             return;
         }
 
-        const startLoad = (asset) => {
-            asset.once("load", (loadedAsset) => {
+        const startLoad = asset => {
+            asset.once("load", loadedAsset => {
                 if (type === 'material') {
                     this._loadTextures(loadedAsset, (err, textures) => {
                         callback(err, loadedAsset);
@@ -457,7 +457,7 @@ class AssetRegistry extends EventHandler {
                     callback(null, loadedAsset);
                 }
             });
-            asset.once("error", (err) => {
+            asset.once("error", err => {
                 // store the error on the asset in case user requests this asset again
                 if (err) {
                     this.loadFromUrlError = err;
@@ -585,12 +585,12 @@ class AssetRegistry extends EventHandler {
     findAll(name, type) {
         const idxs = this._names[name];
         if (idxs) {
-            const assets = idxs.map((idx) => {
+            const assets = idxs.map(idx => {
                 return this._assets[idx];
             });
 
             if (type) {
-                return assets.filter((asset) => {
+                return assets.filter(asset => {
                     return (asset.type === type);
                 });
             }
@@ -649,7 +649,7 @@ class AssetRegistry extends EventHandler {
      * console.log("Found " + assets.length + " assets, where names contains 'monster'");
      */
     filter(callback) {
-        return this._assets.filter((asset) => callback(asset));
+        return this._assets.filter(asset => callback(asset));
     }
 
     /**

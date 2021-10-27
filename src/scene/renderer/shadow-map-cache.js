@@ -21,8 +21,8 @@ class ShadowMapCache {
 
     // remove all shadowmaps from the cache
     clear() {
-        this.shadowMapCache.forEach((shadowMaps) => {
-            shadowMaps.forEach((shadowMap) => {
+        this.shadowMapCache.forEach(shadowMaps => {
+            shadowMaps.forEach(shadowMap => {
                 shadowMap.destroy();
             });
         });

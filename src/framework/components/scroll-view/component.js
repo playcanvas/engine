@@ -610,7 +610,7 @@ class ScrollViewComponent extends Component {
 
     // disable useInput flag on all descendants of this contentEntity
     _disableContentInput() {
-        const _disableInput = (e) => {
+        const _disableInput = e => {
             if (e.element && e.element.useInput) {
                 this._disabledContentInputEntities.push(e);
                 e.element.useInput = false;
