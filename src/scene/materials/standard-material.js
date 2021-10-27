@@ -694,13 +694,13 @@ const defineProp = (prop) => {
 
     const aggFuncs = {
         equals: (a, b) => a.equals(b),
-        clone: (a) => a.clone(),
+        clone: a => a.clone(),
         copy: (dest, src) => dest.copy(src)
     };
 
     const valueFuncs = {
         equals: (a, b) => a === b,
-        clone: (a) => a,
+        clone: a => a,
         copy: (dest, src) => src
     };
 

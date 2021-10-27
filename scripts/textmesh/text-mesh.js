@@ -265,7 +265,7 @@ TextMesh.prototype.parseCommands = function (commands) {
         vertexData.set(coords, vertexCount * 2);
 
         // Add index data
-        earcut(coords, holes).forEach((i) => indices.push(i + vertexCount));
+        earcut(coords, holes).forEach(i => indices.push(i + vertexCount));
         vertexCount += coords.length / 2;
     }
 

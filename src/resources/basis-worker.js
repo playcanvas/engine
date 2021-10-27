@@ -350,7 +350,7 @@ function BasisWorker() {
     const workerTranscode = (url, data, options) => {
         try {
             const result = transcode(url, data, options);
-            result.levels = result.levels.map((v) => v.buffer);
+            result.levels = result.levels.map(v => v.buffer);
             self.postMessage({ url: url, data: result }, result.levels);
         } catch (err) {
             self.postMessage({ url: url, err: err }, null);
