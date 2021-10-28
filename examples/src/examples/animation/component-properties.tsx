@@ -136,70 +136,6 @@ const animClipFlashingLightData = {
     ]
 };
 
-// create an anim state graph
-const animStateGraphData = {
-    "layers": [
-        {
-            "name": "Base",
-            "states": [
-                {
-                    "name": "START"
-                },
-                {
-                    "name": "Static",
-                    "speed": 1.0
-                },
-                {
-                    "name": "Flash",
-                    "speed": 1.0
-                },
-                {
-                    "name": "END"
-                }
-            ],
-            "transitions": [
-                {
-                    "from": "START",
-                    "to": "Static"
-                },
-                {
-                    "from": "Static",
-                    "to": "Flash",
-                    "time": 1.5,
-                    "interruptionSource": "NEXT_STATE",
-                    "conditions": [
-                        {
-                            "parameterName": "flash",
-                            "predicate": "EQUAL_TO",
-                            "value": true
-                        }
-                    ]
-                },
-                {
-                    "from": "Flash",
-                    "to": "Static",
-                    "time": 1.5,
-                    "interruptionSource": "NEXT_STATE",
-                    "conditions": [
-                        {
-                            "parameterName": "flash",
-                            "predicate": "EQUAL_TO",
-                            "value": false
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "parameters": {
-        "flash": {
-            "name": "flash",
-            "type": "BOOLEAN",
-            "value": false
-        }
-    }
-};
-
 class ComponentPropertiesExample extends Example {
     static CATEGORY = 'Animation';
     static NAME = 'Component Properties';
@@ -209,7 +145,6 @@ class ComponentPropertiesExample extends Example {
             <AssetLoader name='playcanvasGreyTexture' type='texture' url='static/assets/textures/playcanvas-grey.png' />
             <AssetLoader name='staticLightClip' type='json' data={animClipStaticLightData} />
             <AssetLoader name='flashingLightClip' type='json' data={animClipFlashingLightData} />
-            <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
         </>;
     }
 
@@ -224,7 +159,7 @@ class ComponentPropertiesExample extends Example {
 
 
     // @ts-ignore: abstract class function
-    example(canvas: HTMLCanvasElement, assets: { playcanvasGreyTexture: pc.Asset, staticLightClip: pc.Asset, flashingLightClip: pc.Asset, animStateGraph: pc.Asset }, data: any): void {
+    example(canvas: HTMLCanvasElement, assets: { playcanvasGreyTexture: pc.Asset, staticLightClip: pc.Asset, flashingLightClip: pc.Asset }, data: any): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
@@ -310,17 +245,18 @@ class ComponentPropertiesExample extends Example {
             activate: true
         });
 
-        // load the state graph into the anim component
-        lightsEntity.anim.loadStateGraph(assets.animStateGraph.data);
-
         // assign animation clip asset resources to the appropriate states
         lightsEntity.anim.assignAnimation('Static', animClipStaticLight);
         lightsEntity.anim.assignAnimation('Flash', animClipFlashingLight);
 
         app.start();
 
-        data.on('flash:set', (value: boolean) => {
-            lightsEntity.anim.setBoolean('flash', value);
+        data.on('flash:set', () => {
+            if (lightsEntity.anim.baseLayer.activeState === 'Static') {
+                lightsEntity.anim.baseLayer.transition('Flash', 0.5);
+            } else {
+                lightsEntity.anim.baseLayer.transition('Static', 0.5);
+            }
         });
     }
 }

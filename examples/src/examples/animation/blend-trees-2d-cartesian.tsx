@@ -24,7 +24,11 @@ const animStateGraphData = {
                         "children": [
                             {
                                 "name": "Idle",
-                                "point": [0.0, 0.5]
+                                "point": [-0.5, 0.5]
+                            },
+                            {
+                                "name": "Eager",
+                                "point": [0.5, 0.5]
                             },
                             {
                                 "name": "Walk",
@@ -50,12 +54,12 @@ const animStateGraphData = {
         "posX": {
             "name": "posX",
             "type": "FLOAT",
-            "value": 0
+            "value": -0.5
         },
         "posY": {
             "name": "posY",
             "type": "FLOAT",
-            "value": 0
+            "value": 0.5
         }
     }
 };
@@ -68,6 +72,7 @@ class BlendTrees2DCartesianExample extends Example {
         return <>
             <AssetLoader name='model' type='container' url='static/assets/models/bitmoji.glb' />
             <AssetLoader name='idleAnim' type='container' url='static/assets/animations/bitmoji/idle.glb' />
+            <AssetLoader name='eagerAnim' type='container' url='static/assets/animations/bitmoji/idle-eager.glb' />
             <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
             <AssetLoader name='danceAnim' type='container' url='static/assets/animations/bitmoji/win-dance.glb' />
             <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
@@ -104,13 +109,32 @@ class BlendTrees2DCartesianExample extends Example {
                 // @ts-ignore engine-tsd
                 modelEntity.anim.baseLayer._controller.activeState.animations.forEach((animNode: any) => {
                     if (animNode.point) {
-                        ctx.fillRect((animNode.point.x + 1) * halfWidth - 2, (animNode.point.y * -1 + 1) * halfHeight - 2, 5, 5);
+                        const posX = (animNode.point.x + 1) * halfWidth;
+                        const posY = (animNode.point.y * -1 + 1) * halfHeight;
+                        const width = 8;
+                        const height = 8;
+
+                        ctx.fillStyle = "#ffffff80";
+                        ctx.beginPath();
+                        ctx.arc(posX, posY, halfWidth * 0.5 * animNode.weight, 0, 2 * Math.PI);
+                        ctx.fill();
+
+                        ctx.fillStyle = '#283538';
+                        ctx.beginPath();
+                        ctx.moveTo(posX, posY - height / 2);
+                        ctx.lineTo(posX - width / 2, posY);
+                        ctx.lineTo(posX, posY + height / 2);
+                        ctx.lineTo(posX + width / 2, posY);
+                        ctx.closePath();
+                        ctx.fill();
                     }
                 });
                 ctx.fillStyle = '#F60';
                 ctx.beginPath();
-                ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth - 2, (modelEntity.anim.getFloat('posY') * - 1 + 1) * halfHeight - 2, 5, 0, 2 * Math.PI);
+                ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * - 1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
                 ctx.fill();
+                ctx.fillStyle = '#283538';
+                ctx.stroke();
             };
             drawPosition(ctx);
             const mouseEvent = (e: any) => {
@@ -149,7 +173,7 @@ class BlendTrees2DCartesianExample extends Example {
         cameraEntity.addComponent("camera", {
             clearColor: new pc.Color(0.1, 0.1, 0.1)
         });
-        cameraEntity.translate(0, 0.75, 5);
+        cameraEntity.translate(0, 0.75, 3);
         // add bloom postprocessing (this is ignored by the picker)
         cameraEntity.addComponent("script");
         cameraEntity.script.create("bloom", {
@@ -160,6 +184,20 @@ class BlendTrees2DCartesianExample extends Example {
             }
         });
         app.root.addChild(cameraEntity);
+
+        // Create an entity with a light component
+        const lightEntity = new pc.Entity();
+        lightEntity.addComponent("light", {
+            castShadows: true,
+            intensity: 1.5,
+            normalOffsetBias: 0.02,
+            shadowType: pc.SHADOW_PCF5,
+            shadowDistance: 6,
+            shadowResolution: 2048,
+            shadowBias: 0.02
+        });
+        app.root.addChild(lightEntity);
+        lightEntity.setLocalEulerAngles(45, 30, 0);
 
         // create an entity from the loaded model using the render component
         const modelEntity = assets.model.resource.instantiateRenderEntity({
@@ -178,6 +216,7 @@ class BlendTrees2DCartesianExample extends Example {
         // load the state graph asset resource into the anim component
         const characterStateLayer = modelEntity.anim.baseLayer;
         characterStateLayer.assignAnimation('Emote.Idle', assets.idleAnim.resource.animations[0].resource);
+        characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
         characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
         characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
 
