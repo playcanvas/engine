@@ -11,7 +11,7 @@ class Prefilter {
      * @name isValidSkyboxCubemap
      * @description Returns true if the texture is valid for use as a skybox.
      * @param {Texture} texture - The texture to test.
-     * @returns {boolean} True if the texture is valid for use as a cubemap otherwize false.
+     * @returns {boolean} True if the texture is valid for use as a cubemap otherwise false.
      */
     static isValidSkyboxCubemap(texture) {
         return texture && texture.cubemap && (texture.type === TEXTURETYPE_DEFAULT || texture.type === TEXTURETYPE_RGBM);
