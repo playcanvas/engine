@@ -5,14 +5,27 @@ import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, ADDRESS_CLAMP_TO_EDGE } from './
 
 // helper functions to support prefiltering lighting data
 class Prefilter {
-    // returns true if the texture is in the correct format to be used as a skybox
+    /**
+     * @private
+     * @function
+     * @name isValidSkyboxCubemap
+     * @description Returns true if the texture is valid for use as a skybox.
+     * @param {Texture} texture - The texture to test.
+     * @returns {boolean} True if the texture is valid for use as a cubemap otherwize false.
+     */
     static isValidSkyboxCubemap(texture) {
         return texture && texture.cubemap && (texture.type === TEXTURETYPE_DEFAULT || texture.type === TEXTURETYPE_RGBM);
     }
 
-    // generate a skybox cubemap from the source texture
-    // source: either a 2d texture in equirect format or cubemap
-    // returns a cubemap in a valid format ready for rendering
+    /**
+     * @private
+     * @function
+     * @name generateSkyboxCubemap
+     * @description Generate a skybox cubemap in the correct pixel format from the source texture.
+     * @param {Texture} source - The source texture. This is either a 2d texture in equirect format or a cubemap.
+     * @param {number} size - Size of the resulting texture. Specify 0 for automatic sizing.
+     * @returns {Texture} The resulting cubemap.
+     */
     static generateSkyboxCubemap(source, size = 0) {
         if (size === 0) {
             size = source.cubemap ? source.width : source.width / 4;
@@ -38,9 +51,15 @@ class Prefilter {
         return faces;
     }
 
-    // generate a set of prefiltered IBL cubemaps
-    // source: either a 2d texture in equirect format or a cubemap
-    // returns an array of cubemaps containing prefiltered lighting data
+    /**
+     * @private
+     * @function
+     * @name generatePrefilteredCubemaps
+     * @description Generate a set of prefiltered IBL cubemaps.
+     * @param {Texture} source - The source texture. Either a 2d texture in equirect format or a cubemap.
+     * @param {boolean} mipmaps - Specify true to have mipmaps generated or false otherwise.
+     * @returns {Texture[]} The array of cubemaps containing prefiltered lighting data.
+     */
     static generatePrefilteredCubemaps(source, mipmaps = true) {
         const device = source.device;
         const cubemaps = [];
@@ -93,15 +112,20 @@ class Prefilter {
         return cubemaps;
     }
 
-    // generate a prefiltered IBL cubemap of size 128 containing the 6 levels
-    // of prefiltered lighting data packed into its mipmaps.
-    // source: either a 2d texture in equirect format or a cubemap
-    // returns a cubemap with mipmaps containing the prefiltered data
+    /**
+     * @private
+     * @function
+     * @name generatePrefilteredCubemap
+     * @description Generates a prefiltered IBL cubemap of size 128 containing the 6 levels.
+     * of prefiltered lighting data packed into its mipmaps.
+     * @param {Texture} source - The source texture. Either a 2d texture in equirect format or a cubemap.
+     * @returns {Texture} A cubemap with each mipmap containing the prefiltered lighting data.
+     */
     static generatePrefilteredCubemap(source) {
         // generate the individual prefiltered cubemaps
         const device = source.device;
         const gl = device.gl;
-        const cubemaps = generatePrefilteredCubemaps(source, false);
+        const cubemaps = Prefilter.generatePrefilteredCubemaps(source, false);
 
         const cubemap = new Texture(device, {
             name: 'skyboxPrefilterSet',
