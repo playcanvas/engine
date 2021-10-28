@@ -99,7 +99,7 @@ class BlendTrees1DExample extends Example {
         cameraEntity.addComponent("camera", {
             clearColor: new pc.Color(0.1, 0.1, 0.1)
         });
-        cameraEntity.translate(0, 0.75, 5);
+        cameraEntity.translate(0, 0.75, 3);
 
         // add bloom postprocessing (this is ignored by the picker)
         cameraEntity.addComponent("script");
@@ -111,6 +111,20 @@ class BlendTrees1DExample extends Example {
             }
         });
         app.root.addChild(cameraEntity);
+
+        // Create an entity with a light component
+        const lightEntity = new pc.Entity();
+        lightEntity.addComponent("light", {
+            castShadows: true,
+            intensity: 1.5,
+            normalOffsetBias: 0.02,
+            shadowType: pc.SHADOW_PCF5,
+            shadowDistance: 6,
+            shadowResolution: 2048,
+            shadowBias: 0.02
+        });
+        app.root.addChild(lightEntity);
+        lightEntity.setLocalEulerAngles(45, 30, 0);
 
         // create an entity from the loaded model using the render component
         const modelEntity = assets.model.resource.instantiateRenderEntity({
