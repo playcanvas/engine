@@ -2,16 +2,8 @@ varying vec3 vViewDir;
 
 uniform samplerCube texture_cubeMap;
 
-#ifdef CUBEMAP_ROTATION
-uniform mat3 cubeMapRotationMatrix;
-#endif
-
 void main(void) {
-#ifdef CUBEMAP_ROTATION
-    vec3 dir=vViewDir * cubeMapRotationMatrix;
-#else
     vec3 dir=vViewDir;
-#endif
 #ifndef RIGHT_HANDED_CUBEMAP
     dir.x *= -1.0;
 #endif

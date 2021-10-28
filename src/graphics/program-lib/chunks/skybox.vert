@@ -6,6 +6,7 @@ uniform mat4 matrix_view;
 #endif
 
 uniform mat4 matrix_projectionSkybox;
+uniform mat3 cubeMapRotationMatrix;
 
 varying vec3 vViewDir;
 
@@ -20,5 +21,5 @@ void main(void) {
     // http://www.opengl.org/discussion_boards/showthread.php/171867-skybox-problem
 
     gl_Position.z = gl_Position.w - 0.00001;
-    vViewDir = aPosition;
+    vViewDir = aPosition * cubeMapRotationMatrix;
 }

@@ -7,7 +7,7 @@ const skybox = {
     generateKey: function (options) {
         const key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
                   options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" +
-                  options.useCubeMapRotation + "" + options.useRightHandedCubeMap + "" + options.mip;
+                  options.useRightHandedCubeMap + "" + options.mip;
         return key;
     },
 
@@ -15,7 +15,6 @@ const skybox = {
         const mip2size = [128, 64, 32, 16, 8, 4, 2];
 
         let fshader = precisionCode(device);
-        fshader += options.useCubeMapRotation ? '#define CUBEMAP_ROTATION\n' : '';
         fshader += options.useRightHandedCubeMap ? '#define RIGHT_HANDED_CUBEMAP\n' : '';
         fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
         fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
