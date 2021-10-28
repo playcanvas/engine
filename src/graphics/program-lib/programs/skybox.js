@@ -21,7 +21,7 @@ const skybox = {
         fshader += gammaCode(options.gamma);
         fshader += tonemapCode(options.toneMapping);
         fshader += shaderChunks.rgbmPS;
-        fshader += shaderChunks.skyboxHDRPS
+        fshader += shaderChunks.skyboxPS
             .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
             .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
 
