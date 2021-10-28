@@ -137,7 +137,7 @@ class Prefilter {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             fixCubemapSeams: false,
             // create the texture with mipmaps = false so the device doesn't automatically
-            // (and unnecessarilly) auto generateMipmaps
+            // (and unnecessarily) auto generateMipmaps
             mipmaps: false
         });
 
