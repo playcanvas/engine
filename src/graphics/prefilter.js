@@ -116,7 +116,7 @@ class Prefilter {
      * @private
      * @function
      * @name generatePrefilteredCubemap
-     * @description Generates a prefiltered IBL cubemap of size 128 containing the 6 levels.
+     * @description Generates a prefiltered IBL cubemap of size 128 containing the 6 levels
      * of prefiltered lighting data packed into its mipmaps.
      * @param {Texture} source - The source texture. Either a 2d texture in equirect format or a cubemap.
      * @returns {Texture} A cubemap with each mipmap containing the prefiltered lighting data.
