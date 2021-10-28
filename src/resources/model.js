@@ -20,10 +20,10 @@ class ModelHandler {
         this._defaultMaterial = defaultMaterial;
         this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this._device), function (url, data) {
+        this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this._device), function (url, data) {
+        this.addParser(new GlbModelParser(this._device, this._defaultMaterial), function (url, data) {
             return (path.getExtension(url) === '.glb');
         });
     }
@@ -57,7 +57,7 @@ class ModelHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading model: " + url.original + " [" + err + "]");
+                callback(`Error loading model: ${url.original} [${err}]`);
             }
         });
     }

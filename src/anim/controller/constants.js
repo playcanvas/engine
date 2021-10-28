@@ -154,3 +154,18 @@ export const ANIM_STATE_END = 'END';
 export const ANIM_STATE_ANY = 'ANY';
 
 export const ANIM_CONTROL_STATES = [ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY];
+
+ /**
+  * @constant
+  * @type {string}
+  * @name ANIM_LAYER_OVERWRITE
+  * @description Used to indicate that a layers animations should overwrite all previous layers.
+  */
+export const ANIM_LAYER_OVERWRITE = 'OVERWRITE';
+ /**
+  * @constant
+  * @type {string}
+  * @name ANIM_LAYER_ADDITIVE
+  * @description Used to indicate that a layers animations should blend additively with previous layers.
+  */
+export const ANIM_LAYER_ADDITIVE = 'ADDITIVE';

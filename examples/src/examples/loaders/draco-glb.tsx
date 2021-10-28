@@ -5,7 +5,6 @@ class DracoGLBExample extends Example {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         // Create the app and start the update loop

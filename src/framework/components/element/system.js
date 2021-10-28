@@ -42,8 +42,8 @@ class ElementComponentSystem extends ComponentSystem {
         // default texture - make white so we can tint it with emissive color
         this._defaultTexture = new Texture(app.graphicsDevice, { width: 1, height: 1, format: PIXELFORMAT_R8_G8_B8_A8 });
         this._defaultTexture.name = 'element-system';
-        var pixels = this._defaultTexture.lock();
-        var pixelData = new Uint8Array(4);
+        const pixels = this._defaultTexture.lock();
+        const pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
         pixelData[1] = 255.0;
         pixelData[2] = 255.0;
@@ -77,6 +77,8 @@ class ElementComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
         this._defaultTexture.destroy();
     }
 
@@ -99,10 +101,10 @@ class ElementComponentSystem extends ComponentSystem {
             }
         }
 
-        var splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
-        var splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
-        var _marginChange = false;
-        var color;
+        const splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
+        const splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
+        let _marginChange = false;
+        let color;
 
         if (data.margin !== undefined) {
             if (data.margin instanceof Vec4) {
@@ -135,7 +137,7 @@ class ElementComponentSystem extends ComponentSystem {
             component.margin = component._margin;
         }
 
-        var shouldForceSetAnchor = false;
+        let shouldForceSetAnchor = false;
 
         if (data.width !== undefined && !splitHorAnchors) {
             // force update
@@ -181,7 +183,7 @@ class ElementComponentSystem extends ComponentSystem {
             }
             if (data.color !== undefined) {
                 color = data.color;
-                if (! (color instanceof Color)) {
+                if (!(color instanceof Color)) {
                     color = new Color(data.color[0], data.color[1], data.color[2]);
                 }
                 component.color = color;
@@ -212,7 +214,7 @@ class ElementComponentSystem extends ComponentSystem {
             }
             if (data.color !== undefined) {
                 color = data.color;
-                if (! (color instanceof Color)) {
+                if (!(color instanceof Color)) {
                     color = new Color(color[0], color[1], color[2]);
                 }
                 component.color = color;
@@ -245,7 +247,7 @@ class ElementComponentSystem extends ComponentSystem {
 
         // find screen
         // do this here not in constructor so that component is added to the entity
-        var result = component._parseUpToScreen();
+        const result = component._parseUpToScreen();
         if (result.screen) {
             component._updateScreen(result.screen);
         }
@@ -264,9 +266,9 @@ class ElementComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var source = entity.element;
+        const source = entity.element;
 
-        var data = {
+        const data = {
             enabled: source.enabled,
             width: source.width,
             height: source.height,
@@ -408,7 +410,7 @@ class ElementComponentSystem extends ComponentSystem {
     }
 
     _createBaseImageMaterial() {
-        var material = new StandardMaterial();
+        const material = new StandardMaterial();
 
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
         material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly

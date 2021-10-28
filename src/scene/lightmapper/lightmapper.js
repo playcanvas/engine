@@ -54,7 +54,7 @@ const tempVec = new Vec3();
  * @name Lightmapper
  * @classdesc The lightmapper is used to bake scene lights into textures.
  * @hideconstructor
- * @param {GraphicsDevice} device - The grahpics device used by the lightmapper.
+ * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
  * @param {Entity} root - The root entity of the scene.
  * @param {Scene} scene - The scene to lightmap.
  * @param {ForwardRenderer} renderer - The renderer.
@@ -465,8 +465,8 @@ class Lightmapper {
      * lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
-     * * {@link BAKE_COLOR}: single color lightmap
-     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * - {@link BAKE_COLOR}: single color lightmap
+     * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * {@link BAKE_COLORDIR}.
@@ -612,7 +612,7 @@ class Lightmapper {
         for (let i = 0; i < sceneLights.length; i++) {
             const light = sceneLights[i];
 
-            // store all lights and their original settings we need to temporariy modify
+            // store all lights and their original settings we need to temporarily modify
             const bakeLight = new BakeLightSimple(this.scene, light);
             allLights.push(bakeLight);
 

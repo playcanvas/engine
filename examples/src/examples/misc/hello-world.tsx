@@ -5,7 +5,6 @@ class HelloWorldExample extends Example {
     static CATEGORY = 'Misc';
     static NAME = 'Hello World';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         const app = new pc.Application(canvas, {});

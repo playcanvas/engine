@@ -230,10 +230,7 @@ class TextElement {
         this._drawOrder = order;
 
         if (this._model) {
-            var i;
-            var len;
-
-            for (i = 0, len = this._model.meshInstances.length; i < len; i++) {
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 this._model.meshInstances[i].drawOrder = order;
             }
         }
@@ -252,7 +249,7 @@ class TextElement {
         // is not yet loaded then reset the current font and wait
         // until the localized font is loaded to see the updated text
         if (this.fontAsset) {
-            var asset = this._system.app.assets.get(this.fontAsset);
+            const asset = this._system.app.assets.get(this.fontAsset);
             if (!asset || !asset.resource || asset.resource !== this._font) {
                 this.font = null;
             }
@@ -273,7 +270,7 @@ class TextElement {
 
     _setText(text) {
         if (this.unicodeConverter) {
-            var unicodeConverterFunc = this._system.getUnicodeConverter();
+            const unicodeConverterFunc = this._system.getUnicodeConverter();
             if (unicodeConverterFunc) {
                 text = unicodeConverterFunc(text);
             } else {
@@ -290,10 +287,7 @@ class TextElement {
     }
 
     _updateText(text) {
-        var i;
-        var len;
-        var results;
-        var tags;
+        let tags;
 
         if (text === undefined) text = this._text;
 
@@ -312,16 +306,16 @@ class TextElement {
 
         // extract markup
         if (this._enableMarkup) {
-            results = Markup.evaluate(this._symbols);
+            const results = Markup.evaluate(this._symbols);
             this._symbols = results.symbols;
             tags = results.tags;
         }
 
         // handle LTR vs RTL ordering
         if (this._rtlReorder) {
-            var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
+            const rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
             if (rtlReorderFunc) {
-                results = rtlReorderFunc(this._symbols);
+                const results = rtlReorderFunc(this._symbols);
 
                 this._rtl = results.rtl;
 
@@ -345,7 +339,7 @@ class TextElement {
 
         // resolve color tags
         if (tags) {
-            var paletteMap = { };
+            const paletteMap = { };
 
             // store fallback color in the palette
             this._colorPalette = [
@@ -356,13 +350,13 @@ class TextElement {
             this._symbolColors = [];
             paletteMap[this._color.toString(false).toLowerCase()] = 0;
 
-            for (i = 0, len = this._symbols.length; i < len; ++i) {
-                var tag = tags[i];
-                var color = 0;
+            for (let i = 0, len = this._symbols.length; i < len; ++i) {
+                const tag = tags[i];
+                let color = 0;
 
                 // get markup coloring
                 if (tag && tag.color && tag.color.value) {
-                    var c = tag.color.value;
+                    const c = tag.color.value;
 
                     // resolve color dictionary names
                     // TODO: implement the dictionary of colors
@@ -372,7 +366,7 @@ class TextElement {
 
                     // convert hex color
                     if (c.length === 7 && c[0] === "#") {
-                        var hex = c.substring(1).toLowerCase();
+                        const hex = c.substring(1).toLowerCase();
 
                         if (paletteMap.hasOwnProperty(hex)) {
                             // color is already in the palette
@@ -398,20 +392,20 @@ class TextElement {
             this._symbolColors = null;
         }
 
-        var charactersPerTexture = this._calculateCharsPerTexture();
+        const charactersPerTexture = this._calculateCharsPerTexture();
 
-        var removedModel = false;
+        let removedModel = false;
 
-        var element = this._element;
-        var screenSpace = element._isScreenSpace();
-        var screenCulled = element._isScreenCulled();
-        var visibleFn = function (camera) {
+        const element = this._element;
+        const screenSpace = element._isScreenSpace();
+        const screenCulled = element._isScreenCulled();
+        const visibleFn = function (camera) {
             return element.isVisibleForCamera(camera);
         };
 
-        for (i = 0, len = this._meshInfo.length; i < len; i++) {
-            var l = charactersPerTexture[i] || 0;
-            var meshInfo = this._meshInfo[i];
+        for (let i = 0, len = this._meshInfo.length; i < len; i++) {
+            const l = charactersPerTexture[i] || 0;
+            const meshInfo = this._meshInfo[i];
 
             if (meshInfo.count !== l) {
                 if (!removedModel) {
@@ -437,7 +431,7 @@ class TextElement {
                 }
 
                 // set up indices and normals whose values don't change when we call _updateMeshes
-                for (var v = 0; v < l; v++) {
+                for (let v = 0; v < l; v++) {
                     // create index and normal arrays since they don't change
                     // if the length doesn't change
                     meshInfo.indices[v * 3 * 2 + 0] = v * 4;
@@ -464,16 +458,16 @@ class TextElement {
                     meshInfo.normals[v * 4 * 3 + 11] = -1;
                 }
 
-                var mesh = createMesh(this._system.app.graphicsDevice,
-                                      meshInfo.positions,
-                                      {
-                                          uvs: meshInfo.uvs,
-                                          normals: meshInfo.normals,
-                                          colors: meshInfo.colors,
-                                          indices: meshInfo.indices
-                                      });
+                const mesh = createMesh(this._system.app.graphicsDevice,
+                                        meshInfo.positions,
+                                        {
+                                            uvs: meshInfo.uvs,
+                                            normals: meshInfo.normals,
+                                            colors: meshInfo.colors,
+                                            indices: meshInfo.indices
+                                        });
 
-                var mi = new MeshInstance(mesh, this._material, this._node);
+                const mi = new MeshInstance(mesh, this._material, this._node);
                 mi.name = "Text Element: " + this._entity.name;
                 mi.castShadow = false;
                 mi.receiveShadow = false;
@@ -515,7 +509,7 @@ class TextElement {
                 this._shadowColorUniform[2] = this._shadowColor.b;
                 this._shadowColorUniform[3] = this._shadowColor.a;
                 mi.setParameter("shadow_color", this._shadowColorUniform);
-                var ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
+                const ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                 this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                 this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                 mi.setParameter("shadow_offset", this._shadowOffsetUniform);
@@ -523,7 +517,6 @@ class TextElement {
                 meshInfo.meshInstance = mi;
 
                 this._model.meshInstances.push(mi);
-
             }
         }
 
@@ -546,45 +539,41 @@ class TextElement {
     }
 
     _removeMeshInstance(meshInstance) {
-
         meshInstance.material = null;
 
-        var oldMesh = meshInstance.mesh;
+        const oldMesh = meshInstance.mesh;
         if (oldMesh) {
             oldMesh.destroy();
         }
 
-        var idx = this._model.meshInstances.indexOf(meshInstance);
+        const idx = this._model.meshInstances.indexOf(meshInstance);
         if (idx !== -1)
             this._model.meshInstances.splice(idx, 1);
     }
 
     _setMaterial(material) {
-        var i;
-        var len;
-
         this._material = material;
         if (this._model) {
-            for (i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var mi = this._model.meshInstances[i];
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const mi = this._model.meshInstances[i];
                 mi.material = material;
             }
         }
     }
 
     _updateMaterial(screenSpace) {
-        var element = this._element;
-        var screenCulled = element._isScreenCulled();
-        var visibleFn = function (camera) {
+        const element = this._element;
+        const screenCulled = element._isScreenCulled();
+        const visibleFn = function (camera) {
             return element.isVisibleForCamera(camera);
         };
 
-        var msdf = this._font && this._font.type === FONT_MSDF;
+        const msdf = this._font && this._font.type === FONT_MSDF;
         this._material = this._system.getTextElementMaterial(screenSpace, msdf);
 
         if (this._model) {
-            for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var mi = this._model.meshInstances[i];
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const mi = this._model.meshInstances[i];
                 mi.cull = !screenSpace;
                 mi.material = this._material;
                 mi.screenSpace = screenSpace;
@@ -620,51 +609,53 @@ class TextElement {
     }
 
     _updateMeshes() {
-        var json = this._font.data;
-        var self = this;
+        const json = this._font.data;
+        const self = this;
 
-        var minFont = Math.min(this._minFontSize, this._maxFontSize);
-        var maxFont = this._maxFontSize;
+        const minFont = Math.min(this._minFontSize, this._maxFontSize);
+        const maxFont = this._maxFontSize;
 
-        var autoFit = this._shouldAutoFit();
+        const autoFit = this._shouldAutoFit();
 
         if (autoFit) {
             this._fontSize = this._maxFontSize;
         }
 
-        var MAGIC = 32;
-        var l = this._symbols.length;
-        var _x = 0; // cursors
-        var _y = 0;
-        var _z = 0;
-        var _xMinusTrailingWhitespace = 0;
-        var lines = 1;
-        var wordStartX = 0;
-        var wordStartIndex = 0;
-        var lineStartIndex = 0;
-        var numWordsThisLine = 0;
-        var numCharsThisLine = 0;
-        var numBreaksThisLine = 0;
-        var splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
+        const MAGIC = 32;
+        const l = this._symbols.length;
 
-        var maxLineWidth = this._element.calculatedWidth;
+        let _x = 0; // cursors
+        let _y = 0;
+        let _z = 0;
+        let _xMinusTrailingWhitespace = 0;
+        let lines = 1;
+        let wordStartX = 0;
+        let wordStartIndex = 0;
+        let lineStartIndex = 0;
+        let numWordsThisLine = 0;
+        let numCharsThisLine = 0;
+        let numBreaksThisLine = 0;
+
+        const splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
+
+        let maxLineWidth = this._element.calculatedWidth;
         if ((this.autoWidth && !splitHorizontalAnchors) || !this._wrapLines) {
             maxLineWidth = Number.POSITIVE_INFINITY;
         }
 
-        var fontMinY = 0;
-        var fontMaxY = 0;
-        var scale = 1;
+        let fontMinY = 0;
+        let fontMaxY = 0;
+        let scale = 1;
 
-        var char, data, i, j, quad, nextchar;
+        let char, data, quad, nextchar;
 
         function breakLine(symbols, lineBreakIndex, lineBreakX) {
             self._lineWidths.push(Math.abs(lineBreakX));
             // in rtl mode lineStartIndex will usually be larger than lineBreakIndex and we will
             // need to adjust the start / end indices when calling symbols.slice()
-            var sliceStart = lineStartIndex > lineBreakIndex ? lineBreakIndex + 1 : lineStartIndex;
-            var sliceEnd = lineStartIndex > lineBreakIndex ? lineStartIndex + 1 : lineBreakIndex;
-            var chars = symbols.slice(sliceStart, sliceEnd);
+            const sliceStart = lineStartIndex > lineBreakIndex ? lineBreakIndex + 1 : lineStartIndex;
+            const sliceEnd = lineStartIndex > lineBreakIndex ? lineStartIndex + 1 : lineBreakIndex;
+            const chars = symbols.slice(sliceStart, sliceEnd);
 
             // Remove line breaks from line.
             // Line breaks would only be there for the final line
@@ -673,8 +664,8 @@ class TextElement {
             // new lines in them. Apart from being a bit weird it should not affect
             // the rendered text.
             if (numBreaksThisLine) {
-                var i = chars.length;
-                while (i-- && numBreaksThisLine > 0)  {
+                let i = chars.length;
+                while (i-- && numBreaksThisLine > 0) {
                     if (LINE_BREAK_CHAR.test(chars[i])) {
                         chars.splice(i, 1);
                         numBreaksThisLine--;
@@ -694,7 +685,7 @@ class TextElement {
             lineStartIndex = lineBreakIndex;
         }
 
-        var retryUpdateMeshes = true;
+        let retryUpdateMeshes = true;
         while (retryUpdateMeshes) {
             retryUpdateMeshes = false;
 
@@ -730,20 +721,20 @@ class TextElement {
             fontMinY = this._fontMinY * scale;
             fontMaxY = this._fontMaxY * scale;
 
-            for (i = 0; i < this._meshInfo.length; i++) {
+            for (let i = 0; i < this._meshInfo.length; i++) {
                 this._meshInfo[i].quad = 0;
                 this._meshInfo[i].lines = {};
             }
 
             // per-vertex color
-            var color_r = 255;
-            var color_g = 255;
-            var color_b = 255;
+            let color_r = 255;
+            let color_g = 255;
+            let color_b = 255;
 
             // In left-to-right mode we loop through the symbols from start to end.
             // In right-to-left mode we loop through the symbols from end to the beginning
             // in order to wrap lines in the correct order
-            for (i = 0; i < l; i++) {
+            for (let i = 0; i < l; i++) {
                 char = this._symbols[i];
                 nextchar = ((i + 1) >= l) ? null : this._symbols[i + 1];
 
@@ -760,11 +751,11 @@ class TextElement {
                     continue;
                 }
 
-                var x = 0;
-                var y = 0;
-                var advance = 0;
-                var quadsize = 1;
-                var dataScale, size;
+                let x = 0;
+                let y = 0;
+                let advance = 0;
+                let quadsize = 1;
+                let dataScale, size;
 
                 data = json.chars[char];
 
@@ -778,7 +769,7 @@ class TextElement {
                         if (json.chars[' ']) {
                             data = json.chars[' '];
                         } else {
-                            for (var key in json.chars) {
+                            for (const key in json.chars) {
                                 data = json.chars[key];
                                 break;
                             }
@@ -790,7 +781,7 @@ class TextElement {
                         }
 
                         if (!json.missingChars.has(char)) {
-                            console.warn("Character '" + char + "' is missing from the font " + json.info.face);
+                            console.warn(`Character '${char}' is missing from the font ${json.info.face}`);
                             json.missingChars.add(char);
                         }
                         // #endif
@@ -798,11 +789,11 @@ class TextElement {
                 }
 
                 if (data) {
-                    var kerning = 0;
+                    let kerning = 0;
                     if (numCharsThisLine > 0) {
-                        var kernTable = this._font.data.kerning;
+                        const kernTable = this._font.data.kerning;
                         if (kernTable) {
-                            var kernLeft = kernTable[string.getCodePoint(this._symbols[i - 1]) || 0];
+                            const kernLeft = kernTable[string.getCodePoint(this._symbols[i - 1]) || 0];
                             if (kernLeft) {
                                 kerning = kernLeft[string.getCodePoint(this._symbols[i]) || 0] || 0;
                             }
@@ -815,14 +806,14 @@ class TextElement {
                     x = (data.xoffset - kerning) * scale;
                     y = data.yoffset * scale;
                 } else {
-                    console.error("Couldn't substitute missing character: '" + char + "'");
+                    console.error(`Couldn't substitute missing character: '${char}'`);
                 }
 
-                var isWhitespace = WHITESPACE_CHAR.test(char);
+                const isWhitespace = WHITESPACE_CHAR.test(char);
 
-                var meshInfo = this._meshInfo[(data && data.map) || 0];
+                const meshInfo = this._meshInfo[(data && data.map) || 0];
 
-                var candidateLineWidth = _x + this._spacing * advance;
+                const candidateLineWidth = _x + this._spacing * advance;
 
                 // If we've exceeded the maximum line width, move everything from the beginning of
                 // the current word onwards down onto a new line.
@@ -835,19 +826,19 @@ class TextElement {
                             breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                         } else {
                             // Move back to the beginning of the current word.
-                            var backtrack = Math.max(i - wordStartIndex, 0);
+                            const backtrack = Math.max(i - wordStartIndex, 0);
                             if (this._meshInfo.length <= 1) {
                                 meshInfo.lines[lines - 1] -= backtrack;
                                 meshInfo.quad -= backtrack;
                             } else {
                                 // We should only backtrack the quads that were in the word from this same texture
                                 // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                                var backtrackStart = wordStartIndex;
-                                var backtrackEnd = i;
-                                for (j = backtrackStart; j < backtrackEnd; j++) {
-                                    var backChar = this._symbols[j];
-                                    var backCharData = json.chars[backChar];
-                                    var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                const backtrackStart = wordStartIndex;
+                                const backtrackEnd = i;
+                                for (let j = backtrackStart; j < backtrackEnd; j++) {
+                                    const backChar = this._symbols[j];
+                                    const backCharData = json.chars[backChar];
+                                    const backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                     backMeshInfo.lines[lines - 1] -= 1;
                                     backMeshInfo.quad -= 1;
                                 }
@@ -864,16 +855,16 @@ class TextElement {
                 quad = meshInfo.quad;
                 meshInfo.lines[lines - 1] = quad;
 
-                var left = _x - x;
-                var right = left + quadsize;
-                var bottom = _y - y;
-                var top = bottom + quadsize;
+                let left = _x - x;
+                let right = left + quadsize;
+                const bottom = _y - y;
+                const top = bottom + quadsize;
 
                 if (this._rtl) {
                     // rtl text will be flipped vertically before rendering and here we
                     // account for the mis-alignment that would be introduced. shift is calculated
                     // as the difference between the glyph's left and right offset.
-                    var shift = quadsize - x - this._spacing * advance - x;
+                    const shift = quadsize - x - this._spacing * advance - x;
                     left -= shift;
                     right -= shift;
                 }
@@ -897,7 +888,7 @@ class TextElement {
                 this.width = Math.max(this.width, candidateLineWidth);
 
                 // scale font size if autoFitWidth is true and the width is larger than the calculated width
-                var fontSize;
+                let fontSize;
                 if (this._shouldAutoFitWidth() && this.width > this._element.calculatedWidth) {
                     fontSize = Math.floor(this._element.fontSize * this._element.calculatedWidth / (this.width || 0.0001));
                     fontSize = math.clamp(fontSize, minFont, maxFont);
@@ -940,7 +931,7 @@ class TextElement {
 
                 numCharsThisLine++;
 
-                var uv = this._getUv(char);
+                const uv = this._getUv(char);
 
                 meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
                 meshInfo.uvs[quad * 4 * 2 + 1] = 1.0 - uv[1];
@@ -956,7 +947,7 @@ class TextElement {
 
                 // set per-vertex color
                 if (this._symbolColors) {
-                    var colorIdx = this._symbolColors[i] * 3;
+                    const colorIdx = this._symbolColors[i] * 3;
                     color_r = this._colorPalette[colorIdx];
                     color_g = this._colorPalette[colorIdx + 1];
                     color_b = this._colorPalette[colorIdx + 2];
@@ -1004,22 +995,22 @@ class TextElement {
         this._noResize = false;
 
         // offset for pivot and alignment
-        var hp = this._element.pivot.x;
-        var vp = this._element.pivot.y;
-        var ha = this._alignment.x;
-        var va = this._alignment.y;
+        const hp = this._element.pivot.x;
+        const vp = this._element.pivot.y;
+        const ha = this._alignment.x;
+        const va = this._alignment.y;
 
-        for (i = 0; i < this._meshInfo.length; i++) {
+        for (let i = 0; i < this._meshInfo.length; i++) {
             if (this._meshInfo[i].count === 0) continue;
 
-            var prevQuad = 0;
-            for (var line in this._meshInfo[i].lines) {
-                var index = this._meshInfo[i].lines[line];
-                var lw = this._lineWidths[parseInt(line, 10)];
-                var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
-                var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
+            let prevQuad = 0;
+            for (const line in this._meshInfo[i].lines) {
+                const index = this._meshInfo[i].lines[line];
+                const lw = this._lineWidths[parseInt(line, 10)];
+                const hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
+                const voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
-                for (quad = prevQuad; quad <= index; quad++) {
+                for (let quad = prevQuad; quad <= index; quad++) {
                     this._meshInfo[i].positions[quad * 4 * 3] += hoffset;
                     this._meshInfo[i].positions[quad * 4 * 3 + 3] += hoffset;
                     this._meshInfo[i].positions[quad * 4 * 3 + 6] += hoffset;
@@ -1033,18 +1024,18 @@ class TextElement {
 
                 // flip rtl characters
                 if (this._rtl) {
-                    for (quad = prevQuad; quad <= index; quad++) {
-                        var idx = quad * 4 * 3;
+                    for (let quad = prevQuad; quad <= index; quad++) {
+                        const idx = quad * 4 * 3;
 
                         // flip the entire line horizontally
-                        for (var vert = 0; vert < 4; ++vert) {
+                        for (let vert = 0; vert < 4; ++vert) {
                             this._meshInfo[i].positions[idx + vert * 3] =
                                 this._element.calculatedWidth - this._meshInfo[i].positions[idx + vert * 3] + hoffset * 2;
                         }
 
                         // flip the character horizontally
-                        var tmp0 = this._meshInfo[i].positions[idx + 3];
-                        var tmp1 = this._meshInfo[i].positions[idx + 6];
+                        const tmp0 = this._meshInfo[i].positions[idx + 3];
+                        const tmp1 = this._meshInfo[i].positions[idx + 6];
                         this._meshInfo[i].positions[idx + 3] = this._meshInfo[i].positions[idx + 0];
                         this._meshInfo[i].positions[idx + 6] = this._meshInfo[i].positions[idx + 9];
                         this._meshInfo[i].positions[idx + 0] = tmp0;
@@ -1056,10 +1047,10 @@ class TextElement {
             }
 
             // update vertex buffer
-            var numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
-            var vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
-            var it = new VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
-            for (var v = 0; v < numVertices; v++) {
+            const numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
+            const vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
+            const it = new VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
+            for (let v = 0; v < numVertices; v++) {
                 if (v >= vertMax) {
                     // clear unused vertices
                     it.element[SEMANTIC_POSITION].set(0, 0, 0);
@@ -1104,11 +1095,11 @@ class TextElement {
         if (name === 'data') {
             this._font.data = _new;
 
-            var maps = this._font.data.info.maps.length;
-            for (var i = 0; i < maps; i++) {
+            const maps = this._font.data.info.maps.length;
+            for (let i = 0; i < maps; i++) {
                 if (!this._meshInfo[i]) continue;
 
-                var mi = this._meshInfo[i].meshInstance;
+                const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
@@ -1138,9 +1129,9 @@ class TextElement {
 
     _getPxRange(font) {
         // calculate pxrange from range and scale properties on a character
-        var keys = Object.keys(this._font.data.chars);
-        for (var i = 0; i < keys.length; i++) {
-            var char = this._font.data.chars[keys[i]];
+        const keys = Object.keys(this._font.data.chars);
+        for (let i = 0; i < keys.length; i++) {
+            const char = this._font.data.chars[keys[i]];
             if (char.range) {
                 return (char.scale || 1) * char.range;
             }
@@ -1149,11 +1140,11 @@ class TextElement {
     }
 
     _getUv(char) {
-        var data = this._font.data;
+        const data = this._font.data;
 
         if (!data.chars[char]) {
             // missing char - return "space" if we have it
-            var space = ' ';
+            const space = ' ';
             if (data.chars[space]) {
                 return this._getUv(space);
             }
@@ -1162,18 +1153,18 @@ class TextElement {
             return [0, 0, 0, 0];
         }
 
-        var map = data.chars[char].map;
-        var width = data.info.maps[map].width;
-        var height = data.info.maps[map].height;
+        const map = data.chars[char].map;
+        const width = data.info.maps[map].width;
+        const height = data.info.maps[map].height;
 
-        var x = data.chars[char].x;
-        var y =  data.chars[char].y;
+        const x = data.chars[char].x;
+        const y =  data.chars[char].y;
 
-        var x1 = x;
-        var y1 = y;
-        var x2 = (x + data.chars[char].width);
-        var y2 = (y - data.chars[char].height);
-        var edge = 1 - (data.chars[char].height / height);
+        const x1 = x;
+        const y1 = y;
+        const x2 = (x + data.chars[char].width);
+        const y2 = (y - data.chars[char].height);
+        const edge = 1 - (data.chars[char].height / height);
         return [
             x1 / width,
             edge - (y1 / height), // bottom left
@@ -1201,8 +1192,8 @@ class TextElement {
 
     _setStencil(stencilParams) {
         if (this._model) {
-            var instances = this._model.meshInstances;
-            for (var i = 0; i < instances.length; i++) {
+            const instances = this._model.meshInstances;
+            for (let i = 0; i < instances.length; i++) {
                 instances[i].stencilFront = stencilParams;
                 instances[i].stencilBack = stencilParams;
             }
@@ -1225,16 +1216,15 @@ class TextElement {
     // calculate the number of characters per texture up to, but not including
     // the specified symbolIndex
     _calculateCharsPerTexture(symbolIndex) {
-        var charactersPerTexture = {};
+        const charactersPerTexture = {};
 
         if (symbolIndex === undefined) {
             symbolIndex = this._symbols.length;
         }
 
-        var i, len, char, info, map;
-        for (i = 0, len = symbolIndex; i < len; i++) {
-            char = this._symbols[i];
-            info = this._font.data.chars[char];
+        for (let i = 0, len = symbolIndex; i < len; i++) {
+            const char = this._symbols[i];
+            let info = this._font.data.chars[char];
             if (!info) {
                 // if char is missing use 'space' or first char in map
                 info = this._font.data.chars[' '];
@@ -1245,7 +1235,7 @@ class TextElement {
                 }
             }
 
-            map = info.map;
+            const map = info.map;
             if (!charactersPerTexture[map]) {
                 charactersPerTexture[map] = 1;
             } else {
@@ -1256,16 +1246,15 @@ class TextElement {
     }
 
     _updateRenderRange() {
-        var startChars = this._rangeStart === 0 ? 0 : this._calculateCharsPerTexture(this._rangeStart);
-        var endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
+        const startChars = this._rangeStart === 0 ? 0 : this._calculateCharsPerTexture(this._rangeStart);
+        const endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
 
-        var i, len;
-        for (i = 0, len = this._meshInfo.length; i < len; i++) {
-            var start = startChars[i] || 0;
-            var end = endChars[i] || 0;
-            var instance = this._meshInfo[i].meshInstance;
+        for (let i = 0, len = this._meshInfo.length; i < len; i++) {
+            const start = startChars[i] || 0;
+            const end = endChars[i] || 0;
+            const instance = this._meshInfo[i].meshInstance;
             if (instance) {
-                var mesh = instance.mesh;
+                const mesh = instance.mesh;
                 if (mesh) {
                     mesh.primitive[0].base = start * 3 * 2;
                     mesh.primitive[0].count = (end - start) * 3 * 2;
@@ -1280,7 +1269,7 @@ class TextElement {
 
     set text(value) {
         this._i18nKey = null;
-        var str = value != null && value.toString() || "";
+        const str = value != null && value.toString() || "";
         this._setText(str);
     }
 
@@ -1289,7 +1278,7 @@ class TextElement {
     }
 
     set key(value) {
-        var str = value !== null ? value.toString() : null;
+        const str = value !== null ? value.toString() : null;
         if (this._i18nKey === str) {
             return;
         }
@@ -1308,9 +1297,9 @@ class TextElement {
     }
 
     set color(value) {
-        var r = value.r;
-        var g = value.g;
-        var b = value.b;
+        const r = value.r;
+        const g = value.g;
+        const b = value.b;
 
         // #if _DEBUG
         if (this._color === value) {
@@ -1336,8 +1325,8 @@ class TextElement {
             this._colorUniform[1] = this._color.g;
             this._colorUniform[2] = this._color.b;
 
-            for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var mi = this._model.meshInstances[i];
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const mi = this._model.meshInstances[i];
                 mi.setParameter('material_emissive', this._colorUniform);
             }
         }
@@ -1353,8 +1342,8 @@ class TextElement {
         this._color.a = value;
 
         if (this._model) {
-            for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var mi = this._model.meshInstances[i];
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const mi = this._model.meshInstances[i];
                 mi.setParameter('material_opacity', value);
             }
         }
@@ -1365,7 +1354,7 @@ class TextElement {
     }
 
     set lineHeight(value) {
-        var _prev = this._lineHeight;
+        const _prev = this._lineHeight;
         this._lineHeight = value;
         this._scaledLineHeight = value;
         if (_prev !== value && this._font) {
@@ -1378,7 +1367,7 @@ class TextElement {
     }
 
     set wrapLines(value) {
-        var _prev = this._wrapLines;
+        const _prev = this._wrapLines;
         this._wrapLines = value;
         if (_prev !== value && this._font) {
             this._updateText();
@@ -1394,7 +1383,7 @@ class TextElement {
     }
 
     set spacing(value) {
-        var _prev = this._spacing;
+        const _prev = this._spacing;
         this._spacing = value;
         if (_prev !== value && this._font) {
             this._updateText();
@@ -1406,7 +1395,7 @@ class TextElement {
     }
 
     set fontSize(value) {
-        var _prev = this._fontSize;
+        const _prev = this._fontSize;
         this._fontSize = value;
         this._originalFontSize = value;
         if (_prev !== value && this._font) {
@@ -1430,10 +1419,7 @@ class TextElement {
     }
 
     set font(value) {
-        var i;
-        var len;
-
-        var previousFontType;
+        let previousFontType;
 
         if (this._font) {
             previousFontType = this._font.type;
@@ -1450,9 +1436,9 @@ class TextElement {
         if (!value) return;
 
         // calculate min / max font extents from all available chars
-        var json = this._font.data;
-        for (var charId in json.chars) {
-            var data = json.chars[charId];
+        const json = this._font.data;
+        for (const charId in json.chars) {
+            const data = json.chars[charId];
             if (data.bounds) {
                 this._fontMinY = Math.min(this._fontMinY, data.bounds[1]);
                 this._fontMaxY = Math.max(this._fontMaxY, data.bounds[3]);
@@ -1463,7 +1449,7 @@ class TextElement {
         if (this._font.on) this._font.on('render', this._onFontRender, this);
 
         if (this._fontAsset.localizedAsset) {
-            var asset = this._system.app.assets.get(this._fontAsset.localizedAsset);
+            const asset = this._system.app.assets.get(this._fontAsset.localizedAsset);
             // if we're setting a font directly which doesn't match the asset
             // then clear the asset
             if (asset.resource !== this._font) {
@@ -1473,18 +1459,18 @@ class TextElement {
 
         // if font type has changed we may need to get change material
         if (value.type !== previousFontType) {
-            var screenSpace = this._element._isScreenSpace();
+            const screenSpace = this._element._isScreenSpace();
             this._updateMaterial(screenSpace);
         }
 
         // make sure we have as many meshInfo entries
         // as the number of font textures
-        for (i = 0, len = this._font.textures.length; i < len; i++) {
+        for (let i = 0, len = this._font.textures.length; i < len; i++) {
             if (!this._meshInfo[i]) {
                 this._meshInfo[i] = new MeshInfo();
             } else {
                 // keep existing entry but set correct parameters to mesh instance
-                var mi = this._meshInfo[i].meshInstance;
+                const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
@@ -1495,8 +1481,8 @@ class TextElement {
         }
 
         // destroy any excess mesh instances
-        var removedModel = false;
-        for (i = this._font.textures.length; i < this._meshInfo.length; i++) {
+        let removedModel = false;
+        for (let i = this._font.textures.length; i < this._meshInfo.length; i++) {
             if (this._meshInfo[i].meshInstance) {
                 if (!removedModel) {
                     // remove model from scene so that excess mesh instances are removed
@@ -1534,7 +1520,7 @@ class TextElement {
     }
 
     set autoWidth(value) {
-        var old = this._autoWidth;
+        const old = this._autoWidth;
         this._autoWidth = value;
 
         // change width of element to match text width but only if the element
@@ -1545,7 +1531,7 @@ class TextElement {
 
         // restore fontSize if autoWidth changed
         if (old !== value) {
-            var newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+            const newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
             if (newFontSize !== this._fontSize) {
                 this._fontSize = newFontSize;
                 if (this._font) {
@@ -1560,7 +1546,7 @@ class TextElement {
     }
 
     set autoHeight(value) {
-        var old = this._autoHeight;
+        const old = this._autoHeight;
         this._autoHeight = value;
 
         // change height of element to match text height but only if the element
@@ -1571,7 +1557,7 @@ class TextElement {
 
         // restore fontSize if autoHeight changed
         if (old !== value) {
-            var newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+            const newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
             if (newFontSize !== this._fontSize) {
                 this._fontSize = newFontSize;
                 if (this._font) {
@@ -1608,11 +1594,11 @@ class TextElement {
     // private
     get aabb() {
         if (this._aabbDirty) {
-            var initialized = false;
-            for (var i = 0; i < this._meshInfo.length; i++) {
-                if (! this._meshInfo[i].meshInstance) continue;
+            let initialized = false;
+            for (let i = 0; i < this._meshInfo.length; i++) {
+                if (!this._meshInfo[i].meshInstance) continue;
 
-                if (! initialized) {
+                if (!initialized) {
                     this._aabb.copy(this._meshInfo[i].meshInstance.aabb);
                     initialized = true;
                 } else {
@@ -1630,10 +1616,10 @@ class TextElement {
     }
 
     set outlineColor(value) {
-        var r = (value instanceof Color) ? value.r : value[0];
-        var g = (value instanceof Color) ? value.g : value[1];
-        var b = (value instanceof Color) ? value.b : value[2];
-        var a = (value instanceof Color) ? value.a : value[3];
+        const r = (value instanceof Color) ? value.r : value[0];
+        const g = (value instanceof Color) ? value.g : value[1];
+        const b = (value instanceof Color) ? value.b : value[2];
+        const a = (value instanceof Color) ? value.a : value[3];
 
         // #if _DEBUG
         if (this._outlineColor === value) {
@@ -1659,8 +1645,8 @@ class TextElement {
             this._outlineColorUniform[2] = this._outlineColor.b;
             this._outlineColorUniform[3] = this._outlineColor.a;
 
-            for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var mi = this._model.meshInstances[i];
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const mi = this._model.meshInstances[i];
                 mi.setParameter("outline_color", this._outlineColorUniform);
             }
         }
@@ -1671,12 +1657,12 @@ class TextElement {
     }
 
     set outlineThickness(value) {
-        var _prev = this._outlineThickness;
+        const _prev = this._outlineThickness;
         this._outlineThickness = value;
         if (_prev !== value && this._font) {
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                    var mi = this._model.meshInstances[i];
+                for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    const mi = this._model.meshInstances[i];
                     mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
                 }
             }
@@ -1688,10 +1674,10 @@ class TextElement {
     }
 
     set shadowColor(value) {
-        var r = (value instanceof Color) ? value.r : value[0];
-        var g = (value instanceof Color) ? value.g : value[1];
-        var b = (value instanceof Color) ? value.b : value[2];
-        var a = (value instanceof Color) ? value.a : value[3];
+        const r = (value instanceof Color) ? value.r : value[0];
+        const g = (value instanceof Color) ? value.g : value[1];
+        const b = (value instanceof Color) ? value.b : value[2];
+        const a = (value instanceof Color) ? value.a : value[3];
 
         // #if _DEBUG
         if (this._shadowColor === value) {
@@ -1717,8 +1703,8 @@ class TextElement {
             this._shadowColorUniform[2] = this._shadowColor.b;
             this._shadowColorUniform[3] = this._shadowColor.a;
 
-            for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var mi = this._model.meshInstances[i];
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const mi = this._model.meshInstances[i];
                 mi.setParameter("shadow_color", this._shadowColorUniform);
             }
         }
@@ -1729,7 +1715,7 @@ class TextElement {
     }
 
     set shadowOffset(value) {
-        var x = (value instanceof Vec2) ? value.x : value[0],
+        const x = (value instanceof Vec2) ? value.x : value[0],
             y = (value instanceof Vec2) ? value.y : value[1];
         if (this._shadowOffset.x === x && this._shadowOffset.y === y) {
             return;
@@ -1737,11 +1723,11 @@ class TextElement {
         this._shadowOffset.set(x, y);
 
         if (this._font && this._model) {
-            for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                var ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
+            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                const ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                 this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                 this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
-                var mi = this._model.meshInstances[i];
+                const mi = this._model.meshInstances[i];
                 mi.setParameter("shadow_offset", this._shadowOffsetUniform);
             }
         }

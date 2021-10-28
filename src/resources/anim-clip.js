@@ -36,7 +36,7 @@ class AnimClipHandler {
 
         http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error loading animation clip resource: " + url.original + " [" + err + "]");
+                callback(`Error loading animation clip resource: ${url.original} [${err}]`);
             } else {
                 callback(null, response);
             }

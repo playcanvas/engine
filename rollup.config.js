@@ -1,5 +1,6 @@
 import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
+import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
 import jscc from 'rollup-plugin-jscc';
 import { terser } from 'rollup-plugin-terser';
@@ -60,7 +61,7 @@ function shaderChunks(removeComments) {
                 code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
                 // Trim all whitespace from line endings
-                code = code.split('\n').map((line) => line.trimEnd()).join('\n');
+                code = code.split('\n').map(line => line.trimEnd()).join('\n');
 
                 // Restore final new line
                 code += '\n';
@@ -116,6 +117,10 @@ const moduleOptions = {
     ]
 };
 
+const stripOptions = {
+    functions: ['DeprecatedLog.log']
+};
+
 const target_release_es5 = {
     input: 'src/index.js',
     output: {
@@ -137,6 +142,7 @@ const target_release_es5 = {
             },
             preventAssignment: true
         }),
+        strip(stripOptions),
         babel(es5Options),
         spacesToTabs()
     ]
@@ -163,6 +169,7 @@ const target_release_es5min = {
             },
             preventAssignment: true
         }),
+        strip(stripOptions),
         babel(es5Options),
         terser()
     ]
@@ -189,6 +196,7 @@ const target_release_es6 = {
             },
             preventAssignment: true
         }),
+        strip(stripOptions),
         babel(moduleOptions),
         spacesToTabs()
     ]
@@ -246,6 +254,7 @@ const target_profiler = {
             },
             preventAssignment: true
         }),
+        strip(stripOptions),
         babel(es5Options),
         spacesToTabs()
     ]

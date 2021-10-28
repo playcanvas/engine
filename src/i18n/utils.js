@@ -8,18 +8,18 @@ import {
 // https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html
 // and http://unicode.org/reports/tr35/tr35-numbers.html#Operands .
 // An initial set of locales is supported and we can keep adding more as we go.
-var PLURALS = {};
+const PLURALS = {};
 
 // Helper function to define the plural function for an array of locales
 function definePluralFn(locales, fn) {
-    for (var i = 0, len = locales.length; i < len; i++) {
+    for (let i = 0, len = locales.length; i < len; i++) {
         PLURALS[locales[i]] = fn;
     }
 }
 
 // Gets the language portion form a locale
 function getLang(locale) {
-    var idx = locale.indexOf('-');
+    const idx = locale.indexOf('-');
     if (idx !== -1) {
         return locale.substring(0, idx);
     }
@@ -29,7 +29,7 @@ function getLang(locale) {
 
 // Replaces the language in the specified locale and returns the result
 function replaceLang(locale, desiredLang) {
-    var idx = locale.indexOf('-');
+    const idx = locale.indexOf('-');
     if (idx !== -1) {
         return desiredLang + locale.substring(idx);
     }
@@ -42,12 +42,12 @@ function findAvailableLocale(desiredLocale, availableLocales) {
         return desiredLocale;
     }
 
-    var fallback = DEFAULT_LOCALE_FALLBACKS[desiredLocale];
+    let fallback = DEFAULT_LOCALE_FALLBACKS[desiredLocale];
     if (fallback && availableLocales[fallback]) {
         return fallback;
     }
 
-    var lang = getLang(desiredLocale);
+    const lang = getLang(desiredLocale);
 
     fallback = DEFAULT_LOCALE_FALLBACKS[lang];
     if (availableLocales[fallback]) {
@@ -134,8 +134,8 @@ definePluralFn([
     'uk'
 ], function (n) {
     if (Number.isInteger(n)) {
-        var mod10 = n % 10;
-        var mod100 = n % 100;
+        const mod10 = n % 10;
+        const mod100 = n % 100;
 
         if (mod10 === 1 && mod100 !== 11) {
             return 0; // one
@@ -157,8 +157,8 @@ definePluralFn([
         if (n === 1) {
             return 0; // one
         }
-        var mod10 = n % 10;
-        var mod100 = n % 100;
+        const mod10 = n % 10;
+        const mod100 = n % 100;
 
         if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
             return 1; // few
@@ -183,7 +183,7 @@ definePluralFn([
     }
 
     if (Number.isInteger(n)) {
-        var mod100 = n % 100;
+        const mod100 = n % 100;
         if (mod100 >= 3 && mod100 <= 10) {
             return 3; // few
         } else if (mod100 >= 11 && mod100 <= 99) {
@@ -194,7 +194,7 @@ definePluralFn([
     return 5; // other
 });
 
-var DEFAULT_PLURAL_FN = PLURALS[getLang(DEFAULT_LOCALE)];
+const DEFAULT_PLURAL_FN = PLURALS[getLang(DEFAULT_LOCALE)];
 
 // Gets the function that converts to plural for a language
 function getPluralFn(lang) {

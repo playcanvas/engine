@@ -27,7 +27,7 @@ class JsonHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading JSON resource: " + url.original + " [" + err + "]");
+                callback(`Error loading JSON resource: ${url.original} [${err}]`);
             }
         });
     }

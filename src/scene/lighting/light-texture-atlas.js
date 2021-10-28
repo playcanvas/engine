@@ -25,7 +25,7 @@ class LightTextureAtlas {
         this.shadowMapResolution = 2048;
         this.shadowMap = null;
 
-        // number of additional pixels to render past the required shadow camera angle (90deg for omno, outer for spot) of the shadow camera for clustered lights.
+        // number of additional pixels to render past the required shadow camera angle (90deg for omni, outer for spot) of the shadow camera for clustered lights.
         // This needs to be a pixel more than a shadow filter needs to access.
         this.shadowEdgePixels = 3;
 
@@ -142,9 +142,9 @@ class LightTextureAtlas {
         }
     }
 
-    collectLights(spotLights, omniLights) {
+    collectLights(spotLights, omniLights, cookiesEnabled, shadowsEnabled) {
 
-        // get all lights that need shadows or cookies
+        // get all lights that need shadows or cookies, if those are enabled
         let needsShadow = false;
         let needsCookie = false;
         const lights = _tempArray;
@@ -154,8 +154,8 @@ class LightTextureAtlas {
             for (let i = 0; i < list.length; i++) {
                 const light = list[i];
                 if (light.visibleThisFrame) {
-                    needsShadow ||= light.castShadows;
-                    needsCookie ||= !!light.cookie;
+                    needsShadow ||= shadowsEnabled && light.castShadows;
+                    needsCookie ||= cookiesEnabled && !!light.cookie;
 
                     if (needsShadow || needsCookie) {
                         lights.push(light);
@@ -164,8 +164,10 @@ class LightTextureAtlas {
             }
         };
 
-        processLights(spotLights);
-        processLights(omniLights);
+        if (cookiesEnabled || shadowsEnabled) {
+            processLights(spotLights);
+            processLights(omniLights);
+        }
 
         if (needsShadow) {
             this.allocateShadowMap(this.shadowMapResolution);
@@ -183,9 +185,9 @@ class LightTextureAtlas {
     }
 
     // update texture atlas for a list of lights
-    update(spotLights, omniLights) {
+    update(spotLights, omniLights, cookiesEnabled, shadowsEnabled) {
 
-        const lights = this.collectLights(spotLights, omniLights);
+        const lights = this.collectLights(spotLights, omniLights, cookiesEnabled, shadowsEnabled);
         if (lights.length > 0) {
 
             // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (4 pixels - should be enough for PCF5)

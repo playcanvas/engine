@@ -1,4 +1,4 @@
-import { platform } from "../core/platform.js";
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
@@ -94,7 +94,7 @@ class XrPlaneDetection extends EventHandler {
     update(frame) {
         let detectedPlanes;
 
-        if (! this._available) {
+        if (!this._available) {
             try {
                 detectedPlanes = frame.detectedPlanes;
                 this._planes = [];
@@ -124,7 +124,7 @@ class XrPlaneDetection extends EventHandler {
         for (const xrPlane of detectedPlanes) {
             let plane = this._planesIndex.get(xrPlane);
 
-            if (! plane) {
+            if (!plane) {
                 // detected plane is not indexed
                 // then create new XrPlane
                 plane = new XrPlane(this, xrPlane);

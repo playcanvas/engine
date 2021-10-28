@@ -1,4 +1,4 @@
-import { platform } from "../core/platform.js";
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
@@ -84,7 +84,7 @@ class XrHitTest extends EventHandler {
     }
 
     _onSessionEnd() {
-        if (! this._session)
+        if (!this._session)
             return;
 
         this._session = null;
@@ -98,10 +98,10 @@ class XrHitTest extends EventHandler {
     isAvailable(callback, fireError) {
         let err;
 
-        if (! this._supported)
+        if (!this._supported)
             err = new Error('XR HitTest is not supported');
 
-        if (! this._session)
+        if (!this._session)
             err = new Error('XR Session is not started (1)');
 
         if (this.manager.type !== XRTYPE_AR)
@@ -123,18 +123,18 @@ class XrHitTest extends EventHandler {
      * @param {object} [options] - Optional object for passing arguments.
      * @param {string} [options.spaceType] - Reference space type. Defaults to {@link XRSPACE_VIEWER}. Can be one of the following:
      *
-     * * {@link XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
-     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
-     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
-     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * - {@link XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
      * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {@link XrInputSource} should be provided.
      * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any combination of the following:
      *
-     * * {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
      * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
@@ -174,10 +174,10 @@ class XrHitTest extends EventHandler {
     start(options) {
         options = options || { };
 
-        if (! this.isAvailable(options.callback, this))
+        if (!this.isAvailable(options.callback, this))
             return;
 
-        if (! options.profile && ! options.spaceType)
+        if (!options.profile && !options.spaceType)
             options.spaceType = XRSPACE_VIEWER;
 
         let xrRay;
@@ -188,7 +188,7 @@ class XrHitTest extends EventHandler {
 
         if (options.spaceType) {
             this._session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
-                if (! this._session) {
+                if (!this._session) {
                     const err = new Error('XR Session is not started (2)');
                     if (callback) callback(err);
                     this.fire('error', err);
@@ -224,7 +224,7 @@ class XrHitTest extends EventHandler {
     }
 
     _onHitTestSource(xrHitTestSource, transient, callback) {
-        if (! this._session) {
+        if (!this._session) {
             xrHitTestSource.cancel();
             const err = new Error('XR Session is not started (3)');
             if (callback) callback(err);

@@ -26,9 +26,9 @@ const MAX_DISTANCE = 10000;
  * @param {Vec3} [options.velocity=null] - The velocity of the sound.
  * @param {string} [options.distanceModel=DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
  *
- * * {@link DISTANCE_LINEAR}
- * * {@link DISTANCE_INVERSE}
- * * {@link DISTANCE_EXPONENTIAL}
+ * - {@link DISTANCE_LINEAR}
+ * - {@link DISTANCE_INVERSE}
+ * - {@link DISTANCE_EXPONENTIAL}
  *
  * Default is {@link DISTANCE_LINEAR}.
  * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the sound source moves further from the listener.
@@ -38,9 +38,9 @@ const MAX_DISTANCE = 10000;
  * @property {Vec3} velocity The velocity of the sound.
  * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
  *
- * * {@link DISTANCE_LINEAR}
- * * {@link DISTANCE_INVERSE}
- * * {@link DISTANCE_EXPONENTIAL}
+ * - {@link DISTANCE_LINEAR}
+ * - {@link DISTANCE_INVERSE}
+ * - {@link DISTANCE_EXPONENTIAL}
  *
  * Default is {@link DISTANCE_LINEAR}.
  * @property {number} refDistance The reference distance for reducing volume as the sound source moves further from the listener.

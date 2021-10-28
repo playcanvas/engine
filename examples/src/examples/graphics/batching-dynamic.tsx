@@ -5,7 +5,6 @@ class BatchingDynamicExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Batching Dynamic';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop

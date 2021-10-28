@@ -1,5 +1,5 @@
 import { SceneParser } from './parser/scene.js';
-import { SceneUtils } from "./scene-utils.js";
+import { SceneUtils } from './scene-utils.js';
 
 class HierarchyHandler {
     constructor(app) {

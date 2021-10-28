@@ -205,12 +205,10 @@ class ScriptComponent extends Component {
     }
 
     onPostStateChange() {
-        var script;
+        const wasLooping = this._beginLooping();
 
-        var wasLooping = this._beginLooping();
-
-        for (var i = 0, len = this.scripts.length; i < len; i++) {
-            script = this.scripts[i];
+        for (let i = 0, len = this.scripts.length; i < len; i++) {
+            const script = this.scripts[i];
 
             if (script._initialized && !script._postInitialized && script.enabled) {
                 script._postInitialized = true;
@@ -226,7 +224,7 @@ class ScriptComponent extends Component {
     // Sets isLoopingThroughScripts to false and returns
     // its previous value
     _beginLooping() {
-        var looping = this._isLoopingThroughScripts;
+        const looping = this._isLoopingThroughScripts;
         this._isLoopingThroughScripts = true;
         return looping;
     }
@@ -250,7 +248,7 @@ class ScriptComponent extends Component {
     }
 
     _checkState() {
-        var state = this.enabled && this.entity.enabled;
+        const state = this.enabled && this.entity.enabled;
         if (state === this._oldState)
             return;
 
@@ -265,11 +263,10 @@ class ScriptComponent extends Component {
             this.system._removeComponentFromEnabled(this);
         }
 
-        var wasLooping = this._beginLooping();
+        const wasLooping = this._beginLooping();
 
-        var script;
-        for (var i = 0, len = this.scripts.length; i < len; i++) {
-            script = this.scripts[i];
+        for (let i = 0, len = this.scripts.length; i < len; i++) {
+            const script = this.scripts[i];
             script.enabled = script._enabled;
         }
 
@@ -279,11 +276,11 @@ class ScriptComponent extends Component {
     _onBeforeRemove() {
         this.fire('remove');
 
-        var wasLooping = this._beginLooping();
+        const wasLooping = this._beginLooping();
 
         // destroy all scripts
-        for (var i = 0; i < this.scripts.length; i++) {
-            var script = this.scripts[i];
+        for (let i = 0; i < this.scripts.length; i++) {
+            const script = this.scripts[i];
             if (!script) continue;
 
             this.destroy(script.__scriptType.__name);
@@ -293,12 +290,11 @@ class ScriptComponent extends Component {
     }
 
     _removeDestroyedScripts() {
-        var len = this._destroyedScripts.length;
+        const len = this._destroyedScripts.length;
         if (!len) return;
 
-        var i;
-        for (i = 0; i < len; i++) {
-            var script = this._destroyedScripts[i];
+        for (let i = 0; i < len; i++) {
+            const script = this._destroyedScripts[i];
             this._removeScriptInstance(script);
         }
 
@@ -309,7 +305,7 @@ class ScriptComponent extends Component {
     }
 
     _onInitializeAttributes() {
-        for (var i = 0, len = this.scripts.length; i < len; i++)
+        for (let i = 0, len = this.scripts.length; i < len; i++)
             this.scripts[i].__initializeAttributes();
     }
 
@@ -324,7 +320,7 @@ class ScriptComponent extends Component {
             script.enabled = false;
 
             if (!script._callbacks || !script._callbacks.error) {
-                console.warn('unhandled exception while calling "' + method + '" for "' + script.__scriptType.__name + '" script: ', ex);
+                console.warn(`unhandled exception while calling "${method}" for "${script.__scriptType.__name}" script: `, ex);
                 console.error(ex);
             }
 
@@ -335,12 +331,12 @@ class ScriptComponent extends Component {
     }
 
     _onInitialize() {
-        var script, scripts = this._scripts;
+        const scripts = this._scripts;
 
-        var wasLooping = this._beginLooping();
+        const wasLooping = this._beginLooping();
 
-        for (var i = 0, len = scripts.length; i < len; i++) {
-            script = scripts[i];
+        for (let i = 0, len = scripts.length; i < len; i++) {
+            const script = scripts[i];
             if (!script._initialized && script.enabled) {
                 script._initialized = true;
                 if (script.initialize)
@@ -356,41 +352,35 @@ class ScriptComponent extends Component {
     }
 
     _onUpdate(dt) {
-        var self = this;
-        var list = self._updateList;
+        const list = this._updateList;
         if (!list.length) return;
 
-        var script;
-
-        var wasLooping = self._beginLooping();
+        const wasLooping = this._beginLooping();
 
         for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
-            script = list.items[list.loopIndex];
+            const script = list.items[list.loopIndex];
             if (script.enabled) {
-                self._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
+                this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
             }
         }
 
-        self._endLooping(wasLooping);
+        this._endLooping(wasLooping);
     }
 
     _onPostUpdate(dt) {
-        var self = this;
-        var list = self._postUpdateList;
+        const list = this._postUpdateList;
         if (!list.length) return;
 
-        var wasLooping = self._beginLooping();
-
-        var script;
+        const wasLooping = this._beginLooping();
 
         for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
-            script = list.items[list.loopIndex];
+            const script = list.items[list.loopIndex];
             if (script.enabled) {
-                self._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
+                this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
             }
         }
 
-        self._endLooping(wasLooping);
+        this._endLooping(wasLooping);
     }
 
     /**
@@ -441,7 +431,7 @@ class ScriptComponent extends Component {
     }
 
     _removeScriptInstance(scriptInstance) {
-        var idx = this._scripts.indexOf(scriptInstance);
+        const idx = this._scripts.indexOf(scriptInstance);
         if (idx === -1) return idx;
 
         this._scripts.splice(idx, 1);
@@ -458,7 +448,7 @@ class ScriptComponent extends Component {
     }
 
     _resetExecutionOrder(startIndex, scriptsLength) {
-        for (var i = startIndex; i < scriptsLength; i++) {
+        for (let i = startIndex; i < scriptsLength; i++) {
             this._scripts[i].__executionOrder = i;
         }
     }
@@ -466,14 +456,14 @@ class ScriptComponent extends Component {
     _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newAttributes, duplicatedIdsMap) {
         if (attribute.array) {
             // handle entity array attribute
-            var len = oldValue.length;
-            if (! len) {
+            const len = oldValue.length;
+            if (!len) {
                 return;
             }
 
-            var newGuidArray = oldValue.slice();
-            for (var i = 0; i < len; i++) {
-                var guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+            const newGuidArray = oldValue.slice();
+            for (let i = 0; i < len; i++) {
+                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
                 if (duplicatedIdsMap[guid]) {
                     newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
                 }
@@ -513,10 +503,10 @@ class ScriptComponent extends Component {
         }
 
         if (!nameOrType) return false;
-        var scriptType = nameOrType;
-        var scriptName = scriptType.__name;
-        var scriptData = this._scriptsIndex[scriptName];
-        var scriptInstance = scriptData && scriptData.instance;
+        const scriptType = nameOrType;
+        const scriptName = scriptType.__name;
+        const scriptData = this._scriptsIndex[scriptName];
+        const scriptInstance = scriptData && scriptData.instance;
         return scriptInstance instanceof scriptType; // will return false if scriptInstance undefined
     }
 
@@ -533,15 +523,15 @@ class ScriptComponent extends Component {
     /* eslint-enable jsdoc/no-undefined-types */
     get(nameOrType) {
         if (typeof nameOrType === 'string') {
-            var data = this._scriptsIndex[nameOrType];
+            const data = this._scriptsIndex[nameOrType];
             return data ? data.instance : null;
         }
 
         if (!nameOrType) return null;
-        var scriptType = nameOrType;
-        var scriptName = scriptType.__name;
-        var scriptData = this._scriptsIndex[scriptName];
-        var scriptInstance = scriptData && scriptData.instance;
+        const scriptType = nameOrType;
+        const scriptName = scriptType.__name;
+        const scriptData = this._scriptsIndex[scriptName];
+        const scriptInstance = scriptData && scriptData.instance;
         return scriptInstance instanceof scriptType ? scriptInstance : null;
     }
 
@@ -568,10 +558,10 @@ class ScriptComponent extends Component {
      */
     /* eslint-enable jsdoc/no-undefined-types */
     create(nameOrType, args = {}) {
-        var self = this;
+        const self = this;
 
-        var scriptType = nameOrType;
-        var scriptName = nameOrType;
+        let scriptType = nameOrType;
+        let scriptName = nameOrType;
 
         // shorthand using script name
         if (typeof scriptType === 'string') {
@@ -583,15 +573,15 @@ class ScriptComponent extends Component {
         if (scriptType) {
             if (!this._scriptsIndex[scriptName] || !this._scriptsIndex[scriptName].instance) {
                 // create script instance
-                var scriptInstance = new scriptType({
+                const scriptInstance = new scriptType({
                     app: this.system.app,
                     entity: this.entity,
                     enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
                     attributes: args.attributes
                 });
 
-                var len = this._scripts.length;
-                var ind = -1;
+                const len = this._scripts.length;
+                let ind = -1;
                 if (typeof args.ind === 'number' && args.ind !== -1 && len > args.ind)
                     ind = args.ind;
 
@@ -634,14 +624,14 @@ class ScriptComponent extends Component {
                 return scriptInstance;
             }
 
-            console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
+            console.warn(`script '${scriptName}' is already added to entity '${this.entity.name}'`);
         } else {
             this._scriptsIndex[scriptName] = {
                 awaiting: true,
                 ind: this._scripts.length
             };
 
-            console.warn('script \'' + scriptName + '\' is not found, awaiting it to be added to registry');
+            console.warn(`script '${scriptName}' is not found, awaiting it to be added to registry`);
         }
 
         return null;
@@ -659,8 +649,8 @@ class ScriptComponent extends Component {
      */
     /* eslint-enable jsdoc/no-undefined-types */
     destroy(nameOrType) {
-        var scriptName = nameOrType;
-        var scriptType = nameOrType;
+        let scriptName = nameOrType;
+        let scriptType = nameOrType;
 
         // shorthand using script name
         if (typeof scriptType === 'string') {
@@ -669,11 +659,11 @@ class ScriptComponent extends Component {
             scriptName = scriptType.__name;
         }
 
-        var scriptData = this._scriptsIndex[scriptName];
+        const scriptData = this._scriptsIndex[scriptName];
         delete this._scriptsIndex[scriptName];
         if (!scriptData) return false;
 
-        var scriptInstance = scriptData.instance;
+        const scriptInstance = scriptData.instance;
         if (scriptInstance && !scriptInstance._destroyed) {
             scriptInstance.enabled = false;
             scriptInstance._destroyed = true;
@@ -681,7 +671,7 @@ class ScriptComponent extends Component {
             // if we are not currently looping through our scripts
             // then it's safe to remove the script
             if (!this._isLoopingThroughScripts) {
-                var ind = this._removeScriptInstance(scriptInstance);
+                const ind = this._removeScriptInstance(scriptInstance);
                 if (ind >= 0) {
                     this._resetExecutionOrder(ind, this._scripts.length);
                 }
@@ -717,8 +707,8 @@ class ScriptComponent extends Component {
      */
     /* eslint-enable jsdoc/no-undefined-types */
     swap(nameOrType) {
-        var scriptName = nameOrType;
-        var scriptType = nameOrType;
+        let scriptName = nameOrType;
+        let scriptType = nameOrType;
 
         // shorthand using script name
         if (typeof scriptType === 'string') {
@@ -727,13 +717,13 @@ class ScriptComponent extends Component {
             scriptName = scriptType.__name;
         }
 
-        var old = this._scriptsIndex[scriptName];
+        const old = this._scriptsIndex[scriptName];
         if (!old || !old.instance) return false;
 
-        var scriptInstanceOld = old.instance;
-        var ind = this._scripts.indexOf(scriptInstanceOld);
+        const scriptInstanceOld = old.instance;
+        const ind = this._scripts.indexOf(scriptInstanceOld);
 
-        var scriptInstance = new scriptType({
+        const scriptInstance = new scriptType({
             app: this.system.app,
             entity: this.entity,
             enabled: scriptInstanceOld.enabled,
@@ -787,20 +777,19 @@ class ScriptComponent extends Component {
      * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the entities that were cloned.
      */
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
-        var newScriptComponent = this.entity.script;
-        var i, j;
+        const newScriptComponent = this.entity.script;
 
         // for each script in the old component
-        for (var scriptName in oldScriptComponent._scriptsIndex) {
+        for (const scriptName in oldScriptComponent._scriptsIndex) {
             // get the script type from the script registry
-            var scriptType = this.system.app.scripts.get(scriptName);
-            if (! scriptType) {
+            const scriptType = this.system.app.scripts.get(scriptName);
+            if (!scriptType) {
                 continue;
             }
 
             // get the script from the component's index
-            var script = oldScriptComponent._scriptsIndex[scriptName];
-            if (! script || ! script.instance) {
+            const script = oldScriptComponent._scriptsIndex[scriptName];
+            if (!script || !script.instance) {
                 continue;
             }
 
@@ -809,24 +798,24 @@ class ScriptComponent extends Component {
             // otherwise it means that the attributes have already been initialized
             // so convert the new guid to an entity
             // and put it in the new attributes
-            var newAttributesRaw = newScriptComponent[scriptName].__attributesRaw;
-            var newAttributes = newScriptComponent[scriptName].__attributes;
-            if (! newAttributesRaw && ! newAttributes) {
+            const newAttributesRaw = newScriptComponent[scriptName].__attributesRaw;
+            const newAttributes = newScriptComponent[scriptName].__attributes;
+            if (!newAttributesRaw && !newAttributes) {
                 continue;
             }
 
             // if we are using attributesRaw then use the guid otherwise use the entity
-            var useGuid = !!newAttributesRaw;
+            const useGuid = !!newAttributesRaw;
 
             // get the old script attributes from the instance
-            var oldAttributes = script.instance.__attributes;
-            for (var attributeName in oldAttributes) {
-                if (! oldAttributes[attributeName]) {
+            const oldAttributes = script.instance.__attributes;
+            for (const attributeName in oldAttributes) {
+                if (!oldAttributes[attributeName]) {
                     continue;
                 }
 
                 // get the attribute definition from the script type
-                var attribute = scriptType.attributes.get(attributeName);
+                const attribute = scriptType.attributes.get(attributeName);
                 if (!attribute) {
                     continue;
                 }
@@ -843,17 +832,17 @@ class ScriptComponent extends Component {
                     );
                 } else if (attribute.type === 'json' && Array.isArray(attribute.schema)) {
                     // json attributes
-                    var oldValue = oldAttributes[attributeName];
-                    var newJsonValue = (newAttributesRaw ? newAttributesRaw[attributeName] : newAttributes[attributeName]);
+                    const oldValue = oldAttributes[attributeName];
+                    const newJsonValue = (newAttributesRaw ? newAttributesRaw[attributeName] : newAttributes[attributeName]);
 
-                    for (i = 0; i < attribute.schema.length; i++) {
-                        var field = attribute.schema[i];
+                    for (let i = 0; i < attribute.schema.length; i++) {
+                        const field = attribute.schema[i];
                         if (field.type !== 'entity') {
                             continue;
                         }
 
                         if (attribute.array) {
-                            for (j = 0; j < oldValue.length; j++) {
+                            for (let j = 0; j < oldValue.length; j++) {
                                 this._resolveEntityScriptAttribute(
                                     field,
                                     field.name,
@@ -863,7 +852,6 @@ class ScriptComponent extends Component {
                                     duplicatedIdsMap
                                 );
                             }
-
                         } else {
                             this._resolveEntityScriptAttribute(
                                 field,
@@ -894,12 +882,12 @@ class ScriptComponent extends Component {
      */
     /* eslint-enable jsdoc/no-undefined-types */
     move(nameOrType, ind) {
-        var len = this._scripts.length;
+        const len = this._scripts.length;
         if (ind >= len || ind < 0)
             return false;
 
-        var scriptType = nameOrType;
-        var scriptName = nameOrType;
+        let scriptType = nameOrType;
+        let scriptName = nameOrType;
 
         if (typeof scriptName !== 'string') {
             scriptName = nameOrType.__name;
@@ -907,16 +895,16 @@ class ScriptComponent extends Component {
             scriptType = null;
         }
 
-        var scriptData = this._scriptsIndex[scriptName];
+        const scriptData = this._scriptsIndex[scriptName];
         if (!scriptData || !scriptData.instance)
             return false;
 
         // if script type specified, make sure instance of said type
-        var scriptInstance = scriptData.instance;
+        const scriptInstance = scriptData.instance;
         if (scriptType && !(scriptInstance instanceof scriptType))
             return false;
 
-        var indOld = this._scripts.indexOf(scriptInstance);
+        const indOld = this._scripts.indexOf(scriptInstance);
         if (indOld === -1 || indOld === ind)
             return false;
 
@@ -939,7 +927,7 @@ class ScriptComponent extends Component {
     }
 
     set enabled(value) {
-        var oldValue = this._enabled;
+        const oldValue = this._enabled;
         this._enabled = value;
         this.fire('set', 'enabled', oldValue, value);
     }
@@ -951,11 +939,11 @@ class ScriptComponent extends Component {
     set scripts(value) {
         this._scriptsData = value;
 
-        for (var key in value) {
+        for (const key in value) {
             if (!value.hasOwnProperty(key))
                 continue;
 
-            var script = this._scriptsIndex[key];
+            const script = this._scriptsIndex[key];
             if (script) {
                 // existing script
 
@@ -965,13 +953,13 @@ class ScriptComponent extends Component {
 
                 // attributes
                 if (typeof value[key].attributes === 'object') {
-                    for (var attr in value[key].attributes) {
+                    for (const attr in value[key].attributes) {
                         if (ScriptAttributes.reservedNames.has(attr))
                             continue;
 
                         if (!script.__attributes.hasOwnProperty(attr)) {
                             // new attribute
-                            var scriptType = this.system.app.scripts.get(key);
+                            const scriptType = this.system.app.scripts.get(key);
                             if (scriptType)
                                 scriptType.attributes.add(attr, { });
                         }

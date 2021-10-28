@@ -35,7 +35,7 @@ import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
-import { WorldClusters } from '../scene/world-clusters.js';
+import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -86,7 +86,6 @@ import { ButtonComponentSystem } from './components/button/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { CollisionComponentSystem } from './components/collision/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { ComponentSystem } from './components/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
 import { JointComponentSystem } from './components/joint/system.js';
 import { LayoutChildComponentSystem } from './components/layout-child/system.js';
@@ -247,26 +246,26 @@ class Progress {
  * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
- * * anim ({@link AnimComponentSystem})
- * * animation ({@link AnimationComponentSystem})
- * * audiolistener ({@link AudioListenerComponentSystem})
- * * button ({@link ButtonComponentSystem})
- * * camera ({@link CameraComponentSystem})
- * * collision ({@link CollisionComponentSystem})
- * * element ({@link ElementComponentSystem})
- * * layoutchild ({@link LayoutChildComponentSystem})
- * * layoutgroup ({@link LayoutGroupComponentSystem})
- * * light ({@link LightComponentSystem})
- * * model ({@link ModelComponentSystem})
- * * particlesystem ({@link ParticleSystemComponentSystem})
- * * rigidbody ({@link RigidBodyComponentSystem})
- * * render ({@link RenderComponentSystem})
- * * screen ({@link ScreenComponentSystem})
- * * script ({@link ScriptComponentSystem})
- * * scrollbar ({@link ScrollbarComponentSystem})
- * * scrollview ({@link ScrollViewComponentSystem})
- * * sound ({@link SoundComponentSystem})
- * * sprite ({@link SpriteComponentSystem})
+ * - anim ({@link AnimComponentSystem})
+ * - animation ({@link AnimationComponentSystem})
+ * - audiolistener ({@link AudioListenerComponentSystem})
+ * - button ({@link ButtonComponentSystem})
+ * - camera ({@link CameraComponentSystem})
+ * - collision ({@link CollisionComponentSystem})
+ * - element ({@link ElementComponentSystem})
+ * - layoutchild ({@link LayoutChildComponentSystem})
+ * - layoutgroup ({@link LayoutGroupComponentSystem})
+ * - light ({@link LightComponentSystem})
+ * - model ({@link ModelComponentSystem})
+ * - particlesystem ({@link ParticleSystemComponentSystem})
+ * - rigidbody ({@link RigidBodyComponentSystem})
+ * - render ({@link RenderComponentSystem})
+ * - screen ({@link ScreenComponentSystem})
+ * - script ({@link ScriptComponentSystem})
+ * - scrollbar ({@link ScrollbarComponentSystem})
+ * - scrollview ({@link ScrollViewComponentSystem})
+ * - sound ({@link SoundComponentSystem})
+ * - sprite ({@link SpriteComponentSystem})
  * @example
  * // Set global gravity to zero
  * this.app.systems.rigidbody.gravity.set(0, 0, 0);
@@ -401,7 +400,7 @@ class Application extends EventHandler {
         super();
 
         // #if _DEBUG
-        console.log("Powered by PlayCanvas " + version + " " + revision);
+        console.log(`Powered by PlayCanvas ${version} ${revision}`);
         // #endif
 
         // Store application instance
@@ -434,7 +433,7 @@ class Application extends EventHandler {
         // for compatibility
         this.context = this;
 
-        if (! options.graphicsDeviceOptions)
+        if (!options.graphicsDeviceOptions)
             options.graphicsDeviceOptions = { };
 
         if (platform.browser && !!navigator.xr) {
@@ -447,7 +446,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
-        WorldClusters.init(this.graphicsDevice);
+        LightsBuffer.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
@@ -675,9 +674,9 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
      *
-     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      */
     get fillMode() {
         return this._fillMode;
@@ -689,8 +688,8 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
      *
-     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      */
     get resolutionMode() {
         return this._resolutionMode;
@@ -704,8 +703,7 @@ class Application extends EventHandler {
      * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
-        const self = this;
-        http.get(url, function (err, response) {
+        http.get(url, (err, response) => {
             if (err) {
                 callback(err);
                 return;
@@ -715,9 +713,9 @@ class Application extends EventHandler {
             const scenes = response.scenes;
             const assets = response.assets;
 
-            self._parseApplicationProperties(props, function (err) {
-                self._parseScenes(scenes);
-                self._parseAssets(assets);
+            this._parseApplicationProperties(props, (err) => {
+                this._parseScenes(scenes);
+                this._parseAssets(assets);
                 if (!err) {
                     callback(null);
                 } else {
@@ -734,53 +732,48 @@ class Application extends EventHandler {
      * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
      */
     preload(callback) {
-        const self = this;
-
-        self.fire("preload:start");
+        this.fire("preload:start");
 
         // get list of assets to preload
         const assets = this.assets.list({
             preload: true
         });
 
-        const _assets = new Progress(assets.length);
+        const progress = new Progress(assets.length);
 
         let _done = false;
 
         // check if all loading is done
-        const done = function () {
+        const done = () => {
             // do not proceed if application destroyed
-            if (!self.graphicsDevice) {
+            if (!this.graphicsDevice) {
                 return;
             }
 
-            if (!_done && _assets.done()) {
+            if (!_done && progress.done()) {
                 _done = true;
-                self.fire("preload:end");
+                this.fire("preload:end");
                 callback();
             }
         };
 
         // totals loading progress of assets
         const total = assets.length;
-        const count = function () {
-            return _assets.count;
-        };
 
-        if (_assets.length) {
-            const onAssetLoad = function (asset) {
-                _assets.inc();
-                self.fire('preload:progress', count() / total);
+        if (progress.length) {
+            const onAssetLoad = (asset) => {
+                progress.inc();
+                this.fire('preload:progress', progress.count / total);
 
-                if (_assets.done())
+                if (progress.done())
                     done();
             };
 
-            const onAssetError = function (err, asset) {
-                _assets.inc();
-                self.fire('preload:progress', count() / total);
+            const onAssetError = (err, asset) => {
+                progress.inc();
+                this.fire('preload:progress', progress.count / total);
 
-                if (_assets.done())
+                if (progress.done())
                     done();
             };
 
@@ -792,10 +785,10 @@ class Application extends EventHandler {
 
                     this.assets.load(assets[i]);
                 } else {
-                    _assets.inc();
-                    self.fire("preload:progress", count() / total);
+                    progress.inc();
+                    this.fire("preload:progress", progress.count / total);
 
-                    if (_assets.done())
+                    if (progress.done())
                         done();
                 }
             }
@@ -810,39 +803,36 @@ class Application extends EventHandler {
             return;
         }
 
-        const self = this;
-
-        self.systems.script.preloading = true;
+        this.systems.script.preloading = true;
 
         const scripts = this._getScriptReferences(sceneData);
 
         const l = scripts.length;
         const progress = new Progress(l);
-        let scriptUrl;
         const regex = /^http(s)?:\/\//;
 
         if (l) {
-            const onLoad = function (err, ScriptType) {
+            const onLoad = (err, ScriptType) => {
                 if (err)
                     console.error(err);
 
                 progress.inc();
                 if (progress.done()) {
-                    self.systems.script.preloading = false;
+                    this.systems.script.preloading = false;
                     callback();
                 }
             };
 
             for (let i = 0; i < l; i++) {
-                scriptUrl = scripts[i];
+                let scriptUrl = scripts[i];
                 // support absolute URLs (for now)
-                if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
+                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
                     scriptUrl = path.join(self._scriptPrefix, scripts[i]);
 
                 this.loader.load(scriptUrl, 'script', onLoad);
             }
         } else {
-            self.systems.script.preloading = false;
+            this.systems.script.preloading = false;
             callback();
         }
     }
@@ -935,17 +925,16 @@ class Application extends EventHandler {
     _loadLibraries(urls, callback) {
         const len = urls.length;
         let count = len;
-        const self = this;
 
         const regex = /^http(s)?:\/\//;
 
         if (len) {
-            const onLoad = function (err, script) {
+            const onLoad = (err, script) => {
                 count--;
                 if (err) {
                     callback(err);
                 } else if (count === 0) {
-                    self.onLibrariesLoaded();
+                    this.onLibrariesLoaded();
                     callback(null);
                 }
             };
@@ -953,13 +942,13 @@ class Application extends EventHandler {
             for (let i = 0; i < len; ++i) {
                 let url = urls[i];
 
-                if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
-                    url = path.join(self._scriptPrefix, url);
+                if (!regex.test(url.toLowerCase()) && this._scriptPrefix)
+                    url = path.join(this._scriptPrefix, url);
 
                 this.loader.load(url, 'script', onLoad);
             }
         } else {
-            self.onLibrariesLoaded();
+            this.onLibrariesLoaded();
             callback(null);
         }
     }
@@ -1110,11 +1099,11 @@ class Application extends EventHandler {
             this.onLibrariesLoaded();
         }
 
-        ComponentSystem.initialize(this.root);
-        this.fire("initialize");
+        this.systems.fire('initialize', this.root);
+        this.fire('initialize');
 
-        ComponentSystem.postInitialize(this.root);
-        this.fire("postinitialize");
+        this.systems.fire('postInitialize', this.root);
+        this.fire('postinitialize');
 
         this.tick();
     }
@@ -1157,11 +1146,11 @@ class Application extends EventHandler {
 
         // Perform ComponentSystem update
         if (script.legacy)
-            ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            this.systems.fire('fixedUpdate', 1.0 / 60.0);
 
-        ComponentSystem.update(dt, this._inTools);
-        ComponentSystem.animationUpdate(dt, this._inTools);
-        ComponentSystem.postUpdate(dt, this._inTools);
+        this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
+        this.systems.fire('animationUpdate', dt);
+        this.systems.fire('postUpdate', dt);
 
         // fire update event
         this.fire("update", dt);
@@ -1299,9 +1288,9 @@ class Application extends EventHandler {
      * @description Controls how the canvas fills the window and resizes when the window changes.
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
-     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
      * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
@@ -1316,8 +1305,8 @@ class Application extends EventHandler {
      * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
      * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
      */
@@ -1451,25 +1440,25 @@ class Application extends EventHandler {
      * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
-     * * {@link FOG_NONE}
-     * * {@link FOG_LINEAR}
-     * * {@link FOG_EXP}
-     * * {@link FOG_EXP2}
+     * - {@link FOG_NONE}
+     * - {@link FOG_LINEAR}
+     * - {@link FOG_EXP}
+     * - {@link FOG_EXP2}
      * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
      * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
      *
-     * * {@link GAMMA_NONE}
-     * * {@link GAMMA_SRGB}
+     * - {@link GAMMA_NONE}
+     * - {@link GAMMA_SRGB}
      * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      *
-     * * {@link TONEMAP_LINEAR}
-     * * {@link TONEMAP_FILMIC}
-     * * {@link TONEMAP_HEJL}
-     * * {@link TONEMAP_ACES}
+     * - {@link TONEMAP_LINEAR}
+     * - {@link TONEMAP_FILMIC}
+     * - {@link TONEMAP_HEJL}
+     * - {@link TONEMAP_ACES}
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
@@ -1479,8 +1468,8 @@ class Application extends EventHandler {
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
      *
-     * * {@link BAKE_COLOR}: single color lightmap
-     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * - {@link BAKE_COLOR}: single color lightmap
+     * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
@@ -1544,7 +1533,7 @@ class Application extends EventHandler {
     setAreaLightLuts(asset) {
         if (asset) {
             const device = this.graphicsDevice;
-            asset.ready(function (asset) {
+            asset.ready((asset) => {
                 AreaLightLuts.set(device, asset.resource);
             });
             this.assets.load(asset);
@@ -1913,12 +1902,7 @@ class Application extends EventHandler {
             this.controller = null;
         }
 
-        const systems = this.systems.list;
-        for (let i = 0, l = systems.length; i < l; i++) {
-            systems[i].destroy();
-        }
-
-        ComponentSystem.destroy();
+        this.systems.destroy();
 
         // layer composition
         if (this.scene.layers) {
@@ -1954,7 +1938,7 @@ class Application extends EventHandler {
         this.scene.destroy();
         this.scene = null;
 
-        this.systems = [];
+        this.systems = null;
         this.context = null;
 
         // script registry

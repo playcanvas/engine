@@ -21,7 +21,7 @@ const _schema = ['enabled'];
  * @property {AudioContext} context Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
  * @property {SoundManager} manager Gets / sets the sound manager.
  */
-class SoundComponentSystem extends ComponentSystem  {
+class SoundComponentSystem extends ComponentSystem {
     constructor(app, manager) {
         super(app);
 
@@ -34,7 +34,7 @@ class SoundComponentSystem extends ComponentSystem  {
 
         this.manager = manager;
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
     }
@@ -51,7 +51,7 @@ class SoundComponentSystem extends ComponentSystem  {
             'slots'
         ];
 
-        for (var i = 0; i < properties.length; i++) {
+        for (let i = 0; i < properties.length; i++) {
             if (data.hasOwnProperty(properties[i])) {
                 component[properties[i]] = data[properties[i]];
             }
@@ -61,14 +61,14 @@ class SoundComponentSystem extends ComponentSystem  {
     }
 
     cloneComponent(entity, clone) {
-        var srcComponent = entity.sound;
-        var srcSlots = srcComponent.slots;
+        const srcComponent = entity.sound;
+        const srcSlots = srcComponent.slots;
 
         // convert 'slots' back to
         // simple option objects
-        var slots = {};
-        for (var key in srcSlots) {
-            var srcSlot = srcSlots[key];
+        const slots = {};
+        for (const key in srcSlots) {
+            const srcSlot = srcSlots[key];
             slots[key] = {
                 name: srcSlot.name,
                 volume: srcSlot.volume,
@@ -82,7 +82,7 @@ class SoundComponentSystem extends ComponentSystem  {
             };
         }
 
-        var cloneData = {
+        const cloneData = {
             distanceModel: srcComponent.distanceModel,
             enabled: srcComponent.enabled,
             maxDistance: srcComponent.maxDistance,
@@ -99,21 +99,21 @@ class SoundComponentSystem extends ComponentSystem  {
     }
 
     onUpdate(dt) {
-        var store = this.store;
+        const store = this.store;
 
-        for (var id in store) {
+        for (const id in store) {
             if (store.hasOwnProperty(id)) {
-                var item = store[id];
-                var entity = item.entity;
+                const item = store[id];
+                const entity = item.entity;
 
                 if (entity.enabled) {
-                    var component = entity.sound;
+                    const component = entity.sound;
 
                     // Update slot position if this is a 3d sound
                     if (component.enabled && component.positional) {
-                        var position = entity.getPosition();
-                        var slots = component.slots;
-                        for (var key in slots) {
+                        const position = entity.getPosition();
+                        const slots = component.slots;
+                        for (const key in slots) {
                             slots[key].updatePosition(position);
                         }
                     }
@@ -123,15 +123,21 @@ class SoundComponentSystem extends ComponentSystem  {
     }
 
     onBeforeRemove(entity, component) {
-        var slots = component.slots;
+        const slots = component.slots;
         // stop non overlapping sounds
-        for (var key in slots) {
+        for (const key in slots) {
             if (!slots[key].overlap) {
                 slots[key].stop();
             }
         }
 
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 
     get volume() {

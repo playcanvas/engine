@@ -13,7 +13,6 @@ class TextOutlineExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
 
         // Create the application and start the update loop

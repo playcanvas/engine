@@ -15,7 +15,7 @@ class DepthMaterial extends Material {
      * @returns {DepthMaterial} A cloned Depth material.
      */
     clone() {
-        var clone = new DepthMaterial();
+        const clone = new DepthMaterial();
 
         Material.prototype._cloneInternal.call(this, clone);
 
@@ -23,10 +23,10 @@ class DepthMaterial extends Material {
     }
 
     updateShader(device) {
-        var options = {
+        const options = {
             skin: !!this.meshInstances[0].skinInstance
         };
-        var library = device.getProgramLibrary();
+        const library = device.getProgramLibrary();
         this.shader = library.getProgram('depth', options);
     }
 }

@@ -11,7 +11,7 @@ import { getApplication } from '../framework/globals.js';
 import { http } from '../net/http.js';
 
 // auto incrementing number for asset ids
-var assetIdCounter = -1;
+let assetIdCounter = -1;
 
 const VARIANT_SUPPORT = {
     pvr: 'extCompressedTexturePVRTC',
@@ -30,10 +30,10 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @classdesc An asset record of a file or data resource that can be loaded by the engine.
  * The asset contains three important fields:
  *
- * * `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
- * * `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
- * * `options`: contains a JSON blob with handler-specific load options.
- * * `resource`: contains the final resource when it is loaded. (e.g. a {@link StandardMaterial} or a {@link Texture}).
+ * - `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
+ * - `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
+ * - `options`: contains a JSON blob with handler-specific load options.
+ * - `resource`: contains the final resource when it is loaded. (e.g. a {@link StandardMaterial} or a {@link Texture}).
  *
  * See the {@link AssetRegistry} for details on loading resources from assets.
  * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
@@ -168,19 +168,19 @@ class Asset extends EventHandler {
      * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
      */
     getFileUrl() {
-        var file = this.file;
+        const file = this.file;
 
         if (!file || !file.url)
             return null;
 
-        var url = file.url;
+        let url = file.url;
 
         if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url))
             url = this.registry.prefix + url;
 
         // add file hash to avoid hard-caching problems
         if (this.type !== 'script' && file.hash) {
-            var separator = url.indexOf('?') !== -1 ? '&' : '?';
+            const separator = url.indexOf('?') !== -1 ? '&' : '?';
             url += separator + 't=' + file.hash;
         }
 
@@ -201,7 +201,7 @@ class Asset extends EventHandler {
             return relativePath;
         }
 
-        var base = path.getDirectory(this.file.url);
+        const base = path.getDirectory(this.file.url);
         return path.join(base, relativePath);
     }
 
@@ -241,7 +241,7 @@ class Asset extends EventHandler {
      * @description Removes a localized asset.
      */
     removeLocalizedAssetId(locale) {
-        var assetId = this._i18n[locale];
+        const assetId = this._i18n[locale];
         if (assetId) {
             delete this._i18n[locale];
             this.fire('remove:localized', locale, assetId);
@@ -297,7 +297,7 @@ class Asset extends EventHandler {
         this.fire('unload', this);
         this.registry.fire('unload:' + this.id, this);
 
-        var old = this._resources;
+        const old = this._resources;
 
         // clear resources on the asset
         this.resources = [];
@@ -309,8 +309,8 @@ class Asset extends EventHandler {
         }
 
         // destroy resources
-        for (var i = 0; i < old.length; ++i) {
-            var resource = old[i];
+        for (let i = 0; i < old.length; ++i) {
+            const resource = old[i];
             if (resource && resource.destroy) {
                 resource.destroy();
             }
@@ -376,7 +376,7 @@ class Asset extends EventHandler {
     set data(value) {
         // fire change event when data changes
         // because the asset might need reloading if that happens
-        var old = this._data;
+        const old = this._data;
         this._data = value;
         if (value !== old) {
             this.fire('change', this, 'data', value, old);
@@ -391,7 +391,7 @@ class Asset extends EventHandler {
     }
 
     set resource(value) {
-        var _old = this._resources[0];
+        const _old = this._resources[0];
         this._resources[0] = value;
         this.fire('change', this, 'resource', value, _old);
     }
@@ -401,7 +401,7 @@ class Asset extends EventHandler {
     }
 
     set resources(value) {
-        var _old = this._resources;
+        const _old = this._resources;
         this._resources = value;
         this.fire('change', this, 'resources', value, _old);
     }

@@ -103,14 +103,11 @@ class GamePads {
      * to work.
      */
     update() {
-        var i, j, l;
-        var buttons, buttonsLen;
-
         // move current buttons status into previous array
-        for (i = 0, l = this.current.length; i < l; i++) {
-            buttons = this.current[i].pad.buttons;
-            buttonsLen = buttons.length;
-            for (j = 0; j < buttonsLen; j++) {
+        for (let i = 0, l = this.current.length; i < l; i++) {
+            const buttons = this.current[i].pad.buttons;
+            const buttonsLen = buttons.length;
+            for (let j = 0; j < buttonsLen; j++) {
                 if (this.previous[i] === undefined) {
                     this.previous[i] = [];
                 }
@@ -139,9 +136,8 @@ class GamePads {
         }
 
         if (this.gamepadsSupported) {
-            var padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
-            var i, len = padDevices.length;
-            for (i = 0; i < len; i++) {
+            const padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
+            for (let i = 0, len = padDevices.length; i < len; i++) {
                 if (padDevices[i]) {
                     pads.push({
                         map: this.getMap(padDevices[i]),
@@ -154,7 +150,7 @@ class GamePads {
     }
 
     getMap(pad) {
-        for (var code in PRODUCT_CODES) {
+        for (const code in PRODUCT_CODES) {
             if (pad.id.indexOf(code) >= 0) {
                 return MAPS[PRODUCT_CODES[code]];
             }
@@ -176,7 +172,7 @@ class GamePads {
             return false;
         }
 
-        var key = this.current[index].map.buttons[button];
+        const key = this.current[index].map.buttons[button];
         return this.current[index].pad.buttons[pc[key]].pressed;
     }
 
@@ -193,8 +189,8 @@ class GamePads {
             return false;
         }
 
-        var key = this.current[index].map.buttons[button];
-        var i = pc[key];
+        const key = this.current[index].map.buttons[button];
+        const i = pc[key];
 
         // Previous pad buttons may not have been populated yet
         // If this is the first time frame a pad has been detected
@@ -214,8 +210,8 @@ class GamePads {
             return false;
         }
 
-        var key = this.current[index].map.buttons[button];
-        var i = pc[key];
+        const key = this.current[index].map.buttons[button];
+        const i = pc[key];
 
         // Previous pad buttons may not have been populated yet
         // If this is the first time frame a pad has been detected
@@ -235,8 +231,8 @@ class GamePads {
             return 0;
         }
 
-        var key = this.current[index].map.axes[axes];
-        var value = this.current[index].pad.axes[pc[key]];
+        const key = this.current[index].map.axes[axes];
+        let value = this.current[index].pad.axes[pc[key]];
 
         if (Math.abs(value) < this.deadZone) {
             value = 0;
