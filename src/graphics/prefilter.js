@@ -11,7 +11,7 @@ class Prefilter {
      * @name isValidSkyboxCubemap
      * @description Returns true if the texture is valid for use as a skybox.
      * @param {Texture} texture - The texture to test.
-     * @returns {boolean} True if the texture is valid for use as a cubemap otherwize false.
+     * @returns {boolean} True if the texture is valid for use as a cubemap otherwise false.
      */
     static isValidSkyboxCubemap(texture) {
         return texture && texture.cubemap && (texture.type === TEXTURETYPE_DEFAULT || texture.type === TEXTURETYPE_RGBM);
@@ -116,7 +116,7 @@ class Prefilter {
      * @private
      * @function
      * @name generatePrefilteredCubemap
-     * @description Generates a prefiltered IBL cubemap of size 128 containing the 6 levels.
+     * @description Generates a prefiltered IBL cubemap of size 128 containing the 6 levels
      * of prefiltered lighting data packed into its mipmaps.
      * @param {Texture} source - The source texture. Either a 2d texture in equirect format or a cubemap.
      * @returns {Texture} A cubemap with each mipmap containing the prefiltered lighting data.
@@ -137,7 +137,7 @@ class Prefilter {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             fixCubemapSeams: false,
             // create the texture with mipmaps = false so the device doesn't automatically
-            // (and unnecessarilly) auto generateMipmaps
+            // (and unnecessarily) auto generateMipmaps
             mipmaps: false
         });
 
