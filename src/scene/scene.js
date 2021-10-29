@@ -463,7 +463,6 @@ class Scene extends EventHandler {
                     rgbm: usedTex.type === TEXTURETYPE_RGBM,
                     hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity !== 1,
-                    useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
                     useRightHandedCubeMap: scene._skyboxIsRenderTarget,
                     mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: usedTex.fixCubemapSeams,
@@ -482,6 +481,8 @@ class Scene extends EventHandler {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, this._skyboxRotation, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
                 material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
+            } else {
+                material.setParameter("cubeMapRotationMatrix", Mat3.IDENTITY.data);
             }
 
             material.cull = CULLFACE_FRONT;
