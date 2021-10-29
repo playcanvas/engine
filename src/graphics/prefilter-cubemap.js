@@ -10,6 +10,7 @@ import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
+import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 function syncToCpu(device, targ, face) {
     const tex = targ._colorBuffer;
@@ -36,6 +37,9 @@ function prefilterCubemap(options) {
     const method = options.method;
     const samples = options.samples;
     const cpuSync = options.cpuSync;
+
+    // TODO: remove this function entirely along with its shader chunks.
+    DeprecatedLog.log('DEPRECATED: pc.prefilterCubemap is deprecated. Please use the pc.Prefilter functions instead.');
 
     if (cpuSync && !sourceCubemap._levels[0]) {
         // #if _DEBUG
