@@ -23,7 +23,11 @@ interface CodeEditorProps {
     files: Array<File>,
     setFiles: (value: Array<File>) => void,
     setLintErrors: (value: boolean) => void,
-    useTypescript: boolean
+    useTypescript: boolean,
+    hasEditedFiles: boolean,
+    lintErrors: boolean,
+    languageButtonRef: React.RefObject<unknown>,
+    playButtonRef: React.RefObject<unknown>
 }
 
 const CodeEditor = (props: CodeEditorProps) => {
@@ -71,11 +75,7 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     useEffect(() => {
         const codePane = document.getElementById('codePane');
-        if (files.length > 2) {
-            codePane.classList.add('multiple-files');
-        } else {
-            codePane.classList.remove('multiple-files');
-        }
+        codePane.classList.add('multiple-files');
         if (!files[selectedFile]) setSelectedFile(props.useTypescript ? 1 : 0);
         if (props.useTypescript && selectedFile === 0) {
             selectFile(1);
@@ -92,15 +92,24 @@ const CodeEditor = (props: CodeEditorProps) => {
         (window as any).toggleEvent = true;
     });
 
-    return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') !== 'false' ? 'collapsed' : null}>
+    return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') !== 'false' ? 'collapsed' : null} resizable='left' resizeMax={2000}>
         <div className='panel-toggle' id='codePane-panel-toggle'/>
-        { props.files && props.files.length > 2 && <Container class='tabs-container'>
-            {props.files.map((file: File, index: number) => {
-                const hidden = (props.useTypescript && index === 0 || !props.useTypescript && index === 1);
-                return <Button key={index} id={`code-editor-file-tab-${index}`} hidden={hidden} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : ''} onClick={() => selectFile(index)}/>;
-            })}
+        <Container class='tabs-wrapper'>
+            <Container class='code-editor-menu-container'>
+                <Button id='play-button' enabled={!props.lintErrors && props.hasEditedFiles} icon='E304' text='' ref={props.playButtonRef} />
+                <Button id='language-button' text={props.useTypescript ? 'JS' : 'TS'} ref={props.languageButtonRef} />
+                <Button icon='E259' text='' onClick={() => {
+                    const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
+                    window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.tsx`);
+                }}/>
+            </Container>
+            <Container class='tabs-container'>
+                {props.files.map((file: File, index: number) => {
+                    const hidden = (props.useTypescript && index === 0 || !props.useTypescript && index === 1);
+                    return <Button key={index} id={`code-editor-file-tab-${index}`} hidden={hidden} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : ''} onClick={() => selectFile(index)}/>;
+                })}
+            </Container>
         </Container>
-        }
         <MonacoEditor
             language={FILE_TYPE_LANGUAGES[files[selectedFile]?.type]}
             value={files[selectedFile]?.text}

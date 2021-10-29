@@ -138,17 +138,26 @@ class BlendTrees2DCartesianExample extends Example {
             };
             drawPosition(ctx);
             const mouseEvent = (e: any) => {
-                if (e.buttons) {
-                    // @ts-ignore engine-tsd
-                    position = new pc.Vec2(e.offsetX, e.offsetY).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
-                    position.y *= -1.0;
-                    modelEntity.anim.setFloat('posX', position.x);
-                    modelEntity.anim.setFloat('posY', position.y);
-                    drawPosition(ctx);
+                // @ts-ignore engine-tsd
+                if (e.targetTouches) {
+                    const offset = canvas.getBoundingClientRect();
+                    position = new pc.Vec2(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                } else {
+                    if (e.buttons) {
+                        position = new pc.Vec2(e.offsetX, e.offsetY).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                    } else {
+                        return;
+                    }
                 }
+                position.y *= -1.0;
+                modelEntity.anim.setFloat('posX', position.x);
+                modelEntity.anim.setFloat('posY', position.y);
+                drawPosition(ctx);
             };
             canvas.addEventListener('mousemove', mouseEvent);
             canvas.addEventListener('mousedown', mouseEvent);
+            canvas.addEventListener('touchmove', mouseEvent);
+            canvas.addEventListener('touchstart', mouseEvent);
         });
         return <>
             <canvas id='2d-blend-control' ref={canvasRef as React.RefObject<HTMLCanvasElement>} />

@@ -1,27 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 // @ts-ignore: library file import
 import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import Button from '@playcanvas/pcui/Button/component';
-// @ts-ignore: library file import
-import Label from '@playcanvas/pcui/Label/component';
-// @ts-ignore: library file import
-import TextAreaInput from '@playcanvas/pcui/TextAreaInput/component';
 
 interface MenuProps {
-    lintErrors: boolean,
-    hasEditedFiles: boolean,
     useTypescript: boolean,
-    languageButtonRef: any,
-    playButtonRef: any,
     setShowMiniStats: (value: boolean) => void
 }
 const Menu = (props: MenuProps) => {
 
     let mouseTimeout: any = null;
     let clickFullscreenListener: EventListener = null;
-    const [showEmbedContainer, setShowEmbedContainer] = useState(false);
 
     const toggleFullscreen = () => {
         if (clickFullscreenListener) {
@@ -57,42 +48,19 @@ const Menu = (props: MenuProps) => {
 
     return <Container id='menu'>
         <Container id='menu-buttons'>
-            <img src='https://playcanvas.com/viewer/static/playcanvas-logo.png' />
+            <img id='playcanvas-icon' src='https://playcanvas.com/viewer/static/playcanvas-logo.png' onClick={() => {
+                window.open("https://github.com/playcanvas/engine");
+            }}/>
             <Button icon='E256' text='' onClick={() => {
                 const tweetText = encodeURI(`Check out this @playcanvas engine example! ${location.href.replace('#/', '')}`);
                 window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
             }}/>
-            <Button icon='E236' text='' id='embed-button' onClick={() => {
-                setShowEmbedContainer(!document.getElementById('menu-embed-container'));
-                document.getElementById('embed-button').classList.toggle('selected');
-            }}/>
-            <Button icon='E259' text='' onClick={() => {
-                window.open("https://github.com/playcanvas/engine");
-            }}/>
-            <Button icon='E127' text='' id='fullscreen-button' onClick={toggleFullscreen}/>
             <Button icon='E149' id='showMiniStatsButton' text='' onClick={() => {
                 document.getElementById('showMiniStatsButton').classList.toggle('selected');
                 props.setShowMiniStats(document.getElementById('showMiniStatsButton').classList.contains('selected'));
             }}/>
-            <Button id='language-button' text={props.useTypescript ? 'JS' : 'TS'} ref={props.languageButtonRef} />
-            <Button id='play-button' enabled={!props.lintErrors && props.hasEditedFiles} icon='E131' text='' ref={props.playButtonRef} />
+            <Button icon='E127' text='' id='fullscreen-button' onClick={toggleFullscreen}/>
         </Container>
-        { showEmbedContainer && <Container id='menu-embed-container'>
-            <Label text='Copy this iframe to embed the current example in your webpage:' />
-            <TextAreaInput id='embed-text-area' enabled={false} value={`<iframe src="${location.href.replace('#/', '#/iframe/')}" frameborder="0"></iframe>`}/>
-            <Button id='copy-embed-button' text='Copy to clipboard' onClick={() => {
-                // @ts-ignore
-                const embedTextArea = document.getElementById('embed-text-area').ui;
-                // @ts-ignore
-                const embedCopyButton = document.getElementById('copy-embed-button').ui;
-                navigator.clipboard.writeText(embedTextArea.value);
-                embedTextArea.flash();
-                embedCopyButton.text = 'Copied!';
-                setTimeout(() => {
-                    embedCopyButton.text = 'Copy to clipboard';
-                }, 1000);
-            }}/>
-        </Container> }
     </Container>;
 };
 

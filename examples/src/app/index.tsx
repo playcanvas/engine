@@ -95,9 +95,6 @@ const MainLayout = () => {
     };
 
     const hasEditedFiles = () => {
-        if (exampleFiles[0].text.length === 0) {
-            return filesHaveChanged(defaultFiles, editedFiles);
-        }
         return filesHaveChanged(editedFiles, exampleFiles);
     };
 
@@ -123,10 +120,19 @@ const MainLayout = () => {
                     <Route key='main' path='/'>
                         <SideBar categories={examples.categories}/>
                         <Container id='main-view-wrapper'>
-                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} useTypescript={useTypescript} playButtonRef={playButtonRef} languageButtonRef={languageButtonRef} setShowMiniStats={updateShowMiniStats} />
+                            <Menu useTypescript={useTypescript} setShowMiniStats={updateShowMiniStats} />
                             <Container id='main-view'>
+                                <CodeEditor
+                                    lintErrors={lintErrors}
+                                    setLintErrors={setLintErrors}
+                                    hasEditedFiles={hasEditedFiles()}
+                                    playButtonRef={playButtonRef}
+                                    languageButtonRef={languageButtonRef}
+                                    useTypescript={useTypescript}
+                                    files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles}
+                                    setFiles={setEditedFiles.bind(this)}
+                                />
                                 <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} />
-                                <CodeEditor useTypescript={useTypescript} files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles} setFiles={setEditedFiles.bind(this)} setLintErrors={setLintErrors} />
                             </Container>
                         </Container>
                     </Route>
