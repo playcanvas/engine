@@ -59,6 +59,7 @@ export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
+export { Prefilter } from './graphics/prefilter.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
 export { ProgramLibrary } from './graphics/program-library.js';
