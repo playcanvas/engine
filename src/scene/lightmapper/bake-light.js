@@ -54,17 +54,19 @@ class BakeLight {
 
     startBake() {
         this.light.enabled = true;
-        this.light._cacheShadowMap = true;
+
+        // destroy shadow map the light might have
+        this.light._destroyShadowMap();
     }
 
-    endBake() {
+    endBake(shadowMapCache) {
         const light = this.light;
         light.enabled = false;
 
-        // release light shadowmap
-        light._cacheShadowMap = false;
-        if (light._isCachedShadowMap) {
-            light._destroyShadowMap();
+        // return shadow map to the cache
+        if (light.shadowMap && light.shadowMap.cached) {
+            shadowMapCache.add(light, light.shadowMap);
+            light.shadowMap = null;
         }
     }
 }

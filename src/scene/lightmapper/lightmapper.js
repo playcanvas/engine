@@ -818,7 +818,9 @@ class Lightmapper {
         if (!shadowMapRendered && light.castShadows) {
 
             // allocate shadow map from the cache to avoid per light allocation
-            light.shadowMap = this.shadowMapCache.get(this.device, light);
+            if (!light.shadowMap) {
+                light.shadowMap = this.shadowMapCache.get(this.device, light);
+            }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRenderer.cullDirectional(light, casters, this.camera);
@@ -1078,7 +1080,7 @@ class Lightmapper {
                     this.restoreMaterials(rcv);
                 }
 
-                bakeLight.endBake();
+                bakeLight.endBake(this.shadowMapCache);
 
                 // #if _DEBUG
                 device.popMarker();
@@ -1095,6 +1097,10 @@ class Lightmapper {
 
         this.restoreLights(allLights);
         this.restoreScene();
+
+        // empty cache to minimize persistent memory use .. if some cached textures are needed,
+        // they will be allocated again as needed
+        this.shadowMapCache.clear();
     }
 }
 
