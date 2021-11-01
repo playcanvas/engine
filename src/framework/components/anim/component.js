@@ -57,7 +57,10 @@ class AnimComponent extends Component {
         }
 
         // remove event from previous asset
-        if (this._stateGraphAsset) this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent, this);
+        if (this._stateGraphAsset) {
+            const stateGraphAsset = this.system.app.assets.get(this._stateGraphAsset);
+            stateGraphAsset.off('change', this._onStateGraphAssetChangeEvent, this);
+        }
 
         let _id;
         let _asset;
@@ -685,7 +688,8 @@ class AnimComponent extends Component {
 
     onBeforeRemove() {
         if (Number.isFinite(this._stateGraphAsset)) {
-            this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent, this);
+            const stateGraphAsset = this.system.app.assets.get(this._stateGraphAsset);
+            stateGraphAsset.off('change', this._onStateGraphAssetChangeEvent, this);
         }
     }
 
