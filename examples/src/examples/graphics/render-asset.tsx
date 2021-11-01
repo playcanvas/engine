@@ -15,7 +15,6 @@ class RenderAssetExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { 'helipad.dds': pc.Asset, statue: pc.Asset, cube: pc.Asset }): void {
 
         // Create the app and start the update loop

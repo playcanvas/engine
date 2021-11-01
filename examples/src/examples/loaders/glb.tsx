@@ -5,7 +5,6 @@ class GLBExample extends Example {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // The example demonstrates loading of glb file, which contains meshes,

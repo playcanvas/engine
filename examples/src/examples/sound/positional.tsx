@@ -15,7 +15,6 @@ class PositionalExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { model: pc.Asset, runAnim: pc.Asset, gravel: pc.Asset }): void {
 
         // Create the application and start the update loop

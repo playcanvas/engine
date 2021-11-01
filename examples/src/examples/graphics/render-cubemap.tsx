@@ -14,7 +14,6 @@ class RenderCubemapExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { 'helipad.dds': pc.Asset, script: pc.Asset }): void {
 
         // Create the app

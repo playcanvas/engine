@@ -60,12 +60,12 @@ let _params = new Set();
  * @property {number} diffuseDetailMapRotation Controls the 2D rotation (in degrees) of the main (secondary) diffuse map.
  * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {string} diffuseDetailMode Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
- * * {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
- * * {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
- * * {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
- * * {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
- * * {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
- * * {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
+ * - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+ * - {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
+ * - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
+ * - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+ * - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
+ * - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
  * Defaults to {@link DETAILMODE_MUL}.
  *
  * @property {Color} specular The specular color of the material. This color value is 3-component (RGB),
@@ -83,9 +83,9 @@ let _params = new Set();
  *
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires {@link StandardMaterial#enableGGXSpecular} is set to true.
- * * When anisotropy == 0, specular is isotropic.
- * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
- * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+ * - When anisotropy == 0, specular is isotropic.
+ * - When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
+ * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
  *
  * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
@@ -142,7 +142,7 @@ let _params = new Set();
  *
  * @property {number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of distortion.
- * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
+ * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of its own surface.
  * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
  *
  * @property {Color} emissive The emissive color of the material. This color value is 3-component (RGB),
@@ -204,8 +204,8 @@ let _params = new Set();
  * @property {Texture|null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
  * @property {Texture|null} cubeMap The cubic environment map of the material (default is null). Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
- * * {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
- * * {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
+ * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
+ * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to {@link CUBEPROJ_NONE}.
  * @property {BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
  * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
@@ -230,9 +230,9 @@ let _params = new Set();
  * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
  * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
- * * {@link SPECOCC_NONE}: No specular occlusion
- * * {@link SPECOCC_AO}: Use AO directly to occlude specular.
- * * {@link SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.
+ * - {@link SPECOCC_NONE}: No specular occlusion
+ * - {@link SPECOCC_AO}: Use AO directly to occlude specular.
+ * - {@link SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {number} occludeDirect Tells if AO should darken directional lighting.
  *
@@ -240,13 +240,13 @@ let _params = new Set();
  * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
  * It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
  * @property {number} shadingModel Defines the shading model.
- * * {@link SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
- * * {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
+ * - {@link SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
+ * - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
  * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behavior is defined by conserveEnergy parameter.
- * * {@link FRESNEL_NONE}: No Fresnel.
- * * {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
+ * - {@link FRESNEL_NONE}: No Fresnel.
+ * - {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
@@ -260,66 +260,66 @@ let _params = new Set();
  * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
  * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.
  * Properties of the object passed into this function are:
- * * pass: value of {@link Layer#shaderPass} of the Layer being rendered.
- * * chunks: Object containing custom shader chunks that will replace default ones.
- * * customFragmentShader: Completely replace fragment shader with this code.
- * * forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be declared as "vUv1" and passed to the fragment shader.
- * * fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of possible values.
- * * gamma: the type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection} for the list of possible values.
- * * toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the list of possible values.
- * * ambientTint: the value of {@link StandardMaterial#ambientTint}.
- * * specularAntialias: the value of {@link StandardMaterial#specularAntialias}.
- * * conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
- * * occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
- * * occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
- * * shadingModel: the value of {@link StandardMaterial#shadingModel}.
- * * fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
- * * cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
- * * useMetalness: the value of {@link StandardMaterial#useMetalness}.
- * * blendType: the value of {@link Material#blendType}.
- * * twoSidedLighting: the value of {@link Material#twoSidedLighting}.
- * * diffuseTint: defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
- * * specularTint: defines if {@link StandardMaterial#specular} constant should affect specular color.
- * * metalnessTint: defines if {@link StandardMaterial#metalness} constant should affect metalness value.
- * * glossTint: defines if {@link StandardMaterial#shininess} constant should affect glossiness value.
- * * emissiveTint: defines if {@link StandardMaterial#emissive} constant should affect emission value.
- * * opacityTint: defines if {@link StandardMaterial#opacity} constant should affect opacity value.
- * * occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
- * * alphaTest: enable alpha testing. See {@link Material#alphaTest}.
- * * alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
- * * opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
- * * alphaFade: fade value. See {@link Material#alphaFade}.
- * * sphereMap: if {@link StandardMaterial#sphereMap} is used.
- * * cubeMap: if {@link StandardMaterial#cubeMap} is used.
- * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
- * * ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.
- * * useSpecular: if any specular or reflections are needed at all.
- * * rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.
- * * hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.
- * * rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.
- * * hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.
- * * fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * * prefilteredCubemap: if prefiltered cubemaps are used.
- * * emissiveFormat: how emissiveMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
- *   * 0: sRGB texture
- *   * 1: RGBM-encoded HDR texture
- *   * 2: Simple read (no conversion from sRGB)
- * * lightMapFormat: how lightMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
- *   * 0: sRGB texture
- *   * 1: RGBM-encoded HDR texture
- *   * 2: Simple read (no conversion from sRGB)
- * * useRgbm: if decodeRGBM() function is needed in the shader at all.
- * * packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
- * * forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use default.
- * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
- * * refraction: if refraction is used.
- * * skyboxIntensity: if reflected skybox intensity should be modulated.
- * * useCubeMapRotation: if cube map rotation is enabled.
- * * useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
- * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
- * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link VertexBuffer} instead of shader's uniforms.
- * * useMorphPosition: if morphing code should be generated to morph positions.
- * * useMorphNormal: if morphing code should be generated to morph normals.
+ * - pass: value of {@link Layer#shaderPass} of the Layer being rendered.
+ * - chunks: Object containing custom shader chunks that will replace default ones.
+ * - customFragmentShader: Completely replace fragment shader with this code.
+ * - forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be declared as "vUv1" and passed to the fragment shader.
+ * - fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of possible values.
+ * - gamma: the type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection} for the list of possible values.
+ * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the list of possible values.
+ * - ambientTint: the value of {@link StandardMaterial#ambientTint}.
+ * - specularAntialias: the value of {@link StandardMaterial#specularAntialias}.
+ * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
+ * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
+ * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
+ * - shadingModel: the value of {@link StandardMaterial#shadingModel}.
+ * - fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
+ * - cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
+ * - useMetalness: the value of {@link StandardMaterial#useMetalness}.
+ * - blendType: the value of {@link Material#blendType}.
+ * - twoSidedLighting: the value of {@link Material#twoSidedLighting}.
+ * - diffuseTint: defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
+ * - specularTint: defines if {@link StandardMaterial#specular} constant should affect specular color.
+ * - metalnessTint: defines if {@link StandardMaterial#metalness} constant should affect metalness value.
+ * - glossTint: defines if {@link StandardMaterial#shininess} constant should affect glossiness value.
+ * - emissiveTint: defines if {@link StandardMaterial#emissive} constant should affect emission value.
+ * - opacityTint: defines if {@link StandardMaterial#opacity} constant should affect opacity value.
+ * - occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
+ * - alphaTest: enable alpha testing. See {@link Material#alphaTest}.
+ * - alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
+ * - opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
+ * - alphaFade: fade value. See {@link Material#alphaFade}.
+ * - sphereMap: if {@link StandardMaterial#sphereMap} is used.
+ * - cubeMap: if {@link StandardMaterial#cubeMap} is used.
+ * - dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
+ * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.
+ * - useSpecular: if any specular or reflections are needed at all.
+ * - rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.
+ * - hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.
+ * - rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.
+ * - hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.
+ * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
+ * - prefilteredCubemap: if prefiltered cubemaps are used.
+ * - emissiveFormat: how emissiveMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
+ *   - 0: sRGB texture
+ *   - 1: RGBM-encoded HDR texture
+ *   - 2: Simple read (no conversion from sRGB)
+ * - lightMapFormat: how lightMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
+ *   - 0: sRGB texture
+ *   - 1: RGBM-encoded HDR texture
+ *   - 2: Simple read (no conversion from sRGB)
+ * - useRgbm: if decodeRGBM() function is needed in the shader at all.
+ * - packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
+ * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use default.
+ * - fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
+ * - refraction: if refraction is used.
+ * - skyboxIntensity: if reflected skybox intensity should be modulated.
+ * - useCubeMapRotation: if cube map rotation is enabled.
+ * - useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
+ * - useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
+ * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link VertexBuffer} instead of shader's uniforms.
+ * - useMorphPosition: if morphing code should be generated to morph positions.
+ * - useMorphNormal: if morphing code should be generated to morph normals.
  * @example
  * // Create a new Standard material
  * var material = new pc.StandardMaterial();
@@ -606,7 +606,7 @@ class StandardMaterial extends Material {
                         // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                         this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                     } else {
-                        console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                        console.log(`Can't use prefiltered cubemap: ${allMips}, ${device.useTexCubeLod}, ${prefilteredCubeMap128._levels}`);
                     }
                 } else {
                     // Single (able to use single cubemap with texCubeLod)
@@ -621,7 +621,7 @@ class StandardMaterial extends Material {
                 this._setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
                 this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
             } else {
-                console.log("Can't use prefiltered cubemap: " + allMips + ", " + device.useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                console.log(`Can't use prefiltered cubemap: ${allMips}, ${device.useTexCubeLod}, ${prefilteredCubeMap128._levels}`);
             }
 
             if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
@@ -694,13 +694,13 @@ const defineProp = (prop) => {
 
     const aggFuncs = {
         equals: (a, b) => a.equals(b),
-        clone: (a) => a.clone(),
+        clone: a => a.clone(),
         copy: (dest, src) => dest.copy(src)
     };
 
     const valueFuncs = {
         equals: (a, b) => a === b,
-        clone: (a) => a,
+        clone: a => a,
         copy: (dest, src) => src
     };
 

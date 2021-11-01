@@ -35,6 +35,7 @@ import { Application } from './application.js';
  * @property {RigidBodyComponent} [rigidbody] Gets the {@link RigidBodyComponent} attached to this entity. [read only]
  * @property {ScreenComponent} [screen] Gets the {@link ScreenComponent} attached to this entity. [read only]
  * @property {ScriptComponent} [script] Gets the {@link ScriptComponent} attached to this entity. [read only]
+ * @property {ScrollbarComponent} [scrollbar] Gets the {@link ScrollbarComponent} attached to this entity. [read only]
  * @property {ScrollViewComponent} [scrollview] Gets the {@link ScrollViewComponent} attached to this entity. [read only]
  * @property {SoundComponent} [sound] Gets the {@link SoundComponent} attached to this entity. [read only]
  * @property {SpriteComponent} [sprite] Gets the {@link SpriteComponent} attached to this entity. [read only]
@@ -54,7 +55,7 @@ import { Application } from './application.js';
  * // Move the entity
  * entity.translate(10, 0, 0);
  *
- * // Or translate it by setting it's position directly
+ * // Or translate it by setting its position directly
  * var p = entity.getPosition();
  * entity.setPosition(p.x + 10, p.y, p.z);
  *
@@ -98,25 +99,26 @@ class Entity extends GraphNode {
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
      * @param {string} type - The name of the component to add. Valid strings are:
      *
-     * * "animation" - see {@link AnimationComponent}
-     * * "audiolistener" - see {@link AudioListenerComponent}
-     * * "button" - see {@link ButtonComponent}
-     * * "camera" - see {@link CameraComponent}
-     * * "collision" - see {@link CollisionComponent}
-     * * "element" - see {@link ElementComponent}
-     * * "layoutchild" - see {@link LayoutChildComponent}
-     * * "layoutgroup" - see {@link LayoutGroupComponent}
-     * * "light" - see {@link LightComponent}
-     * * "model" - see {@link ModelComponent}
-     * * "particlesystem" - see {@link ParticleSystemComponent}
-     * * "render" - see {@link RenderComponent}
-     * * "rigidbody" - see {@link RigidBodyComponent}
-     * * "screen" - see {@link ScreenComponent}
-     * * "script" - see {@link ScriptComponent}
-     * * "scrollbar" - see {@link ScrollbarComponent}
-     * * "scrollview" - see {@link ScrollViewComponent}
-     * * "sound" - see {@link SoundComponent}
-     * * "sprite" - see {@link SpriteComponent}
+     * - "anim" - see {@link AnimComponent}
+     * - "animation" - see {@link AnimationComponent}
+     * - "audiolistener" - see {@link AudioListenerComponent}
+     * - "button" - see {@link ButtonComponent}
+     * - "camera" - see {@link CameraComponent}
+     * - "collision" - see {@link CollisionComponent}
+     * - "element" - see {@link ElementComponent}
+     * - "layoutchild" - see {@link LayoutChildComponent}
+     * - "layoutgroup" - see {@link LayoutGroupComponent}
+     * - "light" - see {@link LightComponent}
+     * - "model" - see {@link ModelComponent}
+     * - "particlesystem" - see {@link ParticleSystemComponent}
+     * - "render" - see {@link RenderComponent}
+     * - "rigidbody" - see {@link RigidBodyComponent}
+     * - "screen" - see {@link ScreenComponent}
+     * - "script" - see {@link ScriptComponent}
+     * - "scrollbar" - see {@link ScrollbarComponent}
+     * - "scrollview" - see {@link ScrollViewComponent}
+     * - "sound" - see {@link SoundComponent}
+     * - "sprite" - see {@link SpriteComponent}
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
@@ -465,7 +467,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         }
 
         // Handle entity script attributes
-        if (components.script && ! newEntity._app.useLegacyScriptAttributeCloning) {
+        if (components.script && !newEntity._app.useLegacyScriptAttributeCloning) {
             newEntity.script.resolveDuplicatedEntityReferenceProperties(components.script, duplicatedIdsMap);
         }
 

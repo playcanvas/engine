@@ -666,7 +666,7 @@ class Vec3 {
      * console.log(v.toString());
      */
     toString() {
-        return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
+        return `[${this.x}, ${this.y}, ${this.z}]`;
     }
 
     /**

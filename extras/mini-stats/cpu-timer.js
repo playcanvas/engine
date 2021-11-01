@@ -24,7 +24,7 @@ class CpuTimer {
         if (this._frameIndex < this._frameTimings.length) {
             this._frameTimings.splice(this._frameIndex);
         }
-        var tmp = this._prevTimings;
+        const tmp = this._prevTimings;
         this._prevTimings = this._timings;
         this._timings = this._frameTimings;
         this._frameTimings = tmp;
@@ -39,22 +39,21 @@ class CpuTimer {
             return;
         }
 
-        var timestamp = pc.now();
+        const timestamp = pc.now();
 
         // end previous mark
-        var prev;
         if (this._frameIndex > 0) {
-            prev = this._frameTimings[this._frameIndex - 1];
+            const prev = this._frameTimings[this._frameIndex - 1];
             prev[1] = timestamp - prev[1];
         } else if (this._timings.length > 0) {
-            prev = this._timings[this._timings.length - 1];
+            const prev = this._timings[this._timings.length - 1];
             prev[1] = timestamp - prev[1];
         }
 
         if (this._frameIndex >= this._frameTimings.length) {
             this._frameTimings.push([name, timestamp]);
         } else {
-            var timing = this._frameTimings[this._frameIndex];
+            const timing = this._frameTimings[this._frameIndex];
             timing[0] = name;
             timing[1] = timestamp;
         }
@@ -63,10 +62,8 @@ class CpuTimer {
 
     get timings() {
         // remove the last time point from the list (which is the time spent outside
-        // of playcanvas)
-        return this._timings.slice(0, -1).map(function (v) {
-            return v[1];
-        });
+        // of PlayCanvas)
+        return this._timings.slice(0, -1).map(v => v[1]);
     }
 }
 

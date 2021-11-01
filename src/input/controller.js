@@ -123,7 +123,7 @@ class Controller {
 
         // clear axes values
         this._axesValues = {};
-        for (var key in this._axes) {
+        for (const key in this._axes) {
             this._axesValues[key] = [];
         }
     }
@@ -140,7 +140,7 @@ class Controller {
             this._enableKeyboard();
         }
         if (this._actions[action]) {
-            throw new Error("Action: " + action + " already registered");
+            throw new Error(`Action: ${action} already registered`);
         }
 
         if (keys === undefined) {
@@ -230,17 +230,17 @@ class Controller {
      * @param {object} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
      */
     registerAxis(options) {
-        var name = options.name;
+        const name = options.name;
         if (!this._axes[name]) {
             this._axes[name] = [];
         }
-        var i = this._axes[name].push(name);
+        const i = this._axes[name].push(name);
 
         //
         options = options || {};
         options.pad = options.pad || PAD_1;
 
-        var bind = function (controller, source, value, key) {
+        const bind = function (controller, source, value, key) {
             switch (source) {
                 case 'mousex':
                     controller._mouse.on(EVENT_MOUSEMOVE, function (e) {
@@ -300,17 +300,15 @@ class Controller {
             return false;
         }
 
-        var action;
-        var index = 0;
-        var length = this._actions[actionName].length;
+        const length = this._actions[actionName].length;
 
-        for (index = 0; index < length; ++index) {
-            action = this._actions[actionName][index];
+        for (let index = 0; index < length; ++index) {
+            const action = this._actions[actionName][index];
             switch (action.type) {
                 case ACTION_KEYBOARD:
                     if (this._keyboard) {
-                        var i, len = action.keys.length;
-                        for (i = 0; i < len; i++) {
+                        const len = action.keys.length;
+                        for (let i = 0; i < len; i++) {
                             if (this._keyboard.isPressed(action.keys[i])) {
                                 return true;
                             }
@@ -344,16 +342,15 @@ class Controller {
             return false;
         }
 
-        var index = 0;
-        var length = this._actions[actionName].length;
+        const length = this._actions[actionName].length;
 
-        for (index = 0; index < length; ++index) {
-            var action = this._actions[actionName][index];
+        for (let index = 0; index < length; ++index) {
+            const action = this._actions[actionName][index];
             switch (action.type) {
                 case ACTION_KEYBOARD:
                     if (this._keyboard) {
-                        var i, len = action.keys.length;
-                        for (i = 0; i < len; i++) {
+                        const len = action.keys.length;
+                        for (let i = 0; i < len; i++) {
                             if (this._keyboard.wasPressed(action.keys[i])) {
                                 return true;
                             }
@@ -376,13 +373,13 @@ class Controller {
     }
 
     getAxis(name) {
-        var value = 0;
+        let value = 0;
 
         if (this._axes[name]) {
-            var i, len = this._axes[name].length;
-            for (i = 0; i < len; i++) {
+            const len = this._axes[name].length;
+            for (let i = 0; i < len; i++) {
                 if (type(this._axes[name][i]) === 'function') {
-                    var v = this._axes[name][i]();
+                    const v = this._axes[name][i]();
                     if (Math.abs(v) > Math.abs(value)) {
                         value = v;
                     }

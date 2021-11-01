@@ -32,9 +32,9 @@ const spriteIndices = [
  * Defaults to 1.
  * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
  *
- * * {@link SPRITE_RENDERMODE_SIMPLE}
- * * {@link SPRITE_RENDERMODE_SLICED}
- * * {@link SPRITE_RENDERMODE_TILED}
+ * - {@link SPRITE_RENDERMODE_SIMPLE}
+ * - {@link SPRITE_RENDERMODE_SLICED}
+ * - {@link SPRITE_RENDERMODE_TILED}
  *
  * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
  * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
@@ -44,9 +44,9 @@ const spriteIndices = [
  * @property {TextureAtlas} atlas The texture atlas.
  * @property {number} renderMode The rendering mode of the sprite. Can be:
  *
- * * {@link SPRITE_RENDERMODE_SIMPLE}
- * * {@link SPRITE_RENDERMODE_SLICED}
- * * {@link SPRITE_RENDERMODE_TILED}
+ * - {@link SPRITE_RENDERMODE_SIMPLE}
+ * - {@link SPRITE_RENDERMODE_SLICED}
+ * - {@link SPRITE_RENDERMODE_TILED}
  *
  * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
  * @property {Mesh[]} meshes An array that contains a mesh for each frame.

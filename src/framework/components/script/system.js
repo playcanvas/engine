@@ -18,7 +18,7 @@ const METHOD_POST_UPDATE = '_onPostUpdate';
 // array because if we ever remove components from the array
 // we would have to re-calculate the execution order for all subsequent
 // script components in the array every time, which would be slow
-var executionOrderCounter = 0;
+let executionOrderCounter = 0;
 
 /**
  * @class
@@ -58,10 +58,10 @@ class ScriptComponentSystem extends ComponentSystem {
         this.preloading = true;
 
         this.on('beforeremove', this._onBeforeRemove, this);
-        ComponentSystem.bind('initialize', this._onInitialize, this);
-        ComponentSystem.bind('postInitialize', this._onPostInitialize, this);
-        ComponentSystem.bind('update', this._onUpdate, this);
-        ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
+        this.app.systems.on('initialize', this._onInitialize, this);
+        this.app.systems.on('postInitialize', this._onPostInitialize, this);
+        this.app.systems.on('update', this._onUpdate, this);
+        this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data) {
@@ -88,7 +88,7 @@ class ScriptComponentSystem extends ComponentSystem {
         if (data.hasOwnProperty('order') && data.hasOwnProperty('scripts')) {
             component._scriptsData = data.scripts;
 
-            for (var i = 0; i < data.order.length; i++) {
+            for (let i = 0; i < data.order.length; i++) {
                 component.create(data.order[i], {
                     enabled: data.scripts[data.order[i]].enabled,
                     attributes: data.scripts[data.order[i]].attributes,
@@ -99,17 +99,16 @@ class ScriptComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var i, key;
-        var order = [];
-        var scripts = { };
+        const order = [];
+        const scripts = { };
 
-        for (i = 0; i < entity.script._scripts.length; i++) {
-            var scriptInstance = entity.script._scripts[i];
-            var scriptName = scriptInstance.__scriptType.__name;
+        for (let i = 0; i < entity.script._scripts.length; i++) {
+            const scriptInstance = entity.script._scripts[i];
+            const scriptName = scriptInstance.__scriptType.__name;
             order.push(scriptName);
 
-            var attributes = { };
-            for (key in scriptInstance.__attributes)
+            const attributes = { };
+            for (const key in scriptInstance.__attributes)
                 attributes[key] = scriptInstance.__attributes[key];
 
             scripts[scriptName] = {
@@ -118,13 +117,13 @@ class ScriptComponentSystem extends ComponentSystem {
             };
         }
 
-        for (key in entity.script._scriptsIndex) {
+        for (const key in entity.script._scriptsIndex) {
             if (key.awaiting) {
                 order.splice(key.ind, 0, key);
             }
         }
 
-        var data = {
+        const data = {
             enabled: entity.script.enabled,
             order: order,
             scripts: scripts
@@ -135,7 +134,7 @@ class ScriptComponentSystem extends ComponentSystem {
 
     _resetExecutionOrder() {
         executionOrderCounter = 0;
-        for (var i = 0, len = this._components.length; i < len; i++) {
+        for (let i = 0, len = this._components.length; i < len; i++) {
             this._components.items[i]._executionOrder = executionOrderCounter++;
         }
     }
@@ -173,7 +172,7 @@ class ScriptComponentSystem extends ComponentSystem {
 
     // inserts the component into the enabledComponents array
     // which finds the right slot based on component._executionOrder
-    _addComponentToEnabled(component)  {
+    _addComponentToEnabled(component) {
         this._enabledComponents.insert(component);
     }
 
@@ -183,7 +182,7 @@ class ScriptComponentSystem extends ComponentSystem {
     }
 
     _onBeforeRemove(entity, component) {
-        var ind = this._components.items.indexOf(component);
+        const ind = this._components.items.indexOf(component);
         if (ind >= 0) {
             component._onBeforeRemove();
         }
@@ -192,6 +191,15 @@ class ScriptComponentSystem extends ComponentSystem {
 
         // remove from components array
         this._components.remove(component);
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('initialize', this._onInitialize, this);
+        this.app.systems.off('postInitialize', this._onPostInitialize, this);
+        this.app.systems.off('update', this._onUpdate, this);
+        this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
 

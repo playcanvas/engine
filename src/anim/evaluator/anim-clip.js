@@ -101,7 +101,7 @@ class AnimClip {
         if (frameStartTime === 0) {
             this.eventCursor = 0;
         }
-        var clippedFrameDuration;
+        let clippedFrameDuration;
         // if this frame overlaps with the end of the track, we should clip off the end of the frame time then check that clipped time later
         if (frameEndTime > this.track.duration) {
             clippedFrameDuration = frameEndTime - this.track.duration;
@@ -123,10 +123,10 @@ class AnimClip {
 
     _update(deltaTime) {
         if (this._playing) {
-            var time = this._time;
-            var duration = this._track.duration;
-            var speed = this._speed;
-            var loop = this._loop;
+            let time = this._time;
+            const duration = this._track.duration;
+            const speed = this._speed;
+            const loop = this._loop;
 
             // check for events that should fire during this frame
             if (this._track.events.length > 0 && duration > 0) {

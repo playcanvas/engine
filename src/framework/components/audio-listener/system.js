@@ -29,7 +29,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
         this.manager = manager;
         this.current = null;
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -46,6 +46,12 @@ class AudioListenerComponentSystem extends ComponentSystem {
             const wtm = this.current.getWorldTransform();
             this.manager.listener.setOrientation(wtm);
         }
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

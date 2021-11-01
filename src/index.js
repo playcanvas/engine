@@ -60,6 +60,7 @@ export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
+export { Prefilter } from './graphics/prefilter.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
 export { ProgramLibrary } from './graphics/program-library.js';
@@ -82,7 +83,7 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { WorldClusters } from './scene/world-clusters.js';
+export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -306,4 +307,4 @@ export { XrPlaneDetection } from './xr/xr-plane-detection.js';
 export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
-export * from './deprecated.js';
+export * from './deprecated/deprecated.js';

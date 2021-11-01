@@ -7,13 +7,13 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { ElementComponent } from './component.js';
 
-var _inputScreenPosition = new Vec2();
-var _inputWorldPosition = new Vec3();
-var _rayOrigin = new Vec3();
-var _rayDirection = new Vec3();
-var _planeOrigin = new Vec3();
-var _planeNormal = new Vec3();
-var _entityRotation = new Quat();
+const _inputScreenPosition = new Vec2();
+const _inputWorldPosition = new Vec3();
+const _rayOrigin = new Vec3();
+const _rayDirection = new Vec3();
+const _planeOrigin = new Vec3();
+const _planeNormal = new Vec3();
+const _entityRotation = new Quat();
 
 const OPPOSITE_AXIS = {
     x: 'y',
@@ -61,8 +61,8 @@ class ElementDragHelper extends EventHandler {
     }
 
     _toggleDragListeners(onOrOff) {
-        var isOn = onOrOff === 'on';
-        var addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
+        const isOn = onOrOff === 'on';
+        const addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
 
         // Prevent multiple listeners
         if (this._hasDragListeners && isOn) {
@@ -95,7 +95,7 @@ class ElementDragHelper extends EventHandler {
             this._dragCamera = event.camera;
             this._calculateDragScale();
 
-            var currentMousePosition = this._screenToLocal(event);
+            const currentMousePosition = this._screenToLocal(event);
 
             if (currentMousePosition) {
                 this._toggleDragListeners('on');
@@ -124,13 +124,13 @@ class ElementDragHelper extends EventHandler {
         _planeOrigin.copy(this._element.entity.getPosition());
         _planeNormal.copy(this._element.entity.forward).mulScalar(-1);
 
-        var denominator = _planeNormal.dot(_rayDirection);
+        const denominator = _planeNormal.dot(_rayDirection);
 
         // If the ray and plane are not parallel
         if (Math.abs(denominator) > 0) {
-            var rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
-            var collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
-            var position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
+            const rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
+            const collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
+            const position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
 
             _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(position, position);
 
@@ -143,7 +143,7 @@ class ElementDragHelper extends EventHandler {
     }
 
     _determineInputPosition(event) {
-        var devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
+        const devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
 
         if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
             _inputScreenPosition.x = event.x * devicePixelRatio;
@@ -168,11 +168,11 @@ class ElementDragHelper extends EventHandler {
     }
 
     _calculateDragScale() {
-        var current = this._element.entity.parent;
-        var screen = this._element.screen && this._element.screen.screen;
-        var isWithin2DScreen = screen && screen.screenSpace;
-        var screenScale = isWithin2DScreen ? screen.scale : 1;
-        var dragScale = this._dragScale;
+        let current = this._element.entity.parent;
+        const screen = this._element.screen && this._element.screen.screen;
+        const isWithin2DScreen = screen && screen.screenSpace;
+        const screenScale = isWithin2DScreen ? screen.scale : 1;
+        const dragScale = this._dragScale;
 
         dragScale.set(screenScale, screenScale, screenScale);
 
@@ -192,15 +192,15 @@ class ElementDragHelper extends EventHandler {
 
     _onMove(event) {
         if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
-            var currentMousePosition = this._screenToLocal(event);
+            const currentMousePosition = this._screenToLocal(event);
 
             if (this._dragStartMousePosition && currentMousePosition) {
                 this._deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
                 this._deltaHandlePosition.copy(this._dragStartHandlePosition).add(this._deltaMousePosition);
 
                 if (this._axis) {
-                    var currentPosition = this._element.entity.getLocalPosition();
-                    var constrainedAxis = OPPOSITE_AXIS[this._axis];
+                    const currentPosition = this._element.entity.getLocalPosition();
+                    const constrainedAxis = OPPOSITE_AXIS[this._axis];
                     this._deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
                 }
 

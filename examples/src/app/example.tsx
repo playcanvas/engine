@@ -21,7 +21,6 @@ interface ExampleState {
 
 class Example extends Component <ExampleProps, ExampleState> {
     exampleData: Observer;
-    controls: any;
     editorValue: string;
 
     constructor(props: ExampleProps) {

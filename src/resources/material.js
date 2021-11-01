@@ -62,7 +62,7 @@ class MaterialHandler {
                 }
             } else {
                 if (callback) {
-                    callback("Error loading material: " + url.original + " [" + err + "]");
+                    callback(`Error loading material: ${url.original} [${err}]`);
                 }
             }
         });

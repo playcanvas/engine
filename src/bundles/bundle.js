@@ -9,7 +9,7 @@ class Bundle {
     constructor(files) {
         this._blobUrls = {};
 
-        for (var i = 0, len = files.length; i < len; i++) {
+        for (let i = 0, len = files.length; i < len; i++) {
             if (files[i].url) {
                 this._blobUrls[files[i].name] = files[i].url;
             }
@@ -47,7 +47,7 @@ class Bundle {
      * @description Destroys the bundle and frees up blob URLs.
      */
     destroy() {
-        for (var key in this._blobUrls) {
+        for (const key in this._blobUrls) {
             URL.revokeObjectURL(this._blobUrls[key]);
         }
         this._blobUrls = null;

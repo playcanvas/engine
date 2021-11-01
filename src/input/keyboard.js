@@ -156,19 +156,16 @@ class Keyboard extends EventHandler {
      */
     toKeyIdentifier(keyCode) {
         keyCode = toKeyCode(keyCode);
-        var count;
-        var hex;
-        var length;
-        var id = _keyCodeToKeyIdentifier[keyCode.toString()];
 
+        const id = _keyCodeToKeyIdentifier[keyCode.toString()];
         if (id) {
             return id;
         }
 
         // Convert to hex and add leading 0's
-        hex = keyCode.toString(16).toUpperCase();
-        length = hex.length;
-        for (count = 0; count < (4 - length); count++) {
+        let hex = keyCode.toString(16).toUpperCase();
+        const length = hex.length;
+        for (let count = 0; count < (4 - length); count++) {
             hex = '0' + hex;
         }
 
@@ -176,12 +173,12 @@ class Keyboard extends EventHandler {
     }
 
     _handleKeyDown(event) {
-        var code = event.keyCode || event.charCode;
+        const code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
         if (code === undefined) return;
 
-        var id = this.toKeyIdentifier(code);
+        const id = this.toKeyIdentifier(code);
 
         this._keymap[id] = true;
 
@@ -199,12 +196,12 @@ class Keyboard extends EventHandler {
     }
 
     _handleKeyUp(event) {
-        var code = event.keyCode || event.charCode;
+        const code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
         if (code === undefined) return;
 
-        var id = this.toKeyIdentifier(code);
+        const id = this.toKeyIdentifier(code);
 
         delete this._keymap[id];
 
@@ -250,14 +247,12 @@ class Keyboard extends EventHandler {
      * @description Called once per frame to update internal state.
      */
     update() {
-        var prop;
-
         // clear all keys
-        for (prop in this._lastmap) {
+        for (const prop in this._lastmap) {
             delete this._lastmap[prop];
         }
 
-        for (prop in this._keymap) {
+        for (const prop in this._keymap) {
             if (this._keymap.hasOwnProperty(prop)) {
                 this._lastmap[prop] = this._keymap[prop];
             }
@@ -272,8 +267,8 @@ class Keyboard extends EventHandler {
      * @returns {boolean} True if the key was pressed, false if not.
      */
     isPressed(key) {
-        var keyCode = toKeyCode(key);
-        var id = this.toKeyIdentifier(keyCode);
+        const keyCode = toKeyCode(key);
+        const id = this.toKeyIdentifier(keyCode);
 
         return !!(this._keymap[id]);
     }
@@ -286,8 +281,8 @@ class Keyboard extends EventHandler {
      * @returns {boolean} True if the key was pressed.
      */
     wasPressed(key) {
-        var keyCode = toKeyCode(key);
-        var id = this.toKeyIdentifier(keyCode);
+        const keyCode = toKeyCode(key);
+        const id = this.toKeyIdentifier(keyCode);
 
         return (!!(this._keymap[id]) && !!!(this._lastmap[id]));
     }
@@ -300,8 +295,8 @@ class Keyboard extends EventHandler {
      * @returns {boolean} True if the key was pressed.
      */
     wasReleased(key) {
-        var keyCode = toKeyCode(key);
-        var id = this.toKeyIdentifier(keyCode);
+        const keyCode = toKeyCode(key);
+        const id = this.toKeyIdentifier(keyCode);
 
         return (!!!(this._keymap[id]) && !!(this._lastmap[id]));
     }

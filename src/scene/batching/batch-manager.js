@@ -1,4 +1,4 @@
-import { now } from  '../../core/time.js';
+import { now } from '../../core/time.js';
 
 import { Vec3 } from '../../math/vec3.js';
 import { Mat3 } from '../../math/mat3.js';
@@ -60,7 +60,7 @@ function equalLightLists(lightList1, lightList2) {
         if (lightList1.indexOf(lightList2[k]) < 0)
             return false;
     }
-    return  true;
+    return true;
 }
 
 const mat3 = new Mat3();
@@ -135,7 +135,7 @@ class BatchManager {
 
         if (this._batchGroups[id]) {
             // #if _DEBUG
-            console.error("batch group with id " + id + " already exists");
+            console.error(`batch group with id ${id} already exists`);
             // #endif
             return;
         }
@@ -156,7 +156,7 @@ class BatchManager {
     removeGroup(id) {
         if (!this._batchGroups[id]) {
             // #if _DEBUG
-            console.error("batch group with id " + id + " doesn't exist");
+            console.error(`batch group with id ${id} doesn't exist`);
             // #endif
             return;
         }
@@ -164,7 +164,7 @@ class BatchManager {
         // delete batches with matching id
         const newBatchList = [];
         for (let i = 0; i < this._batchList.length; i++) {
-            if (this._batchList[i].batchGroupId == id) {
+            if (this._batchList[i].batchGroupId === id) {
                 this.destroyBatch(this._batchList[i]);
             } else {
                 newBatchList.push(this._batchList[i]);
@@ -259,7 +259,7 @@ class BatchManager {
             }
         } else {
             // #if _DEBUG
-            console.warn('Invalid batch ' + groupId + ' insertion');
+            console.warn(`Invalid batch ${groupId} insertion`);
             // #endif
         }
     }
@@ -274,7 +274,7 @@ class BatchManager {
             }
         } else {
             // #if _DEBUG
-            console.warn('Invalid batch ' + groupId + ' insertion');
+            console.warn(`Invalid batch ${groupId} insertion`);
             // #endif
         }
     }
@@ -453,7 +453,7 @@ class BatchManager {
             groupData = this._batchGroups[groupId];
             if (!groupData) {
                 // #if _DEBUG
-                console.error("batch group " + groupId + " not found");
+                console.error(`batch group ${groupId} not found`);
                 // #endif
                 continue;
             }
@@ -475,12 +475,12 @@ class BatchManager {
      * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
      * The input list will be split, if:
      *
-     * * Mesh instances use different materials.
-     * * Mesh instances have different parameters (e.g. lightmaps or static lights).
-     * * Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc).
-     * * Too many vertices for a single batch (65535 is maximum).
-     * * Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end).
-     * * Bounding box of a batch is larger than maxAabbSize in any dimension.
+     * - Mesh instances use different materials.
+     * - Mesh instances have different parameters (e.g. lightmaps or static lights).
+     * - Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc).
+     * - Too many vertices for a single batch (65535 is maximum).
+     * - Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end).
+     * - Bounding box of a batch is larger than maxAabbSize in any dimension.
      *
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances
      * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
@@ -851,7 +851,7 @@ class BatchManager {
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
             meshInstance.cull = batch.origMeshInstances[0].cull;
-            const  batchGroup = this._batchGroups[batchGroupId];
+            const batchGroup = this._batchGroups[batchGroupId];
             if (batchGroup && batchGroup._ui)
                 meshInstance.cull = false;
 

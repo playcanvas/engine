@@ -14,7 +14,6 @@ class MaterialTranslucentSpecularExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { 'helipad.dds': pc.Asset, font: pc.Asset }): void {
 
         // Create the application and start the update loop

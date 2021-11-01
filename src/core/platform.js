@@ -38,7 +38,7 @@ if (typeof navigator !== 'undefined') {
 
     gamepads = 'getGamepads' in navigator;
 
-    workers = (typeof(Worker) !== 'undefined');
+    workers = (typeof Worker !== 'undefined');
 
     try {
         const opts = Object.defineProperty({}, 'passive', {

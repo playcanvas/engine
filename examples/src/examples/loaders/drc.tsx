@@ -50,7 +50,6 @@ class LoadersGlExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any): void {
         // This example uses draco point cloud loader library from https://loaders.gl/
         // Note that many additional formats are supported by the library and can be used.

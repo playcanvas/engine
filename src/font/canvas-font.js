@@ -46,15 +46,15 @@ class CanvasFont extends EventHandler {
         this.color = options.color || new Color(1, 1, 1);
         this.padding = options.padding || 0;
 
-        var w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
-        var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
+        const w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
+        const h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
 
         // Create a canvas to do the text rendering
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         canvas.height = h;
         canvas.width = w;
 
-        var texture = new Texture(this.app.graphicsDevice, {
+        const texture = new Texture(this.app.graphicsDevice, {
             format: PIXELFORMAT_R8_G8_B8_A8,
             mipmaps: true
         });
@@ -80,7 +80,7 @@ class CanvasFont extends EventHandler {
      * @param {string} text - The list of characters to render into the texture atlas.
      */
     createTextures(text) {
-        var _chars = this._normalizeCharsSet(text);
+        const _chars = this._normalizeCharsSet(text);
 
         // different length so definitely update
         if (_chars.length !== this.chars.length) {
@@ -89,7 +89,7 @@ class CanvasFont extends EventHandler {
         }
 
         // compare sorted characters for difference
-        for (var i = 0; i < _chars.length; i++) {
+        for (let i = 0; i < _chars.length; i++) {
             if (_chars[i] !== this.chars[i]) {
                 this._renderAtlas(_chars);
                 return;
@@ -106,11 +106,11 @@ class CanvasFont extends EventHandler {
      * @param {string} text - The list of characters to add to the texture atlas.
      */
     updateTextures(text) {
-        var _chars = this._normalizeCharsSet(text);
-        var newCharsSet = [];
+        const _chars = this._normalizeCharsSet(text);
+        const newCharsSet = [];
 
-        for (var i = 0; i < _chars.length; i++) {
-            var char = _chars[i];
+        for (let i = 0; i < _chars.length; i++) {
+            const char = _chars[i];
             if (!this.data.chars[char]) {
                 newCharsSet.push(char);
             }
@@ -129,7 +129,7 @@ class CanvasFont extends EventHandler {
      */
     destroy() {
         // call texture.destroy on any created textures
-        for (var i = 0; i < this.textures.length; i++) {
+        for (let i = 0; i < this.textures.length; i++) {
             this.textures[i].destroy();
         }
         // null instance variables to make it obvious this font is no longer valid
@@ -146,10 +146,10 @@ class CanvasFont extends EventHandler {
     }
 
     _getAndClearContext(canvas, clearColor) {
-        var w = canvas.width;
-        var h = canvas.height;
+        const w = canvas.width;
+        const h = canvas.height;
 
-        var ctx = canvas.getContext('2d', {
+        const ctx = canvas.getContext('2d', {
             alpha: true
         });
 
@@ -161,15 +161,15 @@ class CanvasFont extends EventHandler {
     }
 
     _colorToRgbString(color, alpha) {
-        var str;
-        var r = Math.round(255 * color.r);
-        var g = Math.round(255 * color.g);
-        var b = Math.round(255 * color.b);
+        let str;
+        const r = Math.round(255 * color.r);
+        const g = Math.round(255 * color.g);
+        const b = Math.round(255 * color.b);
 
         if (alpha) {
-            str = "rgba(" + r + ", " + g + ", " + b + ", " + color.a + ")";
+            str = `rgba(${r}, ${g}, ${b}, ${color.a})`;
         } else {
-            str = "rgb(" + r + ", " + g + ", " + b + ")";
+            str = `rgb(${r}, ${g}, ${b})`;
         }
 
         return str;
@@ -183,27 +183,27 @@ class CanvasFont extends EventHandler {
     _renderAtlas(charsArray) {
         this.chars = charsArray;
 
-        var numTextures = 1;
+        let numTextures = 1;
 
-        var canvas = this.textures[numTextures - 1].getSource();
-        var w = canvas.width;
-        var h = canvas.height;
+        let canvas = this.textures[numTextures - 1].getSource();
+        const w = canvas.width;
+        const h = canvas.height;
 
         // fill color
-        var color = this._colorToRgbString(this.color, false);
+        const color = this._colorToRgbString(this.color, false);
 
         // generate a "transparent" color for the background
         // browsers seem to optimize away all color data if alpha=0
         // so setting alpha to min value and hope this isn't noticeable
-        var a = this.color.a;
+        const a = this.color.a;
         this.color.a = 1 / 255;
-        var transparent = this._colorToRgbString(this.color, true);
+        const transparent = this._colorToRgbString(this.color, true);
         this.color.a = a;
 
-        var TEXT_ALIGN = 'center';
-        var TEXT_BASELINE = 'alphabetic';
+        const TEXT_ALIGN = 'center';
+        const TEXT_BASELINE = 'alphabetic';
 
-        var ctx = this._getAndClearContext(canvas, transparent);
+        let ctx = this._getAndClearContext(canvas, transparent);
 
         ctx.font = this.fontWeight + ' ' + this.fontSize.toString() + 'px ' + this.fontName;
         ctx.textAlign = TEXT_ALIGN;
@@ -211,15 +211,14 @@ class CanvasFont extends EventHandler {
 
         this.data = this._createJson(this.chars, this.fontName, w, h);
 
-        var symbols = string.getSymbols(this.chars.join(''));
-        var prevNumTextures = this.textures.length;
+        const symbols = string.getSymbols(this.chars.join(''));
+        const prevNumTextures = this.textures.length;
 
-        var maxHeight = 0;
-        var maxDescent = 0;
-        var metrics = {};
-        var i, ch;
-        for (i = 0; i < symbols.length; i++) {
-            ch = symbols[i];
+        let maxHeight = 0;
+        let maxDescent = 0;
+        const metrics = {};
+        for (let i = 0; i < symbols.length; i++) {
+            const ch = symbols[i];
             metrics[ch] = this._getTextMetrics(ch);
             maxHeight = Math.max(maxHeight, metrics[ch].height);
             maxDescent = Math.max(maxDescent, metrics[ch].descent);
@@ -227,23 +226,23 @@ class CanvasFont extends EventHandler {
 
         this.glyphSize = Math.max(this.glyphSize, maxHeight);
 
-        var sx = this.glyphSize + this.padding * 2;
-        var sy = this.glyphSize + this.padding * 2;
-        var _xOffset = this.glyphSize / 2 + this.padding;
-        var _yOffset = sy - maxDescent - this.padding;
-        var _x = 0;
-        var _y = 0;
+        const sx = this.glyphSize + this.padding * 2;
+        const sy = this.glyphSize + this.padding * 2;
+        const _xOffset = this.glyphSize / 2 + this.padding;
+        const _yOffset = sy - maxDescent - this.padding;
+        let _x = 0;
+        let _y = 0;
 
-        for (i = 0; i < symbols.length; i++) {
-            ch = symbols[i];
-            var code = string.getCodePoint(symbols[i]);
+        for (let i = 0; i < symbols.length; i++) {
+            const ch = symbols[i];
+            const code = string.getCodePoint(symbols[i]);
 
-            var fs = this.fontSize;
+            let fs = this.fontSize;
             ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
             ctx.textAlign = TEXT_ALIGN;
             ctx.textBaseline = TEXT_BASELINE;
 
-            var width = ctx.measureText(ch).width;
+            let width = ctx.measureText(ch).width;
 
             if (width > fs) {
                 fs = this.fontSize * this.fontSize / width;
@@ -253,9 +252,9 @@ class CanvasFont extends EventHandler {
 
             this.renderCharacter(ctx, ch, _x + _xOffset, _y + _yOffset, color);
 
-            var xoffset = this.padding + (this.glyphSize - width) / 2;
-            var yoffset = -this.padding + metrics[ch].descent - maxDescent;
-            var xadvance = width;
+            const xoffset = this.padding + (this.glyphSize - width) / 2;
+            const yoffset = -this.padding + metrics[ch].descent - maxDescent;
+            const xadvance = width;
 
             this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
 
@@ -278,7 +277,7 @@ class CanvasFont extends EventHandler {
 
                         ctx = this._getAndClearContext(canvas, transparent);
 
-                        var texture = new Texture(this.app.graphicsDevice, {
+                        const texture = new Texture(this.app.graphicsDevice, {
                             format: PIXELFORMAT_R8_G8_B8_A8,
                             mipmaps: true
                         });
@@ -301,7 +300,7 @@ class CanvasFont extends EventHandler {
 
         // Cleanup any remaining (unused) textures
         if (numTextures < prevNumTextures) {
-            for (i = numTextures; i < prevNumTextures; i++) {
+            for (let i = numTextures; i < prevNumTextures; i++) {
                 this.textures[i].destroy();
             }
             this.textures.splice(numTextures);
@@ -312,7 +311,7 @@ class CanvasFont extends EventHandler {
     }
 
     _createJson(chars, fontName, width, height) {
-        var base = {
+        const base = {
             "version": 3,
             "intensity": this.intensity,
             "info": {
@@ -335,7 +334,7 @@ class CanvasFont extends EventHandler {
             json.info.maps.push({ "width": mapW, "height": mapH });
         }
 
-        var scale = this.fontSize / 32;
+        const scale = this.fontSize / 32;
 
         json.chars[char] = {
             "id": charCode,
@@ -360,20 +359,19 @@ class CanvasFont extends EventHandler {
     // e.g. "abcabcabc" -> ['a', 'b', 'c']
     _normalizeCharsSet(text) {
         // normalize unicode if needed
-        var unicodeConverterFunc = this.app.systems.element.getUnicodeConverter();
+        const unicodeConverterFunc = this.app.systems.element.getUnicodeConverter();
         if (unicodeConverterFunc) {
             text = unicodeConverterFunc(text);
         }
         // strip duplicates
-        var set = {};
-        var symbols = string.getSymbols(text);
-        var i;
-        for (i = 0; i < symbols.length; i++) {
-            var ch = symbols[i];
+        const set = {};
+        const symbols = string.getSymbols(text);
+        for (let i = 0; i < symbols.length; i++) {
+            const ch = symbols[i];
             if (set[ch]) continue;
             set[ch] = ch;
         }
-        var chars = Object.keys(set);
+        const chars = Object.keys(set);
         // sort
         return chars.sort();
     }
@@ -381,27 +379,27 @@ class CanvasFont extends EventHandler {
     // Calculate some metrics that aren't available via the
     // browser API, notably character height and descent size
     _getTextMetrics(text) {
-        var textSpan = document.createElement('span');
+        const textSpan = document.createElement('span');
         textSpan.id = 'content-span';
         textSpan.innerHTML = text;
 
-        var block = document.createElement("div");
+        const block = document.createElement("div");
         block.id = 'content-block';
         block.style.display = 'inline-block';
         block.style.width = '1px';
         block.style.height = '0px';
 
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.appendChild(textSpan);
         div.appendChild(block);
         div.style.font = this.fontSize + 'px ' + this.fontName;
 
-        var body = document.body;
+        const body = document.body;
         body.appendChild(div);
 
-        var ascent = -1;
-        var descent = -1;
-        var height = -1;
+        let ascent = -1;
+        let descent = -1;
+        let height = -1;
 
         try {
             block.style['vertical-align'] = 'baseline';

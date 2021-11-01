@@ -1,4 +1,4 @@
-import { platform } from "../core/platform.js";
+import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { XRHAND_LEFT } from './constants.js';
@@ -67,7 +67,7 @@ class XrHand extends EventHandler {
 
             for (let j = 0; j < fingerJointIds[f].length; j++) {
                 const jointId = fingerJointIds[f][j];
-                if (! xrHand.get(jointId)) continue;
+                if (!xrHand.get(jointId)) continue;
 
                 const joint = new XrJoint(j, jointId, this, finger);
 
@@ -111,7 +111,7 @@ class XrHand extends EventHandler {
                 if (pose) {
                     joint.update(pose);
 
-                    if (joint.wrist && ! this._tracking) {
+                    if (joint.wrist && !this._tracking) {
                         this._tracking = true;
                         this.fire('tracking');
                     }
@@ -170,7 +170,7 @@ class XrHand extends EventHandler {
         const squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
 
         if (squeezing) {
-            if (! this._inputSource._squeezing) {
+            if (!this._inputSource._squeezing) {
                 this._inputSource._squeezing = true;
                 this._inputSource.fire('squeezestart');
                 this._manager.input.fire('squeezestart', this._inputSource);

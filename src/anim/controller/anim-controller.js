@@ -13,7 +13,7 @@ import {
  * @private
  * @class
  * @name AnimController
- * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
+ * @classdesc The AnimController manages the animations for its entity, based on the provided state graph and parameters. Its update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
  * @description Create a new AnimController.
  * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
  * @param {object[]} states - The list of states used to form the controller state graph.
@@ -158,6 +158,10 @@ class AnimController {
         return this._stateNames;
     }
 
+    assignMask(mask) {
+        return this._animEvaluator.assignMask(mask);
+    }
+
     _findState(stateName) {
         return this._states[stateName];
     }
@@ -281,7 +285,7 @@ class AnimController {
         }
 
         // filter out transitions that don't have their conditions met
-        transitions = transitions.filter(function (transition) {
+        transitions = transitions.filter((transition) => {
             // if the transition is moving to the already active state, ignore it
             if (transition.to === this.activeStateName) {
                 return false;
@@ -302,7 +306,7 @@ class AnimController {
             }
             // if the exitTime condition has been met or is not present, check condition parameters
             return this._transitionHasConditionsMet(transition);
-        }.bind(this));
+        });
 
         // return the highest priority transition to use
         if (transitions.length > 0) {

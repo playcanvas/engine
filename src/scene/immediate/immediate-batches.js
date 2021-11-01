@@ -1,4 +1,4 @@
-import { ImmediateBatch } from "./immediate-batch";
+import { ImmediateBatch } from './immediate-batch.js';
 
 // helper class storing line batches for a single layer
 class ImmediateBatches {

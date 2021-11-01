@@ -13,7 +13,6 @@ class ModelOutlineExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const app = new pc.Application(canvas, {});
         app.start();

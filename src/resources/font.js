@@ -69,7 +69,7 @@ class FontHandler {
                         });
                     });
                 } else {
-                    callback("Error loading font resource: " + url.original + " [" + err + "]");
+                    callback(`Error loading font resource: ${url.original} [${err}]`);
                 }
             });
 
