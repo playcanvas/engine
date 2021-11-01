@@ -95,8 +95,7 @@ class AnimComponent extends Component {
     _onStateGraphAssetChangeEvent = (asset) => {
         this._stateGraph = new AnimStateGraph(asset._data);
         this.loadStateGraph(this._stateGraph);
-    }
-
+    };
 
     get animationAssets() {
         return this._animationAssets;
