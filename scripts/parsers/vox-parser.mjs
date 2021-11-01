@@ -1,3 +1,5 @@
+// vox loading
+
 const defaultPalette = new Uint8Array(new Uint32Array([
     0x00000000, 0xffffffff, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xff00ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff, 0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff,
     0xff6699ff, 0xff3399ff, 0xff0099ff, 0xffff66ff, 0xffcc66ff, 0xff9966ff, 0xff6666ff, 0xff3366ff, 0xff0066ff, 0xffff33ff, 0xffcc33ff, 0xff9933ff, 0xff6633ff, 0xff3333ff, 0xff0033ff, 0xffff00ff,
@@ -89,8 +91,8 @@ class VoxFrame {
             const numVoxels = this.numVoxels;
             for (let i = 0; i < numVoxels; ++i) {
                 const index = (data[i * 4 + _x] - min[0]) +
-                              (data[i * 4 + _y] - min[1]) * extent[0] +
-                              (data[i * 4 + _z] - min[2]) * extent[0] * extent[1];
+                            (data[i * 4 + _y] - min[1]) * extent[0] +
+                            (data[i * 4 + _z] - min[2]) * extent[0] * extent[1];
                 flattenedData[index] = data[i * 4 + 3];
             }
 
@@ -185,7 +187,7 @@ class VoxLoader {
     }
 }
 
-//-- VoxGen
+// vox mesh generation
 
 const vset = (v0, v1) => {
     v0[0] = v1[0];
@@ -408,16 +410,16 @@ class VoxParser {
     open(url, data, asset) {
         return data;
     }
-
-    static register(app) {
-        // register the animation component system
-        // app.systems.add(new VoxAnimSystem(app));
-
-        // register resource handler
-        app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets, app.scene.defaultMaterial);
-    }
 }
 
+const registerVoxParser = (app) => {
+    // register the animation component system
+    // app.systems.add(new VoxAnimSystem(app));
+
+    // register resource handler
+    app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets, app.scene.defaultMaterial);
+};
+
 export {
-    VoxParser
+    registerVoxParser
 };
