@@ -82,6 +82,14 @@ const CodeEditor = (props: CodeEditorProps) => {
         } else if (!props.useTypescript && selectedFile === 1) {
             selectFile(0);
         }
+        // @ts-ignore
+        codePane.ui.on('resize', () => {
+            localStorage.setItem('codePaneStyle', codePane.getAttribute('style'));
+        });
+        const codePaneStyle = localStorage.getItem('codePaneStyle');
+        if (codePaneStyle) {
+            codePane.setAttribute('style', codePaneStyle);
+        }
         if ((window as any).toggleEvent) return;
         // set up the code panel toggle button
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
@@ -92,7 +100,7 @@ const CodeEditor = (props: CodeEditorProps) => {
         (window as any).toggleEvent = true;
     });
 
-    return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') !== 'false' ? 'collapsed' : null} resizable='left' resizeMax={2000}>
+    return <Panel headerText='CODE' id='codePane' class={localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null} resizable='left' resizeMax={2000}>
         <div className='panel-toggle' id='codePane-panel-toggle'/>
         <Container class='tabs-wrapper'>
             <Container class='code-editor-menu-container'>

@@ -88,7 +88,7 @@ const MainLayout = () => {
         }
     });
 
-    const updateExample = (newExampleDefaultFiles: Array<File>) => {
+    const updateExample = (newExampleDefaultFiles: any) => {
         setDefaultFiles(newExampleDefaultFiles);
         setEditedFiles(emptyFiles);
         setExampleFiles(emptyFiles);
