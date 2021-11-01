@@ -57,7 +57,10 @@ class AnimComponent extends Component {
         }
 
         // remove event from previous asset
-        if (this._stateGraphAsset) this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
+        if (this._stateGraphAsset) {
+            const stateGraphAsset = this.system.app.assets.get(this._stateGraphAsset);
+            stateGraphAsset.off('change', this._onStateGraphAssetChangeEvent, this);
+        }
 
         let _id;
         let _asset;
@@ -80,22 +83,22 @@ class AnimComponent extends Component {
         if (_asset.resource) {
             this._stateGraph = _asset.resource;
             this.loadStateGraph(this._stateGraph);
-            _asset.on('change', this._onStateGraphAssetChangeEvent);
+            _asset.on('change', this._onStateGraphAssetChangeEvent, this);
         } else {
             _asset.once('load', (asset) => {
                 this._stateGraph = asset.resource;
                 this.loadStateGraph(this._stateGraph);
             });
-            _asset.on('change', this._onStateGraphAssetChangeEvent);
+            _asset.on('change', this._onStateGraphAssetChangeEvent, this);
             this.system.app.assets.load(_asset);
         }
         this._stateGraphAsset = _id;
     }
 
-    _onStateGraphAssetChangeEvent = (asset) => {
+    _onStateGraphAssetChangeEvent(asset) {
         this._stateGraph = new AnimStateGraph(asset._data);
         this.loadStateGraph(this._stateGraph);
-    };
+    }
 
     get animationAssets() {
         return this._animationAssets;
@@ -685,7 +688,8 @@ class AnimComponent extends Component {
 
     onBeforeRemove() {
         if (Number.isFinite(this._stateGraphAsset)) {
-            this.system.app.assets.get(this._stateGraphAsset).off('change', this._onStateGraphAssetChangeEvent);
+            const stateGraphAsset = this.system.app.assets.get(this._stateGraphAsset);
+            stateGraphAsset.off('change', this._onStateGraphAssetChangeEvent, this);
         }
     }
 
