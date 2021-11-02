@@ -2,14 +2,68 @@ import { path } from '../core/path.js';
 import { GlbParser } from './parser/glb-parser.js';
 
 /**
+ * @interface
+ * @name ContainerResource
+ * @description Container for a list of animations, textures, materials, renders and a model.
+ */
+class ContainerResource {
+    /**
+     * @function
+     * @name ContainerResource#instantiateModelEntity
+     * @description Instantiates an entity with a model component.
+     * @param {object} [options] - The initialization data for the model component type {@link ModelComponent}.
+     * @returns {Entity} A single entity with a model component. Model component internally contains a hierarchy based on {@link GraphNode}.
+     * @example
+     * // load a glb file and instantiate an entity with a model component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateModelEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     * });
+     */
+    instantiateModelEntity(options) {
+        return null;
+    }
+
+    /**
+     * @function
+     * @name ContainerResource#instantiateRenderEntity
+     * @description Instantiates an entity with a render component.
+     * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
+     * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
+     * @example
+     * // load a glb file and instantiate an entity with a render component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateRenderEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     *
+     *     // find all render components containing mesh instances, and change blend mode on their materials
+     *     var renders = entity.findComponents("render");
+     *     renders.forEach(function (render) {
+     *         render.meshInstances.forEach(function (meshInstance) {
+     *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
+     *             meshInstance.material.update();
+     *         });
+     *     });
+     * });
+     */
+    instantiateRenderEntity(options) {
+        return null;
+    }
+}
+
+/**
  * @class
  * @name ContainerHandler
  * @implements {ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
- * The asset options object can be used to pass load time callbacks for handling the various resources
- * at different stages of loading. The table below lists the resource types and the corresponding
- * supported process functions.
+ * For glTF Files, the asset options object can be used to pass load time callbacks for handling
+ * the various resources at different stages of loading. The table below lists the resource types
+ * and the corresponding supported process functions.
  * ```
  * |---------------------------------------------------------------------|
  * |  resource   |  preprocess |   process   |processAsync | postprocess |

@@ -1,4 +1,4 @@
-import { ContainerResource } from './container-resource.js';
+import { GlbContainerResource } from './glb-container-resource.js';
 import { GlbParser } from './glb-parser.js';
 
 class GlbModelParser {
@@ -10,7 +10,7 @@ class GlbModelParser {
     parse(data) {
         const glbResources = GlbParser.parse("filename.glb", data, this._device);
         if (glbResources) {
-            const model = ContainerResource.createModel(glbResources, this._defaultMaterial);
+            const model = GlbContainerResource.createModel(glbResources, this._defaultMaterial);
             glbResources.destroy();
             return model;
         }

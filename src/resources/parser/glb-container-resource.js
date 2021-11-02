@@ -6,20 +6,10 @@ import { SkinInstance } from '../../scene/skin-instance.js';
 import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
 import { Model } from '../../scene/model.js';
 
-/**
- * @class
- * @name ContainerResource
- * @classdesc Container for a list of animations, textures, materials, renders and a model.
- * @param {object} data - The loaded GLB data.
- * @property {Asset[]} animations - Array of assets of animations in the GLB container.
- * @property {Asset[]} textures - Array of assets of textures in the GLB container.
- * @property {Asset[]} materials - Array of assets of materials in the GLB container.
- * @property {Asset[]} renders - Array of assets of renders in the GLB container.
- */
-class ContainerResource {
+class GlbContainerResource {
     constructor(data, asset, assets, defaultMaterial) {
         const createAsset = function (type, resource, index) {
-            const subAsset = ContainerResource.createAsset(asset.name, type, resource, index);
+            const subAsset = GlbContainerResource.createAsset(asset.name, type, resource, index);
             assets.add(subAsset);
             return subAsset;
         };
@@ -58,8 +48,8 @@ class ContainerResource {
     get model() {
         if (!this._model) {
             // create model only when needed
-            const model = ContainerResource.createModel(this.data, this._defaultMaterial);
-            const modelAsset = ContainerResource.createAsset(this._assetName, 'model', model, 0);
+            const model = GlbContainerResource.createModel(this.data, this._defaultMaterial);
+            const modelAsset = GlbContainerResource.createAsset(this._assetName, 'model', model, 0);
             this._assets.add(modelAsset);
             this._model = modelAsset;
         }
@@ -75,51 +65,12 @@ class ContainerResource {
         return subAsset;
     }
 
-    /**
-     * @function
-     * @name ContainerResource#instantiateModelEntity
-     * @description Instantiates an entity with a model component.
-     * @param {object} [options] - The initialization data for the model component type {@link ModelComponent}.
-     * @returns {Entity} A single entity with a model component. Model component internally contains a hierarchy based on {@link GraphNode}.
-     * @example
-     * // load a glb file and instantiate an entity with a model component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateModelEntity({
-     *         castShadows: true
-     *     });
-     *     app.root.addChild(entity);
-     * });
-     */
     instantiateModelEntity(options) {
         const entity = new Entity();
         entity.addComponent("model", Object.assign({ type: "asset", asset: this.model }, options));
         return entity;
     }
 
-    /**
-     * @function
-     * @name ContainerResource#instantiateRenderEntity
-     * @description Instantiates an entity with a render component.
-     * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
-     * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
-     * @example
-     * // load a glb file and instantiate an entity with a render component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
-     *         castShadows: true
-     *     });
-     *     app.root.addChild(entity);
-     *
-     *     // find all render components containing mesh instances, and change blend mode on their materials
-     *     var renders = entity.findComponents("render");
-     *     renders.forEach(function (render) {
-     *         render.meshInstances.forEach(function (meshInstance) {
-     *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
-     *             meshInstance.material.update();
-     *         });
-     *     });
-     * });
-     */
     instantiateRenderEntity(options) {
 
         const defaultMaterial = this._defaultMaterial;
@@ -232,7 +183,7 @@ class ContainerResource {
         });
 
         // return the scene hierarachy created from scene clones
-        return ContainerResource.createSceneHierarchy(sceneClones, "Entity");
+        return GlbContainerResource.createSceneHierarchy(sceneClones, "Entity");
     }
 
     // helper function to create a single hierarchy from an array of nodes
@@ -291,7 +242,7 @@ class ContainerResource {
         }
 
         // node hierarchy for the model
-        model.graph = ContainerResource.createSceneHierarchy(glb.scenes, "GraphNode");
+        model.graph = GlbContainerResource.createSceneHierarchy(glb.scenes, "GraphNode");
 
         // create mesh instance for meshes on nodes that are part of hierarchy
         for (let i = 0; i < glb.nodes.length; i++) {
@@ -358,4 +309,4 @@ class ContainerResource {
     }
 }
 
-export { ContainerResource };
+export { GlbContainerResource };

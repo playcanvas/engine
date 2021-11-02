@@ -52,7 +52,7 @@ import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '.
 
 import { Asset } from '../../asset/asset.js';
 
-import { ContainerResource } from './container-resource.js';
+import { GlbContainerResource } from './glb-container-resource.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -2345,7 +2345,7 @@ class GlbParser {
                             callback(err);
                         } else {
                             // return everything
-                            callback(null, new ContainerResource(result, asset, this._assets, this._defaultMaterial));
+                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
                         }
                     });
             }
