@@ -15,23 +15,21 @@ class GlbContainerResource {
             return subAsset;
         };
 
-        let i;
-
         // render assets
         const renders = [];
-        for (i = 0; i < data.renders.length; ++i) {
+        for (let i = 0; i < data.renders.length; ++i) {
             renders.push(createAsset('render', data.renders[i], i));
         }
 
         // create material assets
         const materials = [];
-        for (i = 0; i < data.materials.length; ++i) {
+        for (let i = 0; i < data.materials.length; ++i) {
             materials.push(createAsset('material', data.materials[i], i));
         }
 
         // create animation assets
         const animations = [];
-        for (i = 0; i < data.animations.length; ++i) {
+        for (let i = 0; i < data.animations.length; ++i) {
             animations.push(createAsset('animation', data.animations[i], i));
         }
 

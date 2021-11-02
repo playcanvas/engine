@@ -31,7 +31,7 @@ class ContainerResource {
      * @name ContainerResource#instantiateRenderEntity
      * @description Instantiates an entity with a render component.
      * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
-     * @returns {Entity} A hierarachy of entities with render components on entities containing renderable geometry.
+     * @returns {Entity} A hierarchy of entities with render components on entities containing renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -61,7 +61,7 @@ class ContainerResource {
  * @implements {ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
- * For glTF Files, the asset options object can be used to pass load time callbacks for handling
+ * For glTF files, the asset options object can be used to pass load time callbacks for handling
  * the various resources at different stages of loading. The table below lists the resource types
  * and the corresponding supported process functions.
  * ```

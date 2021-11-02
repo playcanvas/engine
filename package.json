@@ -38,7 +38,8 @@
     "examples/lib/*",
     "scripts/textmesh/earcut.min.js",
     "scripts/textmesh/opentype.min.js",
-    "src/polyfill/*"
+    "src/polyfill/*",
+    "scripts/parsers/vox-parser.js"
   ],
   "files": [
     "build/playcanvas.js",

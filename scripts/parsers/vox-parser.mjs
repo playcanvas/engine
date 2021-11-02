@@ -222,7 +222,7 @@ class VoxGen {
 
         const positions = [];
         const normals = [];
-        const colours = [];
+        const colors = [];
         const indices = [];
 
         const pos = [0, 0, 0];
@@ -249,12 +249,12 @@ class VoxGen {
             normals.push(normal[0], normal[1], normal[2]);
             normals.push(normal[0], normal[1], normal[2]);
 
-            // colours
+            // colors
             const clr = voxMesh.palette.clr(paletteIndex - 1);
-            colours.push(clr[0], clr[1], clr[2], clr[3]);
-            colours.push(clr[0], clr[1], clr[2], clr[3]);
-            colours.push(clr[0], clr[1], clr[2], clr[3]);
-            colours.push(clr[0], clr[1], clr[2], clr[3]);
+            colors.push(clr[0], clr[1], clr[2], clr[3]);
+            colors.push(clr[0], clr[1], clr[2], clr[3]);
+            colors.push(clr[0], clr[1], clr[2], clr[3]);
+            colors.push(clr[0], clr[1], clr[2], clr[3]);
         };
 
         const posX = [1, 0, 0];
@@ -306,7 +306,7 @@ class VoxGen {
         const mesh = new pc.Mesh(device);
         mesh.setPositions(positions);
         mesh.setNormals(normals);
-        mesh.setColors32(colours);
+        mesh.setColors32(colors);
         mesh.setIndices(indices);
         mesh.update();
 
