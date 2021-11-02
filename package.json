@@ -38,7 +38,8 @@
     "examples/lib/*",
     "scripts/textmesh/earcut.min.js",
     "scripts/textmesh/opentype.min.js",
-    "src/polyfill/*"
+    "src/polyfill/*",
+    "scripts/parsers/vox-parser.js"
   ],
   "files": [
     "build/playcanvas.js",
@@ -87,6 +88,11 @@
     "build:es6": "rollup -c --environment target:es6",
     "build:debug": "rollup -c --environment target:debug",
     "build:profiler": "rollup -c --environment target:profiler",
+    "watch:es5": "rollup -c -w --environment target:es5",
+    "watch:es5min": "rollup -c -w --environment target:es5min",
+    "watch:es6": "rollup -c -w --environment target:es6",
+    "watch:debug": "rollup -c -w --environment target:debug",
+    "watch:profiler": "rollup -c -w --environment target:profiler",
     "docs": "jsdoc -c conf-api.json",
     "lint": "eslint --ext .js extras scripts src rollup.config.js",
     "serve": "http-server build -a localhost -p 51000",

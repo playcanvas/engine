@@ -9,3 +9,4 @@ npm-debug.log
 release.py
 examples/node_modules
 examples/dist
+/scripts/parsers/vox-parser.js
