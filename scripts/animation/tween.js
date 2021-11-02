@@ -209,7 +209,7 @@ Tween.prototype.start = function (idx) {
 
     var pathSegments = tween.path.split('.');
     var propertyOwner = this.entity;
-    for (i = 0; i < pathSegments.length - 1; i++) {
+    for (var i = 0; i < pathSegments.length - 1; i++) {
         propertyOwner = propertyOwner[pathSegments[i]];
     }
 
