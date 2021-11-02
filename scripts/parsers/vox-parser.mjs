@@ -1,5 +1,8 @@
 // vox loading
 
+import { Component } from '../../src/framework/components/component.js';
+import { ComponentSystem } from '../../src/framework/components/system.js';
+
 const defaultPalette = new Uint8Array(new Uint32Array([
     0x00000000, 0xffffffff, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xff00ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff, 0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff,
     0xff6699ff, 0xff3399ff, 0xff0099ff, 0xffff66ff, 0xffcc66ff, 0xff9966ff, 0xff6666ff, 0xff3366ff, 0xff0066ff, 0xffff33ff, 0xffcc33ff, 0xff9933ff, 0xff6633ff, 0xff3333ff, 0xff0033ff, 0xffff00ff,
@@ -339,6 +342,8 @@ class VoxContainerResource {
             meshInstances: meshInstances
         });
 
+        entity.addComponent('voxanim', { });
+
         this.renders = [];
 
         return entity;
@@ -347,45 +352,100 @@ class VoxContainerResource {
 
 // component / system support
 
-// class VoxAnimComponentData {
+const VoxAnimComponentSchema =  ['enabled'];
 
-// }
+class VoxAnimComponentData {
+    constructor() {
+        this.enabled = true;
+    }
+}
 
-// class VoxAnimComponent extends pc.Component {
-//     constructor(system, entity) {
-//         super(system, entity);
+class VoxAnimComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-//         this.playing = true;
-//         this.timer = 0;
-//     }
-// }
+        this.playing = true;
+        this.timer = 0;
+        this.fps = 10;
+    }
 
-// class VoxAnimSystem extends pc.ComponentSystem {
-//     constructor(app) {
-//         super(app);
+    update(dt) {
+        if (this.playing) {
+            this.timer += dt;
+        }
 
-//         this.id = 'VoxAnim';
-//         this.ComponentType = VoxAnimComponent;
-//         this.DataType = VoxAnimComponentData;
+        const meshInstances = this.entity.render?.meshInstances || this.entity.model?.meshInstances;
+        if (meshInstances) {
+            const frame = Math.floor(this.timer * this.fps) % meshInstances.length;
+            for (let i = 0; i < meshInstances.length; ++i) {
+                meshInstances[i].visible = (i === frame);
+            }
+        }
+    }
+}
 
-//         ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
-//     }
+class VoxAnimSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-//     onAnimationUpdate(dt) {
-//         const components = this.store;
+        this.id = 'voxanim';
+        this.ComponentType = VoxAnimComponent;
+        this.DataType = VoxAnimComponentData;
 
-//         for (const id in components) {
-//             if (components.hasOwnProperty(id)) {
-//                 const component = components[id].entity.anim;
-//                 const componentData = component.data;
+        this.schema = VoxAnimComponentSchema;
 
-//                 if (componentData.enabled && component.entity.enabled && component.playing) {
-//                     component.update(dt);
-//                 }
-//             }
-//         }
-//     }
-// }
+        this.app.systems.on('update', this.onUpdate, this);
+    }
+
+    initializeComponentData(component, data, properties) {
+        properties = [
+            'playing',
+            'timer',
+            'fps'
+        ];
+
+        for (let i = 0; i < properties.length; i++) {
+            if (data.hasOwnProperty(properties[i])) {
+                component[properties[i]] = data[properties[i]];
+            }
+        }
+
+        super.initializeComponentData(component, data, VoxAnimComponentSchema);
+    }
+
+    cloneComponent(entity, clone) {
+        const srcComponent = entity.voxanim;
+        const cloneData = {
+            playing: srcComponent.playing,
+            timer: srcComponent.timer,
+            fps: srcComponent.fps
+        };
+
+        return this.addComponent(clone, cloneData);
+    }
+
+    onUpdate(dt) {
+        const components = this.store;
+        for (const id in components) {
+            if (components.hasOwnProperty(id)) {
+                const entity = components[id].entity;
+                if (entity.enabled) {
+                    const component = entity.voxanim;
+                    if (component.enabled) {
+                        component.update(dt);
+                    }
+                }
+            }
+        }
+    }
+
+    destroy() {
+        super.destroy();
+        this.app.systems.off('update', this.onUpdate, this);
+    }
+}
+
+Component._buildAccessors(VoxAnimComponent.prototype, VoxAnimComponentSchema);
 
 // parser
 
@@ -414,7 +474,7 @@ class VoxParser {
 
 const registerVoxParser = (app) => {
     // register the animation component system
-    // app.systems.add(new VoxAnimSystem(app));
+    app.systems.add(new VoxAnimSystem(app));
 
     // register resource handler
     app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets, app.scene.defaultMaterial);
