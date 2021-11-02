@@ -6,6 +6,7 @@ import { SkinInstance } from '../../scene/skin-instance.js';
 import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
 import { Model } from '../../scene/model.js';
 
+// Container resource returned by the GlbParser. Implements the ContainerResource interface.
 class GlbContainerResource {
     constructor(data, asset, assets, defaultMaterial) {
         const createAsset = function (type, resource, index) {
