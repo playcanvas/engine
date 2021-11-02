@@ -260,53 +260,48 @@ const target_profiler = {
     ]
 };
 
-const target_extras = {
-    input: 'extras/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas-extras.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pcx'
-    },
-    plugins: [
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
+function scriptTarget(name, input, output) {
+    return {
+        input: input,
+        output: {
+            banner: getBanner(''),
+            file: output || input.replace('.mjs', '.js'),
+            format: 'umd',
+            indent: '\t',
+            name: name
+        },
+        plugins: [
+            babel(es5Options),
+            spacesToTabs
+        ]
+    };
+}
 
-const target_scripts = {
-    input: 'scripts/parsers/vox-parser.mjs',
-    output: {
-        file: 'scripts/parsers/vox-parser.js',
-        format: 'umd',
-        name: 'VoxParser'
-    },
-    plugins: [
-        babel(es5Options),
-        spacesToTabs
-    ]
-};
+const target_extras = [
+    scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
+];
 
 let targets = [
     target_release_es5,
     target_release_es5min,
     target_release_es6,
     target_debug,
-    target_profiler,
-    target_extras,
-    target_scripts
+    target_profiler
 ];
 
 // Build all targets by default, unless a specific target is chosen
 if (process.env.target) {
     switch (process.env.target.toLowerCase()) {
-        case "es5":      targets = [target_release_es5,    target_extras, target_scripts]; break;
-        case "es5min":   targets = [target_release_es5min, target_extras, target_scripts]; break;
-        case "es6":      targets = [target_release_es6,    target_extras, target_scripts]; break;
-        case "debug":    targets = [target_debug,          target_extras, target_scripts]; break;
-        case "profiler": targets = [target_profiler,       target_extras, target_scripts]; break;
+        case "es5":      targets = [target_release_es5]; break;
+        case "es5min":   targets = [target_release_es5min]; break;
+        case "es6":      targets = [target_release_es6]; break;
+        case "debug":    targets = [target_debug]; break;
+        case "profiler": targets = [target_profiler]; break;
     }
 }
+
+// append common targets
+targets.push(...target_extras);
 
 export default targets;
