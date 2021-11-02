@@ -153,6 +153,7 @@ export { AnimationHandler } from './resources/animation.js';
 export { AudioHandler } from './resources/audio.js';
 export { BinaryHandler } from './resources/binary.js';
 export { BundleHandler } from './resources/bundle.js';
+export { ContainerHandler, ContainerResource } from './resources/container.js';
 export { createStyle, CssHandler } from './resources/css.js';
 export { CubemapHandler } from './resources/cubemap.js';
 export { FolderHandler } from './resources/folder.js';

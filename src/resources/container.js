@@ -128,4 +128,4 @@ class ContainerHandler {
     }
 }
 
-export { ContainerHandler };
+export { ContainerResource, ContainerHandler };
