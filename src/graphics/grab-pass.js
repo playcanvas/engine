@@ -36,7 +36,7 @@ class GrabPass {
         if (!this.texture) {
 
             const texture = new Texture(this.device, {
-                format: this.useAlpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
+                format: this.useAlpha ? PIXELFORMAT_R8_G8_B8_A8 : PIXELFORMAT_R8_G8_B8,
                 minFilter: this.useMipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR,
                 magFilter: FILTER_LINEAR,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
