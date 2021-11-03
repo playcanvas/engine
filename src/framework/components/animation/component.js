@@ -356,8 +356,10 @@ class AnimationComponent extends Component {
 
         if (!data.currAnim && data.activate && data.enabled && this.entity.enabled) {
             // Set the first loaded animation as the current
-            const animName = Object.keys(data.animations)[0];
-            this.play(animName);
+            const animations = Object.keys(data.animations);
+            if (animations.length > 0) {
+                this.play(animations[0]);
+            }
         }
     }
 
@@ -442,8 +444,10 @@ class AnimationComponent extends Component {
         }
 
         if (data.activate && !data.currAnim) {
-            const animName = Object.keys(data.animations)[0];
-            this.play(animName);
+            const animations = Object.keys(data.animations);
+            if (animations.length > 0) {
+                this.play(animations[0]);
+            }
         }
     }
 
