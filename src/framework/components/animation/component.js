@@ -47,7 +47,7 @@ class AnimationComponent extends Component {
      * @description Start playing an animation.
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
-     * animation state to the start of the animation being set.
+     * animation state to the start of the animation being set. Defaults to 0.
      */
     play(name, blendTime = 0) {
         if (!this.enabled || !this.entity.enabled) {
