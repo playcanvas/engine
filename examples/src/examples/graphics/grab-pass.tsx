@@ -26,7 +26,7 @@ void main(void)
 const fshader = `
 precision mediump float;
 
-// use the special texture_grabPass texture, which is a built-in texture. The first time this texture is used
+// use the special texture_grabPass texture, which is a built-in texture. Each time this texture is used
 // for rendering, the engine will copy color framebuffer to it which represents already rendered scene
 uniform sampler2D texture_grabPass;
 
