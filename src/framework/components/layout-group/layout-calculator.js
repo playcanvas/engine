@@ -396,7 +396,8 @@ function createCalculator(orientation) {
             const line = lines[lineIndex];
 
             if (line.length === 0) {
-                break;
+                positionsAllLines.push([]);
+                continue;
             }
 
             const positionsThisLine = [];
