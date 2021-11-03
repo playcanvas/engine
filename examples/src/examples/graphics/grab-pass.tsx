@@ -43,14 +43,14 @@ varying vec2 texCoord;
 
 void main(void)
 {
-    float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).a;
+    float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;
 
     // sample offset texture - used to add distortion to the sampled background
     vec2 offset = texture2D(uOffsetMap, texCoord).rg;
     offset = 2.0 * offset - 1.0;
 
     // offset strength
-    offset *= (0.5 + roughness) * 0.015;
+    offset *= (0.2 + roughness) * 0.015;
 
     // get normalized uv coordinates for canvas
     vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;
@@ -81,7 +81,7 @@ class GrabPassExample extends Example {
             <AssetLoader name='shader.vert' type='shader' data={vshader} />
             <AssetLoader name='shader.frag' type='shader' data={fshader} />
             <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
-            <AssetLoader name="roughness" type="texture" url="static/assets/textures/channels.png" />
+            <AssetLoader name="roughness" type="texture" url="static/assets/textures/pc-gray.png" />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
@@ -135,12 +135,17 @@ class GrabPassExample extends Example {
             return primitive;
         }
 
-        // create 4 primitives, keep their references to rotate them later
+        // create few primitives, keep their references to rotate them later
         const primitives: any = [];
-        primitives.push(createPrimitive("sphere", new pc.Vec3(-4, 2, -10), new pc.Vec3(3, 6, 3), new pc.Color(1, 0, 0)));
-        primitives.push(createPrimitive("box", new pc.Vec3(4, 2, -10), new pc.Vec3(6, 3, 3), new pc.Color(1, 1, 0)));
-        primitives.push(createPrimitive("cone", new pc.Vec3(-4, 2, 10), new pc.Vec3(4, 5, 4), new pc.Color(0, 1, 1)));
-        primitives.push(createPrimitive("cylinder", new pc.Vec3(4, 2, 10), new pc.Vec3(3, 5, 3), new pc.Color(0, 1, 0.5)));
+        const count = 7;
+        const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+        for (let i = 0; i < count; i++) {
+            const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
+            const color = new pc.Color(Math.random(), Math.random(), Math.random());
+            const angle = 2 * Math.PI * i / count;
+            const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
+            primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
+        }
 
         // Create the camera, which renders entities
         const camera = new pc.Entity();
@@ -152,7 +157,7 @@ class GrabPassExample extends Example {
         camera.lookAt(pc.Vec3.ZERO);
 
         // create a primitive which uses refraction shader to distort the view behind it
-        const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 6), new pc.Color(1, 1, 1));
+        const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
         glass.render.castShadows = false;
         glass.render.receiveShadows = false;
 
@@ -190,6 +195,8 @@ class GrabPassExample extends Example {
             primitives.forEach((prim: pc.Entity) => {
                 prim.rotate(0.3, 0.2, 0.1);
             });
+
+            glass.rotate(-0.1, 0.1, -0.15);
 
             // orbit the camera
             camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
