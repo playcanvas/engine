@@ -342,11 +342,7 @@ class UntarWorker {
      * @returns {boolean} Returns true of false.
      */
     hasPendingRequests() {
-        for (const key in this._pendingRequests) {
-            return true;
-        }
-
-        return false;
+        return Object.keys(this._pendingRequests).length > 0;
     }
 
     /**
