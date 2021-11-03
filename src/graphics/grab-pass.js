@@ -9,7 +9,8 @@ class GrabPass {
         this.device = device;
         this.useAlpha = useAlpha;
 
-        // on webgl1 we cannot mipmap not power of two texture, so use additional power of two texture so disable it for now
+        // for now we only support mipmaps on webgl2 devices due to the support for mipmaps for textures of any dimension
+        // (captured framebuffer is usually not power of 2). See TODO in generateMipmaps function.
         this.useMipmaps = device.webgl2;
 
         this.texture = null;
