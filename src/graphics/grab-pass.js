@@ -134,7 +134,7 @@ class GrabPass {
 
     generateMipmaps() {
 
-        // TODO: imlement support for webgl1, which requires the texture to be a power of two, by first downscaling
+        // TODO: implement support for webgl1, which requires the texture to be a power of two, by first downscaling
         // the captured framebuffer texture to smaller power of 2 texture, and then generate mipmaps and use it
         // for rendering
         if (this.useMipmaps) {
