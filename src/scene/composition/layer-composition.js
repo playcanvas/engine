@@ -112,7 +112,9 @@ class LayerComposition extends EventHandler {
         }
 
         // all other clusters
-        this._worldClusters.forEach((cluster) => cluster.destroy());
+        this._worldClusters.forEach((cluster) => {
+            cluster.destroy();
+        });
         this._worldClusters = null;
     }
 
@@ -612,7 +614,9 @@ class LayerComposition extends EventHandler {
         }
 
         // delete leftovers
-        tempClusterArray.forEach((item) => item.destroy());
+        tempClusterArray.forEach((item) => {
+            item.destroy();
+        });
         tempClusterArray.length = 0;
     }
 
