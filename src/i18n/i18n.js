@@ -269,13 +269,7 @@ class I18n extends EventHandler {
 
             // if no more entries for that locale then
             // delete the locale
-            let hasAny = false;
-            for (const key in translations) { // eslint-disable-line no-unused-vars
-                hasAny = true;
-                break;
-            }
-
-            if (!hasAny) {
+            if (Object.keys(translations).length === 0) {
                 delete this._translations[locale];
                 delete this._availableLangs[getLang(locale)];
             }

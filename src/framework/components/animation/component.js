@@ -47,9 +47,9 @@ class AnimationComponent extends Component {
      * @description Start playing an animation.
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
-     * animation state to the start of the animation being set.
+     * animation state to the start of the animation being set. Defaults to 0.
      */
-    play(name, blendTime) {
+    play(name, blendTime = 0) {
         if (!this.enabled || !this.entity.enabled) {
             return;
         }
@@ -62,8 +62,6 @@ class AnimationComponent extends Component {
             // #endif
             return;
         }
-
-        blendTime = blendTime || 0;
 
         data.prevAnim = data.currAnim;
         data.currAnim = name;
@@ -189,42 +187,40 @@ class AnimationComponent extends Component {
         if (!ids || !ids.length)
             return;
 
-        const self = this;
         const assets = this.system.app.assets;
-        const l = ids.length;
 
-        const onAssetReady = function (asset) {
+        const onAssetReady = (asset) => {
             if (asset.resources.length > 1) {
                 for (let i = 0; i < asset.resources.length; i++) {
-                    self.animations[asset.resources[i].name] = asset.resources[i];
-                    self.animationsIndex[asset.id] = asset.resources[i].name;
+                    this.animations[asset.resources[i].name] = asset.resources[i];
+                    this.animationsIndex[asset.id] = asset.resources[i].name;
                 }
             } else {
-                self.animations[asset.name] = asset.resource;
-                self.animationsIndex[asset.id] = asset.name;
+                this.animations[asset.name] = asset.resource;
+                this.animationsIndex[asset.id] = asset.name;
             }
             /* eslint-disable no-self-assign */
-            self.animations = self.animations; // assigning ensures set_animations event is fired
+            this.animations = this.animations; // assigning ensures set_animations event is fired
             /* eslint-enable no-self-assign */
         };
 
-        const onAssetAdd = function (asset) {
-            asset.off('change', self.onAssetChanged, self);
-            asset.on('change', self.onAssetChanged, self);
+        const onAssetAdd = (asset) => {
+            asset.off('change', this.onAssetChanged, this);
+            asset.on('change', this.onAssetChanged, this);
 
-            asset.off('remove', self.onAssetRemoved, self);
-            asset.on('remove', self.onAssetRemoved, self);
+            asset.off('remove', this.onAssetRemoved, this);
+            asset.on('remove', this.onAssetRemoved, this);
 
             if (asset.resource) {
                 onAssetReady(asset);
             } else {
-                asset.once('load', onAssetReady, self);
-                if (self.enabled && self.entity.enabled)
+                asset.once('load', onAssetReady, this);
+                if (this.enabled && this.entity.enabled)
                     assets.load(asset);
             }
         };
 
-        for (let i = 0; i < l; i++) {
+        for (let i = 0, l = ids.length; i < l; i++) {
             const asset = assets.get(ids[i]);
             if (asset) {
                 onAssetAdd(asset);
@@ -261,7 +257,7 @@ class AnimationComponent extends Component {
                             // restart animation
                             if (this.data.playing && this.data.enabled && this.entity.enabled) {
                                 restarted = true;
-                                this.play(newValue[i].name, 0);
+                                this.play(newValue[i].name);
                             }
                         }
                     }
@@ -282,7 +278,7 @@ class AnimationComponent extends Component {
                         // restart animation
                         if (this.data.playing && this.data.enabled && this.entity.enabled) {
                             restarted = true;
-                            this.play(asset.name, 0);
+                            this.play(asset.name);
                         }
                     }
                     if (!restarted) {
@@ -359,10 +355,10 @@ class AnimationComponent extends Component {
         }
 
         if (!data.currAnim && data.activate && data.enabled && this.entity.enabled) {
-            for (const animName in data.animations) {
-                // Set the first loaded animation as the current
-                this.play(animName, 0);
-                break;
+            // Set the first loaded animation as the current
+            const animationNames = Object.keys(data.animations);
+            if (animationNames.length > 0) {
+                this.play(animationNames[0]);
             }
         }
     }
@@ -389,7 +385,7 @@ class AnimationComponent extends Component {
             }
         }
 
-        const ids = newValue.map(function (value) {
+        const ids = newValue.map((value) => {
             return (value instanceof Asset) ? value.id : value;
         });
 
@@ -448,9 +444,9 @@ class AnimationComponent extends Component {
         }
 
         if (data.activate && !data.currAnim) {
-            for (const animName in data.animations) {
-                this.play(animName, 0);
-                break;
+            const animationNames = Object.keys(data.animations);
+            if (animationNames.length > 0) {
+                this.play(animationNames[0]);
             }
         }
     }
