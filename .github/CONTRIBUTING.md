@@ -46,8 +46,8 @@ You may use the following JavaScript language features in the engine codebase:
 * [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
 * [Static keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static)
 * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
-* [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) - only functionality supported on all browsers, including Safari 8.
-* [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) - only functionality supported on all browsers, including Safari 8.
+* [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) - only functionality supported on all browsers, including Safari 8. `for..of` type of loop should not be used to iterate set as is not supported on Safari 8.
+* [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) - only functionality supported on all browsers, including Safari 8. `for..of` type of loop should not be used to iterate map as is not supported on Safari 8.
 
 ### Opening braces should be on the same line as the statement
 
