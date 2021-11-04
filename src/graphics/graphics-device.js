@@ -41,6 +41,7 @@ import { ScopeSpace } from './scope-space.js';
 import { ShaderInput } from './shader-input.js';
 import { Texture } from './texture.js';
 import { VertexFormat } from './vertex-format.js';
+import { GrabPass } from './grab-pass.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
@@ -681,8 +682,8 @@ class GraphicsDevice extends EventHandler {
         // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
         this.grabPassAvailable = true;
 
-        this.grabPassAlpha = options.alpha;
-        this.createGrabPass();
+        this.grabPass = new GrabPass(this, options.alpha);
+        this.grabPass.create();
 
         VertexFormat.init(this);
 
@@ -702,7 +703,7 @@ class GraphicsDevice extends EventHandler {
     destroy() {
         const gl = this.gl;
 
-        this.destroyGrabPass();
+        this.grabPass.destroy();
 
         if (this.webgl2 && this.feedback) {
             gl.deleteTransformFeedback(this.feedback);
@@ -1046,7 +1047,7 @@ class GraphicsDevice extends EventHandler {
         }
 
         // grab pass
-        this.destroyGrabPass();
+        this.grabPass.destroy();
 
         // release textures - they will be recreated with new context
         while (this.textures.length > 0) {
@@ -1085,117 +1086,7 @@ class GraphicsDevice extends EventHandler {
             buffer.unlock();
         }
 
-        this.createGrabPass();
-    }
-
-    createGrabPass() {
-        if (this.grabPassTexture) return;
-
-        const grabPassTexture = new Texture(this, {
-            format: this.grabPassAlpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
-            minFilter: FILTER_LINEAR,
-            magFilter: FILTER_LINEAR,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            mipmaps: false
-        });
-
-        grabPassTexture.name = 'texture_grabPass';
-
-        const grabPassTextureId = this.scope.resolve(grabPassTexture.name);
-        grabPassTextureId.setValue(grabPassTexture);
-
-        const grabPassRenderTarget = new RenderTarget({
-            colorBuffer: grabPassTexture,
-            depth: false
-        });
-
-        this.grabPassRenderTarget = grabPassRenderTarget;
-        this.grabPassTextureId = grabPassTextureId;
-        this.grabPassTexture = grabPassTexture;
-    }
-
-    updateGrabPass() {
-        const gl = this.gl;
-
-        // print error if we cannot grab framebuffer at this point
-        if (!this.grabPassAvailable) {
-
-            // #if _DEBUG
-            console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
-            // #endif
-
-            return false;
-        }
-
-        // render target currently being rendered to (these are null if default framebuffer is active)
-        const renderTarget = this.renderTarget;
-        const resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
-
-        const grabPassTexture = this.grabPassTexture;
-        const width = this.width;
-        const height = this.height;
-
-        // #if _DEBUG
-        this.pushMarker("grabPass");
-        // #endif
-
-        if (this.webgl2 && !this._tempMacChromeBlitFramebufferWorkaround && width === grabPassTexture._width && height === grabPassTexture._height) {
-            if (resolveRenderTarget) {
-                renderTarget.resolve(true);
-            }
-
-            // these are null if rendering to default framebuffer
-            const currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
-            const resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
-
-            // init grab pass framebuffer (only does it once)
-            this.initRenderTarget(this.grabPassRenderTarget);
-            const grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
-
-            // blit from currently used render target (or default framebuffer if null)
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
-
-            // blit to grab pass framebuffer
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
-
-            // Note: This fails on Chromium Mac when Antialasing is On and Alpha is off
-            // blit color from current framebuffer's color attachment to grab pass color attachment
-            gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
-
-        } else {
-            if (resolveRenderTarget) {
-                renderTarget.resolve(true);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
-            }
-
-            // this allocates texture (grabPassTexture was already bound to gl)
-            const format = grabPassTexture._glFormat;
-            gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
-            grabPassTexture._width = width;
-            grabPassTexture._height = height;
-
-            if (resolveRenderTarget) {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
-            }
-        }
-
-        // #if _DEBUG
-        this.popMarker();
-        // #endif
-
-        return true;
-    }
-
-    destroyGrabPass() {
-        this.grabPassRenderTarget.destroy();
-        this.grabPassRenderTarget = null;
-
-        this.grabPassTextureId = null;
-        this.grabPassTexture.destroy();
-        this.grabPassTexture = null;
+        this.grabPass.create();
     }
 
     updateClientRect() {
@@ -2211,10 +2102,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     setTexture(texture, textureUnit) {
+
         if (!texture._glTexture)
             this.initializeTexture(texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPassTexture) {
+        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPass.texture) {
+
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
             // Ensure the texture is bound on correct target of the specified texture unit
@@ -2227,7 +2120,7 @@ class GraphicsDevice extends EventHandler {
 
             // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
             // (for example when rendering to shadow map), in which case previous content is used
-            const processed = (texture === this.grabPassTexture) && this.updateGrabPass();
+            const processed = (texture === this.grabPass.texture) && this.grabPass.prepareTexture();
 
             if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
                 this.uploadTexture(texture);
