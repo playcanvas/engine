@@ -415,11 +415,11 @@ class StandardMaterial extends Material {
 
     _processParameters(paramsName) {
         const prevParams = this[paramsName];
-        for (const param of prevParams) {
+        prevParams.forEach((param) => {
             if (!_params.has(param)) {
                 delete this.parameters[param];
             }
-        }
+        });
 
         this[paramsName] = _params;
         _params = prevParams;
