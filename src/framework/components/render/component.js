@@ -387,22 +387,32 @@ class RenderComponent extends Component {
         }
     }
 
+    _updateMainMaterial(index, material) {
+        // first material for primitives can be accessed using material property, so set it up
+        if (index === 0) {
+            this.material = material;
+        }
+    }
+
     _onMaterialLoad(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = asset.resource;
         }
+        this._updateMainMaterial(index, asset.resource);
     }
 
     _onMaterialRemove(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = this.system.defaultMaterial;
         }
+        this._updateMainMaterial(index, this.system.defaultMaterial);
     }
 
     _onMaterialUnload(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = this.system.defaultMaterial;
         }
+        this._updateMainMaterial(index, this.system.defaultMaterial);
     }
 
     get renderStyle() {
@@ -682,7 +692,8 @@ class RenderComponent extends Component {
         });
     }
 
-    set materialAssets(value = []) {
+    set materialAssets(value) {
+        value = value || [];
         if (this._materialReferences.length > value.length) {
             for (let i = value.length; i < this._materialReferences.length; i++) {
                 this._materialReferences[i].id = null;
