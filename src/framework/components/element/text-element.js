@@ -769,6 +769,7 @@ class TextElement {
                         if (json.chars[' ']) {
                             data = json.chars[' '];
                         } else {
+                            // eslint-disable-next-line no-unreachable-loop
                             for (const key in json.chars) {
                                 data = json.chars[key];
                                 break;

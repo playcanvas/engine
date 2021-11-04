@@ -111,37 +111,35 @@ class Scanner {
 
     // read tag block
     _tag() {
-        while (true) {
-            switch (this._cur) {
-                case null:
-                    this._error = "unexpected end of input reading tag";
+        switch (this._cur) {
+            case null:
+                this._error = "unexpected end of input reading tag";
+                return ERROR_TOKEN;
+            case "[":
+                this._store();
+                return OPEN_BRACKET_TOKEN;
+            case "]":
+                this._store();
+                this._mode = "text";
+                return CLOSE_BRACKET_TOKEN;
+            case "=":
+                this._store();
+                return EQUALS_TOKEN;
+            case " ":
+            case "\t":
+            case "\n":
+            case "\r":
+            case "\v":
+            case "\f":
+                return this._whitespace();
+            case "\"":
+                return this._string();
+            default:
+                if (!this._isIdentifierSymbol(this._cur)) {
+                    this._error = "unrecognized character";
                     return ERROR_TOKEN;
-                case "[":
-                    this._store();
-                    return OPEN_BRACKET_TOKEN;
-                case "]":
-                    this._store();
-                    this._mode = "text";
-                    return CLOSE_BRACKET_TOKEN;
-                case "=":
-                    this._store();
-                    return EQUALS_TOKEN;
-                case " ":
-                case "\t":
-                case "\n":
-                case "\r":
-                case "\v":
-                case "\f":
-                    return this._whitespace();
-                case "\"":
-                    return this._string();
-                default:
-                    if (!this._isIdentifierSymbol(this._cur)) {
-                        this._error = "unrecognized character";
-                        return ERROR_TOKEN;
-                    }
-                    return this._identifier();
-            }
+                }
+                return this._identifier();
         }
     }
 
