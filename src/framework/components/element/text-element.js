@@ -539,12 +539,8 @@ class TextElement {
     }
 
     _removeMeshInstance(meshInstance) {
-        meshInstance.material = null;
 
-        const oldMesh = meshInstance.mesh;
-        if (oldMesh) {
-            oldMesh.destroy();
-        }
+        meshInstance.destroy();
 
         const idx = this._model.meshInstances.indexOf(meshInstance);
         if (idx !== -1)
