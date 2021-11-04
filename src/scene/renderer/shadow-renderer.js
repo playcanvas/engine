@@ -161,7 +161,7 @@ class ShadowRenderer {
         return shadowCam;
     }
 
-    // culls the list of meshes instances by the camera, storing visible mesh instances in the speficied array
+    // culls the list of meshes instances by the camera, storing visible mesh instances in the specified array
     cullShadowCasters(meshInstances, visible, camera) {
 
         let count = 0;
@@ -243,7 +243,7 @@ class ShadowRenderer {
         light._shadowCascadeDistances.fill(farDist);
         for (let i = 1; i < light.numCascades; i++) {
 
-            //  lerp between linear and logaritmic distance, called practical split distance
+            //  lerp between linear and logarithmic distance, called practical split distance
             const fraction = i / light.numCascades;
             const linearDist = nearDist + (farDist - nearDist) * fraction;
             const logDist = nearDist * (farDist / nearDist) ** fraction;
@@ -605,7 +605,7 @@ class ShadowRenderer {
 
         // temporary render target for blurring
         // TODO: this is probably not optimal and shadow map could have depth buffer on in addition to color buffer,
-        // and for bluring only one buffer is needed.
+        // and for blurring only one buffer is needed.
         const tempShadowMap = this.shadowMapCache.get(device, light);
         const tempRt = tempShadowMap.renderTargets[0];
 

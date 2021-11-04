@@ -173,7 +173,7 @@ class Immediate {
 
         // create a mesh instance for the mesh if needed
         if (!meshInstance) {
-            var graphNode = this.getGraphNode(matrix);
+            const graphNode = this.getGraphNode(matrix);
             meshInstance = new MeshInstance(mesh, material, graphNode);
             meshInstance.cull = false;
         }

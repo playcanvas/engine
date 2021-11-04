@@ -189,7 +189,6 @@ class SceneRegistry {
      * @param {callbacks.LoadSceneData} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
-     *
      * var sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneData(sceneItem, function (err, sceneItem) {
      *     if (err) {
@@ -207,7 +206,6 @@ class SceneRegistry {
      * @description Unloads scene data that has been loaded previously using {@link SceneRegistry#loadSceneData}.
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
      * @example
-     *
      * var sceneItem = app.scenes.find("Scene Name");
      * app.scenes.unloadSceneData(sceneItem);
      */
@@ -230,7 +228,6 @@ class SceneRegistry {
      * @param {callbacks.LoadHierarchy} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
-     *
      * var sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
      *     if (!err) {
@@ -289,7 +286,6 @@ class SceneRegistry {
      * @param {callbacks.LoadSettings} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
-     *
      * var sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
      *     if (!err) {
@@ -362,7 +358,7 @@ class SceneRegistry {
 
                     self._app.root.addChild(scene.root);
 
-                    // Initialise pack settings
+                    // Initialize pack settings
                     if (self._app.systems.rigidbody && typeof Ammo !== 'undefined') {
                         self._app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }

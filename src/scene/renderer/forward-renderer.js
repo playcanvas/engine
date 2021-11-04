@@ -1,4 +1,4 @@
-import { now } from  '../../core/time.js';
+import { now } from '../../core/time.js';
 
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -1201,7 +1201,7 @@ class ForwardRenderer {
 
     // execute first pass over draw calls, in order to update materials / shaders
     // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
-    // where instaed of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
+    // where instead of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
     // take place in parallel
     renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
 
@@ -1337,9 +1337,9 @@ class ForwardRenderer {
 
                 if (newMaterial) {
 
-                    if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
+                    if (!drawCall._shader[pass].failed && !device.setShader(drawCall._shader[pass])) {
                         // #if _DEBUG
-                        console.error('Error in material "' + material.name + '" with flags ' + objDefs);
+                        console.error(`Error in material "${material.name}" with flags ${objDefs}`);
                         // #endif
                         drawCall._shader[pass].failed = true;
                     }

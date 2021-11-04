@@ -33,12 +33,10 @@ class Graph {
     }
 
     update(ms) {
-        var timings = this.timer.timings;
+        const timings = this.timer.timings;
 
         // calculate stacked total
-        var total = timings.reduce(function (a, v) {
-            return a + v;
-        }, 0);
+        const total = timings.reduce((a, v) => a + v, 0);
 
         // update averages
         this.avgTotal += total;
@@ -54,9 +52,9 @@ class Graph {
 
         if (this.enabled) {
             // update timings
-            var value = 0;
-            var range = 1.5 * this.watermark;
-            for (var i = 0; i < timings.length; ++i) {
+            let value = 0;
+            const range = 1.5 * this.watermark;
+            for (let i = 0; i < timings.length; ++i) {
 
                 // scale the value into the range
                 value += Math.floor(timings[i] / range * 255);
@@ -67,7 +65,7 @@ class Graph {
             this.sample[3] = this.watermark / range * 255;
 
             // write latest sample to the texture
-            var gl = this.device.gl;
+            const gl = this.device.gl;
             this.device.bindTexture(this.texture);
             gl.texSubImage2D(gl.TEXTURE_2D,
                              0,

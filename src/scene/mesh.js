@@ -22,7 +22,7 @@ import { getApplication } from '../framework/globals.js';
 
 let id = 0;
 
-// Helper class used to store vertex / index data streams and related properties, when mesh is programatically modified
+// Helper class used to store vertex / index data streams and related properties, when mesh is programmatically modified
 class GeometryData {
     constructor() {
         this.initDefaults();
@@ -60,7 +60,7 @@ class GeometryData {
 
         // #if _DEBUG
         if (this.vertexCount !== count) {
-            console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
+            console.error(`Vertex stream ${semantic} has ${count} vertices, which does not match already set streams with ${this.vertexCount} vertices.`);
         }
         // #endif
     }
@@ -156,10 +156,10 @@ class GeometryVertexStream {
  * Arrays instead to avoid Type Array allocation overhead.
  *
  * Follow these links for more complex examples showing the functionality.
- * * {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
- * * {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
- * * {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
- * * {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
+ * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
  * ### Update Vertex and Index buffers.
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
@@ -176,13 +176,13 @@ class GeometryVertexStream {
  * mesh should be interpreted by the graphics device. For details on the primitive object, see.
  * @property {number} primitive[].type The type of primitive to render. Can be:
  *
- * * {@link PRIMITIVE_POINTS}
- * * {@link PRIMITIVE_LINES}
- * * {@link PRIMITIVE_LINELOOP}
- * * {@link PRIMITIVE_LINESTRIP}
- * * {@link PRIMITIVE_TRIANGLES}
- * * {@link PRIMITIVE_TRISTRIP}
- * * {@link PRIMITIVE_TRIFAN}
+ * - {@link PRIMITIVE_POINTS}
+ * - {@link PRIMITIVE_LINES}
+ * - {@link PRIMITIVE_LINELOOP}
+ * - {@link PRIMITIVE_LINESTRIP}
+ * - {@link PRIMITIVE_TRIANGLES}
+ * - {@link PRIMITIVE_TRISTRIP}
+ * - {@link PRIMITIVE_TRIFAN}
  *
  * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
  * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
@@ -350,15 +350,15 @@ class Mesh extends RefCountedObject {
         }
 
         // account for normalized positional data
-        const positionElement = this.vertexBuffer.getFormat().elements.find((e) => e.name === SEMANTIC_POSITION);
+        const positionElement = this.vertexBuffer.getFormat().elements.find(e => e.name === SEMANTIC_POSITION);
         if (positionElement && positionElement.normalize) {
             const func = (() => {
                 switch (positionElement.dataType) {
-                    case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
-                    case TYPE_UINT8: return (x) => x / 255.0;
-                    case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
-                    case TYPE_UINT16: return (x) => x / 65535.0;
-                    default: return (x) => x;
+                    case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
+                    case TYPE_UINT8: return x => x / 255.0;
+                    case TYPE_INT16: return x => Math.max(x / 32767.0, -1.0);
+                    case TYPE_UINT16: return x => x / 65535.0;
+                    default: return x => x;
                 }
             })();
 
@@ -560,7 +560,7 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#setIndices
      * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 vertices are specified, in which case 32-bit format is used.
-     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indicies that define primitives (lines, triangles, etc.).
+     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indices that define primitives (lines, triangles, etc.).
      * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
     setIndices(indices, numIndices) {

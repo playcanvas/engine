@@ -25,7 +25,7 @@ class LightTextureAtlas {
         this.shadowMapResolution = 2048;
         this.shadowMap = null;
 
-        // number of additional pixels to render past the required shadow camera angle (90deg for omno, outer for spot) of the shadow camera for clustered lights.
+        // number of additional pixels to render past the required shadow camera angle (90deg for omni, outer for spot) of the shadow camera for clustered lights.
         // This needs to be a pixel more than a shadow filter needs to access.
         this.shadowEdgePixels = 3;
 

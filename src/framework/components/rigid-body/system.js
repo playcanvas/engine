@@ -13,9 +13,6 @@ import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
 
 let ammoRayStart, ammoRayEnd;
 
-const collisions = {};
-let frameCollisions = {};
-
 /**
  * @class
  * @name RaycastResult
@@ -165,6 +162,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this._kinematic = [];
         this._triggers = [];
         this._compounds = [];
+
+        this.collisions = {};
+        this.frameCollisions = {};
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
@@ -413,15 +413,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         let isNewCollision = false;
         const guid = entity.getGuid();
 
-        collisions[guid] = collisions[guid] || { others: [], entity: entity };
+        this.collisions[guid] = this.collisions[guid] || { others: [], entity: entity };
 
-        if (collisions[guid].others.indexOf(other) < 0) {
-            collisions[guid].others.push(other);
+        if (this.collisions[guid].others.indexOf(other) < 0) {
+            this.collisions[guid].others.push(other);
             isNewCollision = true;
         }
 
-        frameCollisions[guid] = frameCollisions[guid] || { others: [], entity: entity };
-        frameCollisions[guid].others.push(other);
+        this.frameCollisions[guid] = this.frameCollisions[guid] || { others: [], entity: entity };
+        this.frameCollisions[guid].others.push(other);
 
         return isNewCollision;
     }
@@ -487,10 +487,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * related entities.
      */
     _cleanOldCollisions() {
-        for (const guid in collisions) {
-            if (collisions.hasOwnProperty(guid)) {
-                const frameCollision = frameCollisions[guid];
-                const collision = collisions[guid];
+        for (const guid in this.collisions) {
+            if (this.collisions.hasOwnProperty(guid)) {
+                const frameCollision = this.frameCollisions[guid];
+                const collision = this.collisions[guid];
                 const entity = collision.entity;
                 const entityCollision = entity.collision;
                 const entityRigidbody = entity.rigidbody;
@@ -525,7 +525,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
 
                 if (others.length === 0) {
-                    delete collisions[guid];
+                    delete this.collisions[guid];
                 }
             }
         }
@@ -564,7 +564,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         const dispatcher = dynamicsWorld.getDispatcher();
         const numManifolds = dispatcher.getNumManifolds();
 
-        frameCollisions = {};
+        this.frameCollisions = {};
 
         // loop through the all contacts and fire events
         for (let i = 0; i < numManifolds; i++) {
@@ -619,7 +619,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                     // fire triggerenter events for rigidbodies
                     if (e0BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e1, e0);
                         }
 
@@ -629,7 +629,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     }
 
                     if (e1BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e0, e1);
                         }
 

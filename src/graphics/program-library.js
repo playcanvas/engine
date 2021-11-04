@@ -46,7 +46,7 @@ class ProgramLibrary {
         const generator = this._generators[name];
         if (generator === undefined) {
             // #if _DEBUG
-            console.warn("ProgramLibrary#getProgram: No program library functions registered for: " + name);
+            console.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
             // #endif
             return null;
         }
@@ -71,7 +71,7 @@ class ProgramLibrary {
                 options.lights = lights;
 
             if (this._precached)
-                console.warn("ProgramLibrary#getProgram: Cache miss for shader", name, "key", key, "after shaders precaching");
+                console.warn(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
             const shaderDefinition = generator.createShaderDefinition(gd, options);
             shader = this._cache[key] = new Shader(gd, shaderDefinition);

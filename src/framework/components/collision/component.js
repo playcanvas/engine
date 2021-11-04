@@ -27,15 +27,15 @@ import { Component } from '../component.js';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the collision volume. Can be:
  *
- * * "box": A box-shaped collision volume.
- * * "capsule": A capsule-shaped collision volume.
- * * "compound": A compound shape. Any descendant entities with a collision component
+ * - "box": A box-shaped collision volume.
+ * - "capsule": A capsule-shaped collision volume.
+ * - "compound": A compound shape. Any descendant entities with a collision component
  * of type box, capsule, cone, cylinder or sphere will be combined into a single, rigid
  * shape.
- * * "cone": A cone-shaped collision volume.
- * * "cylinder": A cylinder-shaped collision volume.
- * * "mesh": A collision volume that uses a model asset as its shape.
- * * "sphere": A sphere-shaped collision volume.
+ * - "cone": A cone-shaped collision volume.
+ * - "cylinder": A cylinder-shaped collision volume.
+ * - "mesh": A collision volume that uses a model asset as its shape.
+ * - "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
  * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the
@@ -117,40 +117,39 @@ class CollisionComponent extends Component {
     }
 
     onSetHalfExtents(name, oldValue, newValue) {
-        var t = this.data.type;
+        const t = this.data.type;
         if (this.data.initialized && t === 'box') {
             this.system.recreatePhysicalShapes(this);
         }
     }
 
     onSetRadius(name, oldValue, newValue) {
-        var t = this.data.type;
+        const t = this.data.type;
         if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
     }
 
     onSetHeight(name, oldValue, newValue) {
-        var t = this.data.type;
+        const t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
     }
 
     onSetAxis(name, oldValue, newValue) {
-        var t = this.data.type;
+        const t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
     }
 
     onSetAsset(name, oldValue, newValue) {
-        var asset;
-        var assets = this.system.app.assets;
+        const assets = this.system.app.assets;
 
         if (oldValue) {
             // Remove old listeners
-            asset = assets.get(oldValue);
+            const asset = assets.get(oldValue);
             if (asset) {
                 asset.off('remove', this.onAssetRemoved, this);
             }
@@ -161,7 +160,7 @@ class CollisionComponent extends Component {
                 this.data.asset = newValue.id;
             }
 
-            asset = assets.get(this.data.asset);
+            const asset = assets.get(this.data.asset);
             if (asset) {
                 // make sure we don't subscribe twice
                 asset.off('remove', this.onAssetRemoved, this);
@@ -180,12 +179,11 @@ class CollisionComponent extends Component {
     }
 
     onSetRenderAsset(name, oldValue, newValue) {
-        var asset;
-        var assets = this.system.app.assets;
+        const assets = this.system.app.assets;
 
         if (oldValue) {
             // Remove old listeners
-            asset = assets.get(oldValue);
+            const asset = assets.get(oldValue);
             if (asset) {
                 asset.off('remove', this.onRenderAssetRemoved, this);
             }
@@ -196,7 +194,7 @@ class CollisionComponent extends Component {
                 this.data.renderAsset = newValue.id;
             }
 
-            asset = assets.get(this.data.renderAsset);
+            const asset = assets.get(this.data.renderAsset);
             if (asset) {
                 // make sure we don't subscribe twice
                 asset.off('remove', this.onRenderAssetRemoved, this);
@@ -242,11 +240,11 @@ class CollisionComponent extends Component {
     }
 
     _getCompoundChildShapeIndex(shape) {
-        var compound = this.data.shape;
-        var shapes = compound.getNumChildShapes();
+        const compound = this.data.shape;
+        const shapes = compound.getNumChildShapes();
 
-        for (var i = 0; i < shapes; i++) {
-            var childShape = compound.getChildShape(i);
+        for (let i = 0; i < shapes; i++) {
+            const childShape = compound.getChildShape(i);
             if (childShape.ptr === shape.ptr) {
                 return i;
             }
@@ -266,8 +264,8 @@ class CollisionComponent extends Component {
 
         if (this._compoundParent) {
             this.system.recreatePhysicalShapes(this);
-        } else if (! this.entity.rigidbody) {
-            var ancestor = this.entity.parent;
+        } else if (!this.entity.rigidbody) {
+            let ancestor = this.entity.parent;
             while (ancestor) {
                 if (ancestor.collision && ancestor.collision.type === 'compound') {
                     if (ancestor.collision.shape.getNumChildShapes() === 0) {
@@ -283,10 +281,10 @@ class CollisionComponent extends Component {
     }
 
     _updateCompound() {
-        var entity = this.entity;
+        const entity = this.entity;
         if (entity._dirtyWorld) {
-            var dirty = entity._dirtyLocal;
-            var parent = entity;
+            let dirty = entity._dirtyLocal;
+            let parent = entity;
             while (parent && !dirty) {
                 if (parent.collision && parent.collision === this._compoundParent)
                     break;
@@ -300,7 +298,7 @@ class CollisionComponent extends Component {
             if (dirty) {
                 entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
 
-                var bodyComponent = this._compoundParent.entity.rigidbody;
+                const bodyComponent = this._compoundParent.entity.rigidbody;
                 if (bodyComponent)
                     bodyComponent.activate();
             }
@@ -309,7 +307,7 @@ class CollisionComponent extends Component {
 
     onEnable() {
         if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
-            var asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
+            const asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
             // recreate the collision shape if the model asset is not loaded
             // or the shape does not exist
             if (asset && (!asset.resource || !this.data.shape)) {
@@ -326,7 +324,7 @@ class CollisionComponent extends Component {
             if (this._compoundParent.shape.getNumChildShapes() === 0) {
                 this.system.recreatePhysicalShapes(this._compoundParent);
             } else {
-                var transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
+                const transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
                 this._compoundParent.shape.addChildShape(transform, this.data.shape);
                 Ammo.destroy(transform);
 
@@ -342,7 +340,7 @@ class CollisionComponent extends Component {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
         } else if (this._compoundParent && this !== this._compoundParent) {
-            if (! this._compoundParent.entity._destroying) {
+            if (!this._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(this._compoundParent, this.data.shape);
 
                 if (this._compoundParent.entity.rigidbody)

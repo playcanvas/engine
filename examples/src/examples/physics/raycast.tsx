@@ -13,7 +13,6 @@ class RaycastExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {

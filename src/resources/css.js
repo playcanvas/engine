@@ -20,7 +20,7 @@ class CssHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading css resource: " + url.original + " [" + err + "]");
+                callback(`Error loading css resource: ${url.original} [${err}]`);
             }
         });
     }

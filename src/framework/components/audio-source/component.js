@@ -30,9 +30,9 @@ import { Component } from '../component.js';
  * @property {string} distanceModel Determines which algorithm to use to reduce the
  * volume of the audio as it moves away from the listener. Can be:
  *
- * * "linear"
- * * "inverse"
- * * "exponential"
+ * - "linear"
+ * - "inverse"
+ * - "exponential"
  *
  * Default is "inverse".
  * @property {number} minDistance The minimum distance from the listener at which

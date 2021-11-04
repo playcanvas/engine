@@ -21,100 +21,100 @@ import {
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
-import { WorldClusters } from '../../../scene/world-clusters.js';
+import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
-var _oldChunkWarn = function (oldName, newName) {
+const _oldChunkWarn = function (oldName, newName) {
     // #if _DEBUG
-    console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
+    console.warn(`Shader chunk ${oldName} is deprecated - override ${newName} instead`);
     // #endif
 };
 
-var _oldChunkFloat = function (s, o, p) {
+const _oldChunkFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkColor = function (s, o, p) {
+const _oldChunkColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTex = function (s, o, p) {
+const _oldChunkTex = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTexColor = function (s, o, p) {
+const _oldChunkTexColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTexFloat = function (s, o, p) {
+const _oldChunkTexFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVert = function (s, o, p) {
+const _oldChunkVert = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVertColor = function (s, o, p) {
+const _oldChunkVertColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVertFloat = function (s, o, p) {
+const _oldChunkVertFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformSkin = function (s, o, p) {
+const _oldChunkTransformSkin = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SKIN\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformDynbatch = function (s, o, p) {
+const _oldChunkTransformDynbatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformInstanced = function (s, o, p) {
+const _oldChunkTransformInstanced = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformPixelSnap = function (s, o, p) {
+const _oldChunkTransformPixelSnap = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformScreenSpace = function (s, o, p) {
+const _oldChunkTransformScreenSpace = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
+const _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
             "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformUv1 = function (s, o, p) {
+const _oldChunkTransformUv1 = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
-var _matTex2D = [];
+const _matTex2D = [];
 
-var standard = {
+const standard = {
 
     _oldChunkToNew: {
         aoTexPS: { n: "aoPS", f: _oldChunkTex },
@@ -172,15 +172,15 @@ var standard = {
     optionsContextMin: {},
 
     generateKey: function (options) {
-        var buildPropertiesList = function (options) {
-            var props = [];
-            for (var prop in options) {
+        const buildPropertiesList = function (options) {
+            const props = [];
+            for (const prop in options) {
                 if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
                     props.push(prop);
             }
             return props.sort();
         };
-        var props;
+        let props;
         if (options === this.optionsContextMin) {
             if (!this.propsMin) this.propsMin = buildPropertiesList(options);
             props = this.propsMin;
@@ -191,17 +191,16 @@ var standard = {
             props = buildPropertiesList(options);
         }
 
-        var key = "standard";
+        let key = "standard";
 
-        var i;
-        for (i = 0; i < props.length; i++) {
+        for (let i = 0; i < props.length; i++) {
             if (options[props[i]])
                 key += props[i] + options[props[i]];
         }
 
         if (options.chunks) {
-            var chunks = [];
-            for (var p in options.chunks) {
+            const chunks = [];
+            for (const p in options.chunks) {
                 if (options.chunks.hasOwnProperty(p)) {
                     chunks.push(p + options.chunks[p]);
                 }
@@ -211,7 +210,7 @@ var standard = {
         }
 
         if (options.lights) {
-            for (i = 0; i < options.lights.length; i++) {
+            for (let i = 0; i < options.lights.length; i++) {
                 key += options.lights[i].key;
             }
         }
@@ -224,10 +223,10 @@ var standard = {
             if (_matTex2D[p] < chan.length) {
                 return chan.substring(0, _matTex2D[p]);
             } else if (_matTex2D[p] > chan.length) {
-                var str = chan;
-                var chr = str.charAt(str.length - 1);
-                var addLen = _matTex2D[p] - str.length;
-                for (var i = 0; i < addLen; i++) str += chr;
+                let str = chan;
+                const chr = str.charAt(str.length - 1);
+                const addLen = _matTex2D[p] - str.length;
+                for (let i = 0; i < addLen; i++) str += chr;
                 return str;
             }
             return chan;
@@ -262,12 +261,11 @@ var standard = {
      * @returns {string} The code used to replace "$UV" in the shader code.
      */
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
-        var transformId = options[transformPropName];
-        var uvChannel = options[uVPropName];
+        const transformId = options[transformPropName];
+        const uvChannel = options[uVPropName];
+        const isMainPass = (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR);
 
-        var expression;
-        var isMainPass = (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR);
-
+        let expression;
         if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
             expression = "nineSlicedUv";
         } else if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
@@ -290,13 +288,13 @@ var standard = {
     },
 
     _addMapDef: function (name, enabled) {
-        var s = "\n#undef " + name + "\n";
+        let s = "\n#undef " + name + "\n";
         if (enabled) s += " #define " + name + "\n";
         return s;
     },
 
     _addMapDefs: function (float, color, vertex, map) {
-        var s = "";
+        let s = "";
         s += this._addMapDef("MAPFLOAT", float);
         s += this._addMapDef("MAPCOLOR", color);
         s += this._addMapDef("MAPVERTEX", vertex);
@@ -317,30 +315,30 @@ var standard = {
      * @returns {string} The shader code to support this map.
      */
     _addMap: function (propName, chunkName, options, chunks, samplerFormat) {
-        var mapPropName = propName + "Map";
+        const mapPropName = propName + "Map";
 
-        var uVPropName = mapPropName + "Uv";
-        var transformPropName = mapPropName + "Transform";
-        var channelPropName = mapPropName + "Channel";
-        var vertexColorChannelPropName = propName + "VertexColorChannel";
-        var tintPropName = propName + "Tint";
-        var vertexColorPropName = propName + "VertexColor";
-        var detailModePropName = propName + "Mode";
+        const uVPropName = mapPropName + "Uv";
+        const transformPropName = mapPropName + "Transform";
+        const channelPropName = mapPropName + "Channel";
+        const vertexColorChannelPropName = propName + "VertexColorChannel";
+        const tintPropName = propName + "Tint";
+        const vertexColorPropName = propName + "VertexColor";
+        const detailModePropName = propName + "Mode";
 
-        var tintOption = options[tintPropName];
-        var vertexColorOption = options[vertexColorPropName];
-        var textureOption = options[mapPropName];
-        var detailModeOption = options[detailModePropName];
+        const tintOption = options[tintPropName];
+        const vertexColorOption = options[vertexColorPropName];
+        const textureOption = options[mapPropName];
+        const detailModeOption = options[detailModePropName];
 
-        var subCode = chunks[chunkName];
+        let subCode = chunks[chunkName];
 
         if (textureOption) {
-            var uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
+            const uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
 
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
             if (samplerFormat !== undefined) {
-                var fmt = samplerFormat === 0 ? "texture2DSRGB" : (samplerFormat === 1 ? "texture2DRGBM" : "texture2D");
+                const fmt = samplerFormat === 0 ? "texture2DSRGB" : (samplerFormat === 1 ? "texture2DRGBM" : "texture2D");
                 subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
         }
@@ -353,8 +351,8 @@ var standard = {
             subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
         }
 
-        var isFloatTint = (tintOption === 1);
-        var isVecTint = (tintOption === 3);
+        const isFloatTint = (tintOption === 1);
+        const isVecTint = (tintOption === 3);
 
         subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
         return subCode.replace(/\$/g, "");
@@ -564,8 +562,7 @@ var standard = {
     },
 
     createShaderDefinition: function (device, options) {
-        var i, p;
-        var lighting = options.lights.length > 0;
+        let lighting = options.lights.length > 0;
 
         if (options.dirLightMap) {
             lighting = true;
@@ -585,37 +582,36 @@ var standard = {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        var cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
-        var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
-        var useTexCubeLod = options.useTexCubeLod;
+        const cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
+        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
+        const useTexCubeLod = options.useTexCubeLod;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
-        var shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
+        const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
+        const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
 
         this.options = options;
 
         // GENERATE VERTEX SHADER
-        var code = '';
-        var codeBody = '';
+        let code = '';
+        let codeBody = '';
 
-        var varyings = ""; // additional varyings for map transforms
+        let varyings = ""; // additional varyings for map transforms
 
-        var chunks = shaderChunks;
+        let chunks = shaderChunks;
 
-        var lightType;
-        var shadowCoordArgs;
-        var chunk;
+        let shadowCoordArgs;
+        let chunk;
 
-        var attributes = {
+        const attributes = {
             vertex_position: SEMANTIC_POSITION
         };
 
         if (options.chunks) {
-            var customChunks = {};
-            var newP;
-            for (p in chunks) {
+            const customChunks = {};
+
+            for (const p in chunks) {
                 if (chunks.hasOwnProperty(p)) {
                     if (!options.chunks[p]) {
                         customChunks[p] = chunks[p];
@@ -648,8 +644,8 @@ var standard = {
                 }
             }
 
-            for (p in options.chunks) {
-                newP = this._oldChunkToNew[p];
+            for (const p in options.chunks) {
+                const newP = this._oldChunkToNew[p];
                 if (newP) {
                     customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);
                 }
@@ -705,24 +701,23 @@ var standard = {
             }
         }
 
-        var useUv = [];
-        var useUnmodifiedUv = [];
-        var maxUvSets = 2;
-        var cname, mname, tname, uname;
+        const useUv = [];
+        const useUnmodifiedUv = [];
+        const maxUvSets = 2;
 
-        for (p in _matTex2D) {
-            mname = p + "Map";
+        for (const p in _matTex2D) {
+            const mname = p + "Map";
             if (options[p + "VertexColor"]) {
-                cname = p + "VertexColorChannel";
+                const cname = p + "VertexColorChannel";
                 options[cname] = this._correctChannel(p, options[cname]);
             }
             if (options[mname]) {
-                cname = mname + "Channel";
-                tname = mname + "Transform";
-                uname = mname + "Uv";
+                const cname = mname + "Channel";
+                const tname = mname + "Transform";
+                const uname = mname + "Uv";
                 options[uname] = Math.min(options[uname], maxUvSets - 1);
                 options[cname] = this._correctChannel(p, options[cname]);
-                var uvSet = options[uname];
+                const uvSet = options[uname];
                 useUv[uvSet] = true;
                 useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
             }
@@ -733,7 +728,7 @@ var standard = {
             useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
         }
 
-        for (i = 0; i < maxUvSets; i++) {
+        for (let i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = "TEXCOORD" + i;
                 code += chunks["uv" + i + "VS"];
@@ -744,14 +739,14 @@ var standard = {
             }
         }
 
-        var codes = [code, varyings, codeBody, []];
+        const codes = [code, varyings, codeBody, []];
 
-        for (p in _matTex2D) {
-            mname = p + "Map";
+        for (const p in _matTex2D) {
+            const mname = p + "Map";
             if (options[mname]) {
-                tname = mname + "Transform";
+                const tname = mname + "Transform";
                 if (options[tname]) {
-                    uname = mname + "Uv";
+                    const uname = mname + "Uv";
                     this._setMapTransform(codes, p, options[tname], options[uname]);
                 }
             }
@@ -869,9 +864,9 @@ var standard = {
         code += chunks.endVS;
         code += "}";
 
-        var vshader = code;
+        let vshader = code;
 
-        var oldVars = varyings;
+        const oldVars = varyings;
         varyings = "";
         varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
@@ -885,7 +880,7 @@ var standard = {
         varyings += oldVars;
         vshader = varyings + vshader;
 
-        var startCode = "";
+        let startCode = "";
         if (device.webgl2) {
             startCode = versionCode(device);
             if (chunks.extensionVS) {
@@ -909,7 +904,7 @@ var standard = {
             if (options.forceFragmentPrecision === "mediump" && device.maxPrecision === "lowp") options.forceFragmentPrecision = "lowp";
         }
 
-        var fshader;
+        let fshader;
         code = '';
 
         if (device.webgl2) {
@@ -1004,7 +999,7 @@ var standard = {
             code += chunks.detailModesPS;
         }
 
-        var codeBegin = code;
+        const codeBegin = code;
         code = "";
 
         if (options.clearCoat > 0) {
@@ -1016,15 +1011,14 @@ var standard = {
         }
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
-        var numShadowLights = 0;
-        var shadowTypeUsed = [];
-        var shadowedDirectionalLightUsed = false;
-        var useVsm = false;
-        var usePerspZbufferShadow = false;
-        var light;
+        let numShadowLights = 0;
+        const shadowTypeUsed = [];
+        let shadowedDirectionalLightUsed = false;
+        let useVsm = false;
+        let usePerspZbufferShadow = false;
         const isClustered = LayerComposition.clusteredLightingEnabled;
 
-        var hasAreaLights = options.lights.some(function (light) {
+        const hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
@@ -1042,11 +1036,11 @@ var standard = {
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
         }
 
-        var lightShape = LIGHTSHAPE_PUNCTUAL;
+        let lightShape = LIGHTSHAPE_PUNCTUAL;
 
-        for (i = 0; i < options.lights.length; i++) {
-            light = options.lights[i];
-            lightType = light._type;
+        for (let i = 0; i < options.lights.length; i++) {
+            const light = options.lights[i];
+            const lightType = light._type;
 
             // skip uniform generation for local lights if clustered lighting is enabled
             if (isClustered && lightType !== LIGHTTYPE_DIRECTIONAL)
@@ -1131,7 +1125,7 @@ var standard = {
         code += "\n"; // End of uniform declarations
 
 
-        var tbn;
+        let tbn;
         if (!options.hasTangents && device.extStandardDerivatives) {
             tbn = chunks.TBNderivativePS;
         } else if (options.fastTbn) {
@@ -1165,7 +1159,7 @@ var standard = {
                     code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
                 }
 
-                var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.normalizeNormalMap) {
                     code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                 } else {
@@ -1222,7 +1216,7 @@ var standard = {
                 code += chunks.specularAaNonePS;
             }
 
-            var specularPropName = options.useMetalness ? "metalness" : "specular";
+            const specularPropName = options.useMetalness ? "metalness" : "specular";
             code += this._addMap(specularPropName, specularPropName + "PS", options, chunks);
             code += this._addMap("gloss", "glossPS", options, chunks);
             if (options.fresnelModel === FRESNEL_SCHLICK) {
@@ -1238,14 +1232,14 @@ var standard = {
 
         if (options.heightMap) {
             if (!options.normalMap) {
-                var transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
+                const transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
                 if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
                 code += tbn;
             }
             code += this._addMap("height", "parallaxPS", options, chunks);
         }
 
-        var useAo = options.aoMap || options.aoVertexColor;
+        const useAo = options.aoMap || options.aoVertexColor;
         if (useAo) {
             code += this._addMap("ao", "aoPS", options, chunks);
             if (options.occludeSpecular) {
@@ -1257,10 +1251,10 @@ var standard = {
             }
         }
 
-        var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
+        const reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
 
         if (options.sphereMap) {
-            var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            let scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
             scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
             code += scode;
         } else if (cubemapReflection) {
@@ -1342,7 +1336,7 @@ var standard = {
             code += chunks.lightDiffuseLambertPS;
             if (hasAreaLights) code += chunks.ltc;
         }
-        var useOldAmbient = false;
+        let useOldAmbient = false;
         if (options.useSpecular) {
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
@@ -1372,16 +1366,16 @@ var standard = {
             code += chunks.combineClearCoatPS;
         }
 
-        var addAmbient = true;
+        let addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
-            var lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
+            const lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
             code += this._addMap("light", lightmapChunkPropName, options, chunks, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
         if (addAmbient) {
 
-            var ambientDecode = options.rgbmAmbient ? "decodeRGBM" : (options.hdrAmbient ? "" : "gammaCorrectInput");
+            const ambientDecode = options.rgbmAmbient ? "decodeRGBM" : (options.hdrAmbient ? "" : "gammaCorrectInput");
 
             if (options.ambientSH) {
                 code += chunks.ambientSHPS;
@@ -1415,12 +1409,12 @@ var standard = {
             }
         }
 
-        var hasPointLights = false;
-        var usesLinearFalloff = false;
-        var usesInvSquaredFalloff = false;
-        var usesSpot = false;
-        var usesCookie = false;
-        var usesCookieNow;
+        let hasPointLights = false;
+        let usesLinearFalloff = false;
+        let usesInvSquaredFalloff = false;
+        let usesSpot = false;
+        let usesCookie = false;
+        let usesCookieNow;
 
         // clustered lighting
         if (LayerComposition.clusteredLightingEnabled) {
@@ -1437,7 +1431,7 @@ var standard = {
             if (options.clusteredLightingShadowsEnabled)
                 code += "\n#define CLUSTER_SHADOWS";
 
-            code += WorldClusters.shaderDefines;
+            code += LightsBuffer.shaderDefines;
             code += chunks.clusteredLightPS;
         }
 
@@ -1473,7 +1467,7 @@ var standard = {
             }
         }
 
-        var opacityParallax = false;
+        let opacityParallax = false;
         if (options.blendType === BLEND_NONE && !options.alphaTest && !options.alphaToCoverage) {
             code += "   dAlpha = 1.0;\n";
         } else {
@@ -1487,7 +1481,7 @@ var standard = {
             }
         }
 
-        var getGlossinessCalled = false;
+        let getGlossinessCalled = false;
 
         if (needsNormal) {
             code += "   getViewDir();\n";
@@ -1579,7 +1573,7 @@ var standard = {
             }
 
             // light source shape support
-            var shapeString = '';
+            let shapeString = '';
 
             // clustered lighting
             if (LayerComposition.clusteredLightingEnabled) {
@@ -1589,10 +1583,9 @@ var standard = {
                 code += '   addClusteredLights();';
             }
 
-            for (i = 0; i < options.lights.length; i++) {
-
-                light = options.lights[i];
-                lightType = light._type;
+            for (let i = 0; i < options.lights.length; i++) {
+                const light = options.lights[i];
+                const lightType = light._type;
 
                 // if clustered lights are used, skip normal lights other than directional
                 if (LayerComposition.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
@@ -1686,8 +1679,8 @@ var standard = {
                 }
 
                 if (light.castShadows && !options.noShadow) {
-                    var shadowReadMode = null;
-                    var evsmExp;
+                    let shadowReadMode = null;
+                    let evsmExp;
                     if (light._shadowType === SHADOW_VSM8) {
                         shadowReadMode = "VSM8";
                         evsmExp = "0.0";
@@ -1826,7 +1819,7 @@ var standard = {
         if (usesCookie) {
             code = chunks.cookiePS + code;
         }
-        var structCode = "";
+        let structCode = "";
         if (code.includes("dReflection")) structCode += "vec4 dReflection;\n";
         if (code.includes("dTBN")) structCode += "mat3 dTBN;\n";
         if (code.includes("dAlbedo")) structCode += "vec3 dAlbedo;\n";

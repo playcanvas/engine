@@ -23,25 +23,25 @@ import { EventHandler } from '../../core/event-handler.js';
  *
  * Without using an EntityReference, the Checkbox component must implement some or all of the following:
  *
- * * Listen for its 'checkmark' property being set to a valid guid, and retrieve a reference to the
+ * - Listen for its 'checkmark' property being set to a valid guid, and retrieve a reference to the
  *   entity associated with this guid whenever it changes (i.e. via `app.root.findByGuid()`).
- * * Once a valid entity is received, check to see whether it has already has an ImageElementComponent
+ * - Once a valid entity is received, check to see whether it has already has an ImageElementComponent
  *   or not:
- *   * If it has one, proceed to set the tint of the ImageElementComponent based on whether the Checkbox
+ *   - If it has one, proceed to set the tint of the ImageElementComponent based on whether the Checkbox
  *     is currently active or inactive.
- *   * If it doesn't have one, add a listener to wait for the addition of an ImageElementComponent,
+ *   - If it doesn't have one, add a listener to wait for the addition of an ImageElementComponent,
  *     and then apply the tint once one becomes present.
- * * If the checkmark entity is then reassigned (such as if the user reassigns the field in the editor,
+ * - If the checkmark entity is then reassigned (such as if the user reassigns the field in the editor,
  *   or if this is done at runtime via a script), a well-behaved Checkbox component must also undo the
  *   tinting so that no lasting effect is applied to the old entity.
- * * If the checkmark entity's ImageElementComponent is removed and then another ImageElementComponent
+ * - If the checkmark entity's ImageElementComponent is removed and then another ImageElementComponent
  *   is added, the Checkbox component must handle this in order to re-apply the tint.
- * * To prevent memory leaks, the Checkbox component must also make sure to correctly remove listeners
+ * - To prevent memory leaks, the Checkbox component must also make sure to correctly remove listeners
  *   in each of the following scenarios:
- *   * Destruction of the Checkbox component.
- *   * Reassignment of the checkmark entity.
- *   * Removal of the ImageElementComponent.
- * * It must also be careful not to double-add listeners in any of the above code paths, to avoid various
+ *   - Destruction of the Checkbox component.
+ *   - Reassignment of the checkmark entity.
+ *   - Removal of the ImageElementComponent.
+ * - It must also be careful not to double-add listeners in any of the above code paths, to avoid various
  *   forms of undesirable behavior.
  *
  * If the Checkbox component becomes more complicated and has multiple entity reference properties,
@@ -80,9 +80,9 @@ import { EventHandler } from '../../core/event-handler.js';
  * The event string (i.e. "element#gain" in the above examples) is of the format `sourceName#eventName`,
  * and is defined as follows:
  *
- * * `sourceName`: May be any component name, or the special string "entity", which refers
+ * - `sourceName`: May be any component name, or the special string "entity", which refers
  * to the entity itself.
- * * `eventName`: May be the name of any event dispatched by the relevant component or
+ * - `eventName`: May be the name of any event dispatched by the relevant component or
  * entity, as well as the special strings "gain" or "lose".
  *
  * Some examples are as follows:

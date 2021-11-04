@@ -68,8 +68,8 @@ class XrLightEstimation extends EventHandler {
      */
 
     _onSessionStart() {
-        const supported = !! this._manager.session.requestLightProbe;
-        if (! supported) return;
+        const supported = !!this._manager.session.requestLightProbe;
+        if (!supported) return;
         this._supported = true;
     }
 
@@ -97,16 +97,16 @@ class XrLightEstimation extends EventHandler {
     start() {
         let err;
 
-        if (! this._manager.session)
+        if (!this._manager.session)
             err = new Error('XR session is not running');
 
-        if (! err && this._manager.type !== XRTYPE_AR)
+        if (!err && this._manager.type !== XRTYPE_AR)
             err = new Error('XR session type is not AR');
 
-        if (! err && ! this._supported)
+        if (!err && !this._supported)
             err = new Error('light-estimation is not supported');
 
-        if (! err && this._lightProbe || this._lightProbeRequested)
+        if (!err && this._lightProbe || this._lightProbeRequested)
             err = new Error('light estimation is already requested');
 
         if (err) {
@@ -146,12 +146,12 @@ class XrLightEstimation extends EventHandler {
     }
 
     update(frame) {
-        if (! this._lightProbe) return;
+        if (!this._lightProbe) return;
 
         const lightEstimate = frame.getLightEstimate(this._lightProbe);
-        if (! lightEstimate) return;
+        if (!lightEstimate) return;
 
-        if (! this._available) {
+        if (!this._available) {
             this._available = true;
             this.fire('available');
         }

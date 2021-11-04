@@ -9,7 +9,6 @@ class MiniStatsExample extends Example {
     static NAME = 'Mini Stats';
     static ENGINE = 'DEBUG';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, pcx: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});

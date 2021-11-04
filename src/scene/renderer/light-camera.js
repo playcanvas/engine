@@ -20,7 +20,7 @@ class LightCamera {
         new Quat().setFromEulerAngles(-90, 0, 0),
         new Quat().setFromEulerAngles(0, 180, 180),
         new Quat().setFromEulerAngles(0, 0, 180)
-    ]
+    ];
 
     static create(name, lightType, face) {
 

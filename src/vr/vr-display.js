@@ -30,8 +30,6 @@ class VrDisplay extends EventHandler {
     constructor(app, display) {
         super();
 
-        var self = this;
-
         this._app = app;
         this._device = app.graphicsDevice;
 
@@ -66,8 +64,8 @@ class VrDisplay extends EventHandler {
 
         this.presenting = false;
 
-        self._presentChange = function (event) {
-            var display;
+        this._presentChange = (event) => {
+            let display;
             // handle various events formats
             if (event.display) {
                 // this is the official spec event format
@@ -81,33 +79,34 @@ class VrDisplay extends EventHandler {
             } else {
                 // final catch all is to use this display as Firefox Nightly (54.0a1)
                 // does not include the display within the event data
-                display = self.display;
+                display = this.display;
             }
 
             // check if event refers to this display
-            if (display === self.display) {
-                self.presenting = (self.display && self.display.isPresenting);
+            if (display === this.display) {
+                this.presenting = (this.display && this.display.isPresenting);
 
-                if (self.presenting) {
-                    var leftEye = self.display.getEyeParameters("left");
-                    var rightEye = self.display.getEyeParameters("right");
-                    var w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
-                    var h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+                if (this.presenting) {
+                    const leftEye = this.display.getEyeParameters("left");
+                    const rightEye = this.display.getEyeParameters("right");
+                    const w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+                    const h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
                     // set canvas resolution to the display resolution
-                    self._app.graphicsDevice.setResolution(w, h);
+                    this._app.graphicsDevice.setResolution(w, h);
                     // prevent window resizing from resizing it
-                    self._app._allowResize = false;
+                    this._app._allowResize = false;
                 } else {
                     // restore original resolution
-                    self._app.setCanvasResolution(RESOLUTION_AUTO);
-                    self._app._allowResize = true;
+                    this._app.setCanvasResolution(RESOLUTION_AUTO);
+                    this._app._allowResize = true;
                 }
 
-                self.fire('beforepresentchange', self); // fire internal event for camera component
-                self.fire('presentchange', self);
+                this.fire('beforepresentchange', this); // fire internal event for camera component
+                this.fire('presentchange', this);
             }
         };
-        window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
+
+        window.addEventListener('vrdisplaypresentchange', this._presentChange, false);
     }
 
     /**
@@ -118,7 +117,8 @@ class VrDisplay extends EventHandler {
      * @description Destroy this display object.
      */
     destroy() {
-        window.removeEventListener('vrdisplaypresentchange', self._presentChange);
+        window.removeEventListener('vrdisplaypresentchange', this._presentChange);
+
         if (this._camera) this._camera.vrDisplay = null;
         this._camera = null;
     }
@@ -137,9 +137,8 @@ class VrDisplay extends EventHandler {
             this.leftProj.data = this._frameData.leftProjectionMatrix;
             this.rightProj.data = this._frameData.rightProjectionMatrix;
 
-            var stage = this.display.stageParameters;
+            const stage = this.display.stageParameters;
             if (stage) {
-
                 this.sitToStandInv.set(stage.sittingToStandingTransform).invert();
 
                 this.combinedView.set(this._frameData.leftViewMatrix);
@@ -148,7 +147,6 @@ class VrDisplay extends EventHandler {
                 this.combinedView.set(this._frameData.rightViewMatrix);
                 this.rightView.mul2(this.combinedView, this.sitToStandInv);
             } else {
-
                 this.leftView.set(this._frameData.leftViewMatrix);
                 this.rightView.set(this._frameData.rightViewMatrix);
             }
@@ -157,12 +155,12 @@ class VrDisplay extends EventHandler {
             // Camera is offset backwards to cover both frustums
 
             // Extract widest frustum plane and calculate fov
-            var nx = this.leftProj.data[3] + this.leftProj.data[0];
-            var nz = this.leftProj.data[11] + this.leftProj.data[8];
-            var l = 1.0 / Math.sqrt(nx * nx + nz * nz);
+            let nx = this.leftProj.data[3] + this.leftProj.data[0];
+            let nz = this.leftProj.data[11] + this.leftProj.data[8];
+            let l = 1.0 / Math.sqrt(nx * nx + nz * nz);
             nx *= l;
             nz *= l;
-            var maxFov = -Math.atan2(nz, nx);
+            let maxFov = -Math.atan2(nz, nx);
 
             nx = this.rightProj.data[3] + this.rightProj.data[0];
             nz = this.rightProj.data[11] + this.rightProj.data[8];
@@ -174,24 +172,24 @@ class VrDisplay extends EventHandler {
 
             this.combinedFov = maxFov;
 
-            var aspect = this.rightProj.data[5] / this.rightProj.data[0];
+            const aspect = this.rightProj.data[5] / this.rightProj.data[0];
             this.combinedAspect = aspect;
 
-            var view = this.combinedView;
+            const view = this.combinedView;
             view.copy(this.leftView);
             view.invert();
             this.leftViewInv.copy(view);
-            var pos = this.combinedPos;
+            const pos = this.combinedPos;
             pos.x = this.leftPos.x = view.data[12];
             pos.y = this.leftPos.y = view.data[13];
             pos.z = this.leftPos.z = view.data[14];
             view.copy(this.rightView);
             view.invert();
             this.rightViewInv.copy(view);
-            var deltaX = pos.x - view.data[12];
-            var deltaY = pos.y - view.data[13];
-            var deltaZ = pos.z - view.data[14];
-            var dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+            const deltaX = pos.x - view.data[12];
+            const deltaY = pos.y - view.data[13];
+            const deltaZ = pos.z - view.data[14];
+            const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
             this.rightPos.x = view.data[12];
             this.rightPos.y = view.data[13];
             this.rightPos.z = view.data[14];
@@ -201,13 +199,13 @@ class VrDisplay extends EventHandler {
             pos.x *= 0.5; // middle pos
             pos.y *= 0.5;
             pos.z *= 0.5;
-            var b = Math.PI * 0.5;
-            var c = maxFov * 0.5;
-            var a = Math.PI - (b + c);
-            var offset = dist * 0.5 * (Math.sin(a));// / Math.sin(b) ); // equals 1
-            var fwdX = view.data[8];
-            var fwdY = view.data[9];
-            var fwdZ = view.data[10];
+            const b = Math.PI * 0.5;
+            const c = maxFov * 0.5;
+            const a = Math.PI - (b + c);
+            const offset = dist * 0.5 * (Math.sin(a));// / Math.sin(b) ); // equals 1
+            const fwdX = view.data[8];
+            const fwdY = view.data[9];
+            const fwdZ = view.data[10];
             view.data[12] = pos.x + fwdX * offset; // our forward goes backwards so + instead of -
             view.data[13] = pos.y + fwdY * offset;
             view.data[14] = pos.z + fwdZ * offset;

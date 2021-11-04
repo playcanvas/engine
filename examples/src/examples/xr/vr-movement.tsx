@@ -5,7 +5,6 @@ class VRMovementExample extends Example {
     static CATEGORY = 'XR';
     static NAME = 'VR Movement';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');

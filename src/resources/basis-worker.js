@@ -174,7 +174,7 @@ function BasisWorker() {
         if (!width || !height || !levels) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' levels=' + levels);
+            throw new Error(`Invalid image dimensions url=${url} width=${width} height=${height} levels=${levels}`);
         }
 
         // choose the target format
@@ -265,7 +265,7 @@ function BasisWorker() {
         if (!width || !height || !images || !levels) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' images=' + images + ' levels=' + levels);
+            throw new Error(`Invalid image dimensions url=${url} width=${width} height=${height} images=${images} levels=${levels}`);
         }
 
         // choose the target format
@@ -350,7 +350,7 @@ function BasisWorker() {
     const workerTranscode = (url, data, options) => {
         try {
             const result = transcode(url, data, options);
-            result.levels = result.levels.map((v) => v.buffer);
+            result.levels = result.levels.map(v => v.buffer);
             self.postMessage({ url: url, data: result }, result.levels);
         } catch (err) {
             self.postMessage({ url: url, err: err }, null);

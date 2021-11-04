@@ -10,7 +10,7 @@ class AnimBinder {
     // it will join using that character instead
     static joinPath(pathSegments, character) {
         character = character || '.';
-        var escape = function (string) {
+        const escape = function (string) {
             return string.replace(/\\/g, '\\\\').replace(new RegExp('\\' + character, 'g'), '\\' + character);
         };
         return pathSegments.map(escape).join(character);
@@ -19,11 +19,11 @@ class AnimBinder {
     // split a path string into its segments and resolve character escaping
     static splitPath(path, character) {
         character = character || '.';
-        var result = [];
-        var curr = "";
-        var i = 0;
+        const result = [];
+        let curr = "";
+        let i = 0;
         while (i < path.length) {
-            var c = path[i++];
+            let c = path[i++];
 
             if (c === '\\' && i < path.length) {
                 c = path[i++];

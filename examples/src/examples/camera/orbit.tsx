@@ -14,7 +14,6 @@ class OrbitExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, script: pc.Asset }): void {
 
         // Create the app and start the update loop

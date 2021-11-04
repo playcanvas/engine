@@ -28,7 +28,7 @@ import { StencilParameters } from '../../../scene/stencil-parameters.js';
 import { Asset } from '../../../asset/asset.js';
 
 // #if _DEBUG
-var _debugLogging = false;
+const _debugLogging = false;
 // #endif
 
 class ImageRenderable {
@@ -95,12 +95,12 @@ class ImageRenderable {
             this.model.meshInstances.push(this.unmaskMeshInstance);
 
             // copy parameters
-            for (var name in this.meshInstance.parameters) {
+            for (const name in this.meshInstance.parameters) {
                 this.unmaskMeshInstance.setParameter(name, this.meshInstance.parameters[name].data);
             }
         } else {
             // remove unmask mesh instance from model
-            var idx = this.model.meshInstances.indexOf(this.unmaskMeshInstance);
+            const idx = this.model.meshInstances.indexOf(this.unmaskMeshInstance);
             if (idx >= 0) {
                 this.model.meshInstances.splice(idx, 1);
             }
@@ -145,12 +145,12 @@ class ImageRenderable {
     setUnmaskDrawOrder() {
         if (!this.meshInstance) return;
 
-        var getLastChild = function (e) {
-            var last;
-            var c = e.children;
-            var l = c.length;
+        const getLastChild = function (e) {
+            let last;
+            const c = e.children;
+            const l = c.length;
             if (l) {
-                for (var i = 0; i < l; i++) {
+                for (let i = 0; i < l; i++) {
                     if (c[i].element) {
                         last = c[i];
                     }
@@ -158,7 +158,7 @@ class ImageRenderable {
 
                 if (!last) return null;
 
-                var child = getLastChild(last);
+                const child = getLastChild(last);
                 if (child) {
                     return child;
                 }
@@ -177,7 +177,7 @@ class ImageRenderable {
         // The offset is reduced by a small fraction each time so that if multiple masks
         // end on the same last child they are unmasked in the correct order.
         if (this.unmaskMeshInstance) {
-            var lastChild = getLastChild(this._entity);
+            const lastChild = getLastChild(this._entity);
             if (lastChild && lastChild.element) {
                 this.unmaskMeshInstance.drawOrder = lastChild.element.drawOrder + lastChild.element.getMaskOffset();
             } else {
@@ -199,9 +199,9 @@ class ImageRenderable {
 
     setCull(cull) {
         if (!this.meshInstance) return;
-        var element = this._element;
+        const element = this._element;
 
-        var visibleFn = null;
+        let visibleFn = null;
         if (cull && element._isScreenCulled()) {
             visibleFn = function (camera) {
                 return element.isVisibleForCamera(camera);
@@ -371,9 +371,9 @@ class ImageElement {
     }
 
     _updateMaterial(screenSpace) {
-        var mask = !!this._mask;
-        var nineSliced = !!(this.sprite && this.sprite.renderMode === SPRITE_RENDERMODE_SLICED);
-        var nineTiled = !!(this.sprite && this.sprite.renderMode === SPRITE_RENDERMODE_TILED);
+        const mask = !!this._mask;
+        const nineSliced = !!(this.sprite && this.sprite.renderMode === SPRITE_RENDERMODE_SLICED);
+        const nineTiled = !!(this.sprite && this.sprite.renderMode === SPRITE_RENDERMODE_TILED);
 
         if (!this._hasUserMaterial()) {
             this._material = this._system.getImageElementMaterial(screenSpace, mask, nineSliced, nineTiled);
@@ -389,16 +389,16 @@ class ImageElement {
 
     // build a quad for the image
     _createMesh() {
-        var element = this._element;
-        var w = element.calculatedWidth;
-        var h = element.calculatedHeight;
+        const element = this._element;
+        const w = element.calculatedWidth;
+        const h = element.calculatedHeight;
 
-        var r = this._rect;
+        const r = this._rect;
 
         // Note that when creating a typed array, it's initialized to zeros.
         // Allocate memory for 4 vertices, 8 floats per vertex, 4 bytes per float.
-        var vertexData = new ArrayBuffer(4 * 8 * 4);
-        var vertexDataF32 = new Float32Array(vertexData);
+        const vertexData = new ArrayBuffer(4 * 8 * 4);
+        const vertexDataF32 = new Float32Array(vertexData);
 
         // Vertex layout is: PX, PY, PZ, NX, NY, NZ, U, V
         // Since the memory is zeroed, we will only set non-zero elements
@@ -427,17 +427,17 @@ class ImageElement {
         vertexDataF32[30] = r.x;       // U
         vertexDataF32[31] = 1.0 - (r.y + r.w); // V
 
-        var vertexDesc = [
+        const vertexDesc = [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 }
         ];
 
-        var device = this._system.app.graphicsDevice;
-        var vertexFormat = new VertexFormat(device, vertexDesc);
-        var vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData);
+        const device = this._system.app.graphicsDevice;
+        const vertexFormat = new VertexFormat(device, vertexDesc);
+        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData);
 
-        var mesh = new Mesh(device);
+        const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;
         mesh.primitive[0].type = PRIMITIVE_TRIFAN;
         mesh.primitive[0].base = 0;
@@ -451,12 +451,12 @@ class ImageElement {
     }
 
     _updateMesh(mesh) {
-        var element = this._element;
-        var w = element.calculatedWidth;
-        var h = element.calculatedHeight;
+        const element = this._element;
+        const w = element.calculatedWidth;
+        const h = element.calculatedHeight;
 
         // update material
-        var screenSpace = element._isScreenSpace();
+        const screenSpace = element._isScreenSpace();
         this._updateMaterial(screenSpace);
 
         // force update meshInstance aabb
@@ -465,9 +465,9 @@ class ImageElement {
         if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)) {
 
             // calculate inner offset from the frame's border
-            var frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
-            var borderWidthScale = 2 / frameData.rect.z;
-            var borderHeightScale = 2 / frameData.rect.w;
+            const frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
+            const borderWidthScale = 2 / frameData.rect.z;
+            const borderHeightScale = 2 / frameData.rect.w;
 
             this._innerOffset.set(
                 frameData.border.x * borderWidthScale,
@@ -476,22 +476,22 @@ class ImageElement {
                 frameData.border.w * borderHeightScale
             );
 
-            var tex = this.sprite.atlas.texture;
+            const tex = this.sprite.atlas.texture;
             this._atlasRect.set(frameData.rect.x / tex.width,
                                 frameData.rect.y / tex.height,
                                 frameData.rect.z / tex.width,
                                 frameData.rect.w / tex.height);
 
             // scale: apply PPU
-            var ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
-            var scaleMulX = frameData.rect.z / ppu;
-            var scaleMulY = frameData.rect.w / ppu;
+            const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
+            const scaleMulX = frameData.rect.z / ppu;
+            const scaleMulY = frameData.rect.w / ppu;
 
             // scale borders if necessary instead of overlapping
             this._outerScale.set(Math.max(w, this._innerOffset.x * scaleMulX), Math.max(h, this._innerOffset.y * scaleMulY));
 
-            var scaleX = scaleMulX;
-            var scaleY = scaleMulY;
+            let scaleX = scaleMulX;
+            let scaleY = scaleMulY;
 
             this._outerScale.x /= scaleMulX;
             this._outerScale.y /= scaleMulY;
@@ -521,12 +521,12 @@ class ImageElement {
                 this._renderable.node.setLocalPosition((0.5 - element.pivot.x) * w, (0.5 - element.pivot.y) * h, 0);
             }
         } else {
-            var vb = mesh.vertexBuffer;
-            var vertexDataF32 = new Float32Array(vb.lock());
+            const vb = mesh.vertexBuffer;
+            const vertexDataF32 = new Float32Array(vb.lock());
 
             // offset for pivot
-            var hp = element.pivot.x;
-            var vp = element.pivot.y;
+            const hp = element.pivot.x;
+            const vp = element.pivot.y;
 
             // Update vertex positions, accounting for the pivot offset
             vertexDataF32[0] = 0 - hp * w;
@@ -539,12 +539,12 @@ class ImageElement {
             vertexDataF32[25] = h - vp * h;
 
 
-            var atlasTextureWidth = 1;
-            var atlasTextureHeight = 1;
-            var rect = this._rect;
+            let atlasTextureWidth = 1;
+            let atlasTextureHeight = 1;
+            let rect = this._rect;
 
             if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
+                const frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
                 if (frame) {
                     rect = frame.rect;
                     atlasTextureWidth = this._sprite.atlas.texture.width;
@@ -564,8 +564,8 @@ class ImageElement {
 
             vb.unlock();
 
-            var min = new Vec3(0 - hp * w, 0 - vp * h, 0);
-            var max = new Vec3(w - hp * w, h - vp * h, 0);
+            const min = new Vec3(0 - hp * w, 0 - vp * h, 0);
+            const max = new Vec3(w - hp * w, h - vp * h, 0);
             mesh.aabb.setMinMax(min, max);
 
             if (this._renderable) {
@@ -585,8 +585,8 @@ class ImageElement {
     // if the component is currently being initialized. We need to call
     // _updateSprite every time something related to the sprite asset changes
     _updateSprite() {
-        var nineSlice = false;
-        var mesh = null;
+        let nineSlice = false;
+        let mesh = null;
 
         // take mesh from sprite
         if (this._sprite && this._sprite.atlas) {
@@ -598,7 +598,7 @@ class ImageElement {
         this.mesh = nineSlice ? mesh : this._defaultMesh;
 
         if (this.mesh) {
-            if (! this._element._beingInitialized) {
+            if (!this._element._beingInitialized) {
                 this._updateMesh(this.mesh);
             } else {
                 this._meshDirty = true;
@@ -617,7 +617,7 @@ class ImageElement {
     _toggleMask() {
         this._element._dirtifyMask();
 
-        var screenSpace = this._element._isScreenSpace();
+        const screenSpace = this._element._isScreenSpace();
         this._updateMaterial(screenSpace);
 
         this._renderable.setMask(!!this._mask);
@@ -741,9 +741,9 @@ class ImageElement {
             this.sprite = null;
         } else {
             if (!asset.resource.atlas) {
-                var atlasAssetId = asset.data.textureAtlasAsset;
+                const atlasAssetId = asset.data.textureAtlasAsset;
                 if (atlasAssetId) {
-                    var assets = this._system.app.assets;
+                    const assets = this._system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
                     assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
                 }
@@ -812,7 +812,7 @@ class ImageElement {
 
     // When atlas is loaded try to reset the sprite asset
     _onTextureAtlasLoad(atlasAsset) {
-        var spriteAsset = this._spriteAsset;
+        const spriteAsset = this._spriteAsset;
         if (spriteAsset instanceof Asset) {
             // TODO: _spriteAsset should never be an asset instance?
             this._onSpriteAssetLoad(spriteAsset);
@@ -822,21 +822,20 @@ class ImageElement {
     }
 
     onEnable() {
-        var asset;
         if (this._materialAsset) {
-            asset = this._system.app.assets.get(this._materialAsset);
+            const asset = this._system.app.assets.get(this._materialAsset);
             if (asset && asset.resource !== this._material) {
                 this._bindMaterialAsset(asset);
             }
         }
         if (this._textureAsset) {
-            asset = this._system.app.assets.get(this._textureAsset);
+            const asset = this._system.app.assets.get(this._textureAsset);
             if (asset && asset.resource !== this._texture) {
                 this._bindTextureAsset(asset);
             }
         }
         if (this._spriteAsset) {
-            asset = this._system.app.assets.get(this._spriteAsset);
+            const asset = this._system.app.assets.get(this._spriteAsset);
             if (asset && asset.resource !== this._sprite) {
                 this._bindSpriteAsset(asset);
             }
@@ -853,12 +852,12 @@ class ImageElement {
         this._renderable.meshInstance.stencilFront = stencilParams;
         this._renderable.meshInstance.stencilBack = stencilParams;
 
-        var ref = 0;
+        let ref = 0;
         if (this._element.maskedBy) {
             ref = this._element.maskedBy.element._image._maskRef;
         }
         if (this._renderable.unmaskMeshInstance) {
-            var sp = new StencilParameters({
+            const sp = new StencilParameters({
                 ref: ref + 1,
                 func: FUNC_EQUAL,
                 zpass: STENCILOP_DECREMENT
@@ -874,9 +873,9 @@ class ImageElement {
     }
 
     set color(value) {
-        var r = value.r;
-        var g = value.g;
-        var b = value.b;
+        const r = value.r;
+        const g = value.g;
+        const b = value.b;
 
         // #if _DEBUG
         if (this._color === value) {
@@ -929,7 +928,7 @@ class ImageElement {
         }
         // #endif
 
-        var x, y, z, w;
+        let x, y, z, w;
         if (value instanceof Vec4) {
             x = value.x;
             y = value.y;
@@ -953,7 +952,7 @@ class ImageElement {
         this._rect.set(x, y, z, w);
 
         if (this._renderable.mesh) {
-            if (! this._element._beingInitialized) {
+            if (!this._element._beingInitialized) {
                 this._updateMesh(this._renderable.mesh);
             } else {
                 this._meshDirty = true;
@@ -969,7 +968,7 @@ class ImageElement {
         if (this._material === value) return;
 
         if (!value) {
-            var screenSpace = this._element._isScreenSpace();
+            const screenSpace = this._element._isScreenSpace();
             if (this.mask) {
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
             } else {
@@ -1001,8 +1000,8 @@ class ImageElement {
     }
 
     set materialAsset(value) {
-        var assets = this._system.app.assets;
-        var _id = value;
+        const assets = this._system.app.assets;
+        let _id = value;
 
         if (value instanceof Asset) {
             _id = value.id;
@@ -1011,7 +1010,7 @@ class ImageElement {
         if (this._materialAsset !== _id) {
             if (this._materialAsset) {
                 assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
-                var _prev = assets.get(this._materialAsset);
+                const _prev = assets.get(this._materialAsset);
                 if (_prev) {
                     _prev.off("load", this._onMaterialLoad, this);
                     _prev.off("change", this._onMaterialChange, this);
@@ -1021,7 +1020,7 @@ class ImageElement {
 
             this._materialAsset = _id;
             if (this._materialAsset) {
-                var asset = assets.get(this._materialAsset);
+                const asset = assets.get(this._materialAsset);
                 if (!asset) {
                     this.material = null;
                     assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
@@ -1042,7 +1041,7 @@ class ImageElement {
         if (this._texture === value) return;
 
         if (this._textureAsset) {
-            var textureAsset = this._system.app.assets.get(this._textureAsset);
+            const textureAsset = this._system.app.assets.get(this._textureAsset);
             if (textureAsset && textureAsset.resource !== value) {
                 this.textureAsset = null;
             }
@@ -1077,8 +1076,8 @@ class ImageElement {
     }
 
     set textureAsset(value) {
-        var assets = this._system.app.assets;
-        var _id = value;
+        const assets = this._system.app.assets;
+        let _id = value;
 
         if (value instanceof Asset) {
             _id = value.id;
@@ -1087,7 +1086,7 @@ class ImageElement {
         if (this._textureAsset !== _id) {
             if (this._textureAsset) {
                 assets.off('add:' + this._textureAsset, this._onTextureAdded, this);
-                var _prev = assets.get(this._textureAsset);
+                const _prev = assets.get(this._textureAsset);
                 if (_prev) {
                     _prev.off("load", this._onTextureLoad, this);
                     _prev.off("change", this._onTextureChange, this);
@@ -1097,7 +1096,7 @@ class ImageElement {
 
             this._textureAsset = _id;
             if (this._textureAsset) {
-                var asset = assets.get(this._textureAsset);
+                const asset = assets.get(this._textureAsset);
                 if (!asset) {
                     this.texture = null;
                     assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
@@ -1115,8 +1114,8 @@ class ImageElement {
     }
 
     set spriteAsset(value) {
-        var assets = this._system.app.assets;
-        var _id = value;
+        const assets = this._system.app.assets;
+        let _id = value;
 
         if (value instanceof Asset) {
             _id = value.id;
@@ -1125,7 +1124,7 @@ class ImageElement {
         if (this._spriteAsset !== _id) {
             if (this._spriteAsset) {
                 assets.off('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
-                var _prev = assets.get(this._spriteAsset);
+                const _prev = assets.get(this._spriteAsset);
                 if (_prev) {
                     this._unbindSpriteAsset(_prev);
                 }
@@ -1133,7 +1132,7 @@ class ImageElement {
 
             this._spriteAsset = _id;
             if (this._spriteAsset) {
-                var asset = assets.get(this._spriteAsset);
+                const asset = assets.get(this._spriteAsset);
                 if (!asset) {
                     this.sprite = null;
                     assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
@@ -1162,7 +1161,7 @@ class ImageElement {
         }
 
         if (this._spriteAsset) {
-            var spriteAsset = this._system.app.assets.get(this._spriteAsset);
+            const spriteAsset = this._system.app.assets.get(this._spriteAsset);
             if (spriteAsset && spriteAsset.resource !== value) {
                 this.spriteAsset = null;
             }
@@ -1202,7 +1201,7 @@ class ImageElement {
     }
 
     set spriteFrame(value) {
-        var oldValue = this._spriteFrame;
+        const oldValue = this._spriteFrame;
 
         if (this._sprite) {
             // clamp frame

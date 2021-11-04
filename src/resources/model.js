@@ -57,7 +57,7 @@ class ModelHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading model: " + url.original + " [" + err + "]");
+                callback(`Error loading model: ${url.original} [${err}]`);
             }
         });
     }

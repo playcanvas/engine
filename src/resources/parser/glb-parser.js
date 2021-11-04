@@ -52,6 +52,8 @@ import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '.
 
 import { Asset } from '../../asset/asset.js';
 
+import { GlbContainerResource } from './glb-container-resource.js';
+
 // resources loaded from GLB file that the parser returns
 class GlbResources {
     constructor(gltf) {
@@ -158,11 +160,11 @@ const gltfToEngineSemanticMap = {
 const getDequantizeFunc = (srcType) => {
     // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
     switch (srcType) {
-        case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
-        case TYPE_UINT8: return (x) => x / 255.0;
-        case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
-        case TYPE_UINT16: return (x) => x / 65535.0;
-        default: return (x) => x;
+        case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
+        case TYPE_UINT8: return x => x / 255.0;
+        case TYPE_INT16: return x => Math.max(x / 32767.0, -1.0);
+        case TYPE_UINT16: return x => x / 65535.0;
+        default: return x => x;
     }
 };
 
@@ -1886,7 +1888,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         }
 
         // create and load the asset
-        const asset = new Asset(name, 'texture',  file, null, options);
+        const asset = new Asset(name, 'texture', file, null, options);
         asset.on('load', onLoad);
         asset.on('error', callback);
         registry.add(asset);
@@ -2094,7 +2096,7 @@ const parseGltf = function (gltfChunk, callback) {
 
     // check gltf version
     if (gltf.asset && gltf.asset.version && parseFloat(gltf.asset.version) < 2) {
-        callback("Invalid gltf version. Expected version 2.0 or above but found version '" + gltf.asset.version + "'.");
+        callback(`Invalid gltf version. Expected version 2.0 or above but found version '${gltf.asset.version}'.`);
         return;
     }
 
@@ -2313,6 +2315,49 @@ class GlbParser {
         });
 
         return result;
+    }
+
+    constructor(device, assets, defaultMaterial, maxRetries) {
+        this._device = device;
+        this._assets = assets;
+        this._defaultMaterial = defaultMaterial;
+        this._maxRetries = maxRetries;
+    }
+
+    _getUrlWithoutParams(url) {
+        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+    }
+
+    load(url, callback, asset) {
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                GlbParser.parseAsync(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
+                        }
+                    });
+            }
+        }, asset, this._maxRetries);
+    }
+
+    open(url, data, asset) {
+        return data;
+    }
+
+    patch(asset, assets) {
+
     }
 }
 
