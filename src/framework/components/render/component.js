@@ -692,8 +692,7 @@ class RenderComponent extends Component {
         });
     }
 
-    set materialAssets(value) {
-        value = value || [];
+    set materialAssets(value = []) {
         if (this._materialReferences.length > value.length) {
             for (let i = value.length; i < this._materialReferences.length; i++) {
                 this._materialReferences[i].id = null;
