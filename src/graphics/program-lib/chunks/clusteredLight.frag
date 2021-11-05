@@ -269,6 +269,7 @@ void evaluateLight(ClusterLightData light) {
                 }
 
                 #endif
+
                 #ifdef CLUSTER_SHADOWS
 
                 // shadow
@@ -298,6 +299,16 @@ void evaluateLight(ClusterLightData light) {
         #endif
 
         dDiffuseLight += dAtten * light.color * dAtten3;
+
+        // specular and clear coat are material settings and get included by a define based on the material
+        #ifdef CLUSTER_SPECULAR
+            dSpecularLight += getLightSpecular() * dAtten * light.color;
+
+            #ifdef CLUSTER_CLEAR_COAT
+                ccSpecularLight += getLightSpecularCC() * dAtten * light.color  * dAtten3;
+            #endif
+
+        #endif
     }
 }
 

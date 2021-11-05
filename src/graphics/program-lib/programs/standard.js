@@ -1338,6 +1338,10 @@ const standard = {
         }
         let useOldAmbient = false;
         if (options.useSpecular) {
+
+            // enable specular path in clustered chunk
+            code += "#define CLUSTER_SPECULAR\n";
+
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
@@ -1363,6 +1367,10 @@ const standard = {
         }
 
         if (options.clearCoat > 0) {
+
+            // enable clear-coast path in clustered chunk
+            code += "#define CLUSTER_CLEAR_COAT\n";
+
             code += chunks.combineClearCoatPS;
         }
 
@@ -1580,7 +1588,7 @@ const standard = {
 
                 usesLinearFalloff = true;
                 hasPointLights = true;
-                code += '   addClusteredLights();';
+                code += '   addClusteredLights();\n';
             }
 
             for (let i = 0; i < options.lights.length; i++) {

@@ -10,6 +10,7 @@ class ClusteredShadowsOmniExample extends Example {
     load() {
         return <>
             <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
             <AssetLoader name="xmas_negx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negx.png" />
             <AssetLoader name="xmas_negy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negy.png" />
             <AssetLoader name="xmas_negz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negz.png" />
@@ -57,6 +58,17 @@ class ClusteredShadowsOmniExample extends Example {
             // create a material
             const material = new pc.StandardMaterial();
             material.diffuse = new pc.Color(0.7, 0.7, 0.7);
+
+            // normal map
+            material.normalMap = assets.normal.resource;
+            material.normalMapTiling.set(5, 5);
+            material.bumpiness = 0.7;
+
+            // enable specular
+            material.shininess = 40;
+            material.metalness = 0.3;
+            material.useMetalness = true;
+
             material.update();
 
             // create the primitive using the material
