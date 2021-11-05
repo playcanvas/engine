@@ -3256,11 +3256,12 @@ class GraphicsDevice extends EventHandler {
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glShader);
             const [code, error] = this._processError(source, infoLog);
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
             // #if _DEBUG
             error.shader = shader;
-            console.error(`Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`, error);
+            console.error(message, error);
             // #else
-            console.error(`Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`);
+            console.error(message);
             // #endif
             return false;
         }
@@ -3322,7 +3323,15 @@ class GraphicsDevice extends EventHandler {
             return false;
 
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
-            console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
+
+            const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
+
+            // #if _DEBUG
+            console.error(message, definition);
+            // #else
+            console.error(message);
+            // #endif
+
             return false;
         }
 
