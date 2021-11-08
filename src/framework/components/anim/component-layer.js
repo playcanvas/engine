@@ -35,7 +35,7 @@ class AnimComponentLayer {
     /**
      * @function
      * @name AnimComponentLayer#pause
-     * @description Start playing the animation in the current state.
+     * @description Pause the animation in the current state.
      */
     pause() {
         this._controller.pause();
