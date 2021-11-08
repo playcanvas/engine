@@ -1554,11 +1554,11 @@ class Application extends EventHandler {
         if (asset !== this._skyboxAsset) {
             const onSkyboxRemoved = () => {
                 this.setSkybox(null);
-            }
+            };
 
             const onSkyboxChanged = () => {
                 this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
-            }
+            };
 
             // cleanup previous asset
             if (this._skyboxAsset) {
