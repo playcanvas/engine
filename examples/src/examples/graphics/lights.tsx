@@ -23,10 +23,15 @@ class LightsExample extends Example {
         return <>
             <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
             <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
+            <AssetLoader name="xmas_negx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negx.png" />
+            <AssetLoader name="xmas_negy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negy.png" />
+            <AssetLoader name="xmas_negz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negz.png" />
+            <AssetLoader name="xmas_posx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posx.png" />
+            <AssetLoader name="xmas_posy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posy.png" />
+            <AssetLoader name="xmas_posz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posz.png" />
         </>;
     }
 
-    // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
             <Panel headerText='OMNI LIGHT [KEY_1]'>
@@ -36,6 +41,9 @@ class LightsExample extends Example {
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
                 </LabelGroup>
+                <LabelGroup text='cookie'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.cookieIntensity' }}/>
+                </LabelGroup>
             </Panel>
             <Panel headerText='SPOT LIGHT [KEY_2]'>
                 <LabelGroup text='enabled'>
@@ -43,6 +51,9 @@ class LightsExample extends Example {
                 </LabelGroup>
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='cookie'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.cookieIntensity' }}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='DIRECTIONAL LIGHT [KEY_3]'>
@@ -110,15 +121,16 @@ class LightsExample extends Example {
         app.root.addChild(ground);
 
         // setup light data
-
         data.set('lights', {
             spot: {
                 enabled: true,
-                intensity: 0.6
+                intensity: 0.6,
+                cookieIntensity: 1
             },
             omni: {
                 enabled: true,
-                intensity: 0.6
+                intensity: 0.6,
+                cookieIntensity: 1
             },
             directional: {
                 enabled: true,
@@ -143,7 +155,6 @@ class LightsExample extends Example {
                 shadowResolution: 2048,
                 // heart texture's alpha channel as a cookie texture
                 cookie: assets.heart.resource,
-                // cookie: assets.heart.asset.resource,
                 cookieChannel: "a"
             },
             ...data.get('lights.spot')
@@ -158,6 +169,19 @@ class LightsExample extends Example {
         lights.spot.addChild(cone);
         app.root.addChild(lights.spot);
 
+        // construct the cubemap asset for the omni light cookie texture
+        // Note: the textures array could contain 6 texture asset names to load instead as well
+        const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
+            textures: [
+                assets.xmas_posx.id, assets.xmas_negx.id,
+                assets.xmas_posy.id, assets.xmas_negy.id,
+                assets.xmas_posz.id, assets.xmas_negz.id
+            ]
+        });
+        // @ts-ignore engine-tsd
+        cubemapAsset.loadFaces = true;
+        app.assets.add(cubemapAsset);
+
         // Create a omni light
         lights.omni = new pc.Entity();
         lights.omni.addComponent("light", {
@@ -165,7 +189,9 @@ class LightsExample extends Example {
                 type: "omni",
                 color: pc.Color.YELLOW,
                 castShadows: true,
-                range: 100
+                range: 111,
+                cookieAsset: cubemapAsset,
+                cookieChannel: "rgb"
             },
             ...data.get('lights.omni')
         });
@@ -183,6 +209,7 @@ class LightsExample extends Example {
                 type: "directional",
                 color: pc.Color.CYAN,
                 range: 100,
+                shadowDistance: 50,
                 castShadows: true,
                 shadowBias: 0.1,
                 normalOffsetBias: 0.2
@@ -219,6 +246,7 @@ class LightsExample extends Example {
                 lights.spot.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
 
                 lights.omni.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                lights.omni.rotate(0, 50 * dt, 0);
 
                 lights.directional.setLocalEulerAngles(45, -60 * angleRad, 0);
             }

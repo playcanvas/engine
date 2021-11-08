@@ -4,24 +4,24 @@ import { Vec3 } from '../../math/vec3.js';
 
 import { EMITTERSHAPE_BOX, EMITTERSHAPE_SPHERE, PARTICLESORT_NONE } from '../../scene/constants.js';
 
-var nonUniformScale;
-var uniformScale = 1;
-var particleTexChannels = 4; // there is a duplicate in particle-emitter
-var rotMat = new Mat4();
-var rotMatInv = new Mat4();
-var randomPosTformed = new Vec3();
-var randomPos = new Vec3();
-var rndFactor3Vec = new Vec3();
-var particlePosPrev = new Vec3();
-var velocityVec = new Vec3();
-var localVelocityVec = new Vec3();
-var velocityVec2 = new Vec3();
-var localVelocityVec2 = new Vec3();
-var radialVelocityVec = new Vec3();
-var particlePos = new Vec3();
-var particleFinalPos = new Vec3();
-var moveDirVec = new Vec3();
-var tmpVec3 = new Vec3();
+let nonUniformScale;
+let uniformScale = 1;
+const particleTexChannels = 4; // there is a duplicate in particle-emitter
+const rotMat = new Mat4();
+const rotMatInv = new Mat4();
+const randomPosTformed = new Vec3();
+const randomPos = new Vec3();
+const rndFactor3Vec = new Vec3();
+const particlePosPrev = new Vec3();
+const velocityVec = new Vec3();
+const localVelocityVec = new Vec3();
+const velocityVec2 = new Vec3();
+const localVelocityVec2 = new Vec3();
+const radialVelocityVec = new Vec3();
+const particlePos = new Vec3();
+const particleFinalPos = new Vec3();
+const moveDirVec = new Vec3();
+const tmpVec3 = new Vec3();
 
 function frac(f) {
     return f - Math.floor(f);
@@ -36,10 +36,10 @@ function glMod(x, y) {
 }
 
 function encodeFloatRGBA(v) {
-    var encX = frac(v);
-    var encY = frac(255.0 * v);
-    var encZ = frac(65025.0 * v);
-    var encW = frac(160581375.0 * v);
+    let encX = frac(v);
+    let encY = frac(255.0 * v);
+    let encZ = frac(65025.0 * v);
+    let encW = frac(160581375.0 * v);
 
     encX -= encY / 255.0;
     encY -= encZ / 255.0;
@@ -50,8 +50,8 @@ function encodeFloatRGBA(v) {
 }
 
 function encodeFloatRG(v) {
-    var encX = frac(v);
-    var encY = frac(255.0 * v);
+    let encX = frac(v);
+    let encY = frac(255.0 * v);
 
     encX -= encY / 255.0;
     encY -= encY / 255.0;
@@ -66,12 +66,12 @@ class ParticleCPUUpdater {
     }
 
     calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, i) {
-        var emitter = this._emitter;
+        const emitter = this._emitter;
 
-        var rX = Math.random();
-        var rY = Math.random();
-        var rZ = Math.random();
-        var rW = Math.random();
+        const rX = Math.random();
+        const rY = Math.random();
+        const rZ = Math.random();
+        const rW = Math.random();
         if (emitter.useCpu) {
             particleTex[i * particleTexChannels + 0 + emitter.numParticlesPot * 2 * particleTexChannels] = rX;
             particleTex[i * particleTexChannels + 1 + emitter.numParticlesPot * 2 * particleTexChannels] = rY;
@@ -84,14 +84,14 @@ class ParticleCPUUpdater {
         randomPos.z = rZ - 0.5;
 
         if (emitter.emitterShape === EMITTERSHAPE_BOX) {
-            var max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
+            const max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
 
             // let's find a contour surface level corresponding to max random component
             // and translate 2 other random components to that surface
             // edge = (1.0 - extentsInnerRatioUniform) * max + 0.5 * extentsInnerRatioUniform;
-            var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
-            var edgeY = max + (0.5 - max) * extentsInnerRatioUniform[1];
-            var edgeZ = max + (0.5 - max) * extentsInnerRatioUniform[2];
+            const edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
+            const edgeY = max + (0.5 - max) * extentsInnerRatioUniform[1];
+            const edgeZ = max + (0.5 - max) * extentsInnerRatioUniform[2];
             randomPos.x = edgeX * (max === Math.abs(randomPos.x) ? Math.sign(randomPos.x) : 2 * randomPos.x);
             randomPos.y = edgeY * (max === Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
             randomPos.z = edgeZ * (max === Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
@@ -102,48 +102,47 @@ class ParticleCPUUpdater {
                 randomPosTformed.copy(spawnMatrix.transformPoint(randomPos));
         } else {
             randomPos.normalize();
-            var spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
-            var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
+            const spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
+            const r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
             if (!emitter.localSpace)
                 randomPosTformed.copy(emitterPos).add(randomPos.mulScalar(r * emitter.emitterRadius));
             else
                 randomPosTformed.copy(randomPos.mulScalar(r * emitter.emitterRadius));
         }
 
-        var particleRate, startSpawnTime;
-        particleRate = math.lerp(emitter.rate, emitter.rate2, rX);
-        startSpawnTime = -particleRate * i;
+        const particleRate = math.lerp(emitter.rate, emitter.rate2, rX);
+        let startSpawnTime = -particleRate * i;
         if (emitter.pack8) {
-            var packX = (randomPosTformed.x - emitter.worldBounds.center.x) / emitter.worldBoundsSize.x + 0.5;
-            var packY = (randomPosTformed.y - emitter.worldBounds.center.y) / emitter.worldBoundsSize.y + 0.5;
-            var packZ = (randomPosTformed.z - emitter.worldBounds.center.z) / emitter.worldBoundsSize.z + 0.5;
+            const packX = (randomPosTformed.x - emitter.worldBounds.center.x) / emitter.worldBoundsSize.x + 0.5;
+            const packY = (randomPosTformed.y - emitter.worldBounds.center.y) / emitter.worldBoundsSize.y + 0.5;
+            const packZ = (randomPosTformed.z - emitter.worldBounds.center.z) / emitter.worldBoundsSize.z + 0.5;
 
-            var packA = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
+            let packA = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
             packA = (packA % (Math.PI * 2)) / (Math.PI * 2);
 
-            var rg0 = encodeFloatRG(packX);
+            const rg0 = encodeFloatRG(packX);
             particleTex[i * particleTexChannels] = rg0[0];
             particleTex[i * particleTexChannels + 1] = rg0[1];
 
-            var ba0 = encodeFloatRG(packY);
+            const ba0 = encodeFloatRG(packY);
             particleTex[i * particleTexChannels + 2] = ba0[0];
             particleTex[i * particleTexChannels + 3] = ba0[1];
 
-            var rg1 = encodeFloatRG(packZ);
+            const rg1 = encodeFloatRG(packZ);
             particleTex[i * particleTexChannels + 0 + emitter.numParticlesPot * particleTexChannels] = rg1[0];
             particleTex[i * particleTexChannels + 1 + emitter.numParticlesPot * particleTexChannels] = rg1[1];
 
-            var ba1 = encodeFloatRG(packA);
+            const ba1 = encodeFloatRG(packA);
             particleTex[i * particleTexChannels + 2 + emitter.numParticlesPot * particleTexChannels] = ba1[0];
             particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = ba1[1];
 
-            var a2 = 1.0;
+            const a2 = 1.0;
             particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels * 2] = a2;
 
-            var maxNegLife = Math.max(emitter.lifetime, (emitter.numParticles - 1.0) * (Math.max(emitter.rate, emitter.rate2)));
-            var maxPosLife = emitter.lifetime + 1.0;
+            const maxNegLife = Math.max(emitter.lifetime, (emitter.numParticles - 1.0) * (Math.max(emitter.rate, emitter.rate2)));
+            const maxPosLife = emitter.lifetime + 1.0;
             startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
-            var rgba3 = encodeFloatRGBA(startSpawnTime);
+            const rgba3 = encodeFloatRGBA(startSpawnTime);
             particleTex[i * particleTexChannels + 0 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[0];
             particleTex[i * particleTexChannels + 1 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[1];
             particleTex[i * particleTexChannels + 2 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[2];
@@ -161,12 +160,12 @@ class ParticleCPUUpdater {
 
     // This should only change emitter state via in-params like data, vbToSort, etc.
     update(data, vbToSort, particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, delta, isOnStop) {
-        var a, b, c, i, j;
-        var emitter = this._emitter;
+        let a, b, c;
+        const emitter = this._emitter;
 
         if (emitter.meshInstance.node) {
-            var fullMat = emitter.meshInstance.node.worldTransform;
-            for (j = 0; j < 12; j++) {
+            const fullMat = emitter.meshInstance.node.worldTransform;
+            for (let j = 0; j < 12; j++) {
                 rotMat.data[j] = fullMat.data[j];
             }
             rotMatInv.copy(rotMat);
@@ -177,50 +176,50 @@ class ParticleCPUUpdater {
 
         // Particle updater emulation
         emitterPos = (emitter.meshInstance.node === null || emitter.localSpace) ? Vec3.ZERO : emitter.meshInstance.node.getPosition();
-        var posCam = emitter.camera ? emitter.camera._node.getPosition() : Vec3.ZERO;
+        const posCam = emitter.camera ? emitter.camera._node.getPosition() : Vec3.ZERO;
 
-        var vertSize = !emitter.useMesh ? 15 : 17;
-        var cf, cc;
-        var rotSpeed, rotSpeed2, scale2, alpha, alpha2, radialSpeed, radialSpeed2;
-        var precision1 = emitter.precision - 1;
+        const vertSize = !emitter.useMesh ? 15 : 17;
+        let cf, cc;
+        let rotSpeed, rotSpeed2, scale2, alpha, alpha2, radialSpeed, radialSpeed2;
+        const precision1 = emitter.precision - 1;
 
-        for (i = 0; i < emitter.numParticles; i++) {
-            var id = Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * (emitter.useMesh ? 6 : 4) + 3]);
+        for (let i = 0; i < emitter.numParticles; i++) {
+            const id = Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * (emitter.useMesh ? 6 : 4) + 3]);
 
-            var rndFactor = particleTex[id * particleTexChannels + 0 + emitter.numParticlesPot * 2 * particleTexChannels];
+            const rndFactor = particleTex[id * particleTexChannels + 0 + emitter.numParticlesPot * 2 * particleTexChannels];
             rndFactor3Vec.x = rndFactor;
             rndFactor3Vec.y = particleTex[id * particleTexChannels + 1 + emitter.numParticlesPot * 2 * particleTexChannels];
             rndFactor3Vec.z = particleTex[id * particleTexChannels + 2 + emitter.numParticlesPot * 2 * particleTexChannels];
 
-            var particleRate = emitter.rate + (emitter.rate2 - emitter.rate) * rndFactor;// pc.math.lerp(emitter.rate, emitter.rate2, rndFactor);
+            const particleRate = emitter.rate + (emitter.rate2 - emitter.rate) * rndFactor;// pc.math.lerp(emitter.rate, emitter.rate2, rndFactor);
 
-            var particleLifetime = emitter.lifetime;
+            const particleLifetime = emitter.lifetime;
 
-            var life = particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] + delta;
-            var nlife = saturate(life / particleLifetime);
+            let life = particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] + delta;
+            const nlife = saturate(life / particleLifetime);
 
-            var scale = 0;
-            var alphaDiv = 0;
-            var angle = 0;
+            let scale = 0;
+            let alphaDiv = 0;
+            const angle = 0;
 
-            var respawn = (life - delta) <= 0.0 || life >= particleLifetime;
+            const respawn = (life - delta) <= 0.0 || life >= particleLifetime;
             if (respawn) {
                 this.calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, id);
             }
 
-            var particleEnabled = life > 0.0 && life < particleLifetime;
+            let particleEnabled = life > 0.0 && life < particleLifetime;
             if (particleEnabled) {
                 c = nlife * precision1;
                 cf = Math.floor(c);
                 cc = Math.ceil(c);
                 c %= 1;
 
-                // var rotSpeed =           tex1D(emitter.qRotSpeed, nlife);
+                // let rotSpeed =           tex1D(emitter.qRotSpeed, nlife);
                 a = emitter.qRotSpeed[cf];
                 b = emitter.qRotSpeed[cc];
                 rotSpeed = a + (b - a) * c;
 
-                // var rotSpeed2 =          tex1D(emitter.qRotSpeed2, nlife);
+                // let rotSpeed2 =          tex1D(emitter.qRotSpeed2, nlife);
                 a = emitter.qRotSpeed2[cf];
                 b = emitter.qRotSpeed2[cc];
                 rotSpeed2 = a + (b - a) * c;
@@ -230,26 +229,26 @@ class ParticleCPUUpdater {
                 b = emitter.qScale[cc];
                 scale = a + (b - a) * c;
 
-                // var scale2 =             tex1D(emitter.qScale2, nlife);
+                // let scale2 =             tex1D(emitter.qScale2, nlife);
                 a = emitter.qScale2[cf];
                 b = emitter.qScale2[cc];
                 scale2 = a + (b - a) * c;
 
-                // var alpha =              tex1D(emitter.qAlpha, nlife);
+                // let alpha =              tex1D(emitter.qAlpha, nlife);
                 a = emitter.qAlpha[cf];
                 b = emitter.qAlpha[cc];
                 alpha = a + (b - a) * c;
 
-                // var alpha2 =             tex1D(emitter.qAlpha2, nlife);
+                // let alpha2 =             tex1D(emitter.qAlpha2, nlife);
                 a = emitter.qAlpha2[cf];
                 b = emitter.qAlpha2[cc];
                 alpha2 = a + (b - a) * c;
 
-                // var radialSpeed =        tex1D(emitter.qRadialSpeed, nlife);
+                // let radialSpeed =        tex1D(emitter.qRadialSpeed, nlife);
                 a = emitter.qRadialSpeed[cf];
                 b = emitter.qRadialSpeed[cc];
                 radialSpeed = a + (b - a) * c;
-                // var radialSpeed2 =       tex1D(emitter.qRadialSpeed2, nlife);
+                // let radialSpeed2 =       tex1D(emitter.qRadialSpeed2, nlife);
                 a = emitter.qRadialSpeed2[cf];
                 b = emitter.qRadialSpeed2[cc];
                 radialSpeed2 = a + (b - a) * c;
@@ -407,16 +406,16 @@ class ParticleCPUUpdater {
                 particleEnabled = false;
             particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = life;
 
-            for (var v = 0; v < emitter.numParticleVerts; v++) {
-                var vbOffset = (i * emitter.numParticleVerts + v) * (emitter.useMesh ? 6 : 4);
-                var quadX = emitter.vbCPU[vbOffset];
-                var quadY = emitter.vbCPU[vbOffset + 1];
-                var quadZ = emitter.vbCPU[vbOffset + 2];
+            for (let v = 0; v < emitter.numParticleVerts; v++) {
+                const vbOffset = (i * emitter.numParticleVerts + v) * (emitter.useMesh ? 6 : 4);
+                let quadX = emitter.vbCPU[vbOffset];
+                let quadY = emitter.vbCPU[vbOffset + 1];
+                let quadZ = emitter.vbCPU[vbOffset + 2];
                 if (!particleEnabled) {
                     quadX = quadY = quadZ = 0;
                 }
 
-                var w = i * emitter.numParticleVerts * vertSize + v * vertSize;
+                const w = i * emitter.numParticleVerts * vertSize + v * vertSize;
                 data[w] = particleFinalPos.x;
                 data[w + 1] = particleFinalPos.y;
                 data[w + 2] = particleFinalPos.z;
@@ -441,9 +440,9 @@ class ParticleCPUUpdater {
 
         // Particle sorting
         if (emitter.sort > PARTICLESORT_NONE && emitter.camera) {
-            var vbStride = emitter.useMesh ? 6 : 4;
-            var particleDistance = emitter.particleDistance;
-            for (i = 0; i < emitter.numParticles; i++) {
+            const vbStride = emitter.useMesh ? 6 : 4;
+            const particleDistance = emitter.particleDistance;
+            for (let i = 0; i < emitter.numParticles; i++) {
                 vbToSort[i][0] = i;
                 vbToSort[i][1] = particleDistance[Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * vbStride + 3])]; // particle id
             }
@@ -454,10 +453,10 @@ class ParticleCPUUpdater {
                 return p1[1] - p2[1];
             });
 
-            for (i = 0; i < emitter.numParticles; i++) {
-                var src = vbToSort[i][0] * emitter.numParticleVerts * vbStride;
-                var dest = i * emitter.numParticleVerts * vbStride;
-                for (j = 0; j < emitter.numParticleVerts * vbStride; j++) {
+            for (let i = 0; i < emitter.numParticles; i++) {
+                const src = vbToSort[i][0] * emitter.numParticleVerts * vbStride;
+                const dest = i * emitter.numParticleVerts * vbStride;
+                for (let j = 0; j < emitter.numParticleVerts * vbStride; j++) {
                     emitter.vbCPU[dest + j] = emitter.vbOld[src + j];
                 }
             }

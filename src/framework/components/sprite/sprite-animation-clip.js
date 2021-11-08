@@ -83,8 +83,8 @@ class SpriteAnimationClip extends EventHandler {
             this.sprite = null;
         } else {
             if (!asset.resource.atlas) {
-                var atlasAssetId = asset.data.textureAtlasAsset;
-                var assets = this._component.system.app.assets;
+                const atlasAssetId = asset.data.textureAtlasAsset;
+                const assets = this._component.system.app.assets;
                 assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
                 assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
             } else {
@@ -95,7 +95,7 @@ class SpriteAnimationClip extends EventHandler {
 
     // When atlas is loaded try to reset the sprite asset
     _onTextureAtlasLoad(atlasAsset) {
-        var spriteAsset = this._spriteAsset;
+        const spriteAsset = this._spriteAsset;
         if (spriteAsset instanceof Asset) {
             this._onSpriteAssetLoad(spriteAsset);
         } else {
@@ -135,14 +135,14 @@ class SpriteAnimationClip extends EventHandler {
         if (this.fps === 0) return;
         if (!this._playing || this._paused || !this._sprite) return;
 
-        var dir = this.fps < 0 ? -1 : 1;
-        var time = this._time + dt * this._component.speed * dir;
-        var duration = this.duration;
-        var end = (time > duration || time < 0);
+        const dir = this.fps < 0 ? -1 : 1;
+        const time = this._time + dt * this._component.speed * dir;
+        const duration = this.duration;
+        const end = (time > duration || time < 0);
 
         this._setTime(time);
 
-        var frame = this.frame;
+        let frame = this.frame;
         if (this._sprite) {
             frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
         } else {
@@ -168,7 +168,7 @@ class SpriteAnimationClip extends EventHandler {
 
     _setTime(value) {
         this._time = value;
-        var duration = this.duration;
+        const duration = this.duration;
         if (this._time < 0) {
             if (this.loop) {
                 this._time = this._time % duration + duration;
@@ -276,8 +276,8 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     set spriteAsset(value) {
-        var assets = this._component.system.app.assets;
-        var id = value;
+        const assets = this._component.system.app.assets;
+        let id = value;
 
         if (value instanceof Asset) {
             id = value.id;
@@ -286,7 +286,7 @@ class SpriteAnimationClip extends EventHandler {
         if (this._spriteAsset !== id) {
             if (this._spriteAsset) {
                 // clean old event listeners
-                var prev = assets.get(this._spriteAsset);
+                const prev = assets.get(this._spriteAsset);
                 if (prev) {
                     this._unbindSpriteAsset(prev);
                 }
@@ -296,7 +296,7 @@ class SpriteAnimationClip extends EventHandler {
 
             // bind sprite asset
             if (this._spriteAsset) {
-                var asset = assets.get(this._spriteAsset);
+                const asset = assets.get(this._spriteAsset);
                 if (!asset) {
                     this.sprite = null;
                     assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
@@ -336,7 +336,7 @@ class SpriteAnimationClip extends EventHandler {
         }
 
         if (this._component.currentClip === this) {
-            var mi;
+            let mi;
 
             // if we are clearing the sprite clear old mesh instance parameters
             if (!value || !value.atlas) {
@@ -387,7 +387,7 @@ class SpriteAnimationClip extends EventHandler {
         this._setFrame(value);
 
         // update time to start of frame
-        var fps = this.fps || Number.MIN_VALUE;
+        const fps = this.fps || Number.MIN_VALUE;
         this._setTime(this._frame / fps);
     }
 
@@ -401,7 +401,7 @@ class SpriteAnimationClip extends EventHandler {
 
     get duration() {
         if (this._sprite) {
-            var fps = this.fps || Number.MIN_VALUE;
+            const fps = this.fps || Number.MIN_VALUE;
             return this._sprite.frameKeys.length / Math.abs(fps);
         }
         return 0;

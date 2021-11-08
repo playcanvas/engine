@@ -33,6 +33,18 @@ class ReadStream {
         return this.offset - amount;
     }
 
+    readChar() {
+        return String.fromCharCode(this.dataView.getUint8(this.offset++));
+    }
+
+    readChars(numChars) {
+        let result = '';
+        for (let i = 0; i < numChars; ++i) {
+            result += this.readChar();
+        }
+        return result;
+    }
+
     readU8() {
         return this.dataView.getUint8(this.offset++);
     }
@@ -46,7 +58,7 @@ class ReadStream {
     }
 
     readU64() {
-        return this.dataView.getBigUint64(this._inc(8), true);
+        return this.readU32() + 2 ** 32 * this.readU32();
     }
 
     // big-endian

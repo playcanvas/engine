@@ -43,7 +43,7 @@ class ButtonComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this._onRemoveComponent, this);
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -51,11 +51,11 @@ class ButtonComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
-            var entity = components[id].entity;
-            var component = entity.button;
+        for (const id in components) {
+            const entity = components[id].entity;
+            const component = entity.button;
             if (component.enabled && entity.enabled) {
                 component.onUpdate();
             }
@@ -64,6 +64,12 @@ class ButtonComponentSystem extends ComponentSystem {
 
     _onRemoveComponent(entity, component) {
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

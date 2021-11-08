@@ -13,7 +13,6 @@ class ScrollViewExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
 
         // Create the application and start the update loop
@@ -130,8 +129,9 @@ class ScrollViewExample extends Example {
             lineHeight: 36,
             pivot: new pc.Vec2(0, 1),
             text: "This is a scroll view control. You can scroll the content by dragging the vertical " +
-                    "or horizontal scroll bars or by dragging the content itself. Notice the elastic " +
-                    "bounce if you drag the content beyond the limits of the scroll view.",
+                    "or horizontal scroll bars, by dragging the content itself, by using the mouse wheel, or " +
+                    "by using a trackpad. Notice the elastic bounce if you drag the content beyond the " +
+                    "limits of the scroll view.",
             type: pc.ELEMENTTYPE_TEXT,
             width: 400,
             wrapLines: true
@@ -191,6 +191,8 @@ class ScrollViewExample extends Example {
             bounceAmount: 0.1,
             contentEntity: content,
             friction: 0.05,
+            useMouseWheel: true,
+            mouseWheelSensitivity: pc.Vec2.ONE,
             horizontal: true,
             horizontalScrollbarEntity: horizontalScrollbar,
             horizontalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,

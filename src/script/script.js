@@ -24,7 +24,7 @@ const reservedScriptNames = new Set([
  * @function
  * @name createScript
  * @description Create and register a new {@link ScriptType}.
- * It returns new class type (constructor function), which is auto-registered to {@link ScriptRegistry} using it's name.
+ * It returns new class type (constructor function), which is auto-registered to {@link ScriptRegistry} using its name.
  * This is the main interface to create Script Types, to define custom logic using JavaScript, that is used to create interaction for entities.
  * @param {string} name - Unique Name of a Script Type.
  * If a Script Type with the same name has already been registered and the new one has a `swap` method defined in its prototype,
@@ -54,15 +54,15 @@ const reservedScriptNames = new Set([
 function createScript(name, app) {
     if (script.legacy) {
         // #if _DEBUG
-        console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
+        console.error("This project is using the legacy script system. You cannot call pc.createScript().");
         // #endif
         return null;
     }
 
     if (reservedScriptNames.has(name))
-        throw new Error('script name: \'' + name + '\' is reserved, please change script name');
+        throw new Error(`script name: '${name}' is reserved, please change script name`);
 
-    var scriptType = function (args) {
+    const scriptType = function (args) {
         EventHandler.prototype.initEventHandler.call(this);
         ScriptType.prototype.initScriptType.call(this, args);
     };
@@ -78,7 +78,7 @@ function createScript(name, app) {
 }
 
 // Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
-var reservedAttributes = {};
+const reservedAttributes = {};
 ScriptAttributes.reservedNames.forEach((value, value2, set) => {
     reservedAttributes[value] = 1;
 });
@@ -127,26 +127,26 @@ createScript.reservedAttributes = reservedAttributes;
 function registerScript(script, name, app) {
     if (script.legacy) {
         // #if _DEBUG
-        console.error("This project is using the legacy script system. You cannot call pc.registerScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
+        console.error("This project is using the legacy script system. You cannot call pc.registerScript().");
         // #endif
         return;
     }
 
     if (typeof script !== 'function')
-        throw new Error('script class: \'' + script + '\' must be a constructor function (i.e. class).');
+        throw new Error(`script class: '${script}' must be a constructor function (i.e. class).`);
 
     if (!(script.prototype instanceof ScriptType))
-        throw new Error('script class: \'' + ScriptType.__getScriptName(script) + '\' does not extend pc.ScriptType.');
+        throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend pc.ScriptType.`);
 
     name = name || script.__name || ScriptType.__getScriptName(script);
 
     if (reservedScriptNames.has(name))
-        throw new Error('script name: \'' + name + '\' is reserved, please change script name');
+        throw new Error(`script name: '${name}' is reserved, please change script name`);
 
     script.__name = name;
 
     // add to scripts registry
-    var registry = app ? app.scripts : Application.getApplication().scripts;
+    const registry = app ? app.scripts : Application.getApplication().scripts;
     registry.add(script);
 
     ScriptHandler._push(script);

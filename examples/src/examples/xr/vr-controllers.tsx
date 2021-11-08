@@ -13,7 +13,6 @@ class VRTemplateExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { glb: pc.Asset }): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');

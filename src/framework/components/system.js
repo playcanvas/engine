@@ -24,121 +24,6 @@ class ComponentSystem extends EventHandler {
         this.schema = [];
     }
 
-    // Static class methods
-    static _helper(a, p) {
-        for (var i = 0, l = a.length; i < l; i++) {
-            a[i].f.call(a[i].s, p);
-        }
-    }
-
-    static initialize(root) {
-        this._helper(this._init, root);
-    }
-
-    static postInitialize(root) {
-        this._helper(this._postInit, root);
-
-        // temp, this is for internal use on entity-references until a better system is found
-        this.fire('postinitialize', root);
-    }
-
-    // Update all ComponentSystems
-    static update(dt, inTools) {
-        this._helper(inTools ? this._toolsUpdate : this._update, dt);
-    }
-
-    static animationUpdate(dt, inTools) {
-        this._helper(this._animationUpdate, dt);
-    }
-
-    // Update all ComponentSystems
-    static fixedUpdate(dt, inTools) {
-        this._helper(this._fixedUpdate, dt);
-    }
-
-    // Update all ComponentSystems
-    static postUpdate(dt, inTools) {
-        this._helper(this._postUpdate, dt);
-    }
-
-    static _init = [];
-
-    static _postInit = [];
-
-    static _toolsUpdate = [];
-
-    static _update = [];
-
-    static _animationUpdate = [];
-
-    static _fixedUpdate =[];
-
-    static _postUpdate = [];
-
-    static bind(event, func, scope) {
-        switch (event) {
-            case 'initialize':
-                this._init.push({ f: func, s: scope });
-                break;
-            case 'postInitialize':
-                this._postInit.push({ f: func, s: scope });
-                break;
-            case 'update':
-                this._update.push({ f: func, s: scope });
-                break;
-            case 'animationUpdate':
-                this._animationUpdate.push({ f: func, s: scope });
-                break;
-            case 'postUpdate':
-                this._postUpdate.push({ f: func, s: scope });
-                break;
-            case 'fixedUpdate':
-                this._fixedUpdate.push({ f: func, s: scope });
-                break;
-            case 'toolsUpdate':
-                this._toolsUpdate.push({ f: func, s: scope });
-                break;
-            default:
-                console.error('Component System does not support event', event);
-        }
-    }
-
-    static _erase(a, f, s) {
-        for (var i = 0; i < a.length; i++) {
-            if (a[i].f === f && a[i].s === s) {
-                a.splice(i--, 1);
-            }
-        }
-    }
-
-    static unbind(event, func, scope) {
-        switch (event) {
-            case 'initialize':
-                this._erase(this._init, func, scope);
-                break;
-            case 'postInitialize':
-                this._erase(this._postInit, func, scope);
-                break;
-            case 'update':
-                this._erase(this._update, func, scope);
-                break;
-            case 'animationUpdate':
-                this._erase(this._animationUpdate, func, scope);
-                break;
-            case 'postUpdate':
-                this._erase(this._postUpdate, func, scope);
-                break;
-            case 'fixedUpdate':
-                this._erase(this._fixedUpdate, func, scope);
-                break;
-            case 'toolsUpdate':
-                this._erase(this._toolsUpdate, func, scope);
-                break;
-            default:
-                console.error('Component System does not support event', event);
-        }
-    }
-
     // Instance methods
     /**
      * @private
@@ -153,11 +38,9 @@ class ComponentSystem extends EventHandler {
      * app.systems.model.addComponent(entity, { type: 'box' });
      * // entity.model is now set to a pc.ModelComponent
      */
-    addComponent(entity, data) {
-        var component = new this.ComponentType(this, entity);
-        var componentData = new this.DataType();
-
-        data = data || {};
+    addComponent(entity, data = {}) {
+        const component = new this.ComponentType(this, entity);
+        const componentData = new this.DataType();
 
         this.store[entity.getGuid()] = {
             entity: entity,
@@ -185,8 +68,8 @@ class ComponentSystem extends EventHandler {
      * // entity.model === undefined
      */
     removeComponent(entity) {
-        var record = this.store[entity.getGuid()];
-        var component = entity.c[this.id];
+        const record = this.store[entity.getGuid()];
+        const component = entity.c[this.id];
         this.fire('beforeremove', entity, component);
         delete this.store[entity.getGuid()];
         delete entity[this.id];
@@ -205,7 +88,7 @@ class ComponentSystem extends EventHandler {
      */
     cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data
-        var src = this.store[entity.getGuid()];
+        const src = this.store[entity.getGuid()];
         return this.addComponent(clone, src.data);
     }
 
@@ -220,12 +103,10 @@ class ComponentSystem extends EventHandler {
      * @param {string[]|object[]} properties - The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
      */
     initializeComponentData(component, data = {}, properties) {
-        var descriptor;
-        var name, type, value;
-
         // initialize
-        for (var i = 0, len = properties.length; i < len; i++) {
-            descriptor = properties[i];
+        for (let i = 0, len = properties.length; i < len; i++) {
+            const descriptor = properties[i];
+            let name, type;
 
             // If the descriptor is an object, it will have `name` and `type` members
             if (typeof descriptor === 'object') {
@@ -237,7 +118,7 @@ class ComponentSystem extends EventHandler {
                 type = undefined;
             }
 
-            value = data[name];
+            let value = data[name];
 
             if (value !== undefined) {
                 // If we know the intended type of the value, convert the raw data
@@ -267,8 +148,8 @@ class ComponentSystem extends EventHandler {
      * @returns {string[]|object[]} An array of property descriptors matching the specified type.
      */
     getPropertiesOfType(type) {
-        var matchingProperties = [];
-        var schema = this.schema || [];
+        const matchingProperties = [];
+        const schema = this.schema || [];
 
         schema.forEach(function (descriptor) {
             if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
@@ -328,23 +209,5 @@ function convertValue(value, type) {
 
 // Add event support
 events.attach(ComponentSystem);
-
-ComponentSystem.destroy = function () {
-    ComponentSystem.off('initialize');
-    ComponentSystem.off('postInitialize');
-    ComponentSystem.off('toolsUpdate');
-    ComponentSystem.off('update');
-    ComponentSystem.off('animationUpdate');
-    ComponentSystem.off('fixedUpdate');
-    ComponentSystem.off('postUpdate');
-
-    ComponentSystem._init = [];
-    ComponentSystem._postInit = [];
-    ComponentSystem._toolsUpdate = [];
-    ComponentSystem._update = [];
-    ComponentSystem._animationUpdate = [];
-    ComponentSystem._fixedUpdate = [];
-    ComponentSystem._postUpdate = [];
-};
 
 export { ComponentSystem };

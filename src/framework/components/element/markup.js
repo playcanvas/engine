@@ -26,7 +26,7 @@ class Scanner {
 
     // read the next token, ignore whitespace
     read() {
-        var token = this._read();
+        let token = this._read();
         while (token === WHITESPACE_TOKEN) {
             token = this._read();
         }
@@ -53,9 +53,9 @@ class Scanner {
 
     // print the scanner output
     debugPrint() {
-        var tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
-        var token = this.read();
-        var result = "";
+        const tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
+        let token = this.read();
+        let result = "";
         while (true) {
             result += (result.length > 0 ? "\n" : "") +
                         tokenStrings[token] +
@@ -111,37 +111,35 @@ class Scanner {
 
     // read tag block
     _tag() {
-        while (true) {
-            switch (this._cur) {
-                case null:
-                    this._error = "unexpected end of input reading tag";
+        switch (this._cur) {
+            case null:
+                this._error = "unexpected end of input reading tag";
+                return ERROR_TOKEN;
+            case "[":
+                this._store();
+                return OPEN_BRACKET_TOKEN;
+            case "]":
+                this._store();
+                this._mode = "text";
+                return CLOSE_BRACKET_TOKEN;
+            case "=":
+                this._store();
+                return EQUALS_TOKEN;
+            case " ":
+            case "\t":
+            case "\n":
+            case "\r":
+            case "\v":
+            case "\f":
+                return this._whitespace();
+            case "\"":
+                return this._string();
+            default:
+                if (!this._isIdentifierSymbol(this._cur)) {
+                    this._error = "unrecognized character";
                     return ERROR_TOKEN;
-                case "[":
-                    this._store();
-                    return OPEN_BRACKET_TOKEN;
-                case "]":
-                    this._store();
-                    this._mode = "text";
-                    return CLOSE_BRACKET_TOKEN;
-                case "=":
-                    this._store();
-                    return EQUALS_TOKEN;
-                case " ":
-                case "\t":
-                case "\n":
-                case "\r":
-                case "\v":
-                case "\f":
-                    return this._whitespace();
-                case "\"":
-                    return this._string();
-                default:
-                    if (!this._isIdentifierSymbol(this._cur)) {
-                        this._error = "unrecognized character";
-                        return ERROR_TOKEN;
-                    }
-                    return this._identifier();
-            }
+                }
+                return this._identifier();
         }
     }
 
@@ -226,7 +224,7 @@ class Parser {
     // }
     parse(symbols, tags) {
         while (true) {
-            var token = this._scanner.read();
+            const token = this._scanner.read();
             switch (token) {
                 case EOF_TOKEN:
                     return true;
@@ -255,17 +253,17 @@ class Parser {
 
     _parseTag(symbols, tags) {
         // first token after [ must be an identifier
-        var token = this._scanner.read();
+        let token = this._scanner.read();
         if (token !== IDENTIFIER_TOKEN) {
             this._error = "expected identifier";
             return false;
         }
 
-        var name = this._scanner.buf().join("");
+        const name = this._scanner.buf().join("");
 
         // handle close tags
         if (name[0] === "/") {
-            for (var index = tags.length - 1; index >= 0; --index) {
+            for (let index = tags.length - 1; index >= 0; --index) {
                 if (name === "/" + tags[index].name && tags[index].end === null) {
                     tags[index].end = symbols.length;
                     token = this._scanner.read();
@@ -281,7 +279,7 @@ class Parser {
         }
 
         // else handle open tag
-        var tag = {
+        const tag = {
             name: name,
             value: null,
             attributes: { },
@@ -307,8 +305,8 @@ class Parser {
                 case CLOSE_BRACKET_TOKEN:
                     tags.push(tag);
                     return true;
-                case IDENTIFIER_TOKEN:
-                    var identifier = this._scanner.buf().join("");
+                case IDENTIFIER_TOKEN: {
+                    const identifier = this._scanner.buf().join("");
                     token = this._scanner.read();
                     if (token !== EQUALS_TOKEN) {
                         this._error = "expected equals";
@@ -319,9 +317,10 @@ class Parser {
                         this._error = "expected string";
                         return false;
                     }
-                    var value = this._scanner.buf().join("");
+                    const value = this._scanner.buf().join("");
                     tag.attributes[identifier] = value;
                     break;
+                }
                 default:
                     this._error = "expected close bracket or identifier";
                     return false;
@@ -334,11 +333,11 @@ class Parser {
 // copy the contents of source object into target object (like a deep version
 // of assign)
 function merge(target, source) {
-    for (var key in source) {
+    for (const key in source) {
         if (!source.hasOwnProperty(key)) {
             continue;
         }
-        var value = source[key];
+        const value = source[key];
         if (value instanceof Object) {
             if (!target.hasOwnProperty(key)) {
                 target[key] = { };
@@ -354,10 +353,10 @@ function combineTags(tags) {
     if (tags.length === 0) {
         return null;
     }
-    var result = { };
-    for (var index = 0; index < tags.length; ++index) {
-        var tag = tags[index];
-        var tmp = { };
+    const result = { };
+    for (let index = 0; index < tags.length; ++index) {
+        const tag = tags[index];
+        const tmp = { };
         tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
         merge(result, tmp);
     }
@@ -373,16 +372,14 @@ function combineTags(tags) {
 // tags found earlier).
 // returns an array containing the tag structure (or null) for each symbol
 function resolveMarkupTags(tags, numSymbols) {
-    var index;
-
     if (tags.length === 0) {
         return null;
     }
 
     // make list of tag start/end edges
-    var edges = { };
-    for (index = 0; index < tags.length; ++index) {
-        var tag = tags[index];
+    const edges = { };
+    for (let index = 0; index < tags.length; ++index) {
+        const tag = tags[index];
         if (!edges.hasOwnProperty(tag.start)) {
             edges[tag.start] = { open: [tag], close: null };
         } else {
@@ -405,7 +402,7 @@ function resolveMarkupTags(tags, numSymbols) {
     }
 
     // build tag instances from open/close edges
-    var tagStack = [];
+    let tagStack = [];
 
     function removeTags(tags) {
         tagStack = tagStack.filter(function (tag) {
@@ -416,18 +413,18 @@ function resolveMarkupTags(tags, numSymbols) {
     }
 
     function addTags(tags) {
-        for (var index = 0; index < tags.length; ++index) {
+        for (let index = 0; index < tags.length; ++index) {
             tagStack.push(tags[index]);
         }
     }
 
-    var edgeKeys = Object.keys(edges).sort(function (a, b) {
+    const edgeKeys = Object.keys(edges).sort(function (a, b) {
         return a - b;
     });
 
-    var resolvedTags = [];
-    for (index = 0; index < edgeKeys.length; ++index) {
-        var edge = edges[edgeKeys[index]];
+    const resolvedTags = [];
+    for (let index = 0; index < edgeKeys.length; ++index) {
+        const edge = edges[edgeKeys[index]];
 
         // remove close tags
         if (edge.close !== null) {
@@ -447,10 +444,10 @@ function resolveMarkupTags(tags, numSymbols) {
     }
 
     // assign the resolved tags per-character
-    var result = [];
-    var prevTag = null;
-    for (index = 0; index < resolvedTags.length; ++index) {
-        var resolvedTag = resolvedTags[index];
+    const result = [];
+    let prevTag = null;
+    for (let index = 0; index < resolvedTags.length; ++index) {
+        const resolvedTag = resolvedTags[index];
         while (result.length < resolvedTag.start) {
             result.push(prevTag ? prevTag.tags : null);
         }
@@ -469,9 +466,9 @@ function evaluateMarkup(symbols) {
     // log scanner output
     // console.info((new Scanner(symbols)).debugPrint());
 
-    var parser = new Parser(symbols);
-    var stripped_symbols = [];
-    var tags = [];
+    const parser = new Parser(symbols);
+    const stripped_symbols = [];
+    const tags = [];
 
     if (!parser.parse(stripped_symbols, tags)) {
         console.warn(parser.error());
@@ -482,12 +479,12 @@ function evaluateMarkup(symbols) {
     }
 
     // if any tags were not correctly closed, return failure
-    var invalidTag = tags.find(function (t) {
+    const invalidTag = tags.find(function (t) {
         return t.end === null;
     });
 
     if (invalidTag) {
-        console.warn("Markup error: found unclosed tag='" + invalidTag.name + "'");
+        console.warn(`Markup error: found unclosed tag='${invalidTag.name}'`);
         return {
             symbols: symbols,
             tags: null
@@ -495,7 +492,7 @@ function evaluateMarkup(symbols) {
     }
 
     // revolve tags per-character
-    var resolved_tags = resolveMarkupTags(tags, stripped_symbols.length);
+    const resolved_tags = resolveMarkupTags(tags, stripped_symbols.length);
 
     return {
         symbols: stripped_symbols,

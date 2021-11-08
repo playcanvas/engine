@@ -19,8 +19,8 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} orientation Whether the scrollbar moves horizontally or vertically. Can be:
  *
- * * {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
- * * {@link ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
+ * - {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
+ * - {@link ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
  *
  * Defaults to {@link ORIENTATION_HORIZONTAL}.
  * @property {number} value The current position value of the scrollbar, in the range 0 to 1. Defaults to 0.
@@ -99,11 +99,11 @@ class ScrollbarComponent extends Component {
     }
 
     _updateHandlePositionAndSize() {
-        var handleEntity = this._handleReference.entity;
-        var handleElement = handleEntity && handleEntity.element;
+        const handleEntity = this._handleReference.entity;
+        const handleElement = handleEntity && handleEntity.element;
 
         if (handleEntity) {
-            var position = handleEntity.getLocalPosition();
+            const position = handleEntity.getLocalPosition();
             position[this._getAxis()] = this._getHandlePosition();
             this._handleReference.entity.setLocalPosition(position);
         }

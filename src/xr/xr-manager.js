@@ -41,7 +41,7 @@ class XrManager extends EventHandler {
 
         this.app = app;
 
-        this._supported = platform.browser && !! navigator.xr;
+        this._supported = platform.browser && !!navigator.xr;
 
         this._available = { };
 
@@ -161,17 +161,17 @@ class XrManager extends EventHandler {
      * @param {CameraComponent} camera - It will be used to render XR session and manipulated based on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
      *
-     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @param {string} spaceType - Reference space type. Can be one of the following:
      *
-     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
-     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
-     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
-     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
      * @example
      * button.on('click', function () {
@@ -195,10 +195,10 @@ class XrManager extends EventHandler {
     start(camera, type, spaceType, options) {
         let callback = options;
 
-        if (typeof(options) === 'object')
+        if (typeof options === 'object')
             callback = options.callback;
 
-        if (! this._available[type]) {
+        if (!this._available[type]) {
             if (callback) callback(new Error('XR is not available'));
             return;
         }
@@ -320,7 +320,7 @@ class XrManager extends EventHandler {
      * @param {callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     end(callback) {
-        if (! this._session) {
+        if (!this._session) {
             if (callback) callback(new Error('XR Session is not initialized'));
             return;
         }
@@ -336,9 +336,9 @@ class XrManager extends EventHandler {
      * @description Check if specific type of session is available.
      * @param {string} type - Session type. Can be one of the following:
      *
-     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @example
      * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
@@ -403,7 +403,7 @@ class XrManager extends EventHandler {
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
 
-            if (! failed) this.fire('end');
+            if (!failed) this.fire('end');
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
@@ -449,7 +449,7 @@ class XrManager extends EventHandler {
         this._depthNear = near;
         this._depthFar = far;
 
-        if (! this._session)
+        if (!this._session)
             return;
 
         // if session is available,
@@ -461,7 +461,7 @@ class XrManager extends EventHandler {
     }
 
     update(frame) {
-        if (! this._session) return;
+        if (!this._session) return;
 
         // canvas resolution should be set on first frame availability or resolution changes
         const width = frame.session.renderState.baseLayer.framebufferWidth;
@@ -479,7 +479,7 @@ class XrManager extends EventHandler {
             // add new views into list
             for (let i = 0; i <= (lengthNew - this.views.length); i++) {
                 let view = this.viewsPool.pop();
-                if (! view) {
+                if (!view) {
                     view = {
                         viewport: new Vec4(),
                         projMat: new Mat4(),
@@ -560,7 +560,7 @@ class XrManager extends EventHandler {
     }
 
     get active() {
-        return !! this._session;
+        return !!this._session;
     }
 
     get type() {
@@ -576,7 +576,7 @@ class XrManager extends EventHandler {
     }
 
     get visibilityState() {
-        if (! this._session)
+        if (!this._session)
             return null;
 
         return this._session.visibilityState;

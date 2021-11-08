@@ -4,6 +4,8 @@ import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
+import { Vec2 } from '../../../math/vec2.js';
+
 const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'horizontal', type: 'boolean' },
@@ -12,6 +14,8 @@ const _schema = [
     { name: 'bounceAmount', type: 'number' },
     { name: 'friction', type: 'number' },
     { name: 'dragThreshold', type: 'number' },
+    { name: 'useMouseWheel', type: 'boolean' },
+    { name: 'mouseWheelSensitivity', type: 'vec2' },
     { name: 'horizontalScrollbarVisibility', type: 'number' },
     { name: 'verticalScrollbarVisibility', type: 'number' },
     { name: 'viewportEntity', type: 'entity' },
@@ -43,23 +47,29 @@ class ScrollViewComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this._onRemoveComponent, this);
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
         if (data.dragThreshold === undefined) {
             data.dragThreshold = DEFAULT_DRAG_THRESHOLD;
         }
+        if (data.useMouseWheel === undefined) {
+            data.useMouseWheel = true;
+        }
+        if (data.mouseWheelSensitivity === undefined) {
+            data.mouseWheelSensitivity = new Vec2(1, 1);
+        }
 
         super.initializeComponentData(component, data, _schema);
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
-            var entity = components[id].entity;
-            var component = entity.scrollview;
+        for (const id in components) {
+            const entity = components[id].entity;
+            const component = entity.scrollview;
             if (component.enabled && entity.enabled) {
                 component.onUpdate();
             }
@@ -69,6 +79,12 @@ class ScrollViewComponentSystem extends ComponentSystem {
 
     _onRemoveComponent(entity, component) {
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

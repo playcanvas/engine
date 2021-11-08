@@ -1,4 +1,4 @@
-import { SceneUtils } from "./scene-utils.js";
+import { SceneUtils } from './scene-utils.js';
 
 class SceneSettingsHandler {
     constructor(app) {

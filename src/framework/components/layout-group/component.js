@@ -29,8 +29,8 @@ function isEnabledAndHasEnabledElement(entity) {
  * @property {number} orientation Whether the layout should run horizontally or
  * vertically. Can be:
  *
- * * {@link ORIENTATION_HORIZONTAL}
- * * {@link ORIENTATION_VERTICAL}
+ * - {@link ORIENTATION_HORIZONTAL}
+ * - {@link ORIENTATION_VERTICAL}
  *
  * Defaults to {@link ORIENTATION_HORIZONTAL}.
  * @property {boolean} reverseX Reverses the order of children along the x axis.
@@ -48,8 +48,8 @@ function isEnabledAndHasEnabledElement(entity) {
  * @property {number} widthFitting Fitting logic to be applied when positioning and
  * scaling child elements. Can be:
  *
- * * {@link FITTING_NONE}: Child elements will be rendered at their natural size.
- * * {@link FITTING_STRETCH}: When the natural size of all child elements does not
+ * - {@link FITTING_NONE}: Child elements will be rendered at their natural size.
+ * - {@link FITTING_STRETCH}: When the natural size of all child elements does not
  * fill the width of the container, children will be stretched to fit. The rules for how
  * each child will be stretched are outlined below:
  *   1. Sum the {@link LayoutChildComponent#fitWidthProportion} values of each child
@@ -58,7 +58,7 @@ function isEnabledAndHasEnabledElement(entity) {
  *   3. If there is space remaining in the container, distribute it to each child based
  * on the normalized {@link LayoutChildComponent#fitWidthProportion} values, but do
  * not exceed the {@link LayoutChildComponent#maxWidth} of each child.
- * * {@link FITTING_SHRINK}: When the natural size of all child elements overflows the
+ * - {@link FITTING_SHRINK}: When the natural size of all child elements overflows the
  * width of the container, children will be shrunk to fit. The rules for how each child
  * will be stretched are outlined below:
  *   1. Sum the {@link LayoutChildComponent#fitWidthProportion} values of each child
@@ -68,7 +68,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * container, reduce each child's width proportionally based on the normalized {@link
  * LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link
  * LayoutChildComponent#minWidth} of each child.
- * * {@link FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.
+ * - {@link FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.
  *
  * Defaults to {@link FITTING_NONE}.
  * @property {number} heightFitting Identical to {@link LayoutGroupComponent#widthFitting}
@@ -100,9 +100,9 @@ class LayoutGroupComponent extends Component {
         this._listenForReflowEvents(this.entity, 'on');
 
         // Listen to existing children being resized
-        this.entity.children.forEach(function (child) {
+        this.entity.children.forEach((child) => {
             this._listenForReflowEvents(child, 'on');
-        }.bind(this));
+        });
 
         // Listen to newly added children being resized
         this.entity.on('childinsert', this._onChildInsert, this);
@@ -166,17 +166,17 @@ class LayoutGroupComponent extends Component {
     }
 
     reflow() {
-        var container = getElement(this.entity);
-        var elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
+        const container = getElement(this.entity);
+        const elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
 
         if (!container || elements.length === 0) {
             return;
         }
 
-        var containerWidth = Math.max(container.calculatedWidth, 0);
-        var containerHeight = Math.max(container.calculatedHeight, 0);
+        const containerWidth = Math.max(container.calculatedWidth, 0);
+        const containerHeight = Math.max(container.calculatedHeight, 0);
 
-        var options = {
+        const options = {
             orientation: this._orientation,
             reverseX: this._reverseX,
             reverseY: this._reverseY,
@@ -193,7 +193,7 @@ class LayoutGroupComponent extends Component {
         // a child element triggers another reflow on the next frame, and so on)
         // we flag that a reflow is currently in progress.
         this._isPerformingReflow = true;
-        var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
+        const layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
         this._isPerformingReflow = false;
 
         this.fire('reflow', layoutInfo);
@@ -209,9 +209,9 @@ class LayoutGroupComponent extends Component {
 
         this._listenForReflowEvents(this.entity, 'off');
 
-        this.entity.children.forEach(function (child) {
+        this.entity.children.forEach((child) => {
             this._listenForReflowEvents(child, 'off');
-        }.bind(this));
+        });
 
         this.system.app.systems.element.off('add', this._onElementOrLayoutComponentAdd, this);
         this.system.app.systems.element.off('beforeremove', this._onElementOrLayoutComponentRemove, this);
@@ -221,7 +221,7 @@ class LayoutGroupComponent extends Component {
 }
 
 function defineReflowSchedulingProperty(name) {
-    var _name = '_' + name;
+    const _name = '_' + name;
 
     Object.defineProperty(LayoutGroupComponent.prototype, name, {
         get: function () {

@@ -10,8 +10,8 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
 
-import { RenderAction } from '../render-action.js';
-import { WorldClusters } from '../world-clusters.js';
+import { RenderAction } from './render-action.js';
+import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
 import { getApplication } from '../../framework/globals.js';
@@ -100,10 +100,11 @@ class LayerComposition extends EventHandler {
         // clustered lighting parameters
         this._clusteredLightingCells = new Vec3(10, 3, 10);
         this._clusteredLightingMaxLights = 64;
+        this._clusteredLightingCookiesEnabled = true;
+        this._clusteredLightingShadowsEnabled = true;
     }
 
     destroy() {
-
         // empty light cluster
         if (this._emptyWorldClusters) {
             this._emptyWorldClusters.destroy();
@@ -111,7 +112,9 @@ class LayerComposition extends EventHandler {
         }
 
         // all other clusters
-        this._worldClusters.forEach((cluster) => cluster.destroy());
+        this._worldClusters.forEach((cluster) => {
+            cluster.destroy();
+        });
         this._worldClusters = null;
     }
 
@@ -137,11 +140,43 @@ class LayerComposition extends EventHandler {
         }
     }
 
+    get clusteredLightingCookiesEnabled() {
+        return this._clusteredLightingCookiesEnabled;
+    }
+
+    set clusteredLightingCookiesEnabled(value) {
+        if (this._clusteredLightingCookiesEnabled !== value) {
+            this._clusteredLightingCookiesEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLights = true;
+
+            this.updateWorldClusters();
+        }
+    }
+
+    get clusteredLightingShadowsEnabled() {
+        return this._clusteredLightingShadowsEnabled;
+    }
+
+    set clusteredLightingShadowsEnabled(value) {
+        if (this._clusteredLightingShadowsEnabled !== value) {
+            this._clusteredLightingShadowsEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLights = true;
+
+            this.updateWorldClusters();
+        }
+    }
+
     // update clusters with parameter changes
     updateWorldClusters() {
         this._worldClusters.forEach((cluster) => {
             cluster.cells = this._clusteredLightingCells;
             cluster.maxCellLightCount = this._clusteredLightingMaxLights;
+            cluster.cookiesEnabled = this._clusteredLightingCookiesEnabled;
+            cluster.shadowsEnabled = this._clusteredLightingShadowsEnabled;
         });
     }
 
@@ -162,14 +197,13 @@ class LayerComposition extends EventHandler {
 
     // function which splits list of lights on a a target object into separate lists of lights based on light type
     _splitLightsArray(target) {
-        var light;
-        var lights = target._lights;
+        const lights = target._lights;
         target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
         target._splitLights[LIGHTTYPE_OMNI].length = 0;
         target._splitLights[LIGHTTYPE_SPOT].length = 0;
 
-        for (var i = 0; i < lights.length; i++) {
-            light = lights[i];
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
             if (light.enabled) {
                 target._splitLights[light._type].push(light);
             }
@@ -177,15 +211,13 @@ class LayerComposition extends EventHandler {
     }
 
     _update() {
-        var i, j;
-        var layer;
-        var len = this.layerList.length;
-        var result = 0;
+        const len = this.layerList.length;
+        let result = 0;
 
         // if composition dirty flags are not set, test if layers are marked dirty
         if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
-            for (i = 0; i < len; i++) {
-                layer = this.layerList[i];
+            for (let i = 0; i < len; i++) {
+                const layer = this.layerList[i];
                 if (layer._dirty) {
                     this._dirty = true;
                 }
@@ -202,16 +234,16 @@ class LayerComposition extends EventHandler {
         // existing meshInstances  to accelerate the removal of duplicates
         // returns true if any of the materials on these meshInstances has _dirtyBlend set
         function addUniqueMeshInstance(destArray, destSet, srcArray) {
-            var meshInst, material, dirtyBlend = false;
-            var srcLen = srcArray.length;
-            for (var s = 0; s < srcLen; s++) {
-                meshInst = srcArray[s];
+            let dirtyBlend = false;
+            const srcLen = srcArray.length;
+            for (let s = 0; s < srcLen; s++) {
+                const meshInst = srcArray[s];
 
                 if (!destSet.has(meshInst)) {
                     destSet.add(meshInst);
                     destArray.push(meshInst);
 
-                    material = meshInst.material;
+                    const material = meshInst.material;
                     if (material && material._dirtyBlend) {
                         dirtyBlend = true;
                         material._dirtyBlend = false;
@@ -228,8 +260,8 @@ class LayerComposition extends EventHandler {
             this._meshInstances.length = 0;
             this._meshInstancesSet.clear();
 
-            for (i = 0; i < len; i++) {
-                layer = this.layerList[i];
+            for (let i = 0; i < len; i++) {
+                const layer = this.layerList[i];
                 if (!layer.passThrough) {
 
                     // add meshInstances from both opaque and transparent lists
@@ -243,13 +275,11 @@ class LayerComposition extends EventHandler {
             this._dirty = false;
         }
 
-        // funtion moves transparent or opaque meshes based on moveTransparent from src to dest array
+        // function moves transparent or opaque meshes based on moveTransparent from src to dest array
         function moveByBlendType(dest, src, moveTransparent) {
-            var material, isTransparent;
-            for (var s = 0; s < src.length;) {
-
-                material = src[s].material;
-                isTransparent = material && material.blendType !== BLEND_NONE;
+            for (let s = 0; s < src.length;) {
+                const material = src[s].material;
+                const isTransparent = material && material.blendType !== BLEND_NONE;
 
                 if (isTransparent === moveTransparent) {
 
@@ -272,8 +302,8 @@ class LayerComposition extends EventHandler {
         if (this._dirtyBlend) {
             result |= COMPUPDATED_BLEND;
 
-            for (i = 0; i < len; i++) {
-                layer = this.layerList[i];
+            for (let i = 0; i < len; i++) {
+                const layer = this.layerList[i];
                 if (!layer.passThrough) {
 
                     // move any opaque meshInstances from transparentMeshInstances to opaqueMeshInstances
@@ -298,7 +328,6 @@ class LayerComposition extends EventHandler {
             this.updateShadowCasters();
         }
 
-        var camera, index, cameraIndex;
         if (this._dirtyCameras || (result & COMPUPDATED_LIGHTS)) {
 
             this._dirtyCameras = false;
@@ -306,14 +335,14 @@ class LayerComposition extends EventHandler {
 
             // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
-            for (i = 0; i < len; i++) {
-                layer = this.layerList[i];
+            for (let i = 0; i < len; i++) {
+                const layer = this.layerList[i];
                 layer._dirtyCameras = false;
 
                 // for all cameras in the layer
-                for (j = 0; j < layer.cameras.length; j++) {
-                    camera = layer.cameras[j];
-                    index = this.cameras.indexOf(camera);
+                for (let j = 0; j < layer.cameras.length; j++) {
+                    const camera = layer.cameras[j];
+                    const index = this.cameras.indexOf(camera);
                     if (index < 0) {
                         this.cameras.push(camera);
                     }
@@ -329,9 +358,9 @@ class LayerComposition extends EventHandler {
             const cameraLayers = [];
 
             // render in order of cameras sorted by priority
-            var renderActionCount = 0;
-            for (i = 0; i < this.cameras.length; i++) {
-                camera = this.cameras[i];
+            let renderActionCount = 0;
+            for (let i = 0; i < this.cameras.length; i++) {
+                const camera = this.cameras[i];
                 cameraLayers.length = 0;
 
                 // first render action for this camera
@@ -346,9 +375,9 @@ class LayerComposition extends EventHandler {
 
                 // walk all global sorted list of layers (sublayers) to check if camera renders it
                 // this adds both opaque and transparent sublayers if camera renders the layer
-                for (j = 0; j < len; j++) {
+                for (let j = 0; j < len; j++) {
 
-                    layer = this.layerList[j];
+                    const layer = this.layerList[j];
                     if (layer) {
 
                         // if layer needs to be rendered
@@ -372,7 +401,7 @@ class LayerComposition extends EventHandler {
                                 }
 
                                 // camera index in the layer array
-                                cameraIndex = layer.cameras.indexOf(camera);
+                                const cameraIndex = layer.cameras.indexOf(camera);
                                 if (cameraIndex >= 0) {
 
                                     // add render action to describe rendering step
@@ -392,7 +421,7 @@ class LayerComposition extends EventHandler {
                     this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
                 }
 
-                // if no render action for this camera was marked for end of posprocessing, mark last one
+                // if no render action for this camera was marked for end of postprocessing, mark last one
                 if (!postProcessMarked && lastRenderAction) {
                     lastRenderAction.triggerPostprocess = true;
                 }
@@ -566,7 +595,8 @@ class LayerComposition extends EventHandler {
 
                         // create new cluster
                         if (!clusters) {
-                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights);
+                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights,
+                                                         this._clusteredLightingCookiesEnabled, this._clusteredLightingShadowsEnabled);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;
@@ -584,7 +614,9 @@ class LayerComposition extends EventHandler {
         }
 
         // delete leftovers
-        tempClusterArray.forEach((item) => item.destroy());
+        tempClusterArray.forEach((item) => {
+            item.destroy();
+        });
         tempClusterArray.length = 0;
     }
 
@@ -648,7 +680,7 @@ class LayerComposition extends EventHandler {
         return renderAction;
     }
 
-    // executes when post-processing camera's render actions were created to propage rendering to
+    // executes when post-processing camera's render actions were created to propagate rendering to
     // render targets to previous camera as needed
     propagateRenderTarget(startIndex, fromCamera) {
 
@@ -727,7 +759,7 @@ class LayerComposition extends EventHandler {
     }
 
     _isSublayerAdded(layer, transparent) {
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
                 // #if _DEBUG
                 console.error("Sublayer is already added.");
@@ -771,13 +803,13 @@ class LayerComposition extends EventHandler {
     insert(layer, index) {
         // insert both opaque and transparent at the index
         if (this._isLayerAdded(layer)) return;
-        this.layerList.splice(index, 0,    layer,  layer);
-        this.subLayerList.splice(index, 0, false,  true);
+        this.layerList.splice(index, 0, layer, layer);
+        this.subLayerList.splice(index, 0, false, true);
 
-        var count = this.layerList.length;
+        const count = this.layerList.length;
         this._updateOpaqueOrder(index, count - 1);
         this._updateTransparentOrder(index, count - 1);
-        this.subLayerEnabled.splice(index, 0, true,  true);
+        this.subLayerEnabled.splice(index, 0, true, true);
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -792,7 +824,7 @@ class LayerComposition extends EventHandler {
      */
     remove(layer) {
         // remove all occurrences of a layer
-        var id = this.layerList.indexOf(layer);
+        let id = this.layerList.indexOf(layer);
 
         delete this._opaqueOrder[id];
         delete this._transparentOrder[id];
@@ -809,7 +841,7 @@ class LayerComposition extends EventHandler {
         }
 
         // update both orders
-        var count = this.layerList.length;
+        const count = this.layerList.length;
         this._updateOpaqueOrder(0, count - 1);
         this._updateTransparentOrder(0, count - 1);
     }
@@ -844,10 +876,10 @@ class LayerComposition extends EventHandler {
     insertOpaque(layer, index) {
         // insert opaque at index
         if (this._isSublayerAdded(layer, false)) return;
-        this.layerList.splice(index, 0,    layer);
+        this.layerList.splice(index, 0, layer);
         this.subLayerList.splice(index, 0, false);
 
-        var count = this.subLayerList.length;
+        const count = this.subLayerList.length;
         this._updateOpaqueOrder(index, count - 1);
 
         this.subLayerEnabled.splice(index, 0, true);
@@ -865,7 +897,7 @@ class LayerComposition extends EventHandler {
      */
     removeOpaque(layer) {
         // remove opaque occurrences of a layer
-        for (var i = 0, len = this.layerList.length; i < len; i++) {
+        for (let i = 0, len = this.layerList.length; i < len; i++) {
             if (this.layerList[i] === layer && !this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
@@ -913,10 +945,10 @@ class LayerComposition extends EventHandler {
     insertTransparent(layer, index) {
         // insert transparent at index
         if (this._isSublayerAdded(layer, true)) return;
-        this.layerList.splice(index, 0,    layer);
+        this.layerList.splice(index, 0, layer);
         this.subLayerList.splice(index, 0, true);
 
-        var count = this.subLayerList.length;
+        const count = this.subLayerList.length;
         this._updateTransparentOrder(index, count - 1);
 
         this.subLayerEnabled.splice(index, 0, true);
@@ -934,7 +966,7 @@ class LayerComposition extends EventHandler {
      */
     removeTransparent(layer) {
         // remove transparent occurrences of a layer
-        for (var i = 0, len = this.layerList.length; i < len; i++) {
+        for (let i = 0, len = this.layerList.length; i < len; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
@@ -956,7 +988,7 @@ class LayerComposition extends EventHandler {
 
     _getSublayerIndex(layer, transparent) {
         // find sublayer index in the composition array
-        var id = this.layerList.indexOf(layer);
+        let id = this.layerList.indexOf(layer);
         if (id < 0) return -1;
 
         if (this.subLayerList[id] !== transparent) {
@@ -999,7 +1031,7 @@ class LayerComposition extends EventHandler {
      * @returns {Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
     getLayerById(id) {
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i].id === id) return this.layerList[i];
         }
         return null;
@@ -1013,14 +1045,14 @@ class LayerComposition extends EventHandler {
      * @returns {Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
     getLayerByName(name) {
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i].name === name) return this.layerList[i];
         }
         return null;
     }
 
     _updateOpaqueOrder(startIndex, endIndex) {
-        for (var i = startIndex; i <= endIndex; i++) {
+        for (let i = startIndex; i <= endIndex; i++) {
             if (this.subLayerList[i] === false) {
                 this._opaqueOrder[this.layerList[i].id] = i;
             }
@@ -1028,7 +1060,7 @@ class LayerComposition extends EventHandler {
     }
 
     _updateTransparentOrder(startIndex, endIndex) {
-        for (var i = startIndex; i <= endIndex; i++) {
+        for (let i = startIndex; i <= endIndex; i++) {
             if (this.subLayerList[i] === true) {
                 this._transparentOrder[this.layerList[i].id] = i;
             }
@@ -1039,23 +1071,20 @@ class LayerComposition extends EventHandler {
     // on top of all the sublayers in the other array. The order is a dictionary
     // of <layerId, index>.
     _sortLayersDescending(layersA, layersB, order) {
-        var i = 0;
-        var len = 0;
-        var id = 0;
-        var topLayerA = -1;
-        var topLayerB = -1;
+        let topLayerA = -1;
+        let topLayerB = -1;
 
         // search for which layer is on top in layersA
-        for (i = 0, len = layersA.length; i < len; i++) {
-            id = layersA[i];
+        for (let i = 0, len = layersA.length; i < len; i++) {
+            const id = layersA[i];
             if (order.hasOwnProperty(id)) {
                 topLayerA = Math.max(topLayerA, order[id]);
             }
         }
 
         // search for which layer is on top in layersB
-        for (i = 0, len = layersB.length; i < len; i++) {
-            id = layersB[i];
+        for (let i = 0, len = layersB.length; i < len; i++) {
+            const id = layersB[i];
             if (order.hasOwnProperty(id)) {
                 topLayerB = Math.max(topLayerB, order[id]);
             }

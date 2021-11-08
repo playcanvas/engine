@@ -288,7 +288,7 @@ export const SHADOW_VSM32 = 3;
  */
 export const SHADOW_PCF5 = 4;
 
-// non-public number of supported depth shadow modes
+// non-public: number of supported depth shadow modes
 export const SHADOW_COUNT = 5;
 
 /**
@@ -587,6 +587,7 @@ export const SHADERDEF_TANGENTS = 512;
 export const SHADERDEF_MORPH_POSITION = 1024;
 export const SHADERDEF_MORPH_NORMAL = 2048;
 export const SHADERDEF_MORPH_TEXTURE_BASED = 4096;
+export const SHADERDEF_LMAMBIENT = 8192; // lightmaps contain ambient
 
 export const LINEBATCH_WORLD = 0;
 export const LINEBATCH_OVERLAY = 1;

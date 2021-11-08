@@ -35,8 +35,8 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the SpriteComponent. Can be:
  *
- * * {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
- * * {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
+ * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
+ * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
  *
  * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
  * @property {number|Asset} spriteAsset The asset id or the {@link Asset} of the sprite to render. Only works for {@link SPRITETYPE_SIMPLE} sprites.
@@ -112,8 +112,8 @@ class SpriteComponent extends Component {
     }
 
     onEnable() {
-        var app = this.system.app;
-        var scene = app.scene;
+        const app = this.system.app;
+        const scene = app.scene;
 
         scene.on("set:layers", this._onLayersChanged, this);
         if (scene.layers) {
@@ -131,8 +131,8 @@ class SpriteComponent extends Component {
     }
 
     onDisable() {
-        var app = this.system.app;
-        var scene = app.scene;
+        const app = this.system.app;
+        const scene = app.scene;
 
         scene.off("set:layers", this._onLayersChanged, this);
         if (scene.layers) {
@@ -156,7 +156,7 @@ class SpriteComponent extends Component {
             this._defaultClip._destroy();
             this._defaultClip = null;
         }
-        for (var key in this._clips) {
+        for (const key in this._clips) {
             this._clips[key]._destroy();
         }
         this._clips = null;
@@ -182,13 +182,10 @@ class SpriteComponent extends Component {
         if (this._addedModel) return;
         if (!this._meshInstance) return;
 
-        var i;
-        var len;
+        const meshInstances = [this._meshInstance];
 
-        var meshInstances = [this._meshInstance];
-
-        for (i = 0, len = this._layers.length; i < len; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+        for (let i = 0, len = this._layers.length; i < len; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addMeshInstances(meshInstances);
             }
@@ -200,13 +197,10 @@ class SpriteComponent extends Component {
     _hideModel() {
         if (!this._addedModel || !this._meshInstance) return;
 
-        var i;
-        var len;
+        const meshInstances = [this._meshInstance];
 
-        var meshInstances = [this._meshInstance];
-
-        for (i = 0, len = this._layers.length; i < len; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+        for (let i = 0, len = this._layers.length; i < len; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.removeMeshInstances(meshInstances);
             }
@@ -219,7 +213,7 @@ class SpriteComponent extends Component {
     _showFrame(frame) {
         if (!this.sprite) return;
 
-        var mesh = this.sprite.meshes[frame];
+        const mesh = this.sprite.meshes[frame];
         // if mesh is null then hide the mesh instance
         if (!mesh) {
             if (this._meshInstance) {
@@ -230,7 +224,7 @@ class SpriteComponent extends Component {
             return;
         }
 
-        var material;
+        let material;
         if (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED) {
             material = this.system.default9SlicedMaterialSlicedMode;
         } else if (this.sprite.renderMode === SPRITE_RENDERMODE_TILED) {
@@ -289,10 +283,10 @@ class SpriteComponent extends Component {
             this._meshInstance._updateAabbFunc = this._updateAabbFunc;
 
             // calculate inner offset
-            var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
+            const frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
             if (frameData) {
-                var borderWidthScale = 2 / frameData.rect.z;
-                var borderHeightScale = 2 / frameData.rect.w;
+                const borderWidthScale = 2 / frameData.rect.z;
+                const borderHeightScale = 2 / frameData.rect.w;
 
                 this._innerOffset.set(
                     frameData.border.x * borderWidthScale,
@@ -301,7 +295,7 @@ class SpriteComponent extends Component {
                     frameData.border.w * borderHeightScale
                 );
 
-                var tex = this.sprite.atlas.texture;
+                const tex = this.sprite.atlas.texture;
                 this._atlasRect.set(frameData.rect.x / tex.width,
                                     frameData.rect.y / tex.height,
                                     frameData.rect.z / tex.width,
@@ -332,20 +326,20 @@ class SpriteComponent extends Component {
 
     _updateTransform() {
         // flip
-        var scaleX = this.flipX ? -1 : 1;
-        var scaleY = this.flipY ? -1 : 1;
+        let scaleX = this.flipX ? -1 : 1;
+        let scaleY = this.flipY ? -1 : 1;
 
         // pivot
-        var posX = 0;
-        var posY = 0;
+        let posX = 0;
+        let posY = 0;
 
         if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)) {
 
-            var w = 1;
-            var h = 1;
+            let w = 1;
+            let h = 1;
 
             if (this.sprite.atlas) {
-                var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[this.frame]];
+                const frameData = this.sprite.atlas.frames[this.sprite.frameKeys[this.frame]];
                 if (frameData) {
                     // get frame dimensions
                     w = frameData.rect.z;
@@ -358,8 +352,8 @@ class SpriteComponent extends Component {
             }
 
             // scale: apply PPU
-            var scaleMulX = w / this.sprite.pixelsPerUnit;
-            var scaleMulY = h / this.sprite.pixelsPerUnit;
+            const scaleMulX = w / this.sprite.pixelsPerUnit;
+            const scaleMulY = h / this.sprite.pixelsPerUnit;
 
             // scale borders if necessary instead of overlapping
             this._outerScale.set(Math.max(this._width, this._innerOffset.x * scaleMulX), Math.max(this._height, this._innerOffset.y * scaleMulY));
@@ -403,7 +397,7 @@ class SpriteComponent extends Component {
         if (!this._autoPlayClip) return;
         if (this.type !== SPRITETYPE_ANIMATED) return;
 
-        var clip = this._clips[this._autoPlayClip];
+        const clip = this._clips[this._autoPlayClip];
         // if the clip exists and nothing else is playing play it
         if (clip && !clip.isPlaying && (!this._currentClip || !this._currentClip.isPlaying)) {
             if (this.enabled && this.entity.enabled) {
@@ -424,7 +418,7 @@ class SpriteComponent extends Component {
     }
 
     _onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
 
         if (this._addedModel && this.enabled && this.entity.enabled && this._meshInstance) {
@@ -435,15 +429,14 @@ class SpriteComponent extends Component {
     _onLayerRemoved(layer) {
         if (!this._meshInstance) return;
 
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances([this._meshInstance]);
     }
 
     removeModelFromLayers() {
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
             layer.removeMeshInstances([this._meshInstance]);
         }
@@ -461,7 +454,7 @@ class SpriteComponent extends Component {
      * @returns {SpriteAnimationClip} The new clip that was added.
      */
     addClip(data) {
-        var clip = new SpriteAnimationClip(this, {
+        const clip = new SpriteAnimationClip(this, {
             name: data.name,
             fps: data.fps,
             loop: data.loop,
@@ -505,9 +498,9 @@ class SpriteComponent extends Component {
      * @returns {SpriteAnimationClip} The clip that started playing.
      */
     play(name) {
-        var clip = this._clips[name];
+        const clip = this._clips[name];
 
-        var current = this._currentClip;
+        const current = this._currentClip;
         if (current && current !== clip) {
             current._playing = false;
         }
@@ -519,7 +512,7 @@ class SpriteComponent extends Component {
             this._currentClip.play();
         } else {
             // #if _DEBUG
-            console.warn('Trying to play sprite animation ' + name + ' which does not exist.');
+            console.warn(`Trying to play sprite animation ${name} which does not exist.`);
             // #endif
         }
 
@@ -670,11 +663,9 @@ class SpriteComponent extends Component {
     }
 
     set clips(value) {
-        var name, key;
-
         // if value is null remove all clips
         if (!value) {
-            for (name in this._clips) {
+            for (const name in this._clips) {
                 this.removeClip(name);
             }
             return;
@@ -682,9 +673,9 @@ class SpriteComponent extends Component {
 
         // remove existing clips not in new value
         // and update clips in both objects
-        for (name in this._clips) {
-            var found = false;
-            for (key in value) {
+        for (const name in this._clips) {
+            let found = false;
+            for (const key in value) {
                 if (value[key].name === name) {
                     found = true;
                     this._clips[name].fps = value[key].fps;
@@ -706,7 +697,7 @@ class SpriteComponent extends Component {
         }
 
         // add clips that do not exist
-        for (key in value) {
+        for (const key in value) {
             if (this._clips[value[key].name]) continue;
 
             this.addClip(value[key]);
@@ -795,7 +786,7 @@ class SpriteComponent extends Component {
         if (this._batchGroupId === value)
             return;
 
-        var prev = this._batchGroupId;
+        const prev = this._batchGroupId;
         this._batchGroupId = value;
 
         if (this.entity.enabled && prev >= 0) {

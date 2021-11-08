@@ -9,7 +9,7 @@ import { LayoutGroupComponentData } from './data.js';
 
 const _schema = ['enabled'];
 
-var MAX_ITERATIONS = 100;
+const MAX_ITERATIONS = 100;
 
 /**
  * @class
@@ -35,7 +35,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         this.on('beforeremove', this._onRemoveComponent, this);
 
         // Perform reflow when running in the engine
-        ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
+        this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -87,7 +87,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var layoutGroup = entity.layoutgroup;
+        const layoutGroup = entity.layoutgroup;
 
         return this.addComponent(clone, {
             enabled: layoutGroup.enabled,
@@ -118,13 +118,13 @@ class LayoutGroupComponentSystem extends ComponentSystem {
             return;
         }
 
-        var iterationCount = 0;
+        let iterationCount = 0;
 
         while (this._reflowQueue.length > 0) {
             // Create a copy of the queue to sort and process. If processing the reflow of any
             // layout groups results in additional groups being pushed to the queue, they will
             // be processed on the next iteration of the while loop.
-            var queue = this._reflowQueue.slice();
+            const queue = this._reflowQueue.slice();
             this._reflowQueue.length = 0;
 
             // Sort in ascending order of depth within the graph (i.e. outermost first), so that
@@ -134,7 +134,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
                 return (componentA.entity.graphDepth - componentB.entity.graphDepth);
             });
 
-            for (var i = 0; i < queue.length; ++i) {
+            for (let i = 0; i < queue.length; ++i) {
                 queue[i].reflow();
             }
 
@@ -147,6 +147,12 @@ class LayoutGroupComponentSystem extends ComponentSystem {
 
     _onRemoveComponent(entity, component) {
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
 

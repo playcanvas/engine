@@ -123,7 +123,7 @@ class XrPlane extends EventHandler {
      *     transform.transformPoint(vecB, vecB);
      *
      *     // render line
-     *     app.renderLine(vecA, vecB, color);
+     *     app.drawLine(vecA, vecB, color);
      * }
      */
     get points() {

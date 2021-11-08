@@ -20,7 +20,9 @@ import blurVSMPS from './blurVSM.frag';
 import clearCoatPS from './clearCoat.frag';
 import clearCoatGlossPS from './clearCoatGloss.frag';
 import clearCoatNormalPS from './clearCoatNormal.frag';
-import clusteredLightLoopPS from './clusteredLightLoop.frag';
+import clusteredLightUtilsPS from './clusteredLightUtils.frag';
+import clusteredLightCookiesPS from './clusteredLightCookies.frag';
+import clusteredLightShadowsPS from './clusteredLightShadows.frag';
 import clusteredLightPS from './clusteredLight.frag';
 import combineClearCoatPS from './combineClearCoat.frag';
 import combineDiffusePS from './combineDiffuse.frag';
@@ -37,6 +39,7 @@ import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
 import dilatePS from './dilate.frag';
+import bilateralDeNoisePS from './bilateralDeNoise.frag';
 import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
@@ -49,6 +52,7 @@ import falloffInvSquaredPS from './falloffInvSquared.frag';
 import falloffLinearPS from './falloffLinear.frag';
 import fixCubemapSeamsNonePS from './fixCubemapSeamsNone.frag';
 import fixCubemapSeamsStretchPS from './fixCubemapSeamsStretch.frag';
+import floatUnpackingPS from './float-unpacking.frag';
 import fogExpPS from './fogExp.frag';
 import fogExp2PS from './fogExp2.frag';
 import fogLinearPS from './fogLinear.frag';
@@ -164,8 +168,6 @@ import skinConstVS from './skinConst.vert';
 import skinTexVS from './skinTex.vert';
 import skyboxPS from './skybox.frag';
 import skyboxVS from './skybox.vert';
-import skyboxHDRPS from './skyboxHDR.frag';
-import skyboxPrefilteredCubePS from './skyboxPrefilteredCube.frag';
 import specularPS from './specular.frag';
 import specularAaNonePS from './specularAaNone.frag';
 import specularAaToksvigPS from './specularAaToksvig.frag';
@@ -224,7 +226,9 @@ const shaderChunks = {
     clearCoatPS: clearCoatPS,
     clearCoatGlossPS: clearCoatGlossPS,
     clearCoatNormalPS: clearCoatNormalPS,
-    clusteredLightLoopPS: clusteredLightLoopPS,
+    clusteredLightCookiesPS: clusteredLightCookiesPS,
+    clusteredLightShadowsPS: clusteredLightShadowsPS,
+    clusteredLightUtilsPS: clusteredLightUtilsPS,
     clusteredLightPS: clusteredLightPS,
     combineClearCoatPS: combineClearCoatPS,
     combineDiffusePS: combineDiffusePS,
@@ -241,6 +245,7 @@ const shaderChunks = {
     diffusePS: diffusePS,
     diffuseDetailMapPS: diffuseDetailMapPS,
     dilatePS: dilatePS,
+    bilateralDeNoisePS: bilateralDeNoisePS,
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
@@ -253,6 +258,7 @@ const shaderChunks = {
     falloffLinearPS: falloffLinearPS,
     fixCubemapSeamsNonePS: fixCubemapSeamsNonePS,
     fixCubemapSeamsStretchPS: fixCubemapSeamsStretchPS,
+    floatUnpackingPS: floatUnpackingPS,
     fogExpPS: fogExpPS,
     fogExp2PS: fogExp2PS,
     fogLinearPS: fogLinearPS,
@@ -368,8 +374,6 @@ const shaderChunks = {
     skinTexVS: skinTexVS,
     skyboxPS: skyboxPS,
     skyboxVS: skyboxVS,
-    skyboxHDRPS: skyboxHDRPS,
-    skyboxPrefilteredCubePS: skyboxPrefilteredCubePS,
     specularPS: specularPS,
     specularAaNonePS: specularAaNonePS,
     specularAaToksvigPS: specularAaToksvigPS,

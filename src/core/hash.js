@@ -7,8 +7,8 @@
  * @returns {number} Hash value.
  */
 function hashCode(str) {
-    var hash = 0;
-    for (var i = 0, len = str.length; i < len; i++) {
+    let hash = 0;
+    for (let i = 0, len = str.length; i < len; i++) {
         hash = ((hash << 5) - hash) + str.charCodeAt(i);
         // Convert to 32bit integer
         hash |= 0;

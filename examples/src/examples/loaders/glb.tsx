@@ -5,7 +5,6 @@ class GLBExample extends Example {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // The example demonstrates loading of glb file, which contains meshes,
@@ -26,7 +25,7 @@ class GLBExample extends Example {
             const entity = asset.resource.instantiateRenderEntity();
             app.root.addChild(entity);
 
-            // find all cameras - by default there are disabled
+            // find all cameras - by default they are disabled
             // set their aspect ratio to automatic to work with any window size
             camerasComponents = entity.findComponents("camera");
             camerasComponents.forEach((component) => {

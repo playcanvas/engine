@@ -21,7 +21,7 @@ class BinaryHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading binary resource: " + url.original + " [" + err + "]");
+                callback(`Error loading binary resource: ${url.original} [${err}]`);
             }
         });
     }

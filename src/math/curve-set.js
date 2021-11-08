@@ -155,10 +155,10 @@ class CurveSet {
      * @type {number}
      * @description The interpolation scheme applied to all curves in the curve set. Can be:
      *
-     * * {@link CURVE_LINEAR}
-     * * {@link CURVE_SMOOTHSTEP}
-     * * {@link CURVE_SPLINE}
-     * * {@link CURVE_STEP}
+     * - {@link CURVE_LINEAR}
+     * - {@link CURVE_SMOOTHSTEP}
+     * - {@link CURVE_SPLINE}
+     * - {@link CURVE_STEP}
      *
      * Defaults to {@link CURVE_SMOOTHSTEP}.
      */

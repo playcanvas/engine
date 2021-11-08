@@ -47,23 +47,21 @@ class AnimationComponent extends Component {
      * @description Start playing an animation.
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
-     * animation state to the start of the animation being set.
+     * animation state to the start of the animation being set. Defaults to 0.
      */
-    play(name, blendTime) {
+    play(name, blendTime = 0) {
         if (!this.enabled || !this.entity.enabled) {
             return;
         }
 
-        var data = this.data;
+        const data = this.data;
 
         if (!data.animations[name]) {
             // #if _DEBUG
-            console.error("Trying to play animation '" + name + "' which doesn't exist");
+            console.error(`Trying to play animation '${name}' which doesn't exist`);
             // #endif
             return;
         }
-
-        blendTime = blendTime || 0;
 
         data.prevAnim = data.currAnim;
         data.currAnim = name;
@@ -74,8 +72,8 @@ class AnimationComponent extends Component {
                 this._createAnimationController();
             }
 
-            var prevAnim = data.animations[data.prevAnim];
-            var currAnim = data.animations[data.currAnim];
+            const prevAnim = data.animations[data.prevAnim];
+            const currAnim = data.animations[data.currAnim];
 
             data.blending = blendTime > 0 && data.prevAnim;
             if (data.blending) {
@@ -96,7 +94,7 @@ class AnimationComponent extends Component {
             }
 
             if (data.animEvaluator) {
-                var animEvaluator = data.animEvaluator;
+                const animEvaluator = data.animEvaluator;
 
                 if (data.blending) {
                     // remove all but the last clip
@@ -107,7 +105,7 @@ class AnimationComponent extends Component {
                     data.animEvaluator.removeClips();
                 }
 
-                var clip = new AnimClip(data.animations[data.currAnim], 0, 1.0, true, data.loop);
+                const clip = new AnimClip(data.animations[data.currAnim], 0, 1.0, true, data.loop);
                 clip.name = data.currAnim;
                 clip.blendWeight = data.blending ? 0 : 1;
                 clip.reset();
@@ -130,7 +128,7 @@ class AnimationComponent extends Component {
     }
 
     setModel(model) {
-        var data = this.data;
+        const data = this.data;
 
         if (model !== data.model) {
             // reset animation controller
@@ -147,7 +145,7 @@ class AnimationComponent extends Component {
     }
 
     _resetAnimationController() {
-        var data = this.data;
+        const data = this.data;
         data.skeleton = null;
         data.fromSkel = null;
         data.toSkel = null;
@@ -155,16 +153,16 @@ class AnimationComponent extends Component {
     }
 
     _createAnimationController() {
-        var data = this.data;
-        var model = data.model;
-        var animations = data.animations;
+        const data = this.data;
+        const model = data.model;
+        const animations = data.animations;
 
         // check which type of animations are loaded
-        var hasJson = false;
-        var hasGlb = false;
-        for (var animation in animations) {
+        let hasJson = false;
+        let hasGlb = false;
+        for (const animation in animations) {
             if (animations.hasOwnProperty(animation)) {
-                var anim = animations[animation];
+                const anim = animations[animation];
                 if (anim.constructor === AnimTrack) {
                     hasGlb = true;
                 } else {
@@ -173,7 +171,7 @@ class AnimationComponent extends Component {
             }
         }
 
-        var graph = model.getGraph();
+        const graph = model.getGraph();
         if (hasJson) {
             data.fromSkel = new Skeleton(graph);
             data.toSkel = new Skeleton(graph);
@@ -189,43 +187,41 @@ class AnimationComponent extends Component {
         if (!ids || !ids.length)
             return;
 
-        var self = this;
-        var assets = this.system.app.assets;
-        var i, l = ids.length;
+        const assets = this.system.app.assets;
 
-        var onAssetReady = function (asset) {
+        const onAssetReady = (asset) => {
             if (asset.resources.length > 1) {
-                for (var i = 0; i < asset.resources.length; i++) {
-                    self.animations[asset.resources[i].name] = asset.resources[i];
-                    self.animationsIndex[asset.id] = asset.resources[i].name;
+                for (let i = 0; i < asset.resources.length; i++) {
+                    this.animations[asset.resources[i].name] = asset.resources[i];
+                    this.animationsIndex[asset.id] = asset.resources[i].name;
                 }
             } else {
-                self.animations[asset.name] = asset.resource;
-                self.animationsIndex[asset.id] = asset.name;
+                this.animations[asset.name] = asset.resource;
+                this.animationsIndex[asset.id] = asset.name;
             }
             /* eslint-disable no-self-assign */
-            self.animations = self.animations; // assigning ensures set_animations event is fired
+            this.animations = this.animations; // assigning ensures set_animations event is fired
             /* eslint-enable no-self-assign */
         };
 
-        var onAssetAdd = function (asset) {
-            asset.off('change', self.onAssetChanged, self);
-            asset.on('change', self.onAssetChanged, self);
+        const onAssetAdd = (asset) => {
+            asset.off('change', this.onAssetChanged, this);
+            asset.on('change', this.onAssetChanged, this);
 
-            asset.off('remove', self.onAssetRemoved, self);
-            asset.on('remove', self.onAssetRemoved, self);
+            asset.off('remove', this.onAssetRemoved, this);
+            asset.on('remove', this.onAssetRemoved, this);
 
             if (asset.resource) {
                 onAssetReady(asset);
             } else {
-                asset.once('load', onAssetReady, self);
-                if (self.enabled && self.entity.enabled)
+                asset.once('load', onAssetReady, this);
+                if (this.enabled && this.entity.enabled)
                     assets.load(asset);
             }
         };
 
-        for (i = 0; i < l; i++) {
-            var asset = assets.get(ids[i]);
+        for (let i = 0, l = ids.length; i < l; i++) {
+            const asset = assets.get(ids[i]);
             if (asset) {
                 onAssetAdd(asset);
             } else {
@@ -235,7 +231,6 @@ class AnimationComponent extends Component {
     }
 
     onAssetChanged(asset, attribute, newValue, oldValue) {
-        var i;
         if (attribute === 'resource' || attribute === 'resources') {
             // If the attribute is 'resources', newValue can be an empty array when the
             // asset is unloaded. Therefore, we should assign null in this case
@@ -245,24 +240,24 @@ class AnimationComponent extends Component {
 
             // replace old animation with new one
             if (newValue) {
-                var restarted = false;
+                let restarted = false;
                 if (newValue.length > 1) {
                     if (oldValue && oldValue.length > 1) {
-                        for (i = 0; i < oldValue.length; i++) {
+                        for (let i = 0; i < oldValue.length; i++) {
                             delete this.animations[oldValue[i].name];
                         }
                     } else {
                         delete this.animations[asset.name];
                     }
                     restarted = false;
-                    for (i = 0; i < newValue.length; i++) {
+                    for (let i = 0; i < newValue.length; i++) {
                         this.animations[newValue[i].name] = newValue[i];
 
                         if (!restarted && this.data.currAnim === newValue[i].name) {
                             // restart animation
                             if (this.data.playing && this.data.enabled && this.entity.enabled) {
                                 restarted = true;
-                                this.play(newValue[i].name, 0);
+                                this.play(newValue[i].name);
                             }
                         }
                     }
@@ -272,7 +267,7 @@ class AnimationComponent extends Component {
                     }
                 } else {
                     if (oldValue && oldValue.length > 1) {
-                        for (i = 0; i < oldValue.length; i++) {
+                        for (let i = 0; i < oldValue.length; i++) {
                             delete this.animations[oldValue[i].name];
                         }
                     }
@@ -283,7 +278,7 @@ class AnimationComponent extends Component {
                         // restart animation
                         if (this.data.playing && this.data.enabled && this.entity.enabled) {
                             restarted = true;
-                            this.play(asset.name, 0);
+                            this.play(asset.name);
                         }
                     }
                     if (!restarted) {
@@ -294,7 +289,7 @@ class AnimationComponent extends Component {
                 this.animationsIndex[asset.id] = asset.name;
             } else {
                 if (oldValue.length > 1) {
-                    for (i = 0; i < oldValue.length; i++) {
+                    for (let i = 0; i < oldValue.length; i++) {
                         delete this.animations[oldValue[i].name];
                         if (this.data.currAnim === oldValue[i].name) {
                             this._stopCurrentAnimation();
@@ -316,7 +311,7 @@ class AnimationComponent extends Component {
 
         if (this.animations) {
             if (asset.resources.length > 1) {
-                for (var i = 0; i < asset.resources.length; i++) {
+                for (let i = 0; i < asset.resources.length; i++) {
                     delete this.animations[asset.resources[i].name];
                     if (this.data.currAnim === asset.resources[i].name)
                         this._stopCurrentAnimation();
@@ -331,7 +326,7 @@ class AnimationComponent extends Component {
     }
 
     _stopCurrentAnimation() {
-        var data = this.data;
+        const data = this.data;
         data.currAnim = null;
         data.playing = false;
         if (data.skeleton) {
@@ -339,7 +334,7 @@ class AnimationComponent extends Component {
             data.skeleton.animation = null;
         }
         if (data.animEvaluator) {
-            for (var i = 0; i < data.animEvaluator.clips.length; ++i) {
+            for (let i = 0; i < data.animEvaluator.clips.length; ++i) {
                 data.animEvaluator.clips[i].stop();
             }
             data.animEvaluator.update(0);
@@ -348,37 +343,37 @@ class AnimationComponent extends Component {
     }
 
     onSetAnimations(name, oldValue, newValue) {
-        var data = this.data;
+        const data = this.data;
 
         // If we have animations _and_ a model, we can create the skeletons
-        var modelComponent = this.entity.model;
+        const modelComponent = this.entity.model;
         if (modelComponent) {
-            var m = modelComponent.model;
+            const m = modelComponent.model;
             if (m && m !== data.model) {
                 this.setModel(m);
             }
         }
 
         if (!data.currAnim && data.activate && data.enabled && this.entity.enabled) {
-            for (var animName in data.animations) {
-                // Set the first loaded animation as the current
-                this.play(animName, 0);
-                break;
+            // Set the first loaded animation as the current
+            const animationNames = Object.keys(data.animations);
+            if (animationNames.length > 0) {
+                this.play(animationNames[0]);
             }
         }
     }
 
     onSetAssets(name, oldValue, newValue) {
         if (oldValue && oldValue.length) {
-            for (var i = 0; i < oldValue.length; i++) {
+            for (let i = 0; i < oldValue.length; i++) {
                 // unsubscribe from change event for old assets
                 if (oldValue[i]) {
-                    var asset = this.system.app.assets.get(oldValue[i]);
+                    const asset = this.system.app.assets.get(oldValue[i]);
                     if (asset) {
                         asset.off('change', this.onAssetChanged, this);
                         asset.off('remove', this.onAssetRemoved, this);
 
-                        var animName = this.animationsIndex[asset.id];
+                        const animName = this.animationsIndex[asset.id];
 
                         if (this.data.currAnim === animName)
                             this._stopCurrentAnimation();
@@ -390,7 +385,7 @@ class AnimationComponent extends Component {
             }
         }
 
-        var ids = newValue.map(function (value) {
+        const ids = newValue.map((value) => {
             return (value instanceof Asset) ? value.id : value;
         });
 
@@ -398,32 +393,32 @@ class AnimationComponent extends Component {
     }
 
     onSetLoop(name, oldValue, newValue) {
-        var data = this.data;
+        const data = this.data;
 
         if (data.skeleton) {
             data.skeleton.looping = data.loop;
         }
 
         if (data.animEvaluator) {
-            for (var i = 0; i < data.animEvaluator.clips.length; ++i) {
+            for (let i = 0; i < data.animEvaluator.clips.length; ++i) {
                 data.animEvaluator.clips[i].loop = data.loop;
             }
         }
     }
 
     onSetCurrentTime(name, oldValue, newValue) {
-        var data = this.data;
+        const data = this.data;
 
         if (data.skeleton) {
-            var skeleton = data.skeleton;
+            const skeleton = data.skeleton;
             skeleton.currentTime = newValue;
             skeleton.addTime(0); // update
             skeleton.updateGraph();
         }
 
         if (data.animEvaluator) {
-            var animEvaluator = data.animEvaluator;
-            for (var i = 0; i < animEvaluator.clips.length; ++i) {
+            const animEvaluator = data.animEvaluator;
+            for (let i = 0; i < animEvaluator.clips.length; ++i) {
                 animEvaluator.clips[i].time = newValue;
             }
         }
@@ -432,14 +427,14 @@ class AnimationComponent extends Component {
     onEnable() {
         super.onEnable();
 
-        var data = this.data;
+        const data = this.data;
 
         // load assets if they're not loaded
-        var assets = data.assets;
-        var registry = this.system.app.assets;
+        const assets = data.assets;
+        const registry = this.system.app.assets;
         if (assets) {
-            for (var i = 0, len = assets.length; i < len; i++) {
-                var asset = assets[i];
+            for (let i = 0, len = assets.length; i < len; i++) {
+                let asset = assets[i];
                 if (!(asset instanceof Asset))
                     asset = registry.get(asset);
 
@@ -449,18 +444,18 @@ class AnimationComponent extends Component {
         }
 
         if (data.activate && !data.currAnim) {
-            for (var animName in data.animations) {
-                this.play(animName, 0);
-                break;
+            const animationNames = Object.keys(data.animations);
+            if (animationNames.length > 0) {
+                this.play(animationNames[0]);
             }
         }
     }
 
     onBeforeRemove() {
-        for (var i = 0; i < this.assets.length; i++) {
+        for (let i = 0; i < this.assets.length; i++) {
 
             // this.assets can be an array of pc.Assets or an array of numbers (assetIds)
-            var asset = this.assets[i];
+            let asset = this.assets[i];
             if (typeof asset ===  'number') {
                 asset = this.system.app.assets.get(asset);
             }
@@ -471,7 +466,7 @@ class AnimationComponent extends Component {
             asset.off('remove', this.onAssetRemoved, this);
         }
 
-        var data = this.data;
+        const data = this.data;
 
         delete data.animation;
         delete data.skeleton;
@@ -482,7 +477,7 @@ class AnimationComponent extends Component {
     }
 
     get currentTime() {
-        var data = this.data;
+        const data = this.data;
 
         if (data.skeleton) {
             return this.data.skeleton._time;
@@ -491,7 +486,7 @@ class AnimationComponent extends Component {
         if (data.animEvaluator) {
             // Get the last clip's current time which will be the one
             // that is currently being blended
-            var clips = data.animEvaluator.clips;
+            const clips = data.animEvaluator.clips;
             if (clips.length > 0) {
                 return clips[clips.length - 1].time;
             }
@@ -501,17 +496,17 @@ class AnimationComponent extends Component {
     }
 
     set currentTime(currentTime) {
-        var data = this.data;
+        const data = this.data;
         if (data.skeleton) {
-            var skeleton = data.skeleton;
+            const skeleton = data.skeleton;
             skeleton.currentTime = currentTime;
             skeleton.addTime(0);
             skeleton.updateGraph();
         }
 
         if (data.animEvaluator) {
-            var animEvaluator = data.animEvaluator;
-            for (var i = 0; i < animEvaluator.clips.length; ++i) {
+            const animEvaluator = data.animEvaluator;
+            for (let i = 0; i < animEvaluator.clips.length; ++i) {
                 animEvaluator.clips[i].time = currentTime;
             }
         }

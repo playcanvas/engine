@@ -22,13 +22,13 @@ import { Component } from '../component.js';
  * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the model. Can be one of the following:
- * * "asset": The component will render a model asset
- * * "box": The component will render a box (1 unit in each dimension)
- * * "capsule": The component will render a capsule (radius 0.5, height 2)
- * * "cone": The component will render a cone (radius 0.5, height 1)
- * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
- * * "plane": The component will render a plane (1 unit in each dimension)
- * * "sphere": The component will render a sphere (radius 0.5)
+ * - "asset": The component will render a model asset
+ * - "box": The component will render a box (1 unit in each dimension)
+ * - "capsule": The component will render a capsule (radius 0.5, height 2)
+ * - "cone": The component will render a cone (radius 0.5, height 1)
+ * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
+ * - "plane": The component will render a plane (1 unit in each dimension)
+ * - "sphere": The component will render a sphere (radius 0.5)
  * @property {Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
  * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on this model.
@@ -49,7 +49,7 @@ import { Component } from '../component.js';
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
 class ModelComponent extends Component {
-    constructor(system, entity)   {
+    constructor(system, entity) {
         super(system, entity);
 
         // this.enabled = true;
@@ -91,13 +91,16 @@ class ModelComponent extends Component {
         this._batchGroup = null;
         // #endif
 
+        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy) added or removed from the parent
         entity.on('remove', this.onRemoveChild, this);
+        entity.on('removehierarchy', this.onRemoveChild, this);
         entity.on('insert', this.onInsertChild, this);
+        entity.on('inserthierarchy', this.onInsertChild, this);
     }
 
     addModelToLayers() {
         const layers = this.system.app.scene.layers;
-        for (var i = 0; i < this._layers.length; i++) {
+        for (let i = 0; i < this._layers.length; i++) {
             const layer = layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addMeshInstances(this.meshInstances);
@@ -106,11 +109,9 @@ class ModelComponent extends Component {
     }
 
     removeModelFromLayers() {
-        var layer;
-        var layers = this.system.app.scene.layers;
-
-        for (var i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
+        const layers = this.system.app.scene.layers;
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = layers.getLayerById(this._layers[i]);
             if (!layer) continue;
             layer.removeMeshInstances(this.meshInstances);
         }
@@ -127,11 +128,8 @@ class ModelComponent extends Component {
     }
 
     onRemove() {
-        if (this.type === 'asset') {
-            this.asset = null;
-        } else {
-            this.model = null;
-        }
+        this.asset = null;
+        this.model = null;
         this.materialAsset = null;
         this._unsetMaterialEvents();
 
@@ -148,19 +146,19 @@ class ModelComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances(this.meshInstances);
     }
 
     onLayerRemoved(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances(this.meshInstances);
     }
 
     _setMaterialEvent(index, event, id, handler) {
-        var evt = event + ':' + id;
+        const evt = event + ':' + id;
         this.system.app.assets.on(evt, handler, this);
 
         if (!this._materialEvents)
@@ -176,15 +174,15 @@ class ModelComponent extends Component {
     }
 
     _unsetMaterialEvents() {
-        var assets = this.system.app.assets;
-        var events = this._materialEvents;
+        const assets = this.system.app.assets;
+        const events = this._materialEvents;
         if (!events)
             return;
 
-        for (var i = 0, len = events.length; i < len; i++) {
+        for (let i = 0, len = events.length; i < len; i++) {
             if (!events[i]) continue;
-            var evt = events[i];
-            for (var key in evt) {
+            const evt = events[i];
+            for (const key in evt) {
                 assets.off(key, evt[key].handler, this);
             }
         }
@@ -193,14 +191,14 @@ class ModelComponent extends Component {
     }
 
     _getAssetByIdOrPath(idOrPath) {
-        var asset = null;
-        var isPath = isNaN(parseInt(idOrPath, 10));
+        let asset = null;
+        const isPath = isNaN(parseInt(idOrPath, 10));
 
         // get asset by id or url
         if (!isPath) {
             asset = this.system.app.assets.get(idOrPath);
         } else if (this.asset) {
-            var url = this._getMaterialAssetUrl(idOrPath);
+            const url = this._getMaterialAssetUrl(idOrPath);
             if (url)
                 asset = this.system.app.assets.getByUrl(url);
         }
@@ -211,13 +209,13 @@ class ModelComponent extends Component {
     _getMaterialAssetUrl(path) {
         if (!this.asset) return null;
 
-        var modelAsset = this.system.app.assets.get(this.asset);
+        const modelAsset = this.system.app.assets.get(this.asset);
 
         return modelAsset ? modelAsset.getAbsoluteUrl(path) : null;
     }
 
     _loadAndSetMeshInstanceMaterial(materialAsset, meshInstance, index) {
-        var assets = this.system.app.assets;
+        const assets = this.system.app.assets;
 
         if (!materialAsset)
             return;
@@ -243,8 +241,8 @@ class ModelComponent extends Component {
     }
 
     onEnable() {
-        var app = this.system.app;
-        var scene = app.scene;
+        const app = this.system.app;
+        const scene = app.scene;
 
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
@@ -252,9 +250,9 @@ class ModelComponent extends Component {
             scene.layers.on("remove", this.onLayerRemoved, this);
         }
 
-        var isAsset = (this._type === 'asset');
+        const isAsset = (this._type === 'asset');
 
-        var asset;
+        let asset;
         if (this._model) {
             this.addModelToLayers();
         } else if (isAsset && this._asset) {
@@ -277,7 +275,7 @@ class ModelComponent extends Component {
             // bind mapped assets
             // TODO: replace
             if (this._mapping) {
-                for (var index in this._mapping) {
+                for (const index in this._mapping) {
                     if (this._mapping[index]) {
                         asset = this._getAssetByIdOrPath(this._mapping[index]);
                         if (asset && !asset.resource) {
@@ -294,8 +292,8 @@ class ModelComponent extends Component {
     }
 
     onDisable() {
-        var app = this.system.app;
-        var scene = app.scene;
+        const app = this.system.app;
+        const scene = app.scene;
 
         scene.off("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
@@ -338,9 +336,8 @@ class ModelComponent extends Component {
      */
     hide() {
         if (this._model) {
-            var i, l;
-            var instances = this._model.meshInstances;
-            for (i = 0, l = instances.length; i < l; i++) {
+            const instances = this._model.meshInstances;
+            for (let i = 0, l = instances.length; i < l; i++) {
                 instances[i].visible = false;
             }
         }
@@ -354,9 +351,8 @@ class ModelComponent extends Component {
      */
     show() {
         if (this._model) {
-            var i, l;
-            var instances = this._model.meshInstances;
-            for (i = 0, l = instances.length; i < l; i++) {
+            const instances = this._model.meshInstances;
+            for (let i = 0, l = instances.length; i < l; i++) {
                 instances[i].visible = true;
             }
         }
@@ -463,10 +459,10 @@ class ModelComponent extends Component {
 
         this._material = material;
 
-        var model = this._model;
+        const model = this._model;
         if (model && this._type !== 'asset') {
-            var meshInstances = model.meshInstances;
-            for (var i = 0, len = meshInstances.length; i < len; i++) {
+            const meshInstances = model.meshInstances;
+            for (let i = 0, len = meshInstances.length; i < len; i++) {
                 meshInstances[i].material = material;
             }
         }
@@ -495,9 +491,9 @@ class ModelComponent extends Component {
 
         // set it on meshInstances
         if (this._model) {
-            var mi = this._model.meshInstances;
+            const mi = this._model.meshInstances;
             if (mi) {
-                for (var i = 0; i < mi.length; i++) {
+                for (let i = 0; i < mi.length; i++) {
                     mi[i].setCustomAabb(this._customAabb);
                 }
             }
@@ -524,12 +520,12 @@ class ModelComponent extends Component {
         } else {
 
             // get / create mesh of type
-            var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
+            const primData = getShapePrimitive(this.system.app.graphicsDevice, value);
             this._area = primData.area;
-            var mesh = primData.mesh;
+            const mesh = primData.mesh;
 
-            var node = new GraphNode();
-            var model = new Model();
+            const node = new GraphNode();
+            const model = new Model();
             model.graph = node;
 
             model.meshInstances = [new MeshInstance(mesh, this._material, node)];
@@ -544,8 +540,8 @@ class ModelComponent extends Component {
     }
 
     set asset(value) {
-        var assets = this.system.app.assets;
-        var _id = value;
+        const assets = this.system.app.assets;
+        let _id = value;
 
         if (value instanceof Asset) {
             _id = value.id;
@@ -555,7 +551,7 @@ class ModelComponent extends Component {
             if (this._asset) {
                 // remove previous asset
                 assets.off('add:' + this._asset, this._onModelAssetAdded, this);
-                var _prev = assets.get(this._asset);
+                const _prev = assets.get(this._asset);
                 if (_prev) {
                     this._unbindModelAsset(_prev);
                 }
@@ -564,7 +560,7 @@ class ModelComponent extends Component {
             this._asset = _id;
 
             if (this._asset) {
-                var asset = assets.get(this._asset);
+                const asset = assets.get(this._asset);
                 if (!asset) {
                     this.model = null;
                     assets.on('add:' + this._asset, this._onModelAssetAdded, this);
@@ -582,8 +578,6 @@ class ModelComponent extends Component {
     }
 
     set model(value) {
-        var i;
-
         if (this._model === value)
             return;
 
@@ -614,9 +608,9 @@ class ModelComponent extends Component {
             // flag the model as being assigned to a component
             this._model._immutable = true;
 
-            var meshInstances = this._model.meshInstances;
+            const meshInstances = this._model.meshInstances;
 
-            for (i = 0; i < meshInstances.length; i++) {
+            for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
                 meshInstances[i].isStatic = this._isStatic;
@@ -666,8 +660,8 @@ class ModelComponent extends Component {
             this._lightmapped = value;
 
             if (this._model) {
-                var mi = this._model.meshInstances;
-                for (var i = 0; i < mi.length; i++) {
+                const mi = this._model.meshInstances;
+                for (let i = 0; i < mi.length; i++) {
                     mi[i].setLightmapped(value);
                 }
             }
@@ -681,29 +675,27 @@ class ModelComponent extends Component {
     set castShadows(value) {
         if (this._castShadows === value) return;
 
-        var layer;
-        var i;
-        var model = this._model;
+        const model = this._model;
 
         if (model) {
-            var layers = this.layers;
-            var scene = this.system.app.scene;
+            const layers = this.layers;
+            const scene = this.system.app.scene;
             if (this._castShadows && !value) {
-                for (i = 0; i < layers.length; i++) {
-                    layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                for (let i = 0; i < layers.length; i++) {
+                    const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                     if (!layer) continue;
                     layer.removeShadowCasters(model.meshInstances);
                 }
             }
 
-            var meshInstances = model.meshInstances;
-            for (i = 0; i < meshInstances.length; i++) {
+            const meshInstances = model.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].castShadow = value;
             }
 
             if (!this._castShadows && value) {
-                for (i = 0; i < layers.length; i++) {
-                    layer = scene.layers.getLayerById(layers[i]);
+                for (let i = 0; i < layers.length; i++) {
+                    const layer = scene.layers.getLayerById(layers[i]);
                     if (!layer) continue;
                     layer.addShadowCasters(model.meshInstances);
                 }
@@ -723,8 +715,8 @@ class ModelComponent extends Component {
         this._receiveShadows = value;
 
         if (this._model) {
-            var meshInstances = this._model.meshInstances;
-            for (var i = 0, len = meshInstances.length; i < len; i++) {
+            const meshInstances = this._model.meshInstances;
+            for (let i = 0, len = meshInstances.length; i < len; i++) {
                 meshInstances[i].receiveShadow = value;
             }
         }
@@ -755,11 +747,10 @@ class ModelComponent extends Component {
 
         this._isStatic = value;
 
-        var i, m;
         if (this._model) {
-            var rcv = this._model.meshInstances;
-            for (i = 0; i < rcv.length; i++) {
-                m = rcv[i];
+            const rcv = this._model.meshInstances;
+            for (let i = 0; i < rcv.length; i++) {
+                const m = rcv[i];
                 m.isStatic = value;
             }
         }
@@ -770,13 +761,12 @@ class ModelComponent extends Component {
     }
 
     set layers(value) {
-        var i, layer;
-        var layers = this.system.app.scene.layers;
+        const layers = this.system.app.scene.layers;
 
         if (this.meshInstances) {
             // remove all meshinstances from old layers
-            for (i = 0; i < this._layers.length; i++) {
-                layer = layers.getLayerById(this._layers[i]);
+            for (let i = 0; i < this._layers.length; i++) {
+                const layer = layers.getLayerById(this._layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(this.meshInstances);
             }
@@ -784,7 +774,7 @@ class ModelComponent extends Component {
 
         // set the layer list
         this._layers.length = 0;
-        for (i = 0; i < value.length; i++) {
+        for (let i = 0; i < value.length; i++) {
             this._layers[i] = value[i];
         }
 
@@ -792,8 +782,8 @@ class ModelComponent extends Component {
         if (!this.enabled || !this.entity.enabled || !this.meshInstances) return;
 
         // add all mesh instances to new layers
-        for (i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = layers.getLayerById(this._layers[i]);
             if (!layer) continue;
             layer.addMeshInstances(this.meshInstances);
         }
@@ -806,7 +796,7 @@ class ModelComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId === value) return;
 
-        var batcher = this.system.app.batcher;
+        const batcher = this.system.app.batcher;
         if (this.entity.enabled && this._batchGroupId >= 0) {
             batcher.remove(BatchGroup.MODEL, this.batchGroupId, this.entity);
         }
@@ -827,17 +817,17 @@ class ModelComponent extends Component {
     }
 
     set materialAsset(value) {
-        var _id = value;
+        let _id = value;
         if (value instanceof Asset) {
             _id = value.id;
         }
 
-        var assets = this.system.app.assets;
+        const assets = this.system.app.assets;
 
         if (_id !== this._materialAsset) {
             if (this._materialAsset) {
                 assets.off('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
-                var _prev = assets.get(this._materialAsset);
+                const _prev = assets.get(this._materialAsset);
                 if (_prev) {
                     this._unbindMaterialAsset(_prev);
                 }
@@ -846,7 +836,7 @@ class ModelComponent extends Component {
             this._materialAsset = _id;
 
             if (this._materialAsset) {
-                var asset = assets.get(this._materialAsset);
+                const asset = assets.get(this._materialAsset);
                 if (!asset) {
                     this._setMaterial(this.system.defaultMaterial);
                     assets.on('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
@@ -891,12 +881,12 @@ class ModelComponent extends Component {
 
         if (!this._model) return;
 
-        var meshInstances = this._model.meshInstances;
-        var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
-        var assetMapping = modelAsset ? modelAsset.data.mapping : null;
-        var asset = null;
+        const meshInstances = this._model.meshInstances;
+        const modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
+        const assetMapping = modelAsset ? modelAsset.data.mapping : null;
+        let asset = null;
 
-        for (var i = 0, len = meshInstances.length; i < len; i++) {
+        for (let i = 0, len = meshInstances.length; i < len; i++) {
             if (value[i] !== undefined) {
                 if (value[i]) {
                     asset = this.system.app.assets.get(value[i]);
@@ -909,7 +899,7 @@ class ModelComponent extends Component {
                     if (assetMapping[i].material !== undefined) {
                         asset = this.system.app.assets.get(assetMapping[i].material);
                     } else if (assetMapping[i].path !== undefined) {
-                        var url = this._getMaterialAssetUrl(assetMapping[i].path);
+                        const url = this._getMaterialAssetUrl(assetMapping[i].path);
                         if (url) {
                             asset = this.system.app.assets.getByUrl(url);
                         }

@@ -3,8 +3,10 @@
 /docs
 node_modules/
 .idea/
+.vscode/
 npm-debug.log
 .java-version
 release.py
 examples/node_modules
 examples/dist
+/scripts/parsers/vox-parser.js

@@ -13,9 +13,6 @@ const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
 function rawToValue(app, args, value, old) {
-    var i;
-    var j;
-
     switch (args.type) {
         case 'boolean':
             return !!value;
@@ -23,43 +20,44 @@ function rawToValue(app, args, value, old) {
             if (typeof value === 'number') {
                 return value;
             } else if (typeof value === 'string') {
-                var v = parseInt(value, 10);
+                const v = parseInt(value, 10);
                 if (isNaN(v)) return null;
                 return v;
             } else if (typeof value === 'boolean') {
                 return 0 + value;
             }
             return null;
-        case 'json':
-            var result = {};
+        case 'json': {
+            const result = {};
 
             if (Array.isArray(args.schema)) {
                 if (!value || typeof value !== 'object') {
                     value = {};
                 }
 
-                for (i = 0; i < args.schema.length; i++) {
-                    var field = args.schema[i];
+                for (let i = 0; i < args.schema.length; i++) {
+                    const field = args.schema[i];
                     if (!field.name) continue;
 
                     if (field.array) {
                         result[field.name] = [];
 
-                        var arr = Array.isArray(value[field.name]) ? value[field.name] : [];
+                        const arr = Array.isArray(value[field.name]) ? value[field.name] : [];
 
-                        for (j = 0; j < arr.length; j++) {
+                        for (let j = 0; j < arr.length; j++) {
                             result[field.name].push(rawToValue(app, field, arr[j]));
                         }
                     } else {
                         // use the value of the field as it's passed into rawToValue otherwise
                         // use the default field value
-                        var val = value.hasOwnProperty(field.name) ? value[field.name] : field.default;
+                        const val = value.hasOwnProperty(field.name) ? value[field.name] : field.default;
                         result[field.name] = rawToValue(app, field, val);
                     }
                 }
             }
 
             return result;
+        }
         case 'asset':
             if (value instanceof Asset) {
                 return value;
@@ -85,7 +83,7 @@ function rawToValue(app, args, value, old) {
                 }
                 return value.clone();
             } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
-                for (i = 0; i < value.length; i++) {
+                for (let i = 0; i < value.length; i++) {
                     if (typeof value[i] !== 'number')
                         return null;
                 }
@@ -107,9 +105,9 @@ function rawToValue(app, args, value, old) {
             return null;
         case 'vec2':
         case 'vec3':
-        case 'vec4':
-            var len = parseInt(args.type.slice(3), 10);
-            var vecType = vecLookup[len];
+        case 'vec4': {
+            const len = parseInt(args.type.slice(3), 10);
+            const vecType = vecLookup[len];
 
             if (value instanceof vecType) {
                 if (old instanceof vecType) {
@@ -118,25 +116,26 @@ function rawToValue(app, args, value, old) {
                 }
                 return value.clone();
             } else if (value instanceof Array && value.length === len) {
-                for (i = 0; i < value.length; i++) {
+                for (let i = 0; i < value.length; i++) {
                     if (typeof value[i] !== 'number')
                         return null;
                 }
                 if (!old) old = new vecType();
 
-                for (i = 0; i < len; i++)
+                for (let i = 0; i < len; i++)
                     old[components[i]] = value[i];
 
                 return old;
             }
             return null;
+        }
         case 'curve':
             if (value) {
-                var curve;
+                let curve;
                 if (value instanceof Curve || value instanceof CurveSet) {
                     curve = value.clone();
                 } else {
-                    var CurveType = value.keys[0] instanceof Array ? CurveSet : Curve;
+                    const CurveType = value.keys[0] instanceof Array ? CurveSet : Curve;
                     curve = new CurveType(value.keys);
                     curve.type = value.type;
                 }
@@ -239,12 +238,12 @@ class ScriptAttributes {
     add(name, args) {
         if (this.index[name]) {
             // #if _DEBUG
-            console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
+            console.warn(`attribute '${name}' is already defined for script type '${this.scriptType.name}'`);
             // #endif
             return;
         } else if (ScriptAttributes.reservedNames.has(name)) {
             // #if _DEBUG
-            console.warn('attribute \'' + name + '\' is a reserved attribute name');
+            console.warn(`attribute '${name}' is a reserved attribute name`);
             // #endif
             return;
         }
@@ -256,12 +255,12 @@ class ScriptAttributes {
                 return this.__attributes[name];
             },
             set: function (raw) {
-                var evt = 'attr';
-                var evtName = 'attr:' + name;
+                const evt = 'attr';
+                const evtName = 'attr:' + name;
 
-                var old = this.__attributes[name];
+                const old = this.__attributes[name];
                 // keep copy of old for the event below
-                var oldCopy = old;
+                let oldCopy = old;
                 // json types might have a 'clone' field in their
                 // schema so make sure it's not that
                 if (old && args.type !== 'json' && old.clone) {
@@ -276,9 +275,7 @@ class ScriptAttributes {
                 if (args.array) {
                     this.__attributes[name] = [];
                     if (raw) {
-                        var i;
-                        var len;
-                        for (i = 0, len = raw.length; i < len; i++) {
+                        for (let i = 0, len = raw.length; i < len; i++) {
                             this.__attributes[name].push(rawToValue(this.app, args, raw[i], old ? old[i] : null));
                         }
                     }

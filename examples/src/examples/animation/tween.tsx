@@ -15,7 +15,6 @@ class TweenExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset, script: pc.Asset }): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -122,7 +121,7 @@ class TweenExample extends Example {
         app.root.addChild(camera);
 
         app.on('update', function () {
-            app.renderLines(points, colors);
+            app.drawLines(points, colors);
         });
     }
 }

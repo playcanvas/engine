@@ -5,7 +5,6 @@ class XRPickingExample extends Example {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
@@ -161,7 +160,7 @@ class XRPickingExample extends Example {
                     // @ts-ignore engine-tsd
                     tmpVec.scale(100).add(inputSource.getOrigin());
 
-                    app.renderLine(inputSource.getOrigin(), tmpVec, lineColor);
+                    app.drawLine(inputSource.getOrigin(), tmpVec, lineColor);
                 }
             });
         } else {

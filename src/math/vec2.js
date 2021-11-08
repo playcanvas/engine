@@ -593,7 +593,7 @@ class Vec2 {
      * console.log(v.toString());
      */
     toString() {
-        return '[' + this.x + ', ' + this.y + ']';
+        return `[${this.x}, ${this.y}]`;
     }
 
     /**

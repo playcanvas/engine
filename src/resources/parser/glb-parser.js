@@ -18,7 +18,8 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
     PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP, PRIMITIVE_LINES, PRIMITIVE_POINTS, PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
@@ -50,6 +51,8 @@ import { AnimBinder } from '../../anim/binder/anim-binder.js';
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
 import { Asset } from '../../asset/asset.js';
+
+import { GlbContainerResource } from './glb-container-resource.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -144,18 +147,24 @@ const gltfToEngineSemanticMap = {
     'JOINTS_0': SEMANTIC_BLENDINDICES,
     'WEIGHTS_0': SEMANTIC_BLENDWEIGHT,
     'TEXCOORD_0': SEMANTIC_TEXCOORD0,
-    'TEXCOORD_1': SEMANTIC_TEXCOORD1
+    'TEXCOORD_1': SEMANTIC_TEXCOORD1,
+    'TEXCOORD_2': SEMANTIC_TEXCOORD2,
+    'TEXCOORD_3': SEMANTIC_TEXCOORD3,
+    'TEXCOORD_4': SEMANTIC_TEXCOORD4,
+    'TEXCOORD_5': SEMANTIC_TEXCOORD5,
+    'TEXCOORD_6': SEMANTIC_TEXCOORD6,
+    'TEXCOORD_7': SEMANTIC_TEXCOORD7
 };
 
 // returns a function for dequantizing the data type
 const getDequantizeFunc = (srcType) => {
     // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
     switch (srcType) {
-        case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
-        case TYPE_UINT8: return (x) => x / 255.0;
-        case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
-        case TYPE_UINT16: return (x) => x / 65535.0;
-        default: return (x) => x;
+        case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
+        case TYPE_UINT8: return x => x / 255.0;
+        case TYPE_INT16: return x => Math.max(x / 32767.0, -1.0);
+        case TYPE_UINT16: return x => x / 65535.0;
+        default: return x => x;
     }
 };
 
@@ -1879,7 +1888,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         }
 
         // create and load the asset
-        const asset = new Asset(name, 'texture',  file, null, options);
+        const asset = new Asset(name, 'texture', file, null, options);
         asset.on('load', onLoad);
         asset.on('error', callback);
         registry.add(asset);
@@ -2087,7 +2096,7 @@ const parseGltf = function (gltfChunk, callback) {
 
     // check gltf version
     if (gltf.asset && gltf.asset.version && parseFloat(gltf.asset.version) < 2) {
-        callback("Invalid gltf version. Expected version 2.0 or above but found version '" + gltf.asset.version + "'.");
+        callback(`Invalid gltf version. Expected version 2.0 or above but found version '${gltf.asset.version}'.`);
         return;
     }
 
@@ -2306,6 +2315,49 @@ class GlbParser {
         });
 
         return result;
+    }
+
+    constructor(device, assets, defaultMaterial, maxRetries) {
+        this._device = device;
+        this._assets = assets;
+        this._defaultMaterial = defaultMaterial;
+        this._maxRetries = maxRetries;
+    }
+
+    _getUrlWithoutParams(url) {
+        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+    }
+
+    load(url, callback, asset) {
+        Asset.fetchArrayBuffer(url.load, (err, result) => {
+            if (err) {
+                callback(err);
+            } else {
+                GlbParser.parseAsync(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
+                        }
+                    });
+            }
+        }, asset, this._maxRetries);
+    }
+
+    open(url, data, asset) {
+        return data;
+    }
+
+    patch(asset, assets) {
+
     }
 }
 

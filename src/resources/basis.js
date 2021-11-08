@@ -18,7 +18,7 @@ const getCompressionFormats = (device) => {
 const prepareWorkerModules = (config, callback) => {
     const getWorkerBlob = () => {
         const code = '(' + BasisWorker.toString() + ')()\n\n';
-        return new File([code], 'basis_worker.js', { type: 'application/javascript' });
+        return new Blob([code], { type: 'application/javascript' });
     };
 
     const wasmSupported = () => {
@@ -63,8 +63,8 @@ const prepareWorkerModules = (config, callback) => {
 
         const compileManual = () => {
             fetchPromise
-                .then((result) => result.arrayBuffer())
-                .then((buffer) => WebAssembly.compile(buffer))
+                .then(result => result.arrayBuffer())
+                .then(buffer => WebAssembly.compile(buffer))
                 .then((module_) => {
                     if (basisCode) {
                         sendResponse(basisCode, module_);

@@ -10,7 +10,7 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
-var keyA, keyB, sortPos, sortDir;
+let keyA, keyB, sortPos, sortDir;
 
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -33,14 +33,14 @@ function sortFrontToBack(drawCallA, drawCallB) {
     return drawCallA.zdist - drawCallB.zdist;
 }
 
-var sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
+const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
 function sortLights(lightA, lightB) {
     return lightB.key - lightA.key;
 }
 
 // Layers
-var layerCounter = 0;
+let layerCounter = 0;
 
 class VisibleInstanceList {
     constructor() {
@@ -102,29 +102,29 @@ class InstanceList {
  * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
  * Possible values are:
  *
- * * {@link SORTMODE_NONE}
- * * {@link SORTMODE_MANUAL}
- * * {@link SORTMODE_MATERIALMESH}
- * * {@link SORTMODE_BACK2FRONT}
- * * {@link SORTMODE_FRONT2BACK}
+ * - {@link SORTMODE_NONE}
+ * - {@link SORTMODE_MANUAL}
+ * - {@link SORTMODE_MATERIALMESH}
+ * - {@link SORTMODE_BACK2FRONT}
+ * - {@link SORTMODE_FRONT2BACK}
  *
  * Defaults to {@link SORTMODE_MATERIALMESH}.
  * @property {number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
  * Possible values are:
  *
- * * {@link SORTMODE_NONE}
- * * {@link SORTMODE_MANUAL}
- * * {@link SORTMODE_MATERIALMESH}
- * * {@link SORTMODE_BACK2FRONT}
- * * {@link SORTMODE_FRONT2BACK}
+ * - {@link SORTMODE_NONE}
+ * - {@link SORTMODE_MANUAL}
+ * - {@link SORTMODE_MATERIALMESH}
+ * - {@link SORTMODE_BACK2FRONT}
+ * - {@link SORTMODE_FRONT2BACK}
  *
  * Defaults to {@link SORTMODE_BACK2FRONT}.
  * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
  *
- * * {@link SHADER_FORWARD}
- * * {@link SHADER_FORWARDHDR}
- * * {@link SHADER_DEPTH}
- * * Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader} to apply shader modifications based on this value.
+ * - {@link SHADER_FORWARD}
+ * - {@link SHADER_FORWARDHDR}
+ * - {@link SHADER_DEPTH}
+ * - Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader} to apply shader modifications based on this value.
  *
  * Defaults to {@link SHADER_FORWARD}.
  * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
@@ -139,16 +139,16 @@ class InstanceList {
  * @property {Function} onEnable Custom function that is called after the layer has been enabled.
  * This happens when:
  *
- * * The layer is created with {@link Layer#enabled} set to true (which is the default value).
- * * {@link Layer#enabled} was changed from false to true
- * * {@link Layer#incrementCounter} was called and incremented the counter above zero.
+ * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
+ * - {@link Layer#enabled} was changed from false to true
+ * - {@link Layer#incrementCounter} was called and incremented the counter above zero.
  *
  * Useful for allocating resources this layer will use (e.g. creating render targets).
  * @property {Function} onDisable Custom function that is called after the layer has been disabled.
  * This happens when:
  *
- * * {@link Layer#enabled} was changed from true to false
- * * {@link Layer#decrementCounter} was called and set the counter to zero.
+ * - {@link Layer#enabled} was changed from true to false
+ * - {@link Layer#decrementCounter} was called and set the counter to zero.
  *
  * @property {Function} onPreCull Custom function that is called before visibility culling is performed for this layer.
  * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it
@@ -384,19 +384,13 @@ class Layer {
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
-        var sceneShaderVer = this._shaderVersion;
+        const sceneShaderVer = this._shaderVersion;
 
-        var m, arr, mat;
-        var casters = this.shadowCasters;
-        for (var i = 0; i < meshInstances.length; i++) {
-            m = meshInstances[i];
-
-            mat = m.material;
-            if (mat.blendType === BLEND_NONE) {
-                arr = this.opaqueMeshInstances;
-            } else {
-                arr = this.transparentMeshInstances;
-            }
+        const casters = this.shadowCasters;
+        for (let i = 0; i < meshInstances.length; i++) {
+            const m = meshInstances[i];
+            const mat = m.material;
+            const arr = mat.blendType === BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
 
             // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
             // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
@@ -420,12 +414,11 @@ class Layer {
     // internal function to remove meshInstance from an array
     removeMeshInstanceFromArray(m, arr) {
 
-        var drawCall;
-        var spliceOffset = -1;
-        var spliceCount = 0;
-        var len = arr.length;
-        for (var j = 0; j < len; j++) {
-            drawCall = arr[j];
+        let spliceOffset = -1;
+        let spliceCount = 0;
+        const len = arr.length;
+        for (let j = 0; j < len; j++) {
+            const drawCall = arr[j];
             if (drawCall === m) {
                 spliceOffset = j;
                 spliceCount = 1;
@@ -453,13 +446,12 @@ class Layer {
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
 
-        var j, m;
-        var opaque = this.opaqueMeshInstances;
-        var transparent = this.transparentMeshInstances;
-        var casters = this.shadowCasters;
+        const opaque = this.opaqueMeshInstances;
+        const transparent = this.transparentMeshInstances;
+        const casters = this.shadowCasters;
 
-        for (var i = 0; i < meshInstances.length; i++) {
-            m = meshInstances[i];
+        for (let i = 0; i < meshInstances.length; i++) {
+            const m = meshInstances[i];
 
             // remove from opaque
             this.removeMeshInstanceFromArray(m, opaque);
@@ -469,7 +461,7 @@ class Layer {
 
             // remove from casters
             if (!skipShadowCasters) {
-                j = casters.indexOf(m);
+                const j = casters.indexOf(m);
                 if (j >= 0)
                     casters.splice(j, 1);
             }
@@ -563,10 +555,9 @@ class Layer {
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
-        var m;
-        var arr = this.shadowCasters;
-        for (var i = 0; i < meshInstances.length; i++) {
-            m = meshInstances[i];
+        const arr = this.shadowCasters;
+        for (let i = 0; i < meshInstances.length; i++) {
+            const m = meshInstances[i];
             if (!m.castShadow) continue;
             if (arr.indexOf(m) < 0) arr.push(m);
         }
@@ -580,10 +571,9 @@ class Layer {
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
-        var id;
-        var arr = this.shadowCasters;
-        for (var i = 0; i < meshInstances.length; i++) {
-            id = arr.indexOf(meshInstances[i]);
+        const arr = this.shadowCasters;
+        for (let i = 0; i < meshInstances.length; i++) {
+            const id = arr.indexOf(meshInstances[i]);
             if (id >= 0) arr.splice(id, 1);
         }
         this._dirtyLights = true;
@@ -594,10 +584,10 @@ class Layer {
         // order of lights shouldn't matter
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
-            var str = "";
-            var strStatic = "";
+            let str = "";
+            let strStatic = "";
 
-            for (var i = 0; i < this._lights.length; i++) {
+            for (let i = 0; i < this._lights.length; i++) {
                 if (this._lights[i].isStatic) {
                     strStatic += this._lights[i].key;
                 } else {
@@ -642,7 +632,7 @@ class Layer {
      * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
-        var index = this.cameras.indexOf(camera);
+        const index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
             this._dirtyCameras = true;
@@ -663,30 +653,28 @@ class Layer {
     }
 
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
-        var i, drawCall, meshPos;
-        var tempx, tempy, tempz;
-        for (i = 0; i < drawCallsCount; i++) {
-            drawCall = drawCalls[i];
+        for (let i = 0; i < drawCallsCount; i++) {
+            const drawCall = drawCalls[i];
             if (drawCall.command) continue;
             if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
             if (drawCall.calculateSortDistance) {
                 drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
                 continue;
             }
-            meshPos = drawCall.aabb.center;
-            tempx = meshPos.x - camPos.x;
-            tempy = meshPos.y - camPos.y;
-            tempz = meshPos.z - camPos.z;
+            const meshPos = drawCall.aabb.center;
+            const tempx = meshPos.x - camPos.x;
+            const tempy = meshPos.y - camPos.y;
+            const tempz = meshPos.z - camPos.z;
             drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
         }
     }
 
     _sortVisible(transparent, cameraNode, cameraPass) {
-        var objects = this.instances;
-        var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
+        const objects = this.instances;
+        const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === SORTMODE_NONE) return;
 
-        var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+        const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
         if (sortMode === SORTMODE_CUSTOM) {
             sortPos = cameraNode.getPosition();

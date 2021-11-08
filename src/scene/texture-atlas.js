@@ -52,7 +52,7 @@ class TextureAtlas extends EventHandler {
      * });
      */
     setFrame(key, data) {
-        var frame = this._frames[key];
+        let frame = this._frames[key];
         if (!frame) {
             frame = {
                 rect: data.rect.clone(),
@@ -77,7 +77,7 @@ class TextureAtlas extends EventHandler {
      * atlas.removeFrame('1');
      */
     removeFrame(key) {
-        var frame = this._frames[key];
+        const frame = this._frames[key];
         if (frame) {
             delete this._frames[key];
             this.fire('remove:frame', key.toString(), frame);

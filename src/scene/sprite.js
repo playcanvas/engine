@@ -32,9 +32,9 @@ const spriteIndices = [
  * Defaults to 1.
  * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
  *
- * * {@link SPRITE_RENDERMODE_SIMPLE}
- * * {@link SPRITE_RENDERMODE_SLICED}
- * * {@link SPRITE_RENDERMODE_TILED}
+ * - {@link SPRITE_RENDERMODE_SIMPLE}
+ * - {@link SPRITE_RENDERMODE_SLICED}
+ * - {@link SPRITE_RENDERMODE_TILED}
  *
  * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
  * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
@@ -44,9 +44,9 @@ const spriteIndices = [
  * @property {TextureAtlas} atlas The texture atlas.
  * @property {number} renderMode The rendering mode of the sprite. Can be:
  *
- * * {@link SPRITE_RENDERMODE_SIMPLE}
- * * {@link SPRITE_RENDERMODE_SLICED}
- * * {@link SPRITE_RENDERMODE_TILED}
+ * - {@link SPRITE_RENDERMODE_SIMPLE}
+ * - {@link SPRITE_RENDERMODE_SLICED}
+ * - {@link SPRITE_RENDERMODE_TILED}
  *
  * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
  * @property {Mesh[]} meshes An array that contains a mesh for each frame.
@@ -74,26 +74,25 @@ class Sprite extends EventHandler {
     }
 
     _createMeshes() {
-        var i, len;
-
         // destroy old meshes
-        for (i = 0, len = this._meshes.length; i < len; i++) {
-            var mesh = this._meshes[i];
+        const len = this._meshes.length;
+        for (let i = 0; i < len; i++) {
+            const mesh = this._meshes[i];
             if (mesh) {
                 mesh.destroy();
             }
         }
 
         // clear meshes array
-        var count = this._frameKeys.length;
+        const count = this._frameKeys.length;
         this._meshes = new Array(count);
 
         // get function to create meshes
-        var createMeshFunc = (this.renderMode === SPRITE_RENDERMODE_SLICED || this._renderMode === SPRITE_RENDERMODE_TILED ? this._create9SliceMesh : this._createSimpleMesh);
+        const createMeshFunc = (this.renderMode === SPRITE_RENDERMODE_SLICED || this._renderMode === SPRITE_RENDERMODE_TILED ? this._create9SliceMesh : this._createSimpleMesh);
 
         // create a mesh for each frame in the sprite
-        for (i = 0; i < count; i++) {
-            var frame = this._atlas.frames[this._frameKeys[i]];
+        for (let i = 0; i < count; i++) {
+            const frame = this._atlas.frames[this._frameKeys[i]];
             this._meshes[i] = frame ? createMeshFunc.call(this, frame) : null;
         }
 
@@ -101,17 +100,17 @@ class Sprite extends EventHandler {
     }
 
     _createSimpleMesh(frame) {
-        var rect = frame.rect;
-        var texWidth = this._atlas.texture.width;
-        var texHeight = this._atlas.texture.height;
+        const rect = frame.rect;
+        const texWidth = this._atlas.texture.width;
+        const texHeight = this._atlas.texture.height;
 
-        var w = rect.z / this._pixelsPerUnit;
-        var h = rect.w / this._pixelsPerUnit;
-        var hp = frame.pivot.x;
-        var vp = frame.pivot.y;
+        const w = rect.z / this._pixelsPerUnit;
+        const h = rect.w / this._pixelsPerUnit;
+        const hp = frame.pivot.x;
+        const vp = frame.pivot.y;
 
         // positions based on pivot and size of frame
-        var positions = [
+        const positions = [
             -hp * w,      -vp * h,      0,
             (1 - hp) * w, -vp * h,      0,
             (1 - hp) * w, (1 - vp) * h, 0,
@@ -120,19 +119,19 @@ class Sprite extends EventHandler {
 
         // uvs based on frame rect
         // uvs
-        var lu = rect.x / texWidth;
-        var bv = 1.0 - rect.y / texHeight;
-        var ru = (rect.x + rect.z) / texWidth;
-        var tv = 1.0 - (rect.y + rect.w) / texHeight;
+        const lu = rect.x / texWidth;
+        const bv = 1.0 - rect.y / texHeight;
+        const ru = (rect.x + rect.z) / texWidth;
+        const tv = 1.0 - (rect.y + rect.w) / texHeight;
 
-        var uvs = [
+        const uvs = [
             lu, bv,
             ru, bv,
             ru, tv,
             lu, tv
         ];
 
-        var mesh = createMesh(this._device, positions, {
+        const mesh = createMesh(this._device, positions, {
             uvs: uvs,
             normals: spriteNormals,
             indices: spriteIndices
@@ -143,17 +142,15 @@ class Sprite extends EventHandler {
 
     _create9SliceMesh() {
         // Check the supplied options and provide defaults for unspecified ones
-        var he = Vec2.ONE;
-        var ws = 3;
-        var ls = 3;
+        const he = Vec2.ONE;
+        const ws = 3;
+        const ls = 3;
 
         // Variable declarations
-        var i, j;
-        var x, y, z, u, v;
-        var positions = [];
-        var normals = [];
-        var uvs = [];
-        var indices = [];
+        const positions = [];
+        const normals = [];
+        const uvs = [];
+        const indices = [];
 
         // Generate plane as follows (assigned UVs denoted at corners):
         // (0,1)x---------x(1,1)
@@ -164,17 +161,17 @@ class Sprite extends EventHandler {
         //      |    Z    |
         // (0,0)x---------x(1,0)
         // width
-        var vcounter = 0;
-        for (i = 0; i <= ws; i++) {
-            u = (i === 0 || i === ws) ? 0 : 1;
+        let vcounter = 0;
+        for (let i = 0; i <= ws; i++) {
+            const u = (i === 0 || i === ws) ? 0 : 1;
 
-            for (j = 0; j <= ls; j++) {
+            for (let j = 0; j <= ls; j++) {
 
-                x = -he.x + 2.0 * he.x * (i <= 1 ? 0 : 3) / ws;
-                y = 0.0;
-                z = -(-he.y + 2.0 * he.y * (j <= 1 ? 0 : 3) / ls);
+                const x = -he.x + 2.0 * he.x * (i <= 1 ? 0 : 3) / ws;
+                const y = 0.0;
+                const z = -(-he.y + 2.0 * he.y * (j <= 1 ? 0 : 3) / ls);
 
-                v = (j === 0 || j === ls) ? 0 : 1;
+                const v = (j === 0 || j === ls) ? 0 : 1;
 
                 positions.push(-x, y, z);
                 normals.push(0.0, 1.0, 0.0);
@@ -189,7 +186,7 @@ class Sprite extends EventHandler {
             }
         }
 
-        var options = {
+        const options = {
             normals: normals, // crashes without normals on mac?
             uvs: uvs,
             indices: indices
@@ -207,7 +204,7 @@ class Sprite extends EventHandler {
     }
 
     _onFrameChanged(frameKey, frame) {
-        var idx = this._frameKeys.indexOf(frameKey);
+        const idx = this._frameKeys.indexOf(frameKey);
         if (idx < 0) return;
 
         if (frame) {
@@ -224,7 +221,7 @@ class Sprite extends EventHandler {
     }
 
     _onFrameRemoved(frameKey) {
-        var idx = this._frameKeys.indexOf(frameKey);
+        const idx = this._frameKeys.indexOf(frameKey);
         if (idx < 0) return;
 
         this._meshes[idx] = null;
@@ -334,7 +331,7 @@ class Sprite extends EventHandler {
         if (this._renderMode === value)
             return;
 
-        var prev = this._renderMode;
+        const prev = this._renderMode;
         this._renderMode = value;
         this.fire('set:renderMode', value);
 

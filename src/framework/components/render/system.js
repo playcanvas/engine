@@ -63,7 +63,7 @@ class RenderComponentSystem extends ComponentSystem {
             _data.layers = _data.layers.slice(0);
         }
 
-        for (var i = 0; i < _properties.length; i++) {
+        for (let i = 0; i < _properties.length; i++) {
             if (_data.hasOwnProperty(_properties[i])) {
                 component[_properties[i]] = _data[_properties[i]];
             }
@@ -92,7 +92,7 @@ class RenderComponentSystem extends ComponentSystem {
 
         // clone mesh instances
         const srcMeshInstances = entity.render.meshInstances;
-        const meshes = srcMeshInstances.map((mi) => mi.mesh);
+        const meshes = srcMeshInstances.map(mi => mi.mesh);
         component._onSetMeshes(meshes);
 
         // assign materials
