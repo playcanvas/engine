@@ -559,7 +559,7 @@ class Application extends EventHandler {
 
         this._inTools = false;
 
-        this._skyboxLast = 0;
+        this._skyboxAsset = null;
 
         this._scriptPrefix = options.scriptPrefix || '';
 
@@ -1551,38 +1551,37 @@ class Application extends EventHandler {
      * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
      */
     setSkybox(asset) {
-        if (asset) {
-            if (this._skyboxLast === asset.id) {
-                if (this.scene.skyboxMip === 0 && !asset.loadFaces) {
-                    this._skyboxLoad(asset);
-                } else {
-                    this._onSkyboxChange(asset);
+        if (asset !== this._skyboxAsset) {
+            const onSkyboxRemoved = () => {
+                this.setSkybox(null);
+            };
+
+            const onSkyboxChanged = () => {
+                this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
+            };
+
+            // cleanup previous asset
+            if (this._skyboxAsset) {
+                this.assets.off('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
+                this.assets.off('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this._skyboxAsset.off('change', onSkyboxChanged, this);
+            }
+
+            // set new asset
+            this._skyboxAsset = asset;
+            if (this._skyboxAsset) {
+                this.assets.on('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
+                this.assets.once('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this._skyboxAsset.on('change', onSkyboxChanged, this);
+
+                if (this.scene.skyboxMip === 0 && !this._skyboxAsset.loadFaces) {
+                    this._skyboxAsset.loadFaces = true;
                 }
-                return;
+
+                this.assets.load(this._skyboxAsset);
             }
 
-            if (this._skyboxLast) {
-                this.assets.off('add:' + this._skyboxLast, this.setSkybox, this);
-                this.assets.off('load:' + this._skyboxLast, this._onSkyboxChange, this);
-                this.assets.off('remove:' + this._skyboxLast, this._skyboxRemove, this);
-            }
-
-            this._skyboxLast = asset.id;
-
-            this.assets.on('load:' + asset.id, this._onSkyboxChange, this);
-            this.assets.once('remove:' + asset.id, this._skyboxRemove, this);
-
-            if (asset.resource)
-                this.scene.setSkybox(asset.resources);
-
-            this._skyboxLoad(asset);
-        } else {
-            if (!this._skyboxLast)
-                return;
-
-            this._skyboxRemove({
-                id: this._skyboxLast
-            });
+            onSkyboxChanged();
         }
     }
 
@@ -1611,30 +1610,6 @@ class Application extends EventHandler {
             this.vr.destroy();
             this.vr = null;
         }
-    }
-
-    _onSkyboxChange(asset) {
-        this.scene.setSkybox(asset.resources);
-    }
-
-    _skyboxLoad(asset) {
-        if (this.scene.skyboxMip === 0)
-            asset.loadFaces = true;
-
-        this.assets.load(asset);
-
-        this._onSkyboxChange(asset);
-    }
-
-    _skyboxRemove(asset) {
-        if (!this._skyboxLast)
-            return;
-
-        this.assets.off('add:' + asset.id, this.setSkybox, this);
-        this.assets.off('load:' + asset.id, this._onSkyboxChange, this);
-        this.assets.off('remove:' + asset.id, this._skyboxRemove, this);
-        this.scene.setSkybox(null);
-        this._skyboxLast = null;
     }
 
     _firstBake() {
