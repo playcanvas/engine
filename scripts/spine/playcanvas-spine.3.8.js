@@ -8826,7 +8826,7 @@ pc.extend(pc, function () {
         ];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        pc.ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     };
     SpineComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     SpineComponentSystem.prototype.constructor = SpineComponentSystem;
@@ -8894,7 +8894,7 @@ pc.extend(pc, function () {
             var textureData = {};
             for (var i = 0, n = this.textureAssets.length; i < n; i++) {
                 var asset = this.system.app.assets.get(this.textureAssets[i]);
-                var path = asset.file ? asset.file.filename : null;
+                var path = asset.name ? asset.name : (asset.file ? asset.file.filename : null);
                 // Fallback if filename doesn't exist
                 if (!path) {
                     path = pc.path.getBasename(asset.file.url);
