@@ -88,7 +88,7 @@ class SingleContactResult {
  * @property {Vec3} point The point on the entity where the contact occurred, in world space.
  * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world space.
  * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
- * @property {Vec3} impulse It is the total accumulated impulse applied by the constraint solver during the last substep. Describes how hard two objects collide.
+ * @property {number} impulse The total accumulated impulse applied by the constraint solver during the last substep. Describes how hard two objects collide.
  */
 class ContactPoint {
     constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
