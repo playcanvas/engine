@@ -79,14 +79,7 @@ class AnimComponentLayer {
      * });
      */
     assignMask(mask) {
-        let layerMask;
-        if (typeof mask === 'object') {
-            layerMask = {};
-            Object.keys(mask).forEach((maskKey) => {
-                layerMask[decodeURI(maskKey)] = mask[maskKey];
-            });
-        }
-        if (this._controller.assignMask(layerMask)) {
+        if (this._controller.assignMask(mask)) {
             this._component.rebind();
         }
     }
