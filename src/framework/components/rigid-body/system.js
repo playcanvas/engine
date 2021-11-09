@@ -54,6 +54,7 @@ class SingleContactResult {
         if (arguments.length === 0) {
             this.a = null;
             this.b = null;
+            this.impulse = 0;
             this.localPointA = new Vec3();
             this.localPointB = new Vec3();
             this.pointA = new Vec3();
@@ -62,6 +63,7 @@ class SingleContactResult {
         } else {
             this.a = a;
             this.b = b;
+            this.impulse = contactPoint.impulse;
             this.localPointA = contactPoint.localPoint;
             this.localPointB = contactPoint.localPointOther;
             this.pointA = contactPoint.point;
@@ -86,14 +88,16 @@ class SingleContactResult {
  * @property {Vec3} point The point on the entity where the contact occurred, in world space.
  * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world space.
  * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
+ * @property {Vec3} impulse It is the total accumulated impulse applied by the constraint solver during the last substep. Describes how hard two objects collide.
  */
 class ContactPoint {
-    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3()) {
+    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
         this.localPoint = localPoint;
         this.localPointOther = localPointOther;
         this.point = point;
         this.pointOther = pointOther;
         this.normal = normal;
+        this.impulse = impulse;
     }
 }
 
@@ -439,6 +443,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
         contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        contact.impulse = contactPoint.getAppliedImpulse();
         return contact;
     }
 
@@ -455,6 +460,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.pointOther.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
         contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        contact.impulse = contactPoint.getAppliedImpulse();
         return contact;
     }
 
@@ -468,6 +474,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         result.pointA = contactPoint.point;
         result.pointB = contactPoint.pointOther;
         result.normal = contactPoint.normal;
+        result.impulse = contactPoint.impulse;
 
         return result;
     }
