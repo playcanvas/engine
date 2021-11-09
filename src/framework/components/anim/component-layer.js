@@ -67,7 +67,7 @@ class AnimComponentLayer {
      * @function
      * @name AnimComponentLayer#assignMask
      * @description Add a mask to this layer.
-     * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask in the layer will be removed. Any special characters in mask paths will be unescaped.
+     * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask in the layer will be removed.
      * @example
      * entity.anim.baseLayer.assignMask({
      *     // include the spine of the current model and all of its children
@@ -83,7 +83,7 @@ class AnimComponentLayer {
         if (typeof mask === 'object') {
             layerMask = {};
             Object.keys(mask).forEach((maskKey) => {
-                layerMask[unescape(maskKey)] = mask[maskKey];
+                layerMask[decodeURI(maskKey)] = mask[maskKey];
             });
         }
         if (this._controller.assignMask(layerMask)) {
