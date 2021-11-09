@@ -59,7 +59,12 @@ class AnimComponentSystem extends ComponentSystem {
         if (data.masks) {
             Object.keys(data.masks).forEach((key) => {
                 if (component.layers[key]) {
-                    component.layers[key].assignMask(data.masks[key].mask);
+                    const maskData = data.masks[key].mask;
+                    const mask = {};
+                    Object.keys(maskData).forEach((maskKey) => {
+                        mask[decodeURI(maskKey)] = maskData[maskKey];
+                    });
+                    component.layers[key].assignMask(mask);
                 }
             });
         }
