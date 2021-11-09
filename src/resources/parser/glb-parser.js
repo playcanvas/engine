@@ -1647,7 +1647,7 @@ const createScenes = function (gltf, nodes) {
     const count = gltf.scenes.length;
 
     // if there's a single scene with a single node in it, don't create wrapper nodes
-    if (count === 1 && gltf.scenes[0].nodes.length === 1) {
+    if (count === 1 && gltf.scenes[0].nodes?.length === 1) {
         const nodeIndex = gltf.scenes[0].nodes[0];
         scenes.push(nodes[nodeIndex]);
     } else {
@@ -1655,14 +1655,14 @@ const createScenes = function (gltf, nodes) {
         // create root node per scene
         for (let i = 0; i < count; i++) {
             const scene = gltf.scenes[i];
-            const sceneRoot = new GraphNode(scene.name);
-
-            for (let n = 0; n < scene.nodes.length; n++) {
-                const childNode = nodes[scene.nodes[n]];
-                sceneRoot.addChild(childNode);
+            if (scene.nodes) {
+                const sceneRoot = new GraphNode(scene.name);
+                for (let n = 0; n < scene.nodes.length; n++) {
+                    const childNode = nodes[scene.nodes[n]];
+                    sceneRoot.addChild(childNode);
+                }
+                scenes.push(sceneRoot);
             }
-
-            scenes.push(sceneRoot);
         }
     }
 
