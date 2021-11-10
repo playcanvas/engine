@@ -23,7 +23,7 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
+    SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
@@ -118,7 +118,6 @@ import {
     getApplication,
     setApplication
 } from './globals.js';
-import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { DefaultMaterial } from '../scene/materials/default-material.js';
 
 // Mini-object used to measure progress of loading sets
