@@ -1103,6 +1103,7 @@ class Application extends EventHandler {
         this.fire('initialize');
 
         this.systems.fire('postInitialize', this.root);
+        this.systems.fire('postPostInitialize', this.root);
         this.fire('postinitialize');
 
         this.tick();
