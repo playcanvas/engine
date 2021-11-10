@@ -9,13 +9,14 @@ import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, SPECULAR_BLINN, TONEMAP_LINEAR } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-import { StandardMaterial } from './materials/standard-material.js';
+
+import { getApplication } from '../framework/globals.js';
 
 /**
  * @class
@@ -24,6 +25,7 @@ import { StandardMaterial } from './materials/standard-material.js';
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
  * @description Creates a new Scene.
+ * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this scene. If it is not provided, a device is obtained from the {@link Application}.
  * @property {Color} ambientLight The color of the scene's ambient light. Defaults
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
@@ -103,8 +105,10 @@ import { StandardMaterial } from './materials/standard-material.js';
  * child to the Application root entity.
  */
 class Scene extends EventHandler {
-    constructor() {
+    constructor(graphicsDevice) {
         super();
+
+        this.device = graphicsDevice || getApplication().graphicsDevice;
 
         this.root = null;
 
@@ -173,19 +177,16 @@ class Scene extends EventHandler {
 
         // backwards compatibility only
         this._models = [];
-
-        // default material used in case no other material is available
-        this.defaultMaterial = new StandardMaterial();
-        this.defaultMaterial.name = "Default Material";
-        this.defaultMaterial.shadingModel = SPECULAR_BLINN;
     }
 
     destroy() {
         this._resetSkyboxModel();
         this.root = null;
-        this.defaultMaterial.destroy();
-        this.defaultMaterial = null;
         this.off();
+    }
+
+    get defaultMaterial() {
+        return this.device.defaultMaterial;
     }
 
     get fog() {

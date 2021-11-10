@@ -685,6 +685,9 @@ class GraphicsDevice extends EventHandler {
         this.grabPass = new GrabPass(this, options.alpha);
         this.grabPass.create();
 
+        // default material used in case no other material is available - assigned and owned by the application
+        this.defaultMaterial = null;
+
         VertexFormat.init(this);
 
         // #if _DEBUG
@@ -721,6 +724,7 @@ class GraphicsDevice extends EventHandler {
         this.scope = null;
         this.canvas = null;
         this.gl = null;
+        this.defaultMaterial = null;
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify

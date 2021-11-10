@@ -23,7 +23,7 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL
+    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
@@ -118,6 +118,7 @@ import {
     getApplication,
     setApplication
 } from './globals.js';
+import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -448,11 +449,16 @@ class Application extends EventHandler {
         this.loader = new ResourceLoader(this);
         LightsBuffer.init(this.graphicsDevice);
 
+        // default material used in case no other material is available
+        this.graphicsDevice.defaultMaterial = new StandardMaterial();
+        this.graphicsDevice.defaultMaterial.name = "Default Material";
+        this.graphicsDevice.defaultMaterial.shadingModel = SPECULAR_BLINN;
+
         // stores all entities that have been created
         // for this app by guid
         this._entityIndex = {};
 
-        this.scene = new Scene();
+        this.scene = new Scene(this.graphicsDevice);
         this.root = new Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [];
@@ -1951,6 +1957,9 @@ class Application extends EventHandler {
 
         this.renderer.destroy();
         this.renderer = null;
+
+        this.defaultMaterial.destroy();
+        this.defaultMaterial = null;
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
