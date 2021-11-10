@@ -12,7 +12,6 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
-import { StandardMaterial } from './standard-material.js';
 
 let id = 0;
 
