@@ -1953,7 +1953,7 @@ class Application extends EventHandler {
         this.renderer.destroy();
         this.renderer = null;
 
-        DefaultMaterial.release(this.graphicsDevice);
+        DefaultMaterial.remove(this.graphicsDevice);
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;

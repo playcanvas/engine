@@ -21,7 +21,7 @@ class DefaultMaterial {
     }
 
     // releases a default material for the device (when device is getting destroyed)
-    static release(device) {
+    static remove(device) {
         this.cache.delete(device);
     }
 }
