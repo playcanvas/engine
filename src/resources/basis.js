@@ -63,8 +63,8 @@ const prepareWorkerModules = (config, callback) => {
 
         const compileManual = () => {
             fetchPromise
-                .then(result => result.arrayBuffer())
-                .then(buffer => WebAssembly.compile(buffer))
+                .then((result) => result.arrayBuffer())
+                .then((buffer) => WebAssembly.compile(buffer))
                 .then((module_) => {
                     if (basisCode) {
                         sendResponse(basisCode, module_);

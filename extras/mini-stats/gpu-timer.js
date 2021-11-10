@@ -118,7 +118,7 @@ class GpuTimer {
     }
 
     get timings() {
-        return this._timings.map(v => v[1]);
+        return this._timings.map((v) => v[1]);
     }
 }
 

@@ -649,7 +649,7 @@ class AssetRegistry extends EventHandler {
      * console.log("Found " + assets.length + " assets, where names contains 'monster'");
      */
     filter(callback) {
-        return this._assets.filter(asset => callback(asset));
+        return this._assets.filter((asset) => callback(asset));
     }
 
     /**

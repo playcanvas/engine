@@ -61,7 +61,7 @@ function shaderChunks(removeComments) {
                 code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
                 // Trim all whitespace from line endings
-                code = code.split('\n').map(line => line.trimEnd()).join('\n');
+                code = code.split('\n').map((line) => line.trimEnd()).join('\n');
 
                 // Restore final new line
                 code += '\n';

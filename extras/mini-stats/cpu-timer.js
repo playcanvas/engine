@@ -63,7 +63,7 @@ class CpuTimer {
     get timings() {
         // remove the last time point from the list (which is the time spent outside
         // of PlayCanvas)
-        return this._timings.slice(0, -1).map(v => v[1]);
+        return this._timings.slice(0, -1).map((v) => v[1]);
     }
 }
 

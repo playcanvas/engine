@@ -194,7 +194,7 @@ class Prefilter {
         gl.texParameteri(cubemap._glTarget, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
         // destroy
-        cubemaps.forEach(c => c.destroy());
+        cubemaps.forEach((c) => c.destroy());
 
         return cubemap;
     }

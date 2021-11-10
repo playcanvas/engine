@@ -160,11 +160,11 @@ const gltfToEngineSemanticMap = {
 const getDequantizeFunc = (srcType) => {
     // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
     switch (srcType) {
-        case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
-        case TYPE_UINT8: return x => x / 255.0;
-        case TYPE_INT16: return x => Math.max(x / 32767.0, -1.0);
-        case TYPE_UINT16: return x => x / 65535.0;
-        default: return x => x;
+        case TYPE_INT8: return (x) => Math.max(x / 127.0, -1.0);
+        case TYPE_UINT8: return (x) => x / 255.0;
+        case TYPE_INT16: return (x) => Math.max(x / 32767.0, -1.0);
+        case TYPE_UINT16: return (x) => x / 65535.0;
+        default: return (x) => x;
     }
 };
 

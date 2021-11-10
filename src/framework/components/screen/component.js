@@ -145,7 +145,7 @@ class ScreenComponent extends Component {
         this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
         this.fire('remove');
 
-        this._elements.forEach(element => element._onScreenRemove());
+        this._elements.forEach((element) => element._onScreenRemove());
         this._elements.clear();
 
         // remove all events
@@ -169,7 +169,7 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
 
         this.fire("set:resolution", this._resolution);
-        this._elements.forEach(element => element._onScreenResize(this._resolution));
+        this._elements.forEach((element) => element._onScreenResize(this._resolution));
     }
 
     get resolution() {
@@ -185,7 +185,7 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
 
         this.fire("set:referenceresolution", this._resolution);
-        this._elements.forEach(element => element._onScreenResize(this._resolution));
+        this._elements.forEach((element) => element._onScreenResize(this._resolution));
     }
 
     get referenceResolution() {
@@ -208,7 +208,7 @@ class ScreenComponent extends Component {
 
         this.fire('set:screenspace', this._screenSpace);
 
-        this._elements.forEach(element => element._onScreenSpaceChange());
+        this._elements.forEach((element) => element._onScreenSpaceChange());
     }
 
     get screenSpace() {
@@ -244,7 +244,7 @@ class ScreenComponent extends Component {
 
         this.fire("set:scaleblend", this._scaleBlend);
 
-        this._elements.forEach(element => element._onScreenResize(this._resolution));
+        this._elements.forEach((element) => element._onScreenResize(this._resolution));
     }
 
     get scaleBlend() {
