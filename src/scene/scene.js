@@ -13,6 +13,7 @@ import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAY
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
+import { DefaultMaterial } from './materials/default-material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 
@@ -186,7 +187,7 @@ class Scene extends EventHandler {
     }
 
     get defaultMaterial() {
-        return this.device.defaultMaterial;
+        return DefaultMaterial.get(this.device);
     }
 
     get fog() {

@@ -12,6 +12,7 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
+import { DefaultMaterial } from './default-material.js';
 
 let id = 0;
 
@@ -432,7 +433,7 @@ class Material {
             }
             meshInstance._material = null;
 
-            const defaultMaterial = meshInstance.mesh.device.defaultMaterial;
+            const defaultMaterial = DefaultMaterial.get(meshInstance.mesh.device);
             if (this !== defaultMaterial) {
                 meshInstance.material = defaultMaterial;
             }

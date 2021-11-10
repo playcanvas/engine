@@ -119,6 +119,7 @@ import {
     setApplication
 } from './globals.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { DefaultMaterial } from '../scene/materials/default-material.js';
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -448,11 +449,6 @@ class Application extends EventHandler {
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
         LightsBuffer.init(this.graphicsDevice);
-
-        // default material used in case no other material is available
-        this.graphicsDevice.defaultMaterial = new StandardMaterial();
-        this.graphicsDevice.defaultMaterial.name = "Default Material";
-        this.graphicsDevice.defaultMaterial.shadingModel = SPECULAR_BLINN;
 
         // stores all entities that have been created
         // for this app by guid
@@ -1958,8 +1954,7 @@ class Application extends EventHandler {
         this.renderer.destroy();
         this.renderer = null;
 
-        this.defaultMaterial.destroy();
-        this.defaultMaterial = null;
+        DefaultMaterial.release(this.graphicsDevice);
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
