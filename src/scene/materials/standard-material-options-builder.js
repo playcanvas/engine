@@ -15,6 +15,7 @@ import {
 } from '../constants.js';
 
 import { Quat } from '../../math/quat.js';
+import { LayerComposition } from '../composition/layer-composition.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -207,9 +208,10 @@ class StandardMaterialOptionsBuilder {
         options.useRightHandedCubeMap = stdMat.cubeMap ? stdMat.cubeMap._isRenderTarget : (!stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene._skyboxIsRenderTarget);
 
         // clustered lighting features
-        if (scene.layers) {
+        if (LayerComposition.clusteredLightingEnabled && scene.layers) {
             options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
             options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
+            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
     }
 

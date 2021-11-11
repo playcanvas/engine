@@ -1879,7 +1879,7 @@ class ForwardRenderer {
             // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(comp);
 
-            // render cookies for all local visible lights (only handling spot lights)
+            // render cookies for all local visible lights
             if (comp.clusteredLightingCookiesEnabled) {
                 this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
                 this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);

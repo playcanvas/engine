@@ -568,7 +568,7 @@ const standard = {
             lighting = true;
         }
 
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (LayerComposition.clusteredLightingEnabled && options.useLighting) {
             lighting = true;
         }
 
@@ -1004,6 +1004,9 @@ const standard = {
 
         if (options.clearCoat > 0) {
             code += '#define CLEARCOAT\n';
+
+            // enable clear-coat path in clustered chunk
+            code += "#define CLUSTER_CLEAR_COAT\n";
         }
 
         if (options.opacityFadesSpecular === false) {
@@ -1018,9 +1021,15 @@ const standard = {
         let usePerspZbufferShadow = false;
         const isClustered = LayerComposition.clusteredLightingEnabled;
 
-        const hasAreaLights = options.lights.some(function (light) {
+        let hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
+
+        // if clustered lighting has area lights enabled, it always runs in 'area lights mode'
+        // TODO: maybe we should always use it and remove the other way?
+        if (isClustered && options.clusteredLightingAreaLightsEnabled) {
+            hasAreaLights = true;
+        }
 
         if (device.areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
             // use offset and scale for rgb8 format luts
@@ -1030,7 +1039,7 @@ const standard = {
             code += "#define AREA_LUTS_PRECISION highp\n";
         }
 
-        if (hasAreaLights) {
+        if (hasAreaLights || isClustered) {
             code += "#define AREA_LIGHTS\n";
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex1;\n";
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
@@ -1334,13 +1343,18 @@ const standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if (hasAreaLights) code += chunks.ltc;
+            if (hasAreaLights || isClustered) code += chunks.ltc;
         }
         let useOldAmbient = false;
         if (options.useSpecular) {
 
             // enable specular path in clustered chunk
             code += "#define CLUSTER_SPECULAR\n";
+
+            // enable conserve energy path in clustered chunk
+            if (options.conserveEnergy) {
+                code += "#define CLUSTER_CONSERVE_ENERGY\n";
+            }
 
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
@@ -1367,10 +1381,6 @@ const standard = {
         }
 
         if (options.clearCoat > 0) {
-
-            // enable clear-coast path in clustered chunk
-            code += "#define CLUSTER_CLEAR_COAT\n";
-
             code += chunks.combineClearCoatPS;
         }
 
@@ -1425,7 +1435,7 @@ const standard = {
         let usesCookieNow;
 
         // clustered lighting
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (LayerComposition.clusteredLightingEnabled && lighting) {
 
             usesSpot = true;
             hasPointLights = true;
@@ -1438,6 +1448,8 @@ const standard = {
                 code += "\n#define CLUSTER_COOKIES";
             if (options.clusteredLightingShadowsEnabled)
                 code += "\n#define CLUSTER_SHADOWS";
+            if (options.clusteredLightingAreaLightsEnabled)
+                code += "\n#define CLUSTER_AREALIGHTS";
 
             code += LightsBuffer.shaderDefines;
             code += chunks.clusteredLightPS;
@@ -1583,14 +1595,6 @@ const standard = {
             // light source shape support
             let shapeString = '';
 
-            // clustered lighting
-            if (LayerComposition.clusteredLightingEnabled) {
-
-                usesLinearFalloff = true;
-                hasPointLights = true;
-                code += '   addClusteredLights();\n';
-            }
-
             for (let i = 0; i < options.lights.length; i++) {
                 const light = options.lights[i];
                 const lightType = light._type;
@@ -1726,14 +1730,17 @@ const standard = {
                     }
                 }
 
-                // non-punctual lights do not mix diffuse lighting into specular attenuation
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+
+                    // area light - they do not mix diffuse lighting into specular attenuation
                     if (options.conserveEnergy && options.useSpecular) {
                         code += "       dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
                     } else {
                         code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 } else {
+
+                    // punctual light
                     if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
                         code += "       dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
                     } else {
@@ -1741,10 +1748,16 @@ const standard = {
                     }
                 }
 
+                // specular / clear coat
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+
+                    // area light
                     if (options.clearCoat > 0) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     if (options.useSpecular) code += "       dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+
                 } else {
+
+                    // punctual light
                     if (hasAreaLights) {
                         // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                         if (options.clearCoat > 0) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
@@ -1760,6 +1773,13 @@ const standard = {
                 }
 
                 code += "\n";
+            }
+
+            // clustered lighting
+            if (LayerComposition.clusteredLightingEnabled) {
+                usesLinearFalloff = true;
+                hasPointLights = true;
+                code += '   addClusteredLights();\n';
             }
 
             if (hasAreaLights) {
@@ -1818,7 +1838,7 @@ const standard = {
         if (usesLinearFalloff) {
             code = chunks.falloffLinearPS + code;
         }
-        if (usesInvSquaredFalloff) {
+        if (usesInvSquaredFalloff || LayerComposition.clusteredLightingEnabled) {
             code = chunks.falloffInvSquaredPS + code;
         }
         if (usesSpot) {

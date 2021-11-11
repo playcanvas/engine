@@ -102,6 +102,7 @@ class LayerComposition extends EventHandler {
         this._clusteredLightingMaxLights = 64;
         this._clusteredLightingCookiesEnabled = true;
         this._clusteredLightingShadowsEnabled = true;
+        this._clusteredLightingAreaLightsEnabled = true;
     }
 
     destroy() {
@@ -155,6 +156,21 @@ class LayerComposition extends EventHandler {
         }
     }
 
+    get clusteredLightingAreaLightsEnabled() {
+        return this._clusteredLightingAreaLightsEnabled;
+    }
+
+    set clusteredLightingAreaLightsEnabled(value) {
+        if (this._clusteredLightingAreaLightsEnabled !== value) {
+            this._clusteredLightingAreaLightsEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLights = true;
+
+            this.updateWorldClusters();
+        }
+    }
+
     get clusteredLightingShadowsEnabled() {
         return this._clusteredLightingShadowsEnabled;
     }
@@ -177,6 +193,7 @@ class LayerComposition extends EventHandler {
             cluster.maxCellLightCount = this._clusteredLightingMaxLights;
             cluster.cookiesEnabled = this._clusteredLightingCookiesEnabled;
             cluster.shadowsEnabled = this._clusteredLightingShadowsEnabled;
+            cluster.areaLightsEnabled = this._clusteredLightingAreaLightsEnabled;
         });
     }
 
@@ -596,7 +613,7 @@ class LayerComposition extends EventHandler {
                         // create new cluster
                         if (!clusters) {
                             clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights,
-                                                         this._clusteredLightingCookiesEnabled, this._clusteredLightingShadowsEnabled);
+                                                         this._clusteredLightingCookiesEnabled, this._clusteredLightingShadowsEnabled, this._clusteredLightingAreaLightsEnabled);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;
