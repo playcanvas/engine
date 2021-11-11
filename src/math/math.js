@@ -36,7 +36,7 @@ const math = {
      * @returns {boolean} true if between or false otherwise.
      * @private
      */
-     between: function (num, a, b, inclusive) {
+    between: function (num, a, b, inclusive) {
         const min = Math.min(a, b);
         const max = Math.max(a, b);
         return inclusive ? num >= min && num <= max : num > min && num < max;
@@ -184,7 +184,7 @@ const math = {
      * @param {number} val - The value for which to calculate the next power of 2.
      * @returns {number} The next power of 2.
      */
-     nextPowerOfTwo: function (val) {
+    nextPowerOfTwo: function (val) {
         val--;
         val |= (val >> 1);
         val |= (val >> 2);
@@ -230,7 +230,7 @@ const math = {
             return numToRound;
         return Math.ceil(numToRound / multiple) * multiple;
     },
-    
+
     /**
      * The function interpolates smoothly between two input values based on a third one that should
      * be between the first two. The returned value is clamped between 0 and 1.
