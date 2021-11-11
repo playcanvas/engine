@@ -465,10 +465,7 @@ class LightsBuffer {
             if (isArea) {
 
 
-
                 console.error("IMPLEMENT");
-
-
 
 
             }
