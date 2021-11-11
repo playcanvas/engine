@@ -2,6 +2,16 @@ import React from 'react';
 import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 class AreaLightsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -18,7 +28,27 @@ class AreaLightsExample extends Example {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Material'>
+                <LabelGroup text='Shininess'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.shininess' }} min={0} max={100} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Metalness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.metalness' }} min={0} max={1} precision={2}/>
+                </LabelGroup>
+            </Panel>
+        </>;
+    }
+
+    example(canvas: HTMLCanvasElement, assets: any, data:any): void {
+
+        data.set('settings', {
+            material: {
+                shininess: 80,
+                metalness: 0.7
+            }
+        });
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {
@@ -53,33 +83,33 @@ class AreaLightsExample extends Example {
         blackMaterial.useLighting = false;
         blackMaterial.update();
 
-        // helper function to create a primitive with shape type, position, scale, color
-        function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color, assetManifest: any) {
+        // ground material
+        const groundMaterial = new pc.StandardMaterial();
+        groundMaterial.diffuse = pc.Color.GRAY;
+        groundMaterial.shininess = 80;
+        groundMaterial.metalness = 0.7;
+        groundMaterial.useMetalness = true;
 
-            // create material of specified color
-            const material = new pc.StandardMaterial();
-            material.diffuse = color;
-            material.shininess = 100;
-            material.useMetalness = true;
+        // helper function to create a primitive with shape type, position, scale, color
+        function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, assetManifest: any) {
 
             if (assetManifest) {
-                material.diffuseMap = assetManifest.color.resource;
-                material.normalMap = assetManifest.normal.resource;
-                material.glossMap = assetManifest.gloss.resource;
-                material.metalness = 0.7;
+                groundMaterial.diffuseMap = assetManifest.color.resource;
+                groundMaterial.normalMap = assetManifest.normal.resource;
+                groundMaterial.glossMap = assetManifest.gloss.resource;
 
-                material.diffuseMapTiling.set(17, 17);
-                material.normalMapTiling.set(17, 17);
-                material.glossMapTiling.set(17, 17);
+                groundMaterial.diffuseMapTiling.set(17, 17);
+                groundMaterial.normalMapTiling.set(17, 17);
+                groundMaterial.glossMapTiling.set(17, 17);
             }
 
-            material.update();
+            groundMaterial.update();
 
             // create primitive
             const primitive = new pc.Entity();
             primitive.addComponent('render', {
                 type: primitiveType,
-                material: material
+                material: groundMaterial
             });
 
             // set position and scale and add it to scene
@@ -160,7 +190,7 @@ class AreaLightsExample extends Example {
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // create ground plane
-        const ground = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), pc.Color.GRAY, assets);
+        const ground = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), assets);
 
         // Create the camera, which renders entities
         const camera = new pc.Entity();
@@ -209,6 +239,14 @@ class AreaLightsExample extends Example {
                 }
             }
         }
+
+        // handle HUD changes - update properties on the material
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+            if (pathArray[2] === "shininess") groundMaterial.shininess = value;
+            if (pathArray[2] === "metalness") groundMaterial.metalness = value;
+            groundMaterial.update();
+        });
     }
 }
 
