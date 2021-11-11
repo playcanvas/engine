@@ -28,7 +28,8 @@ class BoundingBox {
      * Create a new axis-aligned bounding box.
      *
      * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
-     * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter. Defaults to 0.5 on each axis.
+     * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor
+     * takes a reference of this parameter. Defaults to 0.5 on each axis.
      */
     constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
         this.center = center;
