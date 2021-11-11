@@ -80,7 +80,7 @@ class LightTextureAtlas {
             this.shadowMap = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
 
             // avoid it being destroyed by lights
-            this.shadowMap.cached = false;
+            this.shadowMap.cached = true;
         }
     }
 
