@@ -23,13 +23,13 @@ const readPackageVersion = () => {
     const versionNumbers = versionParts[0].split('.').map((v) => {
         const intV = parseInt(v, 10);
         if (isNaN(intV)) {
-            throw new Error(`Unable to parse version '${version}'.`);
+            throw new Error(`error: unable to parse version '${version}'.`);
         }
         return intV;
     });
 
     if (versionNumbers.length !== 3) {
-        throw new Error(`Unable to parse version '${version}'.`);
+        throw new Error(`error: unable to parse version '${version}'.`);
     }
 
     return {
@@ -85,7 +85,7 @@ const evolvePackageVersion = (version) => {
 const writePackageVersion = (version) => {
     const packageJson = require('./package.json');
     packageJson.version = `${version.major}.${version.minor}.${version.patch}` + (version.build ? `-${version.build}` : '');
-    fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
+    fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2) + '\n');
 };
 
 // ask user a question and invoke callback if user responds yes (using enter, y or Y).
@@ -176,6 +176,11 @@ const finalizeRelease = () => {
     // calculate the new version - either first minor release or patch release
     const newVersion = evolvePackageVersion(curVersion);
     const versionString = `v${newVersion.major}.${newVersion.minor}.${newVersion.patch}`;
+
+    const tags = exec('git tag');
+    if (new RegExp(`^${versionString}$`, 'm').test(tags)) {
+        throw new Error(`error: tag already exists '${versionString}'.`);
+    }
 
     // get user confirmation
     const question = `About to finalize and tag branch '${curBranch}' with version '${versionString}'.\nContinue? (Y/n) `;
