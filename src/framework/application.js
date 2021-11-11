@@ -118,6 +118,7 @@ import {
     getApplication,
     setApplication
 } from './globals.js';
+import { DefaultMaterial } from '../scene/materials/default-material.js';
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -1976,6 +1977,8 @@ class Application extends EventHandler {
 
         this.renderer.destroy();
         this.renderer = null;
+
+        DefaultMaterial.remove(this.graphicsDevice);
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;

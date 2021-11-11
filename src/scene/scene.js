@@ -9,13 +9,15 @@ import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, SPECULAR_BLINN, TONEMAP_LINEAR } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
+import { DefaultMaterial } from './materials/default-material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-import { StandardMaterial } from './materials/standard-material.js';
+
+import { getApplication } from '../framework/globals.js';
 
 /**
  * @class
@@ -173,19 +175,16 @@ class Scene extends EventHandler {
 
         // backwards compatibility only
         this._models = [];
-
-        // default material used in case no other material is available
-        this.defaultMaterial = new StandardMaterial();
-        this.defaultMaterial.name = "Default Material";
-        this.defaultMaterial.shadingModel = SPECULAR_BLINN;
     }
 
     destroy() {
         this._resetSkyboxModel();
         this.root = null;
-        this.defaultMaterial.destroy();
-        this.defaultMaterial = null;
         this.off();
+    }
+
+    get defaultMaterial() {
+        return DefaultMaterial.get(getApplication().graphicsDevice);
     }
 
     get fog() {
