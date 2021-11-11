@@ -98,7 +98,7 @@ class AnimComponent extends Component {
     _onStateGraphAssetChangeEvent(asset) {
         // both animationAssets and layer masks should be maintained when switching AnimStateGraph assets
         const prevAnimationAssets = this.animationAssets;
-        const prevMasks = this.layers.map((layer) => layer.mask);
+        const prevMasks = this.layers.map(layer => layer.mask);
         // clear the previous state graph
         this.removeStateGraph();
         // load the new state graph
