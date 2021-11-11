@@ -185,9 +185,15 @@ void decodeClusterLightAreaData(inout ClusterLightData clusterLightData) {
         clusterLightData.halfWidth = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_AREA_DATA_WIDTH).xyz;
         clusterLightData.halfHeight = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_AREA_DATA_HEIGHT).xyz;
     #else
+        vec4 areaWidthX = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_WIDTH_X);
+        vec4 areaWidthY = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_WIDTH_Y);
+        vec4 areaWidthZ = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_WIDTH_Z);
+        clusterLightData.halfWidth = vec3(mantisaExponent2Float(areaWidthX), mantisaExponent2Float(areaWidthY), mantisaExponent2Float(areaWidthZ));
 
-        // TODO
-
+        vec4 areaHeightX = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_HEIGHT_X);
+        vec4 areaHeightY = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_HEIGHT_Y);
+        vec4 areaHeightZ = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_HEIGHT_Z);
+        clusterLightData.halfHeight = vec3(mantisaExponent2Float(areaHeightX), mantisaExponent2Float(areaHeightY), mantisaExponent2Float(areaHeightZ));
     #endif
 }
 

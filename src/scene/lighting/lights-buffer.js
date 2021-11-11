@@ -58,8 +58,15 @@ const TextureIndex8 = {
     PROJ_MAT_32: 28,
     PROJ_MAT_33: 29,
 
+    AREA_DATA_WIDTH_X: 30,
+    AREA_DATA_WIDTH_Y: 31,
+    AREA_DATA_WIDTH_Z: 32,
+    AREA_DATA_HEIGHT_X: 33,
+    AREA_DATA_HEIGHT_Y: 34,
+    AREA_DATA_HEIGHT_Z: 35,
+
     // leave last
-    COUNT: 30
+    COUNT: 36
 };
 
 // format of the float texture
@@ -348,6 +355,13 @@ class LightsBuffer {
         // we have two unused bytes here
     }
 
+    addLightAreaSizes(data8, index, light) {
+        const areaSizes = this.getLightAreaSizes(light);
+        for (let i = 0; i < 6; i++) {  // these are full float range
+            FloatPacking.float2MantisaExponent(areaSizes[i], data8, index + 4 * i, 4);
+        }
+    }
+
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex, gammaCorrection) {
 
@@ -463,11 +477,7 @@ class LightsBuffer {
 
             // area light sizes
             if (isArea) {
-
-
-                console.error("IMPLEMENT");
-
-
+                this.addLightAreaSizes(data8, data8Start + 4 * TextureIndex8.AREA_DATA_WIDTH_X, light);
             }
         }
     }
