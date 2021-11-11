@@ -1,17 +1,21 @@
 import { EventHandler } from './event-handler.js';
 
+/**
+ * Event functionality.
+ *
+ * @namespace
+ * @private
+ */
 const events = {
     /**
-     * @private
-     * @function
-     * @name events.attach
-     * @description Attach event methods 'on', 'off', 'fire', 'once' and 'hasEvent' to the
-     * target object.
+     * Attach event methods 'on', 'off', 'fire', 'once' and 'hasEvent' to the target object.
+     *
      * @param {object} target - The object to add events to.
      * @returns {object} The target object.
      * @example
      * var obj = { };
      * pc.events.attach(obj);
+     * @private
      */
     attach: function (target) {
         const ev = events;

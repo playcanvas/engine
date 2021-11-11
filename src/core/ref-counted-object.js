@@ -5,7 +5,7 @@ class RefCountedObject {
         this._refCount = 0;
     }
 
-    // inrements the counter
+    // increments the counter
     incRefCount() {
         this._refCount++;
     }

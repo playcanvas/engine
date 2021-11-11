@@ -1,14 +1,14 @@
 /**
- * @name guid
+ * GUIDs are essentially a very large random number (128-bit) which means the probability of
+ * creating two that clash is vanishingly small. GUIDs are used as the unique identifiers for
+ * Entities.
+ *
  * @namespace
- * @description Basically a very large random number (128-bit) which means the probability of creating two that clash is vanishingly small.
- * GUIDs are used as the unique identifiers for Entities.
  */
 const guid = {
     /**
-     * @function
-     * @name guid.create
-     * @description Create an RFC4122 version 4 compliant GUID.
+     * Create an RFC4122 version 4 compliant GUID.
+     *
      * @returns {string} A new GUID.
      */
     create: function () {

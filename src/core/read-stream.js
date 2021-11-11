@@ -1,8 +1,7 @@
 /**
+ * Helper class for organized reading of memory.
+ *
  * @private
- * @class
- * @name ReadStream
- * @classdesc Helper class for organized reading of memory.
  */
 class ReadStream {
     constructor(arraybuffer) {

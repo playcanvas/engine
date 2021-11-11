@@ -18,17 +18,17 @@ function init() {
 }
 
 /**
- * @private
- * @name debug
+ * Debugging functionality
+ *
  * @namespace
+ * @private
  */
 const debug = {
     /**
-     * @private
-     * @function
-     * @name debug.display
-     * @description Display an object and its data in a table on the page.
+     * Display an object and its data in a table on the page.
+     *
      * @param {object} data - The object to display.
+     * @private
      */
     display: function (data) {
         if (!table) {
