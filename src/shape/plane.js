@@ -3,29 +3,34 @@ import { Vec3 } from '../math/vec3.js';
 const tmpVecA = new Vec3();
 
 /**
+ * An infinite plane.
+ *
  * @private
- * @class
- * @name Plane
- * @classdesc An infinite plane.
- * @description Create an infinite plane.
- * @param {Vec3} [point] - Point position on the plane. The constructor takes a reference of this parameter.
- * @param {Vec3} [normal] - Normal of the plane. The constructor takes a reference of this parameter.
  */
 class Plane {
+    /**
+     * Create an infinite plane.
+     *
+     * @param {Vec3} [point] - Point position on the plane. The constructor takes a reference of
+     * this parameter.
+     * @param {Vec3} [normal] - Normal of the plane. The constructor takes a reference of this
+     * parameter.
+     * @private
+     */
     constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
         this.normal = normal;
         this.point = point;
     }
 
     /**
-     * @private
-     * @function
-     * @name Plane#intersectsLine
-     * @description Test if the plane intersects between two points.
+     * Test if the plane intersects between two points.
+     *
      * @param {Vec3} start - Start position of line.
      * @param {Vec3} end - End position of line.
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
+     * @private
      */
     intersectsLine(start, end, point) {
         const d = -this.normal.dot(this.point);
@@ -41,13 +46,13 @@ class Plane {
     }
 
     /**
-     * @private
-     * @function
-     * @name Plane#intersectsRay
-     * @description Test if a ray intersects with the infinite plane.
+     * Test if a ray intersects with the infinite plane.
+     *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
+     * @private
      */
     intersectsRay(ray, point) {
         const pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
