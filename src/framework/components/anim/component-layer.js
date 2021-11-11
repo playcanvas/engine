@@ -20,6 +20,7 @@ class AnimComponentLayer {
         this._component = component;
         this._weight = weight;
         this._blendType = blendType;
+        this._mask = null;
     }
 
     /**
@@ -82,6 +83,11 @@ class AnimComponentLayer {
         if (this._controller.assignMask(mask)) {
             this._component.rebind();
         }
+        this._mask = mask;
+    }
+
+    get mask() {
+        return this._mask;
     }
 
     /**
