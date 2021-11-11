@@ -1777,7 +1777,7 @@ const standard = {
             }
 
             // clustered lighting
-            if (LayerComposition.clusteredLightingEnabled) {
+            if (LayerComposition.clusteredLightingEnabled && lighting) {
                 usesLinearFalloff = true;
                 hasPointLights = true;
                 code += '   addClusteredLights();\n';
