@@ -4,39 +4,48 @@ import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
- * @class
- * @name Curve
- * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
- * curve is defined by its type that specifies an interpolation scheme for the keys.
- * @description Creates a new curve.
- * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and
- * value second).
- * @property {number} length The number of keys in the curve. [read only].
- * @property {number} type The curve interpolation scheme. Can be:
- *
- * - {@link CURVE_LINEAR}
- * - {@link CURVE_SMOOTHSTEP}
- * - {@link CURVE_SPLINE}
- * - {@link CURVE_STEP}
- *
- * Defaults to {@link CURVE_SMOOTHSTEP}.
- * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated.
- * Valid range is between 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
- * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
- *
- * @example
- * var curve = new pc.Curve([
- *     0, 0,        // At 0 time, value of 0
- *     0.33, 2,     // At 0.33 time, value of 2
- *     0.66, 2.6,   // At 0.66 time, value of 2.6
- *     1, 3         // At 1 time, value of 3
- * ]);
+ * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
+ * type that specifies an interpolation scheme for the keys.
  */
 class Curve {
+    /**
+     * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and 1
+     * where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1 results in
+     * a very smooth curve. Use 0.5 for a Catmull-rom spline.
+     *
+     * @type {number}
+     */
+    tension = 0.5;
+
+    /**
+     * The curve interpolation scheme. Can be:
+     *
+     * - {@link CURVE_LINEAR}
+     * - {@link CURVE_SMOOTHSTEP}
+     * - {@link CURVE_SPLINE}
+     * - {@link CURVE_STEP}
+     *
+     * Defaults to {@link CURVE_SMOOTHSTEP}.
+     *
+     * @type {number}
+     */
+    type = CURVE_SMOOTHSTEP;
+
+    /**
+     * Creates a new curve.
+     *
+     * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and
+     * value second).
+     * @example
+     * var curve = new pc.Curve([
+     *     0, 0,        // At 0 time, value of 0
+     *     0.33, 2,     // At 0.33 time, value of 2
+     *     0.66, 2.6,   // At 0.66 time, value of 2.6
+     *     1, 3         // At 1 time, value of 3
+     * ]);
+     */
     constructor(data) {
         this.keys = [];
-        this.type = CURVE_SMOOTHSTEP;
-        this.tension = 0.5;                     // used for CURVE_SPLINE
         this._eval = new CurveEvaluator(this);
 
         if (data) {
@@ -49,9 +58,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#add
-     * @description Add a new key to the curve.
+     * Add a new key to the curve.
+     *
      * @param {number} time - Time to add new key.
      * @param {number} value - Value of new key.
      * @returns {number[]} [time, value] pair.
@@ -73,9 +81,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#get
-     * @description Return a specific key.
+     * Return a specific key.
+     *
      * @param {number} index - The index of the key to return.
      * @returns {number[]} The key at the specified index.
      */
@@ -84,9 +91,7 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#sort
-     * @description Sort keys by time.
+     * Sort keys by time.
      */
     sort() {
         this.keys.sort(function (a, b) {
@@ -95,9 +100,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#value
-     * @description Returns the interpolated value of the curve at specified time.
+     * Returns the interpolated value of the curve at specified time.
+     *
      * @param {number} time - The time at which to calculate the value.
      * @returns {number} The interpolated value.
      */
@@ -127,9 +131,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#clone
-     * @description Returns a clone of the specified curve object.
+     * Returns a clone of the specified curve object.
+     *
      * @returns {Curve} A clone of the specified curve.
      */
     clone() {
@@ -141,12 +144,11 @@ class Curve {
     }
 
     /**
-     * @private
-     * @function
-     * @name Curve#quantize
-     * @description Sample the curve at regular intervals over the range [0..1].
+     * Sample the curve at regular intervals over the range [0..1].
+     *
      * @param {number} precision - The number of samples to return.
      * @returns {Float32Array} The set of quantized values.
+     * @private
      */
     quantize(precision) {
         precision = Math.max(precision, 2);
@@ -164,15 +166,14 @@ class Curve {
     }
 
     /**
-     * @private
-     * @function
-     * @name Curve#quantizeClamped
-     * @description Sample the curve at regular intervals over the range [0..1]
-     * and clamp the resulting samples to [min..max].
+     * Sample the curve at regular intervals over the range [0..1] and clamp the resulting samples
+     * to [min..max].
+     *
      * @param {number} precision - The number of samples to return.
      * @param {number} min - The minimum output value.
      * @param {number} max - The maximum output value.
      * @returns {Float32Array} The set of quantized values.
+     * @private
      */
     quantizeClamped(precision, min, max) {
         const result = this.quantize(precision);
@@ -182,6 +183,12 @@ class Curve {
         return result;
     }
 
+    /**
+     * The number of keys in the curve.
+     *
+     * @type {number}
+     * @readonly
+     */
     get length() {
         return this.keys.length;
     }

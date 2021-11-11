@@ -1,13 +1,19 @@
 import { Vec3 } from './vec3.js';
 
 /**
- * @class
- * @name Mat3
- * @classdesc A 3x3 matrix.
- * @description Creates a new identity Mat3 object.
- * @property {Float32Array} data Matrix elements in the form of a flat array.
+ * A 3x3 matrix.
  */
 class Mat3 {
+    /**
+     * Matrix elements in the form of a flat array.
+     *
+     * @type {Float32Array}
+     */
+    data;
+
+    /**
+     * Creates a new identity Mat3 object.
+     */
     constructor() {
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.
@@ -17,9 +23,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#clone
-     * @description Creates a duplicate of the specified matrix.
+     * Creates a duplicate of the specified matrix.
+     *
      * @returns {Mat3} A duplicate matrix.
      * @example
      * var src = new pc.Mat3().translate(10, 20, 30);
@@ -31,9 +36,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#copy
-     * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
+     * Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
+     *
      * @param {Mat3} rhs - A 3x3 matrix to be copied.
      * @returns {Mat3} Self for chaining.
      * @example
@@ -60,9 +64,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#set
-     * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
+     * Copies the contents of a source array[9] to a destination 3x3 matrix.
+     *
      * @param {number[]} src - An array[9] to be copied.
      * @returns {Mat3} Self for chaining.
      * @example
@@ -86,10 +89,9 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#equals
+     * Reports whether two matrices are equal.
+     *
      * @param {Mat3} rhs - The other matrix.
-     * @description Reports whether two matrices are equal.
      * @returns {boolean} True if the matrices are equal and false otherwise.
      * @example
      * var a = new pc.Mat3().translate(10, 20, 30);
@@ -112,9 +114,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#isIdentity
-     * @description Reports whether the specified matrix is the identity matrix.
+     * Reports whether the specified matrix is the identity matrix.
+     *
      * @returns {boolean} True if the matrix is identity and false otherwise.
      * @example
      * var m = new pc.Mat3();
@@ -134,9 +135,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#setIdentity
-     * @description Sets the matrix to the identity matrix.
+     * Sets the matrix to the identity matrix.
+     *
      * @returns {Mat3} Self for chaining.
      * @example
      * m.setIdentity();
@@ -160,9 +160,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#toString
-     * @description Converts the matrix to string form.
+     * Converts the matrix to string form.
+     *
      * @returns {string} The matrix in string form.
      * @example
      * var m = new pc.Mat3();
@@ -180,9 +179,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#transpose
-     * @description Generates the transpose of the specified 3x3 matrix.
+     * Generates the transpose of the specified 3x3 matrix.
+     *
      * @returns {Mat3} Self for chaining.
      * @example
      * var m = new pc.Mat3();
@@ -202,9 +200,8 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#setFromMat4
-     * @description Converts the specified 4x4 matrix to a Mat3.
+     * Converts the specified 4x4 matrix to a Mat3.
+     *
      * @param {Mat4} m - The 4x4 matrix to convert.
      * @returns {Mat3} Self for chaining.
      */
@@ -228,11 +225,11 @@ class Mat3 {
     }
 
     /**
-     * @function
-     * @name Mat3#transformVector
-     * @description Transforms a 3-dimensional vector by a 3x3 matrix.
+     * Transforms a 3-dimensional vector by a 3x3 matrix.
+     *
      * @param {Vec3} vec - The 3-dimensional vector to be transformed.
-     * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
+     * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the
+     * transformation.
      * @returns {Vec3} The input vector v transformed by the current instance.
      */
     transformVector(vec, res = new Vec3()) {
@@ -251,22 +248,20 @@ class Mat3 {
 
 
     /**
-     * @field
-     * @static
-     * @readonly
+     * A constant matrix set to the identity.
+     *
      * @name Mat3.IDENTITY
      * @type {Mat3}
-     * @description A constant matrix set to the identity.
+     * @readonly
      */
     static IDENTITY = Object.freeze(new Mat3());
 
     /**
-     * @field
-     * @static
-     * @readonly
+     * A constant matrix with all elements set to 0.
+     *
      * @name Mat3.ZERO
      * @type {Mat3}
-     * @description A constant matrix with all elements set to 0.
+     * @readonly
      */
     static ZERO = Object.freeze(new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]));
 }

@@ -3,29 +3,30 @@ import { Curve } from './curve.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
- * @class
- * @name CurveSet
- * @classdesc A curve set is a collection of curves.
- * @description Creates a new curve set.
- * @param {Array<number[]>} curveKeys - An array of arrays of keys (pairs of numbers with
- * the time first and value second).
- * @example
- * var curveSet = new pc.CurveSet([
- *     [
- *         0, 0,        // At 0 time, value of 0
- *         0.33, 2,     // At 0.33 time, value of 2
- *         0.66, 2.6,   // At 0.66 time, value of 2.6
- *         1, 3         // At 1 time, value of 3
- *     ],
- *     [
- *         0, 34,
- *         0.33, 35,
- *         0.66, 36,
- *         1, 37
- *     ]
- * ]);
+ * A curve set is a collection of curves.
  */
 class CurveSet {
+    /**
+     * Creates a new curve set.
+     *
+     * @param {Array<number[]>} curveKeys - An array of arrays of keys (pairs of numbers with
+     * the time first and value second).
+     * @example
+     * var curveSet = new pc.CurveSet([
+     *     [
+     *         0, 0,        // At 0 time, value of 0
+     *         0.33, 2,     // At 0.33 time, value of 2
+     *         0.66, 2.6,   // At 0.66 time, value of 2.6
+     *         1, 3         // At 1 time, value of 3
+     *     ],
+     *     [
+     *         0, 34,
+     *         0.33, 35,
+     *         0.66, 36,
+     *         1, 37
+     *     ]
+     * ]);
+     */
     constructor() {
         this.curves = [];
         this._type = CURVE_SMOOTHSTEP;
@@ -53,9 +54,8 @@ class CurveSet {
     }
 
     /**
-     * @function
-     * @name CurveSet#get
-     * @description Return a specific curve in the curve set.
+     * Return a specific curve in the curve set.
+     *
      * @param {number} index - The index of the curve to return.
      * @returns {Curve} The curve at the specified index.
      */
@@ -64,14 +64,12 @@ class CurveSet {
     }
 
     /**
-     * @function
-     * @name CurveSet#value
-     * @description Returns the interpolated value of all curves in the curve
-     * set at the specified time.
+     * Returns the interpolated value of all curves in the curve set at the specified time.
+     *
      * @param {number} time - The time at which to calculate the value.
-     * @param {number[]} [result] - The interpolated curve values at the specified time.
-     * If this parameter is not supplied, the function allocates a new array internally
-     * to return the result.
+     * @param {number[]} [result] - The interpolated curve values at the specified time. If this
+     * parameter is not supplied, the function allocates a new array internally to return the
+     * result.
      * @returns {number[]} The interpolated curve values at the specified time.
      */
     value(time, result = []) {
@@ -86,9 +84,8 @@ class CurveSet {
     }
 
     /**
-     * @function
-     * @name CurveSet#clone
-     * @description Returns a clone of the specified curve set object.
+     * Returns a clone of the specified curve set object.
+     *
      * @returns {CurveSet} A clone of the specified curve set.
      */
     clone() {
@@ -122,15 +119,14 @@ class CurveSet {
     }
 
     /**
-     * @private
-     * @function
-     * @name CurveSet#quantizeClamped
-     * @description This function will sample the curveset at regular intervals
-     * over the range [0..1] and clamp the result to min and max.
+     * This function will sample the curveset at regular intervals over the range [0..1] and clamp
+     * the result to min and max.
+     *
      * @param {number} precision - The number of samples to return.
      * @param {number} min - The minimum output value.
      * @param {number} max - The maximum output value.
      * @returns {Float32Array} The set of quantized values.
+     * @private
      */
     quantizeClamped(precision, min, max) {
         const result = this.quantize(precision);
@@ -141,19 +137,17 @@ class CurveSet {
     }
 
     /**
-     * @readonly
-     * @name CurveSet#length
+     * The number of curves in the curve set.
+     *
      * @type {number}
-     * @description The number of curves in the curve set.
+     * @readonly
      */
     get length() {
         return this.curves.length;
     }
 
     /**
-     * @name CurveSet#type
-     * @type {number}
-     * @description The interpolation scheme applied to all curves in the curve set. Can be:
+     * The interpolation scheme applied to all curves in the curve set. Can be:
      *
      * - {@link CURVE_LINEAR}
      * - {@link CURVE_SMOOTHSTEP}
@@ -161,6 +155,8 @@ class CurveSet {
      * - {@link CURVE_STEP}
      *
      * Defaults to {@link CURVE_SMOOTHSTEP}.
+     *
+     * @type {number}
      */
     get type() {
         return this._type;
