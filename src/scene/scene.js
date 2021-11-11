@@ -26,7 +26,6 @@ import { getApplication } from '../framework/globals.js';
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
  * @description Creates a new Scene.
- * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this scene. If it is not provided, a device is obtained from the {@link Application}.
  * @property {Color} ambientLight The color of the scene's ambient light. Defaults
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
@@ -106,10 +105,8 @@ import { getApplication } from '../framework/globals.js';
  * child to the Application root entity.
  */
 class Scene extends EventHandler {
-    constructor(graphicsDevice) {
+    constructor() {
         super();
-
-        this.device = graphicsDevice || getApplication().graphicsDevice;
 
         this.root = null;
 
@@ -187,7 +184,7 @@ class Scene extends EventHandler {
     }
 
     get defaultMaterial() {
-        return DefaultMaterial.get(this.device);
+        return DefaultMaterial.get(getApplication().graphicsDevice);
     }
 
     get fog() {
