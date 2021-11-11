@@ -191,15 +191,13 @@ const finalizeRelease = (curBranch) => {
     });
 };
 
-// invoke worker depending on command line args
 const run = () => {
     const getCurrentBranch = () => exec('git branch --show-current');
 
     if (process.argv.length === 2) {
-        // get the current branch
+        // use current branch to decide operation
         const curBranch = getCurrentBranch();
 
-        // no args - perform operation based on current branch
         if (curBranch === 'dev') {
             createRelease(curBranch);
             return 0;
@@ -212,7 +210,7 @@ const run = () => {
             return 1;
         }
     } else if (process.argv.length === 3) {
-        // operation specified as args
+        // operation specified as arg
         const operation = process.argv[2];
         switch (operation) {
             case 'create-release':
