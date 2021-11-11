@@ -5,7 +5,8 @@ const fs = require('fs');
 const releaseBranchName = 'release-';
 
 const printUsage = () => {
-    console.log(`\nSpecify the type of operation as an argument. One of:
+    console.log(`Run without arguments to perform operation based on current branch (dev or release-1.XX branch).
+Or specify the operation as an argument:
     create-release - create the next minor release branch '${releaseBranchName}1.XX'. invoke from dev branch.
     finalize-release - finalize the package version and tag the release. invoke from release branch.
 `);
@@ -109,11 +110,9 @@ const getUserConfirmation = (question, callback) => {
 // create a new release branch.
 // assumed called from dev.
 // updates package versions on dev and newly created release branch.
-const createRelease = () => {
-    // get current branch for sanity
-    const devBranch = exec('git branch --show-current');
+const createRelease = (devBranch) => {
+    // check branch name
     if (devBranch !== 'dev') {
-        // say something?
         console.log(`warning: source branch is not 'dev'.`);
     }
 
@@ -138,7 +137,7 @@ const createRelease = () => {
         writePackageVersion(bumpPackageVersion(devVersion, 'minor'));
 
         // commit with message indicating release branch
-        exec(`git commit -a -m "${releaseMessage}"`);
+        exec(`git commit -m "${releaseMessage}" -- package.json`);
 
         // checkout release branch
         exec(`git checkout ${releaseBranch}`);
@@ -151,16 +150,15 @@ const createRelease = () => {
             build: 'preview'
         });
 
-        exec(`git commit -a -m "${releaseMessage}"`);
+        exec(`git commit -m "${releaseMessage}"  -- package.json`);
     });
 
     return 0;
 };
 
 // tag the current branch for release
-const finalizeRelease = () => {
-    // get current branch, check it's a release branch
-    const curBranch = exec('git branch --show-current');
+const finalizeRelease = (curBranch) => {
+    // check branch name
     if (!curBranch.startsWith(releaseBranchName)) {
         console.log(`warning: current branch '${curBranch}' does not start with '${releaseBranchName}'.`);
     }
@@ -187,7 +185,7 @@ const finalizeRelease = () => {
     getUserConfirmation(question, () => {
         writePackageVersion(newVersion);
 
-        exec(`git commit -a -m "${versionString}"`);
+        exec(`git commit -m "${versionString}" -- package.json`);
 
         exec(`git tag ${versionString}`);
     });
@@ -195,24 +193,43 @@ const finalizeRelease = () => {
 
 // invoke worker depending on command line args
 const run = () => {
-    if (process.argv.length !== 3) {
-        console.log(`This script prepares the engine for release.`);
-        printUsage();
-        return 1;
-    }
+    const getCurrentBranch = () => exec('git branch --show-current');
 
-    const operation = process.argv[2];
-    switch (operation) {
-        case 'create-release':
-            createRelease();
+    if (process.argv.length === 2) {
+        // get the current branch
+        const curBranch = getCurrentBranch();
+
+        // no args - perform operation based on current branch
+        if (curBranch === 'dev') {
+            createRelease(curBranch);
             return 0;
-        case 'finalize-release':
-            finalizeRelease();
+        } else if (curBranch.startsWith(releaseBranchName)) {
+            finalizeRelease(curBranch);
             return 0;
-        default:
-            console.error(`Can't recognize operation '${operation}.`);
+        } else {
+            console.error(`error: unrecognized branch '${curBranch}.`);
             printUsage();
             return 1;
+        }
+    } else if (process.argv.length === 3) {
+        // operation specified as args
+        const operation = process.argv[2];
+        switch (operation) {
+            case 'create-release':
+                createRelease(getCurrentBranch());
+                return 0;
+            case 'finalize-release':
+                finalizeRelease(getCurrentBranch());
+                return 0;
+            default:
+                console.error(`error: unrecognized operation '${operation}.`);
+                printUsage();
+                return 1;
+        }
+    } else {
+        console.log(`Prepare the engine for release.`);
+        printUsage();
+        return 1;
     }
 };
 
