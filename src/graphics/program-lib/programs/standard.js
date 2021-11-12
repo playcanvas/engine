@@ -1779,6 +1779,7 @@ const standard = {
             // clustered lighting
             if (LayerComposition.clusteredLightingEnabled && lighting) {
                 usesLinearFalloff = true;
+                usesInvSquaredFalloff = true;
                 hasPointLights = true;
                 code += '   addClusteredLights();\n';
             }
@@ -1839,7 +1840,7 @@ const standard = {
         if (usesLinearFalloff) {
             code = chunks.falloffLinearPS + code;
         }
-        if (usesInvSquaredFalloff || LayerComposition.clusteredLightingEnabled) {
+        if (usesInvSquaredFalloff) {
             code = chunks.falloffInvSquaredPS + code;
         }
         if (usesSpot) {

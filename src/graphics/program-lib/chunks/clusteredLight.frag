@@ -92,6 +92,7 @@ struct ClusterLightData {
 #define isClusteredLightCookie(light) (light.cookie > 0.5 )
 #define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
 #define isClusteredLightSpot(light) ( light.type > 0.5 )
+#define isClusteredLightFalloffLinear(light) ( light.falloffMode < 0.5 )
 
 // macros to test light shape
 // Note: Following functions need to be called serially in listed order as they do not test both '>' and '<'
@@ -285,7 +286,11 @@ void evaluateLight(ClusterLightData light) {
     #endif
 
     {   // punctual light
-        dAtten = getFalloffLinear(light.range);
+
+        if (isClusteredLightFalloffLinear(light))
+            dAtten = getFalloffLinear(light.range);
+        else
+            dAtten = getFalloffInvSquared(light.range);
     }
 
     if (dAtten > 0.00001) {

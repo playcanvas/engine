@@ -11,7 +11,7 @@ import {
     MASK_LIGHTMAP, MASK_DYNAMIC,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    LIGHTSHAPE_PUNCTUAL
+    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 
@@ -110,7 +110,7 @@ class Light {
         // Omni and spot properties
         this.attenuationStart = 10;
         this.attenuationEnd = 10;
-        this._falloffMode = 0;
+        this._falloffMode = LIGHTFALLOFF_LINEAR;
         this._shadowType = SHADOW_PCF3;
         this._vsmBlurSize = 11;
         this.vsmBlurMode = BLUR_GAUSSIAN;

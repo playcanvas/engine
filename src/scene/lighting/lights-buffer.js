@@ -276,8 +276,8 @@ class LightsBuffer {
 
     addLightDataFlags(data8, index, light, isSpot) {
         data8[index + 0] = isSpot ? 255 : 0;
-        data8[index + 1] = light._shape * 64;          // value 0..3
-        data8[index + 2] = light._falloffMode * 255;   // we should consider making this global instead of per light
+        data8[index + 1] = light._shape * 64;           // value 0..3
+        data8[index + 2] = light._falloffMode * 255;    // value 0..1
         data8[index + 3] = light.castShadows ? 255 : 0;
     }
 

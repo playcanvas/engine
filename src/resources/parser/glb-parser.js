@@ -1514,6 +1514,7 @@ const createLight = function (gltfLight, node) {
 
         // when range is not defined, infinity should be used - but that is causing infinity in bounds calculations
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : 9999,
+
         falloffMode: LIGHTFALLOFF_INVERSESQUARED,
 
         // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
