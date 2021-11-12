@@ -45,8 +45,8 @@ struct ClusterLightData {
     // light follow mode
     float falloffMode;
 
-    // true if the light is shadow casting
-    bool castShadows;
+    // 1.0 if the light is shadow casting
+    float castShadows;
 
     // shadow bias values
     float shadowBias;
@@ -74,11 +74,11 @@ struct ClusterLightData {
     // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
     vec3 omniAtlasViewport;
 
-    // true if the light has a cookie texture
-    bool isCookie;
+    // 1.0 if the light has a cookie texture
+    float cookie;
 
-    // true if cookie texture is rgb, false is using a single channel selectable by cookieChannelMask
-    bool isCookieRgb;
+    // 1.0 if cookie texture is rgb, otherwise it is using a single channel selectable by cookieChannelMask
+    float cookieRgb;
 
     // invensity of the cookie
     float cookieIntensity;
@@ -87,7 +87,10 @@ struct ClusterLightData {
     vec4 cookieChannelMask;
 };
 
-// macro to test for spot light type
+// macros for light properties
+#define isClusteredLightCastShadow(light) ( light.castShadows > 0.5 )
+#define isClusteredLightCookie(light) (light.cookie > 0.5 )
+#define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
 #define isClusteredLightSpot(light) ( light.type > 0.5 )
 
 // macros to test light shape
@@ -123,15 +126,15 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     clusterLightData.type = lightInfo.x;
     clusterLightData.shape = lightInfo.y;
     clusterLightData.falloffMode = lightInfo.z;
-    clusterLightData.castShadows = lightInfo.w > 0.5;
+    clusterLightData.castShadows = lightInfo.w;
 
     // color
     vec4 colorA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_A);
     vec4 colorB = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_B);
     clusterLightData.color = vec3(bytes2float2(colorA.xy), bytes2float2(colorA.zw), bytes2float2(colorB.xy)) * clusterCompressionLimit0.y;
 
-    // isCookie
-    clusterLightData.isCookie = colorB.z > 0.5;
+    // cookie
+    clusterLightData.cookie = colorB.z;
 
     #ifdef CLUSTER_TEXTURE_FLOAT
 
@@ -246,7 +249,7 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
 
     vec4 cookieA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_A);
     clusterLightData.cookieIntensity = cookieA.x;
-    clusterLightData.isCookieRgb = cookieA.y > 0.5;
+    clusterLightData.cookieRgb = cookieA.y;
 
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
@@ -319,7 +322,7 @@ void evaluateLight(ClusterLightData light) {
         if (dAtten > 0.00001) {
 
             // shadow / cookie
-            if (light.castShadows == true || light.isCookie == true) {
+            if (isClusteredLightCastShadow(light) || isClusteredLightCookie(light)) {
 
                 // shared shadow / cookie data depends on light type
                 if (isClusteredLightSpot(light)) {
@@ -334,13 +337,13 @@ void evaluateLight(ClusterLightData light) {
                 #ifdef CLUSTER_COOKIES
 
                 // cookie
-                if (light.isCookie == true) {
+                if (isClusteredLightCookie(light)) {
                     decodeClusterLightCookieData(light);
 
                     if (isClusteredLightSpot(light)) {
-                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, vPositionW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask);
+                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
                     } else {
-                        dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
 
@@ -349,7 +352,7 @@ void evaluateLight(ClusterLightData light) {
                 #ifdef CLUSTER_SHADOWS
 
                 // shadow
-                if (light.castShadows== true) {
+                if (isClusteredLightCastShadow(light)) {
                     decodeClusterLightShadowData(light);
 
                     vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
