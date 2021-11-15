@@ -1,13 +1,16 @@
 import { Vec3 } from '../../math/vec3.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../graphics/constants.js';
 import { FloatPacking } from '../../math/float-packing.js';
-import { LIGHTTYPE_SPOT } from '../constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT } from '../constants.js';
 import { Texture } from '../../graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
 
 const epsilon = 0.000001;
 
 const tempVec3 = new Vec3();
+const tempAreaLightSizes = new Float32Array(6);
+const areaHalfAxisWidth = new Vec3(-0.5, 0, 0);
+const areaHalfAxisHeight = new Vec3(0, 0, 0.5);
 
 // format of a row in 8 bit texture used to encode light data
 // this is used to store data in the texture correctly, and also use to generate defines for the shader
@@ -55,8 +58,15 @@ const TextureIndex8 = {
     PROJ_MAT_32: 28,
     PROJ_MAT_33: 29,
 
+    AREA_DATA_WIDTH_X: 30,
+    AREA_DATA_WIDTH_Y: 31,
+    AREA_DATA_WIDTH_Z: 32,
+    AREA_DATA_HEIGHT_X: 33,
+    AREA_DATA_HEIGHT_Y: 34,
+    AREA_DATA_HEIGHT_Z: 35,
+
     // leave last
-    COUNT: 30
+    COUNT: 36
 };
 
 // format of the float texture
@@ -64,15 +74,18 @@ const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
     SPOT_DIRECTION: 1,              // spot direction.xyz, -
 
-    PROJ_MAT_0: 2,                  // projection matrix raw 0 (spot light)
+    PROJ_MAT_0: 2,                  // projection matrix row 0 (spot light)
     ATLAS_VIEWPORT: 2,              // atlas viewport data (omni light)
 
-    PROJ_MAT_1: 3,                  // projection matrix raw 1 (spot light)
-    PROJ_MAT_2: 4,                  // projection matrix raw 2 (spot light)
-    PROJ_MAT_3: 5,                  // projection matrix raw 3 (spot light)
+    PROJ_MAT_1: 3,                  // projection matrix row 1 (spot light)
+    PROJ_MAT_2: 4,                  // projection matrix row 2 (spot light)
+    PROJ_MAT_3: 5,                  // projection matrix row 3 (spot light)
+
+    AREA_DATA_WIDTH: 6,             // area light half-width.xyz, -
+    AREA_DATA_HEIGHT: 7,            // area light half-height.xyz, -
 
     // leave last
-    COUNT: 6
+    COUNT: 8
 };
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
@@ -134,13 +147,14 @@ class LightsBuffer {
         return tex;
     }
 
-    constructor(device, cookiesEnabled, shadowsEnabled) {
+    constructor(device, cookiesEnabled, shadowsEnabled, areaLightsEnabled) {
 
         this.device = device;
 
         // features
         this.cookiesEnabled = cookiesEnabled;
         this.shadowsEnabled = shadowsEnabled;
+        this.areaLightsEnabled = areaLightsEnabled;
 
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;
@@ -242,10 +256,28 @@ class LightsBuffer {
         direction.normalize();
     }
 
+    // half sizes of area light in world space, returned as an array of 6 floats
+    getLightAreaSizes(light) {
+
+        const mat = light._node.getWorldTransform();
+
+        mat.transformVector(areaHalfAxisWidth, tempVec3);
+        tempAreaLightSizes[0] = tempVec3.x;
+        tempAreaLightSizes[1] = tempVec3.y;
+        tempAreaLightSizes[2] = tempVec3.z;
+
+        mat.transformVector(areaHalfAxisHeight, tempVec3);
+        tempAreaLightSizes[3] = tempVec3.x;
+        tempAreaLightSizes[4] = tempVec3.y;
+        tempAreaLightSizes[5] = tempVec3.z;
+
+        return tempAreaLightSizes;
+    }
+
     addLightDataFlags(data8, index, light, isSpot) {
         data8[index + 0] = isSpot ? 255 : 0;
-        data8[index + 1] = light._shape * 255;         // this need different encoding as value is 0..2
-        data8[index + 2] = light._falloffMode * 255;   // we should consider making this global instead of per light
+        data8[index + 1] = light._shape * 64;           // value 0..3
+        data8[index + 2] = light._falloffMode * 255;    // value 0..1
         data8[index + 3] = light.castShadows ? 255 : 0;
     }
 
@@ -323,11 +355,19 @@ class LightsBuffer {
         // we have two unused bytes here
     }
 
+    addLightAreaSizes(data8, index, light) {
+        const areaSizes = this.getLightAreaSizes(light);
+        for (let i = 0; i < 6; i++) {  // these are full float range
+            FloatPacking.float2MantisaExponent(areaSizes[i], data8, index + 4 * i, 4);
+        }
+    }
+
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex, gammaCorrection) {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;
         const isCookie = this.cookiesEnabled && !!light._cookie;
+        const isArea = this.areaLightsEnabled && light.shape !== LIGHTSHAPE_PUNCTUAL;
         const castShadows = this.shadowsEnabled && light.castShadows;
         const pos = light._node.getPosition();
 
@@ -405,6 +445,18 @@ class LightsBuffer {
                 dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 2] = atlasViewport.z / 3; // size of a face slot (3x3 grid)
             }
 
+            // area light sizes
+            if (isArea) {
+                const areaSizes = this.getLightAreaSizes(light);
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 0] = areaSizes[0];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 1] = areaSizes[1];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 2] = areaSizes[2];
+
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 0] = areaSizes[3];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 1] = areaSizes[4];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 2] = areaSizes[5];
+            }
+
         } else {    // high precision data stored using 8bit texture
 
             this.addLightDataPositionRange(data8, data8Start + 4 * TextureIndex8.POSITION_X, light, pos);
@@ -421,6 +473,11 @@ class LightsBuffer {
 
             if (atlasViewport) {
                 this.addLightAtlasViewport(data8, data8Start + 4 * TextureIndex8.ATLAS_VIEWPORT_A, atlasViewport);
+            }
+
+            // area light sizes
+            if (isArea) {
+                this.addLightAreaSizes(data8, data8Start + 4 * TextureIndex8.AREA_DATA_WIDTH_X, light);
             }
         }
     }

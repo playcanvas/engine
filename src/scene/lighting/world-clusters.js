@@ -28,7 +28,7 @@ class ClusterLight {
 // Main class implementing clustered lighting. Internally it organizes the omni / spot lights placement in world space 3d cell structure,
 // and also uses LightsBuffer class to store light properties in textures
 class WorldClusters {
-    constructor(device, cells, maxCellLightCount, cookiesEnabled = false, shadowsEnabled = false) {
+    constructor(device, cells, maxCellLightCount, cookiesEnabled = false, shadowsEnabled = false, areaLightsEnabled = false) {
         this.device = device;
         this.name = "Untitled";
 
@@ -64,7 +64,7 @@ class WorldClusters {
         this._usedLights.push(new ClusterLight());
 
         // allocate textures to store lights
-        this.lightsBuffer = new LightsBuffer(device, cookiesEnabled, shadowsEnabled);
+        this.lightsBuffer = new LightsBuffer(device, cookiesEnabled, shadowsEnabled, areaLightsEnabled);
 
         // register shader uniforms
         this.registerUniforms(device);
@@ -142,6 +142,30 @@ class WorldClusters {
             this._cellsLimit.copy(tempVec3).sub(Vec3.ONE);
             this._cellsDirty = true;
         }
+    }
+
+    get cookiesEnabled() {
+        return this.lightsBuffer.cookiesEnabled;
+    }
+
+    set cookiesEnabled(value) {
+        this.lightsBuffer.cookiesEnabled = value;
+    }
+
+    get shadowsEnabled() {
+        return this.lightsBuffer.shadowsEnabled;
+    }
+
+    set shadowsEnabled(value) {
+        this.lightsBuffer.shadowsEnabled = value;
+    }
+
+    get areaLightsEnabled() {
+        return this.lightsBuffer.areaLightsEnabled;
+    }
+
+    set areaLightsEnabled(value) {
+        this.lightsBuffer.areaLightsEnabled = value;
     }
 
     updateCells() {

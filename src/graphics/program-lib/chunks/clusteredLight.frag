@@ -32,17 +32,21 @@ struct ClusterLightData {
     // v coordinate to look up the light textures
     float lightV;
 
-    // true if spot light, false for omni light
-    bool isSpot;
+    // type of the light (spot or omni)
+    float type;
 
     // area light shape
     float shape;
 
+    // area light sizes / orientation
+    vec3 halfWidth;
+    vec3 halfHeight;
+
     // light follow mode
     float falloffMode;
 
-    // true if the light is shadow casting
-    bool castShadows;
+    // 1.0 if the light is shadow casting
+    float castShadows;
 
     // shadow bias values
     float shadowBias;
@@ -70,11 +74,11 @@ struct ClusterLightData {
     // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
     vec3 omniAtlasViewport;
 
-    // true if the light has a cookie texture
-    bool isCookie;
+    // 1.0 if the light has a cookie texture
+    float cookie;
 
-    // true if cookie texture is rgb, false is using a single channel selectable by cookieChannelMask
-    bool isCookieRgb;
+    // 1.0 if cookie texture is rgb, otherwise it is using a single channel selectable by cookieChannelMask
+    float cookieRgb;
 
     // invensity of the cookie
     float cookieIntensity;
@@ -82,6 +86,19 @@ struct ClusterLightData {
     // channel mask - one of the channels has 1, the others are 0
     vec4 cookieChannelMask;
 };
+
+// macros for light properties
+#define isClusteredLightCastShadow(light) ( light.castShadows > 0.5 )
+#define isClusteredLightCookie(light) (light.cookie > 0.5 )
+#define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
+#define isClusteredLightSpot(light) ( light.type > 0.5 )
+#define isClusteredLightFalloffLinear(light) ( light.falloffMode < 0.5 )
+
+// macros to test light shape
+// Note: Following functions need to be called serially in listed order as they do not test both '>' and '<'
+#define isClusteredLightArea(light) ( light.shape > 0.1 )
+#define isClusteredLightRect(light) ( light.shape < 0.3 )
+#define isClusteredLightDisk(light) ( light.shape < 0.6 )
 
 vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     return vec4(
@@ -107,18 +124,18 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 
     // shared data from 8bit texture
     vec4 lightInfo = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_FLAGS);
-    clusterLightData.isSpot = lightInfo.x > 0.5;
+    clusterLightData.type = lightInfo.x;
     clusterLightData.shape = lightInfo.y;
     clusterLightData.falloffMode = lightInfo.z;
-    clusterLightData.castShadows = lightInfo.w > 0.5;
+    clusterLightData.castShadows = lightInfo.w;
 
     // color
     vec4 colorA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_A);
     vec4 colorB = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_B);
     clusterLightData.color = vec3(bytes2float2(colorA.xy), bytes2float2(colorA.zw), bytes2float2(colorB.xy)) * clusterCompressionLimit0.y;
 
-    // isCookie
-    clusterLightData.isCookie = colorB.z > 0.5;
+    // cookie
+    clusterLightData.cookie = colorB.z;
 
     #ifdef CLUSTER_TEXTURE_FLOAT
 
@@ -164,6 +181,23 @@ void decodeClusterLightOmniAtlasViewport(inout ClusterLightData clusterLightData
         vec4 viewportA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_ATLAS_VIEWPORT_A);
         vec4 viewportB = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_ATLAS_VIEWPORT_B);
         clusterLightData.omniAtlasViewport = vec3(bytes2float2(viewportA.xy), bytes2float2(viewportA.zw), bytes2float2(viewportB.xy));
+    #endif
+}
+
+void decodeClusterLightAreaData(inout ClusterLightData clusterLightData) {
+    #ifdef CLUSTER_TEXTURE_FLOAT
+        clusterLightData.halfWidth = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_AREA_DATA_WIDTH).xyz;
+        clusterLightData.halfHeight = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_F_AREA_DATA_HEIGHT).xyz;
+    #else
+        vec4 areaWidthX = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_WIDTH_X);
+        vec4 areaWidthY = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_WIDTH_Y);
+        vec4 areaWidthZ = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_WIDTH_Z);
+        clusterLightData.halfWidth = vec3(mantisaExponent2Float(areaWidthX), mantisaExponent2Float(areaWidthY), mantisaExponent2Float(areaWidthZ));
+
+        vec4 areaHeightX = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_HEIGHT_X);
+        vec4 areaHeightY = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_HEIGHT_Y);
+        vec4 areaHeightZ = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_AREA_DATA_HEIGHT_Z);
+        clusterLightData.halfHeight = vec3(mantisaExponent2Float(areaHeightX), mantisaExponent2Float(areaHeightY), mantisaExponent2Float(areaHeightZ));
     #endif
 }
 
@@ -216,7 +250,7 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
 
     vec4 cookieA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_A);
     clusterLightData.cookieIntensity = cookieA.x;
-    clusterLightData.isCookieRgb = cookieA.y > 0.5;
+    clusterLightData.cookieRgb = cookieA.y;
 
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
@@ -227,13 +261,63 @@ void evaluateLight(ClusterLightData light) {
 
     // evaluate omni part of the light
     getLightDirPoint(light.position);
-    dAtten = getFalloffLinear(light.range);
+
+    #ifdef CLUSTER_AREALIGHTS
+
+    // distance attenuation
+    if (isClusteredLightArea(light)) { // area light
+
+        // area lights
+        decodeClusterLightAreaData(light);
+
+        // handle light shape
+        if (isClusteredLightRect(light)) {
+            calcRectLightValues(light.position, light.halfWidth, light.halfHeight);
+        } else if (isClusteredLightDisk(light)) {
+            calcDiskLightValues(light.position, light.halfWidth, light.halfHeight);
+        } else { // sphere
+            calcSphereLightValues(light.position, light.halfWidth, light.halfHeight);
+        }
+
+        dAtten = getFalloffWindow(light.range);
+
+    } else
+
+    #endif
+
+    {   // punctual light
+
+        if (isClusteredLightFalloffLinear(light))
+            dAtten = getFalloffLinear(light.range);
+        else
+            dAtten = getFalloffInvSquared(light.range);
+    }
+
     if (dAtten > 0.00001) {
 
-        dAtten *= getLightDiffuse();
+        #ifdef CLUSTER_AREALIGHTS
+
+        if (isClusteredLightArea(light)) { // area light
+
+            // handle light shape
+            if (isClusteredLightRect(light)) {
+                dAttenD = getRectLightDiffuse() * 16.0;
+            } else if (isClusteredLightDisk(light)) {
+                dAttenD = getDiskLightDiffuse() * 16.0;
+            } else { // sphere
+                dAttenD = getSphereLightDiffuse() * 16.0;
+            }
+
+        } else
+
+        #endif
+
+        {
+            dAtten *= getLightDiffuse();
+        }
 
         // spot light falloff
-        if (light.isSpot == true) {
+        if (isClusteredLightSpot(light)) {
             decodeClusterLightSpot(light);
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
@@ -243,10 +327,10 @@ void evaluateLight(ClusterLightData light) {
         if (dAtten > 0.00001) {
 
             // shadow / cookie
-            if (light.castShadows == true || light.isCookie == true) {
+            if (isClusteredLightCastShadow(light) || isClusteredLightCookie(light)) {
 
                 // shared shadow / cookie data depends on light type
-                if (light.isSpot == true) {
+                if (isClusteredLightSpot(light)) {
                     decodeClusterLightProjectionMatrixData(light);
                 } else {
                     decodeClusterLightOmniAtlasViewport(light);
@@ -258,13 +342,13 @@ void evaluateLight(ClusterLightData light) {
                 #ifdef CLUSTER_COOKIES
 
                 // cookie
-                if (light.isCookie == true) {
+                if (isClusteredLightCookie(light)) {
                     decodeClusterLightCookieData(light);
 
-                    if (light.isSpot == true) {
-                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, vPositionW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask);
+                    if (isClusteredLightSpot(light)) {
+                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
                     } else {
-                        dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, light.isCookieRgb, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
 
@@ -273,12 +357,12 @@ void evaluateLight(ClusterLightData light) {
                 #ifdef CLUSTER_SHADOWS
 
                 // shadow
-                if (light.castShadows== true) {
+                if (isClusteredLightCastShadow(light)) {
                     decodeClusterLightShadowData(light);
 
                     vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
 
-                    if (light.isSpot == true) {
+                    if (isClusteredLightSpot(light)) {
 
                         // spot shadow
                         getShadowCoordPerspZbufferNormalOffset(light.lightProjectionMatrix, shadowParams);
@@ -298,17 +382,102 @@ void evaluateLight(ClusterLightData light) {
 
         #endif
 
-        dDiffuseLight += dAtten * light.color * dAtten3;
+        // diffuse / specular / clearcoat
+        #ifdef CLUSTER_AREALIGHTS
 
-        // specular and clear coat are material settings and get included by a define based on the material
-        #ifdef CLUSTER_SPECULAR
-            dSpecularLight += getLightSpecular() * dAtten * light.color;
+        if (isClusteredLightArea(light)) { // area light
 
-            #ifdef CLUSTER_CLEAR_COAT
-                ccSpecularLight += getLightSpecularCC() * dAtten * light.color  * dAtten3;
+            // area light diffuse
+            {
+                vec3 areaDiffuse = (dAttenD * dAtten) * light.color * dAtten3;
+
+                #if defined(CLUSTER_SPECULAR) && defined(CLUSTER_CONSERVE_ENERGY)
+                    areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
+                #endif
+
+                // area light diffuse - it does not mix diffuse lighting into specular attenuation
+                dDiffuseLight += areaDiffuse;
+            }
+
+            // specular and clear coat are material settings and get included by a define based on the material
+            #ifdef CLUSTER_SPECULAR
+
+                // area light specular
+                float areaLightSpecular;
+
+                if (isClusteredLightRect(light)) {
+                    areaLightSpecular = getRectLightSpecular();
+                } else if (isClusteredLightDisk(light)) {
+                    areaLightSpecular = getDiskLightSpecular();
+                } else { // sphere
+                    areaLightSpecular = getSphereLightSpecular();
+                }
+
+                dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
+
+                #ifdef CLUSTER_CLEAR_COAT
+
+                    // area light specular clear coat
+                    float areaLightSpecularCC;
+
+                    if (isClusteredLightRect(light)) {
+                        areaLightSpecularCC = getRectLightSpecularCC();
+                    } else if (isClusteredLightDisk(light)) {
+                        areaLightSpecularCC = getDiskLightSpecularCC();
+                    } else { // sphere
+                        areaLightSpecularCC = getSphereLightSpecularCC();
+                    }
+
+                    ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;
+
+                #endif
+
             #endif
 
+        } else
+
         #endif
+
+        {    // punctual light
+
+            // punctual light diffuse
+            {
+                vec3 punctualDiffuse = dAtten * light.color * dAtten3;
+
+                #if defined(CLUSTER_AREALIGHTS) && defined(CLUSTER_SPECULAR) && defined(CLUSTER_CONSERVE_ENERGY)
+                    punctualDiffuse = mix(punctualDiffuse, vec3(0), dSpecularity);
+                #endif
+
+                dDiffuseLight += punctualDiffuse;
+            }
+   
+            // specular and clear coat are material settings and get included by a define based on the material
+            #ifdef CLUSTER_SPECULAR
+
+                // specular
+                {
+                    vec3 punctualSpecular = getLightSpecular() * dAtten * light.color * dAtten3;
+
+                    #if defined(CLUSTER_AREALIGHTS)
+                        punctualSpecular *= dSpecularity;
+                    #endif
+
+                    dSpecularLight += punctualSpecular;
+                }
+
+                #ifdef CLUSTER_CLEAR_COAT
+
+                    vec3 punctualCC = getLightSpecularCC() * dAtten * light.color * dAtten3;
+
+                    #if defined(CLUSTER_AREALIGHTS)
+                        punctualCC *= ccSpecularity;
+                    #endif
+
+                    ccSpecularLight += punctualCC;
+                #endif
+
+            #endif
+        }
     }
 }
 
