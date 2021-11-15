@@ -163,7 +163,7 @@ class AreaLightsExample extends Example {
             brightShape.setLocalScale(primitiveScale);
             light.addChild(brightShape);
 
-            // black primitive representing tha back of the light source which is not emmiting light
+            // black primitive representing the back of the light source which is not emitting light
             if (type === "spot") {
 
                 const blackShape = new pc.Entity();
