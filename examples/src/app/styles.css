@@ -371,8 +371,7 @@ body {
 }
 #controlPanel.mobile > .pcui-panel-content > section {
     border-radius: 6px;
-    height: calc(100% - 32px) !important;
-    position: fixed !important;
+    position: absolute !important;
 }
 /* } */
 

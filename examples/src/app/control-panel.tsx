@@ -54,9 +54,12 @@ const ControlPanel = (props: any) => {
 
     useEffect(() => {
         if (window.top.innerWidth < 601) {
-            const controls = document.getElementById('controlPanel-controls');
             // @ts-ignore
-            controls.ui.hidden = true;
+            document.getElementById('controlPanel-controls').ui.hidden = true;
+        }
+        if (window.top.location.hash.indexOf('#/iframe') === 0) {
+            // @ts-ignore
+            document.getElementById('controlPanel').ui.hidden = true;
         }
     });
 
