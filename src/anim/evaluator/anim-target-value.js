@@ -54,7 +54,10 @@ class AnimTargetValue {
     updateValue(index, value) {
         // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
-            this.value.fill(0, 0, 3).fill(1, 3);
+            this.value[0] = 0;
+            this.value[1] = 0;
+            this.value[2] = 0;
+            this.value[3] = 1;
         }
         if (!this.mask[index]) return;
         if (this.counter === 0) {
