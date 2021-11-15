@@ -100,16 +100,18 @@ export const examples = (() => {
                 })
                 .join('');
 
-            functionText = Babel.transform(functionText, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
-            functionText = format(functionText, { parser: parse, tabWidth: 4 });
+            if (!/Mobi/.test(navigator.userAgent)) {
+                functionText = Babel.transform(functionText, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code;
+                functionText = format(functionText, { parser: parse, tabWidth: 4 });
+                files.unshift(
+                    {
+                        name: 'example.js',
+                        text: functionText,
+                        type: 'javascript'
+                    }
+                );
+            }
 
-            files.unshift(
-                {
-                    name: 'example.js',
-                    text: functionText,
-                    type: 'javascript'
-                }
-            );
             // @ts-ignore
             if (example.load) {
                 // @ts-ignore

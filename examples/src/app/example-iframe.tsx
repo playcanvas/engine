@@ -14,6 +14,8 @@ import * as pcx from 'playcanvas/build/playcanvas-extras.js';
 // @ts-ignore: library file import
 import * as Babel from '@babel/standalone';
 // @ts-ignore: library file import
+import ResizeObserver from 'resize-observer-polyfill/dist/ResizeObserver.global.js';
+// @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 import * as javascriptErrorOverlay from '../../lib/javascriptErrorOverlay';
 import { File } from './helpers/types';

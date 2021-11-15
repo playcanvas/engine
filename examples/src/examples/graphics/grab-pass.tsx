@@ -161,7 +161,7 @@ class GrabPassExample extends Example {
         glass.render.castShadows = false;
         glass.render.receiveShadows = false;
 
-        // create shader using vertex and fragment shaders
+        // @ts-ignore create shader using vertex and fragment shaders
         const webgl2def = (app.graphicsDevice.webgl2) ? "#define GL2\n" : "";
         const shaderDefinition = {
             attributes: {
