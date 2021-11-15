@@ -345,7 +345,7 @@ class AnimEvaluator {
                         animTarget.counter = 0;
                     }
 
-                    // Add this layers value onto the target value
+                    // Add this layer's value onto the target value
                     animTarget.updateValue(binder.layerIndex, target.value);
 
                     // update the target property using this new value
