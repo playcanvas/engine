@@ -1,7 +1,7 @@
 import { Quat } from '../../math/quat.js';
 import { Vec3 } from '../../math/vec3.js';
-import { Vec4 } from '../../math/vec4.js';
 import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
+import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
 
 /**
  * @private
@@ -12,11 +12,9 @@ import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
  * @param {string} type - The type of value stored, either quat or vec3.
  */
 class AnimTargetValue {
-    static TYPE_QUAT = 'QUATERNION';
+    static TYPE_QUAT = 'quaternion';
 
-    static TYPE_VEC3 = 'VECTOR3';
-
-    static _weightedQuaternion = new Vec4();
+    static TYPE_VEC3 = 'vector3';
 
     constructor(component, type) {
         this._component = component;
@@ -27,14 +25,7 @@ class AnimTargetValue {
         this.layerCounter = 0;
         this.valueType = type;
         this.dirty = true;
-
-        if (this.valueType === AnimTargetValue.TYPE_QUAT) {
-            this.value = new Quat();
-            this._currentValue = new Quat();
-        } else {
-            this.value = new Vec3();
-            this._currentValue = new Vec3();
-        }
+        this.value = [0, 0, 0, 1];
     }
 
     getWeight(index) {
@@ -63,35 +54,15 @@ class AnimTargetValue {
     }
 
     updateValue(index, value) {
+        // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
-            this.value.set(0, 0, 0, 1);
+            this.value = [0, 0, 0, 1];
         }
         if (!this.mask[index]) return;
-        this._currentValue.set(...value);
-        switch (this.valueType) {
-            case (AnimTargetValue.TYPE_QUAT): {
-                // Blend the current rotation value with the identity quaternion using its weight
-                const t = this.getWeight(index);
-                AnimTargetValue._weightedQuaternion.set(
-                    this._currentValue.x * t,
-                    this._currentValue.y * t,
-                    this._currentValue.z * t,
-                    1.0 - t + this._currentValue.w * t,
-                );
-
-                // normalise the weighted vector
-                const squaredMagnitude = AnimTargetValue._weightedQuaternion.dot(AnimTargetValue._weightedQuaternion);
-                if (squaredMagnitude > 0) AnimTargetValue._weightedQuaternion.mulScalar(1.0 / Math.sqrt(squaredMagnitude));
-
-                // apply the weighted rotation to the current target value
-                this.value.mul(AnimTargetValue._weightedQuaternion);
-                break;
-            }
-            case (AnimTargetValue.TYPE_VEC3): {
-                // Add the weighted vector to the current target value
-                this.value.add(this._currentValue.mulScalar(this.getWeight(index)));
-                break;
-            }
+        if (this.counter === 0) {
+            AnimEvaluator._set(this.value, value, this.valueType);
+        } else {
+            AnimEvaluator._blend(this.value, value, this.getWeight(index), this.valueType);
         }
     }
 }
