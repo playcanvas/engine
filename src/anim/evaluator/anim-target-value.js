@@ -1,5 +1,3 @@
-import { Quat } from '../../math/quat.js';
-import { Vec3 } from '../../math/vec3.js';
 import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
 

@@ -334,7 +334,6 @@ class AnimEvaluator {
 
         // apply result to anim targets
         const targets = this._targets;
-        const targetValue = new Array(4);
         const binder = this._binder;
         for (const path in targets) {
             if (targets.hasOwnProperty(path)) {
