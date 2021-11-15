@@ -334,7 +334,6 @@ class AnimEvaluator {
 
         // apply result to anim targets
         const targets = this._targets;
-        const targetValue = new Array(4);
         const binder = this._binder;
         for (const path in targets) {
             if (targets.hasOwnProperty(path)) {
@@ -346,16 +345,11 @@ class AnimEvaluator {
                         animTarget.counter = 0;
                     }
 
-                    // Add this layers value onto the target value
+                    // Add this layer's value onto the target value
                     animTarget.updateValue(binder.layerIndex, target.value);
 
-                    // get the updated value from the target which has been weighted and normalized using the layer mask and weights
-                    targetValue[0] = animTarget.value.x;
-                    targetValue[1] = animTarget.value.y;
-                    targetValue[2] = animTarget.value.z;
-                    targetValue[3] = animTarget.value.w;
                     // update the target property using this new value
-                    target.target.func(targetValue);
+                    target.target.func(animTarget.value);
                     animTarget.counter++;
                 } else {
                     target.target.func(target.value);
