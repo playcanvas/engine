@@ -35,6 +35,10 @@ class ClusteredSpotShadowsExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.layers.clusteredLightingMaxLights = 80;
 
+        // enable clustered cookies
+        // @ts-ignore engine-tsd
+        app.scene.layers.clusteredLightingCookiesEnabled = true;
+
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
