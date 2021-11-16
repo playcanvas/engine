@@ -30,6 +30,7 @@ import {
 import { Material } from '../materials/material.js';
 import { LayerComposition } from '../composition/layer-composition.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
+import { DefaultMaterial } from '../materials/default-material.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
@@ -1249,7 +1250,7 @@ class ForwardRenderer {
                 // #endif
 
                 if (!drawCall.material)
-                    drawCall.material = this.scene.defaultMaterial;
+                    drawCall.material = DefaultMaterial.get(device);
 
                 const material = drawCall.material;
 

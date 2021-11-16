@@ -13,11 +13,8 @@ import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAY
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
-import { DefaultMaterial } from './materials/default-material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-
-import { getApplication } from '../framework/globals.js';
 
 /**
  * @class
@@ -99,8 +96,6 @@ import { getApplication } from '../framework/globals.js';
  * @property {number} ambientBakeOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
- * @property {StandardMaterial} defaultMaterial The default material used in case no
- * other material is available.
  * @property {Entity} root The root entity of the scene, which is usually the only
  * child to the Application root entity.
  */
@@ -181,10 +176,6 @@ class Scene extends EventHandler {
         this._resetSkyboxModel();
         this.root = null;
         this.off();
-    }
-
-    get defaultMaterial() {
-        return DefaultMaterial.get(getApplication().graphicsDevice);
     }
 
     get fog() {
