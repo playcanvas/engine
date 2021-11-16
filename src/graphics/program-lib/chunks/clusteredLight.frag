@@ -491,13 +491,6 @@ void evaluateClusterLight(float lightIndex) {
     evaluateLight(clusterLightData);
 }
 
-const vec4 channelSelector[4] = vec4[4] (
-    vec4(1., 0., 0., 0.),
-    vec4(0., 1., 0., 0.),
-    vec4(0., 0., 1., 0.),
-    vec4(0., 0., 0., 1.)
-);
-
 void addClusteredLights() {
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
@@ -522,7 +515,12 @@ void addClusteredLights() {
 
             // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
             for (int i = 0; i < 4; i++) {
-                float index = dot(channelSelector[i], indices);
+                
+                float index = indices.x;
+                if (i == 1) index = indices.y;
+                else if (i == 2) index = indices.z;
+                else if (i == 3) index = indices.w;
+
                 if (index <= 0.0)
                     return;
 

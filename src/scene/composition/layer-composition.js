@@ -100,9 +100,9 @@ class LayerComposition extends EventHandler {
         // clustered lighting parameters
         this._clusteredLightingCells = new Vec3(10, 3, 10);
         this._clusteredLightingMaxLights = 64;
-        this._clusteredLightingCookiesEnabled = true;
+        this._clusteredLightingCookiesEnabled = false;
         this._clusteredLightingShadowsEnabled = true;
-        this._clusteredLightingAreaLightsEnabled = true;
+        this._clusteredLightingAreaLightsEnabled = false;
     }
 
     destroy() {

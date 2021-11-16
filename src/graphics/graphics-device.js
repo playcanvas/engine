@@ -912,6 +912,10 @@ class GraphicsDevice extends EventHandler {
 
         this.samples = gl.getParameter(gl.SAMPLES);
         this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+
+        // Don't allow area lights on old android devices, they often fail to compile the shader,
+        // run it incorrectly or are very slow.
+        this.supportsAreaLights = this.webgl2 || !platform.android;
     }
 
     initializeRenderState() {

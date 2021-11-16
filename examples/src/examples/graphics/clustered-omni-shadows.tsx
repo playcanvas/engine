@@ -47,7 +47,7 @@ class ClusteredShadowsOmniExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.layers.clusteredLightingShadowsEnabled = true;
 
-        // enable clustered cookies (it's enabled by default as well)
+        // enable clustered cookies
         // @ts-ignore engine-tsd
         app.scene.layers.clusteredLightingCookiesEnabled = true;
 

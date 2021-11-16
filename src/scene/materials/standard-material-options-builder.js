@@ -44,7 +44,7 @@ class StandardMaterialOptionsBuilder {
     updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
         this._updateSharedOptions(options, stdMat, objDefs, pass);
         options.useTexCubeLod = device.useTexCubeLod;
-        this._updateEnvOptions(options, stdMat, scene, prefilteredCubeMap128);
+        this._updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
             if (options.gamma) options.gamma = GAMMA_SRGBHDR;
@@ -167,7 +167,7 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
     }
 
-    _updateEnvOptions(options, stdMat, scene, prefilteredCubeMap128) {
+    _updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128) {
         const rgbmAmbient = (prefilteredCubeMap128 && prefilteredCubeMap128.type === TEXTURETYPE_RGBM) ||
             (stdMat.cubeMap && stdMat.cubeMap.type === TEXTURETYPE_RGBM) ||
             (stdMat.dpAtlas && stdMat.dpAtlas.type === TEXTURETYPE_RGBM);
@@ -211,7 +211,7 @@ class StandardMaterialOptionsBuilder {
         if (LayerComposition.clusteredLightingEnabled && scene.layers) {
             options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
             options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
+            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled && device.supportsAreaLights;
         }
     }
 
