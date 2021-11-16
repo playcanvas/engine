@@ -89,7 +89,7 @@ class ApplicationStats {
     }
 
     get lightmapper() {
-        return getApplication().lightmapper._stats;
+        return getApplication().lightmapper.stats;
     }
 
     get batcher() {
