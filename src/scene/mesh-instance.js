@@ -57,6 +57,7 @@ class Command {
  * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
  * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {MorphInstance} morphInstance The morph instance managing morphing of this mesh instance, or null if morphing is not used.
+ * @property {SkinInstance} skinInstance The skin instance managing skinning of this mesh instance, or null if skinning is not used.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
  * @property {GraphNode} node The graph node defining the transform for this instance.
@@ -168,6 +169,38 @@ class MeshInstance {
         this.stencilBack = null;
         // Negative scale batching support
         this.flipFaces = false;
+    }
+
+    destroy() {
+
+        const mesh = this.mesh;
+        if (mesh) {
+
+            // this decreases ref count on the mesh
+            this.mesh = null;
+
+            // destroy mesh
+            if (mesh.getRefCount() < 1) {
+                mesh.destroy();
+            }
+        }
+
+        // release ref counted lightmaps
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
+
+        if (this._skinInstance) {
+            this._skinInstance.destroy();
+            this._skinInstance = null;
+        }
+
+        if (this.morphInstance) {
+            this.morphInstance.destroy();
+            this.morphInstance = null;
+        }
+
+        // make sure material clears references to this meshInstance
+        this.material = null;
     }
 
     // shader uniform names for lightmaps
@@ -455,38 +488,6 @@ class MeshInstance {
     set instancingCount(value) {
         if (this.instancingData)
             this.instancingData.count = value;
-    }
-
-    destroy() {
-
-        const mesh = this.mesh;
-        if (mesh) {
-
-            // this decreases ref count on the mesh
-            this.mesh = null;
-
-            // destroy mesh
-            if (mesh.getRefCount() < 1) {
-                mesh.destroy();
-            }
-        }
-
-        // release ref counted lightmaps
-        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
-        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
-
-        if (this._skinInstance) {
-            this._skinInstance.destroy();
-            this._skinInstance = null;
-        }
-
-        if (this.morphInstance) {
-            this.morphInstance.destroy();
-            this.morphInstance = null;
-        }
-
-        // make sure material clears references to this meshInstance
-        this.material = null;
     }
 
     syncAabb() {
