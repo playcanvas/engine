@@ -1447,7 +1447,7 @@ const standard = {
 
             if (options.clusteredLightingCookiesEnabled)
                 code += "\n#define CLUSTER_COOKIES";
-            if (options.clusteredLightingShadowsEnabled)
+            if (options.clusteredLightingShadowsEnabled && !options.noShadow)
                 code += "\n#define CLUSTER_SHADOWS";
             if (options.clusteredLightingAreaLightsEnabled)
                 code += "\n#define CLUSTER_AREALIGHTS";
