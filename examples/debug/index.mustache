@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.13.9/runtime.min.js"> </script>
+    <script src="{{{enginePath}}}"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas-observer.js"></script>
+    <script src="../../build/wasm-loader.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-y: hidden;
+        }
+        #app-canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id='app-canvas'></canvas>
+    <script>
+        {{{ exampleConstValues }}}.forEach(function(s) {
+            window[s.k] = s.v;
+        });
+
+        function loadExample(exampleFunction, loadFunction, controlsFunction) {
+            var data = new observer.Observer({});
+
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body),
+                elementInput: new pc.ElementInput(canvas),
+                gamepads: new pc.GamePads(),
+                keyboard: new pc.Keyboard(window),
+                graphicsDeviceOptions: {
+                    alpha: true
+                }
+            });
+
+            new pcx.MiniStats(app);
+
+            var assets;
+            if (!loadFunction) {
+                assets = [];
+            } else {
+                assets = loadFunction().props.children;
+                if (!Array.isArray(assets)) {
+                    assets = [assets];
+                }
+            }
+
+            assets = assets.map(function (c) {
+                var props = {
+                    ...c.props
+                };
+                return props;
+            });
+
+            var manifest = {};
+
+            // count of assets to load
+            var count = assets.length;
+
+            function onLoadedResource(key, asset) {
+                count--;
+                if (key) {
+                    manifest[key] = asset;
+                }
+                if (count <= 0) {
+                    exampleFunction(app, canvas, manifest, data);
+                }
+            }
+
+            if (assets.length === 0) {
+                onLoadedResource();
+            }
+
+            assets.forEach(function (resource) {
+                if (!resource.type) {
+                    fetch(resource.url)
+                        .then((response) => response.text())
+                        .then((data) => {
+                            const module = {
+                                exports: {}
+                            };
+                            window[resource.name] = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
+                            onLoadedResource();
+                        });
+                    return;
+                }
+                if (resource.data) {
+                    var asset = new pc.Asset(
+                        resource.name,
+                        resource.type,
+                        resource.type === "cubemap" ? {
+                            url: resource.url
+                        } : null,
+                        resource.data
+                    );
+                    asset.on("load", function (asset) {
+                        onLoadedResource(resource.name, asset);
+                    });
+                    app.assets.add(asset);
+                    app.assets.load(asset);
+                } else {
+                    app.assets.loadFromUrl(resource.url, resource.type, function (
+                        err,
+                        asset
+                    ) {
+                        if (!err && asset) {
+                            onLoadedResource(resource.name, asset);
+                        }
+                    });
+                }
+            });
+        }
+
+        var canvas = document.getElementById('app-canvas');
+        canvas.setAttribute('width', window.innerWidth + 'px');
+        canvas.setAttribute('height', window.innerHeight + 'px');
+
+        {{{ exampleClass }}}
+
+        pc.basisInitialize({
+            glueUrl: '../../static/lib/basis/basis.wasm.js',
+            wasmUrl: '../../static/lib/basis/basis.wasm.wasm',
+            fallbackUrl: '../../static/lib/basis/basis.js'
+        });
+
+        var e = new Example();
+        loadExample.bind(this)(e.example, e.load, e.controls);
+    </script>
+</body>
+
+</html>

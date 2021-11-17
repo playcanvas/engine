@@ -184,7 +184,7 @@ class RenderCubemapExample extends Example {
 
         // helper function to create a texture that can be used to project cubemap to
         function createReprojectionTexture(projection: string, size: number) {
-            return new pc.Texture(this.app.graphicsDevice, {
+            return new pc.Texture(app.graphicsDevice, {
                 width: size,
                 height: size,
                 format: pc.PIXELFORMAT_R8_G8_B8,
