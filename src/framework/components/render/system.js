@@ -6,6 +6,7 @@ import { RenderComponentData } from './data.js';
 
 import { BoundingBox } from '../../../shape/bounding-box';
 import { Vec3 } from '../../../math/vec3';
+import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 
 const _schema = [
     { name: 'rootBone', type: 'entity' },
@@ -48,7 +49,7 @@ class RenderComponentSystem extends ComponentSystem {
         this.DataType = RenderComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = app.scene.defaultMaterial;
+        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }
