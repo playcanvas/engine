@@ -156,7 +156,6 @@ void calcLTCLightValues()
 void calcRectLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 {
 	dLTCCoords = getLTCLightCoords(lightPos, halfWidth, halfHeight);
-	calcLTCLightValues();
 }
 void calcDiskLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 {
@@ -165,7 +164,6 @@ void calcDiskLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 void calcSphereLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 {
 	dLTCCoords = getSphereLightCoords(lightPos, halfWidth, halfHeight);
-	calcLTCLightValues();
 }
 
 // An extended version of the implementation from
