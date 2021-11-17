@@ -11,53 +11,6 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-// create an anim state graph
-const animStateGraphData = {
-    "layers": [
-        {
-            "name": "characterState",
-            "states": [
-                {
-                    "name": "START"
-                },
-                {
-                    "name": "Movement",
-                    "speed": 1.0,
-                    "loop": true,
-                    "blendTree": {
-                        "type": "1D",
-                        "parameter": "blend",
-                        "children": [
-                            {
-                                "name": "Idle",
-                                "point": 0.0
-                            },
-                            {
-                                "name": "Dance",
-                                "point": 1.0,
-                                "speed": 0.85
-                            }
-                        ]
-                    }
-                }
-            ],
-            "transitions": [
-                {
-                    "from": "START",
-                    "to": "Movement"
-                }
-            ]
-        }
-    ],
-    "parameters": {
-        "blend": {
-            "name": "blend",
-            "type": "FLOAT",
-            "value": 0
-        }
-    }
-};
-
 class BlendTrees1DExample extends Example {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
@@ -67,7 +20,6 @@ class BlendTrees1DExample extends Example {
             <AssetLoader name='model' type='container' url='static/assets/models/bitmoji.glb' />
             <AssetLoader name='idleAnim' type='container' url='static/assets/animations/bitmoji/idle.glb' />
             <AssetLoader name='danceAnim' type='container' url='static/assets/animations/bitmoji/win-dance.glb' />
-            <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
             <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
         </>;
@@ -136,8 +88,55 @@ class BlendTrees1DExample extends Example {
             activate: true
         });
 
+        // create an anim state graph
+        const animStateGraphData = {
+            "layers": [
+                {
+                    "name": "characterState",
+                    "states": [
+                        {
+                            "name": "START"
+                        },
+                        {
+                            "name": "Movement",
+                            "speed": 1.0,
+                            "loop": true,
+                            "blendTree": {
+                                "type": "1D",
+                                "parameter": "blend",
+                                "children": [
+                                    {
+                                        "name": "Idle",
+                                        "point": 0.0
+                                    },
+                                    {
+                                        "name": "Dance",
+                                        "point": 1.0,
+                                        "speed": 0.85
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "from": "START",
+                            "to": "Movement"
+                        }
+                    ]
+                }
+            ],
+            "parameters": {
+                "blend": {
+                    "name": "blend",
+                    "type": "FLOAT",
+                    "value": 0
+                }
+            }
+        };
+
         // load the state graph into the anim component
-        modelEntity.anim.loadStateGraph(assets.animStateGraph.data);
+        modelEntity.anim.loadStateGraph(animStateGraphData);
 
         // load the state graph asset resource into the anim component
         const characterStateLayer = modelEntity.anim.baseLayer;

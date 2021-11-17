@@ -5,69 +5,6 @@ import Example from '../../app/example';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-// create an anim state graph
-const animStateGraphData = {
-    "layers": [
-        {
-            "name": "locomotion",
-            "states": [
-                {
-                    "name": "START"
-                },
-                {
-                    "name": "Travel",
-                    "speed": 1.0,
-                    "loop": true,
-                    "blendTree": {
-                        "type": pc.ANIM_BLEND_2D_DIRECTIONAL,
-                        "syncDurations": true,
-                        "parameters": ["posX", "posY"],
-                        "children": [
-                            {
-                                "name": "Idle",
-                                "point": [0.0, 0.0]
-                            },
-                            {
-                                "speed": -1,
-                                "name": "WalkBackwards",
-                                "point": [0.0, -0.5]
-                            },
-                            {
-                                "speed": 1,
-                                "name": "Walk",
-                                "point": [0.0, 0.5]
-                            },
-                            {
-                                "speed": 1,
-                                "name": "Jog",
-                                "point": [0.0, 1.0]
-                            }
-                        ]
-                    }
-                }
-            ],
-            "transitions": [
-                {
-                    "from": "START",
-                    "to": "Travel"
-                }
-            ]
-        }
-    ],
-    "parameters": {
-        "posX": {
-            "name": "posX",
-            "type": "FLOAT",
-            "value": 0
-        },
-        "posY": {
-            "name": "posY",
-            "type": "FLOAT",
-            "value": 0
-        }
-    }
-};
-
 class BlendTrees2DDirectionalExample extends Example {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Directional';
@@ -78,7 +15,6 @@ class BlendTrees2DDirectionalExample extends Example {
             <AssetLoader name='idleAnim' type='container' url='static/assets/animations/bitmoji/idle.glb' />
             <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
             <AssetLoader name='jogAnim' type='container' url='static/assets/animations/bitmoji/run.glb' />
-            <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
             <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
         </>;
@@ -213,8 +149,71 @@ class BlendTrees2DDirectionalExample extends Example {
             activate: true
         });
 
+        // create an anim state graph
+        const animStateGraphData = {
+            "layers": [
+                {
+                    "name": "locomotion",
+                    "states": [
+                        {
+                            "name": "START"
+                        },
+                        {
+                            "name": "Travel",
+                            "speed": 1.0,
+                            "loop": true,
+                            "blendTree": {
+                                "type": pc.ANIM_BLEND_2D_DIRECTIONAL,
+                                "syncDurations": true,
+                                "parameters": ["posX", "posY"],
+                                "children": [
+                                    {
+                                        "name": "Idle",
+                                        "point": [0.0, 0.0]
+                                    },
+                                    {
+                                        "speed": -1,
+                                        "name": "WalkBackwards",
+                                        "point": [0.0, -0.5]
+                                    },
+                                    {
+                                        "speed": 1,
+                                        "name": "Walk",
+                                        "point": [0.0, 0.5]
+                                    },
+                                    {
+                                        "speed": 1,
+                                        "name": "Jog",
+                                        "point": [0.0, 1.0]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "from": "START",
+                            "to": "Travel"
+                        }
+                    ]
+                }
+            ],
+            "parameters": {
+                "posX": {
+                    "name": "posX",
+                    "type": "FLOAT",
+                    "value": 0
+                },
+                "posY": {
+                    "name": "posY",
+                    "type": "FLOAT",
+                    "value": 0
+                }
+            }
+        };
+
         // load the state graph into the anim component
-        modelEntity.anim.loadStateGraph(assets.animStateGraph.data);
+        modelEntity.anim.loadStateGraph(animStateGraphData);
 
         // load the state graph asset resource into the anim component
         const locomotionLayer = modelEntity.anim.baseLayer;

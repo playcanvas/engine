@@ -5,65 +5,6 @@ import Example from '../../app/example';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-// create an anim state graph
-const animStateGraphData = {
-    "layers": [
-        {
-            "name": "base",
-            "states": [
-                {
-                    "name": "START"
-                },
-                {
-                    "name": "Emote",
-                    "speed": 1.0,
-                    "loop": true,
-                    "blendTree": {
-                        "type": pc.ANIM_BLEND_2D_CARTESIAN,
-                        "parameters": ["posX", "posY"],
-                        "children": [
-                            {
-                                "name": "Idle",
-                                "point": [-0.5, 0.5]
-                            },
-                            {
-                                "name": "Eager",
-                                "point": [0.5, 0.5]
-                            },
-                            {
-                                "name": "Walk",
-                                "point": [0.5, -0.5]
-                            },
-                            {
-                                "name": "Dance",
-                                "point": [-0.5, -0.5]
-                            }
-                        ]
-                    }
-                }
-            ],
-            "transitions": [
-                {
-                    "from": "START",
-                    "to": "Emote"
-                }
-            ]
-        }
-    ],
-    "parameters": {
-        "posX": {
-            "name": "posX",
-            "type": "FLOAT",
-            "value": -0.5
-        },
-        "posY": {
-            "name": "posY",
-            "type": "FLOAT",
-            "value": 0.5
-        }
-    }
-};
-
 class BlendTrees2DCartesianExample extends Example {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
@@ -75,7 +16,6 @@ class BlendTrees2DCartesianExample extends Example {
             <AssetLoader name='eagerAnim' type='container' url='static/assets/animations/bitmoji/idle-eager.glb' />
             <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
             <AssetLoader name='danceAnim' type='container' url='static/assets/animations/bitmoji/win-dance.glb' />
-            <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
             <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
         </>;
@@ -220,8 +160,67 @@ class BlendTrees2DCartesianExample extends Example {
             activate: true
         });
 
+        // create an anim state graph
+        const animStateGraphData = {
+            "layers": [
+                {
+                    "name": "base",
+                    "states": [
+                        {
+                            "name": "START"
+                        },
+                        {
+                            "name": "Emote",
+                            "speed": 1.0,
+                            "loop": true,
+                            "blendTree": {
+                                "type": pc.ANIM_BLEND_2D_CARTESIAN,
+                                "parameters": ["posX", "posY"],
+                                "children": [
+                                    {
+                                        "name": "Idle",
+                                        "point": [-0.5, 0.5]
+                                    },
+                                    {
+                                        "name": "Eager",
+                                        "point": [0.5, 0.5]
+                                    },
+                                    {
+                                        "name": "Walk",
+                                        "point": [0.5, -0.5]
+                                    },
+                                    {
+                                        "name": "Dance",
+                                        "point": [-0.5, -0.5]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "from": "START",
+                            "to": "Emote"
+                        }
+                    ]
+                }
+            ],
+            "parameters": {
+                "posX": {
+                    "name": "posX",
+                    "type": "FLOAT",
+                    "value": -0.5
+                },
+                "posY": {
+                    "name": "posY",
+                    "type": "FLOAT",
+                    "value": 0.5
+                }
+            }
+        };
+
         // load the state graph into the anim component
-        modelEntity.anim.loadStateGraph(assets.animStateGraph.data);
+        modelEntity.anim.loadStateGraph(animStateGraphData);
 
         // load the state graph asset resource into the anim component
         const characterStateLayer = modelEntity.anim.baseLayer;

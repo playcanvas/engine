@@ -14,139 +14,6 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 import { Observer } from '@playcanvas/observer';
 import { wasmSupported, loadWasmModuleAsync } from '../../wasm-loader';
 
-// create an anim state graph
-const animStateGraphData = {
-    "layers": [
-        {
-            "name": "locomotion",
-            "states": [
-                {
-                    "name": "START"
-                },
-                {
-                    "name": "Idle",
-                    "speed": 1.0
-                },
-                {
-                    "name": "Walk",
-                    "speed": 1.0
-                },
-                {
-                    "name": "Jump",
-                    "speed": 1
-                },
-                {
-                    "name": "Jog",
-                    "speed": 1.0
-                },
-                {
-                    "name": "END"
-                }
-            ],
-            "transitions": [
-                {
-                    "from": "START",
-                    "to": "Idle",
-                    "time": 0,
-                    "priority": 0
-                },
-                {
-                    "from": "Idle",
-                    "to": "Walk",
-                    "time": 0.1,
-                    "priority": 0,
-                    "conditions": [
-                        {
-                            "parameterName": "speed",
-                            "predicate": pc.ANIM_GREATER_THAN,
-                            "value": 0
-                        }
-                    ]
-                },
-                {
-                    "from": "ANY",
-                    "to": "Jump",
-                    "time": 0.1,
-                    "priority": 0,
-                    "conditions": [
-                        {
-                            "parameterName": "jump",
-                            "predicate": pc.ANIM_EQUAL_TO,
-                            "value": true
-                        }
-                    ]
-                },
-                {
-                    "from": "Jump",
-                    "to": "Idle",
-                    "time": 0.2,
-                    "priority": 0,
-                    "exitTime": 0.8
-                },
-                {
-                    "from": "Jump",
-                    "to": "Walk",
-                    "time": 0.2,
-                    "priority": 0,
-                    "exitTime": 0.8
-                },
-                {
-                    "from": "Walk",
-                    "to": "Idle",
-                    "time": 0.1,
-                    "priority": 0,
-                    "conditions": [
-                        {
-                            "parameterName": "speed",
-                            "predicate": pc.ANIM_LESS_THAN_EQUAL_TO,
-                            "value": 0
-                        }
-                    ]
-                },
-                {
-                    "from": "Walk",
-                    "to": "Jog",
-                    "time": 0.1,
-                    "priority": 0,
-                    "conditions": [
-                        {
-                            "parameterName": "speed",
-                            "predicate": pc.ANIM_GREATER_THAN,
-                            "value": 1
-                        }
-                    ]
-                },
-                {
-                    "from": "Jog",
-                    "to": "Walk",
-                    "time": 0.1,
-                    "priority": 0,
-                    "conditions": [
-                        {
-                            "parameterName": "speed",
-                            "predicate": pc.ANIM_LESS_THAN,
-                            "value": 2
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "parameters": {
-        "speed": {
-            "name": "speed",
-            "type": pc.ANIM_PARAMETER_INTEGER,
-            "value": 0
-        },
-        "jump": {
-            "name": "jump",
-            "type": pc.ANIM_PARAMETER_TRIGGER,
-            "value": false
-        }
-    }
-};
-
-
 class LocomotionExample extends Example {
     static CATEGORY = 'Animation';
     static NAME = 'Locomotion';
@@ -159,7 +26,6 @@ class LocomotionExample extends Example {
             <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
             <AssetLoader name='jogAnim' type='container' url='static/assets/animations/bitmoji/run.glb' />
             <AssetLoader name='jumpAnim' type='container' url='static/assets/animations/bitmoji/jump-flip.glb' />
-            <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
             <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
             <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
         </>;
@@ -246,8 +112,140 @@ class LocomotionExample extends Example {
                 activate: true
             });
 
+            // create an anim state graph
+            const animStateGraphData = {
+                "layers": [
+                    {
+                        "name": "locomotion",
+                        "states": [
+                            {
+                                "name": "START"
+                            },
+                            {
+                                "name": "Idle",
+                                "speed": 1.0
+                            },
+                            {
+                                "name": "Walk",
+                                "speed": 1.0
+                            },
+                            {
+                                "name": "Jump",
+                                "speed": 1
+                            },
+                            {
+                                "name": "Jog",
+                                "speed": 1.0
+                            },
+                            {
+                                "name": "END"
+                            }
+                        ],
+                        "transitions": [
+                            {
+                                "from": "START",
+                                "to": "Idle",
+                                "time": 0,
+                                "priority": 0
+                            },
+                            {
+                                "from": "Idle",
+                                "to": "Walk",
+                                "time": 0.1,
+                                "priority": 0,
+                                "conditions": [
+                                    {
+                                        "parameterName": "speed",
+                                        "predicate": pc.ANIM_GREATER_THAN,
+                                        "value": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "from": "ANY",
+                                "to": "Jump",
+                                "time": 0.1,
+                                "priority": 0,
+                                "conditions": [
+                                    {
+                                        "parameterName": "jump",
+                                        "predicate": pc.ANIM_EQUAL_TO,
+                                        "value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "from": "Jump",
+                                "to": "Idle",
+                                "time": 0.2,
+                                "priority": 0,
+                                "exitTime": 0.8
+                            },
+                            {
+                                "from": "Jump",
+                                "to": "Walk",
+                                "time": 0.2,
+                                "priority": 0,
+                                "exitTime": 0.8
+                            },
+                            {
+                                "from": "Walk",
+                                "to": "Idle",
+                                "time": 0.1,
+                                "priority": 0,
+                                "conditions": [
+                                    {
+                                        "parameterName": "speed",
+                                        "predicate": pc.ANIM_LESS_THAN_EQUAL_TO,
+                                        "value": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "from": "Walk",
+                                "to": "Jog",
+                                "time": 0.1,
+                                "priority": 0,
+                                "conditions": [
+                                    {
+                                        "parameterName": "speed",
+                                        "predicate": pc.ANIM_GREATER_THAN,
+                                        "value": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "from": "Jog",
+                                "to": "Walk",
+                                "time": 0.1,
+                                "priority": 0,
+                                "conditions": [
+                                    {
+                                        "parameterName": "speed",
+                                        "predicate": pc.ANIM_LESS_THAN,
+                                        "value": 2
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "parameters": {
+                    "speed": {
+                        "name": "speed",
+                        "type": pc.ANIM_PARAMETER_INTEGER,
+                        "value": 0
+                    },
+                    "jump": {
+                        "name": "jump",
+                        "type": pc.ANIM_PARAMETER_TRIGGER,
+                        "value": false
+                    }
+                }
+            };
+
             // load the state graph into the anim component
-            characterEntity.anim.loadStateGraph(assets.animStateGraph.resource);
+            characterEntity.anim.loadStateGraph(animStateGraphData);
 
             // assign the loaded animation assets to each of the states present in the state graph
             const locomotionLayer = characterEntity.anim.baseLayer;
