@@ -93,8 +93,8 @@ class ContainerResource {
  * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ContainerHandler {
-    constructor(device, assets, defaultMaterial) {
-        this.glbParser = new GlbParser(device, assets, defaultMaterial, 0);
+    constructor(device, assets) {
+        this.glbParser = new GlbParser(device, assets, 0);
         this.parsers = { };
     }
 

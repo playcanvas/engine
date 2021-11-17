@@ -450,10 +450,9 @@ Component._buildAccessors(VoxAnimComponent.prototype, VoxAnimComponentSchema);
 // parser
 
 class VoxParser {
-    constructor(device, assets, defaultMaterial, maxRetries) {
+    constructor(device, assets, maxRetries) {
         this._device = device;
         this._assets = assets;
-        this._defaultMaterial = defaultMaterial;
         this._maxRetries = maxRetries;
     }
 
@@ -477,7 +476,7 @@ const registerVoxParser = (app) => {
     app.systems.add(new VoxAnimSystem(app));
 
     // register resource handler
-    app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets, app.scene.defaultMaterial);
+    app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets);
 };
 
 export {

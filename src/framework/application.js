@@ -36,6 +36,7 @@ import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
+import { DefaultMaterial } from '../scene/materials/default-material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -118,7 +119,6 @@ import {
     getApplication,
     setApplication
 } from './globals.js';
-import { DefaultMaterial } from '../scene/materials/default-material.js';
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -571,7 +571,7 @@ class Application extends EventHandler {
         this.loader.addHandler("animation", new AnimationHandler());
         this.loader.addHandler("animclip", new AnimClipHandler());
         this.loader.addHandler("animstategraph", new AnimStateGraphHandler());
-        this.loader.addHandler("model", new ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
+        this.loader.addHandler("model", new ModelHandler(this.graphicsDevice));
         this.loader.addHandler("render", new RenderHandler(this.assets));
         this.loader.addHandler("material", new MaterialHandler(this));
         this.loader.addHandler("texture", new TextureHandler(this.graphicsDevice, this.assets, this.loader));
@@ -591,7 +591,7 @@ class Application extends EventHandler {
         this.loader.addHandler("textureatlas", new TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new SpriteHandler(this.assets, this.graphicsDevice));
         this.loader.addHandler("template", new TemplateHandler(this));
-        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.assets, this.scene.defaultMaterial));
+        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.assets));
 
         this.systems = new ComponentSystemRegistry();
         this.systems.add(new RigidBodyComponentSystem(this));
