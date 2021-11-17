@@ -1591,6 +1591,9 @@ const standard = {
                 code += "   dSpecularLight *= dSpecularity;\n";
 
                 code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
+
+                // evaluate material based area lights data, shared by all area lights
+                code += "   calcLTCLightValues();\n";
             }
 
             // light source shape support
