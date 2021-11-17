@@ -13,7 +13,7 @@
     "serve": "serve dist",
     "thumbnails": "node ./thumbnails.js",
     "build:directory": "node ./example-directory.js",
-    "build:debug:directory": "cp -r ../build/ ./dist/build/ && cp ./node_modules/@playcanvas/observer/index.js ./dist/build/playcanvas-observer.js && node ./debug/index.js",
+    "build:debug:directory": "cp -r ../build/ ./dist/build/ && cp ./lib/wasm-loader.js ./dist/build && cp ./node_modules/@playcanvas/observer/index.js ./dist/build/playcanvas-observer.js && node ./debug/index.js",
     "watch:debug:directory": "watch 'npm run build:debug:directory' ./src/examples/"
   },
   "eslintConfig": {
