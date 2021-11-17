@@ -8,6 +8,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
 import { Component } from '../component.js';
 
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
+import { ELEMENTTYPE_GROUP } from "../element/constants";
 
 const VisualState = {
     DEFAULT: 'DEFAULT',
@@ -170,11 +171,15 @@ class ButtonComponent extends Component {
     }
 
     _storeDefaultVisualState() {
+        // If the element is of group type, all it's visual properties are null
         if (this._imageReference.hasComponent('element')) {
-            this._storeDefaultColor(this._imageReference.entity.element.color);
-            this._storeDefaultOpacity(this._imageReference.entity.element.opacity);
-            this._storeDefaultSpriteAsset(this._imageReference.entity.element.spriteAsset);
-            this._storeDefaultSpriteFrame(this._imageReference.entity.element.spriteFrame);
+            const element = this._imageReference.entity.element;
+            if (element.type !== ELEMENTTYPE_GROUP) {
+                this._storeDefaultColor(element.color);
+                this._storeDefaultOpacity(element.opacity);
+                this._storeDefaultSpriteAsset(element.spriteAsset);
+                this._storeDefaultSpriteFrame(element.spriteFrame);
+            }
         }
     }
 
