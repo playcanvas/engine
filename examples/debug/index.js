@@ -14,9 +14,9 @@ const EXAMPLE_CONSTS = [
 ];
 
 function retrieveConstString(data, name) {
-    var start = data.indexOf(`const ${name} = `);
+    const start = data.indexOf(`const ${name} = `);
     if (start < 1) return;
-    var end = data.indexOf("`;", start);
+    const end = data.indexOf("`;", start);
     return data.substring(start + name.length + 10, end);
 }
 
