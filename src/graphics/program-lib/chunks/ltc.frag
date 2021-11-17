@@ -94,24 +94,19 @@ Coords getLTCLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	coords.coord3 = lightPos + halfWidth + halfHeight;
 	return coords;
 }
-//used for simple sphere light falloff
+
 float dSphereRadius;
 Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
-	Coords coords;
-	float radius = max(length(halfWidth), length(halfWidth));
+    // used for simple sphere light falloff
+    // also, the code only handles a spherical light, it cannot be non-uniformly scaled in world space, and so we enforce it here
+	dSphereRadius = max(length(halfWidth), length(halfHeight));
 
-	dSphereRadius = radius;
-
-	vec3 f = normalize(lightPos-view_position);
+    // Billboard the 2d light quad to reflection vector, as it's used for specular. This allows us to use disk math for the sphere.
+    vec3 f = reflect(normalize(lightPos - view_position), vNormalW);
 	vec3 w = normalize(cross(f, halfHeight));
 	vec3 h = normalize(cross(f, w));
 
-	coords.coord0 = lightPos + w * radius - h * radius;
-	coords.coord1 = lightPos - w * radius - h * radius;
-	coords.coord2 = lightPos - w * radius + h * radius;
-	coords.coord3 = lightPos + w * radius + h * radius;
-    
-	return coords;
+    return getLTCLightCoords(lightPos, w * dSphereRadius, h * dSphereRadius);
 }
 
 // used for LTC LUT texture lookup
