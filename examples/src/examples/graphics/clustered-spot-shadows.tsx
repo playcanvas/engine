@@ -11,6 +11,8 @@ class ClusteredSpotShadowsExample extends Example {
     load() {
         return <>
             <AssetLoader name="channels" type="texture" url="static/assets/textures/channels.png" />
+            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -20,7 +22,10 @@ class ClusteredSpotShadowsExample extends Example {
         const app = new pc.Application(canvas, {});
         app.start();
 
-        app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+        // setup skydome as ambient light
+        app.scene.skyboxMip = 3;
+        app.scene.skyboxIntensity = 0.4;
+        app.scene.setSkybox(assets.cubemap.resources);
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
@@ -29,11 +34,11 @@ class ClusteredSpotShadowsExample extends Example {
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(16, 12, 16);
+        app.scene.layers.clusteredLightingCells = new pc.Vec3(20, 2, 20);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 80;
+        app.scene.layers.clusteredLightingMaxLights = 16;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
@@ -47,18 +52,28 @@ class ClusteredSpotShadowsExample extends Example {
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        // ground material
+        const groundMaterial = new pc.StandardMaterial();
+        groundMaterial.shininess = 25;
+        groundMaterial.metalness = 0.4;
+        groundMaterial.useMetalness = true;
+
+        // normal map
+        groundMaterial.normalMap = assets.normal.resource;
+        groundMaterial.normalMapTiling.set(10, 10);
+        groundMaterial.bumpiness = 0.5;
+
+        groundMaterial.update();
+
         // helper function to create a 3d primitive including its material
         function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
-
-            // create a material
-            const material = new pc.StandardMaterial();
 
             // create the primitive using the material
             const primitive = new pc.Entity();
             primitive.addComponent('render', {
                 type: primitiveType,
                 castShadows: true,
-                material: material
+                material: groundMaterial
             });
 
             // set position and scale and add it to scene
@@ -69,18 +84,21 @@ class ClusteredSpotShadowsExample extends Example {
             return primitive;
         }
 
-        // create the ground plane from the boxes
-        for (let x = -5; x <= 5; x += 1) {
-            for (let z = -5; z <= 5; z += 1) {
-                createPrimitive("box", new pc.Vec3(x * 40, -5, z * 40), new pc.Vec3(37, 2, 37));
-            }
-        }
+        createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(500, 0, 500));
 
-        // create shadow caster boxes
-        for (let i = 0; i < 100; i += 1) {
-            const scale = 4 + Math.random() * 10;
-            const pos = new pc.Vec3((Math.random() - 0.5) * 400, 2 * scale, (Math.random() - 0.5) * 400);
-            createPrimitive("box", pos, new pc.Vec3(scale, scale, scale));
+        const numTowers = 8;
+        for (let i = 0; i < numTowers; i++) {
+            let scale = 12;
+            const fraction = i / numTowers * Math.PI * 2;
+            const radius = 200;
+            const numCubes = 12;
+            for (let y = 0; y <= 10; y++) {
+                const elevationRadius = radius * (1 - (y / numCubes));
+                const pos = new pc.Vec3(elevationRadius * Math.sin(fraction), y * 6, elevationRadius * Math.cos(fraction));
+                const prim = createPrimitive("box", pos, new pc.Vec3(scale, scale, scale));
+                prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+            }
+            scale -= 1.5;
         }
 
         const cookieChannels = ["r", "g", "b", "a", "rgb"];
@@ -97,9 +115,10 @@ class ClusteredSpotShadowsExample extends Example {
             lightSpot.addComponent("light", {
                 type: "spot",
                 color: color,
-                innerConeAngle: 20,
-                outerConeAngle: 24 + Math.random() * 20,
-                range: 80,
+                intensity: 3,
+                innerConeAngle: 30,
+                outerConeAngle: 35,
+                range: 150,
                 castShadows: true,
                 shadowBias: 0.4,
                 normalOffsetBias: 0.1,
@@ -108,7 +127,7 @@ class ClusteredSpotShadowsExample extends Example {
                 // cookie texture
                 cookie: assets.channels.resource,
                 cookieChannel: cookieChannel,
-                cookieIntensity: 0.2 + Math.random()
+                cookieIntensity: 0.5
             });
 
             // attach a render component with a small cone to each light
@@ -138,24 +157,25 @@ class ClusteredSpotShadowsExample extends Example {
         // Set an update function on the app's update event
         let time = 0;
         app.on("update", function (dt: number) {
-            time += dt * 0.05;
+            time += dt * 0.15;
 
             // rotate spot lights around
             const lightPos = new pc.Vec3();
             spotLightList.forEach(function (spotlight, i) {
-                const angle = (i / spotLightList.length) * Math.PI * 8;
-                const x = ((i / spotLightList.length) - 0.5) * 500;
-                const z = 200 * Math.sin(angle + time);
-                lightPos.set(x, 60, z);
+                const angle = (i / spotLightList.length) * Math.PI * 2;
+                const x = 130 * Math.sin(angle + time);
+                const z = 130 * Math.cos(angle + time);
+                lightPos.set(x, 100, z);
                 spotlight.setLocalPosition(lightPos);
 
                 lightPos.y = 0;
                 spotlight.lookAt(lightPos, pc.Vec3.RIGHT);
+
                 spotlight.rotateLocal(90, 0, 0);
             });
 
             // orbit the camera
-            camera.setLocalPosition(300 * Math.sin(time * 0.4), 90, 300 * Math.cos(time * 0.4));
+            camera.setLocalPosition(300 * Math.sin(time * 0.4), 150, 300 * Math.cos(time * 0.4));
             camera.lookAt(new pc.Vec3(0, 0, 0));
 
             // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
