@@ -1942,8 +1942,8 @@ class GraphicsDevice extends EventHandler {
                             gl.TEXTURE_2D,
                             mipLevel,
                             texture._glInternalFormat,
-                            Math.max(texture._width * resMult, 1),
-                            Math.max(texture._height * resMult, 1),
+                            Math.max((Math.floor((texture._width * resMult)) + 3) & ~3, 1),
+                            Math.max((Math.floor((texture._height * resMult)) + 3) & ~3, 1),
                             0,
                             mipObject
                         );

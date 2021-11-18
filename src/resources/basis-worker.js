@@ -240,8 +240,8 @@ function BasisWorker() {
 
         return {
             format: basisToEngineMapping(basisFormat, options.deviceDetails),
-            width: compressedFormat ? ((width + 3) & ~3) : width,
-            height: compressedFormat ? ((height + 3) & ~3) : height,
+            width: width,
+            height: height,
             levels: levelData,
             cubemap: false,
             transcodeTime: performanceNow() - funcStart,
@@ -331,8 +331,8 @@ function BasisWorker() {
 
         return {
             format: basisToEngineMapping(basisFormat, options.deviceDetails),
-            width: compressedFormat ? ((width + 3) & ~3) : width,
-            height: compressedFormat ? ((height + 3) & ~3) : height,
+            width: width,
+            height: height,
             levels: levelData,
             cubemap: false,
             transcodeTime: performanceNow() - funcStart,
