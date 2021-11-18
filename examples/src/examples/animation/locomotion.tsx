@@ -26,8 +26,7 @@ class LocomotionExample extends Example {
             <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
             <AssetLoader name='jogAnim' type='container' url='static/assets/animations/bitmoji/run.glb' />
             <AssetLoader name='jumpAnim' type='container' url='static/assets/animations/bitmoji/jump-flip.glb' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -55,7 +54,10 @@ class LocomotionExample extends Example {
 
             // setup skydome
             app.scene.skyboxMip = 2;
-            app.scene.setSkybox(assets['helipad.dds'].resources);
+            app.scene.skyboxIntensity = 0.7;
+            app.scene.setSkybox(assets.cubemap.resources);
+            app.scene.gammaCorrection = pc.GAMMA_SRGB;
+            app.scene.toneMapping = pc.TONEMAP_ACES;
 
             // Create an Entity with a camera component
             const cameraEntity = new pc.Entity();
@@ -64,34 +66,23 @@ class LocomotionExample extends Example {
                 clearColor: new pc.Color(0.1, 0.15, 0.2)
             });
 
-            // add bloom postprocessing (this is ignored by the picker)
-            cameraEntity.addComponent("script");
-            cameraEntity.script.create("bloom", {
-                attributes: {
-                    bloomIntensity: 1,
-                    bloomThreshold: 0.7,
-                    blurAmount: 4
-                }
-            });
-
-            cameraEntity.translateLocal(0, 5, 15);
-            cameraEntity.rotateLocal(-20, 0, 0);
+            cameraEntity.translateLocal(0.5, 3, 8);
+            cameraEntity.rotateLocal(-30, 0, 0);
             app.root.addChild(cameraEntity);
 
-            app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
             // Create an entity with a light component
             const light = new pc.Entity();
             light.addComponent("light", {
                 type: "directional",
                 color: new pc.Color(1, 1, 1),
                 castShadows: true,
-                intensity: 1,
+                intensity: 2,
                 shadowBias: 0.2,
-                shadowDistance: 5,
+                shadowDistance: 16,
                 normalOffsetBias: 0.05,
                 shadowResolution: 2048
             });
-            light.setLocalEulerAngles(45, 30, 0);
+            light.setLocalEulerAngles(60, 30, 0);
             app.root.addChild(light);
 
             app.start();
