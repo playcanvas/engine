@@ -1,4 +1,7 @@
+// #if _DEBUG
 import { version, revision } from '../core/core.js';
+// #endif
+
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
@@ -20,20 +23,20 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    LINEBATCH_OVERLAY,
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
+import { Immediate } from '../scene/immediate/immediate.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
-import { ImmediateData } from '../scene/immediate.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
-import { Lightmapper } from '../scene/lightmapper.js';
+import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
-import { WorldClusters } from '../scene/world-clusters.js';
+import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
+import { DefaultMaterial } from '../scene/materials/default-material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -84,7 +87,6 @@ import { ButtonComponentSystem } from './components/button/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { CollisionComponentSystem } from './components/collision/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { ComponentSystem } from './components/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
 import { JointComponentSystem } from './components/joint/system.js';
 import { LayoutChildComponentSystem } from './components/layout-child/system.js';
@@ -133,8 +135,6 @@ class Progress {
         return (this.count === this.length);
     }
 }
-
-var _deprecationWarning = false;
 
 /**
  * @class
@@ -247,26 +247,26 @@ var _deprecationWarning = false;
  * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
- * * anim ({@link AnimComponentSystem})
- * * animation ({@link AnimationComponentSystem})
- * * audiolistener ({@link AudioListenerComponentSystem})
- * * button ({@link ButtonComponentSystem})
- * * camera ({@link CameraComponentSystem})
- * * collision ({@link CollisionComponentSystem})
- * * element ({@link ElementComponentSystem})
- * * layoutchild ({@link LayoutChildComponentSystem})
- * * layoutgroup ({@link LayoutGroupComponentSystem})
- * * light ({@link LightComponentSystem})
- * * model ({@link ModelComponentSystem})
- * * particlesystem ({@link ParticleSystemComponentSystem})
- * * rigidbody ({@link RigidBodyComponentSystem})
- * * render ({@link RenderComponentSystem})
- * * screen ({@link ScreenComponentSystem})
- * * script ({@link ScriptComponentSystem})
- * * scrollbar ({@link ScrollbarComponentSystem})
- * * scrollview ({@link ScrollViewComponentSystem})
- * * sound ({@link SoundComponentSystem})
- * * sprite ({@link SpriteComponentSystem})
+ * - anim ({@link AnimComponentSystem})
+ * - animation ({@link AnimationComponentSystem})
+ * - audiolistener ({@link AudioListenerComponentSystem})
+ * - button ({@link ButtonComponentSystem})
+ * - camera ({@link CameraComponentSystem})
+ * - collision ({@link CollisionComponentSystem})
+ * - element ({@link ElementComponentSystem})
+ * - layoutchild ({@link LayoutChildComponentSystem})
+ * - layoutgroup ({@link LayoutGroupComponentSystem})
+ * - light ({@link LightComponentSystem})
+ * - model ({@link ModelComponentSystem})
+ * - particlesystem ({@link ParticleSystemComponentSystem})
+ * - rigidbody ({@link RigidBodyComponentSystem})
+ * - render ({@link RenderComponentSystem})
+ * - screen ({@link ScreenComponentSystem})
+ * - script ({@link ScriptComponentSystem})
+ * - scrollbar ({@link ScrollbarComponentSystem})
+ * - scrollview ({@link ScrollViewComponentSystem})
+ * - sound ({@link SoundComponentSystem})
+ * - sprite ({@link SpriteComponentSystem})
  * @example
  * // Set global gravity to zero
  * this.app.systems.rigidbody.gravity.set(0, 0, 0);
@@ -394,13 +394,15 @@ var _deprecationWarning = false;
  * @type {Application|undefined}
  * @description Gets the current application, if any.
  */
-var app = null;
+let app = null;
 
 class Application extends EventHandler {
     constructor(canvas, options = {}) {
         super();
 
-        console.log("Powered by PlayCanvas " + version + " " + revision);
+        // #if _DEBUG
+        console.log(`Powered by PlayCanvas ${version} ${revision}`);
+        // #endif
 
         // Store application instance
         Application._applications[canvas.id] = this;
@@ -432,10 +434,12 @@ class Application extends EventHandler {
         // for compatibility
         this.context = this;
 
-        if (! options.graphicsDeviceOptions)
+        if (!options.graphicsDeviceOptions)
             options.graphicsDeviceOptions = { };
 
-        options.graphicsDeviceOptions.xrCompatible = true;
+        if (platform.browser && !!navigator.xr) {
+            options.graphicsDeviceOptions.xrCompatible = true;
+        }
 
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
@@ -443,7 +447,7 @@ class Application extends EventHandler {
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
-        WorldClusters.init(this.graphicsDevice);
+        LightsBuffer.init(this.graphicsDevice);
 
         // stores all entities that have been created
         // for this app by guid
@@ -468,7 +472,7 @@ class Application extends EventHandler {
 
         this.scenes = new SceneRegistry(this);
 
-        var self = this;
+        const self = this;
         this.defaultLayerWorld = new Layer({
             name: "World",
             id: LAYERID_WORLD
@@ -512,9 +516,9 @@ class Application extends EventHandler {
 
         // Default layers patch
         this.scene.on('set:layers', function (oldComp, newComp) {
-            var list = newComp.layerList;
-            var layer;
-            for (var i = 0; i < list.length; i++) {
+            const list = newComp.layerList;
+            let layer;
+            for (let i = 0; i < list.length; i++) {
                 layer = list[i];
                 switch (layer.id) {
                     case LAYERID_DEPTH:
@@ -556,7 +560,7 @@ class Application extends EventHandler {
 
         this._inTools = false;
 
-        this._skyboxLast = 0;
+        this._skyboxAsset = null;
 
         this._scriptPrefix = options.scriptPrefix || '';
 
@@ -567,7 +571,7 @@ class Application extends EventHandler {
         this.loader.addHandler("animation", new AnimationHandler());
         this.loader.addHandler("animclip", new AnimClipHandler());
         this.loader.addHandler("animstategraph", new AnimStateGraphHandler());
-        this.loader.addHandler("model", new ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
+        this.loader.addHandler("model", new ModelHandler(this.graphicsDevice));
         this.loader.addHandler("render", new RenderHandler(this.assets));
         this.loader.addHandler("material", new MaterialHandler(this));
         this.loader.addHandler("texture", new TextureHandler(this.graphicsDevice, this.assets, this.loader));
@@ -587,7 +591,7 @@ class Application extends EventHandler {
         this.loader.addHandler("textureatlas", new TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new SpriteHandler(this.assets, this.graphicsDevice));
         this.loader.addHandler("template", new TemplateHandler(this));
-        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.scene.defaultMaterial));
+        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.assets));
 
         this.systems = new ComponentSystemRegistry();
         this.systems.add(new RigidBodyComponentSystem(this));
@@ -638,8 +642,10 @@ class Application extends EventHandler {
             }
         }
 
-        // bind tick function to current scope
+        // immediate rendering
+        this._immediate = new Immediate(this.graphicsDevice, this);
 
+        // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
@@ -669,9 +675,9 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
      *
-     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      */
     get fillMode() {
         return this._fillMode;
@@ -683,8 +689,8 @@ class Application extends EventHandler {
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
      *
-     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      */
     get resolutionMode() {
         return this._resolutionMode;
@@ -698,20 +704,19 @@ class Application extends EventHandler {
      * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
-        var self = this;
-        http.get(url, function (err, response) {
+        http.get(url, (err, response) => {
             if (err) {
                 callback(err);
                 return;
             }
 
-            var props = response.application_properties;
-            var scenes = response.scenes;
-            var assets = response.assets;
+            const props = response.application_properties;
+            const scenes = response.scenes;
+            const assets = response.assets;
 
-            self._parseApplicationProperties(props, function (err) {
-                self._parseScenes(scenes);
-                self._parseAssets(assets);
+            this._parseApplicationProperties(props, (err) => {
+                this._parseScenes(scenes);
+                this._parseAssets(assets);
                 if (!err) {
                     callback(null);
                 } else {
@@ -728,69 +733,63 @@ class Application extends EventHandler {
      * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
      */
     preload(callback) {
-        var self = this;
-        var i, total;
-
-        self.fire("preload:start");
+        this.fire("preload:start");
 
         // get list of assets to preload
-        var assets = this.assets.list({
+        const assets = this.assets.list({
             preload: true
         });
 
-        var _assets = new Progress(assets.length);
+        const progress = new Progress(assets.length);
 
-        var _done = false;
+        let _done = false;
 
         // check if all loading is done
-        var done = function () {
+        const done = () => {
             // do not proceed if application destroyed
-            if (!self.graphicsDevice) {
+            if (!this.graphicsDevice) {
                 return;
             }
 
-            if (!_done && _assets.done()) {
+            if (!_done && progress.done()) {
                 _done = true;
-                self.fire("preload:end");
+                this.fire("preload:end");
                 callback();
             }
         };
 
         // totals loading progress of assets
-        total = assets.length;
-        var count = function () {
-            return _assets.count;
-        };
+        const total = assets.length;
 
-        if (_assets.length) {
-            var onAssetLoad = function (asset) {
-                _assets.inc();
-                self.fire('preload:progress', count() / total);
+        if (progress.length) {
+            const onAssetLoad = (asset) => {
+                progress.inc();
+                this.fire('preload:progress', progress.count / total);
 
-                if (_assets.done())
+                if (progress.done())
                     done();
             };
 
-            var onAssetError = function (err, asset) {
-                _assets.inc();
-                self.fire('preload:progress', count() / total);
+            const onAssetError = (err, asset) => {
+                progress.inc();
+                this.fire('preload:progress', progress.count / total);
 
-                if (_assets.done())
+                if (progress.done())
                     done();
             };
 
             // for each asset
-            for (i = 0; i < assets.length; i++) {
+            for (let i = 0; i < assets.length; i++) {
                 if (!assets[i].loaded) {
                     assets[i].once('load', onAssetLoad);
                     assets[i].once('error', onAssetError);
 
                     this.assets.load(assets[i]);
                 } else {
-                    _assets.inc();
-                    self.fire("preload:progress", count() / total);
+                    progress.inc();
+                    this.fire("preload:progress", progress.count / total);
 
-                    if (_assets.done())
+                    if (progress.done())
                         done();
                 }
             }
@@ -805,46 +804,43 @@ class Application extends EventHandler {
             return;
         }
 
-        var self = this;
+        this.systems.script.preloading = true;
 
-        self.systems.script.preloading = true;
+        const scripts = this._getScriptReferences(sceneData);
 
-        var scripts = this._getScriptReferences(sceneData);
-
-        var i = 0, l = scripts.length;
-        var progress = new Progress(l);
-        var scriptUrl;
-        var regex = /^http(s)?:\/\//;
+        const l = scripts.length;
+        const progress = new Progress(l);
+        const regex = /^http(s)?:\/\//;
 
         if (l) {
-            var onLoad = function (err, ScriptType) {
+            const onLoad = (err, ScriptType) => {
                 if (err)
                     console.error(err);
 
                 progress.inc();
                 if (progress.done()) {
-                    self.systems.script.preloading = false;
+                    this.systems.script.preloading = false;
                     callback();
                 }
             };
 
-            for (i = 0; i < l; i++) {
-                scriptUrl = scripts[i];
+            for (let i = 0; i < l; i++) {
+                let scriptUrl = scripts[i];
                 // support absolute URLs (for now)
-                if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
+                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
                     scriptUrl = path.join(self._scriptPrefix, scripts[i]);
 
                 this.loader.load(scriptUrl, 'script', onLoad);
             }
         } else {
-            self.systems.script.preloading = false;
+            this.systems.script.preloading = false;
             callback();
         }
     }
 
     // handle area light property
     _handleAreaLightDataProperty(prop) {
-        var asset = this.assets.get(prop);
+        const asset = this.assets.get(prop);
         if (asset) {
             this.setAreaLightLuts(asset);
         } else {
@@ -854,9 +850,6 @@ class Application extends EventHandler {
 
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
-        var i;
-        var len;
-
         // configure retrying assets
         if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
             this.loader.enableRetry(props.maxAssetRetries);
@@ -881,11 +874,11 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition(this.graphicsDevice, "application");
+            const composition = new LayerComposition(this.graphicsDevice, "application");
 
-            var layers = {};
-            for (var key in props.layers) {
-                var data = props.layers[key];
+            const layers = {};
+            for (const key in props.layers) {
+                const data = props.layers[key];
                 data.id = parseInt(key, 10);
                 // depth layer should only be enabled when needed
                 // by incrementing its ref counter
@@ -893,9 +886,9 @@ class Application extends EventHandler {
                 layers[key] = new Layer(data);
             }
 
-            for (i = 0, len = props.layerOrder.length; i < len; i++) {
-                var sublayer = props.layerOrder[i];
-                var layer = layers[sublayer.layer];
+            for (let i = 0, len = props.layerOrder.length; i < len; i++) {
+                const sublayer = props.layerOrder[i];
+                const layer = layers[sublayer.layer];
                 if (!layer) continue;
 
                 if (sublayer.transparent) {
@@ -912,11 +905,10 @@ class Application extends EventHandler {
 
         // add batch groups
         if (props.batchGroups) {
-            for (i = 0, len = props.batchGroups.length; i < len; i++) {
-                var grp = props.batchGroups[i];
+            for (let i = 0, len = props.batchGroups.length; i < len; i++) {
+                const grp = props.batchGroups[i];
                 this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
             }
-
         }
 
         // set localization assets
@@ -932,33 +924,32 @@ class Application extends EventHandler {
     }
 
     _loadLibraries(urls, callback) {
-        var len = urls.length;
-        var count = len;
-        var self = this;
+        const len = urls.length;
+        let count = len;
 
-        var regex = /^http(s)?:\/\//;
+        const regex = /^http(s)?:\/\//;
 
         if (len) {
-            var onLoad = function (err, script) {
+            const onLoad = (err, script) => {
                 count--;
                 if (err) {
                     callback(err);
                 } else if (count === 0) {
-                    self.onLibrariesLoaded();
+                    this.onLibrariesLoaded();
                     callback(null);
                 }
             };
 
-            for (var i = 0; i < len; ++i) {
-                var url = urls[i];
+            for (let i = 0; i < len; ++i) {
+                let url = urls[i];
 
-                if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
-                    url = path.join(self._scriptPrefix, url);
+                if (!regex.test(url.toLowerCase()) && this._scriptPrefix)
+                    url = path.join(this._scriptPrefix, url);
 
                 this.loader.load(url, 'script', onLoad);
             }
         } else {
-            self.onLibrariesLoaded();
+            this.onLibrariesLoaded();
             callback(null);
         }
     }
@@ -967,23 +958,22 @@ class Application extends EventHandler {
     _parseScenes(scenes) {
         if (!scenes) return;
 
-        for (var i = 0; i < scenes.length; i++) {
+        for (let i = 0; i < scenes.length; i++) {
             this.scenes.add(scenes[i].name, scenes[i].url);
         }
     }
 
     // insert assets into registry
     _parseAssets(assets) {
-        var i, id;
-        var list = [];
+        const list = [];
 
-        var scriptsIndex = {};
-        var bundlesIndex = {};
+        const scriptsIndex = {};
+        const bundlesIndex = {};
 
         if (!script.legacy) {
             // add scripts in order of loading first
-            for (i = 0; i < this.scriptsOrder.length; i++) {
-                id = this.scriptsOrder[i];
+            for (let i = 0; i < this.scriptsOrder.length; i++) {
+                const id = this.scriptsOrder[i];
                 if (!assets[id])
                     continue;
 
@@ -993,7 +983,7 @@ class Application extends EventHandler {
 
             // then add bundles
             if (this.enableBundles) {
-                for (id in assets) {
+                for (const id in assets) {
                     if (assets[id].type === 'bundle') {
                         bundlesIndex[id] = true;
                         list.push(assets[id]);
@@ -1002,7 +992,7 @@ class Application extends EventHandler {
             }
 
             // then add rest of assets
-            for (id in assets) {
+            for (const id in assets) {
                 if (scriptsIndex[id] || bundlesIndex[id])
                     continue;
 
@@ -1011,7 +1001,7 @@ class Application extends EventHandler {
         } else {
             if (this.enableBundles) {
                 // add bundles
-                for (id in assets) {
+                for (const id in assets) {
                     if (assets[id].type === 'bundle') {
                         bundlesIndex[id] = true;
                         list.push(assets[id]);
@@ -1019,9 +1009,8 @@ class Application extends EventHandler {
                 }
             }
 
-
             // then add rest of assets
-            for (id in assets) {
+            for (const id in assets) {
                 if (bundlesIndex[id])
                     continue;
 
@@ -1029,9 +1018,9 @@ class Application extends EventHandler {
             }
         }
 
-        for (i = 0; i < list.length; i++) {
-            var data = list[i];
-            var asset = new Asset(data.name, data.type, data.file, data.data);
+        for (let i = 0; i < list.length; i++) {
+            const data = list[i];
+            const asset = new Asset(data.name, data.type, data.file, data.data);
             asset.id = parseInt(data.id, 10);
             asset.preload = data.preload ? data.preload : false;
             // if this is a script asset and has already been embedded in the page then
@@ -1041,7 +1030,7 @@ class Application extends EventHandler {
             asset.tags.add(data.tags);
             // i18n
             if (data.i18n) {
-                for (var locale in data.i18n) {
+                for (const locale in data.i18n) {
                     asset.addLocalizedAssetId(locale, data.i18n[locale]);
                 }
             }
@@ -1051,31 +1040,29 @@ class Application extends EventHandler {
     }
 
     _getScriptReferences(scene) {
-        var i, key;
-
-        var priorityScripts = [];
+        let priorityScripts = [];
         if (scene.settings.priority_scripts) {
             priorityScripts = scene.settings.priority_scripts;
         }
 
-        var _scripts = [];
-        var _index = {};
+        const _scripts = [];
+        const _index = {};
 
         // first add priority scripts
-        for (i = 0; i < priorityScripts.length; i++) {
+        for (let i = 0; i < priorityScripts.length; i++) {
             _scripts.push(priorityScripts[i]);
             _index[priorityScripts[i]] = true;
         }
 
         // then iterate hierarchy to get referenced scripts
-        var entities = scene.entities;
-        for (key in entities) {
+        const entities = scene.entities;
+        for (const key in entities) {
             if (!entities[key].components.script) {
                 continue;
             }
 
-            var scripts = entities[key].components.script.scripts;
-            for (i = 0; i < scripts.length; i++) {
+            const scripts = entities[key].components.script.scripts;
+            for (let i = 0; i < scripts.length; i++) {
                 if (_index[scripts[i].url])
                     continue;
                 _scripts.push(scripts[i].url);
@@ -1113,11 +1100,12 @@ class Application extends EventHandler {
             this.onLibrariesLoaded();
         }
 
-        ComponentSystem.initialize(this.root);
-        this.fire("initialize");
+        this.systems.fire('initialize', this.root);
+        this.fire('initialize');
 
-        ComponentSystem.postInitialize(this.root);
-        this.fire("postinitialize");
+        this.systems.fire('postInitialize', this.root);
+        this.systems.fire('postPostInitialize', this.root);
+        this.fire('postinitialize');
 
         this.tick();
     }
@@ -1160,11 +1148,11 @@ class Application extends EventHandler {
 
         // Perform ComponentSystem update
         if (script.legacy)
-            ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            this.systems.fire('fixedUpdate', 1.0 / 60.0);
 
-        ComponentSystem.update(dt, this._inTools);
-        ComponentSystem.animationUpdate(dt, this._inTools);
-        ComponentSystem.postUpdate(dt, this._inTools);
+        this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
+        this.systems.fire('animationUpdate', dt);
+        this.systems.fire('postUpdate', dt);
 
         // fire update event
         this.fire("update", dt);
@@ -1190,8 +1178,7 @@ class Application extends EventHandler {
         this.stats.frame.renderStart = now();
         // #endif
 
-        this.fire("prerender");
-
+        this.fire('prerender');
         this.root.syncHierarchy();
         this.batcher.updateAll();
 
@@ -1199,8 +1186,7 @@ class Application extends EventHandler {
         ForwardRenderer._skipRenderCounter = 0;
         // #endif
         this.renderer.renderComposition(this.scene.layers);
-
-        this.fire("postrender");
+        this.fire('postrender');
 
         // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
@@ -1209,7 +1195,7 @@ class Application extends EventHandler {
 
     _fillFrameStatsBasic(now, dt, ms) {
         // Timing stats
-        var stats = this.stats.frame;
+        const stats = this.stats.frame;
         stats.dt = dt;
         stats.ms = ms;
         if (now > stats._timeToCountFrames) {
@@ -1226,7 +1212,7 @@ class Application extends EventHandler {
     }
 
     _fillFrameStats() {
-        var stats = this.stats.frame;
+        let stats = this.stats.frame;
 
         // Render stats
         stats.cameras = this.renderer._camerasRendered;
@@ -1236,7 +1222,7 @@ class Application extends EventHandler {
         stats.shadowMapTime = this.renderer._shadowMapTime;
         stats.depthMapTime = this.renderer._depthMapTime;
         stats.forwardTime = this.renderer._forwardTime;
-        var prims = this.graphicsDevice._primsPerFrame;
+        const prims = this.graphicsDevice._primsPerFrame;
         stats.triangles = prims[PRIMITIVE_TRIANGLES] / 3 +
             Math.max(prims[PRIMITIVE_TRISTRIP] - 2, 0) +
             Math.max(prims[PRIMITIVE_TRIFAN] - 2, 0);
@@ -1248,7 +1234,7 @@ class Application extends EventHandler {
         stats.lightClusters = this.renderer._lightClusters;
         stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
-        for (var i = 0; i < prims.length; i++) {
+        for (let i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
                 stats.otherPrimitives += prims[i];
             }
@@ -1304,9 +1290,9 @@ class Application extends EventHandler {
      * @description Controls how the canvas fills the window and resizes when the window changes.
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
-     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
      * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
@@ -1321,8 +1307,8 @@ class Application extends EventHandler {
      * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
      * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
      */
@@ -1380,12 +1366,12 @@ class Application extends EventHandler {
         if (this.xr && this.xr.session)
             return;
 
-        var windowWidth = window.innerWidth;
-        var windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
 
         if (this._fillMode === FILLMODE_KEEP_ASPECT) {
-            var r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
-            var winR = windowWidth / windowHeight;
+            const r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
+            const winR = windowWidth / windowHeight;
 
             if (r > winR) {
                 width = windowWidth;
@@ -1456,25 +1442,25 @@ class Application extends EventHandler {
      * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
-     * * {@link FOG_NONE}
-     * * {@link FOG_LINEAR}
-     * * {@link FOG_EXP}
-     * * {@link FOG_EXP2}
+     * - {@link FOG_NONE}
+     * - {@link FOG_LINEAR}
+     * - {@link FOG_EXP}
+     * - {@link FOG_EXP2}
      * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
      * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
      *
-     * * {@link GAMMA_NONE}
-     * * {@link GAMMA_SRGB}
+     * - {@link GAMMA_NONE}
+     * - {@link GAMMA_SRGB}
      * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      *
-     * * {@link TONEMAP_LINEAR}
-     * * {@link TONEMAP_FILMIC}
-     * * {@link TONEMAP_HEJL}
-     * * {@link TONEMAP_ACES}
+     * - {@link TONEMAP_LINEAR}
+     * - {@link TONEMAP_FILMIC}
+     * - {@link TONEMAP_HEJL}
+     * - {@link TONEMAP_ACES}
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
@@ -1484,8 +1470,8 @@ class Application extends EventHandler {
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
      *
-     * * {@link BAKE_COLOR}: single color lightmap
-     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * - {@link BAKE_COLOR}: single color lightmap
+     * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
@@ -1516,10 +1502,10 @@ class Application extends EventHandler {
      * app.applySceneSettings(settings);
      */
     applySceneSettings(settings) {
-        var asset;
+        let asset;
 
         if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-            var gravity = settings.physics.gravity;
+            const gravity = settings.physics.gravity;
             this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
         }
 
@@ -1549,7 +1535,7 @@ class Application extends EventHandler {
     setAreaLightLuts(asset) {
         if (asset) {
             const device = this.graphicsDevice;
-            asset.ready(function (asset) {
+            asset.ready((asset) => {
                 AreaLightLuts.set(device, asset.resource);
             });
             this.assets.load(asset);
@@ -1567,38 +1553,37 @@ class Application extends EventHandler {
      * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
      */
     setSkybox(asset) {
-        if (asset) {
-            if (this._skyboxLast === asset.id) {
-                if (this.scene.skyboxMip === 0 && !asset.loadFaces) {
-                    this._skyboxLoad(asset);
-                } else {
-                    this._onSkyboxChange(asset);
+        if (asset !== this._skyboxAsset) {
+            const onSkyboxRemoved = () => {
+                this.setSkybox(null);
+            };
+
+            const onSkyboxChanged = () => {
+                this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
+            };
+
+            // cleanup previous asset
+            if (this._skyboxAsset) {
+                this.assets.off('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
+                this.assets.off('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this._skyboxAsset.off('change', onSkyboxChanged, this);
+            }
+
+            // set new asset
+            this._skyboxAsset = asset;
+            if (this._skyboxAsset) {
+                this.assets.on('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
+                this.assets.once('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this._skyboxAsset.on('change', onSkyboxChanged, this);
+
+                if (this.scene.skyboxMip === 0 && !this._skyboxAsset.loadFaces) {
+                    this._skyboxAsset.loadFaces = true;
                 }
-                return;
+
+                this.assets.load(this._skyboxAsset);
             }
 
-            if (this._skyboxLast) {
-                this.assets.off('add:' + this._skyboxLast, this.setSkybox, this);
-                this.assets.off('load:' + this._skyboxLast, this._onSkyboxChange, this);
-                this.assets.off('remove:' + this._skyboxLast, this._skyboxRemove, this);
-            }
-
-            this._skyboxLast = asset.id;
-
-            this.assets.on('load:' + asset.id, this._onSkyboxChange, this);
-            this.assets.once('remove:' + asset.id, this._skyboxRemove, this);
-
-            if (asset.resource)
-                this.scene.setSkybox(asset.resources);
-
-            this._skyboxLoad(asset);
-        } else {
-            if (!this._skyboxLast)
-                return;
-
-            this._skyboxRemove({
-                id: this._skyboxLast
-            });
+            onSkyboxChanged();
         }
     }
 
@@ -1629,39 +1614,11 @@ class Application extends EventHandler {
         }
     }
 
-    _onSkyboxChange(asset) {
-        this.scene.setSkybox(asset.resources);
-    }
-
-    _skyboxLoad(asset) {
-        if (this.scene.skyboxMip === 0)
-            asset.loadFaces = true;
-
-        this.assets.load(asset);
-
-        this._onSkyboxChange(asset);
-    }
-
-    _skyboxRemove(asset) {
-        if (!this._skyboxLast)
-            return;
-
-        this.assets.off('add:' + asset.id, this.setSkybox, this);
-        this.assets.off('load:' + asset.id, this._onSkyboxChange, this);
-        this.assets.off('remove:' + asset.id, this._skyboxRemove, this);
-        this.scene.setSkybox(null);
-        this._skyboxLast = null;
-    }
-
     _firstBake() {
         this.lightmapper.bake(null, this.scene.lightmapMode);
     }
 
     _firstBatch() {
-        if (this.scene._needsStaticPrepare) {
-            this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
-            this.scene._needsStaticPrepare = false;
-        }
         this.batcher.generate();
     }
 
@@ -1669,162 +1626,60 @@ class Application extends EventHandler {
         return timestamp;
     }
 
-    // IMMEDIATE MODE API
-    _preRenderImmediate() {
-        this._immediateData.finalize();
-    }
-
-    _postRenderImmediate() {
-        this._immediateData.clear();
-    }
-
-    _initImmediate() {
-        // Init global line drawing data once
-        if (!this._immediateData) {
-            this._immediateData = new ImmediateData(this.graphicsDevice);
-
-            this.on('prerender', this._preRenderImmediate, this);
-            this.on('postrender', this._postRenderImmediate, this);
-        }
-    }
-
-    _addLines(position, color, options) {
-        var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
-        var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
-        var mask = (options && options.mask) ? options.mask : undefined;
-
-        this._initImmediate();
-        const lineBatch = this._immediateData.prepareLineBatch(layer, depthTest, mask, position.length / 2);
-
-        // Append
-        lineBatch.addLines(position, color);
+    // returns the default layer used by the line drawing functions
+    _getDefaultDrawLayer() {
+        return this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     }
 
     /**
      * @function
-     * @name Application#renderLine
-     * @description Renders a line. Line start and end coordinates are specified in
-     * world-space. If a single color is supplied, the line will be flat-shaded with
-     * that color. If two colors are supplied, the line will be smooth shaded between
-     * those colors. It is also possible to control which scene layer the line is
-     * rendered into. By default, lines are rendered into the immediate layer
-     * {@link LAYERID_IMMEDIATE}.
+     * @name Application#drawLine
+     * @description Draws a single line. Line start and end coordinates are specified in world-space.
+     * The line will be flat-shaded with the specified color.
      * @param {Vec3} start - The start world-space coordinate of the line.
      * @param {Vec3} end - The end world-space coordinate of the line.
-     * @param {Color} color - The start color of the line.
-     * @param {Color} [endColor] - The end color of the line.
-     * @param {object} [options] - Options to set rendering properties.
-     * @param {Layer} [options.layer] - The layer to render the line into. Defaults
-     * to {@link LAYERID_IMMEDIATE}.
+     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {boolean} [depthTest] - Specifies if the line is depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
      * var start = new pc.Vec3(0, 0, 0);
      * var end = new pc.Vec3(1, 0, 0);
-     * var color = new pc.Color(1, 1, 1);
-     * app.renderLine(start, end, color);
+     * app.drawLine(start, end);
      * @example
-     * // Render a 1-unit long line that is smooth-shaded from white to red
+     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
      * var start = new pc.Vec3(0, 0, 0);
      * var end = new pc.Vec3(1, 0, 0);
-     * var startColor = new pc.Color(1, 1, 1);
-     * var endColor = new pc.Color(1, 0, 0);
-     * app.renderLine(start, end, startColor, endColor);
+     * app.drawLine(start, end, pc.Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
      * var start = new pc.Vec3(0, 0, 0);
      * var end = new pc.Vec3(1, 0, 0);
-     * var color = new pc.Color(1, 1, 1);
      * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.renderLine(start, end, color, {
-     *     layer: worldLayer
-     * });
-     * @example
-     * // Render a 1-unit long line that is smooth-shaded from white to red into the world layer
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
-     * var startColor = new pc.Color(1, 1, 1);
-     * var endColor = new pc.Color(1, 0, 0);
-     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.renderLine(start, end, color, {
-     *     layer: worldLayer
-     * });
+     * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
-    renderLine(start, end, color) {
-        var endColor = color;
-        var options;
-
-        var arg3 = arguments[3];
-        var arg4 = arguments[4];
-
-        if (arg3 instanceof Color) {
-            // passed in end color
-            endColor = arg3;
-
-            if (typeof arg4 === 'number') {
-                if (!_deprecationWarning) {
-                    console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
-                    _deprecationWarning = true;
-                }
-                // compatibility: convert linebatch id into options
-                if (arg4 === LINEBATCH_OVERLAY) {
-                    options = {
-                        layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                        depthTest: false
-                    };
-                } else {
-                    options = {
-                        layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                        depthTest: true
-                    };
-                }
-            } else {
-                // use passed in options
-                options = arg4;
-            }
-        } else if (typeof arg3 === 'number') {
-            if (!_deprecationWarning) {
-                console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
-                _deprecationWarning = true;
-            }
-
-            endColor = color;
-
-            // compatibility: convert linebatch id into options
-            if (arg3 === LINEBATCH_OVERLAY) {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: false
-                };
-            } else {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: true
-                };
-            }
-        } else if (arg3) {
-            // options passed in
-            options = arg3;
-        }
-
-        this._addLines([start, end], [color, endColor], options);
+    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLines([start, end], [color, color]);
     }
 
     /**
      * @function
-     * @name Application#renderLines
-     * @description Renders an arbitrary number of discrete line segments. The lines
-     * are not connected by each subsequent point in the array. Instead, they are
-     * individual segments specified by two points. Therefore, the lengths of the
-     * supplied position and color arrays must be the same and also must be a multiple
-     * of 2. The colors of the ends of each line segment will be interpolated along
-     * the length of each line.
-     * @param {Vec3[]} position - An array of points to draw lines between. The
-     * length of the array must be a multiple of 2.
-     * @param {Color[]} color - An array of colors to color the lines. This
-     * must be the same length as the position array. The length of the array must
-     * also be a multiple of 2.
-     * @param {object} [options] - Options to set rendering properties.
-     * @param {Layer} [options.layer] - The layer to render the lines into.
+     * @name Application#drawLines
+     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
+     * point in the array. Instead, they are individual segments specified by two points. Therefore, the lengths of the
+     * supplied position and color arrays must be the same and also must be a multiple of 2. The colors of the ends of each
+     * line segment will be interpolated along the length of each line.
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same length as the position array.
+     * The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a single line, with unique colors for each point
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
      * var points = [
@@ -1843,90 +1698,106 @@ class Application extends EventHandler {
      *     pc.Color.CYAN,
      *     pc.Color.BLUE
      * ];
-     * app.renderLines(points, colors);
+     * app.drawLines(points, colors);
      */
-    renderLines(position, color, options) {
-        if (!options) {
-            // default option
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                depthTest: true
-            };
-        } else if (typeof options === 'number') {
-            if (!_deprecationWarning) {
-                console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
-                _deprecationWarning = true;
-            }
-
-            // backwards compatibility, LINEBATCH_OVERLAY lines have depthtest disabled
-            if (options === LINEBATCH_OVERLAY) {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: false
-                };
-            } else {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: true
-                };
-            }
-        }
-
-        var multiColor = !!color.length;
-        if (multiColor) {
-            if (position.length !== color.length) {
-                console.error("renderLines: position/color arrays have different lengths");
-                return;
-            }
-        }
-        if (position.length % 2 !== 0) {
-            console.error("renderLines: array length is not divisible by 2");
-            return;
-        }
-        this._addLines(position, color, options);
+    drawLines(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLines(positions, colors);
     }
 
-    _getDefaultImmediateOptions(depthTest = false) {
-        return {
-            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-            depthTest: depthTest
-        };
+    /**
+     * @function
+     * @name Application#drawLineArrays
+     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
+     * point in the array. Instead, they are individual segments specified by two points.
+     * @param {number[]} positions - An array of points to draw lines between. Each point is represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same length as the position array.
+     * The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render 2 discrete line segments
+     * var points = [
+     *     // Line 1
+     *     0, 0, 0,
+     *     1, 0, 0,
+     *     // Line 2
+     *     1, 1, 0,
+     *     1, 1, 1
+     * ];
+     * var colors = [
+     *     // Line 1
+     *     1, 0, 0, 1,  // red
+     *     0, 1, 0, 1,  // green
+     *     // Line 2
+     *     0, 0, 1, 1,  // blue
+     *     1, 1, 1, 1   // white
+     * ];
+     * app.drawLineArrays(points, colors);
+     */
+    drawLineArrays(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        const batch = this._immediate.getBatch(layer, depthTest);
+        batch.addLinesArrays(positions, colors);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    renderWireCube(matrix, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireCube(matrix, color, options);
+    /**
+     * @function
+     * @private
+     * @name Application#drawWireSphere
+     * @description Draws a wireframe sphere with center, radius and color.
+     * @param {Vec3} center - The center of the sphere.
+     * @param {number} radius - The radius of the sphere.
+     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
+     * @param {number} [segments] - Number of line segments used to render the circles forming the sphere. Defaults to 20.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a red wire sphere with radius of 1
+     * var center = new pc.Vec3(0, 0, 0);
+     * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     */
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
-    // Draw lines forming sphere at this frame
-    renderWireSphere(center, radius, color, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderWireSphere(center, radius, color, options);
+    /**
+     * @function
+     * @private
+     * @name Application#drawWireAlignedBox
+     * @description Draws a wireframe axis aligned box specified by min and max points and color.
+     * @param {Vec3} minPoint - The min corner point of the box.
+     * @param {Vec3} maxPoint - The max corner point of the box.
+     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a red wire aligned box
+     * var min = new pc.Vec3(-1, -1, -1);
+     * var max = new pc.Vec3(1, 1, 1);
+     * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     */
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
     // Draw meshInstance at this frame
-    renderMeshInstance(meshInstance, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderMesh(null, null, null, meshInstance, options);
+    drawMeshInstance(meshInstance, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawMesh(null, null, null, meshInstance, layer);
     }
 
     // Draw mesh at this frame
-    renderMesh(mesh, material, matrix, options = this._getDefaultImmediateOptions(true)) {
-        this._initImmediate();
-        this._immediateData.renderMesh(material, matrix, mesh, null, options);
+    drawMesh(mesh, material, matrix, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawMesh(material, matrix, mesh, null, layer);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    renderQuad(matrix, material, options = this._getDefaultImmediateOptions()) {
-        this._initImmediate();
-        this._immediateData.renderMesh(material, matrix, this._immediateData.getQuadMesh(), null, options);
+    drawQuad(matrix, material, layer = this._getDefaultDrawLayer()) {
+        this._immediate.drawMesh(material, matrix, this._immediate.getQuadMesh(), null, layer);
     }
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    renderTexture(x, y, width, height, texture, material, options) {
-        this._initImmediate();
+    drawTexture(x, y, width, height, texture, material, layer = this._getDefaultDrawLayer()) {
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1935,23 +1806,21 @@ class Application extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this._immediateData.getTextureShader();
+            material.shader = this._immediate.getTextureShader();
             material.update();
         }
 
-        this.renderQuad(matrix, material, options);
+        this.drawQuad(matrix, material, layer);
     }
 
     // draws a depth texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    renderDepthTexture(x, y, width, height, options) {
-        this._initImmediate();
-
+    drawDepthTexture(x, y, width, height, layer = this._getDefaultDrawLayer()) {
         const material = new Material();
-        material.shader = this._immediateData.getDepthTextureShader();
+        material.shader = this._immediate.getDepthTextureShader();
         material.update();
 
-        this.renderTexture(x, y, width, height, null, material, options);
+        this.drawTexture(x, y, width, height, null, material, layer);
     }
 
     /**
@@ -1968,16 +1837,17 @@ class Application extends EventHandler {
             return;
         }
 
-        var i, l;
-        var canvasId = this.graphicsDevice.canvas.id;
+        const canvasId = this.graphicsDevice.canvas.id;
 
         this.off('librariesloaded');
-        document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-        document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+        }
         this._visibilityChangeHandler = null;
-        this.onVisibilityChange = null;
 
         this.root.destroy();
         this.root = null;
@@ -2009,12 +1879,7 @@ class Application extends EventHandler {
             this.controller = null;
         }
 
-        var systems = this.systems.list;
-        for (i = 0, l = systems.length; i < l; i++) {
-            systems[i].destroy();
-        }
-
-        ComponentSystem.destroy();
+        this.systems.destroy();
 
         // layer composition
         if (this.scene.layers) {
@@ -2022,8 +1887,8 @@ class Application extends EventHandler {
         }
 
         // destroy all texture resources
-        var assets = this.assets.list();
-        for (i = 0; i < assets.length; i++) {
+        const assets = this.assets.list();
+        for (let i = 0; i < assets.length; i++) {
             assets[i].unload();
             assets[i].off();
         }
@@ -2037,9 +1902,9 @@ class Application extends EventHandler {
         this.i18n.destroy();
         this.i18n = null;
 
-        for (var key in this.loader.getHandler('script')._cache) {
-            var element = this.loader.getHandler('script')._cache[key];
-            var parent = element.parentNode;
+        for (const key in this.loader.getHandler('script')._cache) {
+            const element = this.loader.getHandler('script')._cache[key];
+            const parent = element.parentNode;
             if (parent) parent.removeChild(element);
         }
         this.loader.getHandler('script')._cache = {};
@@ -2050,7 +1915,7 @@ class Application extends EventHandler {
         this.scene.destroy();
         this.scene = null;
 
-        this.systems = [];
+        this.systems = null;
         this.context = null;
 
         // script registry
@@ -2083,11 +1948,15 @@ class Application extends EventHandler {
         }
         this.xr.end();
 
-        this.graphicsDevice.destroy();
-        this.graphicsDevice = null;
+        ParticleEmitter.staticDestroy();
 
         this.renderer.destroy();
         this.renderer = null;
+
+        DefaultMaterial.remove(this.graphicsDevice);
+
+        this.graphicsDevice.destroy();
+        this.graphicsDevice = null;
 
         this.tick = null;
 
@@ -2099,9 +1968,6 @@ class Application extends EventHandler {
         }
 
         script.app = null;
-
-        // remove default particle texture
-        ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
         Application._applications[canvasId] = null;
 
@@ -2124,12 +1990,12 @@ class Application extends EventHandler {
 }
 
 // static data
-var _frameEndData = {};
+const _frameEndData = {};
 
 // create tick function to be wrapped in closure
-var makeTick = function (_app) {
-    var application = _app;
-    var frameRequest;
+const makeTick = function (_app) {
+    const application = _app;
+    let frameRequest;
 
     return function (timestamp, frame) {
         if (!application.graphicsDevice)
@@ -2145,9 +2011,9 @@ var makeTick = function (_app) {
         // have current application pointer in pc
         app = application;
 
-        var currentTime = application._processTimestamp(timestamp) || now();
-        var ms = currentTime - (application._time || currentTime);
-        var dt = ms / 1000.0;
+        const currentTime = application._processTimestamp(timestamp) || now();
+        const ms = currentTime - (application._time || currentTime);
+        let dt = ms / 1000.0;
         dt = math.clamp(dt, 0, application.maxDeltaTime);
         dt *= application.timeScale;
 

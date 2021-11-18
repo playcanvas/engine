@@ -6,6 +6,7 @@ import { RenderComponentData } from './data.js';
 
 import { BoundingBox } from '../../../shape/bounding-box';
 import { Vec3 } from '../../../math/vec3';
+import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 
 const _schema = [
     { name: 'rootBone', type: 'entity' },
@@ -48,7 +49,7 @@ class RenderComponentSystem extends ComponentSystem {
         this.DataType = RenderComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = app.scene.defaultMaterial;
+        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }
@@ -63,7 +64,7 @@ class RenderComponentSystem extends ComponentSystem {
             _data.layers = _data.layers.slice(0);
         }
 
-        for (var i = 0; i < _properties.length; i++) {
+        for (let i = 0; i < _properties.length; i++) {
             if (_data.hasOwnProperty(_properties[i])) {
                 component[_properties[i]] = _data[_properties[i]];
             }
@@ -92,7 +93,7 @@ class RenderComponentSystem extends ComponentSystem {
 
         // clone mesh instances
         const srcMeshInstances = entity.render.meshInstances;
-        const meshes = srcMeshInstances.map((mi) => mi.mesh);
+        const meshes = srcMeshInstances.map(mi => mi.mesh);
         component._onSetMeshes(meshes);
 
         // assign materials

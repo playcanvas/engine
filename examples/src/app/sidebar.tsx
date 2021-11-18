@@ -1,14 +1,31 @@
 import React, { useState, useEffect } from 'react';
 // @ts-ignore: library file import
-import { Container, Panel, TextInput, Label, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import TextInput from '@playcanvas/pcui/TextInput/component';
+// @ts-ignore: library file import
+import Label from '@playcanvas/pcui/Label/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
 // @ts-ignore: library file import
-import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
+import { Observer } from '@playcanvas/observer';
 
 interface SideBarProps {
     categories: any
 }
+
+const toggleSideBar = () => {
+    const sideBar = document.getElementById('sideBar');
+    sideBar.classList.toggle('collapsed');
+};
 
 const SideBar = (props: SideBarProps) => {
     const defaultCategories = props.categories;
@@ -18,10 +35,9 @@ const SideBar = (props: SideBarProps) => {
     useEffect(() => {
         // set up the control panel toggle button
         const sideBar = document.getElementById('sideBar');
-        const panelToggleDiv = sideBar.querySelector('.panel-toggle');
-        panelToggleDiv.addEventListener('click', function () {
-            sideBar.classList.toggle('collapsed');
-        });
+        const panelToggleDiv = document.querySelector('.sideBar-panel-toggle');
+        panelToggleDiv.removeEventListener('click', toggleSideBar);
+        panelToggleDiv.addEventListener('click', toggleSideBar);
 
         window.addEventListener('hashchange', () => {
             setHash(location.hash);
@@ -41,10 +57,9 @@ const SideBar = (props: SideBarProps) => {
             topNavItem.scrollIntoView();
         });
 
-        const sideBarPanel = document.getElementById('sideBar-panel');
         if (!filteredCategories && document.body.offsetWidth < 601) {
             // @ts-ignore
-            sideBarPanel.ui.collapsed = true;
+            sideBar.ui.collapsed = true;
         }
         sideBar.classList.add('visible');
 
@@ -58,9 +73,8 @@ const SideBar = (props: SideBarProps) => {
 
     const categories = filteredCategories || defaultCategories;
     return (
-        <Container id='sideBar' class='small-thumbnails'>
-            <div className='panel-toggle' />
-            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} id='sideBar-panel'>
+        <>
+            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} collapsed={true} id='sideBar' class='small-thumbnails'>
                 <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(filter: string) => {
                     const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
                     if (!reg) {
@@ -89,23 +103,23 @@ const SideBar = (props: SideBarProps) => {
                         });
                     });
                     setFilteredCategories(updatedCategories);
-                }}/>
+                }} />
                 <LabelGroup text='Large thumbnails:'>
-                    <BooleanInput type='toggle'  binding={new BindingTwoWay()} link={{ observer, path: 'largeThumbnails' }} />
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: 'largeThumbnails' }} />
                 </LabelGroup>
                 <Container id='sideBar-contents'>
                     {
-                        Object.keys(categories).sort((a: string, b:string) => (a > b ? 1 : -1)).map((category: string) => {
+                        Object.keys(categories).sort((a: string, b: string) => (a > b ? 1 : -1)).map((category: string) => {
                             return <Panel key={category} class="categoryPanel" headerText={categories[category].name} collapsible={true} collapsed={false}>
                                 <ul className="category-nav">
                                     {
-                                        Object.keys(categories[category].examples).sort((a: string, b:string) => (a > b ? 1 : -1)).map((example: string) => {
+                                        Object.keys(categories[category].examples).sort((a: string, b: string) => (a > b ? 1 : -1)).map((example: string) => {
                                             const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
                                             const className = `nav-item ${isSelected ? 'selected' : ''}`;
                                             return <Link key={example} to={`/${category}/${example}`} onClick={() => {
-                                                const sideBarPanel = document.getElementById('sideBar-panel');
+                                                const sideBar = document.getElementById('sideBar');
                                                 // @ts-ignore
-                                                sideBarPanel.ui.collapsed = true;
+                                                sideBar.ui.collapsed = true;
                                             }}>
                                                 <div className={className} id={`link-${category}-${example}`}>
                                                     <img src={`./thumbnails/${category}_${example}.png`} />
@@ -119,11 +133,12 @@ const SideBar = (props: SideBarProps) => {
                         })
                     }
                     {
-                        Object.keys(categories).length === 0 && <Label text='No results'/>
+                        Object.keys(categories).length === 0 && <Label text='No results' />
                     }
                 </Container>
             </Panel>
-        </Container>
+            <div className='panel-toggle sideBar-panel-toggle' />
+        </>
     );
 };
 

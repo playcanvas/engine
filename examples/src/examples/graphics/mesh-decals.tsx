@@ -13,7 +13,6 @@ class MeshDecalsExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { spark: pc.Asset }): void {
 
         // Create the application
@@ -50,7 +49,9 @@ class MeshDecalsExample extends Example {
             type: "omni",
             color: new pc.Color(0.2, 0.2, 0.2),
             range: 30,
-            castShadows: true
+            castShadows: true,
+            shadowBias: 0.1,
+            normalOffsetBias: 0.2
         });
         light.translate(0, 8, 0);
         app.root.addChild(light);

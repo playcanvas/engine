@@ -1,4 +1,4 @@
-import { math } from '../math/math.js';
+import { FloatPacking } from '../math/float-packing.js';
 import { Texture } from '../graphics/texture.js';
 
 import {
@@ -70,7 +70,7 @@ class AreaLightLuts {
 
             const count = data.length;
             const ret = new Uint16Array(count);
-            const float2Half = math.float2Half;
+            const float2Half = FloatPacking.float2Half;
             for (let i = 0; i < count; i++) {
                 ret[i] = float2Half(data[i]);
             }

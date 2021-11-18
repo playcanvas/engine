@@ -17,7 +17,7 @@ class LocalizedAsset extends EventHandler {
     }
 
     _bindDefaultAsset() {
-        var asset = this._app.assets.get(this._defaultAsset);
+        const asset = this._app.assets.get(this._defaultAsset);
         if (!asset) {
             this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
         } else {
@@ -30,7 +30,7 @@ class LocalizedAsset extends EventHandler {
 
         this._app.assets.off('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
 
-        var asset = this._app.assets.get(this._defaultAsset);
+        const asset = this._app.assets.get(this._defaultAsset);
         if (!asset) return;
 
         asset.off('add:localized', this._onLocaleAdd, this);
@@ -56,7 +56,7 @@ class LocalizedAsset extends EventHandler {
     _bindLocalizedAsset() {
         if (!this._autoLoad) return;
 
-        var asset = this._app.assets.get(this._localizedAsset);
+        const asset = this._app.assets.get(this._localizedAsset);
         if (!asset) return;
 
         asset.on("load", this._onLocalizedAssetLoad, this);
@@ -71,7 +71,7 @@ class LocalizedAsset extends EventHandler {
     }
 
     _unbindLocalizedAsset() {
-        var asset = this._app.assets.get(this._localizedAsset);
+        const asset = this._app.assets.get(this._localizedAsset);
         if (!asset) return;
 
         asset.off("load", this._onLocalizedAssetLoad, this);
@@ -120,13 +120,13 @@ class LocalizedAsset extends EventHandler {
             return;
         }
 
-        var asset = this._app.assets.get(this._defaultAsset);
+        const asset = this._app.assets.get(this._defaultAsset);
         if (!asset || this._disableLocalization) {
             this.localizedAsset = this._defaultAsset;
             return;
         }
 
-        var localizedAssetId = asset.getLocalizedAssetId(locale);
+        const localizedAssetId = asset.getLocalizedAssetId(locale);
         if (!localizedAssetId) {
             this.localizedAsset = this._defaultAsset;
             return;
@@ -146,7 +146,7 @@ class LocalizedAsset extends EventHandler {
     }
 
     set defaultAsset(value) {
-        var id = value instanceof Asset ? value.id : value;
+        const id = value instanceof Asset ? value.id : value;
 
         if (this._defaultAsset === id) return;
 
@@ -169,7 +169,7 @@ class LocalizedAsset extends EventHandler {
     }
 
     set localizedAsset(value) {
-        var id = value instanceof Asset ? value.id : value;
+        const id = value instanceof Asset ? value.id : value;
         if (this._localizedAsset === id) {
             return;
         }
@@ -183,7 +183,7 @@ class LocalizedAsset extends EventHandler {
         this._localizedAsset = id;
 
         if (this._localizedAsset) {
-            var asset = this._app.assets.get(this._localizedAsset);
+            const asset = this._app.assets.get(this._localizedAsset);
             if (!asset) {
                 this._app.assets.once('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
             } else {

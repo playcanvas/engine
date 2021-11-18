@@ -1,4 +1,3 @@
-import { RefCountedCache } from '../core/ref-counted-cache.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { BoundingSphere } from '../shape/bounding-sphere.js';
 
@@ -9,16 +8,18 @@ import {
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM, SHADERDEF_DIRLM,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
     SORTKEY_FORWARD
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
+import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
-var _tmpAabb = new BoundingBox();
-var _tempBoneAabb = new BoundingBox();
-var _tempSphere = new BoundingSphere();
-var _meshSet = new Set();
+const _tmpAabb = new BoundingBox();
+const _tempBoneAabb = new BoundingBox();
+const _tempSphere = new BoundingSphere();
+const _meshSet = new Set();
 
 
 // internal data structure used to store data used by hardware instancing
@@ -56,6 +57,7 @@ class Command {
  * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
  * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {MorphInstance} morphInstance The morph instance managing morphing of this mesh instance, or null if morphing is not used.
+ * @property {SkinInstance} skinInstance The skin instance managing skinning of this mesh instance, or null if skinning is not used.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
  * @property {GraphNode} node The graph node defining the transform for this instance.
@@ -63,9 +65,9 @@ class Command {
  * @property {Material} material The material used by this mesh instance.
  * @property {number} renderStyle The render style of the mesh instance. Can be:
  *
- * * {@link RENDERSTYLE_SOLID}
- * * {@link RENDERSTYLE_WIREFRAME}
- * * {@link RENDERSTYLE_POINTS}
+ * - {@link RENDERSTYLE_SOLID}
+ * - {@link RENDERSTYLE_WIREFRAME}
+ * - {@link RENDERSTYLE_POINTS}
  *
  * Defaults to {@link RENDERSTYLE_SOLID}.
  * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
@@ -169,26 +171,40 @@ class MeshInstance {
         this.flipFaces = false;
     }
 
+    destroy() {
+
+        const mesh = this.mesh;
+        if (mesh) {
+
+            // this decreases ref count on the mesh
+            this.mesh = null;
+
+            // destroy mesh
+            if (mesh.getRefCount() < 1) {
+                mesh.destroy();
+            }
+        }
+
+        // release ref counted lightmaps
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
+
+        if (this._skinInstance) {
+            this._skinInstance.destroy();
+            this._skinInstance = null;
+        }
+
+        if (this.morphInstance) {
+            this.morphInstance.destroy();
+            this.morphInstance = null;
+        }
+
+        // make sure material clears references to this meshInstance
+        this.material = null;
+    }
+
     // shader uniform names for lightmaps
     static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
-
-    // cache of lightmaps internally created by baking using Lightmapper
-    // this allows us to automatically release realtime baked lightmaps when mesh instances using them are destroyed
-    static _lightmapCache = new RefCountedCache();
-
-    // add texture reference to lightmap cache
-    static incRefLightmap(texture) {
-        this._lightmapCache.incRef(texture);
-    }
-
-    // remove texture reference from lightmap cache
-    static decRefLightmap(texture) {
-        this._lightmapCache.decRef(texture);
-    }
-
-    static destroyLightmapCache() {
-        this._lightmapCache.destroy();
-    }
 
     get renderStyle() {
         return this._renderStyle;
@@ -334,7 +350,7 @@ class MeshInstance {
             this._shader[i] = null;
         }
 
-        var prevMat = this._material;
+        const prevMat = this._material;
 
         // Remove the material's reference to this mesh instance
         if (prevMat) {
@@ -350,10 +366,10 @@ class MeshInstance {
 
             this.updateKey();
 
-            var prevBlend = prevMat && (prevMat.blendType !== BLEND_NONE);
-            var thisBlend = this._material.blendType !== BLEND_NONE;
+            const prevBlend = prevMat && (prevMat.blendType !== BLEND_NONE);
+            const thisBlend = this._material.blendType !== BLEND_NONE;
             if (prevBlend !== thisBlend) {
-                var scene = this._material._scene;
+                let scene = this._material._scene;
                 if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
                 if (scene) {
@@ -400,7 +416,7 @@ class MeshInstance {
     set skinInstance(val) {
         this._skinInstance = val;
         this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN);
-        for (var i = 0; i < this._shader.length; i++) {
+        for (let i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
         }
 
@@ -420,7 +436,7 @@ class MeshInstance {
         this._shaderDefs = (val && val.morph.useTextureMorph) ? (this._shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (this._shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         this._shaderDefs = (val && val.morph.morphPositions) ? (this._shaderDefs | SHADERDEF_MORPH_POSITION) : (this._shaderDefs & ~SHADERDEF_MORPH_POSITION);
         this._shaderDefs = (val && val.morph.morphNormals) ? (this._shaderDefs | SHADERDEF_MORPH_NORMAL) : (this._shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-        for (var i = 0; i < this._shader.length; i++) {
+        for (let i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
         }
     }
@@ -454,7 +470,7 @@ class MeshInstance {
     }
 
     set mask(val) {
-        var toggles = this._shaderDefs & 0x0000FFFF;
+        const toggles = this._shaderDefs & 0x0000FFFF;
         this._shaderDefs = toggles | (val << 16);
         this._shader[SHADER_FORWARD] = null;
         this._shader[SHADER_FORWARDHDR] = null;
@@ -472,38 +488,6 @@ class MeshInstance {
     set instancingCount(value) {
         if (this.instancingData)
             this.instancingData.count = value;
-    }
-
-    destroy() {
-
-        const mesh = this.mesh;
-        if (mesh) {
-
-            // this decreases ref count on the mesh
-            this.mesh = null;
-
-            // destroy mesh
-            if (mesh.getRefCount() < 1) {
-                mesh.destroy();
-            }
-        }
-
-        // release ref counted lightmaps
-        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
-        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
-
-        if (this._skinInstance) {
-            this._skinInstance.destroy();
-            this._skinInstance = null;
-        }
-
-        if (this.morphInstance) {
-            this.morphInstance.destroy();
-            this.morphInstance = null;
-        }
-
-        // make sure material clears references to this meshInstance
-        this.material = null;
     }
 
     syncAabb() {
@@ -531,7 +515,7 @@ class MeshInstance {
     }
 
     updateKey() {
-        var material = this.material;
+        const material = this.material;
         this._key[SORTKEY_FORWARD] = getKey(this.layer,
                                             (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
                                             false, material.id);
@@ -594,9 +578,9 @@ class MeshInstance {
         // note on -262141: All bits set except 2 - 19 range
 
         if (data === undefined && typeof name === 'object') {
-            var uniformObject = name;
+            const uniformObject = name;
             if (uniformObject.length) {
-                for (var i = 0; i < uniformObject.length; i++) {
+                for (let i = 0; i < uniformObject.length; i++) {
                     this.setParameter(uniformObject[i]);
                 }
                 return;
@@ -605,7 +589,7 @@ class MeshInstance {
             data = uniformObject.value;
         }
 
-        var param = this.parameters[name];
+        const param = this.parameters[name];
         if (param) {
             param.data = data;
             param.passFlags = passFlags;
@@ -629,12 +613,12 @@ class MeshInstance {
 
         // remove old
         if (old) {
-            MeshInstance.decRefLightmap(old.data);
+            LightmapCache.decRef(old.data);
         }
 
         // assign new
         if (texture) {
-            MeshInstance.incRefLightmap(texture);
+            LightmapCache.incRef(texture);
             this.setParameter(name, texture);
         } else {
             this.deleteParameter(name);
@@ -655,9 +639,9 @@ class MeshInstance {
 
     // used to apply parameters from this mesh instance into scope of uniforms, called internally by forward-renderer
     setParameters(device, passFlag) {
-        var parameter, parameters = this.parameters;
-        for (var paramName in parameters) {
-            parameter = parameters[paramName];
+        const parameters = this.parameters;
+        for (const paramName in parameters) {
+            const parameter = parameters[paramName];
             if (parameter.passFlags & passFlag) {
                 if (!parameter.scopeId) {
                     parameter.scopeId = device.scope.resolve(paramName);
@@ -673,7 +657,7 @@ class MeshInstance {
         } else {
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
-            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
+            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM | SHADERDEF_LMAMBIENT);
             this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     }

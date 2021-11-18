@@ -1,3 +1,5 @@
+import { AnimTargetValue } from './anim-target-value.js';
+
 /**
  * @private
  * @class
@@ -17,55 +19,54 @@ class AnimEvaluator {
     }
 
     static _dot(a, b) {
-        var len  = a.length;
-        var result = 0;
-        for (var i = 0; i < len; ++i) {
+        const len  = a.length;
+        let result = 0;
+        for (let i = 0; i < len; ++i) {
             result += a[i] * b[i];
         }
         return result;
     }
 
     static _normalize(a) {
-        var l = AnimEvaluator._dot(a, a);
+        let l = AnimEvaluator._dot(a, a);
         if (l > 0) {
             l = 1.0 / Math.sqrt(l);
-            var len = a.length;
-            for (var i = 0; i < len; ++i) {
+            const len = a.length;
+            for (let i = 0; i < len; ++i) {
                 a[i] *= l;
             }
         }
     }
 
     static _set(a, b, type) {
-        var len  = a.length;
-        var i;
+        const len  = a.length;
 
         if (type === 'quaternion') {
-            var l = AnimEvaluator._dot(b, b);
+            let l = AnimEvaluator._dot(b, b);
             if (l > 0) {
                 l = 1.0 / Math.sqrt(l);
             }
-            for (i = 0; i < len; ++i) {
+            for (let i = 0; i < len; ++i) {
                 a[i] = b[i] * l;
             }
         } else {
-            for (i = 0; i < len; ++i) {
+            for (let i = 0; i < len; ++i) {
                 a[i] = b[i];
             }
         }
     }
 
     static _blendVec(a, b, t) {
-        var it = 1.0 - t;
-        var len = a.length;
-        for (var i = 0; i < len; ++i) {
+        const it = 1.0 - t;
+        const len = a.length;
+        for (let i = 0; i < len; ++i) {
             a[i] = a[i] * it + b[i] * t;
         }
     }
 
     static _blendQuat(a, b, t) {
-        var len = a.length;
-        var it = 1.0 - t;
+        const len = a.length;
+        const it = 1.0 - t;
 
         // negate b if a and b don't lie in the same winding (due to
         // double cover). if we don't do this then often rotations from
@@ -74,7 +75,7 @@ class AnimEvaluator {
             t = -t;
         }
 
-        for (var i = 0; i < len; ++i) {
+        for (let i = 0; i < len; ++i) {
             a[i] = a[i] * it + b[i] * t;
         }
 
@@ -90,11 +91,11 @@ class AnimEvaluator {
     }
 
     static _stableSort(a, lessFunc) {
-        var len = a.length;
-        for (var i = 0; i < len - 1; ++i) {
-            for (var j = i + 1; j < len; ++j) {
+        const len = a.length;
+        for (let i = 0; i < len - 1; ++i) {
+            for (let j = i + 1; j < len; ++j) {
                 if (lessFunc(a[j], a[i])) {
-                    var tmp = a[i];
+                    const tmp = a[i];
                     a[i] = a[j];
                     a[j] = tmp;
                 }
@@ -120,20 +121,21 @@ class AnimEvaluator {
      * @param {AnimClip} clip - The clip to add to the evaluator.
      */
     addClip(clip) {
-        var targets = this._targets;
+        const targets = this._targets;
+        const binder = this._binder;
 
         // store list of input/output arrays
-        var curves = clip.track.curves;
-        var snapshot = clip.snapshot;
-        var inputs = [];
-        var outputs = [];
-        for (var i = 0; i < curves.length; ++i) {
-            var curve = curves[i];
-            var paths = curve.paths;
-            for (var j = 0; j < paths.length; ++j) {
-                var path = paths[j];
-                var resolved = this._binder.resolve(path);
-                var target = targets[resolved && resolved.targetPath || null];
+        const curves = clip.track.curves;
+        const snapshot = clip.snapshot;
+        const inputs = [];
+        const outputs = [];
+        for (let i = 0; i < curves.length; ++i) {
+            const curve = curves[i];
+            const paths = curve.paths;
+            for (let j = 0; j < paths.length; ++j) {
+                const path = paths[j];
+                const resolved = binder.resolve(path);
+                let target = targets[resolved && resolved.targetPath || null];
 
                 // create new target if it doesn't exist yet
                 if (!target && resolved) {
@@ -144,16 +146,29 @@ class AnimEvaluator {
                         blendCounter: 0             // per-frame number of blends (used to identify first blend)
                     };
 
-                    for (var k = 0; k < target.target.components; ++k) {
+                    for (let k = 0; k < target.target.components; ++k) {
                         target.value.push(0);
                     }
 
                     targets[resolved.targetPath] = target;
+                    if (binder.animComponent) {
+                        if (!binder.animComponent.targets[resolved.targetPath]) {
+                            let type;
+                            if (resolved.targetPath.substring(resolved.targetPath.length - 13) === 'localRotation') {
+                                type = AnimTargetValue.TYPE_QUAT;
+                            } else {
+                                type = AnimTargetValue.TYPE_VEC3;
+                            }
+                            binder.animComponent.targets[resolved.targetPath] = new AnimTargetValue(binder.animComponent, type);
+                        }
+                        binder.animComponent.targets[resolved.targetPath].layerCounter++;
+                        binder.animComponent.targets[resolved.targetPath].setMask(binder.layerIndex, 1);
+                    }
                 }
 
                 // binding may have failed
-                // TODO: it may be worth storing quaternions and vector targets in seperate
-                // lists. this way the update code won't be foreced to check target type before
+                // TODO: it may be worth storing quaternions and vector targets in separate
+                // lists. this way the update code won't be forced to check target type before
                 // setting/blending each target.
                 if (target) {
                     target.curves++;
@@ -176,25 +191,29 @@ class AnimEvaluator {
      * @param {number} index - Index of the clip to remove.
      */
     removeClip(index) {
-        var targets = this._targets;
+        const targets = this._targets;
+        const binder = this._binder;
 
-        var clips = this._clips;
-        var clip = clips[index];
-        var curves = clip.track.curves;
+        const clips = this._clips;
+        const clip = clips[index];
+        const curves = clip.track.curves;
 
-        for (var i = 0; i < curves.length; ++i) {
-            var curve = curves[i];
-            var paths = curve.paths;
-            for (var j = 0; j < paths.length; ++j) {
-                var path = paths[j];
+        for (let i = 0; i < curves.length; ++i) {
+            const curve = curves[i];
+            const paths = curve.paths;
+            for (let j = 0; j < paths.length; ++j) {
+                const path = paths[j];
 
-                var target = this._binder.resolve(path);
+                const target = this._binder.resolve(path);
 
                 if (target) {
                     target.curves--;
                     if (target.curves === 0) {
-                        this._binder.unresolve(path);
+                        binder.unresolve(path);
                         delete targets[target.targetPath];
+                        if (binder.animComponent) {
+                            binder.animComponent.targets[target.targetPath].layerCounter--;
+                        }
                     }
                 }
             }
@@ -226,9 +245,9 @@ class AnimEvaluator {
      * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
      */
     findClip(name) {
-        var clips = this._clips;
-        for (var i = 0; i < clips.length; ++i) {
-            var clip = clips[i];
+        const clips = this._clips;
+        for (let i = 0; i < clips.length; ++i) {
+            const clip = clips[i];
             if (clip.name === name) {
                 return clip;
             }
@@ -239,11 +258,15 @@ class AnimEvaluator {
     rebind() {
         this._binder.rebind();
         this._targets = {};
-        var clips = [...this.clips];
+        const clips = [...this.clips];
         this.removeClips();
         clips.forEach((clip) => {
             this.addClip(clip);
         });
+    }
+
+    assignMask(mask) {
+        return this._binder.assignMask(mask);
     }
 
     /**
@@ -256,36 +279,34 @@ class AnimEvaluator {
      */
     update(deltaTime) {
         // copy clips
-        var clips = this._clips;
+        const clips = this._clips;
 
         // stable sort order
-        var order = clips.map(function (c, i) {
+        const order = clips.map(function (c, i) {
             return i;
         });
         AnimEvaluator._stableSort(order, function (a, b) {
             return clips[a].blendOrder < clips[b].blendOrder;
         });
 
-        var i, j;
-
-        for (i = 0; i < order.length; ++i) {
-            var index = order[i];
-            var clip = clips[index];
-            var inputs = this._inputs[index];
-            var outputs = this._outputs[index];
-            var blendWeight = clip.blendWeight;
+        for (let i = 0; i < order.length; ++i) {
+            const index = order[i];
+            const clip = clips[index];
+            const inputs = this._inputs[index];
+            const outputs = this._outputs[index];
+            const blendWeight = clip.blendWeight;
 
             // update clip
             if (blendWeight > 0.0) {
                 clip._update(deltaTime);
             }
 
-            var input;
-            var output;
-            var value;
+            let input;
+            let output;
+            let value;
 
             if (blendWeight >= 1.0) {
-                for (j = 0; j < inputs.length; ++j) {
+                for (let j = 0; j < inputs.length; ++j) {
                     input = inputs[j];
                     output = outputs[j];
                     value = output.value;
@@ -295,7 +316,7 @@ class AnimEvaluator {
                     output.blendCounter++;
                 }
             } else if (blendWeight > 0.0) {
-                for (j = 0; j < inputs.length; ++j) {
+                for (let j = 0; j < inputs.length; ++j) {
                     input = inputs[j];
                     output = outputs[j];
                     value = output.value;
@@ -312,11 +333,27 @@ class AnimEvaluator {
         }
 
         // apply result to anim targets
-        var targets = this._targets;
-        for (var path in targets) {
+        const targets = this._targets;
+        const binder = this._binder;
+        for (const path in targets) {
             if (targets.hasOwnProperty(path)) {
-                var target = targets[path];
-                target.target.func(target.value);
+                const target = targets[path];
+                // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
+                if (binder.animComponent && target.target.isTransform) {
+                    const animTarget = binder.animComponent.targets[path];
+                    if (animTarget.counter === animTarget.layerCounter) {
+                        animTarget.counter = 0;
+                    }
+
+                    // Add this layer's value onto the target value
+                    animTarget.updateValue(binder.layerIndex, target.value);
+
+                    // update the target property using this new value
+                    target.target.func(animTarget.value);
+                    animTarget.counter++;
+                } else {
+                    target.target.func(target.value);
+                }
                 target.blendCounter = 0;
             }
         }
@@ -324,7 +361,7 @@ class AnimEvaluator {
         // give the binder an opportunity to update itself
         // TODO: is this even necessary? binder could know when to update
         // itself without our help.
-        this._binder.update(deltaTime);
+        binder.update(deltaTime);
     }
 }
 

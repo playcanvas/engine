@@ -3,9 +3,15 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
-import { Button, BooleanInput, LabelGroup } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 // @ts-ignore: library file import
-import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 import { wasmSupported, loadWasmModuleAsync } from '../../wasm-loader';
 
 // create an anim state graph
@@ -154,10 +160,11 @@ class LocomotionExample extends Example {
             <AssetLoader name='jogAnim' type='container' url='static/assets/animations/bitmoji/run.glb' />
             <AssetLoader name='jumpAnim' type='container' url='static/assets/animations/bitmoji/jump-flip.glb' />
             <AssetLoader name='animStateGraph' type='json' data={animStateGraphData} />
+            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
         </>;
     }
 
-    // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
             <Button text='Jump' onClick={() => data.emit('jump')}/>
@@ -167,8 +174,7 @@ class LocomotionExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { model: pc.Asset, idleAnim: pc.Asset, walkAnim: pc.Asset, jogAnim: pc.Asset, jumpAnim: pc.Asset, playcanvasGreyTexture: pc.Asset, animStateGraph: pc.Asset }, data: any, wasmSupported: any, loadWasmModuleAsync: any): void {
+    example(canvas: HTMLCanvasElement, assets: any, data: any, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
             loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', run);
@@ -181,12 +187,27 @@ class LocomotionExample extends Example {
             // Create the application and start the update loop
             const app = new pc.Application(canvas, {});
 
+            // setup skydome
+            app.scene.skyboxMip = 2;
+            app.scene.setSkybox(assets['helipad.dds'].resources);
+
             // Create an Entity with a camera component
             const cameraEntity = new pc.Entity();
             cameraEntity.name = "Camera";
             cameraEntity.addComponent("camera", {
                 clearColor: new pc.Color(0.1, 0.15, 0.2)
             });
+
+            // add bloom postprocessing (this is ignored by the picker)
+            cameraEntity.addComponent("script");
+            cameraEntity.script.create("bloom", {
+                attributes: {
+                    bloomIntensity: 1,
+                    bloomThreshold: 0.7,
+                    blurAmount: 4
+                }
+            });
+
             cameraEntity.translateLocal(0, 5, 15);
             cameraEntity.rotateLocal(-20, 0, 0);
             app.root.addChild(cameraEntity);

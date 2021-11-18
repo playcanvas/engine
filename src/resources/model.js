@@ -5,6 +5,8 @@ import { http, Http } from '../net/http.js';
 import { GlbModelParser } from './parser/glb-model.js';
 import { JsonModelParser } from './parser/json-model.js';
 
+import { DefaultMaterial } from '../scene/materials/default-material.js';
+
 /**
  * @class
  * @name ModelHandler
@@ -14,16 +16,16 @@ import { JsonModelParser } from './parser/json-model.js';
  * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ModelHandler {
-    constructor(device, defaultMaterial) {
+    constructor(device) {
         this._device = device;
         this._parsers = [];
-        this._defaultMaterial = defaultMaterial;
+        this._defaultMaterial = DefaultMaterial.get(device);
         this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this._device), function (url, data) {
+        this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this._device), function (url, data) {
+        this.addParser(new GlbModelParser(this._device, this._defaultMaterial), function (url, data) {
             return (path.getExtension(url) === '.glb');
         });
     }
@@ -57,7 +59,7 @@ class ModelHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading model: " + url.original + " [" + err + "]");
+                callback(`Error loading model: ${url.original} [${err}]`);
             }
         });
     }

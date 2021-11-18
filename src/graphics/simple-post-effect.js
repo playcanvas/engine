@@ -1,7 +1,6 @@
-import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32 } from './constants.js';
+import { BUFFER_STATIC, CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32 } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
-import { VertexIterator } from './vertex-iterator.js';
 
 // Draws shaded full-screen quad in a single call
 let _postEffectQuadVB = null;
@@ -24,23 +23,20 @@ const _postEffectQuadDraw = {
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
+
+    // #if _DEBUG
+    device.pushMarker("drawQuadWithShader");
+    // #endif
+
     if (_postEffectQuadVB === null) {
         const vertexFormat = new VertexFormat(device, [{
             semantic: SEMANTIC_POSITION,
             components: 2,
             type: TYPE_FLOAT32
         }]);
-        _postEffectQuadVB = new VertexBuffer(device, vertexFormat, 4);
-
-        const iterator = new VertexIterator(_postEffectQuadVB);
-        iterator.element[SEMANTIC_POSITION].set(-1.0, -1.0);
-        iterator.next();
-        iterator.element[SEMANTIC_POSITION].set(1.0, -1.0);
-        iterator.next();
-        iterator.element[SEMANTIC_POSITION].set(-1.0, 1.0);
-        iterator.next();
-        iterator.element[SEMANTIC_POSITION].set(1.0, 1.0);
-        iterator.end();
+        const positions = new Float32Array(8);
+        positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
+        _postEffectQuadVB = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
     }
 
     const oldRt = device.renderTarget;
@@ -114,6 +110,10 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
 
     device.setViewport(oldVx, oldVy, oldVw, oldVh);
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
+
+    // #if _DEBUG
+    device.popMarker();
+    // #endif
 }
 
 function destroyPostEffectQuad() {

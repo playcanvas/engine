@@ -13,20 +13,23 @@ import {
  * @private
  * @class
  * @name AnimController
- * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
+ * @classdesc The AnimController manages the animations for its entity, based on the provided state graph and parameters. Its update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
  * @description Create a new AnimController.
  * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
  * @param {object[]} states - The list of states used to form the controller state graph.
  * @param {object[]} transitions - The list of transitions used to form the controller state graph.
  * @param {object[]} parameters - The anim components parameters.
  * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
+ * @param {EventHandler} eventHandler - The event handler which should be notified with anim events
+ * @param {Set} consumedTriggers - Used to set triggers back to their default state after they have been consumed by a transition
  */
 class AnimController {
-    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler) {
+    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
+        this._consumedTriggers = consumedTriggers;
         for (let i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
@@ -155,6 +158,10 @@ class AnimController {
         return this._stateNames;
     }
 
+    assignMask(mask) {
+        return this._animEvaluator.assignMask(mask);
+    }
+
     _findState(stateName) {
         return this._states[stateName];
     }
@@ -278,7 +285,7 @@ class AnimController {
         }
 
         // filter out transitions that don't have their conditions met
-        transitions = transitions.filter(function (transition) {
+        transitions = transitions.filter((transition) => {
             // if the transition is moving to the already active state, ignore it
             if (transition.to === this.activeStateName) {
                 return false;
@@ -299,7 +306,7 @@ class AnimController {
             }
             // if the exitTime condition has been met or is not present, check condition parameters
             return this._transitionHasConditionsMet(transition);
-        }.bind(this));
+        });
 
         // return the highest priority transition to use
         if (transitions.length > 0) {
@@ -317,7 +324,9 @@ class AnimController {
         let state;
         let animation;
         let clip;
-        this.previousState = transition.from;
+        // If transition.from is set, transition from the active state irregardless of the transition.from value (this could be the previous, active or ANY states).
+        // Otherwise the previousState is cleared.
+        this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
 
         // turn off any triggers which were required to activate this transition
@@ -325,7 +334,7 @@ class AnimController {
             const condition = transition.conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
-                parameter.value = false;
+                this._consumedTriggers.add(condition.parameterName);
             }
         }
 

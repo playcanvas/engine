@@ -1,10 +1,9 @@
-import { now } from  '../../core/time.js';
+import { now } from '../../core/time.js';
 
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Vec3 } from '../../math/vec3.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
 import { BoundingSphere } from '../../shape/bounding-sphere.js';
 
 import {
@@ -12,11 +11,9 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FUNC_ALWAYS, FUNC_LESSEQUAL,
-    PRIMITIVE_TRIANGLES,
-    SEMANTIC_ATTR, SEMANTIC_POSITION,
+    SEMANTIC_ATTR,
     STENCILOP_KEEP
 } from '../../graphics/constants.js';
-import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
@@ -28,73 +25,82 @@ import {
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT,
-    PROJECTION_PERSPECTIVE
+    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
 } from '../constants.js';
 import { Material } from '../materials/material.js';
-import { Mesh } from '../mesh.js';
-import { MeshInstance } from '../mesh-instance.js';
 import { LayerComposition } from '../composition/layer-composition.js';
+import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
+import { DefaultMaterial } from '../materials/default-material.js';
+
 import { ShadowRenderer } from './shadow-renderer.js';
-import { Camera } from '../camera.js';
-import { GraphNode } from '../graph-node.js';
+import { StaticMeshes } from './static-meshes.js';
+import { CookieRenderer } from './cookie-renderer.js';
+import { LightCamera } from './light-camera.js';
 
-var shadowCamView = new Mat4();
-var shadowCamViewProj = new Mat4();
+const viewInvMat = new Mat4();
+const viewMat = new Mat4();
+const viewMat3 = new Mat3();
+const viewProjMat = new Mat4();
+let projMat;
 
-var viewInvMat = new Mat4();
-var viewMat = new Mat4();
-var viewMat3 = new Mat3();
-var viewProjMat = new Mat4();
-var projMat;
+const flipYMat = new Mat4().setScale(1, -1, 1);
+const flippedViewProjMat = new Mat4();
+const flippedSkyboxProjMat = new Mat4();
 
-var flipYMat = new Mat4().setScale(1, -1, 1);
-var flippedViewProjMat = new Mat4();
-var flippedSkyboxProjMat = new Mat4();
+const viewInvL = new Mat4();
+const viewInvR = new Mat4();
+const viewL = new Mat4();
+const viewR = new Mat4();
+const viewPosL = new Vec3();
+const viewPosR = new Vec3();
+let projL, projR;
+const viewMat3L = new Mat3();
+const viewMat3R = new Mat3();
+const viewProjMatL = new Mat4();
+const viewProjMatR = new Mat4();
 
-var viewInvL = new Mat4();
-var viewInvR = new Mat4();
-var viewL = new Mat4();
-var viewR = new Mat4();
-var viewPosL = new Vec3();
-var viewPosR = new Vec3();
-var projL, projR;
-var viewMat3L = new Mat3();
-var viewMat3R = new Mat3();
-var viewProjMatL = new Mat4();
-var viewProjMatR = new Mat4();
+const worldMatX = new Vec3();
+const worldMatY = new Vec3();
+const worldMatZ = new Vec3();
 
-var worldMatX = new Vec3();
-var worldMatY = new Vec3();
-var worldMatZ = new Vec3();
+const tempSphere = new BoundingSphere();
+const boneTextureSize = [0, 0, 0, 0];
+let boneTexture, instancingData, modelMatrix, normalMatrix;
 
-var tempSphere = new BoundingSphere();
-var boneTextureSize = [0, 0, 0, 0];
-var boneTexture, instancingData, modelMatrix, normalMatrix;
+let keyA, keyB;
 
-var keyA, keyB;
+let _autoInstanceBuffer = null;
 
-var _autoInstanceBuffer = null;
+let _skinUpdateIndex = 0;
 
-var _skinUpdateIndex = 0;
+const _drawCallList = {
+    drawCalls: [],
+    isNewMaterial: [],
+    lightMaskChanged: []
+};
 
-var _tempMaterialSet = new Set();
+const _tempMaterialSet = new Set();
 
 /**
  * @class
  * @name ForwardRenderer
  * @classdesc The forward renderer render scene objects.
+ * @hideconstructor
  * @description Creates a new forward renderer object.
+ * @hideconstructor
  * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+ * @param {Scene} A - scene for the rendering.
  */
 class ForwardRenderer {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
-        var device = this.device;
+        this.scene = null;
 
         this._shadowDrawCalls = 0;
         this._forwardDrawCalls = 0;
         this._skinDrawCalls = 0;
+        this._numDrawCallsCulled = 0;
+        this._instancedDrawCalls = 0;
         this._camerasRendered = 0;
         this._materialSwitches = 0;
         this._shadowMapUpdates = 0;
@@ -106,19 +112,27 @@ class ForwardRenderer {
         this._skinTime = 0;
         this._morphTime = 0;
         this._instancingTime = 0;
+        this._removedByInstancing = 0;
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
         this._lightClusters = 0;
 
         // Shaders
-        var library = device.getProgramLibrary();
+        const device = this.device;
+        const library = device.getProgramLibrary();
         this.library = library;
 
+        // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
+        this.lightTextureAtlas = new LightTextureAtlas(device);
+
         // shadows
-        this._shadowRenderer = new ShadowRenderer(this);
+        this._shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
+
+        // cookies
+        this._cookieRenderer = new CookieRenderer(device, this.lightTextureAtlas);
 
         // Uniforms
-        var scope = device.scope;
+        const scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
         this.projSkyboxId = scope.resolve('matrix_projectionSkybox');
         this.viewId = scope.resolve('matrix_view');
@@ -130,6 +144,7 @@ class ForwardRenderer {
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
         this.cameraParamsId = scope.resolve('camera_params');
+        this.tbnBasis = scope.resolve('tbnBasis');
 
         this.fogColorId = scope.resolve('fog_color');
         this.fogStartId = scope.resolve('fog_start');
@@ -185,9 +200,6 @@ class ForwardRenderer {
 
         this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
 
-        this.polygonOffsetId = scope.resolve("polygonOffset");
-        this.polygonOffset = new Float32Array(2);
-
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
 
@@ -197,6 +209,12 @@ class ForwardRenderer {
     destroy() {
         this._shadowRenderer.destroy();
         this._shadowRenderer = null;
+
+        this._cookieRenderer.destroy();
+        this._cookieRenderer = null;
+
+        this.lightTextureAtlas.destroy();
+        this.lightTextureAtlas = null;
     }
 
     // #if _PROFILER
@@ -207,20 +225,6 @@ class ForwardRenderer {
 
     static skipRenderAfter = 0;
     // #endif
-
-    // temporary camera to calculate spot light cookie view-projection matrix
-    static spotCookieCamera = null;
-
-    static getSpotCookieCamera() {
-        if (!this.spotCookieCamera) {
-            this.spotCookieCamera = new Camera();
-            this.spotCookieCamera.projection = PROJECTION_PERSPECTIVE;
-            this.spotCookieCamera.aspectRatio = 1;
-            this.spotCookieCamera.node = new GraphNode();
-        }
-
-        return this.spotCookieCamera;
-    }
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {
@@ -266,14 +270,10 @@ class ForwardRenderer {
         return keyB - keyA;
     }
 
-    lightCompare(lightA, lightB) {
-        return lightA.key - lightB.key;
-    }
-
     updateCameraFrustum(camera) {
         if (camera.vrDisplay && camera.vrDisplay.presenting) {
             projMat = camera.vrDisplay.combinedProj;
-            var parent = camera._node.parent;
+            const parent = camera._node.parent;
             if (parent) {
                 viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
             } else {
@@ -285,7 +285,7 @@ class ForwardRenderer {
             camera.frustum.setFromMat4(viewProjMat);
         } else if (camera.xr && camera.xr.views.length) {
             // calculate frustum based on XR view
-            var view = camera.xr.views[0];
+            const view = camera.xr.views[0];
             viewProjMat.mul2(view.projMat, view.viewOffMat);
             camera.frustum.setFromMat4(viewProjMat);
             return;
@@ -299,8 +299,8 @@ class ForwardRenderer {
         if (camera.calculateTransform) {
             camera.calculateTransform(viewInvMat, VIEW_CENTER);
         } else {
-            var pos = camera._node.getPosition();
-            var rot = camera._node.getRotation();
+            const pos = camera._node.getPosition();
+            const rot = camera._node.getRotation();
             viewInvMat.setTRS(pos, rot, Vec3.ONE);
             this.viewInvId.setValue(viewInvMat.data);
         }
@@ -311,9 +311,9 @@ class ForwardRenderer {
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    setCamera(camera, target, clear, cullBorder) {
-        var vrDisplay = camera.vrDisplay;
-        var parent, transform;
+    setCamera(camera, target, clear) {
+        const vrDisplay = camera.vrDisplay;
+        let transform;
 
         if (vrDisplay && vrDisplay.presenting) {
             // Projection LR
@@ -334,7 +334,7 @@ class ForwardRenderer {
                 viewR.copy(viewInvR).invert();
                 viewMat.copy(viewInvMat).invert();
             } else {
-                parent = camera._node.parent;
+                const parent = camera._node.parent;
                 if (parent) {
                     transform = parent.getWorldTransform();
 
@@ -382,13 +382,12 @@ class ForwardRenderer {
             viewProjMat.mul2(projMat, viewMat);
             camera.frustum.setFromMat4(viewProjMat);
         } else if (camera.xr && camera.xr.session) {
-            parent = camera._node.parent;
+            const parent = camera._node.parent;
             if (parent) transform = parent.getWorldTransform();
 
-            var views = camera.xr.views;
-
-            for (var v = 0; v < views.length; v++) {
-                var view = views[v];
+            const views = camera.xr.views;
+            for (let v = 0; v < views.length; v++) {
+                const view = views[v];
 
                 if (parent) {
                     view.viewInvOffMat.mul2(transform, view.viewInvMat);
@@ -422,8 +421,8 @@ class ForwardRenderer {
             if (camera.calculateTransform) {
                 camera.calculateTransform(viewInvMat, VIEW_CENTER);
             } else {
-                var pos = camera._node.getPosition();
-                var rot = camera._node.getRotation();
+                const pos = camera._node.getPosition();
+                const rot = camera._node.getRotation();
                 viewInvMat.setTRS(pos, rot, Vec3.ONE);
             }
             this.viewInvId.setValue(viewInvMat.data);
@@ -456,12 +455,14 @@ class ForwardRenderer {
             camera.frustum.setFromMat4(viewProjMat);
         }
 
+        this.tbnBasis.setValue(target && target.flipY ? -1 : 1);
+
         // Near and far clip values
         this.nearClipId.setValue(camera._nearClip);
         this.farClipId.setValue(camera._farClip);
 
-        var n = camera._nearClip;
-        var f = camera._farClip;
+        const n = camera._nearClip;
+        const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
         this.cameraParams[2] = (1 - f / n) * 0.5;
@@ -469,23 +470,10 @@ class ForwardRenderer {
         this.cameraParamsId.setValue(this.cameraParams);
 
         this.clearView(camera, target, clear, false);
-
-        var device = this.device;
-        var pixelWidth = target ? target.width : device.width;
-        var pixelHeight = target ? target.height : device.height;
-
-        var scissorRect = camera.scissorRect;
-        var x = Math.floor(scissorRect.x * pixelWidth);
-        var y = Math.floor(scissorRect.y * pixelHeight);
-        var w = Math.floor(scissorRect.z * pixelWidth);
-        var h = Math.floor(scissorRect.w * pixelHeight);
-        device.setScissor(x, y, w, h);
-
-        if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
     }
 
     clearView(camera, target, clear, forceWrite, options) {
-        var device = this.device;
+        const device = this.device;
         device.setRenderTarget(target);
         device.updateBegin();
 
@@ -494,14 +482,24 @@ class ForwardRenderer {
             device.setDepthWrite(true);
         }
 
-        var rect = camera.rect;
-        var pixelWidth = target ? target.width : device.width;
-        var pixelHeight = target ? target.height : device.height;
-        var x = Math.floor(rect.x * pixelWidth);
-        var y = Math.floor(rect.y * pixelHeight);
-        var w = Math.floor(rect.z * pixelWidth);
-        var h = Math.floor(rect.w * pixelHeight);
+        const pixelWidth = target ? target.width : device.width;
+        const pixelHeight = target ? target.height : device.height;
+
+        const rect = camera.rect;
+        let x = Math.floor(rect.x * pixelWidth);
+        let y = Math.floor(rect.y * pixelHeight);
+        let w = Math.floor(rect.z * pixelWidth);
+        let h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
+
+        // by default clear is using viewport rectangle. Use scissor rectangle when required.
+        if (camera._scissorRectClear) {
+            const scissorRect = camera.scissorRect;
+            x = Math.floor(scissorRect.x * pixelWidth);
+            y = Math.floor(scissorRect.y * pixelHeight);
+            w = Math.floor(scissorRect.z * pixelWidth);
+            h = Math.floor(scissorRect.w * pixelHeight);
+        }
         device.setScissor(x, y, w, h);
 
         if (clear) {
@@ -516,7 +514,7 @@ class ForwardRenderer {
                        (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
                        (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
                 stencil: camera._clearStencil
-            }); // clear full RT
+            });
         }
     }
 
@@ -568,13 +566,13 @@ class ForwardRenderer {
         this.lightPos[cnt][2] = campos.z - dir.z * far;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+        const hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
         this.lightWidth[cnt][0] = hWidth.x * far;
         this.lightWidth[cnt][1] = hWidth.y * far;
         this.lightWidth[cnt][2] = hWidth.z * far;
         this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
 
-        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+        const hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
         this.lightHeight[cnt][0] = hHeight.x * far;
         this.lightHeight[cnt][1] = hHeight.y * far;
         this.lightHeight[cnt][2] = hHeight.z * far;
@@ -582,18 +580,15 @@ class ForwardRenderer {
     }
 
     dispatchDirectLights(dirs, scene, mask, camera) {
-        var numDirs = dirs.length;
-        var i;
-        var directional, wtm;
-        var cnt = 0;
+        let cnt = 0;
 
-        var scope = this.device.scope;
+        const scope = this.device.scope;
 
-        for (i = 0; i < numDirs; i++) {
+        for (let i = 0; i < dirs.length; i++) {
             if (!(dirs[i].mask & mask)) continue;
 
-            directional = dirs[i];
-            wtm = directional._node.getWorldTransform();
+            const directional = dirs[i];
+            const wtm = directional._node.getWorldTransform();
 
             if (!this.lightColorId[cnt]) {
                 this._resolveLight(scope, cnt);
@@ -617,22 +612,7 @@ class ForwardRenderer {
             if (directional.castShadows) {
 
                 const lightRenderData = directional.getRenderData(camera, 0);
-
-                // make bias dependent on far plane because it's not constant for direct light
-                // clip distance used is based on the nearest shadow cascade
-                const farClip = lightRenderData.shadowCamera._farClip;
-                let bias;
-                if (directional._isVsm) {
-                    bias = -0.00001 * 20;
-                } else {
-                    bias = (directional.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) {
-                        bias *= -100;
-                    }
-                }
-                var normalBias = directional._isVsm ?
-                    directional.vsmBias / (farClip / 7.0) :
-                    directional._normalOffsetBias;
+                const biases = directional._getUniformBiasValues(lightRenderData);
 
                 this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
                 this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
@@ -641,11 +621,11 @@ class ForwardRenderer {
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
 
-                var params = directional._shadowRenderParams;
+                const params = directional._shadowRenderParams;
                 params.length = 3;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = normalBias;
-                params[2] = bias;
+                params[1] = biases.normalBias;
+                params[2] = biases.bias;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
             cnt++;
@@ -654,13 +634,13 @@ class ForwardRenderer {
     }
 
     setLTCPositionalLight(wtm, cnt) {
-        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+        const hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
         this.lightWidth[cnt][0] = hWidth.x;
         this.lightWidth[cnt][1] = hWidth.y;
         this.lightWidth[cnt][2] = hWidth.z;
         this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
 
-        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+        const hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
         this.lightHeight[cnt][0] = hHeight.x;
         this.lightHeight[cnt][1] = hHeight.y;
         this.lightHeight[cnt][2] = hHeight.z;
@@ -668,7 +648,7 @@ class ForwardRenderer {
     }
 
     dispatchOmniLight(scene, scope, omni, cnt) {
-        var wtm = omni._node.getWorldTransform();
+        const wtm = omni._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
             this._resolveLight(scope, cnt);
@@ -693,11 +673,12 @@ class ForwardRenderer {
             const lightRenderData = omni.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
-            var params = omni._shadowRenderParams;
+            const biases = omni._getUniformBiasValues(lightRenderData);
+            const params = omni._shadowRenderParams;
             params.length = 4;
             params[0] = omni._shadowResolution;
-            params[1] = omni._normalOffsetBias;
-            params[2] = omni.shadowBias;
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
@@ -709,7 +690,7 @@ class ForwardRenderer {
     }
 
     dispatchSpotLight(scene, scope, spot, cnt) {
-        var wtm = spot._node.getWorldTransform();
+        const wtm = spot._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
             this._resolveLight(scope, cnt);
@@ -738,53 +719,33 @@ class ForwardRenderer {
         this.lightDir[cnt][2] = spot._direction.z;
         this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
-        let cookieMatrix;
         if (spot.castShadows) {
-            var bias;
-            if (spot._isVsm) {
-                bias = -0.00001 * 20;
-            } else {
-                bias = spot.shadowBias * 20; // approx remap from old bias values
-                if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
-            }
-            var normalBias = spot._isVsm ?
-                spot.vsmBias / (spot.attenuationEnd / 7.0) :
-                spot._normalOffsetBias;
 
             // shadow map
             const lightRenderData = spot.getRenderData(null, 0);
             this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
 
             this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-            var params = spot._shadowRenderParams;
+
+            const biases = spot._getUniformBiasValues(lightRenderData);
+            const params = spot._shadowRenderParams;
             params.length = 4;
             params[0] = spot._shadowResolution;
-            params[1] = normalBias;
-            params[2] = bias;
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
-
-            cookieMatrix = lightRenderData.shadowMatrix;
         }
 
         if (spot._cookie) {
-            this.lightCookieId[cnt].setValue(spot._cookie);
+
+            // if shadow is not rendered, we need to evaluate light projection matrix
             if (!spot.castShadows) {
-                const cookieCam = ForwardRenderer.getSpotCookieCamera();
-                cookieCam.fov = spot._outerConeAngle * 2;
-
-                const cookieNode = cookieCam._node;
-                cookieNode.setPosition(spot._node.getPosition());
-                cookieNode.setRotation(spot._node.getRotation());
-                cookieNode.rotateLocal(-90, 0, 0);
-
-                shadowCamView.setTRS(cookieNode.getPosition(), cookieNode.getRotation(), Vec3.ONE).invert();
-                shadowCamViewProj.mul2(cookieCam.projectionMatrix, shadowCamView);
-
-                cookieMatrix = spot.cookieMatrix;
-                cookieMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
+                const cookieMatrix = LightCamera.evalSpotCookieMatrix(spot);
+                this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
             }
-            this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
+
+            this.lightCookieId[cnt].setValue(spot._cookie);
             this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
             if (spot._cookieTransform) {
                 spot._cookieTransformUniform[0] = spot._cookieTransform.x;
@@ -800,30 +761,23 @@ class ForwardRenderer {
     }
 
     dispatchLocalLights(sortedLights, scene, mask, usedDirLights, staticLightList) {
-        var i;
-        var omni, spot;
 
-        var omnis = sortedLights[LIGHTTYPE_OMNI];
-        var spts = sortedLights[LIGHTTYPE_SPOT];
+        let cnt = usedDirLights;
+        const scope = this.device.scope;
 
-        var numDirs = usedDirLights;
-        var numOmnis = omnis.length;
-        var numSpts = spts.length;
-        var cnt = numDirs;
-
-        var scope = this.device.scope;
-
-        for (i = 0; i < numOmnis; i++) {
-            omni = omnis[i];
+        const omnis = sortedLights[LIGHTTYPE_OMNI];
+        const numOmnis = omnis.length;
+        for (let i = 0; i < numOmnis; i++) {
+            const omni = omnis[i];
             if (!(omni.mask & mask)) continue;
             if (omni.isStatic) continue;
             this.dispatchOmniLight(scene, scope, omni, cnt);
             cnt++;
         }
 
-        var staticId = 0;
+        let staticId = 0;
         if (staticLightList) {
-            omni = staticLightList[staticId];
+            let omni = staticLightList[staticId];
             while (omni && omni._type === LIGHTTYPE_OMNI) {
                 this.dispatchOmniLight(scene, scope, omni, cnt);
                 cnt++;
@@ -832,8 +786,10 @@ class ForwardRenderer {
             }
         }
 
-        for (i = 0; i < numSpts; i++) {
-            spot = spts[i];
+        const spts = sortedLights[LIGHTTYPE_SPOT];
+        const numSpts = spts.length;
+        for (let i = 0; i < numSpts; i++) {
+            const spot = spts[i];
             if (!(spot.mask & mask)) continue;
             if (spot.isStatic) continue;
             this.dispatchSpotLight(scene, scope, spot, cnt);
@@ -841,7 +797,7 @@ class ForwardRenderer {
         }
 
         if (staticLightList) {
-            spot = staticLightList[staticId];
+            let spot = staticLightList[staticId];
             while (spot && spot._type === LIGHTTYPE_SPOT) {
                 this.dispatchSpotLight(scene, scope, spot, cnt);
                 cnt++;
@@ -853,20 +809,19 @@ class ForwardRenderer {
 
     cull(camera, drawCalls, visibleList) {
         // #if _PROFILER
-        var cullTime = now();
-        var numDrawCallsCulled = 0;
+        const cullTime = now();
+        let numDrawCallsCulled = 0;
         // #endif
 
-        var visibleLength = 0;
-        var i, drawCall, visible;
-        var drawCallsCount = drawCalls.length;
+        let visibleLength = 0;
+        const drawCallsCount = drawCalls.length;
 
-        var cullingMask = camera.cullingMask || 0xFFFFFFFF; // if missing assume camera's default value
+        const cullingMask = camera.cullingMask || 0xFFFFFFFF; // if missing assume camera's default value
 
         if (!camera.frustumCulling) {
-            for (i = 0; i < drawCallsCount; i++) {
+            for (let i = 0; i < drawCallsCount; i++) {
                 // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
-                drawCall = drawCalls[i];
+                const drawCall = drawCalls[i];
                 if (!drawCall.visible && !drawCall.command) continue;
 
                 // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
@@ -879,11 +834,11 @@ class ForwardRenderer {
             return visibleLength;
         }
 
-        for (i = 0; i < drawCallsCount; i++) {
-            drawCall = drawCalls[i];
+        for (let i = 0; i < drawCallsCount; i++) {
+            const drawCall = drawCalls[i];
             if (!drawCall.command) {
                 if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
-                visible = true;
+                let visible = true;
 
                 // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
                 if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
@@ -946,16 +901,15 @@ class ForwardRenderer {
 
         _skinUpdateIndex++;
 
-        var drawCallsCount = drawCalls.length;
+        const drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
         // #if _PROFILER
-        var skinTime = now();
+        const skinTime = now();
         // #endif
 
-        var i, si;
-        for (i = 0; i < drawCallsCount; i++) {
-            si = drawCalls[i].skinInstance;
+        for (let i = 0; i < drawCallsCount; i++) {
+            const si = drawCalls[i].skinInstance;
             if (si) {
                 si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
                 si._dirty = true;
@@ -969,14 +923,13 @@ class ForwardRenderer {
 
     updateGpuSkinMatrices(drawCalls) {
         // #if _PROFILER
-        var skinTime = now();
+        const skinTime = now();
         // #endif
 
-        var i, skin;
-        var drawCallsCount = drawCalls.length;
-        for (i = 0; i < drawCallsCount; i++) {
+        const drawCallsCount = drawCalls.length;
+        for (let i = 0; i < drawCallsCount; i++) {
             if (!drawCalls[i].visibleThisFrame) continue;
-            skin = drawCalls[i].skinInstance;
+            const skin = drawCalls[i].skinInstance;
             if (skin) {
                 if (skin._dirty) {
                     skin.updateMatrixPalette(drawCalls[i].node, _skinUpdateIndex);
@@ -992,13 +945,12 @@ class ForwardRenderer {
 
     updateMorphing(drawCalls) {
         // #if _PROFILER
-        var morphTime = now();
+        const morphTime = now();
         // #endif
 
-        var i, morphInst;
-        var drawCallsCount = drawCalls.length;
-        for (i = 0; i < drawCallsCount; i++) {
-            morphInst = drawCalls[i].morphInstance;
+        const drawCallsCount = drawCalls.length;
+        for (let i = 0; i < drawCallsCount; i++) {
+            const morphInst = drawCalls[i].morphInstance;
             if (morphInst && morphInst._dirty && drawCalls[i].visibleThisFrame) {
                 morphInst.update();
             }
@@ -1110,23 +1062,15 @@ class ForwardRenderer {
 
     renderShadows(lights, camera) {
 
-        var device = this.device;
+        const device = this.device;
         device.grabPassAvailable = false;
 
         // #if _PROFILER
-        var shadowMapStartTime = now();
+        const shadowMapStartTime = now();
         // #endif
 
         for (let i = 0; i < lights.length; i++) {
             this._shadowRenderer.render(lights[i], camera);
-        }
-
-        if (device.webgl2) {
-            device.setDepthBias(false);
-        } else if (device.extStandardDerivatives) {
-            this.polygonOffset[0] = 0;
-            this.polygonOffset[1] = 0;
-            this.polygonOffsetId.setValue(this.polygonOffset);
         }
 
         device.grabPassAvailable = true;
@@ -1134,6 +1078,14 @@ class ForwardRenderer {
         // #if _PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
+    }
+
+    renderCookies(lights) {
+
+        const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
+        for (let i = 0; i < lights.length; i++) {
+            this._cookieRenderer.render(lights[i], cookieRenderTarget);
+        }
     }
 
     updateShader(meshInstance, objDefs, staticLightList, pass, sortedLights) {
@@ -1149,10 +1101,10 @@ class ForwardRenderer {
     }
 
     setCullMode(cullFaces, flip, drawCall) {
-        var material = drawCall.material;
-        var mode = CULLFACE_NONE;
+        const material = drawCall.material;
+        let mode = CULLFACE_NONE;
         if (cullFaces) {
-            var flipFaces = 1;
+            let flipFaces = 1;
 
             if (material.cull > CULLFACE_NONE && material.cull < CULLFACE_FRONTANDBACK) {
                 if (drawCall.flipFaces)
@@ -1161,7 +1113,7 @@ class ForwardRenderer {
                 if (flip)
                     flipFaces *= -1;
 
-                var wt = drawCall.node.worldTransform;
+                const wt = drawCall.node.worldTransform;
                 wt.getX(worldMatX);
                 wt.getY(worldMatY);
                 wt.getZ(worldMatZ);
@@ -1180,7 +1132,7 @@ class ForwardRenderer {
         this.device.setCullMode(mode);
 
         if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            var wt2 = drawCall.node.worldTransform;
+            const wt2 = drawCall.node.worldTransform;
             wt2.getX(worldMatX);
             wt2.getY(worldMatY);
             wt2.getZ(worldMatZ);
@@ -1217,14 +1169,13 @@ class ForwardRenderer {
 
             } else {    // vertex attributes based morphing
 
-                var vb, semantic;
-                for (var t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
+                for (let t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
 
-                    vb = morphInstance._activeVertexBuffers[t];
+                    const vb = morphInstance._activeVertexBuffers[t];
                     if (vb) {
 
                         // patch semantic for the buffer to current ATTR slot (using ATTR8 - ATTR15 range)
-                        semantic = SEMANTIC_ATTR + (t + 8);
+                        const semantic = SEMANTIC_ATTR + (t + 8);
                         vb.format.elements[0].name = semantic;
                         vb.format.elements[0].scopeId = device.scope.resolve(semantic);
                         vb.format.update();
@@ -1249,53 +1200,62 @@ class ForwardRenderer {
         this.viewPosId.setValue(vp);
     }
 
-    renderForward(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
-        var device = this.device;
-        var scene = this.scene;
-        var vrDisplay = camera.vrDisplay;
-        var lightHash = layer ? layer._lightHash : 0;
+    // execute first pass over draw calls, in order to update materials / shaders
+    // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
+    // where instead of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
+    // take place in parallel
+    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
 
-        var passFlag = 1 << pass;
+        const addCall = (drawCall, isNewMaterial, lightMaskChanged) => {
+            _drawCallList.drawCalls.push(drawCall);
+            _drawCallList.isNewMaterial.push(isNewMaterial);
+            _drawCallList.lightMaskChanged.push(lightMaskChanged);
+        };
 
-        // #if _PROFILER
-        var forwardStartTime = now();
-        // #endif
+        // start with empty arrays
+        _drawCallList.drawCalls.length = 0;
+        _drawCallList.isNewMaterial.length = 0;
+        _drawCallList.lightMaskChanged.length = 0;
 
-        var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
-        var prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
-        var stencilFront, stencilBack;
+        const device = this.device;
+        const scene = this.scene;
+        const lightHash = layer ? layer._lightHash : 0;
+        let prevMaterial = null, prevObjDefs, prevStatic, prevLightMask;
 
-        var halfWidth = device.width * 0.5;
+        for (let i = 0; i < drawCallsCount; i++) {
 
-        // Render the scene
-        for (i = 0; i < drawCallsCount; i++) {
+            const drawCall = drawCalls[i];
 
-            drawCall = drawCalls[i];
-            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask)) continue; // apply visibility override
+            // apply visibility override
+            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
+                continue;
 
             if (drawCall.command) {
-                // We have a command
-                drawCall.command();
+
+                addCall(drawCall, false, false);
+
             } else {
 
                 // #if _PROFILER
                 if (camera === ForwardRenderer.skipRenderCamera) {
-                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) continue;
+                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
+                        continue;
                     ForwardRenderer._skipRenderCounter++;
                 }
                 if (layer) {
-                    if (layer._skipRenderCounter >= layer.skipRenderAfter) continue;
+                    if (layer._skipRenderCounter >= layer.skipRenderAfter)
+                        continue;
                     layer._skipRenderCounter++;
                 }
                 // #endif
 
-                // We have a mesh instance
-                mesh = drawCall.mesh;
-                material = drawCall.material;
-                objDefs = drawCall._shaderDefs;
-                lightMask = drawCall.mask;
+                if (!drawCall.material)
+                    drawCall.material = DefaultMaterial.get(device);
 
-                this.setSkinning(device, drawCall, material);
+                const material = drawCall.material;
+
+                const objDefs = drawCall._shaderDefs;
+                const lightMask = drawCall.mask;
 
                 if (material && material === prevMaterial && objDefs !== prevObjDefs) {
                     prevMaterial = null; // force change shader if the object uses a different variant of the same material
@@ -1315,7 +1275,7 @@ class ForwardRenderer {
 
                     if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
                         if (!drawCall.isStatic) {
-                            variantKey = pass + "_" + objDefs + "_" + lightHash;
+                            const variantKey = pass + "_" + objDefs + "_" + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
                             if (!drawCall._shader[pass]) {
                                 this.updateShader(drawCall, objDefs, null, pass, sortedLights);
@@ -1327,10 +1287,60 @@ class ForwardRenderer {
                         drawCall._shaderDefs = objDefs;
                         drawCall._lightHash = lightHash;
                     }
+                }
 
-                    if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
+                addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
+
+                prevMaterial = material;
+                prevObjDefs = objDefs;
+                prevLightMask = lightMask;
+                prevStatic = drawCall.isStatic;
+
+            }
+        }
+
+        return _drawCallList;
+    }
+
+    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+        const device = this.device;
+        const scene = this.scene;
+        const vrDisplay = camera.vrDisplay;
+        const passFlag = 1 << pass;
+        const halfWidth = device.width * 0.5;
+
+        // #if _PROFILER
+        const forwardStartTime = now();
+        // #endif
+
+        // run first pass over draw calls and handle material / shader updates
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
+
+        // Render the scene
+        const preparedCallsCount = preparedCalls.drawCalls.length;
+        for (let i = 0; i < preparedCallsCount; i++) {
+
+            const drawCall = preparedCalls.drawCalls[i];
+
+            if (drawCall.command) {
+
+                // We have a command
+                drawCall.command();
+
+            } else {
+
+                // We have a mesh instance
+                const newMaterial = preparedCalls.isNewMaterial[i];
+                const lightMaskChanged = preparedCalls.lightMaskChanged[i];
+                const material = drawCall.material;
+                const objDefs = drawCall._shaderDefs;
+                const lightMask = drawCall.mask;
+
+                if (newMaterial) {
+
+                    if (!drawCall._shader[pass].failed && !device.setShader(drawCall._shader[pass])) {
                         // #if _DEBUG
-                        console.error('Error in material "' + material.name + '" with flags ' + objDefs);
+                        console.error(`Error in material "${material.name}" with flags ${objDefs}`);
                         // #endif
                         drawCall._shader[pass].failed = true;
                     }
@@ -1338,8 +1348,8 @@ class ForwardRenderer {
                     // Uniforms I: material
                     material.setParameters(device);
 
-                    if (!prevMaterial || lightMask !== prevLightMask) {
-                        usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
+                    if (lightMaskChanged) {
+                        const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                     }
 
@@ -1379,8 +1389,8 @@ class ForwardRenderer {
 
                 this.setCullMode(camera._cullFaces, flipFaces, drawCall);
 
-                stencilFront = drawCall.stencilFront || material.stencilFront;
-                stencilBack = drawCall.stencilBack || material.stencilBack;
+                const stencilFront = drawCall.stencilFront || material.stencilFront;
+                const stencilBack = drawCall.stencilBack || material.stencilBack;
 
                 if (stencilFront || stencilBack) {
                     device.setStencilTest(true);
@@ -1413,13 +1423,16 @@ class ForwardRenderer {
                     device.setStencilTest(false);
                 }
 
+                const mesh = drawCall.mesh;
+
                 // Uniforms II: meshInstance overrides
                 drawCall.setParameters(device, passFlag);
 
                 this.setVertexBuffers(device, mesh);
                 this.setMorphing(device, drawCall.morphInstance);
+                this.setSkinning(device, drawCall, material);
 
-                style = drawCall.renderStyle;
+                const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
 
                 if (drawCallback) {
@@ -1453,10 +1466,10 @@ class ForwardRenderer {
                     i += this.drawInstance2(device, drawCall, mesh, style);
                     this._forwardDrawCalls++;
                 } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
-                    var views = camera.xr.views;
+                    const views = camera.xr.views;
 
-                    for (var v = 0; v < views.length; v++) {
-                        var view = views[v];
+                    for (let v = 0; v < views.length; v++) {
+                        const view = views[v];
 
                         device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
@@ -1482,17 +1495,13 @@ class ForwardRenderer {
                 }
 
                 // Unset meshInstance overrides back to material values if next draw call will use the same material
-                if (i < drawCallsCount - 1 && drawCalls[i + 1].material === material) {
+                if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
                     material.setParameters(device, drawCall.parameters);
                 }
-
-                prevMaterial = material;
-                prevObjDefs = objDefs;
-                prevLightMask = lightMask;
-                prevStatic = drawCall.isStatic;
             }
         }
         device.updateEnd();
+        _drawCallList.length = 0;
 
         // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
@@ -1507,333 +1516,10 @@ class ForwardRenderer {
         }
     }
 
-    revertStaticMeshes(meshInstances) {
-        var i;
-        var drawCalls = meshInstances;
-        var drawCallsCount = drawCalls.length;
-        var drawCall;
-        var newDrawCalls = [];
-
-        var prevStaticSource;
-        for (i = 0; i < drawCallsCount; i++) {
-            drawCall = drawCalls[i];
-            if (drawCall._staticSource) {
-                if (drawCall._staticSource !== prevStaticSource) {
-                    newDrawCalls.push(drawCall._staticSource);
-                    prevStaticSource = drawCall._staticSource;
-                }
-            } else {
-                newDrawCalls.push(drawCall);
-            }
-        }
-
-        // Set array to new
-        meshInstances.length = newDrawCalls.length;
-        for (i = 0; i < newDrawCalls.length; i++) {
-            meshInstances[i] = newDrawCalls[i];
-        }
-    }
-
-    prepareStaticMeshes(meshInstances, lights) {
-        // #if _PROFILER
-        var prepareTime = now();
-        var searchTime = 0;
-        var subSearchTime = 0;
-        var triAabbTime = 0;
-        var subTriAabbTime = 0;
-        var writeMeshTime = 0;
-        var subWriteMeshTime = 0;
-        var combineTime = 0;
-        var subCombineTime = 0;
-        // #endif
-
-        var i, j, k, v, s, index;
-
-        var device = this.device;
-        var scene = this.scene;
-        var drawCalls = meshInstances;
-        var drawCallsCount = drawCalls.length;
-        var drawCall, light;
-
-        var newDrawCalls = [];
-        var mesh;
-        var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
-        var _x, _y, _z;
-        var minx, miny, minz, maxx, maxy, maxz;
-        var minv, maxv;
-        var minVec = new Vec3();
-        var maxVec = new Vec3();
-        var localLightBounds = new BoundingBox();
-        var invMatrix = new Mat4();
-        var triLightComb = [];
-        var triLightCombUsed;
-        var indexBuffer, vertexBuffer;
-        var combIndices, combIbName, combIb;
-        var lightTypePass;
-        var lightAabb = [];
-        var aabb;
-        var triBounds = [];
-        var staticLights = [];
-        var bit;
-        var lht;
-        for (i = 0; i < drawCallsCount; i++) {
-            drawCall = drawCalls[i];
-            if (!drawCall.isStatic) {
-                newDrawCalls.push(drawCall);
-            } else {
-                aabb = drawCall.aabb;
-                staticLights.length = 0;
-                for (lightTypePass = LIGHTTYPE_OMNI; lightTypePass <= LIGHTTYPE_SPOT; lightTypePass++) {
-                    for (j = 0; j < lights.length; j++) {
-                        light = lights[j];
-                        if (light._type !== lightTypePass) continue;
-                        if (light.enabled) {
-                            if (light.mask & drawCall.mask) {
-                                if (light.isStatic) {
-                                    if (!lightAabb[j]) {
-                                        lightAabb[j] = new BoundingBox();
-                                        // light.getBoundingBox(lightAabb[j]); // box from sphere seems to give better granularity
-                                        light._node.getWorldTransform();
-                                        light.getBoundingSphere(tempSphere);
-                                        lightAabb[j].center.copy(tempSphere.center);
-                                        lightAabb[j].halfExtents.x = tempSphere.radius;
-                                        lightAabb[j].halfExtents.y = tempSphere.radius;
-                                        lightAabb[j].halfExtents.z = tempSphere.radius;
-                                    }
-                                    if (!lightAabb[j].intersects(aabb)) continue;
-                                    staticLights.push(j);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (staticLights.length === 0) {
-                    newDrawCalls.push(drawCall);
-                    continue;
-                }
-
-                mesh = drawCall.mesh;
-                vertexBuffer = mesh.vertexBuffer;
-                indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
-                indices = indexBuffer.bytesPerIndex === 2 ? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
-                numTris = mesh.primitive[drawCall.renderStyle].count / 3;
-                baseIndex = mesh.primitive[drawCall.renderStyle].base;
-                elems = vertexBuffer.format.elements;
-                vertSize = vertexBuffer.format.size / 4; // / 4 because float
-                verts = new Float32Array(vertexBuffer.storage);
-
-                for (k = 0; k < elems.length; k++) {
-                    if (elems[k].name === SEMANTIC_POSITION) {
-                        offsetP = elems[k].offset / 4; // / 4 because float
-                    }
-                }
-
-                // #if _PROFILER
-                subTriAabbTime = now();
-                // #endif
-
-                triLightComb.length = numTris;
-                for (k = 0; k < numTris; k++) {
-                    // triLightComb[k] = ""; // uncomment to remove 32 lights limit
-                    triLightComb[k] = 0; // comment to remove 32 lights limit
-                }
-                triLightCombUsed = false;
-
-                triBounds.length = numTris * 6;
-                for (k = 0; k < numTris; k++) {
-                    minx = Number.MAX_VALUE;
-                    miny = Number.MAX_VALUE;
-                    minz = Number.MAX_VALUE;
-                    maxx = -Number.MAX_VALUE;
-                    maxy = -Number.MAX_VALUE;
-                    maxz = -Number.MAX_VALUE;
-                    for (v = 0; v < 3; v++) {
-                        index = indices[k * 3 + v + baseIndex];
-                        index = index * vertSize + offsetP;
-                        _x = verts[index];
-                        _y = verts[index + 1];
-                        _z = verts[index + 2];
-                        if (_x < minx) minx = _x;
-                        if (_y < miny) miny = _y;
-                        if (_z < minz) minz = _z;
-                        if (_x > maxx) maxx = _x;
-                        if (_y > maxy) maxy = _y;
-                        if (_z > maxz) maxz = _z;
-                    }
-                    index = k * 6;
-                    triBounds[index] = minx;
-                    triBounds[index + 1] = miny;
-                    triBounds[index + 2] = minz;
-                    triBounds[index + 3] = maxx;
-                    triBounds[index + 4] = maxy;
-                    triBounds[index + 5] = maxz;
-                }
-                // #if _PROFILER
-                triAabbTime += now() - subTriAabbTime;
-                // #endif
-
-                // #if _PROFILER
-                subSearchTime = now();
-                // #endif
-                for (s = 0; s < staticLights.length; s++) {
-                    j = staticLights[s];
-                    light = lights[j];
-
-                    invMatrix.copy(drawCall.node.worldTransform).invert();
-                    localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
-                    minv = localLightBounds.getMin();
-                    maxv = localLightBounds.getMax();
-                    bit = 1 << s;
-
-                    for (k = 0; k < numTris; k++) {
-                        index = k * 6;
-                        if ((triBounds[index] <= maxv.x) && (triBounds[index + 3] >= minv.x) &&
-                            (triBounds[index + 1] <= maxv.y) && (triBounds[index + 4] >= minv.y) &&
-                            (triBounds[index + 2] <= maxv.z) && (triBounds[index + 5] >= minv.z)) {
-
-                            // triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
-                            triLightComb[k] |= bit; // comment to remove 32 lights limit
-                            triLightCombUsed = true;
-                        }
-                    }
-                }
-                // #if _PROFILER
-                searchTime += now() - subSearchTime;
-                // #endif
-
-                if (triLightCombUsed) {
-
-                    // #if _PROFILER
-                    subCombineTime = now();
-                    // #endif
-
-                    combIndices = {};
-                    for (k = 0; k < numTris; k++) {
-                        j = k * 3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
-                        combIbName = triLightComb[k];
-                        if (!combIndices[combIbName]) combIndices[combIbName] = [];
-                        combIb = combIndices[combIbName];
-                        combIb.push(indices[j]);
-                        combIb.push(indices[j + 1]);
-                        combIb.push(indices[j + 2]);
-                    }
-
-                    // #if _PROFILER
-                    combineTime += now() - subCombineTime;
-                    // #endif
-
-                    // #if _PROFILER
-                    subWriteMeshTime = now();
-                    // #endif
-
-                    for (combIbName in combIndices) {
-                        combIb = combIndices[combIbName];
-                        var ib = new IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
-                        var ib2 = ib.bytesPerIndex === 2 ? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
-                        ib2.set(combIb);
-                        ib.unlock();
-
-                        minx = Number.MAX_VALUE;
-                        miny = Number.MAX_VALUE;
-                        minz = Number.MAX_VALUE;
-                        maxx = -Number.MAX_VALUE;
-                        maxy = -Number.MAX_VALUE;
-                        maxz = -Number.MAX_VALUE;
-                        for (k = 0; k < combIb.length; k++) {
-                            index = combIb[k];
-                            _x = verts[index * vertSize + offsetP];
-                            _y = verts[index * vertSize + offsetP + 1];
-                            _z = verts[index * vertSize + offsetP + 2];
-                            if (_x < minx) minx = _x;
-                            if (_y < miny) miny = _y;
-                            if (_z < minz) minz = _z;
-                            if (_x > maxx) maxx = _x;
-                            if (_y > maxy) maxy = _y;
-                            if (_z > maxz) maxz = _z;
-                        }
-                        minVec.set(minx, miny, minz);
-                        maxVec.set(maxx, maxy, maxz);
-                        var chunkAabb = new BoundingBox();
-                        chunkAabb.setMinMax(minVec, maxVec);
-
-                        var mesh2 = new Mesh(device);
-                        mesh2.vertexBuffer = vertexBuffer;
-                        mesh2.indexBuffer[0] = ib;
-                        mesh2.primitive[0].type = PRIMITIVE_TRIANGLES;
-                        mesh2.primitive[0].base = 0;
-                        mesh2.primitive[0].count = combIb.length;
-                        mesh2.primitive[0].indexed = true;
-                        mesh2.aabb = chunkAabb;
-
-                        var instance = new MeshInstance(mesh2, drawCall.material, drawCall.node);
-                        instance.isStatic = drawCall.isStatic;
-                        instance.visible = drawCall.visible;
-                        instance.layer = drawCall.layer;
-                        instance.castShadow = drawCall.castShadow;
-                        instance._receiveShadow = drawCall._receiveShadow;
-                        instance.cull = drawCall.cull;
-                        instance.pick = drawCall.pick;
-                        instance.mask = drawCall.mask;
-                        instance.parameters = drawCall.parameters;
-                        instance._shaderDefs = drawCall._shaderDefs;
-                        instance._staticSource = drawCall;
-
-                        if (drawCall._staticLightList) {
-                            instance._staticLightList = drawCall._staticLightList; // add forced assigned lights
-                        } else {
-                            instance._staticLightList = [];
-                        }
-
-                        // uncomment to remove 32 lights limit
-                        // var lnames = combIbName.split("_");
-                        // lnames.length = lnames.length - 1;
-                        // for(k = 0; k < lnames.length; k++) {
-                        //     instance._staticLightList[k] = lights[parseInt(lnames[k])];
-                        // }
-
-                        // comment to remove 32 lights limit
-                        for (k = 0; k < staticLights.length; k++) {
-                            bit = 1 << k;
-                            if (combIbName & bit) {
-                                lht = lights[staticLights[k]];
-                                if (instance._staticLightList.indexOf(lht) < 0) {
-                                    instance._staticLightList.push(lht);
-                                }
-                            }
-                        }
-
-                        instance._staticLightList.sort(this.lightCompare);
-
-                        newDrawCalls.push(instance);
-                    }
-
-                    // #if _PROFILER
-                    writeMeshTime += now() - subWriteMeshTime;
-                    // #endif
-                } else {
-                    newDrawCalls.push(drawCall);
-                }
-            }
-        }
-        // Set array to new
-        meshInstances.length = newDrawCalls.length;
-        for (i = 0; i < newDrawCalls.length; i++) {
-            meshInstances[i] = newDrawCalls[i];
-        }
-        // #if _PROFILER
-        scene._stats.lastStaticPrepareFullTime = now() - prepareTime;
-        scene._stats.lastStaticPrepareSearchTime = searchTime;
-        scene._stats.lastStaticPrepareWriteTime = writeMeshTime;
-        scene._stats.lastStaticPrepareTriAabbTime = triAabbTime;
-        scene._stats.lastStaticPrepareCombineTime = combineTime;
-        // #endif
-    }
-
     updateShaders(drawCalls) {
-        var mat, count = drawCalls.length;
-        for (var i = 0; i < count; i++) {
-            mat = drawCalls[i].material;
+        const count = drawCalls.length;
+        for (let i = 0; i < count; i++) {
+            const mat = drawCalls[i].material;
             if (mat) {
                 // material not processed yet
                 if (!_tempMaterialSet.has(mat)) {
@@ -1852,9 +1538,9 @@ class ForwardRenderer {
     }
 
     updateLitShaders(drawCalls) {
-        var mat, count = drawCalls.length;
-        for (var i = 0; i < count; i++) {
-            mat = drawCalls[i].material;
+        const count = drawCalls.length;
+        for (let i = 0; i < count; i++) {
+            const mat = drawCalls[i].material;
             if (mat) {
                 // material not processed yet
                 if (!_tempMaterialSet.has(mat)) {
@@ -1877,9 +1563,9 @@ class ForwardRenderer {
     }
 
     beginFrame(comp) {
-        var scene = this.scene;
-        var meshInstances = comp._meshInstances;
-        var lights = comp._lights;
+        const scene = this.scene;
+        const meshInstances = comp._meshInstances;
+        const lights = comp._lights;
 
         // Update shaders if needed
         // all mesh instances (TODO: ideally can update less if only lighting changed)
@@ -1897,31 +1583,29 @@ class ForwardRenderer {
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
         this.updateCpuSkinMatrices(meshInstances);
 
-        var i;
-        var len = meshInstances.length;
-        for (i = 0; i < len; i++) {
+        const miCount = meshInstances.length;
+        for (let i = 0; i < miCount; i++) {
             meshInstances[i].visibleThisFrame = false;
         }
 
         // clear light visibility
-        len = lights.length;
-        for (i = 0; i < len; i++) {
+        const lightCount = lights.length;
+        for (let i = 0; i < lightCount; i++) {
             lights[i].visibleThisFrame = lights[i]._type === LIGHTTYPE_DIRECTIONAL;
         }
     }
 
     beginLayers(comp) {
-        var scene = this.scene;
-        var len = comp.layerList.length;
-        var layer;
-        var i, j;
-        var shaderVersion = this.scene._shaderVersion;
-        for (i = 0; i < len; i++) {
+
+        const len = comp.layerList.length;
+        for (let i = 0; i < len; i++) {
             comp.layerList[i]._postRenderCounter = 0;
         }
-        var transparent;
-        for (i = 0; i < len; i++) {
-            layer = comp.layerList[i];
+
+        const scene = this.scene;
+        const shaderVersion = scene._shaderVersion;
+        for (let i = 0; i < len; i++) {
+            const layer = comp.layerList[i];
             layer._shaderVersion = shaderVersion;
             // #if _PROFILER
             layer._skipRenderCounter = 0;
@@ -1932,7 +1616,7 @@ class ForwardRenderer {
 
             layer._preRenderCalledForCameras = 0;
             layer._postRenderCalledForCameras = 0;
-            transparent = comp.subLayerList[i];
+            const transparent = comp.subLayerList[i];
             if (transparent) {
                 layer._postRenderCounter |= 2;
             } else {
@@ -1941,7 +1625,7 @@ class ForwardRenderer {
             layer._postRenderCounterMax = layer._postRenderCounter;
 
             // prepare layer for culling with the camera
-            for (j = 0; j < layer.cameras.length; j++) {
+            for (let j = 0; j < layer.cameras.length; j++) {
                 layer.instances.prepare(j);
             }
 
@@ -1949,11 +1633,11 @@ class ForwardRenderer {
             if (layer._needsStaticPrepare && layer._staticLightHash) {
                 // TODO: reuse with the same staticLightHash
                 if (layer._staticPrepareDone) {
-                    this.revertStaticMeshes(layer.opaqueMeshInstances);
-                    this.revertStaticMeshes(layer.transparentMeshInstances);
+                    StaticMeshes.revert(layer.opaqueMeshInstances);
+                    StaticMeshes.revert(layer.transparentMeshInstances);
                 }
-                this.prepareStaticMeshes(layer.opaqueMeshInstances, layer._lights);
-                this.prepareStaticMeshes(layer.transparentMeshInstances, layer._lights);
+                StaticMeshes.prepare(this.device, scene, layer.opaqueMeshInstances, layer._lights);
+                StaticMeshes.prepare(this.device, scene, layer.transparentMeshInstances, layer._lights);
                 comp._dirty = true;
                 scene.updateShaders = true;
                 layer._needsStaticPrepare = false;
@@ -1969,9 +1653,7 @@ class ForwardRenderer {
     }
 
     setSceneConstants() {
-        var i;
-        var device = this.device;
-        var scene = this.scene;
+        const scene = this.scene;
 
         // Set up ambient/exposure
         this.dispatchGlobalLights(scene);
@@ -1982,7 +1664,7 @@ class ForwardRenderer {
             this.fogColor[1] = scene.fogColor.g;
             this.fogColor[2] = scene.fogColor.b;
             if (scene.gammaCorrection) {
-                for (i = 0; i < 3; i++) {
+                for (let i = 0; i < 3; i++) {
                     this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
                 }
             }
@@ -1996,6 +1678,7 @@ class ForwardRenderer {
         }
 
         // Set up screen size // should be RT size?
+        const device = this.device;
         this._screenSize[0] = device.width;
         this._screenSize[1] = device.height;
         this._screenSize[2] = 1 / device.width;
@@ -2006,14 +1689,15 @@ class ForwardRenderer {
     updateLightStats(comp, compUpdatedFlags) {
 
         // #if _PROFILER
-        if (compUpdatedFlags & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
-            var stats = this.scene._stats;
+        const scene = this.scene;
+        if (compUpdatedFlags & COMPUPDATED_LIGHTS || !scene._statsUpdated) {
+            const stats = scene._stats;
             stats.lights = comp._lights.length;
             stats.dynamicLights = 0;
             stats.bakedLights = 0;
-            var l;
-            for (var i = 0; i < stats.lights; i++) {
-                l = comp._lights[i];
+
+            for (let i = 0; i < stats.lights; i++) {
+                const l = comp._lights[i];
                 if (l.enabled) {
                     if ((l.mask & MASK_DYNAMIC) || (l.mask & MASK_BAKED)) { // if affects dynamic or baked objects in real-time
                         stats.dynamicLights++;
@@ -2025,11 +1709,11 @@ class ForwardRenderer {
             }
         }
 
-        if (compUpdatedFlags & COMPUPDATED_INSTANCES || !this.scene._statsUpdated) {
-            this.scene._stats.meshInstances = comp._meshInstances.length;
+        if (compUpdatedFlags & COMPUPDATED_INSTANCES || !scene._statsUpdated) {
+            scene._stats.meshInstances = comp._meshInstances.length;
         }
 
-        this.scene._statsUpdated = true;
+        scene._statsUpdated = true;
         // #endif
     }
 
@@ -2134,6 +1818,11 @@ class ForwardRenderer {
         // #endif
     }
 
+    updateLightTextureAtlas(comp) {
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI],
+                                      comp.clusteredLightingCookiesEnabled, comp.clusteredLightingShadowsEnabled);
+    }
+
     updateClusters(comp) {
 
         // #if _PROFILER
@@ -2152,25 +1841,19 @@ class ForwardRenderer {
     }
 
     renderComposition(comp) {
-        var device = this.device;
-        var camera;
-        var renderAction, renderActions = comp._renderActions;
-        var i, layer, layerIndex, transparent;
+        const device = this.device;
 
         // update the skybox, since this might change _meshInstances
-        if (this.scene.updateSkybox) {
-            this.scene._updateSkybox(device);
-            this.scene.updateSkybox = false;
-        }
+        this.scene._updateSkybox(device);
 
         this.beginLayers(comp);
 
         // #if _PROFILER
-        var layerCompositionUpdateTime = now();
+        const layerCompositionUpdateTime = now();
         // #endif
 
         // Update static layer data, if something's changed
-        var updated = comp._update();
+        const updated = comp._update();
         if (updated & COMPUPDATED_LIGHTS) {
             this.scene.updateLitShaders = true;
         }
@@ -2189,31 +1872,45 @@ class ForwardRenderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
-        // update light clusters
-        this.updateClusters(comp);
-
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
+        if (LayerComposition.clusteredLightingEnabled) {
+
+            // update shadow / cookie atlas allocation for the visible lights
+            this.updateLightTextureAtlas(comp);
+
+            // render cookies for all local visible lights
+            if (comp.clusteredLightingCookiesEnabled) {
+                this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
+                this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
+            }
+        }
+
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        // TODO: in the current implementation clustered lights don't support shadows, so avoid rendering them completely
-        if (!LayerComposition.clusteredLightingEnabled) {
+        if (!LayerComposition.clusteredLightingEnabled || (LayerComposition.clusteredLightingEnabled && comp.clusteredLightingShadowsEnabled)) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
 
+        // update light clusters
+        if (LayerComposition.clusteredLightingEnabled) {
+            this.updateClusters(comp);
+        }
+
         // Rendering
         let sortTime, drawTime;
-        for (i = 0; i < renderActions.length; i++) {
-            renderAction = renderActions[i];
+        const renderActions = comp._renderActions;
+        for (let i = 0; i < renderActions.length; i++) {
+            const renderAction = renderActions[i];
 
             // layer
-            layerIndex = renderAction.layerIndex;
-            layer = comp.layerList[layerIndex];
-            transparent = comp.subLayerList[layerIndex];
+            const layerIndex = renderAction.layerIndex;
+            const layer = comp.layerList[layerIndex];
+            const transparent = comp.subLayerList[layerIndex];
 
             const cameraPass = renderAction.cameraIndex;
-            camera = layer.cameras[cameraPass];
+            const camera = layer.cameras[cameraPass];
 
             // render directional shadow maps for this camera - these get re-rendered for each camera
             if (renderAction.directionalLights.length > 0) {
@@ -2294,7 +1991,7 @@ class ForwardRenderer {
 
                 // upload clustered lights uniforms
                 if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
-                    renderAction.lightClusters.activate();
+                    renderAction.lightClusters.activate(this.lightTextureAtlas);
                 }
 
                 // enable flip faces if either the camera has _flipFaces enabled or the render target

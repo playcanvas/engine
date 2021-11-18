@@ -42,9 +42,7 @@ class AnimationComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('update', this.onUpdate, this);
-
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -53,7 +51,6 @@ class AnimationComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var key;
         this.addComponent(clone, {});
 
         clone.animation.assets = entity.animation.assets.slice();
@@ -62,18 +59,18 @@ class AnimationComponentSystem extends ComponentSystem {
         clone.animation.data.activate = entity.animation.activate;
         clone.animation.data.enabled = entity.animation.enabled;
 
-        var clonedAnimations = { };
-        var animations = entity.animation.animations;
-        for (key in animations) {
+        const clonedAnimations = { };
+        const animations = entity.animation.animations;
+        for (const key in animations) {
             if (animations.hasOwnProperty(key)) {
                 clonedAnimations[key] = animations[key];
             }
         }
         clone.animation.animations = clonedAnimations;
 
-        var clonedAnimationsIndex = { };
-        var animationsIndex = entity.animation.animationsIndex;
-        for (key in animationsIndex) {
+        const clonedAnimationsIndex = { };
+        const animationsIndex = entity.animation.animationsIndex;
+        for (const key in animationsIndex) {
             if (animationsIndex.hasOwnProperty(key)) {
                 clonedAnimationsIndex[key] = animationsIndex[key];
             }
@@ -86,12 +83,12 @@ class AnimationComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
-                var componentData = component.data;
+                const component = components[id];
+                const componentData = component.data;
 
                 if (componentData.enabled && component.entity.enabled) {
 
@@ -105,14 +102,14 @@ class AnimationComponentSystem extends ComponentSystem {
 
                     // update skeleton
                     if (componentData.playing) {
-                        var skeleton = componentData.skeleton;
+                        const skeleton = componentData.skeleton;
                         if (skeleton !== null && componentData.model !== null) {
                             if (componentData.blending) {
                                 skeleton.blend(componentData.fromSkel, componentData.toSkel, componentData.blend);
                             } else {
                                 // Advance the animation, interpolating keyframes at each animated node in
                                 // skeleton
-                                var delta = dt * componentData.speed;
+                                const delta = dt * componentData.speed;
                                 skeleton.addTime(delta);
                                 if (componentData.speed > 0 && (skeleton._time === skeleton._animation.duration) && !componentData.loop) {
                                     componentData.playing = false;
@@ -130,12 +127,12 @@ class AnimationComponentSystem extends ComponentSystem {
                     }
 
                     // update anim controller
-                    var animEvaluator = componentData.animEvaluator;
+                    const animEvaluator = componentData.animEvaluator;
                     if (animEvaluator) {
 
                         // force all clip's speed and playing state from the component
-                        for (var i = 0; i < animEvaluator.clips.length; ++i) {
-                            var clip = animEvaluator.clips[i];
+                        for (let i = 0; i < animEvaluator.clips.length; ++i) {
+                            const clip = animEvaluator.clips[i];
                             clip.speed = componentData.speed;
                             if (!componentData.playing) {
                                 clip.pause();
@@ -145,7 +142,7 @@ class AnimationComponentSystem extends ComponentSystem {
                         }
 
                         // update blend weight
-                        if (componentData.blending) {
+                        if (componentData.blending && animEvaluator.clips.length > 1) {
                             animEvaluator.clips[1].blendWeight = componentData.blend;
                         }
 
@@ -159,6 +156,12 @@ class AnimationComponentSystem extends ComponentSystem {
                 }
             }
         }
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

@@ -1,34 +1,33 @@
 // Word atlas
 class WordAtlas {
     constructor(texture, words) {
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         canvas.width = texture.width;
         canvas.height = texture.height;
 
         // configure the context
-        var context = canvas.getContext('2d', { alpha: true });
+        const context = canvas.getContext('2d', { alpha: true });
         context.font = '10px "Lucida Console", Monaco, monospace';
         context.textAlign = "left";
         context.textBaseline = "alphabetic";
         context.fillStyle = "rgb(255, 255, 255)";
 
-        var padding = 5;
-        var x = padding;
-        var y = padding;
-        var placements = [];
-        var i;
+        const padding = 5;
+        let x = padding;
+        let y = padding;
+        const placements = [];
 
-        for (i = 0; i < words.length; ++i) {
+        for (let i = 0; i < words.length; ++i) {
             // measure the word
-            var measurement = context.measureText(words[i]);
+            const measurement = context.measureText(words[i]);
 
-            var l = Math.ceil(-measurement.actualBoundingBoxLeft);
-            var r = Math.ceil(measurement.actualBoundingBoxRight);
-            var a = Math.ceil(measurement.actualBoundingBoxAscent);
-            var d = Math.ceil(measurement.actualBoundingBoxDescent);
+            const l = Math.ceil(-measurement.actualBoundingBoxLeft);
+            const r = Math.ceil(measurement.actualBoundingBoxRight);
+            const a = Math.ceil(measurement.actualBoundingBoxAscent);
+            const d = Math.ceil(measurement.actualBoundingBoxDescent);
 
-            var w = l + r;
-            var h = a + d;
+            const w = l + r;
+            const h = a + d;
 
             // wrap text
             if (x + w >= canvas.width) {
@@ -56,8 +55,8 @@ class WordAtlas {
             x += w + padding;
         }
 
-        var wordMap = { };
-        words.forEach(function (w, i) {
+        const wordMap = { };
+        words.forEach((w, i) => {
             wordMap[w] = i;
         });
 
@@ -67,32 +66,31 @@ class WordAtlas {
         this.texture = texture;
 
         // copy pixel data to target
-        var source = context.getImageData(0, 0, canvas.width, canvas.height);
-        var dest = texture.lock();
-        var red, alpha;
-        for (y = 0; y < source.height; ++y) {
-            for (x = 0; x < source.width; ++x) {
-                var offset = (x + y * texture.width) * 4;
+        const source = context.getImageData(0, 0, canvas.width, canvas.height);
+        const dest = texture.lock();
+        for (let y = 0; y < source.height; ++y) {
+            for (let x = 0; x < source.width; ++x) {
+                const offset = (x + y * texture.width) * 4;
 
                 // set .rgb white to allow shader to identify text
                 dest[offset] = 255;
                 dest[offset + 1] = 255;
                 dest[offset + 2] = 255;
 
-                // red red and alpha from image
-                red = source.data[(x + (source.height - 1 - y) * source.width) * 4];
-                alpha = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
+                // red and alpha from image
+                const red = source.data[(x + (source.height - 1 - y) * source.width) * 4];
+                const alpha = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
 
-                // alpha contains greyscale letters, use red to make non-digits darker
+                // alpha contains grayscale letters, use red to make non-digits darker
                 dest[offset + 3] = alpha * (red > 150 ? 1 : 0.7);
             }
         }
     }
 
     render(render2d, word, x, y) {
-        var p = this.placements[this.wordMap[word]];
+        const p = this.placements[this.wordMap[word]];
         if (p) {
-            var padding = 1;
+            const padding = 1;
             render2d.quad(this.texture,
                           x + p.l - padding,
                           y - p.d + padding,

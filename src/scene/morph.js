@@ -1,6 +1,6 @@
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../math/vec3.js';
-import { math } from '../math/math.js';
+import { FloatPacking } from '../math/float-packing.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
@@ -8,6 +8,9 @@ import { VertexFormat } from '../graphics/vertex-format.js';
 import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
+
+// value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
+const _floatRounding = 0.2;
 
 /**
  * @class
@@ -85,26 +88,23 @@ class Morph extends RefCountedObject {
         }
 
         // if texture morphing is not set up, use attribute based morphing
-        var i;
         if (!this._useTextureMorph) {
-            for (i = 0; i < this._targets.length; i++) {
+            for (let i = 0; i < this._targets.length; i++) {
                 this._targets[i]._initVertexBuffers(this.device);
             }
         }
 
         // finalize init
-        for (i = 0; i < this._targets.length; i++) {
+        for (let i = 0; i < this._targets.length; i++) {
             this._targets[i]._postInit();
         }
     }
 
     _initTextureBased() {
-        var target, i, v;
-
         // collect all source delta arrays to find sparse set of vertices
-        var deltaArrays = [], deltaInfos = [];
-        for (i = 0; i < this._targets.length; i++) {
-            target = this._targets[i];
+        const deltaArrays = [], deltaInfos = [];
+        for (let i = 0; i < this._targets.length; i++) {
+            const target = this._targets[i];
             if (target.options.deltaPositions) {
                 deltaArrays.push(target.options.deltaPositions);
                 deltaInfos.push({ target: target, name: 'texturePositions' });
@@ -116,16 +116,15 @@ class Morph extends RefCountedObject {
         }
 
         // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
-        var ids = [], usedDataIndices = [];
-        var vertexUsed, data;
-        var freeIndex = 1;  // reserve slot 0 for zero delta
-        var dataCount = deltaArrays[0].length;
-        for (v = 0; v < dataCount; v += 3) {
+        const ids = [], usedDataIndices = [];
+        let freeIndex = 1;  // reserve slot 0 for zero delta
+        const dataCount = deltaArrays[0].length;
+        for (let v = 0; v < dataCount; v += 3) {
 
             // find if vertex is morphed by any target
-            vertexUsed = false;
-            for (i = 0; i < deltaArrays.length; i++) {
-                data = deltaArrays[i];
+            let vertexUsed = false;
+            for (let i = 0; i < deltaArrays.length; i++) {
+                const data = deltaArrays[i];
 
                 // if non-zero delta
                 if (data[v] !== 0 || data[v + 1] !== 0 || data[v + 2] !== 0) {
@@ -135,23 +134,23 @@ class Morph extends RefCountedObject {
             }
 
             if (vertexUsed) {
-                ids.push(freeIndex);
+                ids.push(freeIndex + _floatRounding);
                 usedDataIndices.push(v / 3);
                 freeIndex++;
             } else {
                 // non morphed vertices would be all mapped to pixel 0 of texture
-                ids.push(0);
+                ids.push(0 + _floatRounding);
             }
         }
 
         // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
         // TODO: on webgl2 we could store this in uint32 format and remove this limit
-        var maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
+        const maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
 
         // texture size for freeIndex pixels - roughly square
-        var morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
+        let morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
         morphTextureWidth = Math.min(morphTextureWidth, maxTextureSize);
-        var morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);
+        const morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);
 
         // if data cannot fit into max size texture, fail this set up
         if (morphTextureHeight > maxTextureSize) {
@@ -162,23 +161,23 @@ class Morph extends RefCountedObject {
         this.morphTextureHeight = morphTextureHeight;
 
         // texture format based vars
-        var halfFloat = false;
-        var numComponents = 3;  // RGB32 is used
-        var float2Half = math.float2Half;
+        let halfFloat = false;
+        let numComponents = 3;  // RGB32 is used
+        const float2Half = FloatPacking.float2Half;
         if (this._textureFormat === Morph.FORMAT_HALF_FLOAT) {
             halfFloat = true;
             numComponents = 4;  // RGBA16 is used, RGB16 does not work
         }
 
         // build texture for each delta array, all textures are the same size
-        var arraySize = this.morphTextureWidth * this.morphTextureHeight * numComponents;
-        var packedDeltas = halfFloat ? new Uint16Array(arraySize) : new Float32Array(arraySize);
-        for (i = 0; i < deltaArrays.length; i++) {
-            data = deltaArrays[i];
+        const arraySize = this.morphTextureWidth * this.morphTextureHeight * numComponents;
+        const packedDeltas = halfFloat ? new Uint16Array(arraySize) : new Float32Array(arraySize);
+        for (let i = 0; i < deltaArrays.length; i++) {
+            const data = deltaArrays[i];
 
             // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
-            for (v = 0; v < usedDataIndices.length; v++) {
-                var index = usedDataIndices[v];
+            for (let v = 0; v < usedDataIndices.length; v++) {
+                const index = usedDataIndices[v];
 
                 if (halfFloat) {
                     packedDeltas[v * numComponents + numComponents] = float2Half(data[index * 3]);
@@ -192,13 +191,13 @@ class Morph extends RefCountedObject {
             }
 
             // create texture and assign it to target
-            target = deltaInfos[i].target;
-            var format = this._textureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
+            const target = deltaInfos[i].target;
+            const format = this._textureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
             target._setTexture(deltaInfos[i].name, this._createTexture("MorphTarget", format, packedDeltas));
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
-        var formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_FLOAT32 }];
+        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_FLOAT32 }];
         this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc), ids.length, BUFFER_STATIC, new Float32Array(ids));
 
         return true;
@@ -215,7 +214,7 @@ class Morph extends RefCountedObject {
             this.vertexBufferIds = null;
         }
 
-        for (var i = 0; i < this._targets.length; i++) {
+        for (let i = 0; i < this._targets.length; i++) {
             this._targets[i].destroy();
         }
         this._targets.length = 0;
@@ -236,9 +235,8 @@ class Morph extends RefCountedObject {
         // find out if this morph needs to morph positions and normals
         this._morphPositions = false;
         this._morphNormals = false;
-        var target;
-        for (var i = 0; i < this._targets.length; i++) {
-            target = this._targets[i];
+        for (let i = 0; i < this._targets.length; i++) {
+            const target = this._targets[i];
             if (target.morphPositions) {
                 this._morphPositions = true;
             }
@@ -251,11 +249,10 @@ class Morph extends RefCountedObject {
     _calculateAabb() {
 
         this.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
-        var target;
 
         // calc bounding box of the relative change this morph can add
-        for (var i = 0; i < this._targets.length; i++) {
-            target = this._targets[i];
+        for (let i = 0; i < this._targets.length; i++) {
+            const target = this._targets[i];
             this.aabb._expand(target.aabb.getMin(), target.aabb.getMax());
         }
     }
@@ -263,7 +260,7 @@ class Morph extends RefCountedObject {
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
     _createTexture(name, format, pixelData) {
 
-        var texture = new Texture(this.device, {
+        const texture = new Texture(this.device, {
             width: this.morphTextureWidth,
             height: this.morphTextureHeight,
             format: format,
@@ -277,8 +274,7 @@ class Morph extends RefCountedObject {
         texture.name = name;
 
         if (pixelData) {
-            var pixels = texture.lock();
-            pixels.set(pixelData);
+            texture.lock().set(pixelData);
             texture.unlock();
         }
 

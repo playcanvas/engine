@@ -5,16 +5,16 @@ import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
+import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, SPECULAR_BLINN, TONEMAP_LINEAR } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-import { StandardMaterial } from './materials/standard-material.js';
 
 /**
  * @class
@@ -27,10 +27,10 @@ import { StandardMaterial } from './materials/standard-material.js';
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
  *
- * * {@link FOG_NONE}
- * * {@link FOG_LINEAR}
- * * {@link FOG_EXP}
- * * {@link FOG_EXP2}
+ * - {@link FOG_NONE}
+ * - {@link FOG_LINEAR}
+ * - {@link FOG_EXP}
+ * - {@link FOG_EXP2}
  *
  * Defaults to {@link FOG_NONE}.
  * @property {Color} fogColor The color of the fog (if enabled). Defaults to black
@@ -45,17 +45,17 @@ import { StandardMaterial } from './materials/standard-material.js';
  * @property {number} gammaCorrection The gamma correction to apply when rendering the
  * scene. Can be:
  *
- * * {@link GAMMA_NONE}
- * * {@link GAMMA_SRGB}
+ * - {@link GAMMA_NONE}
+ * - {@link GAMMA_SRGB}
  *
  * Defaults to {@link GAMMA_NONE}.
  * @property {number} toneMapping The tonemapping transform to apply when writing
  * fragments to the frame buffer. Can be:
  *
- * * {@link TONEMAP_LINEAR}
- * * {@link TONEMAP_FILMIC}
- * * {@link TONEMAP_HEJL}
- * * {@link TONEMAP_ACES}
+ * - {@link TONEMAP_LINEAR}
+ * - {@link TONEMAP_FILMIC}
+ * - {@link TONEMAP_HEJL}
+ * - {@link TONEMAP_ACES}
  *
  * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} exposure The exposure value tweaks the overall brightness of
@@ -77,16 +77,25 @@ import { StandardMaterial } from './materials/standard-material.js';
  * 2048.
  * @property {number} lightmapMode The lightmap baking mode. Can be:
  *
- * * {@link BAKE_COLOR}: single color lightmap
- * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
+ * - {@link BAKE_COLOR}: single color lightmap
+ * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
  * bump/specular). Only lights with bakeDir=true will be used for generating the dominant
  * light direction.
  *
  * Defaults to {@link BAKE_COLORDIR}.
+ * @property {boolean} lightmapFilterEnabled Enables bilateral filter on runtime baked color lightmaps, which removes the noise and banding while preserving the edges. Defaults to false;
+ * Note that the filtering takes place in the image space of the lightmap, and it does not filter across lightmap UV space seams, often making the seams more visible. It's important to balance the strength of the filter with number of samples used
+ * for lightmap baking to limit the visible artifacts.
+ * @property {number} lightmapFilterRange A range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value applies more widespread blur. This needs to be a positive non-zero value. Defaults to 10.
+ * @property {number} lightmapFilterSmoothness A spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value blurs less similar colors. This needs to be a positive non-zero value. Defaults to 0.2.
+ * @property {boolean} ambientBake If enabled, the ambient lighting will be baked into lightmaps. This will be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
+ * @property {number} ambientBakeNumSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
+ * @property {number} ambientBakeSpherePart If {@link Scene#ambientBake} is true, this specifies a part of the sphere which represents the source of ambient light. The valid range is 0..1, representing a part of the sphere from top to the bottom.
+ * A value of 0.5 represents the upper hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller upper hemisphere as this requires fewer samples to bake.
+ * @property {number} ambientBakeOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+ * @property {number} ambientBakeOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
- * @property {StandardMaterial} defaultMaterial The default material used in case no
- * other material is available.
  * @property {Entity} root The root entity of the scene, which is usually the only
  * child to the Application root entity.
  */
@@ -126,9 +135,19 @@ class Scene extends EventHandler {
 
         this._skyboxIsRenderTarget = false;
 
+        // ambient light lightmapping properties
+        this._ambientBake = false;
+        this._ambientBakeNumSamples = 1;
+        this._ambientBakeSpherePart = 0.4;
+        this.ambientBakeOcclusionContrast = 0;
+        this.ambientBakeOcclusionBrightness = 0;
+
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
         this.lightmapMode = BAKE_COLORDIR;
+        this.lightmapFilterEnabled = false;
+        this._lightmapFilterRange = 10;
+        this._lightmapFilterSmoothness = 0.2;
 
         this._stats = {
             meshInstances: 0,
@@ -151,18 +170,11 @@ class Scene extends EventHandler {
 
         // backwards compatibility only
         this._models = [];
-
-        // default material used in case no other material is available
-        this.defaultMaterial = new StandardMaterial();
-        this.defaultMaterial.name = "Default Material";
-        this.defaultMaterial.shadingModel = SPECULAR_BLINN;
     }
 
     destroy() {
         this._resetSkyboxModel();
         this.root = null;
-        this.defaultMaterial.destroy();
-        this.defaultMaterial = null;
         this.off();
     }
 
@@ -217,6 +229,46 @@ class Scene extends EventHandler {
         this._skyboxIntensity = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
+    }
+
+    get ambientBake() {
+        return this._ambientBake;
+    }
+
+    set ambientBake(value) {
+        this._ambientBake = value;
+    }
+
+    get ambientBakeNumSamples() {
+        return this._ambientBakeNumSamples;
+    }
+
+    set ambientBakeNumSamples(value) {
+        this._ambientBakeNumSamples = math.clamp(Math.floor(value), 1, 255);
+    }
+
+    get ambientBakeSpherePart() {
+        return this._ambientBakeSpherePart;
+    }
+
+    set ambientBakeSpherePart(value) {
+        this._ambientBakeSpherePart = math.clamp(value, 0.001, 1);
+    }
+
+    get lightmapFilterRange() {
+        return this._lightmapFilterRange;
+    }
+
+    set lightmapFilterRange(value) {
+        this._lightmapFilterRange = Math.max(value, 0.001);
+    }
+
+    get lightmapFilterSmoothness() {
+        return this._lightmapFilterSmoothness;
+    }
+
+    set lightmapFilterSmoothness(value) {
+        this._lightmapFilterSmoothness = Math.max(value, 0.001);
     }
 
     get skyboxRotation() {
@@ -316,7 +368,7 @@ class Scene extends EventHandler {
     // some backwards compatibility
     // drawCalls will now return list of all active composition mesh instances
     get drawCalls() {
-        var drawCalls = this.layers._meshInstances;
+        let drawCalls = this.layers._meshInstances;
         if (!drawCalls.length) {
             this.layers._update();
             drawCalls = this.layers._meshInstances;
@@ -332,17 +384,9 @@ class Scene extends EventHandler {
     }
 
     set layers(layers) {
-        var prev = this._layers;
+        const prev = this._layers;
         this._layers = layers;
         this.fire("set:layers", prev, layers);
-    }
-
-    get defaultMaterial() {
-        return Material.defaultMaterial;
-    }
-
-    set defaultMaterial(value) {
-        Material.defaultMaterial = value;
     }
 
     applySettings(settings) {
@@ -372,6 +416,11 @@ class Scene extends EventHandler {
     }
 
     _updateSkybox(device) {
+        if (!this.updateSkybox) {
+            return;
+        }
+        this.updateSkybox = false;
+
         // Create skybox
         if (!this.skyboxModel) {
 
@@ -379,10 +428,10 @@ class Scene extends EventHandler {
             // we can't simply fix this and map 3 to the correct level, since doing so has the potential
             // to change the look of existing scenes dramatically.
             // NOTE: the table skips the 32x32 mipmap
-            var skyboxMapping = [0, 1, 3, 4, 5, 6];
+            const skyboxMapping = [0, 1, 3, 4, 5, 6];
 
             // select which texture to use for the backdrop
-            var usedTex =
+            const usedTex =
                 this._skyboxMip ?
                     this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
                     this._skyboxCubeMap || this._skyboxPrefiltered[0];
@@ -396,15 +445,14 @@ class Scene extends EventHandler {
                 this._skyboxIsRenderTarget = false;
             }
 
-            var material = new Material();
-            var scene = this;
+            const material = new Material();
+            const scene = this;
             material.updateShader = function (dev, sc, defs, staticLightList, pass) {
-                var library = device.getProgramLibrary();
-                var shader = library.getProgram('skybox', {
+                const library = device.getProgramLibrary();
+                const shader = library.getProgram('skybox', {
                     rgbm: usedTex.type === TEXTURETYPE_RGBM,
                     hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity !== 1,
-                    useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
                     useRightHandedCubeMap: scene._skyboxIsRenderTarget,
                     mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: usedTex.fixCubemapSeams,
@@ -423,20 +471,25 @@ class Scene extends EventHandler {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, this._skyboxRotation, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
                 material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
+            } else {
+                material.setParameter("cubeMapRotationMatrix", Mat3.IDENTITY.data);
             }
 
             material.cull = CULLFACE_FRONT;
             material.depthWrite = false;
 
-            var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
+            const skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
             if (skyLayer) {
-                var node = new GraphNode("Skybox");
-                var mesh = createBox(device);
-                var meshInstance = new MeshInstance(mesh, material, node);
+                const node = new GraphNode("Skybox");
+                const mesh = createBox(device);
+                const meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
 
-                var model = new Model();
+                // disable picker, the material has custom update shader and does not handle picker variant
+                meshInstance.pick = false;
+
+                const model = new Model();
                 model.graph = node;
                 model.meshInstances = [meshInstance];
                 this.skyboxModel = model;
@@ -467,20 +520,19 @@ class Scene extends EventHandler {
      * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
      */
     setSkybox(cubemaps) {
-        var i;
         if (!cubemaps)
             cubemaps = [null, null, null, null, null, null, null];
 
         // check if any values actually changed
         // to prevent unnecessary recompilations
 
-        var different = false;
+        let different = false;
 
         if (this._skyboxCubeMap !== cubemaps[0])
             different = true;
 
         if (!different) {
-            for (i = 0; i < 6 && !different; i++) {
+            for (let i = 0; i < 6 && !different; i++) {
                 if (this._skyboxPrefiltered[i] !== cubemaps[i + 1])
                     different = true;
             }
@@ -491,7 +543,7 @@ class Scene extends EventHandler {
 
         // set skybox
 
-        for (i = 0; i < 6; i++)
+        for (let i = 0; i < 6; i++)
             this._skyboxPrefiltered[i] = cubemaps[i + 1];
 
         this.skybox = cubemaps[0];
@@ -500,22 +552,22 @@ class Scene extends EventHandler {
     // Backwards compatibility
     addModel(model) {
         if (this.containsModel(model)) return;
-        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
         layer.addMeshInstances(model.meshInstances);
         this._models.push(model);
     }
 
     addShadowCaster(model) {
-        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
         layer.addShadowCasters(model.meshInstances);
     }
 
     removeModel(model) {
-        var index = this._models.indexOf(model);
+        const index = this._models.indexOf(model);
         if (index !== -1) {
-            var layer = this.layers.getLayerById(LAYERID_WORLD);
+            const layer = this.layers.getLayerById(LAYERID_WORLD);
             if (!layer) return;
             layer.removeMeshInstances(model.meshInstances);
             this._models.splice(index, 1);
@@ -523,7 +575,7 @@ class Scene extends EventHandler {
     }
 
     removeShadowCasters(model) {
-        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
         layer.removeShadowCasters(model.meshInstances);
     }

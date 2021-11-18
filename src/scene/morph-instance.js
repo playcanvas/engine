@@ -6,13 +6,14 @@ import { RenderTarget } from '../graphics/render-target.js';
 import { Morph } from './morph.js';
 
 // vertex shader used to add morph targets from textures into render target
-var textureMorphVertexShader =
-    'attribute vec2 vertex_position;\n' +
-    'varying vec2 uv0;\n' +
-    'void main(void) {\n' +
-    '    gl_Position = vec4(vertex_position, 0.5, 1.0);\n' +
-    '    uv0 = vertex_position.xy * 0.5 + 0.5;\n' +
-    '}\n';
+const textureMorphVertexShader = `
+    attribute vec2 vertex_position;
+    varying vec2 uv0;
+    void main(void) {
+        gl_Position = vec4(vertex_position, 0.5, 1.0);
+        uv0 = vertex_position.xy * 0.5 + 0.5;
+    }
+    `;
 
 /**
  * @class
@@ -31,7 +32,7 @@ class MorphInstance {
 
         // weights
         this._weights = [];
-        for (var v = 0; v < morph._targets.length; v++) {
+        for (let v = 0; v < morph._targets.length; v++) {
             this.setWeight(v, morph._targets[v].defaultWeight);
         }
 
@@ -50,16 +51,16 @@ class MorphInstance {
             this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
 
             // create render targets to morph targets into
-            var createRT = function (name, textureVar) {
+            const createRT = (name, textureVar) => {
 
                 // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-                var format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+                const format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
                 this[textureVar] = morph._createTexture(name, format);
                 return new RenderTarget({
                     colorBuffer: this[textureVar],
                     depth: false
                 });
-            }.bind(this);
+            };
 
             if (morph.morphPositions) {
                 this.rtPositions = createRT("MorphRTPos", "texturePositions");
@@ -74,7 +75,7 @@ class MorphInstance {
                 1 / morph.morphTextureWidth, 1 / morph.morphTextureHeight]);
 
             // resolve possible texture names
-            for (var i = 0; i < this.maxSubmitCount; i++) {
+            for (let i = 0; i < this.maxSubmitCount; i++) {
                 this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
             }
 
@@ -151,7 +152,7 @@ class MorphInstance {
      * @returns {MorphInstance} A clone of the specified MorphInstance.
      */
     clone() {
-        var clone = new MorphInstance(this.morph);
+        const clone = new MorphInstance(this.morph);
         return clone;
     }
 
@@ -181,21 +182,21 @@ class MorphInstance {
     // generates fragment shader to blend number of textures using specified weights
     _getFragmentShader(numTextures) {
 
-        var i, fragmentShader = '';
+        let fragmentShader = '';
 
         if (numTextures > 0) {
             fragmentShader += 'varying vec2 uv0;\n' +
                 'uniform highp float morphFactor[' + numTextures + '];\n';
         }
 
-        for (i = 0; i < numTextures; i++) {
+        for (let i = 0; i < numTextures; i++) {
             fragmentShader += 'uniform highp sampler2D morphBlendTex' + i + ';\n';
         }
 
         fragmentShader += 'void main (void) {\n' +
             '    highp vec4 color = vec4(0, 0, 0, 1);\n';
 
-        for (i = 0; i < numTextures; i++) {
+        for (let i = 0; i < numTextures; i++) {
             fragmentShader += '    color.xyz += morphFactor[' + i + '] * texture2D(morphBlendTex' + i + ', uv0).xyz;\n';
         }
 
@@ -208,11 +209,11 @@ class MorphInstance {
     // creates complete shader for texture based morphing
     _getShader(count) {
 
-        var shader = this.shaderCache[count];
+        let shader = this.shaderCache[count];
 
         // if shader is not in cache, generate one
         if (!shader) {
-            var fs = this._getFragmentShader(count);
+            const fs = this._getFragmentShader(count);
             shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
             this.shaderCache[count] = shader;
         }
@@ -222,10 +223,10 @@ class MorphInstance {
 
     _updateTextureRenderTarget(renderTarget, srcTextureName) {
 
-        var device = this.device;
+        const device = this.device;
 
         // blend curently set up textures to render target
-        var submitBatch = function (usedCount, blending) {
+        const submitBatch = (usedCount, blending) => {
 
             // factors
             this.morphFactor.setValue(this._shaderMorphWeights);
@@ -238,18 +239,17 @@ class MorphInstance {
             }
 
             // render quad with shader for required number of textures
-            var shader = this._getShader(usedCount);
+            const shader = this._getShader(usedCount);
             drawQuadWithShader(device, renderTarget, shader, undefined, undefined, blending);
-
-        }.bind(this);
+        };
 
         // set up parameters for active blend targets
-        var usedCount = 0;
-        var blending = false;
-        var count = this._activeTargets.length;
-        for (var i = 0; i < count; i++) {
-            var activeTarget = this._activeTargets[i];
-            var tex = activeTarget.target[srcTextureName];
+        let usedCount = 0;
+        let blending = false;
+        const count = this._activeTargets.length;
+        for (let i = 0; i < count; i++) {
+            const activeTarget = this._activeTargets[i];
+            const tex = activeTarget.target[srcTextureName];
             if (tex) {
 
                 // texture
@@ -277,7 +277,7 @@ class MorphInstance {
 
     _updateTextureMorph() {
 
-        var device = this.device;
+        const device = this.device;
 
         // #if _DEBUG
         device.pushMarker("MorphUpdate");
@@ -302,17 +302,16 @@ class MorphInstance {
     _updateVertexMorph() {
 
         // prepare 8 slots for rendering. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
-        var i, count = this.maxSubmitCount;
-        for (i = 0; i < count; i++) {
+        const count = this.maxSubmitCount;
+        for (let i = 0; i < count; i++) {
             this._shaderMorphWeights[i] = 0;
             this._activeVertexBuffers[i] = null;
         }
 
-        var posIndex = 0;
-        var nrmIndex = this.morph.morphPositions ? 4 : 0;
-        var target;
-        for (i = 0; i < this._activeTargets.length; i++) {
-            target = this._activeTargets[i].target;
+        let posIndex = 0;
+        let nrmIndex = this.morph.morphPositions ? 4 : 0;
+        for (let i = 0; i < this._activeTargets.length; i++) {
+            const target = this._activeTargets[i].target;
 
             if (target._vertexBufferPositions) {
                 this._activeVertexBuffers[posIndex] = target._vertexBufferPositions;
@@ -336,21 +335,21 @@ class MorphInstance {
     update() {
 
         this._dirty = false;
-        var targets = this.morph._targets;
+        const targets = this.morph._targets;
 
         // collect active targets, reuse objects in _activeTargets array to avoid allocations
-        var activeCount = 0, activeTarget;
-        var i, absWeight, epsilon = 0.00001;
-        for (i = 0; i < targets.length; i++) {
-            absWeight = Math.abs(this.getWeight(i));
+        let activeCount = 0;
+        const epsilon = 0.00001;
+        for (let i = 0; i < targets.length; i++) {
+            const absWeight = Math.abs(this.getWeight(i));
             if (absWeight > epsilon) {
 
-                    // create new object if needed
+                // create new object if needed
                 if (this._activeTargets.length <= activeCount) {
                     this._activeTargets[activeCount] = {};
                 }
 
-                activeTarget = this._activeTargets[activeCount++];
+                const activeTarget = this._activeTargets[activeCount++];
                 activeTarget.absWeight = absWeight;
                 activeTarget.weight = this.getWeight(i);
                 activeTarget.target = targets[i];
@@ -359,7 +358,7 @@ class MorphInstance {
         this._activeTargets.length = activeCount;
 
         // if there's more active targets then rendering supports
-        var maxActiveTargets = this.morph.maxActiveTargets;
+        const maxActiveTargets = this.morph.maxActiveTargets;
         if (this._activeTargets.length > maxActiveTargets) {
 
             // sort them by absWeight

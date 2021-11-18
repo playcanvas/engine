@@ -10,6 +10,7 @@ import { ModelComponentData } from './data.js';
 
 import { BoundingBox } from '../../../shape/bounding-box';
 import { Vec3 } from '../../../math/vec3';
+import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 
 const _schema = ['enabled'];
 
@@ -32,7 +33,7 @@ class ModelComponentSystem extends ComponentSystem {
         this.DataType = ModelComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = app.scene.defaultMaterial;
+        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }
@@ -64,7 +65,7 @@ class ModelComponentSystem extends ComponentSystem {
             _data.layers = _data.layers.slice(0);
         }
 
-        for (var i = 0; i < properties.length; i++) {
+        for (let i = 0; i < properties.length; i++) {
             if (_data.hasOwnProperty(properties[i])) {
                 component[properties[i]] = _data[properties[i]];
             }
@@ -78,7 +79,7 @@ class ModelComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        const data = {
             type: entity.model.type,
             asset: entity.model.asset,
             castShadows: entity.model.castShadows,
@@ -96,12 +97,12 @@ class ModelComponentSystem extends ComponentSystem {
         // if original has a different material
         // than the assigned materialAsset then make sure we
         // clone that one instead of the materialAsset one
-        var materialAsset = entity.model.materialAsset;
+        let materialAsset = entity.model.materialAsset;
         if (!(materialAsset instanceof Asset) && materialAsset != null) {
             materialAsset = this.app.assets.get(materialAsset);
         }
 
-        var material = entity.model.material;
+        const material = entity.model.material;
         if (!material ||
             material === this.defaultMaterial ||
             !materialAsset ||
@@ -110,7 +111,7 @@ class ModelComponentSystem extends ComponentSystem {
             data.materialAsset = materialAsset;
         }
 
-        var component = this.addComponent(clone, data);
+        const component = this.addComponent(clone, data);
 
         // clone the original model if the original model component is of type asset but
         // has no specified asset
@@ -124,9 +125,9 @@ class ModelComponentSystem extends ComponentSystem {
 
         // TODO: we should copy all relevant meshinstance properties here
         if (entity.model.model) {
-            var meshInstances = entity.model.model.meshInstances;
-            var meshInstancesClone = component.model.meshInstances;
-            for (var i = 0; i < meshInstances.length; i++) {
+            const meshInstances = entity.model.model.meshInstances;
+            const meshInstancesClone = component.model.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
                 meshInstancesClone[i].mask = meshInstances[i].mask;
                 meshInstancesClone[i].material = meshInstances[i].material;
                 meshInstancesClone[i].layer = meshInstances[i].layer;
@@ -135,7 +136,7 @@ class ModelComponentSystem extends ComponentSystem {
         }
 
         if (entity.model.customAabb) {
-            component.customAabb = entity.model.aabb.clone();
+            component.customAabb = entity.model.customAabb.clone();
         }
     }
 

@@ -11,15 +11,19 @@ import {
     MASK_LIGHTMAP, MASK_DYNAMIC,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    LIGHTSHAPE_PUNCTUAL
+    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 
-var spotCenter = new Vec3();
-var spotEndPoint = new Vec3();
-var tmpVec = new Vec3();
+const spotCenter = new Vec3();
+const spotEndPoint = new Vec3();
+const tmpVec = new Vec3();
+const tmpBiases = {
+    bias: 0,
+    normalBias: 0
+};
 
-var chanId = { r: 0, g: 1, b: 2, a: 3 };
+const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
 // viewport in shadows map for cascades for directional light
 const directionalCascades = [
@@ -45,7 +49,14 @@ class LightRenderData {
         // camera used to cull / render the shadow map
         this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
 
+        // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
+
+        // viewport for the shadow rendering to the texture (x, y, width, height)
+        this.shadowViewport = new Vec4(0, 0, 1, 1);
+
+        // scissor rectangle for the shadow rendering to the texture (x, y, width, height)
+        this.shadowScissor = new Vec4(0, 0, 1, 1);
 
         // face index, value is based on light type:
         // - spot: always 0
@@ -93,11 +104,13 @@ class Light {
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
+        this.bakeNumSamples = 1;
+        this.bakeArea = 0;
 
         // Omni and spot properties
         this.attenuationStart = 10;
         this.attenuationEnd = 10;
-        this._falloffMode = 0;
+        this._falloffMode = LIGHTFALLOFF_LINEAR;
         this._shadowType = SHADOW_PCF3;
         this._vsmBlurSize = 11;
         this.vsmBlurMode = BLUR_GAUSSIAN;
@@ -129,7 +142,7 @@ class Light {
 
         // Cache of light property data in a format more friendly for shader uniforms
         this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
-        var c = Math.pow(this._finalColor[0], 2.2);
+        const c = Math.pow(this._finalColor[0], 2.2);
         this._linearFinalColor = new Float32Array([c, c, c]);
 
         this._position = new Vec3(0, 0, 0);
@@ -152,6 +165,9 @@ class Light {
 
         // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
         this._cookieMatrix = null;
+
+        // viewport of the cookie texture / shadow in the atlas
+        this._atlasViewport = null;
 
         this._scene = null;
         this._node = null;
@@ -213,7 +229,7 @@ class Light {
      * @returns {Light} A cloned Light.
      */
     clone() {
-        var clone = new Light(this.device);
+        const clone = new Light(this.device);
 
         // Clone Light properties
         clone.type = this._type;
@@ -261,6 +277,43 @@ class Light {
         return clone;
     }
 
+    // returns the bias (.x) and normalBias (.y) value for lights as passed to shaders by uniforms
+    // Note: this needs to be revisited and simplified
+    // Note: vsmBias is not used at all for omni light, even though it is editable in the Editor
+    _getUniformBiasValues(lightRenderData) {
+
+        const farClip = lightRenderData.shadowCamera._farClip;
+
+        switch (this._type) {
+            case LIGHTTYPE_OMNI:
+                tmpBiases.bias = this.shadowBias;
+                tmpBiases.normalBias = this._normalOffsetBias;
+                break;
+            case LIGHTTYPE_SPOT:
+                if (this._isVsm) {
+                    tmpBiases.bias = -0.00001 * 20;
+                } else {
+                    tmpBiases.bias = this.shadowBias * 20; // approx remap from old bias values
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
+                }
+                tmpBiases.normalBias = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
+                break;
+            case LIGHTTYPE_DIRECTIONAL:
+                // make bias dependent on far plane because it's not constant for direct light
+                // clip distance used is based on the nearest shadow cascade
+                if (this._isVsm) {
+                    tmpBiases.bias = -0.00001 * 20;
+                } else {
+                    tmpBiases.bias = (this.shadowBias / farClip) * 100;
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
+                }
+                tmpBiases.normalBias = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
+                break;
+        }
+
+        return tmpBiases;
+    }
+
     get numCascades() {
         return this.cascades.length;
     }
@@ -286,16 +339,28 @@ class Light {
         }
     }
 
+    // returns number of render targets to render the shadow map
+    get numShadowFaces() {
+        const type = this._type;
+        if (type === LIGHTTYPE_DIRECTIONAL) {
+            return this.numCascades;
+        } else if (type === LIGHTTYPE_OMNI) {
+            return 6;
+        }
+
+        return 1;
+    }
+
     getColor() {
         return this._color;
     }
 
     getBoundingSphere(sphere) {
         if (this._type === LIGHTTYPE_SPOT) {
-            var range = this.attenuationEnd;
-            var angle = this._outerConeAngle;
-            var f = Math.cos(angle * math.DEG_TO_RAD);
-            var node = this._node;
+            const range = this.attenuationEnd;
+            const angle = this._outerConeAngle;
+            const f = Math.cos(angle * math.DEG_TO_RAD);
+            const node = this._node;
 
             spotCenter.copy(node.up);
             spotCenter.mulScalar(-range * 0.5 * f);
@@ -319,11 +384,11 @@ class Light {
 
     getBoundingBox(box) {
         if (this._type === LIGHTTYPE_SPOT) {
-            var range = this.attenuationEnd;
-            var angle = this._outerConeAngle;
-            var node = this._node;
+            const range = this.attenuationEnd;
+            const angle = this._outerConeAngle;
+            const node = this._node;
 
-            var scl = Math.abs(Math.sin(angle * math.DEG_TO_RAD) * range);
+            const scl = Math.abs(Math.sin(angle * math.DEG_TO_RAD) * range);
 
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);
@@ -337,15 +402,15 @@ class Light {
     }
 
     _updateFinalColor() {
-        var color = this._color;
-        var r = color.r;
-        var g = color.g;
-        var b = color.b;
+        const color = this._color;
+        const r = color.r;
+        const g = color.g;
+        const b = color.b;
 
-        var i = this._intensity;
+        const i = this._intensity;
 
-        var finalColor = this._finalColor;
-        var linearFinalColor = this._linearFinalColor;
+        const finalColor = this._finalColor;
+        const linearFinalColor = this._linearFinalColor;
 
         finalColor[0] = r * i;
         finalColor[1] = g * i;
@@ -362,18 +427,11 @@ class Light {
     }
 
     setColor() {
-        var r, g, b;
         if (arguments.length === 1) {
-            r = arguments[0].r;
-            g = arguments[0].g;
-            b = arguments[0].b;
+            this._color.set(arguments[0].r, arguments[0].g, arguments[0].b);
         } else if (arguments.length === 3) {
-            r = arguments[0];
-            g = arguments[1];
-            b = arguments[2];
+            this._color.set(arguments[0], arguments[1], arguments[2]);
         }
-
-        this._color.set(r, g, b);
 
         this._updateFinalColor();
     }
@@ -407,7 +465,7 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
-        var key =
+        let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
                (this._shadowType                          << 25) |
@@ -446,7 +504,7 @@ class Light {
         this._destroyShadowMap();
         this.updateKey();
 
-        var stype = this._shadowType;
+        const stype = this._shadowType;
         this._shadowType = null;
         this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
     }
@@ -463,7 +521,7 @@ class Light {
         this._destroyShadowMap();
         this.updateKey();
 
-        var stype = this._shadowType;
+        const stype = this._shadowType;
         this._shadowType = null;
         this.shadowType = stype; // refresh shadow type; switching shape and back may change it
     }
@@ -476,7 +534,7 @@ class Light {
         if (this._shadowType === value)
             return;
 
-        var device = this.device;
+        const device = this.device;
 
         if (this._type === LIGHTTYPE_OMNI)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
@@ -619,6 +677,13 @@ class Light {
         return this._cookieMatrix;
     }
 
+    get atlasViewport() {
+        if (!this._atlasViewport) {
+            this._atlasViewport = new Vec4(0, 0, 1, 1);
+        }
+        return this._atlasViewport;
+    }
+
     get cookie() {
         return this._cookie;
     }
@@ -652,9 +717,9 @@ class Light {
             return;
 
         if (value.length < 3) {
-            var chr = value.charAt(value.length - 1);
-            var addLen = 3 - value.length;
-            for (var i = 0; i < addLen; i++)
+            const chr = value.charAt(value.length - 1);
+            const addLen = 3 - value.length;
+            for (let i = 0; i < addLen; i++)
                 value += chr;
         }
         this._cookieChannel = value;
@@ -686,7 +751,7 @@ class Light {
         if (this._cookieOffset === value)
             return;
 
-        var xformNew = !!(this._cookieTransformSet || value);
+        const xformNew = !!(this._cookieTransformSet || value);
         if (xformNew && !value && this._cookieOffset) {
             this._cookieOffset.set(0, 0);
         } else {

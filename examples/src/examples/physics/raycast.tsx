@@ -13,7 +13,6 @@ class RaycastExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
@@ -116,7 +115,7 @@ class RaycastExample extends Example {
                 end.set(10, y, 0);
 
                 // Render the ray used in the raycast
-                app.renderLine(start, end, white);
+                app.drawLine(start, end, white);
 
                 // @ts-ignore engine-tsd
                 const result = app.systems.rigidbody.raycastFirst(start, end);
@@ -126,7 +125,7 @@ class RaycastExample extends Example {
                     // Render the normal on the surface from the hit point
                     // @ts-ignore engine-tsd
                     temp.copy(result.normal).scale(0.3).add(result.point);
-                    app.renderLine(result.point, temp, blue);
+                    app.drawLine(result.point, temp, blue);
                 }
 
                 y = -2 + 1.2 * Math.sin(time);
@@ -134,7 +133,7 @@ class RaycastExample extends Example {
                 end.set(10, y, 0);
 
                 // Render the ray used in the raycast
-                app.renderLine(start, end, white);
+                app.drawLine(start, end, white);
 
                 // @ts-ignore engine-tsd
                 const results = app.systems.rigidbody.raycastAll(start, end);
@@ -144,7 +143,7 @@ class RaycastExample extends Example {
                     // Render the normal on the surface from the hit point
                     // @ts-ignore engine-tsd
                     temp.copy(result.normal).scale(0.3).add(result.point);
-                    app.renderLine(result.point, temp, blue);
+                    app.drawLine(result.point, temp, blue);
                 }, this);
             });
 

@@ -44,7 +44,7 @@ class GpuTimer {
         if (this._frames.length > 0) {
             if (this._resolveFrameTimings(this._frames[0], this._prevTimings)) {
                 // swap
-                var tmp = this._prevTimings;
+                const tmp = this._prevTimings;
                 this._prevTimings = this._timings;
                 this._timings = tmp;
 
@@ -68,7 +68,7 @@ class GpuTimer {
         }
 
         // allocate new query and begin
-        var query = this._allocateQuery();
+        const query = this._allocateQuery();
         query[0] = name;
         this._gl.beginQuery(this._ext.TIME_ELAPSED_EXT, query[1]);
         this._frameQueries.push(query);
@@ -88,7 +88,7 @@ class GpuTimer {
     // check if the gpu has been interrupted thereby invalidating all
     // in-flight queries
     _checkDisjoint() {
-        var disjoint = this._gl.getParameter(this._ext.GPU_DISJOINT_EXT);
+        const disjoint = this._gl.getParameter(this._ext.GPU_DISJOINT_EXT);
         if (disjoint) {
             // return all queries to the free list
             this._freeQueries = [this._frames, [this._frameQueries], [this._freeQueries]].flat(2);
@@ -110,7 +110,7 @@ class GpuTimer {
             return false;
         }
 
-        for (var i = 0; i < frame.length; ++i) {
+        for (let i = 0; i < frame.length; ++i) {
             timings[i] = [frame[i][0], this._gl.getQueryParameter(frame[i][1], this._gl.QUERY_RESULT) * 0.000001];
         }
 
@@ -118,9 +118,7 @@ class GpuTimer {
     }
 
     get timings() {
-        return this._timings.map(function (v) {
-            return v[1];
-        });
+        return this._timings.map(v => v[1]);
     }
 }
 

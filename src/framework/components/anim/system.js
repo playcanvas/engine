@@ -28,15 +28,15 @@ class AnimComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
+        this.app.systems.on('animationUpdate', this.onAnimationUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
         properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
-        const complexProperties = ['animationAssets', 'stateGraph', 'layers'];
+        const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
-            // these properties will be initialised manually below
+            // these properties will be initialized manually below
             if (complexProperties.includes(key)) return;
             component[key] = data[key];
         });
@@ -55,27 +55,38 @@ class AnimComponentSystem extends ComponentSystem {
         } else if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
         }
+
+        if (data.masks) {
+            Object.keys(data.masks).forEach((key) => {
+                if (component.layers[key]) {
+                    const maskData = data.masks[key].mask;
+                    const mask = {};
+                    Object.keys(maskData).forEach((maskKey) => {
+                        mask[decodeURI(maskKey)] = maskData[maskKey];
+                    });
+                    component.layers[key].assignMask(mask);
+                }
+            });
+        }
     }
 
     onAnimationUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id].entity.anim;
-                var componentData = component.data;
+                const component = components[id].entity.anim;
+                const componentData = component.data;
 
                 if (componentData.enabled && component.entity.enabled && component.playing) {
-                    for (var i = 0; i < component.layers.length; i++) {
-                        component.layers[i].update(dt * component.speed);
-                    }
+                    component.update(dt);
                 }
             }
         }
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        const data = {
             stateGraphAsset: entity.anim.stateGraphAsset,
             animationAssets: entity.anim.animationAssets,
             speed: entity.anim.speed,
@@ -92,6 +103,12 @@ class AnimComponentSystem extends ComponentSystem {
 
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('animationUpdate', this.onAnimationUpdate, this);
     }
 }
 

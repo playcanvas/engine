@@ -3,9 +3,17 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import { AssetLoader } from '../../app/helpers/loader';
 import Example from '../../app/example';
 // @ts-ignore: library file import
-import { Panel, SliderInput, LabelGroup, BooleanInput } from '@playcanvas/pcui/pcui-react';
+import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
-import { BindingTwoWay, Observer } from '@playcanvas/pcui/pcui-binding';
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 class PostEffectsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -23,7 +31,6 @@ class PostEffectsExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     controls(data: Observer) {
         return <>
             <Panel headerText='BLOOM [KEY_1]'>
@@ -92,7 +99,6 @@ class PostEffectsExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: any, data: any): void {
         const app = new pc.Application(canvas, {
             keyboard: new pc.Keyboard(window)
@@ -289,7 +295,7 @@ class PostEffectsExample extends Example {
             // display the depth textur if bokeh is enabled
             if (camera.script.bokeh.enabled) {
                 // @ts-ignore engine-tsd
-                app.renderDepthTexture(0.7, -0.7, 0.5, 0.5);
+                app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
             }
         });
 
@@ -298,7 +304,7 @@ class PostEffectsExample extends Example {
             if (pathArray[0] === 'scripts') {
                 camera.script[pathArray[1]][pathArray[2]] = value;
             } else {
-                camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI
+                camera.camera.disablePostEffectsLayer = camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
             }
         });
     }

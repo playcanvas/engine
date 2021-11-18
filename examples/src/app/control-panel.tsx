@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 // @ts-ignore: library file import
 import { playcanvasTypeDefs } from './helpers/raw-file-loading';
 import MonacoEditor from "@monaco-editor/react";
 // @ts-ignore: library file import
-import { Panel, Container, Button } from '@playcanvas/pcui/pcui-react';
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import Container from '@playcanvas/pcui/Container/component';
+// @ts-ignore: library file import
+import Button from '@playcanvas/pcui/Button/component';
 
 const ControlPanel = (props: any) => {
     const [state, setState] = useState({
-        showParameters: !!props.controls,
-        showCode: !props.controls,
+        showParameters: false,
+        showCode: true,
         collapsed: window.top.innerWidth < 601
     });
     const beforeMount = (monaco: any) => {
@@ -30,7 +34,7 @@ const ControlPanel = (props: any) => {
         document.getElementById('codeButton').classList.toggle('selected');
         const controls = document.getElementById('controlPanel-controls');
         // @ts-ignore
-        controls.ui.hidden = !controls.ui.hidden;
+        controls.classList.remove('pcui-hidden');
     };
     const onClickCodeTab = () => {
         if (document.getElementById('codeButton').classList.contains('selected')) {
@@ -45,13 +49,24 @@ const ControlPanel = (props: any) => {
         document.getElementById('codeButton').classList.toggle('selected');
         const controls = document.getElementById('controlPanel-controls');
         // @ts-ignore
-        controls.ui.hidden = !controls.ui.hidden;
+        controls.classList.add('pcui-hidden');
     };
 
-    return <Panel id='controlPanel' class={[window.top.innerWidth > 600 && !props.controls ? 'empty' : 'null', window.top.innerWidth < 601 ? 'mobile' : null]} resizable='top' headerText={window.top.innerWidth < 601 ? (props.controls ? 'CONTROLS & CODE' : 'CODE') : 'CONTROLS'} collapsible={true} collapsed={state.collapsed}>
+    useEffect(() => {
+        if (window.top.innerWidth < 601) {
+            // @ts-ignore
+            document.getElementById('controlPanel-controls').ui.hidden = true;
+        }
+        if (window.top.location.hash.indexOf('#/iframe') === 0) {
+            // @ts-ignore
+            document.getElementById('controlPanel').ui.hidden = true;
+        }
+    });
+
+    return <Panel id='controlPanel' class={[window.top.innerWidth > 600 && !props.controls ? 'empty' : 'null', window.top.innerWidth < 601 ? 'mobile' : null]} resizable='top' headerText={window.top.innerWidth < 601 ? (props.controls ? 'CODE & CONTROLS' : 'CODE') : 'CONTROLS'} collapsible={true} collapsed={state.collapsed}>
         { window.top.innerWidth < 601 && props.controls && <Container id= 'controlPanel-tabs' class='tabs-container'>
-            <Button text='PARAMETERS' class={state.showParameters ? 'selected' : null} id='paramButton' onClick={onClickParametersTab} />
             <Button text='CODE' id='codeButton' class={state.showCode ? 'selected' : null} onClick={onClickCodeTab}/>
+            <Button text='PARAMETERS' class={state.showParameters ? 'selected' : null} id='paramButton' onClick={onClickParametersTab} />
         </Container>
         }
         <Container id='controlPanel-controls'>

@@ -44,7 +44,7 @@ class AnimationHandler {
 
         http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error loading animation resource: " + url.original + " [" + err + "]");
+                callback(`Error loading animation resource: ${url.original} [${err}]`);
             } else {
                 callback(null, response);
             }

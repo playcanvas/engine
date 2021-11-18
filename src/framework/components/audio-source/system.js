@@ -49,8 +49,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
 
         this.initialized = false;
 
-        ComponentSystem.bind('initialize', this.onInitialize, this);
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('initialize', this.onInitialize, this);
+        this.app.systems.on('update', this.onUpdate, this);
 
         this.on('remove', this.onRemove, this);
     }
@@ -71,9 +71,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
             root.audiosource.play(root.audiosource.currentSource);
         }
 
-        var children = root._children;
-        var i, len = children.length;
-        for (i = 0; i < len; i++) {
+        const children = root._children;
+        for (let i = 0, len = children.length; i < len; i++) {
             if (children[i] instanceof Entity) {
                 this.onInitialize(children[i]);
             }
@@ -83,17 +82,17 @@ class AudioSourceComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
-                var entity = component.entity;
-                var componentData = component.data;
+                const component = components[id];
+                const entity = component.entity;
+                const componentData = component.data;
 
                 // Update channel position if this is a 3d sound
                 if (componentData.enabled && entity.enabled && componentData.channel instanceof Channel3d) {
-                    var pos = entity.getPosition();
+                    const pos = entity.getPosition();
                     componentData.channel.setPosition(pos);
                 }
             }
@@ -117,6 +116,13 @@ class AudioSourceComponentSystem extends ComponentSystem {
      */
     setVolume(volume) {
         this.manager.setVolume(volume);
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('initialize', this.onInitialize, this);
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

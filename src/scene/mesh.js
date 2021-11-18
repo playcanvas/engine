@@ -8,7 +8,7 @@ import {
     INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES, PRIMITIVE_POINTS,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
-    TYPE_FLOAT32, TYPE_UINT8,
+    TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
     typedArrayIndexFormats
 } from '../graphics/constants.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
@@ -20,9 +20,9 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 
 import { getApplication } from '../framework/globals.js';
 
-var id = 0;
+let id = 0;
 
-// Helper class used to store vertex / index data streams and related properties, when mesh is programatically modified
+// Helper class used to store vertex / index data streams and related properties, when mesh is programmatically modified
 class GeometryData {
     constructor() {
         this.initDefaults();
@@ -60,7 +60,7 @@ class GeometryData {
 
         // #if _DEBUG
         if (this.vertexCount !== count) {
-            console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
+            console.error(`Vertex stream ${semantic} has ${count} vertices, which does not match already set streams with ${this.vertexCount} vertices.`);
         }
         // #endif
     }
@@ -156,10 +156,10 @@ class GeometryVertexStream {
  * Arrays instead to avoid Type Array allocation overhead.
  *
  * Follow these links for more complex examples showing the functionality.
- * * {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
- * * {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
- * * {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
- * * {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
+ * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
  * ### Update Vertex and Index buffers.
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
@@ -176,13 +176,13 @@ class GeometryVertexStream {
  * mesh should be interpreted by the graphics device. For details on the primitive object, see.
  * @property {number} primitive[].type The type of primitive to render. Can be:
  *
- * * {@link PRIMITIVE_POINTS}
- * * {@link PRIMITIVE_LINES}
- * * {@link PRIMITIVE_LINELOOP}
- * * {@link PRIMITIVE_LINESTRIP}
- * * {@link PRIMITIVE_TRIANGLES}
- * * {@link PRIMITIVE_TRISTRIP}
- * * {@link PRIMITIVE_TRIFAN}
+ * - {@link PRIMITIVE_POINTS}
+ * - {@link PRIMITIVE_LINES}
+ * - {@link PRIMITIVE_LINELOOP}
+ * - {@link PRIMITIVE_LINESTRIP}
+ * - {@link PRIMITIVE_TRIANGLES}
+ * - {@link PRIMITIVE_TRISTRIP}
+ * - {@link PRIMITIVE_TRIFAN}
  *
  * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
  * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
@@ -257,40 +257,33 @@ class Mesh extends RefCountedObject {
 
         this.boneAabb = [];
         this.boneUsed = [];
-        var numVerts = this.vertexBuffer.numVertices;
-        var i, j, k, l;
-        var x, y, z;
-        var bMax, bMin;
-        var boneMin = [];
-        var boneMax = [];
-        var boneUsed = this.boneUsed;
-        var numBones = this.skin.boneNames.length;
-        var aabb;
-        var boneWeight, boneIndex;
-        var minMorphX, minMorphY, minMorphZ;
-        var maxMorphX, maxMorphY, maxMorphZ;
-        var dx, dy, dz;
-        var target;
+        let x, y, z;
+        let bMax, bMin;
+        const boneMin = [];
+        const boneMax = [];
+        const boneUsed = this.boneUsed;
+        const numBones = this.skin.boneNames.length;
+        let maxMorphX, maxMorphY, maxMorphZ;
 
         // start with empty bone bounds
-        for (i = 0; i < numBones; i++) {
+        for (let i = 0; i < numBones; i++) {
             boneMin[i] = new Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             boneMax[i] = new Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         }
 
         // access to mesh from vertex buffer
-        var iterator = new VertexIterator(this.vertexBuffer);
-        var posElement = iterator.element[SEMANTIC_POSITION];
-        var weightsElement = iterator.element[SEMANTIC_BLENDWEIGHT];
-        var indicesElement = iterator.element[SEMANTIC_BLENDINDICES];
-
+        const iterator = new VertexIterator(this.vertexBuffer);
+        const posElement = iterator.element[SEMANTIC_POSITION];
+        const weightsElement = iterator.element[SEMANTIC_BLENDWEIGHT];
+        const indicesElement = iterator.element[SEMANTIC_BLENDINDICES];
 
         // Find bone AABBs of attached vertices
-        for (j = 0; j < numVerts; j++) {
-            for (k = 0; k < 4; k++) {
-                boneWeight = weightsElement.array[weightsElement.index + k];
+        const numVerts = this.vertexBuffer.numVertices;
+        for (let j = 0; j < numVerts; j++) {
+            for (let k = 0; k < 4; k++) {
+                const boneWeight = weightsElement.array[weightsElement.index + k];
                 if (boneWeight > 0) {
-                    boneIndex = indicesElement.array[indicesElement.index + k];
+                    const boneIndex = indicesElement.array[indicesElement.index + k];
                     boneUsed[boneIndex] = true;
 
                     x = posElement.array[posElement.index];
@@ -312,17 +305,17 @@ class Mesh extends RefCountedObject {
                     if (morphTargets) {
 
                         // find maximum displacement of the vertex by all targets
-                        minMorphX = maxMorphX = x;
-                        minMorphY = maxMorphY = y;
-                        minMorphZ = maxMorphZ = z;
+                        let minMorphX = maxMorphX = x;
+                        let minMorphY = maxMorphY = y;
+                        let minMorphZ = maxMorphZ = z;
 
                         // morph this vertex by all morph targets
-                        for (l = 0; l < morphTargets.length; l++) {
-                            target = morphTargets[l];
+                        for (let l = 0; l < morphTargets.length; l++) {
+                            const target = morphTargets[l];
 
-                            dx = target.deltaPositions[j * 3];
-                            dy = target.deltaPositions[j * 3 + 1];
-                            dz = target.deltaPositions[j * 3 + 2];
+                            const dx = target.deltaPositions[j * 3];
+                            const dy = target.deltaPositions[j * 3 + 1];
+                            const dz = target.deltaPositions[j * 3 + 2];
 
                             if (dx < 0) {
                                 minMorphX += dx;
@@ -356,9 +349,32 @@ class Mesh extends RefCountedObject {
             iterator.next();
         }
 
+        // account for normalized positional data
+        const positionElement = this.vertexBuffer.getFormat().elements.find(e => e.name === SEMANTIC_POSITION);
+        if (positionElement && positionElement.normalize) {
+            const func = (() => {
+                switch (positionElement.dataType) {
+                    case TYPE_INT8: return x => Math.max(x / 127.0, -1.0);
+                    case TYPE_UINT8: return x => x / 255.0;
+                    case TYPE_INT16: return x => Math.max(x / 32767.0, -1.0);
+                    case TYPE_UINT16: return x => x / 65535.0;
+                    default: return x => x;
+                }
+            })();
+
+            for (let i = 0; i < numBones; i++) {
+                if (boneUsed[i]) {
+                    const min = boneMin[i];
+                    const max = boneMax[i];
+                    min.set(func(min.x), func(min.y), func(min.z));
+                    max.set(func(max.x), func(max.y), func(max.z));
+                }
+            }
+        }
+
         // store bone bounding boxes
-        for (i = 0; i < numBones; i++) {
-            aabb = new BoundingBox();
+        for (let i = 0; i < numBones; i++) {
+            const aabb = new BoundingBox();
             aabb.setMinMax(boneMin[i], boneMax[i]);
             this.boneAabb.push(aabb);
         }
@@ -423,7 +439,7 @@ class Mesh extends RefCountedObject {
      */
     setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false) {
         this._initGeometryData();
-        var vertexCount = numVertices || data.length / componentCount;
+        const vertexCount = numVertices || data.length / componentCount;
         this._geometryData._changeVertexCount(vertexCount, semantic);
         this._geometryData.vertexStreamsUpdated = true;
 
@@ -445,12 +461,12 @@ class Mesh extends RefCountedObject {
      * @returns {number} Returns the number of vertices populated.
      */
     getVertexStream(semantic, data) {
-        var count = 0;
-        var done = false;
+        let count = 0;
+        let done = false;
 
         // see if we have un-applied stream
         if (this._geometryData) {
-            var stream = this._geometryData.vertexStreamDictionary[semantic];
+            const stream = this._geometryData.vertexStreamDictionary[semantic];
             if (stream) {
                 done = true;
                 count = this._geometryData.vertexCount;
@@ -470,7 +486,7 @@ class Mesh extends RefCountedObject {
             // get stream from VertexBuffer
             if (this.vertexBuffer) {
                 // note: there is no need to .end the iterator, as we are only reading data from it
-                var iterator = new VertexIterator(this.vertexBuffer);
+                const iterator = new VertexIterator(this.vertexBuffer);
                 count = iterator.readData(semantic, data);
             }
         }
@@ -544,7 +560,7 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#setIndices
      * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 vertices are specified, in which case 32-bit format is used.
-     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indicies that define primitives (lines, triangles, etc.).
+     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indices that define primitives (lines, triangles, etc.).
      * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
     setIndices(indices, numIndices) {
@@ -612,11 +628,11 @@ class Mesh extends RefCountedObject {
      * @returns {number} Returns the number of indices populated.
      */
     getIndices(indices) {
-        var count = 0;
+        let count = 0;
 
         // see if we have un-applied indices
         if (this._geometryData && this._geometryData.indices) {
-            var streamIndices = this._geometryData.indices;
+            const streamIndices = this._geometryData.indices;
             count = this._geometryData.indexCount;
 
             if (ArrayBuffer.isView(indices)) {
@@ -630,7 +646,7 @@ class Mesh extends RefCountedObject {
         } else {
             // get data from IndexBuffer
             if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
-                var indexBuffer = this.indexBuffer[0];
+                const indexBuffer = this.indexBuffer[0];
                 count = indexBuffer.readData(indices);
             }
         }
@@ -657,7 +673,7 @@ class Mesh extends RefCountedObject {
             if (updateBoundingBox) {
 
                 // find vec3 position stream
-                var stream = this._geometryData.vertexStreamDictionary[SEMANTIC_POSITION];
+                const stream = this._geometryData.vertexStreamDictionary[SEMANTIC_POSITION];
                 if (stream) {
                     if (stream.componentCount === 3) {
                         this._aabb.compute(stream.data, this._geometryData.vertexCount);
@@ -666,7 +682,7 @@ class Mesh extends RefCountedObject {
             }
 
             // destroy vertex buffer if recreate was requested or if vertices don't fit
-            var destroyVB = this._geometryData.recreate;
+            let destroyVB = this._geometryData.recreate;
             if (this._geometryData.vertexCount > this._geometryData.maxVertices) {
                 destroyVB = true;
                 this._geometryData.maxVertices = this._geometryData.vertexCount;
@@ -680,7 +696,7 @@ class Mesh extends RefCountedObject {
             }
 
             // destroy index buffer if recreate was requested or if indices don't fit
-            var destroyIB = this._geometryData.recreate;
+            let destroyIB = this._geometryData.recreate;
             if (this._geometryData.indexCount > this._geometryData.maxIndices) {
                 destroyIB = true;
                 this._geometryData.maxIndices = this._geometryData.indexCount;
@@ -734,10 +750,10 @@ class Mesh extends RefCountedObject {
     // builds vertex format based on attached vertex streams
     _buildVertexFormat(vertexCount) {
 
-        var vertexDesc = [];
+        const vertexDesc = [];
 
-        for (var semantic in this._geometryData.vertexStreamDictionary) {
-            var stream = this._geometryData.vertexStreamDictionary[semantic];
+        for (const semantic in this._geometryData.vertexStreamDictionary) {
+            const stream = this._geometryData.vertexStreamDictionary[semantic];
             vertexDesc.push({
                 semantic: semantic,
                 components: stream.componentCount,
@@ -754,18 +770,18 @@ class Mesh extends RefCountedObject {
 
         // if we don't have vertex buffer, create new one, otherwise update existing one
         if (!this.vertexBuffer) {
-            var allocateVertexCount = this._geometryData.maxVertices;
-            var format = this._buildVertexFormat(allocateVertexCount);
+            const allocateVertexCount = this._geometryData.maxVertices;
+            const format = this._buildVertexFormat(allocateVertexCount);
             this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage);
         }
 
         // lock vertex buffer and create typed access arrays for individual elements
-        var iterator = new VertexIterator(this.vertexBuffer);
+        const iterator = new VertexIterator(this.vertexBuffer);
 
         // copy all stream data into vertex buffer
-        var numVertices = this._geometryData.vertexCount;
-        for (var semantic in this._geometryData.vertexStreamDictionary) {
-            var stream = this._geometryData.vertexStreamDictionary[semantic];
+        const numVertices = this._geometryData.vertexCount;
+        for (const semantic in this._geometryData.vertexStreamDictionary) {
+            const stream = this._geometryData.vertexStreamDictionary[semantic];
             iterator.writeData(semantic, stream.data, numVertices);
 
             // remove stream
@@ -780,14 +796,14 @@ class Mesh extends RefCountedObject {
 
         // if we don't have index buffer, create new one, otherwise update existing one
         if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
-            var createFormat = this._geometryData.maxVertices > 0xffff ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+            const createFormat = this._geometryData.maxVertices > 0xffff ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
             this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
         }
 
-        var srcIndices = this._geometryData.indices;
+        const srcIndices = this._geometryData.indices;
         if (srcIndices) {
 
-            var indexBuffer = this.indexBuffer[0];
+            const indexBuffer = this.indexBuffer[0];
             indexBuffer.writeData(srcIndices, this._geometryData.indexCount);
 
             // remove data
@@ -826,23 +842,23 @@ class Mesh extends RefCountedObject {
         // release existing IB
         this._destroyIndexBuffer(RENDERSTYLE_WIREFRAME);
 
-        var lines = [];
-        var format;
+        const lines = [];
+        let format;
         if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
-            var offsets = [[0, 1], [1, 2], [2, 0]];
+            const offsets = [[0, 1], [1, 2], [2, 0]];
 
-            var base = this.primitive[RENDERSTYLE_SOLID].base;
-            var count = this.primitive[RENDERSTYLE_SOLID].count;
-            var indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
-            var srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
+            const base = this.primitive[RENDERSTYLE_SOLID].base;
+            const count = this.primitive[RENDERSTYLE_SOLID].count;
+            const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
+            const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
 
-            var uniqueLineIndices = {};
+            const uniqueLineIndices = {};
 
-            for (var j = base; j < base + count; j += 3) {
-                for (var k = 0; k < 3; k++) {
-                    var i1 = srcIndices[j + offsets[k][0]];
-                    var i2 = srcIndices[j + offsets[k][1]];
-                    var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
+            for (let j = base; j < base + count; j += 3) {
+                for (let k = 0; k < 3; k++) {
+                    const i1 = srcIndices[j + offsets[k][0]];
+                    const i2 = srcIndices[j + offsets[k][1]];
+                    const line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
                     if (uniqueLineIndices[line] === undefined) {
                         uniqueLineIndices[line] = 0;
                         lines.push(i1, i2);
@@ -851,14 +867,14 @@ class Mesh extends RefCountedObject {
             }
             format = indexBuffer.format;
         } else {
-            for (var i = 0; i < this.vertexBuffer.numVertices; i += 3) {
+            for (let i = 0; i < this.vertexBuffer.numVertices; i += 3) {
                 lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
             }
             format = lines.length > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
         }
 
-        var wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length);
-        var dstIndices = new typedArrayIndexFormats[wireBuffer.format](wireBuffer.storage);
+        const wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length);
+        const dstIndices = new typedArrayIndexFormats[wireBuffer.format](wireBuffer.storage);
         dstIndices.set(lines);
         wireBuffer.unlock();
 

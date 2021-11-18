@@ -14,7 +14,6 @@ class AreaPickerExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { bloom : pc.Asset, 'helipad.dds': pc.Asset}): void {
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});
@@ -104,9 +103,7 @@ class AreaPickerExample extends Example {
             // and connect them using white lines
             const points = [pt0, pt1,  pt1, pt2,  pt2, pt3,  pt3, pt0];
             const colors = [pink, pink, pink, pink, pink, pink, pink, pink];
-                // const colors = [pc.Color.WHITE, pc.Color.WHITE,  pc.Color.WHITE, pc.Color.WHITE,
-                // pc.Color.WHITE, pc.Color.WHITE,  pc.Color.WHITE, pc.Color.WHITE];
-            app.renderLines(points, colors);
+            app.drawLines(points, colors);
         }
 
         // sets material emissive color to specified color

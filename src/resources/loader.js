@@ -20,20 +20,20 @@ class ResourceLoader {
      * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
      * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
      *
-     * * {@link ASSET_ANIMATION}
-     * * {@link ASSET_AUDIO}
-     * * {@link ASSET_IMAGE}
-     * * {@link ASSET_JSON}
-     * * {@link ASSET_MODEL}
-     * * {@link ASSET_MATERIAL}
-     * * {@link ASSET_TEXT}
-     * * {@link ASSET_TEXTURE}
-     * * {@link ASSET_CUBEMAP}
-     * * {@link ASSET_SHADER}
-     * * {@link ASSET_CSS}
-     * * {@link ASSET_HTML}
-     * * {@link ASSET_SCRIPT}
-     * * {@link ASSET_CONTAINER}
+     * - {@link ASSET_ANIMATION}
+     * - {@link ASSET_AUDIO}
+     * - {@link ASSET_IMAGE}
+     * - {@link ASSET_JSON}
+     * - {@link ASSET_MODEL}
+     * - {@link ASSET_MATERIAL}
+     * - {@link ASSET_TEXT}
+     * - {@link ASSET_TEXTURE}
+     * - {@link ASSET_CUBEMAP}
+     * - {@link ASSET_SHADER}
+     * - {@link ASSET_CSS}
+     * - {@link ASSET_HTML}
+     * - {@link ASSET_SCRIPT}
+     * - {@link ASSET_CONTAINER}
      *
      * @param {ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
      * @example
@@ -139,7 +139,7 @@ class ResourceLoader {
             const normalizedUrl = url.split('?')[0];
             if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
                 if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
-                    handleLoad('Bundle for ' + url + ' not loaded yet');
+                    handleLoad(`Bundle for ${url} not loaded yet`);
                     return;
                 }
 

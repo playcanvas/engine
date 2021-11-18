@@ -15,7 +15,7 @@ import { Component } from '../component.js';
  * @property {number} maxHeight The maximum height the element should be rendered at.
  * @property {number} fitWidthProportion The amount of additional horizontal space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
  * @property {number} fitHeightProportion The amount of additional vertical space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
- * @property {number} excludeFromLayout If set to true, the child will be excluded from all layout calculations.
+ * @property {boolean} excludeFromLayout If set to true, the child will be excluded from all layout calculations.
  */
 class LayoutChildComponent extends Component {
     constructor(system, entity) {
@@ -32,7 +32,7 @@ class LayoutChildComponent extends Component {
 }
 
 function defineResizeProperty(name) {
-    var _name = '_' + name;
+    const _name = '_' + name;
 
     Object.defineProperty(LayoutChildComponent.prototype, name, {
         get: function () {

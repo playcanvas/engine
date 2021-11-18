@@ -1,7 +1,7 @@
 import React, { useEffect, useState, createRef } from 'react';
 import ReactDOM from 'react-dom';
 // @ts-ignore: library file import
-import { Container } from '@playcanvas/pcui/pcui-react';
+import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route } from "react-router-dom";
 import SideBar from './sidebar';
@@ -60,12 +60,14 @@ const MainLayout = () => {
     // The example files are the files that should be loaded and executed by the example. Upon hitting the play button, the currently set edited files are set to the example files
     const [exampleFiles, setExampleFiles] = useState(emptyFiles);
     const [lintErrors, setLintErrors] = useState(false);
+    const [useTypescript, setUseTypescript] = useState(localStorage.getItem('useTypescript') === 'true');
 
     const updateShowMiniStats = (value: boolean) => {
         (window as any)._showMiniStats = value;
     };
 
     const playButtonRef = createRef();
+    const languageButtonRef = createRef();
     useEffect(() => {
         if (playButtonRef.current) {
             // @ts-ignore
@@ -75,18 +77,24 @@ const MainLayout = () => {
                 setExampleFiles(editedFiles);
             });
         }
+        if (languageButtonRef.current) {
+            // @ts-ignore
+            languageButtonRef.current.element.unbind();
+            // @ts-ignore
+            languageButtonRef.current.element.on('click', () => {
+                localStorage.setItem('useTypescript', !useTypescript ? 'true' : 'false');
+                setUseTypescript(!useTypescript);
+            });
+        }
     });
 
-    const updateExample = (newExampleDefaultFiles: Array<File>) => {
+    const updateExample = (newExampleDefaultFiles: any) => {
         setDefaultFiles(newExampleDefaultFiles);
         setEditedFiles(emptyFiles);
         setExampleFiles(emptyFiles);
     };
 
     const hasEditedFiles = () => {
-        if (exampleFiles[0].text.length === 0) {
-            return filesHaveChanged(defaultFiles, editedFiles);
-        }
         return filesHaveChanged(editedFiles, exampleFiles);
     };
 
@@ -101,10 +109,10 @@ const MainLayout = () => {
                             const controls = e.controls;
                             return [
                                 <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`]}>
-                                    <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} engine={e.constructor.ENGINE} files={p.files} />
+                                    <ExampleIframe useTypescript={useTypescript} controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} engine={e.constructor.ENGINE} files={p.files} />
                                 </Route>,
                                 <Route key={`/debug${p.path}`} path={[`/debug${p.path}`]}>
-                                    <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null}  engine={e.constructor.ENGINE} files={p.files} debugExample={e}/>
+                                    <ExampleIframe useTypescript={useTypescript} controls={controls} assets={assetsLoader ? assetsLoader().props.children : null}  engine={e.constructor.ENGINE} files={p.files} debugExample={e}/>
                                 </Route>
                             ];
                         })
@@ -112,10 +120,19 @@ const MainLayout = () => {
                     <Route key='main' path='/'>
                         <SideBar categories={examples.categories}/>
                         <Container id='main-view-wrapper'>
-                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} setShowMiniStats={updateShowMiniStats} />
+                            <Menu useTypescript={useTypescript} setShowMiniStats={updateShowMiniStats} />
                             <Container id='main-view'>
+                                <CodeEditor
+                                    lintErrors={lintErrors}
+                                    setLintErrors={setLintErrors}
+                                    hasEditedFiles={hasEditedFiles()}
+                                    playButtonRef={playButtonRef}
+                                    languageButtonRef={languageButtonRef}
+                                    useTypescript={useTypescript}
+                                    files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles}
+                                    setFiles={setEditedFiles.bind(this)}
+                                />
                                 <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} />
-                                <CodeEditor files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles} setFiles={setEditedFiles.bind(this)} setLintErrors={setLintErrors} />
                             </Container>
                         </Container>
                     </Route>

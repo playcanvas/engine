@@ -1,5 +1,5 @@
-import { Vec3 } from "../math/vec3";
-import { PROJECTION_PERSPECTIVE } from "../scene/constants";
+import { Vec3 } from '../math/vec3.js';
+import { PROJECTION_PERSPECTIVE } from '../scene/constants.js';
 
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 

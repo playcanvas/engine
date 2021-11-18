@@ -134,7 +134,7 @@ describe("pc.Mat4", function () {
 
     it("setLookAt: 180deg", function () {
         var m = new pc.Mat4();
-        m.setFromAxisAngle(pc.Vec3.UP, 90);
+        m.setFromAxisAngle(pc.Vec3.UP, 180);
         var r = new pc.Mat4();
         var heading = new pc.Vec3(-m.data[8], -m.data[9], -m.data[10]);
         var left = new pc.Vec3(m.data[0], m.data[1], m.data[2]);

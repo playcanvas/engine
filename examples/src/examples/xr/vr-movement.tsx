@@ -5,7 +5,6 @@ class VRMovementExample extends Example {
     static CATEGORY = 'XR';
     static NAME = 'VR Movement';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
@@ -230,7 +229,7 @@ class VRMovementExample extends Example {
                     tmpVec3B.copy(inputSource.getDirection());
                     // @ts-ignore engine-tsd
                     tmpVec3B.scale(100).add(tmpVec3A);
-                    app.renderLine(tmpVec3A, tmpVec3B, lineColor);
+                    app.drawLine(tmpVec3A, tmpVec3B, lineColor);
 
                     // render controller
                     if (inputSource.grip) {

@@ -13,7 +13,6 @@ class FlyExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop

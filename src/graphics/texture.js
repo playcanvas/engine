@@ -16,8 +16,8 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
-var _pixelSizeTable = null;
-var _blockSizeTable = null;
+let _pixelSizeTable = null;
+let _blockSizeTable = null;
 
 /**
  * @class
@@ -32,36 +32,36 @@ var _blockSizeTable = null;
  * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
  * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
  * @param {number} [options.format] - The pixel format of the texture. Can be:
- * * {@link PIXELFORMAT_A8}
- * * {@link PIXELFORMAT_L8}
- * * {@link PIXELFORMAT_L8_A8}
- * * {@link PIXELFORMAT_R5_G6_B5}
- * * {@link PIXELFORMAT_R5_G5_B5_A1}
- * * {@link PIXELFORMAT_R4_G4_B4_A4}
- * * {@link PIXELFORMAT_R8_G8_B8}
- * * {@link PIXELFORMAT_R8_G8_B8_A8}
- * * {@link PIXELFORMAT_DXT1}
- * * {@link PIXELFORMAT_DXT3}
- * * {@link PIXELFORMAT_DXT5}
- * * {@link PIXELFORMAT_RGB16F}
- * * {@link PIXELFORMAT_RGBA16F}
- * * {@link PIXELFORMAT_RGB32F}
- * * {@link PIXELFORMAT_RGBA32F}
- * * {@link PIXELFORMAT_ETC1}
- * * {@link PIXELFORMAT_PVRTC_2BPP_RGB_1}
- * * {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
- * * {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
- * * {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
- * * {@link PIXELFORMAT_111110F}
- * * {@link PIXELFORMAT_ASTC_4x4}>/li>
- * * {@link PIXELFORMAT_ATC_RGB}
- * * {@link PIXELFORMAT_ATC_RGBA}
+ * - {@link PIXELFORMAT_A8}
+ * - {@link PIXELFORMAT_L8}
+ * - {@link PIXELFORMAT_L8_A8}
+ * - {@link PIXELFORMAT_R5_G6_B5}
+ * - {@link PIXELFORMAT_R5_G5_B5_A1}
+ * - {@link PIXELFORMAT_R4_G4_B4_A4}
+ * - {@link PIXELFORMAT_R8_G8_B8}
+ * - {@link PIXELFORMAT_R8_G8_B8_A8}
+ * - {@link PIXELFORMAT_DXT1}
+ * - {@link PIXELFORMAT_DXT3}
+ * - {@link PIXELFORMAT_DXT5}
+ * - {@link PIXELFORMAT_RGB16F}
+ * - {@link PIXELFORMAT_RGBA16F}
+ * - {@link PIXELFORMAT_RGB32F}
+ * - {@link PIXELFORMAT_RGBA32F}
+ * - {@link PIXELFORMAT_ETC1}
+ * - {@link PIXELFORMAT_PVRTC_2BPP_RGB_1}
+ * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+ * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
+ * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+ * - {@link PIXELFORMAT_111110F}
+ * - {@link PIXELFORMAT_ASTC_4x4}>/li>
+ * - {@link PIXELFORMAT_ATC_RGB}
+ * - {@link PIXELFORMAT_ATC_RGBA}
  * Defaults to {@link PIXELFORMAT_R8_G8_B8_A8}.
  * @param {string} [options.projection] - The projection type of the texture, used when the texture represents an environment. Can be:
- * * {@link TEXTUREPROJECTION_NONE}
- * * {@link TEXTUREPROJECTION_CUBE}
- * * {@link TEXTUREPROJECTION_EQUIRECT}
- * * {@link TEXTUREPROJECTION_OCTAHEDRAL}
+ * - {@link TEXTUREPROJECTION_NONE}
+ * - {@link TEXTUREPROJECTION_CUBE}
+ * - {@link TEXTUREPROJECTION_EQUIRECT}
+ * - {@link TEXTUREPROJECTION_OCTAHEDRAL}
  * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is specified, otherwise {@link TEXTUREPROJECTION_NONE}.
  * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}.
  * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}.
@@ -85,12 +85,12 @@ var _blockSizeTable = null;
  * Defaults to false.
  * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to {@link FUNC_LESS}.
  * Possible values:
- * * {@link FUNC_LESS}
- * * {@link FUNC_LESSEQUAL}
- * * {@link FUNC_GREATER}
- * * {@link FUNC_GREATEREQUAL}
- * * {@link FUNC_EQUAL}
- * * {@link FUNC_NOTEQUAL}
+ * - {@link FUNC_LESS}
+ * - {@link FUNC_LESSEQUAL}
+ * - {@link FUNC_GREATER}
+ * - {@link FUNC_GREATEREQUAL}
+ * - {@link FUNC_EQUAL}
+ * - {@link FUNC_NOTEQUAL}
  * @example
  * // Create a 8x8x24-bit texture
  * var texture = new pc.Texture(graphicsDevice, {
@@ -233,12 +233,12 @@ class Texture {
      * @name Texture#minFilter
      * @type {number}
      * @description The minification filter to be applied to the texture. Can be:
-     * * {@link FILTER_NEAREST}
-     * * {@link FILTER_LINEAR}
-     * * {@link FILTER_NEAREST_MIPMAP_NEAREST}
-     * * {@link FILTER_NEAREST_MIPMAP_LINEAR}
-     * * {@link FILTER_LINEAR_MIPMAP_NEAREST}
-     * * {@link FILTER_LINEAR_MIPMAP_LINEAR}
+     * - {@link FILTER_NEAREST}
+     * - {@link FILTER_LINEAR}
+     * - {@link FILTER_NEAREST_MIPMAP_NEAREST}
+     * - {@link FILTER_NEAREST_MIPMAP_LINEAR}
+     * - {@link FILTER_LINEAR_MIPMAP_NEAREST}
+     * - {@link FILTER_LINEAR_MIPMAP_LINEAR}
      */
     get minFilter() {
         return this._minFilter;
@@ -255,8 +255,8 @@ class Texture {
      * @name Texture#magFilter
      * @type {number}
      * @description The magnification filter to be applied to the texture. Can be:
-     * * {@link FILTER_NEAREST}
-     * * {@link FILTER_LINEAR}
+     * - {@link FILTER_NEAREST}
+     * - {@link FILTER_LINEAR}
      */
     get magFilter() {
         return this._magFilter;
@@ -273,9 +273,9 @@ class Texture {
      * @name Texture#addressU
      * @type {number}
      * @description The addressing mode to be applied to the texture horizontally. Can be:
-     * * {@link ADDRESS_REPEAT}
-     * * {@link ADDRESS_CLAMP_TO_EDGE}
-     * * {@link ADDRESS_MIRRORED_REPEAT}
+     * - {@link ADDRESS_REPEAT}
+     * - {@link ADDRESS_CLAMP_TO_EDGE}
+     * - {@link ADDRESS_MIRRORED_REPEAT}
      */
     get addressU() {
         return this._addressU;
@@ -292,9 +292,9 @@ class Texture {
      * @name Texture#addressV
      * @type {number}
      * @description The addressing mode to be applied to the texture vertically. Can be:
-     * * {@link ADDRESS_REPEAT}
-     * * {@link ADDRESS_CLAMP_TO_EDGE}
-     * * {@link ADDRESS_MIRRORED_REPEAT}
+     * - {@link ADDRESS_REPEAT}
+     * - {@link ADDRESS_CLAMP_TO_EDGE}
+     * - {@link ADDRESS_MIRRORED_REPEAT}
      */
     get addressV() {
         return this._addressV;
@@ -311,9 +311,9 @@ class Texture {
      * @name Texture#addressW
      * @type {number}
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
-     * * {@link ADDRESS_REPEAT}
-     * * {@link ADDRESS_CLAMP_TO_EDGE}
-     * * {@link ADDRESS_MIRRORED_REPEAT}
+     * - {@link ADDRESS_REPEAT}
+     * - {@link ADDRESS_CLAMP_TO_EDGE}
+     * - {@link ADDRESS_MIRRORED_REPEAT}
      */
     get addressW() {
         return this._addressW;
@@ -355,12 +355,12 @@ class Texture {
      * @type {number}
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
      * Possible values:
-     * * {@link FUNC_LESS}
-     * * {@link FUNC_LESSEQUAL}
-     * * {@link FUNC_GREATER}
-     * * {@link FUNC_GREATEREQUAL}
-     * * {@link FUNC_EQUAL}
-     * * {@link FUNC_NOTEQUAL}
+     * - {@link FUNC_LESS}
+     * - {@link FUNC_LESSEQUAL}
+     * - {@link FUNC_GREATER}
+     * - {@link FUNC_GREATEREQUAL}
+     * - {@link FUNC_EQUAL}
+     * - {@link FUNC_NOTEQUAL}
      */
     get compareFunc() {
         return this._compareFunc;
@@ -458,30 +458,30 @@ class Texture {
      * @name Texture#format
      * @type {number}
      * @description The pixel format of the texture. Can be:
-     * * {@link PIXELFORMAT_A8}
-     * * {@link PIXELFORMAT_L8}
-     * * {@link PIXELFORMAT_L8_A8}
-     * * {@link PIXELFORMAT_R5_G6_B5}
-     * * {@link PIXELFORMAT_R5_G5_B5_A1}
-     * * {@link PIXELFORMAT_R4_G4_B4_A4}
-     * * {@link PIXELFORMAT_R8_G8_B8}
-     * * {@link PIXELFORMAT_R8_G8_B8_A8}
-     * * {@link PIXELFORMAT_DXT1}
-     * * {@link PIXELFORMAT_DXT3}
-     * * {@link PIXELFORMAT_DXT5}
-     * * {@link PIXELFORMAT_RGB16F}
-     * * {@link PIXELFORMAT_RGBA16F}
-     * * {@link PIXELFORMAT_RGB32F}
-     * * {@link PIXELFORMAT_RGBA32F}
-     * * {@link PIXELFORMAT_ETC1}
-     * * {@link PIXELFORMAT_PVRTC_2BPP_RGB_1}
-     * * {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
-     * * {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
-     * * {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * * {@link PIXELFORMAT_111110F}
-     * * {@link PIXELFORMAT_ASTC_4x4}>/li>
-     * * {@link PIXELFORMAT_ATC_RGB}
-     * * {@link PIXELFORMAT_ATC_RGBA}
+     * - {@link PIXELFORMAT_A8}
+     * - {@link PIXELFORMAT_L8}
+     * - {@link PIXELFORMAT_L8_A8}
+     * - {@link PIXELFORMAT_R5_G6_B5}
+     * - {@link PIXELFORMAT_R5_G5_B5_A1}
+     * - {@link PIXELFORMAT_R4_G4_B4_A4}
+     * - {@link PIXELFORMAT_R8_G8_B8}
+     * - {@link PIXELFORMAT_R8_G8_B8_A8}
+     * - {@link PIXELFORMAT_DXT1}
+     * - {@link PIXELFORMAT_DXT3}
+     * - {@link PIXELFORMAT_DXT5}
+     * - {@link PIXELFORMAT_RGB16F}
+     * - {@link PIXELFORMAT_RGBA16F}
+     * - {@link PIXELFORMAT_RGB32F}
+     * - {@link PIXELFORMAT_RGBA32F}
+     * - {@link PIXELFORMAT_ETC1}
+     * - {@link PIXELFORMAT_PVRTC_2BPP_RGB_1}
+     * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+     * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
+     * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_ASTC_4x4}>/li>
+     * - {@link PIXELFORMAT_ATC_RGB}
+     * - {@link PIXELFORMAT_ATC_RGBA}
      */
     get format() {
         return this._format;
@@ -498,7 +498,7 @@ class Texture {
     }
 
     get gpuSize() {
-        var mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
+        const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
         return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
     }
 
@@ -605,9 +605,9 @@ class Texture {
             _blockSizeTable[PIXELFORMAT_ATC_RGBA] = 16;
         }
 
-        var pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
-        var blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
-        var result = 0;
+        const pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
+        const blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
+        let result = 0;
 
         while (1) {
             if (pixelSize > 0) {
@@ -615,9 +615,9 @@ class Texture {
                 result += width * height * depth * pixelSize;
             } else {
                 // handle block formats
-                var blockWidth = Math.floor((width + 3) / 4);
-                var blockHeight = Math.floor((height + 3) / 4);
-                var blockDepth = Math.floor((depth + 3) / 4);
+                let blockWidth = Math.floor((width + 3) / 4);
+                const blockHeight = Math.floor((height + 3) / 4);
+                const blockDepth = Math.floor((depth + 3) / 4);
 
                 if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
                     format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
@@ -671,8 +671,8 @@ class Texture {
      * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
      * @param {number} [options.mode] - The lock mode. Can be:
-     * * {@link TEXTURELOCK_READ}
-     * * {@link TEXTURELOCK_WRITE}
+     * - {@link TEXTURELOCK_READ}
+     * - {@link TEXTURELOCK_WRITE}
      * Defaults to {@link TEXTURELOCK_WRITE}.
      * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
      */
@@ -746,9 +746,8 @@ class Texture {
      * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
      */
     setSource(source, mipLevel = 0) {
-        var i;
-        var invalid = false;
-        var width, height;
+        let invalid = false;
+        let width, height;
 
         if (this._cubemap) {
             if (source[0]) {
@@ -756,8 +755,8 @@ class Texture {
                 width = source[0].width || 0;
                 height = source[0].height || 0;
 
-                for (i = 0; i < 6; i++) {
-                    var face = source[i];
+                for (let i = 0; i < 6; i++) {
+                    const face = source[i];
                     // cubemap becomes invalid if any condition is not satisfied
                     if (!face ||                  // face is missing
                         face.width !== width ||   // face is different width
@@ -774,7 +773,7 @@ class Texture {
 
             if (!invalid) {
                 // mark levels as updated
-                for (i = 0; i < 6; i++) {
+                for (let i = 0; i < 6; i++) {
                     if (this._levels[mipLevel][i] !== source[i])
                         this._levelsUpdated[mipLevel][i] = true;
                 }
@@ -803,7 +802,7 @@ class Texture {
 
             // remove levels
             if (this._cubemap) {
-                for (i = 0; i < 6; i++) {
+                for (let i = 0; i < 6; i++) {
                     this._levels[mipLevel][i] = null;
                     this._levelsUpdated[mipLevel][i] = true;
                 }
@@ -879,65 +878,62 @@ class Texture {
             console.error("This format is not implemented yet");
         // #endif
 
-        var fsize = 128;
-        var i = 0;
-        var j;
-        var face;
-        while (this._levels[i]) {
-            var mipSize;
+        let fsize = 128;
+        let idx = 0;
+        while (this._levels[idx]) {
             if (!this.cubemap) {
-                mipSize = this._levels[i].length;
+                const mipSize = this._levels[idx].length;
                 if (!mipSize) {
                     // #if _DEBUG
-                    console.error("No byte array for mip " + i);
+                    console.error(`No byte array for mip ${idx}`);
                     // #endif
                     return;
                 }
                 fsize += mipSize;
             } else {
-                for (face = 0; face < 6; face++) {
-                    if (!this._levels[i][face]) {
+                for (let face = 0; face < 6; face++) {
+                    if (!this._levels[idx][face]) {
                         // #if _DEBUG
-                        console.error('No level data for mip ' + i + ', face ' + face);
+                        console.error(`No level data for mip ${idx}, face ${face}`);
                         // #endif
                         return;
                     }
-                    mipSize = this._levels[i][face].length;
+                    const mipSize = this._levels[idx][face].length;
                     if (!mipSize) {
                         // #if _DEBUG
-                        console.error("No byte array for mip " + i + ", face " + face);
+                        console.error(`No byte array for mip ${idx}, face ${face}`);
                         // #endif
                         return;
                     }
                     fsize += mipSize;
                 }
             }
-            fsize += this._levels[i].length;
-            i++;
+            fsize += this._levels[idx].length;
+            idx++;
         }
 
-        var buff = new ArrayBuffer(fsize);
-        var header = new Uint32Array(buff, 0, 128 / 4);
+        const buff = new ArrayBuffer(fsize);
+        const header = new Uint32Array(buff, 0, 128 / 4);
 
-        var DDS_MAGIC = 542327876; // "DDS"
-        var DDS_HEADER_SIZE = 124;
-        var DDS_FLAGS_REQUIRED = 0x01 | 0x02 | 0x04 | 0x1000 | 0x80000; // caps | height | width | pixelformat | linearsize
-        var DDS_FLAGS_MIPMAP = 0x20000;
-        var DDS_PIXELFORMAT_SIZE = 32;
-        var DDS_PIXELFLAGS_RGBA8 = 0x01 | 0x40; // alpha | rgb
-        var DDS_CAPS_REQUIRED = 0x1000;
-        var DDS_CAPS_MIPMAP = 0x400000;
-        var DDS_CAPS_COMPLEX = 0x8;
-        var DDS_CAPS2_CUBEMAP = 0x200 | 0x400 | 0x800 | 0x1000 | 0x2000 | 0x4000 | 0x8000; // cubemap | all faces
+        const DDS_MAGIC = 542327876; // "DDS"
+        const DDS_HEADER_SIZE = 124;
+        const DDS_FLAGS_REQUIRED = 0x01 | 0x02 | 0x04 | 0x1000 | 0x80000; // caps | height | width | pixelformat | linearsize
+        const DDS_FLAGS_MIPMAP = 0x20000;
+        const DDS_PIXELFORMAT_SIZE = 32;
+        const DDS_PIXELFLAGS_RGBA8 = 0x01 | 0x40; // alpha | rgb
+        const DDS_CAPS_REQUIRED = 0x1000;
+        const DDS_CAPS_MIPMAP = 0x400000;
+        const DDS_CAPS_COMPLEX = 0x8;
+        const DDS_CAPS2_CUBEMAP = 0x200 | 0x400 | 0x800 | 0x1000 | 0x2000 | 0x4000 | 0x8000; // cubemap | all faces
 
-        var flags = DDS_FLAGS_REQUIRED;
+        let flags = DDS_FLAGS_REQUIRED;
         if (this._levels.length > 1) flags |= DDS_FLAGS_MIPMAP;
 
-        var caps = DDS_CAPS_REQUIRED;
+        let caps = DDS_CAPS_REQUIRED;
         if (this._levels.length > 1) caps |= DDS_CAPS_MIPMAP;
         if (this._levels.length > 1 || this.cubemap) caps |= DDS_CAPS_COMPLEX;
 
-        var caps2 = this.cubemap ? DDS_CAPS2_CUBEMAP : 0;
+        const caps2 = this.cubemap ? DDS_CAPS2_CUBEMAP : 0;
 
         header[0] = DDS_MAGIC;
         header[1] = DDS_HEADER_SIZE;
@@ -947,7 +943,9 @@ class Texture {
         header[5] = this.width * this.height * 4;
         header[6] = 0; // depth
         header[7] = this._levels.length;
-        for (i = 0; i < 11; i++) header[8 + i] = 0;
+        for (let i = 0; i < 11; i++) {
+            header[8 + i] = 0;
+        }
         header[19] = DDS_PIXELFORMAT_SIZE;
         header[20] = DDS_PIXELFLAGS_RGBA8;
         header[21] = 0; // fourcc
@@ -962,21 +960,24 @@ class Texture {
         header[30] = 0;
         header[31] = 0;
 
-        var offset = 128;
-        var level, mip;
+        let offset = 128;
         if (!this.cubemap) {
-            for (i = 0; i < this._levels.length; i++) {
-                level = this._levels[i];
-                mip = new Uint8Array(buff, offset, level.length);
-                for (j = 0; j < level.length; j++) mip[j] = level[j];
+            for (let i = 0; i < this._levels.length; i++) {
+                const level = this._levels[i];
+                const mip = new Uint8Array(buff, offset, level.length);
+                for (let j = 0; j < level.length; j++) {
+                    mip[j] = level[j];
+                }
                 offset += level.length;
             }
         } else {
-            for (face = 0; face < 6; face++) {
-                for (i = 0; i < this._levels.length; i++) {
-                    level = this._levels[i][face];
-                    mip = new Uint8Array(buff, offset, level.length);
-                    for (j = 0; j < level.length; j++) mip[j] = level[j];
+            for (let face = 0; face < 6; face++) {
+                for (let i = 0; i < this._levels.length; i++) {
+                    const level = this._levels[i][face];
+                    const mip = new Uint8Array(buff, offset, level.length);
+                    for (let j = 0; j < level.length; j++) {
+                        mip[j] = level[j];
+                    }
                     offset += level.length;
                 }
             }

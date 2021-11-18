@@ -635,7 +635,7 @@ class Vec4 {
      * console.log(v.toString());
      */
     toString() {
-        return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
+        return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
     }
 
     /**

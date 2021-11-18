@@ -18,18 +18,18 @@ import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
 // #if _DEBUG
-var _debugLogging = false;
+const _debugLogging = false;
 // #endif
 
-var position = new Vec3();
-var invParentWtm = new Mat4();
+const position = new Vec3();
+const invParentWtm = new Mat4();
 
-var vecA = new Vec3();
-var vecB = new Vec3();
-var matA = new Mat4();
-var matB = new Mat4();
-var matC = new Mat4();
-var matD = new Mat4();
+const vecA = new Vec3();
+const vecB = new Vec3();
+const matA = new Mat4();
+const matB = new Mat4();
+const matC = new Mat4();
+const matD = new Mat4();
 
 /**
  * @component
@@ -73,20 +73,20 @@ var matD = new Mat4();
  * ~~~
  *
  * Relevant 'Engine-only' examples:
- * * [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
- * * [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
- * * [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
- * * [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
- * * [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
- * * [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
+ * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
+ * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
+ * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
+ * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
+ * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
+ * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
  *
  * @param {ElementComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the ElementComponent. Can be:
  *
- * * {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.
- * * {@link ELEMENTTYPE_IMAGE}: The component will render an image
- * * {@link ELEMENTTYPE_TEXT}: The component will render text
+ * - {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.
+ * - {@link ELEMENTTYPE_IMAGE}: The component will render an image
+ * - {@link ELEMENTTYPE_TEXT}: The component will render text
  *
  * @property {Entity} screen The Entity with a {@link ScreenComponent} that this component belongs to. This is automatically set when the component is a child of a ScreenComponent.
  * @property {number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components.
@@ -268,9 +268,9 @@ class ElementComponent extends Component {
         }
 
         // update margin
-        var element = this.element;
-        var p = this.localPosition;
-        var pvt = element._pivot;
+        const element = this.element;
+        const p = this.localPosition;
+        const pvt = element._pivot;
         element._margin.x = p.x - element._calculatedWidth * pvt.x;
         element._margin.z = (element._localAnchor.z - element._localAnchor.x) - element._calculatedWidth - element._margin.x;
         element._margin.y = p.y - element._calculatedHeight * pvt.y;
@@ -282,16 +282,16 @@ class ElementComponent extends Component {
 
     // this method overwrites GraphNode#sync and so operates in scope of the Entity.
     _sync() {
-        var element = this.element;
-        var screen = element.screen;
+        const element = this.element;
+        const screen = element.screen;
 
         if (screen) {
 
             if (element._anchorDirty) {
-                var resx = 0;
-                var resy = 0;
-                var px = 0;
-                var py = 1;
+                let resx = 0;
+                let resy = 0;
+                let px = 0;
+                let py = 1;
 
                 if (this._parent && this._parent.element) {
                     // use parent rect
@@ -301,7 +301,7 @@ class ElementComponent extends Component {
                     py = this._parent.element.pivot.y;
                 } else {
                     // use screen rect
-                    var resolution = screen.screen.resolution;
+                    const resolution = screen.screen.resolution;
                     resx = resolution.x / screen.screen.scale;
                     resy = resolution.y / screen.screen.scale;
                 }
@@ -324,8 +324,8 @@ class ElementComponent extends Component {
             this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
             // update margin
-            var p = this.localPosition;
-            var pvt = element._pivot;
+            const p = this.localPosition;
+            const pvt = element._pivot;
             element._margin.x = p.x - element._calculatedWidth * pvt.x;
             element._margin.z = (element._localAnchor.z - element._localAnchor.x) - element._calculatedWidth - element._margin.x;
             element._margin.y = p.y - element._calculatedHeight * pvt.y;
@@ -368,9 +368,9 @@ class ElementComponent extends Component {
                     this.worldTransform.mul2(element._screenToWorld, this.localTransform);
 
                     // update parent world transform
-                    var parentWorldTransform = element._parentWorldTransform;
+                    const parentWorldTransform = element._parentWorldTransform;
                     parentWorldTransform.setIdentity();
-                    var parent = this._parent;
+                    const parent = this._parent;
                     if (parent && parent.element && parent !== screen) {
                         matA.setTRS(Vec3.ZERO, parent.getLocalRotation(), parent.getLocalScale());
                         parentWorldTransform.mul2(parent.element._parentWorldTransform, matA);
@@ -378,10 +378,10 @@ class ElementComponent extends Component {
 
                     // update element transform
                     // rotate and scale around pivot
-                    var depthOffset = vecA;
+                    const depthOffset = vecA;
                     depthOffset.set(0, 0, this.localPosition.z);
 
-                    var pivotOffset = vecB;
+                    const pivotOffset = vecB;
                     pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth, element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
@@ -405,7 +405,7 @@ class ElementComponent extends Component {
     _onInsert(parent) {
         // when the entity is reparented find a possible new screen and mask
 
-        var result = this._parseUpToScreen();
+        const result = this._parseUpToScreen();
 
         this.entity._dirtifyWorld();
 
@@ -415,12 +415,12 @@ class ElementComponent extends Component {
     }
 
     _dirtifyMask() {
-        var current = this.entity;
+        let current = this.entity;
         while (current) {
             // search up the hierarchy until we find an entity which has:
             // - no parent
             // - screen component on parent
-            var next = current.parent;
+            const next = current.parent;
             if ((next === null || next.screen) && current.element) {
                 if (!this.system._prerender || !this.system._prerender.length) {
                     this.system._prerender = [];
@@ -430,11 +430,11 @@ class ElementComponent extends Component {
                     if (_debugLogging) console.log('register prerender');
                     // #endif
                 }
-                var i = this.system._prerender.indexOf(this.entity);
+                const i = this.system._prerender.indexOf(this.entity);
                 if (i >= 0) {
                     this.system._prerender.splice(i, 1);
                 }
-                var j = this.system._prerender.indexOf(current);
+                const j = this.system._prerender.indexOf(current);
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
@@ -448,15 +448,15 @@ class ElementComponent extends Component {
     }
 
     _onPrerender() {
-        for (var i = 0; i < this.system._prerender.length; i++) {
-            var mask = this.system._prerender[i];
+        for (let i = 0; i < this.system._prerender.length; i++) {
+            const mask = this.system._prerender[i];
             // #if _DEBUG
             if (_debugLogging) console.log('prerender from: ' + mask.name);
             // #endif
 
             // prevent call if element has been removed since being added
             if (mask.element) {
-                var depth = 1;
+                const depth = 1;
                 mask.element.syncMask(depth);
             }
         }
@@ -482,7 +482,7 @@ class ElementComponent extends Component {
             this._unbindScreen(this.screen.screen);
         }
 
-        var previousScreen = this.screen;
+        const previousScreen = this.screen;
         this.screen = screen;
         if (this.screen) {
             this._bindScreen(this.screen.screen);
@@ -495,8 +495,8 @@ class ElementComponent extends Component {
         this._anchorDirty = true;
 
         // update all child screens
-        var children = this.entity.children;
-        for (var i = 0, l = children.length; i < l; i++) {
+        const children = this.entity.children;
+        for (let i = 0, l = children.length; i < l; i++) {
             if (children[i].element) children[i].element._updateScreen(screen);
         }
 
@@ -505,7 +505,7 @@ class ElementComponent extends Component {
     }
 
     syncMask(depth) {
-        var result = this._parseUpToScreen();
+        const result = this._parseUpToScreen();
         this._updateMask(result.mask, depth);
     }
 
@@ -515,15 +515,15 @@ class ElementComponent extends Component {
     //   Note: if this entity is itself a mask the stencil params
     //   will be updated in updateMask to include masking
     _setMaskedBy(mask) {
-        var renderableElement = this._image || this._text;
+        const renderableElement = this._image || this._text;
 
         if (mask) {
-            var ref = mask.element._image._maskRef;
+            const ref = mask.element._image._maskRef;
             // #if _DEBUG
             if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
             // #endif
 
-            var sp = new StencilParameters({
+            const sp = new StencilParameters({
                 ref: ref,
                 func: FUNC_EQUAL
             });
@@ -550,15 +550,13 @@ class ElementComponent extends Component {
     // recursively update entity's stencil params
     // to render the correct value into the stencil buffer
     _updateMask(currentMask, depth) {
-        var i, l, sp, children;
-
         if (currentMask) {
             this._setMaskedBy(currentMask);
 
             // this element is also masking others
             if (this.mask) {
-                var ref = currentMask.element._image._maskRef;
-                sp = new StencilParameters({
+                const ref = currentMask.element._image._maskRef;
+                const sp = new StencilParameters({
                     ref: ref,
                     func: FUNC_EQUAL,
                     zpass: STENCILOP_INCREMENT
@@ -580,8 +578,8 @@ class ElementComponent extends Component {
             }
 
             // recurse through all children
-            children = this.entity.children;
-            for (i = 0, l = children.length; i < l; i++) {
+            const children = this.entity.children;
+            for (let i = 0, l = children.length; i < l; i++) {
                 if (children[i].element) {
                     children[i].element._updateMask(currentMask, depth);
                 }
@@ -595,7 +593,7 @@ class ElementComponent extends Component {
             this._setMaskedBy(null);
 
             if (this.mask) {
-                sp = new StencilParameters({
+                const sp = new StencilParameters({
                     ref: depth,
                     func: FUNC_ALWAYS,
                     zpass: STENCILOP_REPLACE
@@ -617,8 +615,8 @@ class ElementComponent extends Component {
             }
 
             // recurse through all children
-            children = this.entity.children;
-            for (i = 0, l = children.length; i < l; i++) {
+            const children = this.entity.children;
+            for (let i = 0, l = children.length; i < l; i++) {
                 if (children[i].element) {
                     children[i].element._updateMask(currentMask, depth);
                 }
@@ -633,12 +631,12 @@ class ElementComponent extends Component {
     // this screen is the parent screen
     // also searches for masked elements to get the relevant mask
     _parseUpToScreen() {
-        var result = {
+        const result = {
             screen: null,
             mask: null
         };
 
-        var parent = this.entity._parent;
+        let parent = this.entity._parent;
 
         while (parent && !parent.screen) {
             if (parent.element && parent.element.mask) {
@@ -682,15 +680,15 @@ class ElementComponent extends Component {
 
     // store pixel positions of anchor relative to current parent resolution
     _calculateLocalAnchors() {
-        var resx = 1000;
-        var resy = 1000;
-        var parent = this.entity._parent;
+        let resx = 1000;
+        let resy = 1000;
+        const parent = this.entity._parent;
         if (parent && parent.element) {
             resx = parent.element.calculatedWidth;
             resy = parent.element.calculatedHeight;
         } else if (this.screen) {
-            var res = this.screen.screen.resolution;
-            var scale = this.screen.screen.scale;
+            const res = this.screen.screen.resolution;
+            const scale = this.screen.screen.scale;
             resx = res.x / scale;
             resy = res.y / scale;
         }
@@ -705,7 +703,7 @@ class ElementComponent extends Component {
 
     // internal - apply offset x,y to local position and find point in world space
     getOffsetPosition(x, y) {
-        var p = this.entity.getLocalPosition().clone();
+        const p = this.entity.getLocalPosition().clone();
 
         p.x += x;
         p.y += y;
@@ -724,7 +722,7 @@ class ElementComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         if (this._image) {
             layer.addMeshInstances(this._image._renderable.model.meshInstances);
@@ -734,7 +732,7 @@ class ElementComponent extends Component {
     }
 
     onLayerRemoved(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         if (this._image) {
             layer.removeMeshInstances(this._image._renderable.model.meshInstances);
@@ -816,8 +814,8 @@ class ElementComponent extends Component {
 
         this._calculateLocalAnchors();
 
-        var newWidth = this._absRight - this._absLeft;
-        var newHeight = this._absTop - this._absBottom;
+        const newWidth = this._absRight - this._absLeft;
+        const newHeight = this._absTop - this._absBottom;
 
         if (propagateCalculatedWidth) {
             this._setWidth(newWidth);
@@ -831,7 +829,7 @@ class ElementComponent extends Component {
             this._setCalculatedHeight(newHeight, false);
         }
 
-        var p = this.entity.getLocalPosition();
+        const p = this.entity.getLocalPosition();
         p.x = this._margin.x + this._calculatedWidth * this._pivot.x;
         p.y = this._margin.y + this._calculatedHeight * this._pivot.y;
 
@@ -864,8 +862,8 @@ class ElementComponent extends Component {
         this.entity._dirtifyLocal();
 
         if (updateMargins) {
-            var p = this.entity.getLocalPosition();
-            var pvt = this._pivot;
+            const p = this.entity.getLocalPosition();
+            const pvt = this._pivot;
             this._margin.x = p.x - this._calculatedWidth * pvt.x;
             this._margin.z = (this._localAnchor.z - this._localAnchor.x) - this._calculatedWidth - this._margin.x;
         }
@@ -883,8 +881,8 @@ class ElementComponent extends Component {
         this.entity._dirtifyLocal();
 
         if (updateMargins) {
-            var p = this.entity.getLocalPosition();
-            var pvt = this._pivot;
+            const p = this.entity.getLocalPosition();
+            const pvt = this._pivot;
             this._margin.y = p.y - this._calculatedHeight * pvt.y;
             this._margin.w = (this._localAnchor.w - this._localAnchor.y) - this._calculatedHeight - this._margin.y;
         }
@@ -895,9 +893,8 @@ class ElementComponent extends Component {
     }
 
     _flagChildrenAsDirty() {
-        var i, l;
-        var c = this.entity._children;
-        for (i = 0, l = c.length; i < l; i++) {
+        const c = this.entity._children;
+        for (let i = 0, l = c.length; i < l; i++) {
             if (c[i].element) {
                 c[i].element._anchorDirty = true;
                 c[i].element._sizeDirty = true;
@@ -906,23 +903,21 @@ class ElementComponent extends Component {
     }
 
     addModelToLayers(model) {
-        var layer;
         this._addedModels.push(model);
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
             layer.addMeshInstances(model.meshInstances);
         }
     }
 
     removeModelFromLayers(model) {
-        var layer;
-        var idx = this._addedModels.indexOf(model);
+        const idx = this._addedModels.indexOf(model);
         if (idx >= 0) {
             this._addedModels.splice(idx, 1);
         }
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this.layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
             layer.removeMeshInstances(model.meshInstances);
         }
@@ -931,44 +926,44 @@ class ElementComponent extends Component {
     getMaskOffset() {
         // reset offset on new frame
         // we always count offset down from 0.5
-        var frame = this.system.app.frame;
+        const frame = this.system.app.frame;
         if (this._offsetReadAt !== frame) {
             this._maskOffset = 0.5;
             this._offsetReadAt = frame;
         }
-        var mo = this._maskOffset;
+        const mo = this._maskOffset;
         this._maskOffset -= 0.001;
         return mo;
     }
 
     isVisibleForCamera(camera) {
-        var clipL, clipR, clipT, clipB;
+        let clipL, clipR, clipT, clipB;
 
         if (this.maskedBy) {
-            var corners = this.maskedBy.element.screenCorners;
+            const corners = this.maskedBy.element.screenCorners;
 
             clipL = Math.min(Math.min(corners[0].x, corners[1].x), Math.min(corners[2].x, corners[3].x));
             clipR = Math.max(Math.max(corners[0].x, corners[1].x), Math.max(corners[2].x, corners[3].x));
             clipB = Math.min(Math.min(corners[0].y, corners[1].y), Math.min(corners[2].y, corners[3].y));
             clipT = Math.max(Math.max(corners[0].y, corners[1].y), Math.max(corners[2].y, corners[3].y));
         } else {
-            var sw = this.system.app.graphicsDevice.width;
-            var sh = this.system.app.graphicsDevice.height;
+            const sw = this.system.app.graphicsDevice.width;
+            const sh = this.system.app.graphicsDevice.height;
 
-            var cameraWidth = camera._rect.z * sw;
-            var cameraHeight = camera._rect.w * sh;
+            const cameraWidth = camera._rect.z * sw;
+            const cameraHeight = camera._rect.w * sh;
             clipL = camera._rect.x * sw;
             clipR = clipL + cameraWidth;
             clipT = (1 - camera._rect.y) * sh;
             clipB = clipT - cameraHeight;
         }
 
-        var hitCorners = this.screenCorners;
+        const hitCorners = this.screenCorners;
 
-        var left = Math.min(Math.min(hitCorners[0].x, hitCorners[1].x), Math.min(hitCorners[2].x, hitCorners[3].x));
-        var right = Math.max(Math.max(hitCorners[0].x, hitCorners[1].x), Math.max(hitCorners[2].x, hitCorners[3].x));
-        var bottom = Math.min(Math.min(hitCorners[0].y, hitCorners[1].y), Math.min(hitCorners[2].y, hitCorners[3].y));
-        var top = Math.max(Math.max(hitCorners[0].y, hitCorners[1].y), Math.max(hitCorners[2].y, hitCorners[3].y));
+        const left = Math.min(Math.min(hitCorners[0].x, hitCorners[1].x), Math.min(hitCorners[2].x, hitCorners[3].x));
+        const right = Math.max(Math.max(hitCorners[0].x, hitCorners[1].x), Math.max(hitCorners[2].x, hitCorners[3].x));
+        const bottom = Math.min(Math.min(hitCorners[0].y, hitCorners[1].y), Math.min(hitCorners[2].y, hitCorners[3].y));
+        const top = Math.max(Math.max(hitCorners[0].y, hitCorners[1].y), Math.max(hitCorners[2].y, hitCorners[3].y));
 
         if (right < clipL ||
             left > clipR ||
@@ -1030,13 +1025,11 @@ Object.defineProperty(ElementComponent.prototype, "layers", {
     },
 
     set: function (value) {
-        var i, j, layer;
-
         if (this._addedModels.length) {
-            for (i = 0; i < this._layers.length; i++) {
-                layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+            for (let i = 0; i < this._layers.length; i++) {
+                const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    for (j = 0; j < this._addedModels.length; j++) {
+                    for (let j = 0; j < this._addedModels.length; j++) {
                         layer.removeMeshInstances(this._addedModels[j].meshInstances);
                     }
                 }
@@ -1047,10 +1040,10 @@ Object.defineProperty(ElementComponent.prototype, "layers", {
 
         if (!this.enabled || !this.entity.enabled || !this._addedModels.length) return;
 
-        for (i = 0; i < this._layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (layer) {
-                for (j = 0; j < this._addedModels.length; j++) {
+                for (let j = 0; j < this._addedModels.length; j++) {
                     layer.addMeshInstances(this._addedModels[j].meshInstances);
                 }
             }
@@ -1064,7 +1057,7 @@ Object.defineProperty(ElementComponent.prototype, "drawOrder", {
     },
 
     set: function (value) {
-        var priority = 0;
+        let priority = 0;
         if (this.screen) {
             priority = this.screen.screen.priority;
         }
@@ -1125,9 +1118,9 @@ Object.defineProperty(ElementComponent.prototype, "left", {
 
     set: function (value) {
         this._margin.x = value;
-        var p = this.entity.getLocalPosition();
-        var wr = this._absRight;
-        var wl = this._localAnchor.x + value;
+        const p = this.entity.getLocalPosition();
+        const wr = this._absRight;
+        const wl = this._localAnchor.x + value;
         this._setWidth(wr - wl);
 
         p.x = value + this._calculatedWidth * this._pivot.x;
@@ -1144,9 +1137,9 @@ Object.defineProperty(ElementComponent.prototype, "right", {
         this._margin.z = value;
 
         // update width
-        var p = this.entity.getLocalPosition();
-        var wl = this._absLeft;
-        var wr = this._localAnchor.z - value;
+        const p = this.entity.getLocalPosition();
+        const wl = this._absLeft;
+        const wr = this._localAnchor.z - value;
         this._setWidth(wr - wl);
 
         // update position
@@ -1162,9 +1155,9 @@ Object.defineProperty(ElementComponent.prototype, "top", {
 
     set: function (value) {
         this._margin.w = value;
-        var p = this.entity.getLocalPosition();
-        var wb = this._absBottom;
-        var wt = this._localAnchor.w - value;
+        const p = this.entity.getLocalPosition();
+        const wb = this._absBottom;
+        const wt = this._localAnchor.w - value;
         this._setHeight(wt - wb);
 
         p.y = (this._localAnchor.w - this._localAnchor.y) - value - this._calculatedHeight * (1 - this._pivot.y);
@@ -1179,9 +1172,9 @@ Object.defineProperty(ElementComponent.prototype, "bottom", {
 
     set: function (value) {
         this._margin.y = value;
-        var p = this.entity.getLocalPosition();
-        var wt = this._absTop;
-        var wb = this._localAnchor.y + value;
+        const p = this.entity.getLocalPosition();
+        const wt = this._absTop;
+        const wb = this._localAnchor.y + value;
         this._setHeight(wt - wb);
 
         p.y = value + this._calculatedHeight * this._pivot.y;
@@ -1247,8 +1240,8 @@ Object.defineProperty(ElementComponent.prototype, "pivot", {
     },
 
     set: function (value) {
-        var prevX = this._pivot.x;
-        var prevY = this._pivot.y;
+        const prevX = this._pivot.x;
+        const prevY = this._pivot.y;
 
         if (value instanceof Vec2) {
             this._pivot.set(value.x, value.y);
@@ -1256,13 +1249,13 @@ Object.defineProperty(ElementComponent.prototype, "pivot", {
             this._pivot.set(value[0], value[1]);
         }
 
-        var mx = this._margin.x + this._margin.z;
-        var dx = this._pivot.x - prevX;
+        const mx = this._margin.x + this._margin.z;
+        const dx = this._pivot.x - prevX;
         this._margin.x += mx * dx;
         this._margin.z -= mx * dx;
 
-        var my = this._margin.y + this._margin.w;
-        var dy = this._pivot.y - prevY;
+        const my = this._margin.y + this._margin.w;
+        const dy = this._pivot.y - prevY;
         this._margin.y += my * dy;
         this._margin.w -= my * dy;
 
@@ -1337,7 +1330,7 @@ Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         if (!this._cornersDirty || !this.screen)
             return this._screenCorners;
 
-        var parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
+        const parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
 
         // init corners
         this._screenCorners[0].set(this._absLeft, this._absBottom, 0);
@@ -1346,8 +1339,8 @@ Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         this._screenCorners[3].set(this._absLeft, this._absTop, 0);
 
         // transform corners to screen space
-        var screenSpace = this.screen.screen.screenSpace;
-        for (var i = 0; i < 4; i++) {
+        const screenSpace = this.screen.screen.screenSpace;
+        for (let i = 0; i < 4; i++) {
             this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
             if (screenSpace)
                 this._screenCorners[i].mulScalar(this.screen.screen.scale);
@@ -1374,13 +1367,13 @@ Object.defineProperty(ElementComponent.prototype, 'canvasCorners', {
         if (!this._canvasCornersDirty || !this.screen || !this.screen.screen.screenSpace)
             return this._canvasCorners;
 
-        var device = this.system.app.graphicsDevice;
-        var screenCorners = this.screenCorners;
-        var sx = device.canvas.clientWidth / device.width;
-        var sy = device.canvas.clientHeight / device.height;
+        const device = this.system.app.graphicsDevice;
+        const screenCorners = this.screenCorners;
+        const sx = device.canvas.clientWidth / device.width;
+        const sy = device.canvas.clientHeight / device.height;
 
         // scale screen corners to canvas size and reverse y
-        for (var i = 0; i < 4; i++) {
+        for (let i = 0; i < 4; i++) {
             this._canvasCorners[i].set(screenCorners[i].x * sx, (device.height - screenCorners[i].y) * sy);
         }
 
@@ -1401,7 +1394,7 @@ Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         }
 
         if (this.screen) {
-            var screenCorners = this.screenCorners;
+            const screenCorners = this.screenCorners;
 
             if (!this.screen.screen.screenSpace) {
                 matA.copy(this.screen.screen._screenMatrix);
@@ -1413,12 +1406,12 @@ Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
                 matA.mul2(this.screen.getWorldTransform(), matA);
 
                 // transform screen corners to world space
-                for (var i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; i++) {
                     matA.transformPoint(screenCorners[i], this._worldCorners[i]);
                 }
             }
         } else {
-            var localPos = this.entity.getLocalPosition();
+            const localPos = this.entity.getLocalPosition();
 
             // rotate and scale around pivot
             matA.setTranslate(-localPos.x, -localPos.y, -localPos.z);
@@ -1426,7 +1419,7 @@ Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
             matC.setTranslate(localPos.x, localPos.y, localPos.z);
 
             // get parent world transform (but use this entity if there is no parent)
-            var entity = this.entity.parent ? this.entity.parent : this.entity;
+            const entity = this.entity.parent ? this.entity.parent : this.entity;
             matD.copy(entity.getWorldTransform());
             matD.mul(matC).mul(matB).mul(matA);
 
@@ -1446,7 +1439,6 @@ Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
             vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
             matD.transformPoint(vecA, this._worldCorners[3]);
         }
-
 
         this._worldCornersDirty = false;
 
@@ -1532,7 +1524,7 @@ Object.defineProperty(ElementComponent.prototype, "maskedBy", {
     }
 });
 
-var _define = function (name) {
+function _define(name) {
     Object.defineProperty(ElementComponent.prototype, name, {
         get: function () {
             if (this._text) {
@@ -1550,7 +1542,7 @@ var _define = function (name) {
             }
         }
     });
-};
+}
 
 _define("fontSize");
 _define("minFontSize");

@@ -1,4 +1,4 @@
-import { platform } from "../core/platform.js";
+import { platform } from '../core/platform.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
@@ -42,7 +42,7 @@ class XrJoint {
         this._hand = hand;
         this._finger = finger;
         this._wrist = id === 'wrist';
-        this._tip = this._finger && !! tipJointIdsIndex[id];
+        this._tip = this._finger && !!tipJointIdsIndex[id];
 
         this._radius = null;
 

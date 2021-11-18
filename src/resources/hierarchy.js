@@ -1,5 +1,5 @@
 import { SceneParser } from './parser/scene.js';
-import { SceneUtils } from "./scene-utils.js";
+import { SceneUtils } from './scene-utils.js';
 
 class HierarchyHandler {
     constructor(app) {
@@ -8,7 +8,7 @@ class HierarchyHandler {
     }
 
     load(url, callback) {
-        SceneUtils.load(url, callback);
+        SceneUtils.load(url, this.maxRetries, callback);
     }
 
     open(url, data) {

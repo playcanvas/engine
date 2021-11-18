@@ -41,6 +41,7 @@ import { ScopeSpace } from './scope-space.js';
 import { ShaderInput } from './shader-input.js';
 import { Texture } from './texture.js';
 import { VertexFormat } from './vertex-format.js';
+import { GrabPass } from './grab-pass.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
@@ -247,7 +248,7 @@ function testTextureFloatHighPrecision(device) {
  * @property {ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
  */
 class GraphicsDevice extends EventHandler {
-    constructor(canvas, options) {
+    constructor(canvas, options = {}) {
         super();
 
         this.canvas = canvas;
@@ -291,11 +292,10 @@ class GraphicsDevice extends EventHandler {
         };
 
         // Retrieve the WebGL context
-        const preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+        const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
         const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
-        options = options || {};
         options.stencil = true;
         for (let i = 0; i < names.length; i++) {
             gl = canvas.getContext(names[i], options);
@@ -682,8 +682,8 @@ class GraphicsDevice extends EventHandler {
         // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
         this.grabPassAvailable = true;
 
-        this.grabPassAlpha = options.alpha;
-        this.createGrabPass();
+        this.grabPass = new GrabPass(this, options.alpha);
+        this.grabPass.create();
 
         VertexFormat.init(this);
 
@@ -698,6 +698,29 @@ class GraphicsDevice extends EventHandler {
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
+    }
+
+    destroy() {
+        const gl = this.gl;
+
+        this.grabPass.destroy();
+
+        if (this.webgl2 && this.feedback) {
+            gl.deleteTransformFeedback(this.feedback);
+        }
+
+        this.clearShaderCache();
+        this.clearVertexArrayObjectCache();
+
+        this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
+        this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
+
+        this._contextLostHandler = null;
+        this._contextRestoredHandler = null;
+
+        this.scope = null;
+        this.canvas = null;
+        this.gl = null;
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
@@ -889,6 +912,10 @@ class GraphicsDevice extends EventHandler {
 
         this.samples = gl.getParameter(gl.SAMPLES);
         this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+
+        // Don't allow area lights on old android devices, they often fail to compile the shader,
+        // run it incorrectly or are very slow.
+        this.supportsAreaLights = this.webgl2 || !platform.android;
     }
 
     initializeRenderState() {
@@ -1024,7 +1051,7 @@ class GraphicsDevice extends EventHandler {
         }
 
         // grab pass
-        this.destroyGrabPass();
+        this.grabPass.destroy();
 
         // release textures - they will be recreated with new context
         while (this.textures.length > 0) {
@@ -1063,117 +1090,7 @@ class GraphicsDevice extends EventHandler {
             buffer.unlock();
         }
 
-        this.createGrabPass();
-    }
-
-    createGrabPass() {
-        if (this.grabPassTexture) return;
-
-        const grabPassTexture = new Texture(this, {
-            format: this.grabPassAlpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
-            minFilter: FILTER_LINEAR,
-            magFilter: FILTER_LINEAR,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            mipmaps: false
-        });
-
-        grabPassTexture.name = 'texture_grabPass';
-
-        const grabPassTextureId = this.scope.resolve(grabPassTexture.name);
-        grabPassTextureId.setValue(grabPassTexture);
-
-        const grabPassRenderTarget = new RenderTarget({
-            colorBuffer: grabPassTexture,
-            depth: false
-        });
-
-        this.grabPassRenderTarget = grabPassRenderTarget;
-        this.grabPassTextureId = grabPassTextureId;
-        this.grabPassTexture = grabPassTexture;
-    }
-
-    updateGrabPass() {
-        const gl = this.gl;
-
-        // print error if we cannot grab framebuffer at this point
-        if (!this.grabPassAvailable) {
-
-            // #if _DEBUG
-            console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
-            // #endif
-
-            return false;
-        }
-
-        // render target currently being rendered to (these are null if default framebuffer is active)
-        const renderTarget = this.renderTarget;
-        const resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
-
-        const grabPassTexture = this.grabPassTexture;
-        const width = this.width;
-        const height = this.height;
-
-        // #if _DEBUG
-        this.pushMarker("grabPass");
-        // #endif
-
-        if (this.webgl2 && !this._tempMacChromeBlitFramebufferWorkaround && width === grabPassTexture._width && height === grabPassTexture._height) {
-            if (resolveRenderTarget) {
-                renderTarget.resolve(true);
-            }
-
-            // these are null if rendering to default framebuffer
-            const currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
-            const resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
-
-            // init grab pass framebuffer (only does it once)
-            this.initRenderTarget(this.grabPassRenderTarget);
-            const grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
-
-            // blit from currently used render target (or default framebuffer if null)
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
-
-            // blit to grab pass framebuffer
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
-
-            // Note: This fails on Chromium Mac when Antialasing is On and Alpha is off
-            // blit color from current framebuffer's color attachment to grab pass color attachment
-            gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
-
-        } else {
-            if (resolveRenderTarget) {
-                renderTarget.resolve(true);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
-            }
-
-            // this allocates texture (grabPassTexture was already bound to gl)
-            const format = grabPassTexture._glFormat;
-            gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
-            grabPassTexture._width = width;
-            grabPassTexture._height = height;
-
-            if (resolveRenderTarget) {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
-            }
-        }
-
-        // #if _DEBUG
-        this.popMarker();
-        // #endif
-
-        return true;
-    }
-
-    destroyGrabPass() {
-        this.grabPassRenderTarget.destroy();
-        this.grabPassRenderTarget = null;
-
-        this.grabPassTextureId = null;
-        this.grabPassTexture.destroy();
-        this.grabPassTexture = null;
+        this.grabPass.create();
     }
 
     updateClientRect() {
@@ -2189,10 +2106,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     setTexture(texture, textureUnit) {
+
         if (!texture._glTexture)
             this.initializeTexture(texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPassTexture) {
+        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPass.texture) {
+
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
             // Ensure the texture is bound on correct target of the specified texture unit
@@ -2205,7 +2124,7 @@ class GraphicsDevice extends EventHandler {
 
             // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
             // (for example when rendering to shadow map), in which case previous content is used
-            const processed = (texture === this.grabPassTexture) && this.updateGrabPass();
+            const processed = (texture === this.grabPass.texture) && this.grabPass.prepareTexture();
 
             if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
                 this.uploadTexture(texture);
@@ -2344,13 +2263,13 @@ class GraphicsDevice extends EventHandler {
      * @description Submits a graphical primitive to the hardware for immediate rendering.
      * @param {object} primitive - Primitive object describing how to submit current vertex/index buffers defined as follows:
      * @param {number} primitive.type - The type of primitive to render. Can be:
-     * * {@link PRIMITIVE_POINTS}
-     * * {@link PRIMITIVE_LINES}
-     * * {@link PRIMITIVE_LINELOOP}
-     * * {@link PRIMITIVE_LINESTRIP}
-     * * {@link PRIMITIVE_TRIANGLES}
-     * * {@link PRIMITIVE_TRISTRIP}
-     * * {@link PRIMITIVE_TRIFAN}
+     * - {@link PRIMITIVE_POINTS}
+     * - {@link PRIMITIVE_LINES}
+     * - {@link PRIMITIVE_LINELOOP}
+     * - {@link PRIMITIVE_LINESTRIP}
+     * - {@link PRIMITIVE_TRIANGLES}
+     * - {@link PRIMITIVE_TRISTRIP}
+     * - {@link PRIMITIVE_TRIFAN}
      * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the draw call.
      * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
@@ -2498,9 +2417,9 @@ class GraphicsDevice extends EventHandler {
      * @param {number} options.depth - The depth value to clear the depth buffer to in the range 0.0 to 1.0.
      * @param {number} options.flags - The buffers to clear (the types being color, depth and stencil). Can be any bitwise
      * combination of:
-     * * {@link CLEARFLAG_COLOR}
-     * * {@link CLEARFLAG_DEPTH}
-     * * {@link CLEARFLAG_STENCIL}
+     * - {@link CLEARFLAG_COLOR}
+     * - {@link CLEARFLAG_DEPTH}
+     * - {@link CLEARFLAG_STENCIL}
      * @param {number} options.stencil - The stencil value to clear the stencil buffer to. Defaults to 0.
      * @example
      * // Clear color buffer to black and depth buffer to 1.0
@@ -2658,14 +2577,14 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setDepthFunc
      * @description Configures the depth test.
      * @param {number} func - A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
-     * * {@link FUNC_NEVER}: don't draw
-     * * {@link FUNC_LESS}: draw if new depth < depth buffer
-     * * {@link FUNC_EQUAL}: draw if new depth == depth buffer
-     * * {@link FUNC_LESSEQUAL}: draw if new depth <= depth buffer
-     * * {@link FUNC_GREATER}: draw if new depth > depth buffer
-     * * {@link FUNC_NOTEQUAL}: draw if new depth != depth buffer
-     * * {@link FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
-     * * {@link FUNC_ALWAYS}: always draw
+     * - {@link FUNC_NEVER}: don't draw
+     * - {@link FUNC_LESS}: draw if new depth < depth buffer
+     * - {@link FUNC_EQUAL}: draw if new depth == depth buffer
+     * - {@link FUNC_LESSEQUAL}: draw if new depth <= depth buffer
+     * - {@link FUNC_GREATER}: draw if new depth > depth buffer
+     * - {@link FUNC_NOTEQUAL}: draw if new depth != depth buffer
+     * - {@link FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
+     * - {@link FUNC_ALWAYS}: always draw
      */
     setDepthFunc(func) {
         if (this.depthFunc === func) return;
@@ -2863,14 +2782,14 @@ class GraphicsDevice extends EventHandler {
      * @description Configures stencil test for both front and back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
      * reference value, and mask value. Can be:
-     * * {@link FUNC_NEVER}: never pass
-     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link FUNC_ALWAYS}: always pass
+     * - {@link FUNC_NEVER}: never pass
+     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * - {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2891,14 +2810,14 @@ class GraphicsDevice extends EventHandler {
      * @description Configures stencil test for front faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
-     * * {@link FUNC_NEVER}: never pass
-     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link FUNC_ALWAYS}: always pass
+     * - {@link FUNC_NEVER}: never pass
+     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * - {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2918,14 +2837,14 @@ class GraphicsDevice extends EventHandler {
      * @description Configures stencil test for back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
-     * * {@link FUNC_NEVER}: never pass
-     * * {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * * {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * * {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * * {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * * {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * * {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * * {@link FUNC_ALWAYS}: always pass
+     * - {@link FUNC_NEVER}: never pass
+     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * - {@link FUNC_ALWAYS}: always pass
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
      */
@@ -2948,14 +2867,14 @@ class GraphicsDevice extends EventHandler {
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link STENCILOP_ZERO}: set value to zero
-     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * * {@link STENCILOP_INCREMENT}: increment the value
-     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link STENCILOP_DECREMENT}: decrement the value
-     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link STENCILOP_INVERT}: invert the value bitwise
+     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * - {@link STENCILOP_ZERO}: set value to zero
+     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * - {@link STENCILOP_INCREMENT}: increment the value
+     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * - {@link STENCILOP_DECREMENT}: decrement the value
+     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * - {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperation(fail, zfail, zpass, writeMask) {
@@ -2982,14 +2901,14 @@ class GraphicsDevice extends EventHandler {
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link STENCILOP_ZERO}: set value to zero
-     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * * {@link STENCILOP_INCREMENT}: increment the value
-     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link STENCILOP_DECREMENT}: decrement the value
-     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link STENCILOP_INVERT}: invert the value bitwise
+     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * - {@link STENCILOP_ZERO}: set value to zero
+     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * - {@link STENCILOP_INCREMENT}: increment the value
+     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * - {@link STENCILOP_DECREMENT}: decrement the value
+     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * - {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
@@ -3014,14 +2933,14 @@ class GraphicsDevice extends EventHandler {
      * @param {number} zfail - Action to take if depth test is failed.
      * @param {number} zpass - Action to take if both depth and stencil test are passed
      * All arguments can be:
-     * * {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * * {@link STENCILOP_ZERO}: set value to zero
-     * * {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * * {@link STENCILOP_INCREMENT}: increment the value
-     * * {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
-     * * {@link STENCILOP_DECREMENT}: decrement the value
-     * * {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
-     * * {@link STENCILOP_INVERT}: invert the value bitwise
+     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * - {@link STENCILOP_ZERO}: set value to zero
+     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
+     * - {@link STENCILOP_INCREMENT}: increment the value
+     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+     * - {@link STENCILOP_DECREMENT}: decrement the value
+     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+     * - {@link STENCILOP_INVERT}: invert the value bitwise
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
      */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
@@ -3042,17 +2961,17 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setBlendFunction
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
-     * * {@link BLENDMODE_ZERO}
-     * * {@link BLENDMODE_ONE}
-     * * {@link BLENDMODE_SRC_COLOR}
-     * * {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * * {@link BLENDMODE_DST_COLOR}
-     * * {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * * {@link BLENDMODE_SRC_ALPHA}
-     * * {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * * {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * * {@link BLENDMODE_DST_ALPHA}
-     * * {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * - {@link BLENDMODE_ZERO}
+     * - {@link BLENDMODE_ONE}
+     * - {@link BLENDMODE_SRC_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
+     * - {@link BLENDMODE_DST_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
+     * - {@link BLENDMODE_SRC_ALPHA}
+     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
+     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
+     * - {@link BLENDMODE_DST_ALPHA}
+     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
      */
@@ -3070,17 +2989,17 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setBlendFunctionSeparate
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
-     * * {@link BLENDMODE_ZERO}
-     * * {@link BLENDMODE_ONE}
-     * * {@link BLENDMODE_SRC_COLOR}
-     * * {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * * {@link BLENDMODE_DST_COLOR}
-     * * {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * * {@link BLENDMODE_SRC_ALPHA}
-     * * {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * * {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * * {@link BLENDMODE_DST_ALPHA}
-     * * {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * - {@link BLENDMODE_ZERO}
+     * - {@link BLENDMODE_ONE}
+     * - {@link BLENDMODE_SRC_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
+     * - {@link BLENDMODE_DST_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
+     * - {@link BLENDMODE_SRC_ALPHA}
+     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
+     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
+     * - {@link BLENDMODE_DST_ALPHA}
+     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
      * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
@@ -3104,11 +3023,11 @@ class GraphicsDevice extends EventHandler {
      * @description Configures the blending equation. The default blend equation is
      * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
-     * * {@link BLENDEQUATION_ADD}
-     * * {@link BLENDEQUATION_SUBTRACT}
-     * * {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * * {@link BLENDEQUATION_MIN}
-     * * {@link BLENDEQUATION_MAX}
+     * - {@link BLENDEQUATION_ADD}
+     * - {@link BLENDEQUATION_SUBTRACT}
+     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
+     * - {@link BLENDEQUATION_MIN}
+     * - {@link BLENDEQUATION_MAX}
      *
      * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
      */
@@ -3126,11 +3045,11 @@ class GraphicsDevice extends EventHandler {
      * @description Configures the blending equation. The default blend equation is
      * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
-     * * {@link BLENDEQUATION_ADD}
-     * * {@link BLENDEQUATION_SUBTRACT}
-     * * {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * * {@link BLENDEQUATION_MIN}
-     * * {@link BLENDEQUATION_MAX}
+     * - {@link BLENDEQUATION_ADD}
+     * - {@link BLENDEQUATION_SUBTRACT}
+     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
+     * - {@link BLENDEQUATION_MIN}
+     * - {@link BLENDEQUATION_MAX}
      *
      * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
      * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel. Accepts same values as blendEquation.
@@ -3150,10 +3069,10 @@ class GraphicsDevice extends EventHandler {
      * @description Controls how triangles are culled based on their face direction.
      * The default cull mode is {@link CULLFACE_BACK}.
      * @param {number} cullMode - The cull mode to set. Can be:
-     * * {@link CULLFACE_NONE}
-     * * {@link CULLFACE_BACK}
-     * * {@link CULLFACE_FRONT}
-     * * {@link CULLFACE_FRONTANDBACK}
+     * - {@link CULLFACE_NONE}
+     * - {@link CULLFACE_BACK}
+     * - {@link CULLFACE_FRONT}
+     * - {@link CULLFACE_FRONTANDBACK}
      */
     setCullMode(cullMode) {
         if (this.cullMode !== cullMode) {
@@ -3335,25 +3254,59 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    _addLineNumbers(src) {
+    _isShaderCompiled(shader, glShader, source, shaderType) {
+        const gl = this.gl;
+
+        if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
+            const infoLog = gl.getShaderInfoLog(glShader);
+            const [code, error] = this._processError(source, infoLog);
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
+            // #if _DEBUG
+            error.shader = shader;
+            console.error(message, error);
+            // #else
+            console.error(message);
+            // #endif
+            return false;
+        }
+        return true;
+    }
+
+    _processError(src, infoLog) {
         if (!src)
             return "";
 
-        const lines = src.split("\n");
+        const lines = src.split('\n');
+        const error = { };
+        let code = '';
+        let from = 0;
+        let to = lines.length;
 
-        // Chrome reports shader errors on lines indexed from 1
-        for (let i = 0, len = lines.length; i < len; i++) {
-            lines[i] = (i + 1) + ":\t" + lines[i];
+        // if error is in the code, only show nearby lines instead of whole shader code
+        if (infoLog && infoLog.startsWith('ERROR:')) {
+            const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
+            if (match) {
+                error.message = match[3];
+                error.line = parseInt(match[2], 10);
+
+                from = Math.max(0, error.line - 6);
+                to = Math.min(lines.length, error.line + 5);
+            }
         }
 
-        return lines.join("\n");
+        // Chrome reports shader errors on lines indexed from 1
+        for (let i = from; i < to; i++) {
+            code += (i + 1) + ":\t" + lines[i] + '\n';
+        }
+
+        error.source = src;
+
+        return [code, error];
     }
 
     postLink(shader) {
         const gl = this.gl;
 
-        const glVertexShader = shader._glVertexShader;
-        const glFragmentShader = shader._glFragmentShader;
         const glProgram = shader._glProgram;
 
         const definition = shader.definition;
@@ -3366,17 +3319,23 @@ class GraphicsDevice extends EventHandler {
         });
         // #endif
 
-        // Check for errors
-        if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
-            console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
+        // Check for compilation errors
+        if (!this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader, "vertex"))
             return false;
-        }
-        if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
-            console.error("Failed to compile fragment shader:\n\n" + this._addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(glFragmentShader));
+
+        if (!this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader, "fragment"))
             return false;
-        }
+
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
-            console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
+
+            const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
+
+            // #if _DEBUG
+            console.error(message, definition);
+            // #else
+            console.error(message);
+            // #endif
+
             return false;
         }
 
@@ -3570,28 +3529,6 @@ class GraphicsDevice extends EventHandler {
 
     removeShaderFromCache(shader) {
         this.programLib.removeFromCache(shader);
-    }
-
-    destroy() {
-        const gl = this.gl;
-
-        this.destroyGrabPass();
-
-        if (this.webgl2 && this.feedback) {
-            gl.deleteTransformFeedback(this.feedback);
-        }
-
-        this.clearShaderCache();
-        this.clearVertexArrayObjectCache();
-
-        this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
-        this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
-
-        this._contextLostHandler = null;
-        this._contextRestoredHandler = null;
-
-        this.canvas = null;
-        this.gl = null;
     }
 
     /**

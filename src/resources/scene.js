@@ -1,5 +1,5 @@
 import { SceneParser } from './parser/scene.js';
-import { SceneUtils } from "./scene-utils.js";
+import { SceneUtils } from './scene-utils.js';
 
 /**
  * @class
@@ -15,7 +15,7 @@ class SceneHandler {
     }
 
     load(url, callback) {
-        SceneUtils.load(url, callback);
+        SceneUtils.load(url, this.maxRetries, callback);
     }
 
     open(url, data) {

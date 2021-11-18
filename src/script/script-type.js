@@ -4,7 +4,7 @@ import { ScriptComponent } from '../framework/components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
-var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
  * @class
@@ -13,25 +13,25 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
  * @classdesc Represents the type of a script. It is returned by {@link createScript}.
  * Also referred to as Script Type.
  *
- * The type is to be extended using its JavaScript prototype. There is a **list of methods**
+ * The type is to be extended using its JavaScript prototype. There is a list of methods
  * that will be executed by the engine on instances of this type, such as:
  *
- * * initialize
- * * postInitialize
- * * update
- * * postUpdate
- * * swap
+ * - `initialize`
+ * - `postInitialize`
+ * - `update`
+ * - `postUpdate`
+ * - `swap`
  *
- * **initialize** and **postInitialize** - are called if defined when script is about to run
- * for the first time - postInitialize will run after all initialize methods are executed in
- * the same tick or enabling chain of actions.
+ * `initialize` and `postInitialize` - are called (if defined) when a script is about to run
+ * for the first time - `postInitialize` will run after all `initialize` methods are executed
+ * in the same tick or enabling chain of actions.
  *
- * **update** and **postUpdate** - methods are called if defined for enabled (running state)
- * scripts on each tick.
+ * `update` and `postUpdate` - are called (if defined) for enabled (running state) scripts
+ * on each tick.
  *
- * **swap** - This method will be called when a {@link ScriptType} that already exists in
- * the registry gets redefined. If the new {@link ScriptType} has a `swap` method in its
- * prototype, then it will be executed to perform hot-reload at runtime.
+ * `swap` - is called when a ScriptType that already exists in the registry gets redefined.
+ * If the new ScriptType has a `swap` method in its prototype, then it will be executed to
+ * perform hot-reload at runtime.
  * @property {Application} app The {@link Application} that the instance of this type
  * belongs to.
  * @property {Entity} entity The {@link Entity} that the instance of this type belongs to.
@@ -52,7 +52,7 @@ class ScriptType extends EventHandler {
     }
 
     initScriptType(args) {
-        var script = this.constructor; // get script type, i.e. function (class)
+        const script = this.constructor; // get script type, i.e. function (class)
 
         // #if _DEBUG
         if (!args || !args.app || !args.entity) {
@@ -89,7 +89,7 @@ class ScriptType extends EventHandler {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
         if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-        var match = ("" + constructorFn).match(funcNameRegex);
+        const match = ("" + constructorFn).match(funcNameRegex);
         return match ? match[1] : undefined;
     }
 
@@ -133,7 +133,7 @@ class ScriptType extends EventHandler {
             return;
 
         // set attributes values
-        for (var key in this.__scriptType.attributes.index) {
+        for (const key in this.__scriptType.attributes.index) {
             if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                 this[key] = this.__attributesRaw[key];
             } else if (!this.__attributes.hasOwnProperty(key)) {
@@ -168,7 +168,7 @@ class ScriptType extends EventHandler {
      * });
      */
     static extend(methods) {
-        for (var key in methods) {
+        for (const key in methods) {
             if (!methods.hasOwnProperty(key))
                 continue;
 

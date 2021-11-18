@@ -96,15 +96,15 @@ class I18n extends EventHandler {
      */
     getText(key, locale) {
         // default translation is the key
-        var result = key;
+        let result = key;
 
-        var lang;
+        let lang;
         if (!locale) {
             locale = this._locale;
             lang = this._lang;
         }
 
-        var translations = this._translations[locale];
+        let translations = this._translations[locale];
         if (!translations) {
             if (!lang) {
                 lang = getLang(locale);
@@ -147,10 +147,10 @@ class I18n extends EventHandler {
      */
     getPluralText(key, n, locale) {
         // default translation is the key
-        var result = key;
+        let result = key;
 
-        var pluralFn;
-        var lang;
+        let lang;
+        let pluralFn;
 
         if (!locale) {
             locale = this._locale;
@@ -161,7 +161,7 @@ class I18n extends EventHandler {
             pluralFn = getPluralFn(lang);
         }
 
-        var translations = this._translations[locale];
+        let translations = this._translations[locale];
         if (!translations) {
             locale = this._findFallbackLocale(locale, lang);
             lang = getLang(locale);
@@ -170,7 +170,7 @@ class I18n extends EventHandler {
         }
 
         if (translations && translations[key] && pluralFn) {
-            var index = pluralFn(n);
+            const index = pluralFn(n);
             result = translations[key][index];
 
             // if null or undefined switch back to the key (empty string is allowed)
@@ -212,7 +212,7 @@ class I18n extends EventHandler {
      * });
      */
     addData(data) {
-        var parsed;
+        let parsed;
         try {
             parsed = this._parser.parse(data);
         } catch (err) {
@@ -220,13 +220,13 @@ class I18n extends EventHandler {
             return;
         }
 
-        for (var i = 0, len = parsed.length; i < len; i++) {
-            var entry = parsed[i];
-            var locale = entry.info.locale;
-            var messages = entry.messages;
+        for (let i = 0, len = parsed.length; i < len; i++) {
+            const entry = parsed[i];
+            const locale = entry.info.locale;
+            const messages = entry.messages;
             if (!this._translations[locale]) {
                 this._translations[locale] = {};
-                var lang = getLang(locale);
+                const lang = getLang(locale);
 
                 // remember the first locale we've found for that language
                 // in case we need to fall back to it
@@ -248,8 +248,7 @@ class I18n extends EventHandler {
      * @param {object} data - The localization data. The data is expected to be in the same format as {@link I18n#addData}.
      */
     removeData(data) {
-        var parsed;
-        var key;
+        let parsed;
         try {
             parsed = this._parser.parse(data);
         } catch (err) {
@@ -257,26 +256,20 @@ class I18n extends EventHandler {
             return;
         }
 
-        for (var i = 0, len = parsed.length; i < len; i++) {
-            var entry = parsed[i];
-            var locale = entry.info.locale;
-            var translations = this._translations[locale];
+        for (let i = 0, len = parsed.length; i < len; i++) {
+            const entry = parsed[i];
+            const locale = entry.info.locale;
+            const translations = this._translations[locale];
             if (!translations) continue;
 
-            var messages = entry.messages;
-            for (key in messages) {
+            const messages = entry.messages;
+            for (const key in messages) {
                 delete translations[key];
             }
 
             // if no more entries for that locale then
             // delete the locale
-            var hasAny = false;
-            for (key in translations) {
-                hasAny = true;
-                break;
-            }
-
-            if (!hasAny) {
+            if (Object.keys(translations).length === 0) {
                 delete this._translations[locale];
                 delete this._availableLangs[getLang(locale)];
             }
@@ -310,7 +303,7 @@ class I18n extends EventHandler {
         // replace 'in' language with 'id'
         // for Indonesian because both codes are valid
         // so that users only need to use the 'id' code
-        var lang = getLang(value);
+        let lang = getLang(value);
         if (lang === 'in') {
             lang = 'id';
             value = replaceLang(value, lang);
@@ -319,7 +312,7 @@ class I18n extends EventHandler {
             }
         }
 
-        var old = this._locale;
+        const old = this._locale;
         // cache locale, lang and plural function
         this._locale = value;
         this._lang = lang;
@@ -334,26 +327,21 @@ class I18n extends EventHandler {
     }
 
     set assets(value) {
-        var i;
-        var len;
-        var id;
-        var asset;
-
-        var index = {};
+        const index = {};
 
         // convert array to dict
-        for (i = 0, len = value.length; i < len; i++) {
-            id = value[i] instanceof Asset ? value[i].id : value[i];
+        for (let i = 0, len = value.length; i < len; i++) {
+            const id = value[i] instanceof Asset ? value[i].id : value[i];
             index[id] = true;
         }
 
         // remove assets not in value
-        i = this._assets.length;
+        let i = this._assets.length;
         while (i--) {
-            id = this._assets[i];
+            const id = this._assets[i];
             if (!index[id]) {
                 this._app.assets.off('add:' + id, this._onAssetAdd, this);
-                asset = this._app.assets.get(id);
+                const asset = this._app.assets.get(id);
                 if (asset) {
                     this._onAssetRemove(asset);
                 }
@@ -362,14 +350,14 @@ class I18n extends EventHandler {
         }
 
         // add assets in value that do not already exist here
-        for (id in index) {
-            id = parseInt(id, 10);
-            if (this._assets.indexOf(id) !== -1) continue;
+        for (const id in index) {
+            const idNum = parseInt(id, 10);
+            if (this._assets.indexOf(idNum) !== -1) continue;
 
-            this._assets.push(id);
-            asset = this._app.assets.get(id);
+            this._assets.push(idNum);
+            const asset = this._app.assets.get(idNum);
             if (!asset) {
-                this._app.assets.once('add:' + id, this._onAssetAdd, this);
+                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
             } else {
                 this._onAssetAdd(asset);
             }
@@ -381,7 +369,7 @@ class I18n extends EventHandler {
     // 2) If no translation exists for that locale return the first locale available for that language.
     // 3) If no translation exists for that either then return the DEFAULT_LOCALE
     _findFallbackLocale(locale, lang) {
-        var result = DEFAULT_LOCALE_FALLBACKS[locale];
+        let result = DEFAULT_LOCALE_FALLBACKS[locale];
         if (result && this._translations[result]) {
             return result;
         }

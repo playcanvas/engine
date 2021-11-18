@@ -13,7 +13,6 @@ class MeshGenerationExample extends Example {
         </>;
     }
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, assets: { playcanvasGrey: pc.Asset }): void {
 
         // Create the application

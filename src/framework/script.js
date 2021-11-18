@@ -10,13 +10,13 @@ import { getApplication } from './globals.js';
  * @description The script namespace holds the createLoadingScreen function that
  * is used to override the default PlayCanvas loading screen.
  */
-var _legacy = false;
+let _legacy = false;
 
 // flag to avoid creating multiple loading screens e.g. when
 // loading screen scripts are reloaded
-var _createdLoadingScreen = false;
+let _createdLoadingScreen = false;
 
-var script = {
+const script = {
     // set during script load to be used for initializing script
     app: null,
 
@@ -50,7 +50,7 @@ var script = {
             return;
 
         // get the ScriptType from the callback
-        var ScriptType = callback(script.app);
+        const ScriptType = callback(script.app);
 
         // store the script name
         ScriptType._pcScriptName = name;
@@ -120,7 +120,7 @@ var script = {
      * @description Handles the creation of the loading screen of the application. A script can subscribe to
      * the events of a {@link Application} to show a loading screen, progress bar etc. In order for this to work
      * you need to set the project's loading screen script to the script that calls this method.
-     * @param {callbacks.CreateScreen} callback - A function which can set up and tear down a customised loading screen.
+     * @param {callbacks.CreateScreen} callback - A function which can set up and tear down a customized loading screen.
      * @example
      * pc.script.createLoadingScreen(function (app) {
      *     var showSplashScreen = function () {};
@@ -137,7 +137,7 @@ var script = {
 
         _createdLoadingScreen = true;
 
-        var app = getApplication();
+        const app = getApplication();
         callback(app);
     }
 };

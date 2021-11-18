@@ -9,11 +9,9 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
+import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
 
-var ammoRayStart, ammoRayEnd;
-
-var collisions = {};
-var frameCollisions = {};
+let ammoRayStart, ammoRayEnd;
 
 /**
  * @class
@@ -56,6 +54,7 @@ class SingleContactResult {
         if (arguments.length === 0) {
             this.a = null;
             this.b = null;
+            this.impulse = 0;
             this.localPointA = new Vec3();
             this.localPointB = new Vec3();
             this.pointA = new Vec3();
@@ -64,6 +63,7 @@ class SingleContactResult {
         } else {
             this.a = a;
             this.b = b;
+            this.impulse = contactPoint.impulse;
             this.localPointA = contactPoint.localPoint;
             this.localPointB = contactPoint.localPointOther;
             this.pointA = contactPoint.point;
@@ -88,14 +88,16 @@ class SingleContactResult {
  * @property {Vec3} point The point on the entity where the contact occurred, in world space.
  * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world space.
  * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
+ * @property {number} impulse The total accumulated impulse applied by the constraint solver during the last substep. Describes how hard two objects collide.
  */
 class ContactPoint {
-    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3()) {
+    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
         this.localPoint = localPoint;
         this.localPointOther = localPointOther;
         this.point = point;
         this.pointOther = pointOther;
         this.normal = normal;
+        this.impulse = impulse;
     }
 }
 
@@ -165,6 +167,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this._triggers = [];
         this._compounds = [];
 
+        this.collisions = {};
+        this.frameCollisions = {};
+
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
     }
@@ -195,10 +200,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.contactResultPool = new ObjectPool(ContactResult, 1);
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
-            ComponentSystem.bind('update', this.onUpdate, this);
+            this.app.systems.on('update', this.onUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
-            ComponentSystem.unbind('update', this.onUpdate, this);
+            this.app.systems.off('update', this.onUpdate, this);
         }
     }
 
@@ -336,9 +341,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    // #if _DEBUG
-                    console.warn('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
-                    // #endif
+                    DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
 
                     const callback = arguments[2];
                     callback(result);
@@ -414,15 +417,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         let isNewCollision = false;
         const guid = entity.getGuid();
 
-        collisions[guid] = collisions[guid] || { others: [], entity: entity };
+        this.collisions[guid] = this.collisions[guid] || { others: [], entity: entity };
 
-        if (collisions[guid].others.indexOf(other) < 0) {
-            collisions[guid].others.push(other);
+        if (this.collisions[guid].others.indexOf(other) < 0) {
+            this.collisions[guid].others.push(other);
             isNewCollision = true;
         }
 
-        frameCollisions[guid] = frameCollisions[guid] || { others: [], entity: entity };
-        frameCollisions[guid].others.push(other);
+        this.frameCollisions[guid] = this.frameCollisions[guid] || { others: [], entity: entity };
+        this.frameCollisions[guid].others.push(other);
 
         return isNewCollision;
     }
@@ -440,6 +443,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
         contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        contact.impulse = contactPoint.getAppliedImpulse();
         return contact;
     }
 
@@ -456,6 +460,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.pointOther.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
         contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        contact.impulse = contactPoint.getAppliedImpulse();
         return contact;
     }
 
@@ -469,6 +474,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         result.pointA = contactPoint.point;
         result.pointB = contactPoint.pointOther;
         result.normal = contactPoint.normal;
+        result.impulse = contactPoint.impulse;
 
         return result;
     }
@@ -488,10 +494,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * related entities.
      */
     _cleanOldCollisions() {
-        for (const guid in collisions) {
-            if (collisions.hasOwnProperty(guid)) {
-                const frameCollision = frameCollisions[guid];
-                const collision = collisions[guid];
+        for (const guid in this.collisions) {
+            if (this.collisions.hasOwnProperty(guid)) {
+                const frameCollision = this.frameCollisions[guid];
+                const collision = this.collisions[guid];
                 const entity = collision.entity;
                 const entityCollision = entity.collision;
                 const entityRigidbody = entity.rigidbody;
@@ -526,7 +532,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
 
                 if (others.length === 0) {
-                    delete collisions[guid];
+                    delete this.collisions[guid];
                 }
             }
         }
@@ -565,7 +571,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         const dispatcher = dynamicsWorld.getDispatcher();
         const numManifolds = dispatcher.getNumManifolds();
 
-        frameCollisions = {};
+        this.frameCollisions = {};
 
         // loop through the all contacts and fire events
         for (let i = 0; i < numManifolds; i++) {
@@ -620,7 +626,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                     // fire triggerenter events for rigidbodies
                     if (e0BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e1, e0);
                         }
 
@@ -630,7 +636,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     }
 
                     if (e1BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e0, e1);
                         }
 
@@ -760,6 +766,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);
             Ammo.destroy(this.solver);

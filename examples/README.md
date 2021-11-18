@@ -26,8 +26,10 @@ To create the side bar thumbnails run the following script:
 npm run thumbnails
 ```
 
-### Local engine development
-By default, the local build uses whichever version of PlayCanvas is listed in the package.json file. If you'd like to use the locally built version of PlayCanvas in the engines build directory you can replace the `npm run build:watch` script above with `npm run local` or `npm run local:dbg` for the debug version.
+Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
+
+### Debug and performance engine development
+By default, the examples app uses the local version of the playcanvas engine. If you'd like to use the debug or performance versions of the engine instead, you can run `npm run build:debug` or `npm run build:profiler`.
 
 By default, example code is executed as an anonymous function in the browser (in order to support live code editing). However this limits the usefulness of debugging tools as the callstack for the example code is obscured. To run examples with a full callstack, allowing line by line debugging of an example, you can use the debug path for each example. Where `/#/misc/hello-world` becomes `/#/debug/misc/hello-world`. A full list of debug paths can be found at [http://localhost:5000/debug-directory]().
 
@@ -94,7 +96,7 @@ example(canvas: HTMLCanvasElement, TWEEN: any) {
 ### `controls` function
 This function allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 ```tsx
-import { Button } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 controls(data: any) {
     return <>
         <Button text='Flash' onClick={() => {
@@ -112,3 +114,18 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
     console.log(data.get('flash'));
 }
 ```
+## Deployment
+
+Build the latest engine using `npm run build` in the engine directory.
+
+Build the latest examples browser using `npm run build` in the examples directory.
+
+Run `npm run thumbnails` to create the thumbnails directory for browser. This may take a while depending on the number of new examples or if this is first time it has been run locally.
+
+Run `npm run build:directory` to build the static html directory structure for the project.
+
+Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository and submit a PR with the changes. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
+
+Run `git commit -m "Update to Engine 1.XX.X"` in the `playcanvas.github.io` repo
+
+Create a PR for this new commit

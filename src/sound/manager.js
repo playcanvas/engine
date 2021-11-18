@@ -54,8 +54,8 @@ class SoundManager extends EventHandler {
 
                     const context = this.context;
                     if (context) {
-                        var buffer = context.createBuffer(1, 1, 44100);
-                        var source = context.createBufferSource();
+                        const buffer = context.createBuffer(1, 1, 44100);
+                        const source = context.createBufferSource();
                         source.buffer = buffer;
                         source.connect(context.destination);
                         source.start(0);
@@ -81,8 +81,19 @@ class SoundManager extends EventHandler {
     }
 
     resume() {
-        this.suspended = false;
-        this.fire('resume');
+        const resumeFunction = () => {
+            this.suspended = false;
+            this.fire('resume');
+        };
+
+        // On iOS safari, switching tab or minimizing the browser will set the AudioContext state as 'interrupted'.
+        // On other browsers, AudioContext state will be set to 'suspended'.
+        // In those situations, the .resume() API must be called explicitly
+        if ((hasAudioContext() || this._forceWebAudioApi) &&
+            (this.context.state === 'interrupted' || this.context.state === 'suspended')) {
+            this.context.resume().then(resumeFunction);
+        } else
+            resumeFunction();
     }
 
     destroy() {
@@ -114,9 +125,8 @@ class SoundManager extends EventHandler {
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel} The channel playing the sound.
      */
-    playSound(sound, options) {
-        options = options || {};
-        var channel = null;
+    playSound(sound, options = {}) {
+        let channel = null;
         if (Channel) {
             channel = new Channel(this, sound, options);
             channel.play();
@@ -136,9 +146,8 @@ class SoundManager extends EventHandler {
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel3d} The 3D channel playing the sound.
      */
-    playSound3d(sound, position, options) {
-        options = options || {};
-        var channel = null;
+    playSound3d(sound, position, options = {}) {
+        let channel = null;
         if (Channel3d) {
             channel = new Channel3d(this, sound, options);
             channel.setPosition(position);
