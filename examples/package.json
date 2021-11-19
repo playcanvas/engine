@@ -14,7 +14,7 @@
     "thumbnails": "node ./thumbnails.js",
     "build:directory": "node ./example-directory.js",
     "build:debug:directory": "cp -r ../build/ ./dist/build/ && cp ./lib/wasm-loader.js ./dist/build && cp ./node_modules/@playcanvas/observer/index.js ./dist/build/playcanvas-observer.js && node ./debug/index.js",
-    "watch:debug:directory": "watch 'npm run build:debug:directory' ./src/examples/"
+    "watch:debug:directory": "nodemon -e js,mjs,json,tsx --watch ../src --watch ./src/examples --exec npm run build:debug:directory"
   },
   "eslintConfig": {
     "root": true,
@@ -67,6 +67,7 @@
     "html-webpack-plugin": "^5.3.2",
     "monaco-editor": "^0.25.2",
     "monaco-editor-webpack-plugin": "^4.0.0",
+    "nodemon": "^2.0.15",
     "playcanvas": "file:../",
     "prettier": "2.4.1",
     "prop-types": "^15.7.2",
@@ -80,7 +81,6 @@
     "sharp": "^0.28.3",
     "style-loader": "^3.0.0",
     "typescript": "^4.3.5",
-    "watch": "^1.0.2",
     "webpack": "^5.42.1",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.7.2",
