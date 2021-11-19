@@ -17,7 +17,7 @@ FollowCamera.attributes.add('lerpAmount', {
     max: 1,
     default: 0.99,
     title: 'Lerp Amount',
-    description: 'The amount to lerp the camera towards its desired position over time. The closer it is to 1, the faster the camera will move. Lerping is frame rate independent though and will be correct for other frame rates.'
+    description: 'The amount to lerp the camera towards its desired position over time. The closer it is to 1, the faster the camera will move. Lerping is frame rate independent and will be correct for every frame rate.'
 });
 
 // initialize code called once per entity
