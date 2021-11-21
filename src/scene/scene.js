@@ -17,14 +17,11 @@ import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 
 /**
- * @class
- * @name Scene
- * @augments EventHandler
- * @classdesc A scene is graphical representation of an environment. It manages the
- * scene hierarchy, all graphical objects, lights, and scene-wide properties.
- * @description Creates a new Scene.
- * @property {Color} ambientLight The color of the scene's ambient light. Defaults
- * to black (0, 0, 0).
+ * A scene is graphical representation of an environment. It manages the scene hierarchy, all
+ * graphical objects, lights, and scene-wide properties.
+ *
+ * @property {Color} ambientLight The color of the scene's ambient light. Defaults to black
+ * (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
  *
  * - {@link FOG_NONE}
@@ -33,17 +30,15 @@ import { Model } from './model.js';
  * - {@link FOG_EXP2}
  *
  * Defaults to {@link FOG_NONE}.
- * @property {Color} fogColor The color of the fog (if enabled). Defaults to black
- * (0, 0, 0).
- * @property {number} fogDensity The density of the fog (if enabled). This property
- * is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
- * @property {number} fogEnd The distance from the viewpoint where linear fog reaches
- * its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
- * Defaults to 1000.
- * @property {number} fogStart The distance from the viewpoint where linear fog begins.
- * This property is only valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1.
- * @property {number} gammaCorrection The gamma correction to apply when rendering the
- * scene. Can be:
+ * @property {Color} fogColor The color of the fog (if enabled). Defaults to black (0, 0, 0).
+ * @property {number} fogDensity The density of the fog (if enabled). This property is only valid
+ * if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
+ * @property {number} fogEnd The distance from the viewpoint where linear fog reaches its maximum.
+ * This property is only valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1000.
+ * @property {number} fogStart The distance from the viewpoint where linear fog begins. This
+ * property is only valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1.
+ * @property {number} gammaCorrection The gamma correction to apply when rendering the scene. Can
+ * be:
  *
  * - {@link GAMMA_NONE}
  * - {@link GAMMA_SRGB}
@@ -58,48 +53,76 @@ import { Model } from './model.js';
  * - {@link TONEMAP_ACES}
  *
  * Defaults to {@link TONEMAP_LINEAR}.
- * @property {number} exposure The exposure value tweaks the overall brightness of
- * the scene. Defaults to 1.
- * @property {Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
- * @property {Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
- * @property {Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
- * @property {Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the scene's skybox, if mip level 3. Defaults to null.
- * @property {Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the scene's skybox, if mip level 4. Defaults to null.
- * @property {Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
- * @property {Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
- * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
- * @property {Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
- * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
- * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
- * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
+ * @property {number} exposure The exposure value tweaks the overall brightness of the scene.
  * Defaults to 1.
- * @property {number} lightmapMaxResolution The maximum lightmap resolution. Defaults to
- * 2048.
+ * @property {Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is
+ * 0. Defaults to null.
+ * @property {Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as
+ * the scene's skybox, if mip level 1. Defaults to null.
+ * @property {Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the
+ * scene's skybox, if mip level 2. Defaults to null.
+ * @property {Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the
+ * scene's skybox, if mip level 3. Defaults to null.
+ * @property {Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the
+ * scene's skybox, if mip level 4. Defaults to null.
+ * @property {Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the
+ * scene's skybox, if mip level 5. Defaults to null.
+ * @property {Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the
+ * scene's skybox, if mip level 6. Defaults to null.
+ * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
+ * @property {Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to
+ * {@link Quat.IDENTITY}.
+ * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid for
+ * prefiltered cubemap skyboxes. Defaults to 0 (base level).
+ * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier. Defaults to 1.
+ * @property {number} lightmapMaxResolution The maximum lightmap resolution. Defaults to 2048.
  * @property {number} lightmapMode The lightmap baking mode. Can be:
  *
  * - {@link BAKE_COLOR}: single color lightmap
- * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
- * bump/specular). Only lights with bakeDir=true will be used for generating the dominant
- * light direction.
+ * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump or
+ * specular). Only lights with bakeDir=true will be used for generating the dominant light
+ * direction.
  *
  * Defaults to {@link BAKE_COLORDIR}.
- * @property {boolean} lightmapFilterEnabled Enables bilateral filter on runtime baked color lightmaps, which removes the noise and banding while preserving the edges. Defaults to false;
- * Note that the filtering takes place in the image space of the lightmap, and it does not filter across lightmap UV space seams, often making the seams more visible. It's important to balance the strength of the filter with number of samples used
- * for lightmap baking to limit the visible artifacts.
- * @property {number} lightmapFilterRange A range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value applies more widespread blur. This needs to be a positive non-zero value. Defaults to 10.
- * @property {number} lightmapFilterSmoothness A spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value blurs less similar colors. This needs to be a positive non-zero value. Defaults to 0.2.
- * @property {boolean} ambientBake If enabled, the ambient lighting will be baked into lightmaps. This will be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
- * @property {number} ambientBakeNumSamples If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum value is 255.
- * @property {number} ambientBakeSpherePart If {@link Scene#ambientBake} is true, this specifies a part of the sphere which represents the source of ambient light. The valid range is 0..1, representing a part of the sphere from top to the bottom.
- * A value of 0.5 represents the upper hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller upper hemisphere as this requires fewer samples to bake.
- * @property {number} ambientBakeOcclusionContrast If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
- * @property {number} ambientBakeOcclusionBrightness If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
- * @property {LayerComposition} layers A {@link LayerComposition} that defines
- * rendering order of this scene.
- * @property {Entity} root The root entity of the scene, which is usually the only
- * child to the Application root entity.
+ * @property {boolean} lightmapFilterEnabled Enables bilateral filter on runtime baked color
+ * lightmaps, which removes the noise and banding while preserving the edges. Defaults to false;
+ * Note that the filtering takes place in the image space of the lightmap, and it does not filter
+ * across lightmap UV space seams, often making the seams more visible. It's important to balance
+ * the strength of the filter with number of samples used for lightmap baking to limit the visible
+ * artifacts.
+ * @property {number} lightmapFilterRange A range parameter of the bilateral filter. It's used when
+ * {@link Scene#lightmapFilterEnabled} is enabled. Larger value applies more widespread blur. This
+ * needs to be a positive non-zero value. Defaults to 10.
+ * @property {number} lightmapFilterSmoothness A spatial parameter of the bilateral filter. It's
+ * used when {@link Scene#lightmapFilterEnabled} is enabled. Larger value blurs less similar
+ * colors. This needs to be a positive non-zero value. Defaults to 0.2.
+ * @property {boolean} ambientBake If enabled, the ambient lighting will be baked into lightmaps.
+ * This will be either the {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}.
+ * Defaults to false.
+ * @property {number} ambientBakeNumSamples If {@link Scene#ambientBake} is true, this specifies
+ * the number of samples used to bake the ambient light into the lightmap. Defaults to 1. Maximum
+ * value is 255.
+ * @property {number} ambientBakeSpherePart If {@link Scene#ambientBake} is true, this specifies a
+ * part of the sphere which represents the source of ambient light. The valid range is 0..1,
+ * representing a part of the sphere from top to the bottom. A value of 0.5 represents the upper
+ * hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller upper
+ * hemisphere as this requires fewer samples to bake.
+ * @property {number} ambientBakeOcclusionContrast If {@link Scene#ambientBake} is true, this
+ * specifies the contrast of ambient occlusion. Typical range is -1 to 1. Defaults to 0,
+ * representing no change to contrast.
+ * @property {number} ambientBakeOcclusionBrightness If {@link Scene#ambientBake} is true, this
+ * specifies the brightness of ambient occlusion. Typical range is -1 to 1. Defaults to 0,
+ * representing no change to brightness.
+ * @property {LayerComposition} layers A {@link LayerComposition} that defines rendering order of
+ * this scene.
+ * @property {Entity} root The root entity of the scene, which is usually the only child to the
+ * {@link Application} root entity.
+ * @augments EventHandler
  */
 class Scene extends EventHandler {
+    /**
+     * Create a new Scene instance.
+     */
     constructor() {
         super();
 

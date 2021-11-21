@@ -41,15 +41,18 @@ const up = new Vec3();
  */
 
 /**
- * @class
- * @name GraphNode
- * @augments EventHandler
- * @classdesc A hierarchical scene node.
- * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
+ * A hierarchical scene node.
+ *
  * @property {string} name The non-unique name of a graph node.
  * @property {Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link GraphNode#findByTag} function.
+ * @augments EventHandler
  */
 class GraphNode extends EventHandler {
+    /**
+     * Create a new GraphNode instance.
+     *
+     * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
+     */
     constructor(name) {
         super();
 

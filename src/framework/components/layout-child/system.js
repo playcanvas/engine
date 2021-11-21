@@ -7,14 +7,16 @@ import { LayoutChildComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name LayoutChildComponentSystem
+ * Manages creation of {@link LayoutChildComponent}s.
+ *
  * @augments ComponentSystem
- * @description Create a new LayoutChildComponentSystem.
- * @classdesc Manages creation of {@link LayoutChildComponent}s.
- * @param {Application} app - The application.
  */
 class LayoutChildComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LayoutChildComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

@@ -11,24 +11,23 @@ const METHOD_POST_INITIALIZE = '_onPostInitialize';
 const METHOD_UPDATE = '_onUpdate';
 const METHOD_POST_UPDATE = '_onPostUpdate';
 
-// Ever-increasing integer used as the
-// execution order of new script components.
-// We are using an ever-increasing number and not
-// the order of the script component in the components
-// array because if we ever remove components from the array
-// we would have to re-calculate the execution order for all subsequent
-// script components in the array every time, which would be slow
+// Ever-increasing integer used as the execution order of new script components. We are using an
+// ever-increasing number and not the order of the script component in the components array because
+// if we ever remove components from the array, we would have to re-calculate the execution order
+// for all subsequent script components in the array every time, which would be slow.
 let executionOrderCounter = 0;
 
 /**
- * @class
- * @name ScriptComponentSystem
+ * Allows scripts to be attached to an Entity and executed.
+ *
  * @augments ComponentSystem
- * @description Create a new ScriptComponentSystem.
- * @classdesc Allows scripts to be attached to an Entity and executed.
- * @param {Application} app - The application.
  */
 class ScriptComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ScriptComponentSystem.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

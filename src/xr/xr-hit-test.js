@@ -14,17 +14,20 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  */
 
 /**
- * @class
- * @name XrHitTest
- * @augments EventHandler
- * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
- * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
+ * Hit Test provides ability to get position and rotation of ray intersecting point with
+ * representation of real world geometry by underlying AR system.
+ *
  * @property {boolean} supported True if AR Hit Test is supported.
  * @property {XrHitTestSource[]} sources list of active {@link XrHitTestSource}.
+ * @augments EventHandler
  */
 class XrHitTest extends EventHandler {
+    /**
+     * Create a new XrHitTest instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 

@@ -26,23 +26,22 @@ const PARAM_OUTER_SCALE = 'outerScale';
 const PARAM_ATLAS_RECT = 'atlasRect';
 
 /**
- * @component
- * @class
- * @name SpriteComponent
- * @augments Component
- * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
- * @param {SpriteComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * Enables an Entity to render a simple static sprite or sprite animations.
+ *
  * @property {string} type The type of the SpriteComponent. Can be:
  *
  * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
  * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
  *
- * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
- * @property {number|Asset} spriteAsset The asset id or the {@link Asset} of the sprite to render. Only works for {@link SPRITETYPE_SIMPLE} sprites.
+ * @property {number} frame The frame counter of the sprite. Specifies which frame from the current
+ * sprite asset to render.
+ * @property {number|Asset} spriteAsset The asset id or the {@link Asset} of the sprite to render.
+ * Only works for {@link SPRITETYPE_SIMPLE} sprites.
  * @property {Sprite} sprite The current sprite.
- * @property {number} width The width of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
- * @property {number} height The height of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
+ * @property {number} width The width of the sprite when rendering using 9-Slicing. The width and
+ * height are only used when the render mode of the sprite asset is Sliced or Tiled.
+ * @property {number} height The height of the sprite when rendering using 9-Slicing. The width and
+ * height are only used when the render mode of the sprite asset is Sliced or Tiled.
  * @property {Color} color The color tint of the sprite.
  * @property {number} opacity The opacity of the sprite.
  * @property {boolean} flipX Flip the X axis when rendering a sprite.
@@ -50,12 +49,25 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * @property {object} clips A dictionary that contains {@link SpriteAnimationClip}s.
  * @property {SpriteAnimationClip} currentClip The current clip being played.
  * @property {number} speed A global speed modifier used when playing sprite animation clips.
- * @property {number} batchGroupId Assign sprite to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
- * @property {string} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this sprite should belong.
- * @property {number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer. This is not used unless the layer's sort order is set to {@link SORTMODE_MANUAL}.
+ * @property {number} batchGroupId Assign sprite to a specific batch group (see
+ * {@link BatchGroup}). Default value is -1 (no group).
+ * @property {string} autoPlayClip The name of the clip to play automatically when the component is
+ * enabled and the clip exists.
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this sprite should
+ * belong.
+ * @property {number} drawOrder The draw order of the component. A higher value means that the
+ * component will be rendered on top of other components in the same layer. This is not used unless
+ * the layer's sort order is set to {@link SORTMODE_MANUAL}.
+ * @augments Component
+ * @component
  */
 class SpriteComponent extends Component {
+    /**
+     * Create a new SpriteComponent instance.
+     *
+     * @param {SpriteComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

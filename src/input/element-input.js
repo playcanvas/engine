@@ -144,18 +144,8 @@ class ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementMouseEvent
- * @augments ElementInputEvent
- * @classdesc Represents a Mouse event fired on a {@link ElementComponent}.
- * @description Create an instance of an ElementMouseEvent.
- * @param {MouseEvent} event - The MouseEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {number} x - The x coordinate.
- * @param {number} y - The y coordinate.
- * @param {number} lastX - The last x coordinate.
- * @param {number} lastY - The last y coordinate.
+ * Represents a Mouse event fired on a {@link ElementComponent}.
+ *
  * @property {boolean} ctrlKey Whether the ctrl key was pressed.
  * @property {boolean} altKey Whether the alt key was pressed.
  * @property {boolean} shiftKey Whether the shift key was pressed.
@@ -164,8 +154,22 @@ class ElementInputEvent {
  * @property {number} dx The amount of horizontal movement of the cursor.
  * @property {number} dy The amount of vertical movement of the cursor.
  * @property {number} wheelDelta The amount of the wheel movement.
+ * @augments ElementInputEvent
  */
 class ElementMouseEvent extends ElementInputEvent {
+    /**
+     * Create an instance of an ElementMouseEvent.
+     *
+     * @param {MouseEvent} event - The MouseEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} lastX - The last x coordinate.
+     * @param {number} lastY - The last y coordinate.
+     */
     constructor(event, element, camera, x, y, lastX, lastY) {
         super(event, element, camera);
 
@@ -201,22 +205,28 @@ class ElementMouseEvent extends ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementTouchEvent
- * @augments ElementInputEvent
- * @classdesc Represents a TouchEvent fired on a {@link ElementComponent}.
- * @description Create an instance of an ElementTouchEvent.
- * @param {TouchEvent} event - The TouchEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {number} x - The x coordinate of the touch that triggered the event.
- * @param {number} y - The y coordinate of the touch that triggered the event.
- * @param {Touch} touch - The touch object that triggered the event.
- * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
- * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+ * Represents a TouchEvent fired on a {@link ElementComponent}.
+ *
+ * @property {Touch[]} touches The Touch objects representing all current points of contact with
+ * the surface, regardless of target or changed status.
+ * @property {Touch[]} changedTouches The Touch objects representing individual points of contact
+ * whose states changed between the previous touch event and this one.
  * @property {Touch} touch The touch object that triggered the event.
+ * @augments ElementInputEvent
  */
 class ElementTouchEvent extends ElementInputEvent {
+    /**
+     * Create an instance of an ElementTouchEvent.
+     *
+     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {number} x - The x coordinate of the touch that triggered the event.
+     * @param {number} y - The y coordinate of the touch that triggered the event.
+     * @param {Touch} touch - The touch object that triggered the event.
+     */
     constructor(event, element, camera, x, y, touch) {
         super(event, element, camera);
 
@@ -229,18 +239,24 @@ class ElementTouchEvent extends ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementSelectEvent
+ * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
+ *
+ * @property {XrInputSource} inputSource The XR input source that this event was originally raised
+ * from.
  * @augments ElementInputEvent
- * @classdesc Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
- * @description Create an instance of a ElementSelectEvent.
- * @param {object} event - The XRInputSourceEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {XrInputSource} inputSource - The XR input source that this event was originally raised from.
- * @property {XrInputSource} inputSource The XR input source that this event was originally raised from.
  */
 class ElementSelectEvent extends ElementInputEvent {
+    /**
+     * Create an instance of a ElementSelectEvent.
+     *
+     * @param {object} event - The XRInputSourceEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {XrInputSource} inputSource - The XR input source that this event was originally
+     * raised from.
+     */
     constructor(event, element, camera, inputSource) {
         super(event, element, camera);
         this.inputSource = inputSource;
@@ -248,18 +264,19 @@ class ElementSelectEvent extends ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementInput
- * @classdesc Handles mouse and touch events for {@link ElementComponent}s. When input events
- * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
- * @description Create a new ElementInput instance.
- * @param {Element} domElement - The DOM element.
- * @param {object} [options] - Optional arguments.
- * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
- * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
- * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
+ * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
+ * ElementComponent this fires the appropriate events on the ElementComponent.
  */
 class ElementInput {
+    /**
+     * Create a new ElementInput instance.
+     *
+     * @param {Element} domElement - The DOM element.
+     * @param {object} [options] - Optional arguments.
+     * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
+     * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
+     * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
+     */
     constructor(domElement, options) {
         this._app = null;
         this._attached = false;

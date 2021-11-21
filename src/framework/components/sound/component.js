@@ -5,40 +5,41 @@ import { Component } from '../component.js';
 import { SoundSlot } from './slot.js';
 
 /**
- * @component
- * @class
- * @name SoundComponent
- * @augments Component
- * @classdesc The Sound Component controls playback of {@link Sound}s.
- * @description Create a new Sound Component.
- * @param {SoundComponentSystem} system - The ComponentSystem that created this
- * component.
- * @param {Entity} entity - The entity that the Component is attached to.
- * @property {number} volume The volume modifier to play the audio with. In range 0-1.
+ * The Sound Component controls playback of {@link Sound}s.
+ *
+ * @property {number} volume The volume modifier to play the audio with. In range 0-1. Defaults to
+ * 1.
+ * @property {number} pitch The pitch modifier to play the audio with. Must be larger than 0.01.
  * Defaults to 1.
- * @property {number} pitch The pitch modifier to play the audio with. Must be larger
- * than 0.01. Defaults to 1.
- * @property {boolean} positional If true the audio will play back at the location
- * of the Entity in space, so the audio will be affected by the position of the
- * {@link AudioListenerComponent}. Defaults to true.
- * @property {string} distanceModel Determines which algorithm to use to reduce the
- * volume of the sound as it moves away from the listener. Can be:
+ * @property {boolean} positional If true the audio will play back at the location of the Entity in
+ * space, so the audio will be affected by the position of the {@link AudioListenerComponent}.
+ * Defaults to true.
+ * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the
+ * sound as it moves away from the listener. Can be:
  *
  * - {@link DISTANCE_LINEAR}
  * - {@link DISTANCE_INVERSE}
  * - {@link DISTANCE_EXPONENTIAL}
  *
  * Defaults to {@link DISTANCE_LINEAR}.
- * @property {number} refDistance The reference distance for reducing volume as the
- * sound source moves further from the listener. Defaults to 1.
- * @property {number} maxDistance The maximum distance from the listener at which audio
- * falloff stops. Note the volume of the audio is not 0 after this distance, but just
- * doesn't fall off anymore. Defaults to 10000.
+ * @property {number} refDistance The reference distance for reducing volume as the sound source
+ * moves further from the listener. Defaults to 1.
+ * @property {number} maxDistance The maximum distance from the listener at which audio falloff
+ * stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off
+ * anymore. Defaults to 10000.
  * @property {number} rollOffFactor The factor used in the falloff equation. Defaults to 1.
- * @property {object} slots A dictionary that contains the {@link SoundSlot}s managed
- * by this SoundComponent.
+ * @property {object} slots A dictionary that contains the {@link SoundSlot}s managed by this
+ * SoundComponent.
+ * @augments Component
+ * @component
  */
 class SoundComponent extends Component {
+    /**
+     * Create a new Sound Component.
+     *
+     * @param {SoundComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity that the Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

@@ -24,25 +24,28 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  */
 
 /**
- * @class
- * @name XrManager
- * @augments EventHandler
- * @classdesc Manage and update XR session and its states.
- * @description Manage and update XR session and its states.
- * @hideconstructor
- * @param {Application} app - The main application.
+ * Manage and update XR session and its states.
+ *
  * @property {boolean} supported True if XR is supported.
  * @property {boolean} active True if XR session is running.
- * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
- * any of XRTYPE_*.
- * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
- * is running. Can be any of XRSPACE_*.
+ * @property {string|null} type Returns type of currently running XR session or null if no session
+ * is running. Can be any of XRTYPE_*.
+ * @property {string|null} spaceType Returns reference space type of currently running XR session
+ * or null if no session is running. Can be any of XRSPACE_*.
  * @property {Entity|null} camera Active camera for which XR session is running or null.
  * @property {XrInput} input Provides access to Input Sources.
- * @property {XrHitTest} hitTest Provides ability to hit test representation of real world geometry of underlying AR system.
+ * @property {XrHitTest} hitTest Provides ability to hit test representation of real world geometry
+ * of underlying AR system.
  * @property {object|null} session Provides access to XRSession of WebXR.
+ * @augments EventHandler
  */
 class XrManager extends EventHandler {
+    /**
+     * Create a new XrManager instance.
+     *
+     * @param {Application} app - The main application.
+     * @hideconstructor
+     */
     constructor(app) {
         super();
 

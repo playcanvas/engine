@@ -15,19 +15,25 @@ import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
 import { Entity } from "../../entity.js";
 
 /**
- * @component
- * @class
- * @name AnimComponent
- * @augments Component
- * @classdesc The Anim Component allows an Entity to playback animations on models and entity properties.
- * @description Create a new AnimComponent.
- * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
- * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
+ * The Anim Component allows an Entity to playback animations on models and entity properties.
+ *
+ * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at
+ * normal speed, 0.0 pauses the animation.
+ * @property {boolean} activate If true the first animation will begin playing when the scene is
+ * loaded.
  * @property {boolean} playing Plays or pauses all animations in the component.
+ * @augments Component
+ * @component
  */
 class AnimComponent extends Component {
+    /**
+     * Create a new AnimComponent instance.
+     *
+     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this
+     * Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
+
     constructor(system, entity) {
         super(system, entity);
 

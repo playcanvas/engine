@@ -14,14 +14,9 @@ import { Component } from '../component.js';
 import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
- * @component
- * @class
- * @name RenderComponent
- * @augments Component
- * @classdesc Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches {@link MeshInstance} geometry to the Entity.
- * @description Create a new RenderComponent.
- * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches
+ * {@link MeshInstance} geometry to the Entity.
+ *
  * @property {string} type The type of the render. Can be one of the following:
  * - "asset": The component will render a render asset
  * - "box": The component will render a box (1 unit in each dimension)
@@ -30,28 +25,52 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
  * - "plane": The component will render a plane (1 unit in each dimension)
  * - "sphere": The component will render a sphere (radius 0.5)
- * @property {Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
- * @property {Asset[]|number[]} materialAssets The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
- * @property {Material} material The material {@link Material} that will be used to render the meshes (not used on renders of type 'asset').
- * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have shadow casting enabled.
+ * @property {Asset|number} asset The render asset for the render component (only applies to type
+ * 'asset') - can also be an asset id.
+ * @property {Asset[]|number[]} materialAssets The material assets that will be used to render the
+ * meshes. Each material corresponds to the respective mesh instance.
+ * @property {Material} material The material {@link Material} that will be used to render the
+ * meshes (not used on renders of type 'asset').
+ * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have
+ * shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on attached meshes.
- * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering lightmaps.
- * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
+ * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering
+ * lightmaps.
+ * @property {boolean} lightmapped If true, the meshes will be lightmapped after using
+ * lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark meshes as non-movable (optimization).
- * @property {BoundingBox} customAabb If set, the object space bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
- * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
- * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
- * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which the meshes should belong.
- * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
- * @property {Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
- * @property {number} renderStyle Set rendering of all {@link MeshInstance}s to the specified render style. Can be one of the following:
+ * @property {BoundingBox} customAabb If set, the object space bounding box is used as a bounding
+ * box for visibility culling of attached mesh instances. This is an optimization, allowing
+ * oversized bounding box to be specified for skinned characters in order to avoid per frame
+ * bounding box computations based on bone positions.
+ * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component.
+ * If meshes are not set or loaded for component it will return null.
+ * @property {number} batchGroupId Assign meshes to a specific batch group (see
+ * {@link BatchGroup}). Default value is -1 (no group).
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which the meshes should
+ * belong. Don't push/pop/splice or modify this array, if you want to change it - set a new one
+ * instead.
+ * @property {Entity} rootBone A reference to the entity to be used as the root bone for any
+ * skinned meshes that are rendered by this component.
+ * @property {number} renderStyle Set rendering of all {@link MeshInstance}s to the specified
+ * render style. Can be:
+ *
  * - {@link RENDERSTYLE_SOLID}
  * - {@link RENDERSTYLE_WIREFRAME}
  * - {@link RENDERSTYLE_POINTS}
+ * 
+ * Defaults to {@link RENDERSTYLE_SOLID}.
+ * @augments Component
+ * @component
  */
 class RenderComponent extends Component {
+    /**
+     * Create a new RenderComponent.
+     *
+     * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */    
     constructor(system, entity) {
         super(system, entity);
 

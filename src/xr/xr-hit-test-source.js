@@ -7,21 +7,20 @@ const poolVec3 = [];
 const poolQuat = [];
 
 /**
- * @class
- * @name XrHitTestSource
+ * Represents XR hit test source, which provides access to hit results of real world geometry from
+ * AR session.
+ *
  * @augments EventHandler
- * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
- * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
- * @param {boolean} transient - True if XRHitTestSource created for input source profile.
- * @example
- * hitTestSource.on('result', function (position, rotation) {
- *     target.setPosition(position);
- * });
  */
 class XrHitTestSource extends EventHandler {
+    /**
+     * Create a new XrHitTestSource instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
+     * @param {boolean} transient - True if XRHitTestSource created for input source profile.
+     * @hideconstructor
+     */
     constructor(manager, xrHitTestSource, transient) {
         super();
 

@@ -29,19 +29,11 @@ const properties = [
 ];
 
 /**
- * @component
- * @class
- * @name CameraComponent
- * @augments Component
- * @classdesc The Camera Component enables an Entity to render the scene. A scene
- * requires at least one enabled camera component to be rendered. Note that multiple
- * camera components can be enabled simultaneously (for split-screen or offscreen
- * rendering, for example).
- * @description Create a new Camera Component.
- * @param {CameraComponentSystem} system - The ComponentSystem that created this
- * Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @example
+ * The Camera Component enables an Entity to render the scene. A scene requires at least one
+ * enabled camera component to be rendered. Note that multiple camera components can be enabled
+ * simultaneously (for split-screen or offscreen rendering, for example).
+ *
+ * ```javascript
  * // Add a pc.CameraComponent to an entity
  * var entity = new pc.Entity();
  * entity.addComponent('camera', {
@@ -49,14 +41,14 @@ const properties = [
  *     farClip: 100,
  *     fov: 55
  * });
- * @example
+ *
  * // Get the pc.CameraComponent on an entity
  * var cameraComponent = entity.camera;
- * @example
+ *
  * // Update a property on a camera component
  * entity.camera.nearClip = 2;
- * @property {number} projection The type of projection used to render the camera.
- * Can be:
+ * ```
+ * @property {number} projection The type of projection used to render the camera. Can be:
  *
  * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
  * resembles a truncated pyramid.
@@ -64,10 +56,9 @@ const properties = [
  * frustum is a cuboid.
  *
  * Defaults to {@link PROJECTION_PERSPECTIVE}.
- * @property {number} aspectRatio The aspect ratio (width divided by height) of the
- * camera. If aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically
- * calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set
- * the value.
+ * @property {number} aspectRatio The aspect ratio (width divided by height) of the camera. If
+ * aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically calculated every
+ * frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
  * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
  *
  * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
@@ -75,66 +66,76 @@ const properties = [
  * - {@link ASPECT_MANUAL}: use the aspectRatio value.
  *
  * Defaults to {@link ASPECT_AUTO}.
- * @property {Color} clearColor The color used to clear the canvas to before the
- * camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
- * @property {boolean} clearColorBuffer If true the camera will clear the color buffer
- * to the color set in clearColor. Defaults to true.
- * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+ * @property {Color} clearColor The color used to clear the canvas to before the camera starts to
+ * render. Defaults to [0.75, 0.75, 0.75, 1].
+ * @property {boolean} clearColorBuffer If true the camera will clear the color buffer to the color
+ * set in clearColor. Defaults to true.
+ * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer. Defaults to
+ * true.
+ * @property {boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
  * Defaults to true.
- * @property {boolean} clearStencilBuffer If true the camera will clear the stencil
- * buffer. Defaults to true.
- * @property {number} farClip The distance from the camera after which no rendering
- * will take place. Defaults to 1000.
- * @property {number} fov The field of view of the camera in degrees. Usually this is
- * the Y-axis field of view, see {@link CameraComponent#horizontalFov}. Used for
+ * @property {number} farClip The distance from the camera after which no rendering will take
+ * place. Defaults to 1000.
+ * @property {number} fov The field of view of the camera in degrees. Usually this is the Y-axis
+ * field of view, see {@link CameraComponent#horizontalFov}. Used for
  * {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
- * @property {boolean} horizontalFov Set which axis to use for the Field of View
- * calculation. Defaults to false.
- * @property {number} nearClip The distance from the camera before which no rendering
- * will take place. Defaults to 0.1.
- * @property {number} orthoHeight The half-height of the orthographic view window (in
- * the Y-axis). Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
- * @property {number} priority Controls the order in which cameras are rendered. Cameras
- * with smaller values for priority are rendered first. Defaults to 0.
- * @property {RenderTarget} renderTarget Render target to which rendering of the cameras
- * is performed. If not set, it will render simply to the screen.
- * @property {Vec4} rect Controls where on the screen the camera will be rendered in
- * normalized screen coordinates. Defaults to [0, 0, 1, 1].
- * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle.
- * The order of the values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
- * @property {PostEffectQueue} postEffects The post effects queue for this camera.
- * Use this to add or remove post effects from the camera.
- * @property {boolean} frustumCulling Controls the culling of mesh instances against
- * the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
- * If false, all mesh instances in the scene are rendered by the camera, regardless of
- * visibility. Defaults to false.
- * @property {callbacks.CalculateMatrix} calculateTransform Custom function you can
- * provide to calculate the camera transformation matrix manually. Can be used for complex
- * effects like reflections. Function is called using component's scope.
- * Arguments:
+ * @property {boolean} horizontalFov Set which axis to use for the Field of View calculation.
+ * Defaults to false.
+ * @property {number} nearClip The distance from the camera before which no rendering will take
+ * place. Defaults to 0.1.
+ * @property {number} orthoHeight The half-height of the orthographic view window (in the Y-axis).
+ * Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+ * @property {number} priority Controls the order in which cameras are rendered. Cameras with
+ * smaller values for priority are rendered first. Defaults to 0.
+ * @property {RenderTarget} renderTarget Render target to which rendering of the cameras is
+ * performed. If not set, it will render simply to the screen.
+ * @property {Vec4} rect Controls where on the screen the camera will be rendered in normalized
+ * screen coordinates. Defaults to [0, 0, 1, 1].
+ * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle. The order of the
+ * values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
+ * @property {PostEffectQueue} postEffects The post effects queue for this camera. Use this to add
+ * or remove post effects from the camera.
+ * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
+ * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh
+ * instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
+ * @property {callbacks.CalculateMatrix} calculateTransform Custom function you can provide to
+ * calculate the camera transformation matrix manually. Can be used for complex effects like
+ * reflections. Function is called using component's scope. Arguments:
+ *
  * - {@link Mat4} transformMatrix: output of the function.
- * - {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ *
  * Left and right are only used in stereo rendering.
- * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can
- * provide to calculate the camera projection matrix manually. Can be used for complex
- * effects like doing oblique projection. Function is called using component's scope.
- * Arguments:
- * - {{@link Mat4}} transformMatrix: output of the function
- * - {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can provide to
+ * calculate the camera projection matrix manually. Can be used for complex effects like doing
+ * oblique projection. Function is called using component's scope. Arguments:
+ *
+ * - {@link Mat4} transformMatrix: output of the function
+ * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ *
  * Left and right are only used in stereo rendering.
- * @property {boolean} cullFaces If true the camera will take material.cull into account.
- * Otherwise both front and back faces will be rendered. Defaults to true.
- * @property {boolean} flipFaces If true the camera will invert front and back faces.
- * Can be useful for reflection rendering. Defaults to false.
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this
- * camera should belong. Don't push/pop/splice or modify this array, if you want to
- * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
- * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
- * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of the camera stops being applied to.
- * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
- * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
+ * @property {boolean} cullFaces If true the camera will take material.cull into account. Otherwise
+ * both front and back faces will be rendered. Defaults to true.
+ * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
+ * for reflection rendering. Defaults to false.
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this camera should
+ * belong. Don't push/pop/splice or modify this array, if you want to change it, set a new one
+ * instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI,
+ * LAYERID_IMMEDIATE].
+ * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of
+ * the camera stops being applied to. Defaults to LAYERID_UI, which causes post processing to not
+ * be applied to UI layer and any following layers for the camera. Set to undefined for
+ * post-processing to be applied to all layers of the camera.
+ * @augments Component
+ * @component
  */
 class CameraComponent extends Component {
+    /**
+     * Create a new CameraComponent instance.
+     *
+     * @param {CameraComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

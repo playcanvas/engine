@@ -7,26 +7,27 @@ import { Vec3 } from '../math/vec3.js';
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
 /**
- * @private
- * @deprecated
- * @class
- * @name VrDisplay
- * @augments EventHandler
- * @classdesc Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
- * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
- * from the WebVR API.
- * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
- * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
- * from the WebVR API.
- * @param {Application} app - The application outputting to this VR display.
- * @param {VRDisplay} display - The native VRDisplay object from the WebVR API.
+ * Represents a single Display for VR content. This could be a Head Mounted display that can
+ * present content on a separate screen or a phone which can display content full screen on the
+ * same screen. This object contains the native `navigator.VRDisplay` object from the WebVR API.
+ *
  * @property {number} id An identifier for this distinct VRDisplay.
  * @property {VRDisplay} display The native VRDisplay object from the WebVR API.
  * @property {boolean} presenting True if this display is currently presenting VR content.
- * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
- * This can be used to determine what features are available on this display.
+ * @property {VRDisplayCapabilities} capabilities Returns the 
+ * [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities) object
+ * from the VRDisplay. This can be used to determine what features are available on this display.
+ * @augments EventHandler
+ * @private
+ * @deprecated
  */
 class VrDisplay extends EventHandler {
+    /**
+     * Create a new VrDisplay instance.
+     *
+     * @param {Application} app - The application outputting to this VR display.
+     * @param {VRDisplay} display - The native VRDisplay object from the WebVR API.
+     */
     constructor(app, display) {
         super();
 

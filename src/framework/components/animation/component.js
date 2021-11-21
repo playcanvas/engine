@@ -10,14 +10,8 @@ import { Asset } from '../../../asset/asset.js';
 import { Component } from '../component.js';
 
 /**
- * @component Animation
- * @class
- * @name AnimationComponent
- * @augments Component
- * @classdesc The Animation Component allows an Entity to playback animations on models.
- * @description Create a new AnimationComponent.
- * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * The Animation Component allows an Entity to playback animations on models.
+ *
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
@@ -26,8 +20,16 @@ import { Component } from '../component.js';
  * @property {number} duration Get the duration in seconds of the current animation. [read only]
  * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
+ * @augments Component
+ * @component
  */
 class AnimationComponent extends Component {
+    /**
+     * Create a new AnimationComponent instance.
+     *
+     * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

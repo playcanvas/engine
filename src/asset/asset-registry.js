@@ -26,16 +26,18 @@ import { Asset } from './asset.js';
  */
 
 /**
- * @class
- * @name AssetRegistry
- * @augments EventHandler
- * @classdesc Container for all assets that are available to this application.
- * @description Create an instance of an AssetRegistry.
- * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
- * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
+ * Container for all assets that are available to this application. Note that PlayCanvas scripts
+ * are provided with an AssetRegistry instance as `app.assets`.
+ *
  * @property {string} prefix A URL prefix that will be added to all asset loading requests.
+ * @augments EventHandler
  */
 class AssetRegistry extends EventHandler {
+    /**
+     * Create an instance of an AssetRegistry.
+     *
+     * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
+     */
     constructor(loader) {
         super();
 

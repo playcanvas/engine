@@ -3,16 +3,18 @@ import { EventHandler } from '../core/event-handler.js';
 import { XrInputSource } from './xr-input-source.js';
 
 /**
- * @class
- * @name XrInput
- * @augments EventHandler
- * @classdesc Provides access to input sources for WebXR.
- * @description Provides access to input sources for WebXR.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
+ * Provides access to input sources for WebXR.
+ *
  * @property {XrInputSource[]} inputSources List of active {@link XrInputSource}.
+ * @augments EventHandler
  */
 class XrInput extends EventHandler {
+    /**
+     * Create a new XrInput instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 

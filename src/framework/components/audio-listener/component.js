@@ -1,16 +1,20 @@
 import { Component } from '../component.js';
 
 /**
- * @component
- * @class
- * @name AudioListenerComponent
+ * Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard
+ * correctly.
+ *
  * @augments Component
- * @classdesc Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard correctly.
- * @description Create new AudioListenerComponent.
- * @param {AudioListenerComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * @component
  */
 class AudioListenerComponent extends Component {
+    /**
+     * Create a new AudioListenerComponent instance.
+     *
+     * @param {AudioListenerComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
+
     setCurrentListener() {
         if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
             this.system.current = this.entity;

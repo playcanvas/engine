@@ -13,14 +13,16 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name ScrollbarComponentSystem
+ * Manages creation of {@link ScrollbarComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ScrollbarComponent}s.
- * @description Create a new ScrollbarComponentSystem.
- * @param {Application} app - The application.
  */
 class ScrollbarComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ScrollbarComponentSystem.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

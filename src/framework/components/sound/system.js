@@ -9,19 +9,22 @@ import { SoundComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name SoundComponentSystem
- * @augments ComponentSystem
- * @classdesc Manages creation of {@link SoundComponent}s.
- * @description Create a SoundComponentSystem.
- * @param {Application} app - The Application.
- * @param {SoundManager} manager - The sound manager.
- * @property {number} volume Sets / gets the volume for the entire Sound system. All sounds will have their volume
- * multiplied by this value. Valid between [0, 1].
- * @property {AudioContext} context Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
+ * Manages creation of {@link SoundComponent}s.
+ *
+ * @property {number} volume Sets / gets the volume for the entire Sound system. All sounds will
+ * have their volume multiplied by this value. Valid between [0, 1].
+ * @property {AudioContext} context Gets the AudioContext currently used by the sound manager.
+ * Requires Web Audio API support.
  * @property {SoundManager} manager Gets / sets the sound manager.
+ * @augments ComponentSystem
  */
 class SoundComponentSystem extends ComponentSystem {
+    /**
+     * Create a SoundComponentSystem.
+     *
+     * @param {Application} app - The Application.
+     * @param {SoundManager} manager - The sound manager.
+     */
     constructor(app, manager) {
         super(app);
 

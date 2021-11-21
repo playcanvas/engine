@@ -3,20 +3,24 @@ import { Vec3 } from '../../../math/vec3.js';
 import { Component } from '../component.js';
 
 /**
- * @private
- * @component
- * @class
- * @name ZoneComponent
+ * The ZoneComponent allows you to define an area in world space of certain size. This can be used
+ * in various ways, such as affecting audio reverb when {@link AudioListenerComponent} is within
+ * zone. Or create culling system with portals between zones to hide whole indoor sections for
+ * performance reasons. And many other possible options. Zones are building blocks and meant to be
+ * used in many different ways.
+ *
  * @augments Component
- * @classdesc The ZoneComponent allows you to define an area in world space of certain size.
- * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
- * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
- * And many other possible options. Zones are building blocks and meant to be used in many different ways.
- * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Vec3} size - The Size of Box of a Zone.
+ * @component
+ * @private
  */
 
 class ZoneComponent extends Component {
+    /**
+     * Create a new ZoneComponent instance.
+     *
+     * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Vec3} size - The Size of Box of a Zone.
+     */
     constructor(system, entity) {
         super(system, entity);
 

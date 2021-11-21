@@ -20,27 +20,35 @@ const tempSet = new Set();
 const tempClusterArray = [];
 
 /**
- * @class
- * @name LayerComposition
+ * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
+ * rendering order.
+ *
+ * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will
+ * be rendered.
+ * @property {boolean[]} subLayerList A read-only array of boolean values, matching
+ * {@link Layer#layerList}. True means only semi-transparent objects are rendered, and false means
+ * opaque.
+ * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching
+ * {@link Layer#layerList}. True means the layer is rendered, false means it's skipped.
+ * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be
+ * used during rendering. e.g. Inside {@link Layer#onPreCull}, {@link Layer#onPostCull},
+ * {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  * @augments EventHandler
- * @classdesc Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define rendering order.
- * @description Create a new layer composition.
- * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this layer composition. If it is not provided, a device is obtained
- * from the {@link Application}.
- * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
- * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
- * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
- * True means only semi-transparent objects are rendered, and false means opaque.
- * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link Layer#layerList}.
- * True means the layer is rendered, false means it's skipped.
- * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be used during rendering. e.g. Inside
- * {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  */
-// Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
+    // Composition can hold only 2 sublayers of each layer
+
     // temporary way to enable clustered lighting, will be removed later when this becomes default
     static clusteredLightingEnabled = false;
 
+    /**
+     * Create a new layer composition.
+     *
+     * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this layer
+     * composition. If it is not provided, a device is obtained from the {@link Application}.
+     * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to
+     * "Untitled" if not specified.
+     */
     constructor(graphicsDevice, name = "Untitled") {
         super();
 

@@ -13,22 +13,29 @@ const mat4A = new Mat4();
 const mat4B = new Mat4();
 
 /**
- * @class
- * @name XrLightEstimation
+ * Light Estimation provides illumination data from the real world, which is estimated by the
+ * underlying AR system. It provides a reflection Cube Map, that represents the reflection
+ * estimation from the viewer position. A more simplified approximation of light is provided by L2
+ * Spherical Harmonics data. And the most simple level of light estimation is the most prominent
+ * directional light, its rotation, intensity and color.
+ *
+ * @property {boolean} supported True if Light Estimation is supported. This information is
+ * available only during an active AR session.
+ * @property {number|null} intensity Intensity of what is estimated to be the most prominent
+ * directional light. Or null if data is not available.
+ * @property {Color|null} color Color of what is estimated to be the most prominent directional
+ * light. Or null if data is not available.
+ * @property {Quat|null} rotation Rotation of what is estimated to be the most prominent
+ * directional light. Or null if data is not available.
  * @augments EventHandler
- * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
- * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
- * A more simplified approximation of light is provided by L2 Spherical Harmonics data.
- * And the most simple level of light estimation is the most prominent directional light, its rotation, intensity and color.
- * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link XrManager}.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
- * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
- * @property {Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
- * @property {Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
  */
 class XrLightEstimation extends EventHandler {
+    /**
+     * Create a new XrLightEstimation instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 

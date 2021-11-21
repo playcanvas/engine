@@ -1,15 +1,18 @@
 import { EventHandler } from '../core/event-handler.js';
 
 /**
- * @class
- * @name ScriptRegistry
+ * Container for all {@link ScriptType}s that are available to this application. Note that
+ * PlayCanvas scripts can access the Script Registry from inside the application with
+ * {@link Application#scripts}.
+ *
  * @augments EventHandler
- * @classdesc Container for all Script Types that are available to this application.
- * @description Create an instance of a ScriptRegistry.
- * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link Application#scripts} {@link ADDRESS_REPEAT}.
- * @param {Application} app - Application to attach registry to.
  */
 class ScriptRegistry extends EventHandler {
+    /**
+     * Create a new ScriptRegistry instance.
+     *
+     * @param {Application} app - Application to attach registry to.
+     */
     constructor(app) {
         super();
 

@@ -11,14 +11,16 @@ import { ScreenComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name ScreenComponentSystem
+ * Manages creation of {@link ScreenComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ScreenComponent}s.
- * @description Create a new ScreenComponentSystem.
- * @param {Application} app - The application.
  */
 class ScreenComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ScreenComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

@@ -9,14 +9,16 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name AnimComponentSystem
+ * The AnimComponentSystem manages creating and deleting AnimComponents.
+ *
  * @augments ComponentSystem
- * @classdesc The AnimComponentSystem manages creating and deleting AnimComponents.
- * @description Create an AnimComponentSystem.
- * @param {Application} app - The application managing this system.
  */
 class AnimComponentSystem extends ComponentSystem {
+    /**
+     * Create an AnimComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     */
     constructor(app) {
         super(app);
 

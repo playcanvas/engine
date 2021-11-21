@@ -24,16 +24,20 @@ const properties = [
 ];
 
 /**
- * @private
- * @component
- * @class
- * @name JointComponent
+ * The JointComponent adds a physics joint constraint linking two rigid bodies.
+ *
  * @augments Component
- * @classdesc The JointComponent adds a physics joint constraint linking two rigid bodies.
- * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * @component
+ * @private
  */
 class JointComponent extends Component {
+    /**
+     * Create a new JointComponent instance.
+     *
+     * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @private
+     */
     constructor(system, entity) {
         super(system, entity);
 

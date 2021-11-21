@@ -12,14 +12,16 @@ const _schema = ['enabled'];
 const MAX_ITERATIONS = 100;
 
 /**
- * @class
- * @name LayoutGroupComponentSystem
+ * Manages creation of {@link LayoutGroupComponent}s.
+ *
  * @augments ComponentSystem
- * @description Create a new LayoutGroupComponentSystem.
- * @classdesc Manages creation of {@link LayoutGroupComponent}s.
- * @param {Application} app - The application.
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LayoutGroupComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

@@ -27,14 +27,16 @@ const _schema = [
 const DEFAULT_DRAG_THRESHOLD = 10;
 
 /**
- * @class
- * @name ScrollViewComponentSystem
+ * Manages creation of {@link ScrollViewComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ScrollViewComponent}s.
- * @description Create a new ScrollViewComponentSystem.
- * @param {Application} app - The application.
  */
 class ScrollViewComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ScrollViewComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

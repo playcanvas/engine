@@ -9,15 +9,17 @@ import { ZoneComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @private
- * @class
- * @name ZoneComponentSystem
- * @classdesc Defines zone in world.
- * @description Create a new ZoneComponentSystem.
- * @param {Application} app - The application.
+ * Creates and manages {@link ZoneComponent} instances.
+ *
  * @augments ComponentSystem
+ * @private
  */
 class ZoneComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ZoneComponentSystem.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

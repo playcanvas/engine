@@ -21,15 +21,17 @@ const OPPOSITE_AXIS = {
 };
 
 /**
- * @class
- * @name ElementDragHelper
+ * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
+ *
  * @augments EventHandler
- * @description Create a new ElementDragHelper.
- * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
- * @param {ElementComponent} element - The Element that should become draggable.
- * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
  */
 class ElementDragHelper extends EventHandler {
+    /**
+     * Create a new ElementDragHelper instance.
+     *
+     * @param {ElementComponent} element - The Element that should become draggable.
+     * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
+     */
     constructor(element, axis) {
         super();
 

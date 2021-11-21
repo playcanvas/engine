@@ -15,15 +15,17 @@ import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name ModelComponentSystem
+ * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
+ * cone etc.
+ *
  * @augments ComponentSystem
- * @classdesc Allows an Entity to render a model or a primitive shape like a box,
- * capsule, sphere, cylinder, cone etc.
- * @description Create a new ModelComponentSystem.
- * @param {Application} app - The Application.
  */
 class ModelComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ModelComponentSystem instance.
+     *
+     * @param {Application} app - The Application.
+     */
     constructor(app) {
         super(app);
 
