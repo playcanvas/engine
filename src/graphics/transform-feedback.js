@@ -2,36 +2,24 @@ import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
 
-/* eslint-disable jsdoc/check-examples */
 /**
- * @class
- * @name TransformFeedback
- * @classdesc Transform feedback helper object.
- * @description This object allows you to configure and use the transform feedback feature (WebGL2
- * only). How to use:
+ * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to
+ * use:
  *
  * 1. First, check that you're on WebGL2, by looking at the `app.graphicsDevice.webgl2`` value.
  * 2. Define the outputs in your vertex shader. The syntax is `out vec3 out_vertex_position`,
- * note that there must be out_ in the name. You can then simply assign values to these outputs
- * in VS. The order and size of shader outputs must match the output buffer layout.
+ * note that there must be out_ in the name. You can then simply assign values to these outputs in
+ * VS. The order and size of shader outputs must match the output buffer layout.
  * 3. Create the shader using `TransformFeedback.createShader(device, vsCode, yourShaderName)`.
- * 4. Create/acquire the input vertex buffer. Can be any VertexBuffer, either manually created,
- * or from a Mesh.
- * 5. Create the TransformFeedback object: `var tf = new TransformFeedback(inputBuffer)`.
- * This object will internally create an output buffer.
- * 6. Run the shader: `tf.process(shader)`. Shader will take the input buffer, process it and
- * write to the output buffer, then the input/output buffers will be automatically swapped, so
- * you'll immediately see the result.
- * @param {VertexBuffer} inputBuffer - The input vertex buffer.
- * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
+ * 4. Create/acquire the input vertex buffer. Can be any VertexBuffer, either manually created, or
+ * from a Mesh.
+ * 5. Create the TransformFeedback object: `var tf = new TransformFeedback(inputBuffer)`. This
+ * object will internally create an output buffer.
+ * 6. Run the shader: `tf.process(shader)`. Shader will take the input buffer, process it and write
+ * to the output buffer, then the input/output buffers will be automatically swapped, so you'll
+ * immediately see the result.
  *
- * - {@link BUFFER_STATIC}
- * - {@link BUFFER_DYNAMIC}
- * - {@link BUFFER_STREAM}
- * - {@link BUFFER_GPUDYNAMIC}
- *
- * Defaults to {@link BUFFER_GPUDYNAMIC} (which is recommended for continuous update).
- * @example
+ * ```javascript
  * // *** shader asset ***
  * attribute vec3 vertex_position;
  * attribute vec3 vertex_normal;
@@ -46,7 +34,9 @@ import { VertexBuffer } from './vertex-buffer.js';
  *     out_vertex_normal = vertex_normal;
  *     out_vertex_texCoord0 = vertex_texCoord0;
  * }
- * @example
+ * ```
+ * 
+ * ```javascript
  * // *** script asset ***
  * var TransformExample = pc.createScript('transformExample');
  *
@@ -75,9 +65,22 @@ import { VertexBuffer } from './vertex-buffer.js';
  *     if (!this.app.graphicsDevice.webgl2) return;
  *     this.tf.process(this.shader);
  * };
+ * ```
  */
-/* eslint-enable jsdoc/check-examples */
 class TransformFeedback {
+    /**
+     * Create a new TransformFeedback instance.
+     *
+     * @param {VertexBuffer} inputBuffer - The input vertex buffer.
+     * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
+     *
+     * - {@link BUFFER_STATIC}
+     * - {@link BUFFER_DYNAMIC}
+     * - {@link BUFFER_STREAM}
+     * - {@link BUFFER_GPUDYNAMIC}
+     *
+     * Defaults to {@link BUFFER_GPUDYNAMIC} (which is recommended for continuous update).
+     */
     constructor(inputBuffer, usage = BUFFER_GPUDYNAMIC) {
         this.device = inputBuffer.device;
         const gl = this.device.gl;

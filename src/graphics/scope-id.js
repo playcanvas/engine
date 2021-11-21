@@ -1,13 +1,16 @@
 import { VersionedObject } from './versioned-object.js';
 
 /**
- * @class
- * @name ScopeId
- * @classdesc The scope for a variable.
- * @param {string} name - The variable name.
+ * The scope for a variable.
+ *
  * @property {string} name The variable name.
  */
 class ScopeId {
+    /**
+     * Create a new ScopeId instance.
+     *
+     * @param {string} name - The variable name.
+     */
     constructor(name) {
         // Set the name
         this.name = name;

@@ -1,13 +1,16 @@
 import { ScopeId } from './scope-id.js';
 
 /**
- * @class
- * @name ScopeSpace
- * @classdesc The scope for variables.
- * @param {string} name - The scope name.
+ * The scope for variables.
+ *
  * @property {string} name The scope name.
  */
 class ScopeSpace {
+    /**
+     * Create a new ScopeSpace instance.
+     *
+     * @param {string} name - The scope name.
+     */
     constructor(name) {
 
         // Store the name

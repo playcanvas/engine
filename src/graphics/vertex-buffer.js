@@ -3,18 +3,20 @@ import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from 
 let id = 0;
 
 /**
- * @class
- * @name VertexBuffer
- * @classdesc A vertex buffer is the mechanism via which the application specifies vertex
- * data to the graphics hardware.
- * @description Creates a new vertex buffer object.
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex buffer.
- * @param {VertexFormat} format - The vertex format of this vertex buffer.
- * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
- * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
- * @param {ArrayBuffer} [initialData] - Initial data.
+ * A vertex buffer is the mechanism via which the application specifies vertex data to the graphics
+ * hardware.
  */
 class VertexBuffer {
+    /**
+     * Create a new VertexBuffer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
+     * buffer.
+     * @param {VertexFormat} format - The vertex format of this vertex buffer.
+     * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
+     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * @param {ArrayBuffer} [initialData] - Initial data.
+     */
     constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;

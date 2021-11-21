@@ -67,53 +67,58 @@ function arrayGet4(offset, outputArray, outputIndex) {
 }
 
 /**
- * @class
- * @name VertexIteratorAccessor
- * @classdesc Helps with accessing a specific vertex attribute.
- * @description Returns a new VertexIteratorAccessor object.
- * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
- * @param {object} vertexElement - The vertex attribute to be accessed.
- * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
- * the vertex data to a shader input. Can be:
- *
- * - {@link SEMANTIC_POSITION}
- * - {@link SEMANTIC_NORMAL}
- * - {@link SEMANTIC_TANGENT}
- * - {@link SEMANTIC_BLENDWEIGHT}
- * - {@link SEMANTIC_BLENDINDICES}
- * - {@link SEMANTIC_COLOR}
- * - {@link SEMANTIC_TEXCOORD0}
- * - {@link SEMANTIC_TEXCOORD1}
- * - {@link SEMANTIC_TEXCOORD2}
- * - {@link SEMANTIC_TEXCOORD3}
- * - {@link SEMANTIC_TEXCOORD4}
- * - {@link SEMANTIC_TEXCOORD5}
- * - {@link SEMANTIC_TEXCOORD6}
- * - {@link SEMANTIC_TEXCOORD7}
- *
- * If vertex data has a meaning other that one of those listed above, use the user-defined
- * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
- * @param {number} vertexElement.numComponents - The number of components of the vertex attribute.
- * Can be 1, 2, 3 or 4.
- * @param {number} vertexElement.dataType - The data type of the attribute. Can be:
- *
- * - {@link TYPE_INT8}
- * - {@link TYPE_UINT8}
- * - {@link TYPE_INT16}
- * - {@link TYPE_UINT16}
- * - {@link TYPE_INT32}
- * - {@link TYPE_UINT32}
- * - {@link TYPE_FLOAT32}
- * @param {boolean} vertexElement.normalize - If true, vertex attribute data will be mapped from a
- * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
- * unchanged. If this property is unspecified, false is assumed.
- * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex that are not relevant to this attribute.
- * @param {number} vertexElement.stride - The number of total bytes that are between the start of one vertex, and the start of the next.
- * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
- * @param {number} vertexElement.size - The size of the attribute in bytes.
- * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
+ * Helps with accessing a specific vertex attribute.
  */
 class VertexIteratorAccessor {
+    /**
+     * Create a new VertexIteratorAccessor instance.
+     *
+     * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
+     * @param {object} vertexElement - The vertex attribute to be accessed.
+     * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
+     * the vertex data to a shader input. Can be:
+     *
+     * - {@link SEMANTIC_POSITION}
+     * - {@link SEMANTIC_NORMAL}
+     * - {@link SEMANTIC_TANGENT}
+     * - {@link SEMANTIC_BLENDWEIGHT}
+     * - {@link SEMANTIC_BLENDINDICES}
+     * - {@link SEMANTIC_COLOR}
+     * - {@link SEMANTIC_TEXCOORD0}
+     * - {@link SEMANTIC_TEXCOORD1}
+     * - {@link SEMANTIC_TEXCOORD2}
+     * - {@link SEMANTIC_TEXCOORD3}
+     * - {@link SEMANTIC_TEXCOORD4}
+     * - {@link SEMANTIC_TEXCOORD5}
+     * - {@link SEMANTIC_TEXCOORD6}
+     * - {@link SEMANTIC_TEXCOORD7}
+     *
+     * If vertex data has a meaning other that one of those listed above, use the user-defined
+     * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
+     * @param {number} vertexElement.numComponents - The number of components of the vertex
+     * attribute. Can be 1, 2, 3 or 4.
+     * @param {number} vertexElement.dataType - The data type of the attribute. Can be:
+     *
+     * - {@link TYPE_INT8}
+     * - {@link TYPE_UINT8}
+     * - {@link TYPE_INT16}
+     * - {@link TYPE_UINT16}
+     * - {@link TYPE_INT32}
+     * - {@link TYPE_UINT32}
+     * - {@link TYPE_FLOAT32}
+     * @param {boolean} vertexElement.normalize - If true, vertex attribute data will be mapped
+     * from a 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data
+     * is left unchanged. If this property is unspecified, false is assumed.
+     * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex
+     * that are not relevant to this attribute.
+     * @param {number} vertexElement.stride - The number of total bytes that are between the start
+     * of one vertex, and the start of the next.
+     * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the
+     * attribute.
+     * @param {number} vertexElement.size - The size of the attribute in bytes.
+     * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data
+     * inside the buffer.
+     */
     constructor(buffer, vertexElement, vertexFormat) {
         this.index = 0;
         this.numComponents = vertexElement.numComponents;

@@ -4,44 +4,42 @@ import {
 } from './constants.js';
 
 /**
- * @class
- * @name IndexBuffer
- * @classdesc An index buffer stores index values into a {@link VertexBuffer}.
- * Indexed graphical primitives can normally utilize less memory that unindexed
- * primitives (if vertices are shared).
+ * An index buffer stores index values into a {@link VertexBuffer}. Indexed graphical primitives
+ * can normally utilize less memory that unindexed primitives (if vertices are shared).
  *
  * Typically, index buffers are set on {@link Mesh} objects.
- * @description Creates a new index buffer.
- * @example
- * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
- * // static, hinting that the buffer will never be modified.
- * var indices = new UInt16Array([0, 1, 2]);
- * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
- *                                      pc.INDEXFORMAT_UINT16,
- *                                      3,
- *                                      pc.BUFFER_STATIC,
- *                                      indices);
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to
- * manage this index buffer.
- * @param {number} format - The type of each index to be stored in the index
- * buffer. Can be:
- *
- * - {@link INDEXFORMAT_UINT8}
- * - {@link INDEXFORMAT_UINT16}
- * - {@link INDEXFORMAT_UINT32}
- * @param {number} numIndices - The number of indices to be stored in the index
- * buffer.
- * @param {number} [usage] - The usage type of the vertex buffer. Can be:
- *
- * - {@link BUFFER_DYNAMIC}
- * - {@link BUFFER_STATIC}
- * - {@link BUFFER_STREAM}
- *
- * Defaults to {@link BUFFER_STATIC}.
- * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
- * index buffer will be initialized to zeros.
  */
 class IndexBuffer {
+    /**
+     * Create a new IndexBuffer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index
+     * buffer.
+     * @param {number} format - The type of each index to be stored in the index buffer. Can be:
+     *
+     * - {@link INDEXFORMAT_UINT8}
+     * - {@link INDEXFORMAT_UINT16}
+     * - {@link INDEXFORMAT_UINT32}
+     * @param {number} numIndices - The number of indices to be stored in the index buffer.
+     * @param {number} [usage] - The usage type of the vertex buffer. Can be:
+     *
+     * - {@link BUFFER_DYNAMIC}
+     * - {@link BUFFER_STATIC}
+     * - {@link BUFFER_STREAM}
+     *
+     * Defaults to {@link BUFFER_STATIC}.
+     * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
+     * will be initialized to zeros.
+     * @example
+     * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
+     * // static, hinting that the buffer will never be modified.
+     * var indices = new UInt16Array([0, 1, 2]);
+     * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
+     *                                      pc.INDEXFORMAT_UINT16,
+     *                                      3,
+     *                                      pc.BUFFER_STATIC,
+     *                                      indices);
+     */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
