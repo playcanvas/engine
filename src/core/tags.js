@@ -224,7 +224,6 @@ class Tags extends EventHandler {
 
     /**
      * @field
-     * @readonly
      * @name Tags#size
      * @type {number}
      * @description Number of tags in set.

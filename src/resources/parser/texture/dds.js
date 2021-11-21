@@ -10,6 +10,8 @@ import {
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 
+import { TextureParser } from '../../texture.js';
+
 /**
  * @private
  * @class

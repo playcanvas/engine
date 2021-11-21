@@ -24,6 +24,13 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
+ * Callback used by {@link Asset#ready} and called when an asset is ready.
+ *
+ * @callback assetReadyCallback
+ * @param {Asset} asset - The ready asset.
+ */
+
+/**
  * @class
  * @name Asset
  * @augments EventHandler
@@ -252,7 +259,7 @@ class Asset extends EventHandler {
      * @function
      * @name Asset#ready
      * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away.
-     * @param {callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
+     * @param {assetReadyCallback} callback - The function called when the asset is ready. Passed the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * var asset = app.assets.find("My Asset");
@@ -445,7 +452,7 @@ class Asset extends EventHandler {
      * ArrayBuffer. If the asset file contents are present, that is returned. Otherwise the file
      * data is be downloaded via http.
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {callbacks.ResourceLoader} callback - The callback function to receive results.
+     * @param {resourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
      */

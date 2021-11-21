@@ -1,6 +1,8 @@
 import { http, Http } from '../net/http.js';
 import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
+import { ResourceHandler } from './handler.js';
+
 /**
  * @private
  * @class
@@ -42,6 +44,9 @@ class AnimStateGraphHandler {
 
     open(url, data) {
         return new AnimStateGraph(data);
+    }
+
+    patch(asset, assets) {
     }
 }
 

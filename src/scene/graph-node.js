@@ -23,6 +23,24 @@ const target = new Vec3();
 const up = new Vec3();
 
 /**
+ * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
+ * node and all of its descendants.
+ *
+ * @callback findNodeCallback
+ * @param {GraphNode} node - The current graph node.
+ * @returns {boolean} Returning `true` will result in that node being returned from
+ * {@link GraphNode#find} or {@link GraphNode#findOne}.
+ */
+
+/**
+ * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
+ * descendants.
+ *
+ * @callback forEachNodeCallback
+ * @param {GraphNode} node - The current graph node.
+ */
+
+/**
  * @class
  * @name GraphNode
  * @augments EventHandler
@@ -82,7 +100,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#right
      * @type {Vec3}
      * @description The normalized local space X-axis vector of the graph node in world space.
@@ -95,7 +112,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#up
      * @type {Vec3}
      * @description The normalized local space Y-axis vector of the graph node in world space.
@@ -108,7 +124,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#forward
      * @type {Vec3}
      * @description The normalized local space negative Z-axis vector of the graph node in world space.
@@ -144,7 +159,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#parent
      * @type {GraphNode}
      * @description A read-only property to get a parent graph node.
@@ -154,7 +168,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#path
      * @type {string}
      * @description A read-only property to get the path of the graph node relative to
@@ -176,7 +189,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#root
      * @type {GraphNode}
      * @description A read-only property to get highest graph node from current node.
@@ -193,7 +205,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#children
      * @type {GraphNode[]}
      * @description A read-only property to get the children of this graph node.
@@ -203,7 +214,6 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphNode#graphDepth
      * @type {number}
      * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. It is not recalculated when a node is simply removed from the graph.
@@ -287,7 +297,7 @@ class GraphNode extends EventHandler {
      * @function
      * @name GraphNode#find
      * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
-     * @param {callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
+     * @param {findNodeCallback|string} attr - This can either be a function or a string. If it's a function, it is executed
      * for each descendant node to test if node satisfies the search logic. Returning true from the function will
      * include the node into the results. If it's a string then it represents the name of a field or a method of the
      * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
@@ -348,7 +358,7 @@ class GraphNode extends EventHandler {
      * @function
      * @name GraphNode#findOne
      * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
-     * @param {callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
+     * @param {findNodeCallback|string} attr - This can either be a function or a string. If it's a function, it is executed
      * for each descendant node to test if node satisfies the search logic. Returning true from the function will
      * result in that node being returned from findOne. If it's a string then it represents the name of a field or a method of the
      * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
@@ -513,7 +523,7 @@ class GraphNode extends EventHandler {
      * @function
      * @name GraphNode#forEach
      * @description Executes a provided function once on this graph node and all of its descendants.
-     * @param {callbacks.ForEach} callback - The function to execute on the graph node and each descendant.
+     * @param {forEachNodeCallback} callback - The function to execute on the graph node and each descendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
      * // Log the path and name of each node in descendant tree starting with "parent"

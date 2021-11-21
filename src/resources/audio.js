@@ -6,6 +6,8 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
+import { ResourceHandler } from './handler.js';
+
 // checks if user is running IE
 const ie = (function () {
     if (typeof window === 'undefined') {
@@ -97,6 +99,9 @@ class AudioHandler {
 
     open(url, data) {
         return data;
+    }
+
+    patch(asset, assets) {
     }
 
     /**

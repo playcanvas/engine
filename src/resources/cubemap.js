@@ -6,6 +6,8 @@ import {
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
+import { ResourceHandler } from './handler.js';
+
 /**
  * @class
  * @name CubemapHandler

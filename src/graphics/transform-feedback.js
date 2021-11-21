@@ -170,7 +170,6 @@ class TransformFeedback {
     }
 
     /**
-     * @readonly
      * @name TransformFeedback#inputBuffer
      * @type {VertexBuffer}
      * @description The current input buffer.
@@ -180,7 +179,6 @@ class TransformFeedback {
     }
 
     /**
-     * @readonly
      * @name TransformFeedback#outputBuffer
      * @type {VertexBuffer}
      * @description The current output buffer.

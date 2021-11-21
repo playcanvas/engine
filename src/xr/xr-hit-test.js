@@ -5,6 +5,15 @@ import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
 /**
+ * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
+ *
+ * @callback xrHitTestStartCallback
+ * @param {Error|null} err - The Error object if failed to create hit test source or null.
+ * @param {XrHitTestSource|null} hitTestSource - Object that provides access to hit results against
+ * real world geometry.
+ */
+
+/**
  * @class
  * @name XrHitTest
  * @augments EventHandler
@@ -137,7 +146,7 @@ class XrHitTest extends EventHandler {
      * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
+     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,

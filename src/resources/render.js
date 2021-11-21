@@ -1,5 +1,7 @@
 import { Render } from '../scene/render.js';
 
+import { ResourceHandler } from './handler.js';
+
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {
     const renderAsset = this;

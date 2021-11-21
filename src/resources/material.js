@@ -10,6 +10,8 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
+import { ResourceHandler } from './handler.js';
+
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
     diffuseMap: 'gray',

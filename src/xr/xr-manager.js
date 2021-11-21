@@ -17,6 +17,13 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 
 /**
+ * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
+ *
+ * @callback xrErrorCallback
+ * @param {Error|null} err - The Error object or null if operation was successful.
+ */
+
+/**
  * @class
  * @name XrManager
  * @augments EventHandler
@@ -187,7 +194,7 @@ class XrManager extends EventHandler {
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
-     * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {xrErrorCallback} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing system.
      * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying depth sensing system.
@@ -317,7 +324,7 @@ class XrManager extends EventHandler {
      *         app.xr.end();
      *     }
      * });
-     * @param {callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {xrErrorCallback} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     end(callback) {
         if (!this._session) {

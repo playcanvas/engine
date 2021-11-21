@@ -1,5 +1,6 @@
-import { SceneParser } from './parser/scene.js';
+import { ResourceHandler } from './handler.js';
 import { SceneUtils } from './scene-utils.js';
+import { SceneParser } from './parser/scene.js';
 
 /**
  * @class

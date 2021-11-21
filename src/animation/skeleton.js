@@ -96,7 +96,6 @@ class Skeleton {
     }
 
     /**
-     * @readonly
      * @name Skeleton#numNodes
      * @type {number}
      * @description Read-only property that returns number of nodes of a skeleton.

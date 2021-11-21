@@ -172,7 +172,12 @@ class CameraComponent extends Component {
      * @description Queries the camera's view matrix.
      */
 
-    get camera() {
+    /**
+     * @private
+     * @type {Camera}
+     * @description Queries the camera component's underlying Camera instance.
+     */
+     get camera() {
         return this._camera;
     }
 
@@ -595,7 +600,7 @@ class CameraComponent extends Component {
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
-     * @param {callbacks.XrError} [options.callback] - Optional callback function called once
+     * @param {xrErrorCallback} [options.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
      * session started successfully.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
@@ -621,7 +626,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#endXr
      * @description Attempt to end XR session of this camera.
-     * @param {callbacks.XrError} [callback] - Optional callback function called once
+     * @param {xrErrorCallback} [callback] - Optional callback function called once
      * session is ended. The callback has one argument Error - it is null if successfully
      * ended XR session.
      * @example

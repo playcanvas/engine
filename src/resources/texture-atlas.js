@@ -13,6 +13,8 @@ import {
 
 import { TextureAtlas } from '../scene/texture-atlas.js';
 
+import { ResourceHandler } from './handler.js';
+
 const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
     "clamp": ADDRESS_CLAMP_TO_EDGE,

@@ -11,6 +11,8 @@ import {
 
 import { Asset } from '../../../asset/asset.js';
 
+import { TextureParser } from '../../texture.js';
+
 /**
  * @private
  * @class

@@ -189,7 +189,6 @@ class VertexFormat {
     /**
      * @field
      * @static
-     * @readonly
      * @name VertexFormat.defaultInstancingFormat
      * @type {VertexFormat}
      * @description Returns {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.

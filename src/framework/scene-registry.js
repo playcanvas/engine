@@ -5,6 +5,29 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**
+ * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
+ *
+ * @callback loadHierarchyCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ */
+
+/**
+ * Callback used by {@link SceneRegistry#loadSceneSettings}.
+ *
+ * @callback loadSettingsCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ */
+
+/**
+ * Callback used by {@link SceneRegistry#loadScene}.
+ *
+ * @callback loadSceneCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ */
+
+/**
  * @class
  * @name SceneRegistry
  * @classdesc Container for storing and loading of scenes. An instance of the registry is created on the {@link Application} object as {@link Application#scenes}.
@@ -186,7 +209,7 @@ class SceneRegistry {
      * {@link SceneRegistry#loadSceneHierarchy} and {@link SceneRegistry#loadSceneSettings} to make
      * scene loading quicker for the user.
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
-     * @param {callbacks.LoadSceneData} callback - The function to call after loading,
+     * @param {loadSceneCallbackData} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
      * var sceneItem = app.scenes.find("Scene Name");
@@ -225,7 +248,7 @@ class SceneRegistry {
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
-     * @param {callbacks.LoadHierarchy} callback - The function to call after loading,
+     * @param {loadHierarchyCallback} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
      * var sceneItem = app.scenes.find("Scene Name");
@@ -284,7 +307,7 @@ class SceneRegistry {
      * @name SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene.
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
-     * @param {callbacks.LoadSettings} callback - The function called after the settings
+     * @param {loadSettingsCallback} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
      * var sceneItem = app.scenes.find("Scene Name");
@@ -319,7 +342,7 @@ class SceneRegistry {
      * @description Load the scene hierarchy and scene settings. This is an internal method used
      * by the {@link Application}.
      * @param {string} url - The URL of the scene file.
-     * @param {callbacks.LoadScene} callback - The function called after the settings are
+     * @param {loadSceneCallback} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the
      * {@link Scene}.
      */

@@ -68,7 +68,6 @@ class AnimBinder {
     }
 
     /**
-     * @private
      * @function
      * @name AnimBinder#resolve
      * @description Resolve the provided target path and return an instance of {@link AnimTarget} which
@@ -81,7 +80,6 @@ class AnimBinder {
     }
 
     /**
-     * @private
      * @function
      * @name AnimBinder#unresolve
      * @description Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
@@ -92,7 +90,6 @@ class AnimBinder {
     }
 
     /**
-     * @private
      * @function
      * @name AnimBinder#update
      * @description Called by {@link AnimEvaluator} once a frame after animation updates are done.

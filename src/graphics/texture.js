@@ -424,7 +424,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#width
      * @type {number}
      * @description The width of the texture in pixels.
@@ -434,7 +433,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#height
      * @type {number}
      * @description The height of the texture in pixels.
@@ -444,7 +442,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#depth
      * @type {number}
      * @description The number of depth slices in a 3D texture (WebGL2 only).
@@ -454,7 +451,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#format
      * @type {number}
      * @description The pixel format of the texture. Can be:
@@ -488,7 +484,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#cubemap
      * @type {boolean}
      * @description Returns true if this texture is a cube map and false otherwise.
@@ -503,7 +498,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#volume
      * @type {boolean}
      * @description Returns true if this texture is a 3D volume and false otherwise.
@@ -542,7 +536,6 @@ class Texture {
     }
 
     /**
-     * @readonly
      * @name Texture#pot
      * @type {boolean}
      * @description Returns true if all dimensions of the texture are power of two, and false otherwise.

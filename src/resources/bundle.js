@@ -6,6 +6,8 @@ import { Bundle } from '../bundles/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
+import { ResourceHandler } from './handler.js';
+
 /**
  * @private
  * @class

@@ -221,7 +221,6 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @readonly
      * @name Morph#targets
      * @type {MorphTarget[]}
      * @description The array of morph targets.

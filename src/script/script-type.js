@@ -96,7 +96,6 @@ class ScriptType extends EventHandler {
     /**
      * @field
      * @static
-     * @readonly
      * @name ScriptType.scriptName
      * @type {string|null}
      * @description Name of a Script Type.
@@ -108,7 +107,6 @@ class ScriptType extends EventHandler {
     /**
      * @field
      * @static
-     * @readonly
      * @name ScriptType.attributes
      * @type {ScriptAttributes}
      * @description The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
@@ -149,7 +147,6 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @readonly
      * @static
      * @function
      * @name ScriptType.extend

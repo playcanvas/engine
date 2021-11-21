@@ -214,7 +214,6 @@ class AnimComponent extends Component {
     /**
      * @name AnimComponent#playable
      * @type {boolean}
-     * @readonly
      * @description Returns whether all component layers are currently playable.
      */
     get playable() {
@@ -229,7 +228,6 @@ class AnimComponent extends Component {
     /**
      * @name AnimComponent#baseLayer
      * @type {AnimComponentLayer}
-     * @readonly
      * @description Returns the base layer of the state graph.
      */
     get baseLayer() {

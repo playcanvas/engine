@@ -141,7 +141,6 @@ class CurveSet {
     }
 
     /**
-     * @readonly
      * @name CurveSet#length
      * @type {number}
      * @description The number of curves in the curve set.

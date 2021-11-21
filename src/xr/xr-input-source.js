@@ -339,7 +339,7 @@ class XrInputSource extends EventHandler {
      * computed based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function
+     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function
      * called once hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {

@@ -25,6 +25,7 @@ import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
+import { GraphicsDevice } from '../../graphics-device.js';
 
 const _oldChunkWarn = function (oldName, newName) {
     // #if _DEBUG
@@ -171,6 +172,11 @@ const standard = {
     optionsContext: {},
     optionsContextMin: {},
 
+    /**
+     * 
+     * @param {*} options 
+     * @returns { string}
+     */
     generateKey: function (options) {
         const buildPropertiesList = function (options) {
             const props = [];
@@ -561,6 +567,13 @@ const standard = {
         return code;
     },
 
+    /**
+     * @function
+     * @name createShaderDefinition
+     * @param {GraphicsDevice} device
+     * @param {object} options
+     * @returns {object}
+     */
     createShaderDefinition: function (device, options) {
         let lighting = options.lights.length > 0;
 

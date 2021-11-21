@@ -7,6 +7,18 @@ import { JsonModelParser } from './parser/json-model.js';
 
 import { DefaultMaterial } from '../scene/materials/default-material.js';
 
+import { ResourceHandler } from './handler.js';
+
+/**
+ * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
+ *
+ * @callback addParserCallback
+ * @param {string} url - The resource url.
+ * @param {object} data - The raw model data.
+ * @returns {boolean} Return true if this parser should be used to parse the data into a
+ * {@link Model}.
+ */
+
 /**
  * @class
  * @name ModelHandler
@@ -143,7 +155,7 @@ class ModelHandler {
      * @description Add a parser that converts raw data into a {@link Model}
      * Default parser is for JSON models.
      * @param {object} parser - See JsonModelParser for example.
-     * @param {callbacks.AddParser} decider - Function that decides on which parser to use.
+     * @param {addParserCallback} decider - Function that decides on which parser to use.
      * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link Model}.
      * The first parser to return true is used.
      */

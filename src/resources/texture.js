@@ -15,6 +15,8 @@ import { Ktx2Parser } from './parser/texture/ktx2.js';
 import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
+import { ResourceHandler } from './handler.js';
+
 const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
     "clamp": ADDRESS_CLAMP_TO_EDGE,
@@ -52,7 +54,7 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {resourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     /* eslint-disable jsdoc/require-returns-check */

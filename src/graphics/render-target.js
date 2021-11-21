@@ -256,7 +256,6 @@ class RenderTarget {
     }
 
     /**
-     * @readonly
      * @name RenderTarget#colorBuffer
      * @type {Texture}
      * @description Color buffer set up on the render target.
@@ -266,7 +265,6 @@ class RenderTarget {
     }
 
     /**
-     * @readonly
      * @name RenderTarget#depthBuffer
      * @type {Texture}
      * @description Depth buffer set up on the render target. Only available, if depthBuffer was set in constructor.
@@ -277,7 +275,6 @@ class RenderTarget {
     }
 
     /**
-     * @readonly
      * @name RenderTarget#face
      * @type {number}
      * @description If the render target is bound to a cubemap, this property
@@ -295,7 +292,6 @@ class RenderTarget {
     }
 
     /**
-     * @readonly
      * @name RenderTarget#width
      * @type {number}
      * @description Width of the render target in pixels.
@@ -305,7 +301,6 @@ class RenderTarget {
     }
 
     /**
-     * @readonly
      * @name RenderTarget#height
      * @type {number}
      * @description Height of the render target in pixels.

@@ -48,7 +48,6 @@ class Animation {
     }
 
     /**
-     * @readonly
      * @name Animation#nodes
      * @type {Node[]}
      * @description A read-only property to get array of animation nodes.

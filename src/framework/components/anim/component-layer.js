@@ -148,7 +148,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#name
      * @type {string}
      * @description Returns the name of the layer.
@@ -171,7 +170,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#playable
      * @type {string}
      * @description Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
@@ -181,7 +179,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#activeState
      * @type {string}
      * @description Returns the currently active state name.
@@ -191,7 +188,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#previousState
      * @type {string}
      * @description Returns the previously active state name.
@@ -201,7 +197,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#activeStateProgress
      * @type {number}
      * @description Returns the currently active states progress as a value normalized by the states animation duration. Looped animations will return values greater than 1.
@@ -211,7 +206,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#activeStateDuration
      * @type {number}
      * @description Returns the currently active states duration.
@@ -234,7 +228,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#transitioning
      * @type {boolean}
      * @description Returns whether the anim component layer is currently transitioning between states.
@@ -244,7 +237,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#transitionProgress
      * @type {number}
      * @description If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
@@ -257,7 +249,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#states
      * @type {string[]}
      * @description Lists all available states in this layers state graph.

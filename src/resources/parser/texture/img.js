@@ -6,6 +6,8 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
 
+import { TextureParser } from '../../texture.js';
+
 /**
  * @private
  * @class

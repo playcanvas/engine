@@ -1,5 +1,7 @@
 import { script } from '../framework/script.js';
 
+import { ResourceHandler } from './handler.js';
+
 /**
  * @class
  * @name ScriptHandler

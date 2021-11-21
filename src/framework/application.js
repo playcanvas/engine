@@ -137,6 +137,20 @@ class Progress {
 }
 
 /**
+ * Callback used by {@link Application#configure} when configuration file is loaded and parsed (or
+ * an error occurs).
+ *
+ * @callback configureAppCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ */
+
+/**
+ * Callback used by {@link Application#preload} when all assets (marked as 'preload') are loaded.
+ *
+ * @callback preloadAppCallback
+ */
+
+/**
  * @class
  * @name Application
  * @augments EventHandler
@@ -670,7 +684,6 @@ class Application extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name Application#fillMode
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
@@ -684,7 +697,6 @@ class Application extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name Application#resolutionMode
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
@@ -701,7 +713,7 @@ class Application extends EventHandler {
      * @name Application#configure
      * @description Load the application configuration file and apply application properties and fill the asset registry.
      * @param {string} url - The URL of the configuration file to load.
-     * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
+     * @param {configureAppCallback} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
         http.get(url, (err, response) => {
@@ -730,7 +742,7 @@ class Application extends EventHandler {
      * @function
      * @name Application#preload
      * @description Load all assets in the asset registry that are marked as 'preload'.
-     * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
+     * @param {preloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         this.fire("preload:start");

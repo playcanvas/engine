@@ -3532,7 +3532,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphicsDevice#width
      * @type {number}
      * @description Width of the back buffer in pixels.
@@ -3542,7 +3541,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphicsDevice#height
      * @type {number}
      * @description Height of the back buffer in pixels.
@@ -3598,7 +3596,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphicsDevice#textureFloatHighPrecision
      * @type {boolean}
      * @description Check if high precision floating-point textures are supported.
@@ -3611,7 +3608,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name GraphicsDevice#textureHalfFloatUpdatable
      * @type {boolean}
      * @description Check if texture with half float format can be updated with data.

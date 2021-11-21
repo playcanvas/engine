@@ -10,6 +10,8 @@ import {
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 
+import { TextureParser } from '../../texture.js';
+
 // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
 const IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
 

@@ -1,4 +1,17 @@
 /**
+ * @callback handleEventCallback
+ * @description Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
+ * @param {*} [arg1] - First argument that is passed from caller.
+ * @param {*} [arg2] - Second argument that is passed from caller.
+ * @param {*} [arg3] - Third argument that is passed from caller.
+ * @param {*} [arg4] - Fourth argument that is passed from caller.
+ * @param {*} [arg5] - Fifth argument that is passed from caller.
+ * @param {*} [arg6] - Sixth argument that is passed from caller.
+ * @param {*} [arg7] - Seventh argument that is passed from caller.
+ * @param {*} [arg8] - Eighth argument that is passed from caller.
+ */
+
+/**
  * @class
  * @name EventHandler
  * @classdesc Abstract base class that implements functionality for event handling.
@@ -46,7 +59,7 @@ class EventHandler {
      * @name EventHandler#on
      * @description Attach an event handler to an event.
      * @param {string} name - Name of the event to bind the callback to.
-     * @param {callbacks.HandleEvent} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
+     * @param {handleEventCallback} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
      * @returns {EventHandler} Self for chaining.
      * @example
@@ -67,7 +80,7 @@ class EventHandler {
      * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event,
      * if scope is not provided then all events with the callback will be unbound.
      * @param {string} [name] - Name of the event to unbind.
-     * @param {callbacks.HandleEvent} [callback] - Function to be unbound.
+     * @param {handleEventCallback} [callback] - Function to be unbound.
      * @param {object} [scope] - Scope that was used as the this when the event is fired.
      * @returns {EventHandler} Self for chaining.
      * @example
@@ -193,7 +206,7 @@ class EventHandler {
      * @name EventHandler#once
      * @description Attach an event handler to an event. This handler will be removed after being fired once.
      * @param {string} name - Name of the event to bind the callback to.
-     * @param {callbacks.HandleEvent} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
+     * @param {handleEventCallback} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
      * @returns {EventHandler} Self for chaining.
      * @example

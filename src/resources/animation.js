@@ -9,6 +9,8 @@ import { Animation, Key, Node } from '../animation/animation.js';
 
 import { GlbParser } from '../resources/parser/glb-parser.js';
 
+import { ResourceHandler } from './handler.js';
+
 /**
  * @class
  * @name AnimationHandler
@@ -62,6 +64,9 @@ class AnimationHandler {
             return null;
         }
         return this["_parseAnimationV" + data.animation.version](data);
+    }
+
+    patch(asset, assets) {
     }
 
     _parseAnimationV3(data) {

@@ -46,7 +46,6 @@ class MorphTarget {
     /**
      * @name MorphTarget#name
      * @type {string}
-     * @readonly
      * @description The name of the morph target.
      */
     get name() {
@@ -56,7 +55,6 @@ class MorphTarget {
     /**
      * @name MorphTarget#defaultWeight
      * @type {number}
-     * @readonly
      * @description The default weight of the morph target.
      */
     get defaultWeight() {
