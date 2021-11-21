@@ -177,7 +177,7 @@ class CameraComponent extends Component {
      * @type {Camera}
      * @description Queries the camera component's underlying Camera instance.
      */
-     get camera() {
+    get camera() {
         return this._camera;
     }
 

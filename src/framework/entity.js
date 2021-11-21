@@ -14,6 +14,7 @@ import { Application } from './application.js';
  * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
  * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
  * ComponentSystems allow access to all Entities and Components and are attached to the {@link Application}.
+ *
  * @property {AnimComponent} [anim] Gets the {@link AnimComponent} attached to this entity. [read only]
  * @property {AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
  * @property {AudioListenerComponent} [audiolistener] Gets the {@link AudioListenerComponent} attached to this entity. [read only]

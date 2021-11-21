@@ -173,8 +173,8 @@ const standard = {
     optionsContextMin: {},
 
     /**
-     * 
-     * @param {*} options 
+     *
+     * @param {*} options
      * @returns { string}
      */
     generateKey: function (options) {
