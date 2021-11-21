@@ -108,7 +108,7 @@
     "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
-    "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
+    "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
     "tsd": "tsc && node tsd.js"
   }
 }
