@@ -25,7 +25,6 @@ import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
-import { GraphicsDevice } from '../../graphics-device.js';
 
 const _oldChunkWarn = function (oldName, newName) {
     // #if _DEBUG
@@ -168,15 +167,10 @@ const standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
-    // Shared Sandard Material option structures
+    // Shared Standard Material option structures
     optionsContext: {},
     optionsContextMin: {},
 
-    /**
-     *
-     * @param {*} options
-     * @returns { string}
-     */
     generateKey: function (options) {
         const buildPropertiesList = function (options) {
             const props = [];
