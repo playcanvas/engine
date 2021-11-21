@@ -1126,10 +1126,16 @@ export const typedArrayToType = {
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
 
-// map of engine semantics into location on device in range 0..15 (note - semantics mapping to
-// the same location cannot be used at the same time)
-// organized in a way that ATTR0-ATTR7 do not overlap with common important semantics
-export const semanticToLocation = {};
+/**
+ * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the
+ * same location cannot be used at the same time) organized in a way that ATTR0-ATTR7 do not
+ * overlap with common important semantics.
+ *
+ * @type {object}
+ * @private
+ */
+const semanticToLocation = {};
+
 semanticToLocation[SEMANTIC_POSITION] = 0;
 semanticToLocation[SEMANTIC_NORMAL] = 1;
 semanticToLocation[SEMANTIC_BLENDWEIGHT] = 2;
@@ -1161,3 +1167,5 @@ semanticToLocation[SEMANTIC_ATTR12] = 12;
 semanticToLocation[SEMANTIC_ATTR13] = 13;
 semanticToLocation[SEMANTIC_ATTR14] = 14;
 semanticToLocation[SEMANTIC_ATTR15] = 15;
+
+export { semanticToLocation };
