@@ -1,19 +1,22 @@
 import { AnimEvents } from './anim-events.js';
 
 /**
+ * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
+ * 
  * @private
- * @class
- * @name AnimTrack
- * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
- * @description Create a new animation track.
- * @param {string} name - The track name.
- * @param {number} duration - The duration of the track in seconds.
- * @param {AnimData[]} inputs - List of curve key data.
- * @param {AnimData[]} outputs - List of curve value data.
- * @param {AnimCurve[]} curves - The list of curves.
- * @param {AnimEvents} animEvents - A sequence of animation events.
  */
 class AnimTrack {
+    /**
+     * Create a new AnimTrack instance.
+     *
+     * @param {string} name - The track name.
+     * @param {number} duration - The duration of the track in seconds.
+     * @param {AnimData[]} inputs - List of curve key data.
+     * @param {AnimData[]} outputs - List of curve value data.
+     * @param {AnimCurve[]} curves - The list of curves.
+     * @param {AnimEvents} animEvents - A sequence of animation events.
+     * @private
+     */
     constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
         this._duration = duration;

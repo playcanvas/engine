@@ -1,9 +1,8 @@
 /**
- * @private
- * @class
- * @name AnimBinder
- * @classdesc This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
+ * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.
+ * 
+ * @private
  */
 class AnimBinder {
     // join a list of path segments into a path string using the full stop character. If another character is supplied,

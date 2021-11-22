@@ -2,12 +2,10 @@ import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
 import { Entity } from '../../framework/entity.js';
 /**
- * @private
- * @class
- * @name DefaultAnimBinder
+ * Implementation of {@link AnimBinder} for animating a skeleton in the graph-node hierarchy.
+ *
  * @implements {AnimBinder}
- * @classdesc Implementation of {@link AnimBinder} for animating a skeleton in the graph-node
- * hierarchy.
+ * @private
  */
 class DefaultAnimBinder {
     constructor(graph) {

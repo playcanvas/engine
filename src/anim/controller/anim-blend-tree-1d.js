@@ -3,14 +3,26 @@ import { math } from '../../math/math.js';
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
+ * An AnimBlendTree that calculates its weights using a 1D algorithm based on the thesis
+ * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
+ *
  * @private
- * @class
- * @name AnimBlendTree1D
- * @classdesc An AnimBlendTree that calculates its weights using a 1D algorithm
- * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
- * @description Create a new BlendTree1D.
  */
 class AnimBlendTree1D extends AnimBlendTree {
+    /**
+     * Create a new BlendTree1D instance.
+     * 
+     * @param {*} state 
+     * @param {*} parent 
+     * @param {*} name 
+     * @param {*} point 
+     * @param {*} parameters 
+     * @param {*} children 
+     * @param {*} syncAnimations 
+     * @param {*} createTree 
+     * @param {*} findParameter
+     * @private
+     */
     constructor(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter) {
         children.sort((a, b) => a.point - b.point);
         super(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);

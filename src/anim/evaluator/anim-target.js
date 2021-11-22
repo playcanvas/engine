@@ -8,17 +8,22 @@
  */
 
 /**
+ * Stores the information required by {@link AnimEvaluator} for updating a target value.
+ *
  * @private
- * @class
- * @name AnimTarget
- * @classdesc Stores the information required by {@link AnimEvaluator} for updating a target value.
- * @param {AnimSetter} func - This function will be called when a new animation value is output by
- * the {@link AnimEvaluator}.
- * @param {'vector'|'quaternion'} type - The type of animation data this target expects.
- * @param {number} components - The number of components on this target (this should ideally match the number
- * of components found on all attached animation curves).
  */
 class AnimTarget {
+    /**
+     * Create a new AnimTarget instance.
+     *
+     * @param {AnimSetter} func - This function will be called when a new animation value is output
+     * by the {@link AnimEvaluator}.
+     * @param {'vector'|'quaternion'} type - The type of animation data this target expects.
+     * @param {number} components - The number of components on this target (this should ideally
+     * match the number of components found on all attached animation curves).
+     * @param {string} targetPath - The path to the target value.
+     * @private
+     */
     constructor(func, type, components, targetPath) {
         this._func = func;
         this._type = type;

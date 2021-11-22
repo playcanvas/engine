@@ -1,14 +1,17 @@
 import { AnimCache } from './anim-cache.js';
 
 /**
+ * AnimSnapshot stores the state of an animation track at a particular time.
+ *
  * @private
- * @class
- * @name AnimSnapshot
- * @classdesc AnimSnapshot stores the state of an animation track at a particular time.
- * @description Create a new animation snapshot.
- * @param {AnimTrack} animTrack - The source track.
  */
 class AnimSnapshot {
+    /**
+     * Create a new animation snapshot.
+     *
+     * @param {AnimTrack} animTrack - The source track.
+     * @private
+     */
     constructor(animTrack) {
         this._name = animTrack.name + 'Snapshot';
         this._time = -1;
