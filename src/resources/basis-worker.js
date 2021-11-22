@@ -113,7 +113,7 @@ function BasisWorker() {
 
     const isPOT = (width, height) => {
         return ((width & (width - 1)) === 0) && ((height & (height - 1)) === 0);
-    }
+    };
 
     const performanceNow = () => {
         return (typeof performance !== 'undefined') ? performance.now() : 0;
@@ -182,7 +182,7 @@ function BasisWorker() {
                 // https://www.khronos.org/registry/webgl/extensions/rejected/WEBGL_compressed_texture_atc/
                 return true;
         }
-    }
+    };
 
     const transcodeKTX2 = (url, data, options) => {
         if (!basis.KTX2File) {
