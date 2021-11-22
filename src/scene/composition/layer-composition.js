@@ -161,6 +161,11 @@ class LayerComposition extends EventHandler {
     }
 
     set clusteredLightingAreaLightsEnabled(value) {
+
+        if (!this.device.supportsAreaLights) {
+            value = false;
+        }
+
         if (this._clusteredLightingAreaLightsEnabled !== value) {
             this._clusteredLightingAreaLightsEnabled = value;
 
