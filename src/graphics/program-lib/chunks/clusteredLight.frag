@@ -55,9 +55,6 @@ struct ClusterLightData {
     float shadowBias;
     float shadowNormalBias;
 
-    // shadow (spot light only) / cookie projection matrix
-    mat4 lightProjectionMatrix;
-
     // world space position
     vec3 position;
 
@@ -89,6 +86,13 @@ struct ClusterLightData {
     // channel mask - one of the channels has 1, the others are 0
     vec4 cookieChannelMask;
 };
+
+// Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
+// when stored outside, so we store it outside to avoid spot shadow flickering. This might need to be done to other / all members
+// of the structure if further similar issues are observed.
+
+// shadow (spot light only) / cookie projection matrix
+mat4 lightProjectionMatrix;
 
 // macros for light properties
 #define isClusteredLightCastShadow(light) ( light.castShadows > 0.5 )
@@ -238,7 +242,7 @@ void decodeClusterLightProjectionMatrixData(inout ClusterLightData clusterLightD
         vec4 m3 = vec4(mantisaExponent2Float(m30), mantisaExponent2Float(m31), mantisaExponent2Float(m32), mantisaExponent2Float(m33));
     #endif
     
-    clusterLightData.lightProjectionMatrix = mat4(m0, m1, m2, m3);
+    lightProjectionMatrix = mat4(m0, m1, m2, m3);
 }
 
 void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
@@ -355,7 +359,7 @@ void evaluateLight(ClusterLightData light) {
                     decodeClusterLightCookieData(light);
 
                     if (isClusteredLightSpot(light)) {
-                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, light.lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
+                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
                     } else {
                         dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
@@ -374,7 +378,7 @@ void evaluateLight(ClusterLightData light) {
                     if (isClusteredLightSpot(light)) {
 
                         // spot shadow
-                        getShadowCoordPerspZbufferNormalOffset(light.lightProjectionMatrix, shadowParams);
+                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
                         dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
 
                     } else {
