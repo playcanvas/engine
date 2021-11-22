@@ -32,13 +32,16 @@ function upgradeDataSchema(data) {
 }
 
 /**
- * @class
- * @name FontHandler
+ * Resource handler used for loading {@link Font} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Font} resources.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class FontHandler {
+    /**
+     * Create a new FontHandler instance.
+     *
+     * @param {ResourceLoader} loader - The resource loader.
+     */
     constructor(loader) {
         this._loader = loader;
         this.maxRetries = 0;

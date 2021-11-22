@@ -48,19 +48,20 @@ const PASS_DIR = 1;
 
 const tempVec = new Vec3();
 
-
 /**
- * @class
- * @name Lightmapper
- * @classdesc The lightmapper is used to bake scene lights into textures.
- * @hideconstructor
- * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
- * @param {Entity} root - The root entity of the scene.
- * @param {Scene} scene - The scene to lightmap.
- * @param {ForwardRenderer} renderer - The renderer.
- * @param {AssetRegistry} assets - Registry of assets to lightmap.
+ * The lightmapper is used to bake scene lights into textures.
  */
 class Lightmapper {
+    /**
+     * Create a new Lightmapper instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
+     * @param {Entity} root - The root entity of the scene.
+     * @param {Scene} scene - The scene to lightmap.
+     * @param {ForwardRenderer} renderer - The renderer.
+     * @param {AssetRegistry} assets - Registry of assets to lightmap.
+     * @hideconstructor
+     */
     constructor(device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;

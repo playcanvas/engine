@@ -4,20 +4,22 @@ import { MorphInstance } from './morph-instance.js';
 import { SkinInstance } from './skin-instance.js';
 
 /**
- * @class
- * @name Model
- * @classdesc A model is a graphical object that can be added to or removed from a scene.
- * It contains a hierarchy and any number of mesh instances.
- * @description Creates a new model.
- * @example
- * // Create a new model
- * var model = new pc.Model();
+ * A model is a graphical object that can be added to or removed from a scene. It contains a
+ * hierarchy and any number of mesh instances.
+ *
  * @property {GraphNode} graph The root node of the model's graph node hierarchy.
  * @property {MeshInstance[]} meshInstances An array of MeshInstances contained in this model.
  * @property {SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
  * @property {MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
  */
 class Model {
+    /**
+     * Creates a new model.
+     *
+     * @example
+     * // Create a new model
+     * var model = new pc.Model();
+     */
     constructor() {
         this.graph = null;
         this.meshInstances = [];

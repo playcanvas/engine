@@ -78,14 +78,16 @@ function getScaleSign(mi) {
 }
 
 /**
- * @class
- * @name BatchManager
- * @classdesc Glues many mesh instances into a single one for better performance.
- * @param {GraphicsDevice} device - The graphics device used by the batch manager.
- * @param {Entity} root - The entity under which batched models are added.
- * @param {Scene} scene - The scene that the batch manager affects.
+ * Glues many mesh instances into a single one for better performance.
  */
 class BatchManager {
+    /**
+     * Create a new BatchManager instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device used by the batch manager.
+     * @param {Entity} root - The entity under which batched models are added.
+     * @param {Scene} scene - The scene that the batch manager affects.
+     */
     constructor(device, root, scene) {
         this.device = device;
         this.rootNode = root;

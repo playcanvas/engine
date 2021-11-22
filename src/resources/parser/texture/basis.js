@@ -6,11 +6,10 @@ import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../g
 import { TextureParser } from '../../texture.js';
 
 /**
- * @private
- * @class
- * @name BasisParser
+ * Parser for basis files.
+ *
  * @implements {TextureParser}
- * @classdesc Parser for basis files.
+ * @private
  */
 class BasisParser {
     constructor(registry, device) {

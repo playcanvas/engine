@@ -3,17 +3,24 @@ import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
- * @class
- * @name XrImageTracking
- * @classdesc Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
- * @description Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
+ * Image Tracking provides the ability to track real world images by provided image samples and
+ * their estimated sizes.
+ *
  * @property {boolean} supported True if Image Tracking is supported.
- * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for the AR session or there was an error processing the provided images.
- * @property {XrTrackedImage[]} images List of {@link XrTrackedImage} that contain tracking information.
+ * @property {boolean} available True if Image Tracking is available. This property will be false
+ * if no images were provided for the AR session or there was an error processing the provided
+ * images.
+ * @property {XrTrackedImage[]} images List of {@link XrTrackedImage} that contain tracking
+ * information.
  */
 class XrImageTracking extends EventHandler {
+    /**
+     * Image Tracking provides the ability to track real world images by provided image samples and
+     * their estimate sizes.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 

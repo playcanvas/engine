@@ -3,13 +3,16 @@ import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from './parser/scene.js';
 
 /**
- * @class
- * @name SceneHandler
+ * Resource handler used for loading {@link Scene} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Scene} resources.
- * @param {Application} app - The running {@link Application}.
  */
 class SceneHandler {
+    /**
+     * Create a new SceneHandler instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         this._app = app;
         this.maxRetries = 0;

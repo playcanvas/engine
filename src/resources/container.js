@@ -58,14 +58,13 @@ class ContainerResource {
 }
 
 /**
- * @class
- * @name ContainerHandler
- * @implements {ResourceHandler}
- * @classdesc Loads files that contain multiple resources. For example glTF files can contain
- * textures, models and animations.
+ * Loads files that contain multiple resources. For example glTF files can contain textures, models
+ * and animations.
+ *
  * For glTF files, the asset options object can be used to pass load time callbacks for handling
  * the various resources at different stages of loading. The table below lists the resource types
  * and the corresponding supported process functions.
+ *
  * ```
  * |---------------------------------------------------------------------|
  * |  resource   |  preprocess |   process   |processAsync | postprocess |
@@ -82,7 +81,9 @@ class ContainerResource {
  * | bufferView  |      x      |             |      x      |      x      |
  * |---------------------------------------------------------------------|
  * ```
+ *
  * For example, to receive a texture preprocess callback:
+ *
  * ```javascript
  * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
@@ -90,11 +91,18 @@ class ContainerResource {
  *     },
  * });
  * ```
- * @param {GraphicsDevice} device - The graphics device that will be rendering.
- * @param {AssetRegistry} assets - The asset registry
- * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ *
+ * @implements {ResourceHandler}
  */
 class ContainerHandler {
+    /**
+     * Create a new ContainerResource instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device that will be rendering.
+     * @param {AssetRegistry} assets - The asset registry
+     * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any
+     * place that a material is not specified.
+     */
     constructor(device, assets) {
         this.glbParser = new GlbParser(device, assets, 0);
         this.parsers = { };

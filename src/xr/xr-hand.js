@@ -25,19 +25,22 @@ if (platform.browser && window.XRHand) {
 }
 
 /**
- * @class
- * @name XrHand
- * @classdesc Represents a hand with fingers and joints.
- * @description Represents a hand with fingers and joints.
- * @hideconstructor
- * @param {XrInputSource} inputSource - Input Source that hand is related to.
+ * Represents a hand with fingers and joints.
+ *
  * @property {XrFinger[]} fingers List of fingers of a hand.
  * @property {XrJoint[]} joints List of joints of hand.
  * @property {XrJoint[]} tips List of joints that are tips of a fingers.
- * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system.
+ * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR
+ * underlying system.
  * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost.
  */
 class XrHand extends EventHandler {
+    /**
+     * Represents a hand with fingers and joints.
+     *
+     * @param {XrInputSource} inputSource - Input Source that hand is related to.
+     * @hideconstructor
+     */
     constructor(inputSource) {
         super();
 

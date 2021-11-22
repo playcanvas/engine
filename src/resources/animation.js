@@ -12,10 +12,9 @@ import { GlbParser } from '../resources/parser/glb-parser.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @class
- * @name AnimationHandler
+ * Resource handler used for loading {@link Animation} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Animation} resources.
  */
 class AnimationHandler {
     constructor() {

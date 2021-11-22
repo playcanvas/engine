@@ -9,11 +9,10 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
 import { TextureParser } from '../../texture.js';
 
 /**
- * @private
- * @class
- * @name ImgParser
+ * Parser for browser-supported image formats.
+ *
  * @implements {TextureParser}
- * @classdesc Parser for browser-supported image formats.
+ * @private
  */
 class ImgParser {
     constructor(registry) {

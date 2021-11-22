@@ -7,11 +7,10 @@ import { AnimTrack } from '../anim/evaluator/anim-track.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @private
- * @class
- * @name AnimClipHandler
+ * Resource handler used for loading {@link AnimClip} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link AnimClip} resources.
+ * @private
  */
 class AnimClipHandler {
     constructor() {

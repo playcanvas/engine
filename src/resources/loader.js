@@ -6,13 +6,15 @@
  */
 
 /**
- * @class
- * @name ResourceLoader
- * @param {Application} app - The application.
- * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
- * multiple requests. Add ResourceHandlers to handle different types of resources.
+ * Load resource data, potentially from remote sources. Caches resource on load to prevent multiple
+ * requests. Add ResourceHandlers to handle different types of resources.
  */
 class ResourceLoader {
+    /**
+     * Create a new ResourceLoader instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         this._handlers = {};
         this._requests = {};

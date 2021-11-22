@@ -9,14 +9,17 @@ import { Untar, UntarWorker } from './untar.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @private
- * @class
- * @name BundleHandler
+ * Loads Bundle Assets.
+ *
  * @implements {ResourceHandler}
- * @param {AssetRegistry} assets - The asset registry.
- * @classdesc Loads Bundle Assets.
+ * @private
  */
 class BundleHandler {
+    /**
+     * Create a new BundleHandler instance.
+     *
+     * @param {AssetRegistry} assets - The asset registry.
+     */
     constructor(assets) {
         this._assets = assets;
         this._worker = null;

@@ -27,13 +27,16 @@ const PLACEHOLDER_MAP = {
 };
 
 /**
- * @class
- * @name MaterialHandler
+ * Resource handler used for loading {@link Material} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Material} resources.
- * @param {Application} app - The running {@link Application}.
  */
 class MaterialHandler {
+    /**
+     * Create a new MaterialHandler instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;

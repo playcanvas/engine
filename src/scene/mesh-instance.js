@@ -47,19 +47,17 @@ class Command {
 }
 
 /**
- * @class
- * @name MeshInstance
- * @classdesc An instance of a {@link Mesh}. A single mesh can be referenced by many
- * mesh instances that can have different transforms and materials.
- * @description Create a new mesh instance.
- * @param {Mesh} mesh - The graphics mesh being instanced.
- * @param {Material} material - The material used to render this instance.
- * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
+ * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
+ * have different transforms and materials.
+ *
  * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
- * @property {MorphInstance} morphInstance The morph instance managing morphing of this mesh instance, or null if morphing is not used.
- * @property {SkinInstance} skinInstance The skin instance managing skinning of this mesh instance, or null if skinning is not used.
- * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
- * But note that the mesh instance is still in the hierarchy and still in the draw call list.
+ * @property {MorphInstance} morphInstance The morph instance managing morphing of this mesh
+ * instance, or null if morphing is not used.
+ * @property {SkinInstance} skinInstance The skin instance managing skinning of this mesh instance,
+ * or null if skinning is not used.
+ * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to
+ * enable/disable rendering without overhead of removing from scene. But note that the mesh
+ * instance is still in the hierarchy and still in the draw call list.
  * @property {GraphNode} node The graph node defining the transform for this instance.
  * @property {Mesh} mesh The graphics mesh being instanced.
  * @property {Material} material The material used by this mesh instance.
@@ -70,32 +68,42 @@ class Command {
  * - {@link RENDERSTYLE_POINTS}
  *
  * Defaults to {@link RENDERSTYLE_SOLID}.
- * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
+ * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum
+ * culling ({@link CameraComponent#frustumCulling}).
  * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
- * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
- * @property {callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
- * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
- * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
- * @property {boolean} visibleThisFrame Read this value in {@link Layer#onPostCull} to determine if the object is actually going to be rendered.
- * @example
- * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
- * var mesh = pc.createBox(graphicsDevice);
- * var material = new pc.StandardMaterial();
- * var node = new pc.GraphNode();
- * var meshInstance = new pc.MeshInstance(mesh, material, node);
- *
- * @example
- * // A script you can attach on an entity to test if it is visible on a Layer
- * var MeshVisScript = pc.createScript('meshVisScript');
- * MeshVisScript.prototype.initialize = function () {
- *     var _this = this;
- *     this.app.scene.layers.getLayerByName("World").onPostCull = function (cameraIndex) {
- *         var meshInstance = _this.entity.model.model.meshInstances[0];
- *         console.log("visible: " + meshInstance.visibleThisFrame);
- *     };
- * };
+ * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or
+ * {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
+ * @property {callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh
+ * instances are sorted by a distance calculation to determine their rendering order. Set this
+ * callback to override the default distance calculation, which gives the dot product of the camera
+ * forward vector and the vector between the camera position and the center of the mesh instance's
+ * axis-aligned bounding box. This option can be particularly useful for rendering transparent
+ * meshes in a better order than default.
+ * @property {boolean} visibleThisFrame Read this value in {@link Layer#onPostCull} to determine if
+ * the object is actually going to be rendered.
  */
 class MeshInstance {
+    /**
+     * Create a new MeshInstance instance.
+     *
+     * @param {Mesh} mesh - The graphics mesh being instanced.
+     * @param {Material} material - The material used to render this instance.
+     * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
+     * @example
+     * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
+     * var mesh = pc.createBox(graphicsDevice);
+     * var material = new pc.StandardMaterial();
+     *
+     * var meshInstance = new pc.MeshInstance(mesh, material);
+     * 
+     * var entity = new pc.Entity();
+     * entity.addComponent('render', {
+     *     meshInstances: [meshInstance]
+     * });
+     * 
+     * // Add the entity to the scene hierarchy
+     * this.app.scene.root.addChild(entity);
+     */
     constructor(mesh, material, node = null) {
 
         // if first parameter is of GraphNode type, handle previous constructor signature: (node, mesh, material)

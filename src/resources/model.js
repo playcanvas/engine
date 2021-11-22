@@ -20,14 +20,16 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * @class
- * @name ModelHandler
+ * Resource handler used for loading {@link Model} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Model} resources.
- * @param {GraphicsDevice} device - The graphics device that will be rendering.
- * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ModelHandler {
+    /**
+     * Create a new ModelHandler instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device that will be rendering.
+     */
     constructor(device) {
         this._device = device;
         this._parsers = [];

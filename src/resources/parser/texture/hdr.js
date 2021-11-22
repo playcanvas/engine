@@ -14,11 +14,10 @@ import { Asset } from '../../../asset/asset.js';
 import { TextureParser } from '../../texture.js';
 
 /**
- * @private
- * @class
- * @name HdrParser
+ * Texture parser for hdr files.
+ *
  * @implements {TextureParser}
- * @classdesc Texture parser for hdr files.
+ * @private
  */
 class HdrParser {
     constructor(registry) {

@@ -13,14 +13,16 @@ import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FI
 const _floatRounding = 0.2;
 
 /**
- * @class
- * @name Morph
- * @classdesc Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
- * @param {MorphTarget[]} targets - A list of morph targets.
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
- * from the {@link Application}.
+ * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
  */
 class Morph extends RefCountedObject {
+    /**
+     * Create a new Morph instance.
+     *
+     * @param {MorphTarget[]} targets - A list of morph targets.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph
+     * target. If it is not provided, a device is obtained from the {@link Application}.
+     */
     constructor(targets, graphicsDevice) {
         super();
 

@@ -13,11 +13,10 @@ import {
 import { TextureParser } from '../../texture.js';
 
 /**
- * @private
- * @class
- * @name DdsParser
+ * Legacy texture parser for dds files.
+ *
  * @implements {TextureParser}
- * @classdesc Legacy texture parser for dds files.
+ * @private
  */
 class DdsParser {
     constructor(registry) {

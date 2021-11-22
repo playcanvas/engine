@@ -147,20 +147,23 @@ function rawToValue(app, args, value, old) {
     return value;
 }
 
-/* eslint-disable jsdoc/no-undefined-types */
 /**
- * @class
- * @name ScriptAttributes
- * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link ScriptType}.
- * Note: An instance of ScriptAttributes is created automatically by each {@link ScriptType}.
- * @param {Class<ScriptType>} scriptType - Script Type that attributes relate to.
+ * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
+ * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
+ * created automatically by each {@link ScriptType}.
  */
-/* eslint-enable jsdoc/no-undefined-types */
 class ScriptAttributes {
+    /* eslint-disable jsdoc/no-undefined-types */
+    /**
+     * Create a new ScriptAttributes instance.
+     *
+     * @param {Class<ScriptType>} scriptType - Script Type that attributes relate to.
+     */
     constructor(scriptType) {
         this.scriptType = scriptType;
         this.index = {};
     }
+    /* eslint-enable jsdoc/no-undefined-types */
 
     static reservedNames = new Set([
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',

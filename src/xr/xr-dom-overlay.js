@@ -1,31 +1,51 @@
 import { platform } from '../core/platform.js';
 
 /**
- * @class
- * @name XrDomOverlay
- * @classdesc DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It requires that the root DOM element is provided for session start. That way, input source select events are first tested against DOM Elements and then propagated down to the XR Session. If this propagation is not desirable, use the `beforexrselect` event on a DOM element and the `preventDefault` function to stop propagation.
- * @description DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It requires that the root DOM element is provided for session start. That way, input source select events are first tested against DOM Elements and then propagated down to the XR Session. If this propagation is not desirable, use the `beforexrselect` event on a DOM element and the `preventDefault` function to stop propagation.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @property {boolean} supported True if DOM Overlay is supported.
- * @property {boolean} available True if DOM Overlay is available. It can only be available if it is supported, during a valid WebXR session and if a valid root element is provided.
- * @property {string|null} state State of the DOM Overlay, which defines how the root DOM element is rendered. Possible options:
+ * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It
+ * requires that the root DOM element is provided for session start. That way, input source select
+ * events are first tested against DOM Elements and then propagated down to the XR Session. If this
+ * propagation is not desirable, use the `beforexrselect` event on a DOM element and the
+ * `preventDefault` function to stop propagation.
  *
- * - screen: Screen - indicates that the DOM element is covering whole physical screen, matching XR viewports.
- * - floating: Floating - indicates that the underlying platform renders the DOM element as floating in space, which can move during the WebXR session or allow the application to move the element.
- * - head-locked: Head Locked - indicates that the DOM element follows the user's head movement consistently, appearing similar to a helmet heads-up display.
- *
- * @example
+ * ```javascript```
  * app.xr.domOverlay.root = element;
  * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
- * @example
- * // Disable input source firing `select` event when some descendant element of DOM overlay root is touched/clicked.
- * // This is useful when the user interacts with UI elements and there should not be `select` events behind UI.
+ * ```
+ * 
+ * ```javascript
+ * // Disable input source firing `select` event when some descendant element of DOM overlay root
+ * // is touched/clicked. This is useful when the user interacts with UI elements and there should
+ * // not be `select` events behind UI.
  * someElement.addEventListener('beforexrselect', function (evt) {
  *     evt.preventDefault();
  * });
+ * ```
+ * 
+ * @property {boolean} supported True if DOM Overlay is supported.
+ * @property {boolean} available True if DOM Overlay is available. It can only be available if it
+ * is supported, during a valid WebXR session and if a valid root element is provided.
+ * @property {string|null} state State of the DOM Overlay, which defines how the root DOM element
+ * is rendered. Possible options:
+ *
+ * - screen: Screen - indicates that the DOM element is covering whole physical screen, matching XR
+ * viewports.
+ * - floating: Floating - indicates that the underlying platform renders the DOM element as
+ * floating in space, which can move during the WebXR session or allow the application to move the
+ * element.
+ * - head-locked: Head Locked - indicates that the DOM element follows the user's head movement
+ * consistently, appearing similar to a helmet heads-up display.
  */
 class XrDomOverlay {
+    /**
+     * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It
+     * requires that the root DOM element is provided for session start. That way, input source
+     * select events are first tested against DOM Elements and then propagated down to the XR
+     * Session. If this propagation is not desirable, use the `beforexrselect` event on a DOM
+     * element and the `preventDefault` function to stop propagation.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         this._manager = manager;
         this._supported = platform.browser && !!window.XRDOMOverlayState;

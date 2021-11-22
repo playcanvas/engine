@@ -42,14 +42,16 @@ function onContainerAssetRemoved(containerAsset) {
 }
 
 /**
- * @class
- * @name RenderHandler
+ * Resource handler used for loading {@link Render} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Render} resources.
- * @param {GraphicsDevice} device - The graphics device that will be rendering.
- * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class RenderHandler {
+    /**
+     * Create a new RenderHandler instance.
+     *
+     * @param {AssetRegistry} assets - The asset registry.
+     */
     constructor(assets) {
         this._registry = assets;
     }

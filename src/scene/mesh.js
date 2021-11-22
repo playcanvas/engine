@@ -97,9 +97,7 @@ class GeometryVertexStream {
 }
 
 /**
- * @class
- * @name Mesh
- * @classdesc A graphical primitive. The mesh is defined by a {@link VertexBuffer} and an optional
+ * A graphical primitive. The mesh is defined by a {@link VertexBuffer} and an optional
  * {@link IndexBuffer}. It also contains a primitive definition which controls the type of the
  * primitive and the portion of the vertex or index buffer to use.
  *
@@ -107,12 +105,14 @@ class GeometryVertexStream {
  * There are two ways a mesh can be generated or updated.
  *
  * ### Simple Mesh API
- * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs} that provide a simple way to provide
- * vertex and index data for the Mesh, and hiding the complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
+ * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs}
+ * that provide a simple way to provide vertex and index data for the Mesh, and hiding the
+ * complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
  *
- * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
+ * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to
+ * form a single triangle.
  *
- * ~~~javascript
+ * ```javascript
  * var mesh = new pc.Mesh(device);
  * var positions = [
  *     0, 0, 0, // pos 0
@@ -121,12 +121,12 @@ class GeometryVertexStream {
  * ];
  * mesh.setPositions(positions);
  * mesh.update();
- * ~~~
+ * ```
  *
- * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
- * Float32Array is used for positions and uvs.
+ * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in
+ * channel 0, and an index buffer to form two triangles. Float32Array is used for positions and uvs.
  *
- * ~~~javascript
+ * ```javascript
  * var mesh = new pc.Mesh(device);
  * var positions = new Float32Array([
  *     0, 0, 0, // pos 0
@@ -148,12 +148,14 @@ class GeometryVertexStream {
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
  * mesh.update();
- * ~~~
+ * ```
  *
- * This example demonstrated that vertex attributes such as position and normals, and also indices can be provided using Arrays ([]) and also Typed Arrays
- * (Float32Array and similar). Note that typed arrays have higher performance, and are generaly recommended for per-frame operations or larger meshes,
- * but their construction using new operator is costly operation. If you only need to operate on small number of vertices or indices, consider using the
- * Arrays instead to avoid Type Array allocation overhead.
+ * This example demonstrated that vertex attributes such as position and normals, and also indices
+ * can be provided using Arrays ([]) and also Typed Arrays (Float32Array and similar). Note that
+ * typed arrays have higher performance, and are generally recommended for per-frame operations or
+ * larger meshes, but their construction using new operator is costly operation. If you only need
+ * to operate on small number of vertices or indices, consider using the Arrays instead to avoid
+ * Type Array allocation overhead.
  *
  * Follow these links for more complex examples showing the functionality.
  * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
@@ -162,18 +164,17 @@ class GeometryVertexStream {
  * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
  * ### Update Vertex and Index buffers.
- * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
- * See {@link VertexBuffer}, {@link IndexBuffer} and {@link VertexFormat} for details.
- * @description Create a new mesh.
- * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
- * from the {@link Application}.
+ * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
+ * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
+ * {@link IndexBuffer} and {@link VertexFormat} for details.
+ *
  * @property {VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
- * @property {IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
- * be empty. The first index buffer in the array is used by {@link MeshInstance}s with a renderStyle
- * property set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if renderStyle is
- * set to {@link RENDERSTYLE_WIREFRAME}.
- * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
- * mesh should be interpreted by the graphics device. For details on the primitive object, see.
+ * @property {IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this
+ * array can be empty. The first index buffer in the array is used by {@link MeshInstance}s with a
+ * renderStyle property set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is
+ * used if renderStyle is set to {@link RENDERSTYLE_WIREFRAME}.
+ * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data
+ * in the mesh should be interpreted by the graphics device.
  * @property {number} primitive[].type The type of primitive to render. Can be:
  *
  * - {@link PRIMITIVE_POINTS}
@@ -184,15 +185,28 @@ class GeometryVertexStream {
  * - {@link PRIMITIVE_TRISTRIP}
  * - {@link PRIMITIVE_TRIFAN}
  *
- * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
- * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
- * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
- * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
- * @property {BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
- * @property {Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
- * @property {Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
+ * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the
+ * draw call.
+ * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw
+ * call.
+ * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby
+ * using the currently set index buffer and false otherwise.
+ * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer
+ * property.
+ * @property {BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this
+ * mesh.
+ * @property {Skin} [skin] The skin data (if any) that drives skinned mesh animations for this
+ * mesh.
+ * @property {Morph} [morph] The morph data (if any) that drives morph target animations for this
+ * mesh.
  */
 class Mesh extends RefCountedObject {
+    /**
+     * Create a new Mesh instance.
+     *
+     * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If
+     * it is not provided, a device is obtained from the {@link Application}.
+     */
     constructor(graphicsDevice) {
         super();
         this.id = id++;

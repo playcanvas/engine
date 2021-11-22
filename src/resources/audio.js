@@ -43,13 +43,16 @@ const toMIME = {
 };
 
 /**
- * @class
- * @name AudioHandler
+ * Resource handler used for loading {@link Sound} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Sound} resources.
- * @param {SoundManager} manager - The sound manager.
  */
 class AudioHandler {
+    /**
+     * Create a new AudioHandler instance.
+     *
+     * @param {SoundManager} manager - The sound manager.
+     */
     constructor(manager) {
         this.manager = manager;
         this.maxRetries = 0;
