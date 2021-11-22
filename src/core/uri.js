@@ -59,19 +59,22 @@ function createURI(options) {
 // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
 const re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
+/**
+ * A URI object.
+ *
+ * @property {string} scheme The scheme. (e.g. http).
+ * @property {string} authority The authority. (e.g. `www.example.com`).
+ * @property {string} path The path. (e.g. /users/example).
+ * @property {string} query The query, the section after a ?. (e.g. search=value).
+ * @property {string} fragment The fragment, the section after a #.
+ * @private
+ */
 class URI {
     /**
-     * @private
-     * @class
-     * @name URI
-     * @description Create a new URI object.
-     * @classdesc A URI object.
+     * Create a new URI instance.
+     *
      * @param {string} uri - URI string.
-     * @property {string} scheme The scheme. (e.g. http).
-     * @property {string} authority The authority. (e.g. `www.example.com`).
-     * @property {string} path The path. (e.g. /users/example).
-     * @property {string} query The query, the section after a ?. (e.g. search=value).
-     * @property {string} fragment The fragment, the section after a #.
+     * @private
      */
     constructor(uri) {
         const result = uri.match(re);

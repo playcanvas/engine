@@ -10,13 +10,15 @@ const now = (typeof window !== 'undefined') && window.performance && window.perf
 } : Date.now;
 
 /**
+ * A Timer counts milliseconds from when start() is called until when stop() is called.
+ *
  * @private
- * @class
- * @name Timer
- * @description Create a new Timer instance.
- * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
  */
 class Timer {
+    /**
+     * Create a new Timer instance.
+     * @private
+     */
     constructor() {
         this._isRunning = false;
         this._a = 0;

@@ -1,10 +1,14 @@
 /**
+ * A ordered list-type data structure that can provide item look up by key, but also return return a list.
+ *
  * @private
- * @class
- * @name IndexedList
- * @classdesc A ordered list-type data structure that can provide item look up by key, but also return return a list.\.
  */
 class IndexedList {
+    /**
+     * Create a new IndexedList instance.
+     * 
+     * @private
+     */
     constructor() {
         this._list = [];
         this._index = {};

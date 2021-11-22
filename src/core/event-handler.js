@@ -12,22 +12,23 @@
  */
 
 /**
- * @class
- * @name EventHandler
- * @classdesc Abstract base class that implements functionality for event handling.
- * @description Create a new event handler.
- * @example
- * var obj = new EventHandlerSubclass();
- *
- * // subscribe to an event
- * obj.on('hello', function (str) {
- *     console.log('event hello is fired', str);
- * });
- *
- * // fire event
- * obj.fire('hello', 'world');
+ * Abstract base class that implements functionality for event handling.
  */
 class EventHandler {
+    /**
+     * Create a new EventHandler instance.
+     *
+     * @example
+     * var obj = new EventHandlerSubclass();
+     *
+     * // subscribe to an event
+     * obj.on('hello', function (str) {
+     *     console.log('event hello is fired', str);
+     * });
+     *
+     * // fire event
+     * obj.fire('hello', 'world');
+     */
     constructor() {
         this.initEventHandler();
     }
