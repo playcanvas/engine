@@ -11,15 +11,19 @@ const tmpSphere = new BoundingSphere();
 const tmpMat4 = new Mat4();
 
 /**
- * @class
- * @name OrientedBox
- * @description Create a new oriented box.
- * @classdesc Oriented Box.
+ * Oriented Box.
+ *
  * @property {Mat4} [worldTransform] The world transform of the OBB.
- * @param {Mat4} [worldTransform] - Transform that has the orientation and position of the box. Scale is assumed to be one.
- * @param {Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
  */
 class OrientedBox {
+    /**
+     * Create a new OrientedBox instance.
+     *
+     * @param {Mat4} [worldTransform] - Transform that has the orientation and position of the box.
+     * Scale is assumed to be one.
+     * @param {Vec3} [halfExtents] - Half the distance across the box in each local axis. The
+     * constructor takes a reference of this parameter.
+     */
     constructor(worldTransform = new Mat4(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
         this.halfExtents = halfExtents;
 

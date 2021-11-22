@@ -4,16 +4,17 @@ import { PROJECTION_PERSPECTIVE } from '../scene/constants.js';
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
- * @class
- * @name Frustum
- * @classdesc A frustum is a shape that defines the viewing space of a camera. It can be
- * used to determine visibility of points and bounding spheres. Typically, you would not
- * create a Frustum shape directly, but instead query {@link CameraComponent#frustum}.
- * @description Creates a new frustum shape.
- * @example
- * var frustum = new pc.Frustum();
+ * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
+ * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
+ * directly, but instead query {@link CameraComponent#frustum}.
  */
 class Frustum {
+    /**
+     * Create a new Frustum instance.
+     *
+     * @example
+     * var frustum = new pc.Frustum();
+     */
     constructor() {
         this.planes = [];
         for (let i = 0; i < 6; i++)

@@ -7,16 +7,19 @@ const tmpVecD = new Vec3();
 const tmpVecE = new Vec3();
 
 /**
- * @class
- * @name BoundingBox
- * @description Create a new axis-aligned bounding box.
- * @classdesc Axis-Aligned Bounding Box.
- * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
- * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter. Defaults to 0.5 on each axis.
+ * Axis-Aligned Bounding Box.
+ *
  * @property {Vec3} center Center of box.
  * @property {Vec3} halfExtents Half the distance across the box in each axis.
  */
 class BoundingBox {
+    /**
+     * Create a new BoundingBox instance. The bounding box is axis-aligned.
+     *
+     * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
+     * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor
+     * takes a reference of this parameter. Defaults to 0.5 on each axis.
+     */
     constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
         this.center = center;
         this.halfExtents = halfExtents;

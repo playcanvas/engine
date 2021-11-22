@@ -4,19 +4,22 @@ const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 
 /**
- * @class
- * @name BoundingSphere
- * @classdesc A bounding sphere is a volume for facilitating fast intersection testing.
- * @description Creates a new bounding sphere.
- * @example
- * // Create a new bounding sphere centered on the origin with a radius of 0.5
- * var sphere = new pc.BoundingSphere();
- * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The constructor takes a reference of this parameter.
- * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
+ * A bounding sphere is a volume for facilitating fast intersection testing.
+ *
  * @property {Vec3} center Center of sphere.
  * @property {number} radius The radius of the bounding sphere.
  */
 class BoundingSphere {
+    /**
+     * Creates a new BoundingSphere instance.
+     *
+     * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The
+     * constructor takes a reference of this parameter.
+     * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
+     * @example
+     * // Create a new bounding sphere centered on the origin with a radius of 0.5
+     * var sphere = new pc.BoundingSphere();
+     */
     constructor(center = new Vec3(), radius = 0.5) {
         this.center = center;
         this.radius = radius;

@@ -3,15 +3,19 @@ import { Vec3 } from '../math/vec3.js';
 const tmpVecA = new Vec3();
 
 /**
+ * An infinite plane.
+ *
  * @private
- * @class
- * @name Plane
- * @classdesc An infinite plane.
- * @description Create an infinite plane.
- * @param {Vec3} [point] - Point position on the plane. The constructor takes a reference of this parameter.
- * @param {Vec3} [normal] - Normal of the plane. The constructor takes a reference of this parameter.
  */
 class Plane {
+    /**
+     * Create a new Plane instance.
+     *
+     * @param {Vec3} [point] - Point position on the plane. The constructor takes a reference of this parameter.
+     * @param {Vec3} [normal] - Normal of the plane. The constructor takes a reference of this parameter.
+     * @private
+     */
+
     constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
         this.normal = normal;
         this.point = point;
