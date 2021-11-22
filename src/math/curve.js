@@ -4,13 +4,9 @@ import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
- * @class
- * @name Curve
- * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
- * curve is defined by its type that specifies an interpolation scheme for the keys.
- * @description Creates a new curve.
- * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and
- * value second).
+ * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
+ * type that specifies an interpolation scheme for the keys.
+ *
  * @property {number} length The number of keys in the curve. [read only].
  * @property {number} type The curve interpolation scheme. Can be:
  *
@@ -20,19 +16,24 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * - {@link CURVE_STEP}
  *
  * Defaults to {@link CURVE_SMOOTHSTEP}.
- * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated.
- * Valid range is between 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
+ * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated. Valid
+ * range is between 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
  * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
- *
- * @example
- * var curve = new pc.Curve([
- *     0, 0,        // At 0 time, value of 0
- *     0.33, 2,     // At 0.33 time, value of 2
- *     0.66, 2.6,   // At 0.66 time, value of 2.6
- *     1, 3         // At 1 time, value of 3
- * ]);
  */
 class Curve {
+    /**
+     * Creates a new Curve instance.
+     *
+     * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and value
+     * second).
+     * @example
+     * var curve = new pc.Curve([
+     *     0, 0,        // At 0 time, value of 0
+     *     0.33, 2,     // At 0.33 time, value of 2
+     *     0.66, 2.6,   // At 0.66 time, value of 2.6
+     *     1, 3         // At 1 time, value of 3
+     * ]);
+     */
     constructor(data) {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;

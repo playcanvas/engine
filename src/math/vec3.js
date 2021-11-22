@@ -1,54 +1,59 @@
 /**
- * @class
- * @name Vec3
- * @classdesc A 3-dimensional vector.
- * @description Creates a new Vec3 object.
- * @param {number|number[]} [x] - The x value. If x is an array of length 3, the array will be used to populate all components.
- * @param {number} [y] - The y value.
- * @param {number} [z] - The z value.
- * @example
- * var v = new pc.Vec3(1, 2, 3);
- */
-/**
- * @name Vec3#x
- * @type {number}
- * @description The first component of the vector.
- * @example
- * var vec = new pc.Vec3(10, 20, 30);
- *
- * // Get x
- * var x = vec.x;
- *
- * // Set x
- * vec.x = 0;
- */
-/**
- * @name Vec3#y
- * @type {number}
- * @description The second component of the vector.
- * @example
- * var vec = new pc.Vec3(10, 20, 30);
- *
- * // Get y
- * var y = vec.y;
- *
- * // Set y
- * vec.y = 0;
- */
-/**
- * @name Vec3#z
- * @type {number}
- * @description The third component of the vector.
- * @example
- * var vec = new pc.Vec3(10, 20, 30);
- *
- * // Get z
- * var z = vec.z;
- *
- * // Set z
- * vec.z = 0;
+ * 3-dimensional vector.
  */
 class Vec3 {
+    /**
+     * @name Vec3#x
+     * @type {number}
+     * @description The first component of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
+     */
+
+    /**
+     * @name Vec3#y
+     * @type {number}
+     * @description The second component of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
+     */
+
+    /**
+     * @name Vec3#z
+     * @type {number}
+     * @description The third component of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get z
+     * var z = vec.z;
+     *
+     * // Set z
+     * vec.z = 0;
+     */
+
+    /**
+     * Creates a new Vec3 object.
+     *
+     * @param {number|number[]} [x] - The x value. If x is an array of length 3, the array will be
+     * used to populate all components.
+     * @param {number} [y] - The y value.
+     * @param {number} [z] - The z value.
+     * @example
+     * var v = new pc.Vec3(1, 2, 3);
+     */
     constructor(x = 0, y = 0, z = 0) {
         if (x.length === 3) {
             this.x = x[0];

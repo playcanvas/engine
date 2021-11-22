@@ -1,72 +1,78 @@
 /**
- * @class
- * @name Vec4
- * @classdesc A 4-dimensional vector.
- * @description Creates a new Vec4 object.
- * @param {number|number[]} [x] - The x value. If x is an array of length 4, the array will be used to populate all components.
- * @param {number} [y] - The y value.
- * @param {number} [z] - The z value.
- * @param {number} [w] - The w value.
- * @example
- * var v = new pc.Vec4(1, 2, 3, 4);
- */
-/**
- * @field
- * @name Vec4#x
- * @type {number}
- * @description The first component of the vector.
- * @example
- * var vec = new pc.Vec4(10, 20, 30, 40);
- *
- * // Get x
- * var x = vec.x;
- *
- * // Set x
- * vec.x = 0;
- */
-/**
- * @field
- * @name Vec4#y
- * @type {number}
- * @description The second component of the vector.
- * @example
- * var vec = new pc.Vec4(10, 20, 30, 40);
- *
- * // Get y
- * var y = vec.y;
- *
- * // Set y
- * vec.y = 0;
- */
-/**
- * @field
- * @name Vec4#z
- * @type {number}
- * @description The third component of the vector.
- * @example
- * var vec = new pc.Vec4(10, 20, 30, 40);
- *
- * // Get z
- * var z = vec.z;
- *
- * // Set z
- * vec.z = 0;
- */
-/**
- * @field
- * @name Vec4#w
- * @type {number}
- * @description The fourth component of the vector.
- * @example
- * var vec = new pc.Vec4(10, 20, 30, 40);
- *
- * // Get w
- * var w = vec.w;
- *
- * // Set w
- * vec.w = 0;
+ * A 4-dimensional vector.
  */
 class Vec4 {
+    /**
+     * @field
+     * @name Vec4#x
+     * @type {number}
+     * @description The first component of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
+     */
+
+    /**
+     * @field
+     * @name Vec4#y
+     * @type {number}
+     * @description The second component of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
+     */
+
+    /**
+     * @field
+     * @name Vec4#z
+     * @type {number}
+     * @description The third component of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get z
+     * var z = vec.z;
+     *
+     * // Set z
+     * vec.z = 0;
+     */
+
+    /**
+     * @field
+     * @name Vec4#w
+     * @type {number}
+     * @description The fourth component of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get w
+     * var w = vec.w;
+     *
+     * // Set w
+     * vec.w = 0;
+     */
+
+    /**
+     * Creates a new Vec4 object.
+     *
+     * @param {number|number[]} [x] - The x value. If x is an array of length 4, the array will be
+     * used to populate all components.
+     * @param {number} [y] - The y value.
+     * @param {number} [z] - The z value.
+     * @param {number} [w] - The w value.
+     * @example
+     * var v = new pc.Vec4(1, 2, 3, 4);
+     */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
             this.x = x[0];

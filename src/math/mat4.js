@@ -11,13 +11,14 @@ const scale = new Vec3();
 
 
 /**
- * @class
- * @name Mat4
- * @classdesc A 4x4 matrix.
- * @description Creates a new identity Mat4 object.
+ * A 4x4 matrix.
+ *
  * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
 class Mat4 {
+    /**
+     * Create a new Mat4 instance. It is initialized to the identity matrix.
+     */
     constructor() {
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.

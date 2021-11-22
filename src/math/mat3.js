@@ -1,13 +1,14 @@
 import { Vec3 } from './vec3.js';
 
 /**
- * @class
- * @name Mat3
- * @classdesc A 3x3 matrix.
- * @description Creates a new identity Mat3 object.
+ * A 3x3 matrix.
+ *
  * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
 class Mat3 {
+    /**
+     * Create a new Mat3 instance. It is initialized to the identity matrix.
+     */
     constructor() {
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.

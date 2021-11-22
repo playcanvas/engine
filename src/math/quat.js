@@ -2,72 +2,77 @@ import { math } from './math.js';
 import { Vec3 } from './vec3.js';
 
 /**
- * @class
- * @name Quat
- * @classdesc A quaternion.
- * @description Create a new Quat object.
- * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
- * @param {number} [y] - The quaternion's y component. Default value 0.
- * @param {number} [z] - The quaternion's z component. Default value 0.
- * @param {number} [w] - The quaternion's w component. Default value 1.
- */
-/**
- * @field
- * @name Quat#x
- * @type {number}
- * @description The x component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get x
- * var x = quat.x;
- *
- * // Set x
- * quat.x = 0;
- */
-/**
- * @field
- * @name Quat#y
- * @type {number}
- * @description The y component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get y
- * var y = quat.y;
- *
- * // Set y
- * quat.y = 0;
- */
-/**
- * @field
- * @name Quat#z
- * @type {number}
- * @description The z component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get z
- * var z = quat.z;
- *
- * // Set z
- * quat.z = 0;
- */
-/**
- * @field
- * @name Quat#w
- * @type {number}
- * @description The w component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get w
- * var w = quat.w;
- *
- * // Set w
- * quat.w = 0;
+ * A quaternion.
  */
 class Quat {
+    /**
+     * @field
+     * @name Quat#x
+     * @type {number}
+     * @description The x component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get x
+     * var x = quat.x;
+     *
+     * // Set x
+     * quat.x = 0;
+     */
+
+    /**
+     * @field
+     * @name Quat#y
+     * @type {number}
+     * @description The y component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get y
+     * var y = quat.y;
+     *
+     * // Set y
+     * quat.y = 0;
+     */
+
+    /**
+     * @field
+     * @name Quat#z
+     * @type {number}
+     * @description The z component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get z
+     * var z = quat.z;
+     *
+     * // Set z
+     * quat.z = 0;
+     */
+
+    /**
+     * @field
+     * @name Quat#w
+     * @type {number}
+     * @description The w component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get w
+     * var w = quat.w;
+     *
+     * // Set w
+     * quat.w = 0;
+     */
+
+    /**
+     * Create a new Quat instance.
+     *
+     * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
+     * @param {number} [y] - The quaternion's y component. Default value 0.
+     * @param {number} [z] - The quaternion's z component. Default value 0.
+     * @param {number} [w] - The quaternion's w component. Default value 1.
+     */    
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
             this.x = x[0];
