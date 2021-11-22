@@ -88,7 +88,7 @@ struct ClusterLightData {
 };
 
 // Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
-// when stored outside, as so we store it outside to avoid spot shadow flickering. This might need to be done to other / all members
+// when stored outside, so we store it outside to avoid spot shadow flickering. This might need to be done to other / all members
 // of the structure if further similar issues are observed.
 
 // shadow (spot light only) / cookie projection matrix
