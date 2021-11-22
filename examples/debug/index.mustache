@@ -54,10 +54,7 @@
             }
 
             assets = assets.map(function (c) {
-                var props = {
-                    ...c.props
-                };
-                return props;
+                return c.props;
             });
 
             var manifest = {};
@@ -82,9 +79,9 @@
             assets.forEach(function (resource) {
                 if (!resource.type) {
                     fetch(resource.url)
-                        .then((response) => response.text())
-                        .then((data) => {
-                            const module = {
+                        .then(function(response) { response.text() })
+                        .then(function(data) {
+                            var module = {
                                 exports: {}
                             };
                             window[resource.name] = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
