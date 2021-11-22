@@ -29,18 +29,22 @@ function getTouchTargetCoords(touch) {
 }
 
 /**
- * @class
- * @name Touch
- * @classdesc A instance of a single point touch on a {@link TouchDevice}.
- * @description Create a new Touch object from the browser Touch.
- * @param {Touch} touch - The browser Touch object.
+ * A instance of a single point touch on a {@link TouchDevice}.
+ *
  * @property {number} id The identifier of the touch.
- * @property {number} x The x co-ordinate relative to the element that the TouchDevice is attached to.
- * @property {number} y The y co-ordinate relative to the element that the TouchDevice is attached to.
+ * @property {number} x The x coordinate relative to the element that the TouchDevice is attached
+ * to.
+ * @property {number} y The y coordinate relative to the element that the TouchDevice is attached
+ * to.
  * @property {Element} target The target element of the touch event.
  * @property {Touch} touch The original browser Touch object.
  */
 class Touch {
+    /**
+     * Create a new Touch object from the browser Touch.
+     *
+     * @param {Touch} touch - The browser Touch object.
+     */
     constructor(touch) {
         const coords = getTouchTargetCoords(touch);
 
@@ -56,19 +60,21 @@ class Touch {
 }
 
 /**
- * @class
- * @name TouchEvent
- * @classdesc A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
- * browser event and provides lists of {@link Touch} objects.
- * @description Create a new TouchEvent from an existing browser event.
- * @param {TouchDevice} device - The source device of the touch events.
- * @param {TouchEvent} event - The original browser TouchEvent.
+ * A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the
+ * standard browser event and provides lists of {@link Touch} objects.
+ *
  * @property {Element} element The target Element that the event was fired from.
  * @property {Touch[]} touches A list of all touches currently in contact with the device.
  * @property {Touch[]} changedTouches A list of touches that have changed since the last event.
  * @property {TouchEvent} event - The original browser TouchEvent.
  */
 class TouchEvent {
+    /**
+     * Create a new TouchEvent instance. It is created from an existing browser event.
+     *
+     * @param {TouchDevice} device - The source device of the touch events.
+     * @param {TouchEvent} event - The original browser TouchEvent.
+     */
     constructor(device, event) {
         this.element = event.target;
         this.event = event;

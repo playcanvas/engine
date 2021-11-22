@@ -82,11 +82,12 @@ const PRODUCT_CODES = {
 };
 
 /**
- * @class
- * @name GamePads
- * @classdesc Input handler for accessing GamePad input.
+ * Input handler for accessing GamePad input.
  */
 class GamePads {
+    /**
+     * Create a new GamePads instance.
+     */
     constructor() {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
