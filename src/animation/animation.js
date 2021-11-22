@@ -8,12 +8,12 @@ class Key {
 }
 
 /**
- * @class
- * @name Node
- * @classdesc A animation node has a name and contains an array of keyframes.
- * @description Create a new animation node.
+ * A animation node has a name and contains an array of keyframes.
  */
 class Node {
+    /**
+     * Create a new Node instance.
+     */
     constructor() {
         this._name = "";
         this._keys = [];
@@ -21,14 +21,16 @@ class Node {
 }
 
 /**
- * @class
- * @name Animation
- * @classdesc An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
- * It controls how the nodes of the hierarchy are transformed over time.
+ * An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy. It
+ * controls how the nodes of the hierarchy are transformed over time.
+ *
  * @property {string} name Human-readable name of the animation.
  * @property {number} duration Duration of the animation in seconds.
  */
 class Animation {
+    /**
+     * Create a new Animation instance.
+     */
     constructor() {
         this.name = '';
         this.duration = 0;

@@ -26,13 +26,16 @@ class InterpolatedKey {
 }
 
 /**
- * @class
- * @name Skeleton
- * @classdesc Represents a skeleton used to play animations.
- * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
+ * Represents a skeleton used to play animations.
+ *
  * @property {boolean} looping Determines whether skeleton is looping its animation.
  */
 class Skeleton {
+    /**
+     * Create a new Skeleton instance.
+     *
+     * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
+     */
     constructor(graph) {
         this._animation = null;
         this._time = 0;
