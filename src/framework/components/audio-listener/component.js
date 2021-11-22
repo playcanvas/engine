@@ -14,6 +14,9 @@ class AudioListenerComponent extends Component {
      * @param {AudioListenerComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
+    constructor(system, entity) { // eslint-disable-line no-useless-constructor
+        super(system, entity);
+    }
 
     setCurrentListener() {
         if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
