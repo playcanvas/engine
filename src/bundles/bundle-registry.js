@@ -1,11 +1,15 @@
 /**
+ * Keeps track of which assets are in bundles and loads files from bundles.
+ *
  * @private
- * @class
- * @name BundleRegistry
- * @param {AssetRegistry} assets - The asset registry.
- * @classdesc Keeps track of which assets are in bundles and loads files from bundles.
  */
 class BundleRegistry {
+    /**
+     * Create a new BundleRegistry instance.
+     *
+     * @param {AssetRegistry} assets - The asset registry.
+     * @private
+     */
     constructor(assets) {
         this._assets = assets;
 

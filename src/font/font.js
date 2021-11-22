@@ -1,15 +1,18 @@
 import { FONT_MSDF } from './constants.js';
 
 /**
- * @class
- * @name Font
- * @classdesc Represents the resource of a font asset.
- * @param {Texture[]} textures - The font textures.
- * @param {object} data - The font data.
+ * Represents the resource of a font asset.
+ *
  * @property {number} intensity The font intensity.
  * @property {Texture[]} textures The font textures.
  */
 class Font {
+    /**
+     * Create a new Font instance.
+     *
+     * @param {Texture[]} textures - The font textures.
+     * @param {object} data - The font data.
+     */
     constructor(textures, data) {
         this.type = data ? data.type || FONT_MSDF : FONT_MSDF;
 

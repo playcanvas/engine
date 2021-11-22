@@ -211,14 +211,16 @@ class VertexIteratorAccessor {
 }
 
 /**
- * @class
- * @name VertexIterator
- * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
- * @description Returns a new VertexIterator object.
- * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
+ * A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
+ *
  * @property {object<string, VertexIteratorAccessor>} element The vertex buffer elements.
  */
 class VertexIterator {
+    /**
+     * Create a new VertexIterator instance.
+     *
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
+     */
     constructor(vertexBuffer) {
         // Store the vertex buffer
         this.vertexBuffer = vertexBuffer;
