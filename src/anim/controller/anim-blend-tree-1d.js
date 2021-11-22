@@ -11,15 +11,15 @@ import { AnimBlendTree } from './anim-blend-tree.js';
 class AnimBlendTree1D extends AnimBlendTree {
     /**
      * Create a new BlendTree1D instance.
-     * 
-     * @param {*} state 
-     * @param {*} parent 
-     * @param {*} name 
-     * @param {*} point 
-     * @param {*} parameters 
-     * @param {*} children 
-     * @param {*} syncAnimations 
-     * @param {*} createTree 
+     *
+     * @param {*} state
+     * @param {*} parent
+     * @param {*} name
+     * @param {*} point
+     * @param {*} parameters
+     * @param {*} children
+     * @param {*} syncAnimations
+     * @param {*} createTree
      * @param {*} findParameter
      * @private
      */

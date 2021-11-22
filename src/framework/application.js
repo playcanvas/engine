@@ -175,9 +175,10 @@ let app = null;
  *
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
+ *
  * @augments EventHandler
  */
- class Application extends EventHandler {
+class Application extends EventHandler {
     /**
      * Create a new Application instance.
      *

@@ -5,14 +5,14 @@ import { XrPlane } from './xr-plane.js';
 /**
  * Plane Detection provides the ability to detect real world surfaces based on estimations of the
  * underlying AR system.
- * 
+ *
  * ```javascript
  * // start session with plane detection enabled
  * app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
  *     planeDetection: true
  * });
  * ```
- * 
+ *
  * ```javascript
  * app.xr.planeDetection.on('add', function (plane) {
  *     // new plane been added

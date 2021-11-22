@@ -104,6 +104,8 @@ class ContactPoint {
      * world space.
      * @param {Vec3} [normal] - The normal vector of the contact on the other entity, in world
      * space.
+     * @param {number} [impulse] - The total accumulated impulse applied by the constraint solver
+     * during the last sub-step. Describes how hard two objects collide. Defaults to 0.
      */
     constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
         this.localPoint = localPoint;

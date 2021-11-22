@@ -26,7 +26,7 @@ class CurveSet {
      *         1, 37
      *     ]
      * ]);
-     */    
+     */
     constructor() {
         this.curves = [];
         this._type = CURVE_SMOOTHSTEP;

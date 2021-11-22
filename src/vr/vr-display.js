@@ -14,7 +14,7 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
  * @property {number} id An identifier for this distinct VRDisplay.
  * @property {VRDisplay} display The native VRDisplay object from the WebVR API.
  * @property {boolean} presenting True if this display is currently presenting VR content.
- * @property {VRDisplayCapabilities} capabilities Returns the 
+ * @property {VRDisplayCapabilities} capabilities Returns the
  * [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities) object
  * from the VRDisplay. This can be used to determine what features are available on this display.
  * @augments EventHandler

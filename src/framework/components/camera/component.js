@@ -48,6 +48,7 @@ const properties = [
  * // Update a property on a camera component
  * entity.camera.nearClip = 2;
  * ```
+ *
  * @property {number} projection The type of projection used to render the camera. Can be:
  *
  * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum

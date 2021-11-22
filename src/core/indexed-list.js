@@ -6,7 +6,7 @@
 class IndexedList {
     /**
      * Create a new IndexedList instance.
-     * 
+     *
      * @private
      */
     constructor() {

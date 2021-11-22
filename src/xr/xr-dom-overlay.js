@@ -11,7 +11,7 @@ import { platform } from '../core/platform.js';
  * app.xr.domOverlay.root = element;
  * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
  * ```
- * 
+ *
  * ```javascript
  * // Disable input source firing `select` event when some descendant element of DOM overlay root
  * // is touched/clicked. This is useful when the user interacts with UI elements and there should
@@ -20,7 +20,7 @@ import { platform } from '../core/platform.js';
  *     evt.preventDefault();
  * });
  * ```
- * 
+ *
  * @property {boolean} supported True if DOM Overlay is supported.
  * @property {boolean} available True if DOM Overlay is available. It can only be available if it
  * is supported, during a valid WebXR session and if a valid root element is provided.

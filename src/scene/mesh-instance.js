@@ -95,12 +95,12 @@ class MeshInstance {
      * var material = new pc.StandardMaterial();
      *
      * var meshInstance = new pc.MeshInstance(mesh, material);
-     * 
+     *
      * var entity = new pc.Entity();
      * entity.addComponent('render', {
      *     meshInstances: [meshInstance]
      * });
-     * 
+     *
      * // Add the entity to the scene hierarchy
      * this.app.scene.root.addChild(entity);
      */

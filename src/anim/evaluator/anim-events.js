@@ -6,7 +6,7 @@ class AnimEvents {
     /**
      * Create a new AnimEvents instance.
      *
-     * @param {object[]} events An array of animation events.
+     * @param {object[]} events - An array of animation events.
      * @example
      * const events = new pc.AnimEvents([
      *     {

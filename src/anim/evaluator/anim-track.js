@@ -2,7 +2,7 @@ import { AnimEvents } from './anim-events.js';
 
 /**
  * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
- * 
+ *
  * @private
  */
 class AnimTrack {

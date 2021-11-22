@@ -17,6 +17,7 @@ const now = (typeof window !== 'undefined') && window.performance && window.perf
 class Timer {
     /**
      * Create a new Timer instance.
+     *
      * @private
      */
     constructor() {

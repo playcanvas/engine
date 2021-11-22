@@ -11,6 +11,7 @@
 class AssetReference {
     /**
      * Create a new AssetReference instance.
+     *
      * @param {string} propertyName - The name of the property that the asset is stored under,
      * passed into callbacks to enable updating.
      * @param {Asset|object} parent - The parent object that contains the asset reference, passed

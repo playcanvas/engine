@@ -72,7 +72,7 @@ class Quat {
      * @param {number} [y] - The quaternion's y component. Default value 0.
      * @param {number} [z] - The quaternion's z component. Default value 0.
      * @param {number} [w] - The quaternion's w component. Default value 1.
-     */    
+     */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
             this.x = x[0];

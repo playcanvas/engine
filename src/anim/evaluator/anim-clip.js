@@ -17,7 +17,7 @@ class AnimClip {
      * @param {number} speed - Speed of the animation playback.
      * @param {boolean} playing - true if the clip is playing and false otherwise.
      * @param {boolean} loop - Whether the clip should loop.
-     * @param {function} eventHandler - The handler to call when an event is fired by the clip.
+     * @param {Function} eventHandler - The handler to call when an event is fired by the clip.
      * @private
      */
     constructor(track, time, speed, playing, loop, eventHandler) {

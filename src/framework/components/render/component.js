@@ -59,7 +59,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * - {@link RENDERSTYLE_SOLID}
  * - {@link RENDERSTYLE_WIREFRAME}
  * - {@link RENDERSTYLE_POINTS}
- * 
+ *
  * Defaults to {@link RENDERSTYLE_SOLID}.
  * @augments Component
  * @component
@@ -70,7 +70,7 @@ class RenderComponent extends Component {
      *
      * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
-     */    
+     */
     constructor(system, entity) {
         super(system, entity);
 

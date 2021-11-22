@@ -20,6 +20,7 @@ class ZoneComponent extends Component {
      *
      * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Vec3} size - The Size of Box of a Zone.
+     * @param entity
      */
     constructor(system, entity) {
         super(system, entity);

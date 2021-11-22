@@ -8,7 +8,7 @@ import { getApplication } from './globals.js';
 class ApplicationStats {
     /**
      * Create a new ApplicationStats instance.
-     * 
+     *
      * @param {GraphicsDevice} device - The graphics device.
      * @private
      */

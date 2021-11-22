@@ -35,7 +35,7 @@ import { VertexBuffer } from './vertex-buffer.js';
  *     out_vertex_texCoord0 = vertex_texCoord0;
  * }
  * ```
- * 
+ *
  * ```javascript
  * // *** script asset ***
  * var TransformExample = pc.createScript('transformExample');

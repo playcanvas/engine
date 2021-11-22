@@ -33,7 +33,7 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  *     material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
  * });
  * ```
- * 
+ *
  * ```javascript
  * // GLSL shader to unpack depth texture
  * varying vec2 vUv0;
