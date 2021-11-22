@@ -18,14 +18,15 @@ class PostEffect {
 }
 
 /**
- * @class
- * @name PostEffectQueue
- * @classdesc Used to manage multiple post effects for a camera.
- * @description Create a new PostEffectQueue.
- * @param {Application} app - The application.
- * @param {CameraComponent} camera - The camera component.
+ * Used to manage multiple post effects for a camera.
  */
 class PostEffectQueue {
+    /**
+     * Create a new PostEffectQueue instance.
+     *
+     * @param {Application} app - The application.
+     * @param {CameraComponent} camera - The camera component.
+     */
     constructor(app, camera) {
         this.app = app;
         this.camera = camera;

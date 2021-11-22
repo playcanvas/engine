@@ -28,12 +28,15 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  */
 
 /**
- * @class
- * @name SceneRegistry
- * @classdesc Container for storing and loading of scenes. An instance of the registry is created on the {@link Application} object as {@link Application#scenes}.
- * @param {Application} app - The application.
+ * Container for storing and loading of scenes. An instance of the registry is created on the
+ * {@link Application} object as {@link Application#scenes}.
  */
 class SceneRegistry {
+    /**
+     * Create a new SceneRegistry instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         this._app = app;
         this._list = [];

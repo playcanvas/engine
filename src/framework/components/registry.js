@@ -1,12 +1,12 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @class
- * @name ComponentSystemRegistry
- * @classdesc Store, access and delete instances of the various ComponentSystems.
- * @description Create a new ComponentSystemRegistry.
+ * Store, access and delete instances of the various ComponentSystems.
  */
 class ComponentSystemRegistry extends EventHandler {
+    /**
+     * Create a new ComponentSystemRegistry instance.
+     */
     constructor() {
         super();
 

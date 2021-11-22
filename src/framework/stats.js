@@ -1,12 +1,17 @@
 import { getApplication } from './globals.js';
 
 /**
+ * Records performance-related statistics related to the application.
+ *
  * @private
- * @class
- * @name ApplicationStats
- * @param {GraphicsDevice} device - The graphics device.
  */
 class ApplicationStats {
+    /**
+     * Create a new ApplicationStats instance.
+     * 
+     * @param {GraphicsDevice} device - The graphics device.
+     * @private
+     */
     constructor(device) {
         this.frame = {
             fps: 0,

@@ -646,10 +646,9 @@ CALCULATE_FNS[ORIENTATION_HORIZONTAL] = createCalculator(ORIENTATION_HORIZONTAL)
 CALCULATE_FNS[ORIENTATION_VERTICAL] = createCalculator(ORIENTATION_VERTICAL);
 
 /**
+ * Used to manage layout calculations for {@link LayoutGroupComponent}s.
+ *
  * @private
- * @class
- * @name LayoutCalculator
- * @classdesc Used to manage layout calculations for {@link LayoutGroupComponent}s.
  */
 class LayoutCalculator {
     calculateLayout(elements, options) {

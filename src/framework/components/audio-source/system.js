@@ -26,15 +26,20 @@ const _schema = [
 ];
 
 /**
- * @private
- * @class
- * @name AudioSourceComponentSystem
+ * Controls playback of an audio sample. This class will be deprecated in favor of
+ * {@link SoundComponentSystem}.
+ *
  * @augments ComponentSystem
- * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link SoundComponentSystem}.
- * @param {Application} app - The application managing this system.
- * @param {SoundManager} manager - A sound manager instance.
+ * @private
  */
 class AudioSourceComponentSystem extends ComponentSystem {
+    /**
+     * Create a new AudioSourceComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     * @param {SoundManager} manager - A sound manager instance.
+     * @private
+     */
     constructor(app, manager) {
         super(app);
 

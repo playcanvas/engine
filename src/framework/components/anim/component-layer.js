@@ -2,18 +2,18 @@ import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
-
 /**
- * @class
- * @name AnimComponentLayer
- * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
- * @description Create a new AnimComponentLayer.
- * @param {string} name - The name of the layer.
- * @param {object} controller - The controller to manage this layers animations.
- * @param {AnimComponent} component - The component that this layer is a member of.
- * @param {number} weight - The weight of this layer. Defaults to 1.
+ * The Anim Component Layer allows managers a single layer of the animation state graph.
  */
 class AnimComponentLayer {
+    /**
+     * Create a new AnimComponentLayer instance.
+     *
+     * @param {string} name - The name of the layer.
+     * @param {object} controller - The controller to manage this layers animations.
+     * @param {AnimComponent} component - The component that this layer is a member of.
+     * @param {number} weight - The weight of this layer. Defaults to 1.
+     */
     constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;

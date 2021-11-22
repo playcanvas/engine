@@ -7,16 +7,8 @@ import { Asset } from '../../../asset/asset.js';
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
 /**
- * @class
- * @name SpriteAnimationClip
- * @augments EventHandler
- * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
- * @param {SpriteComponent} component - The sprite component managing this clip.
- * @param {object} data - Data for the new animation clip.
- * @param {number} [data.fps] - Frames per second for the animation clip.
- * @param {object} [data.loop] - Whether to loop the animation clip.
- * @param {string} [data.name] - The name of the new animation clip.
- * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
+ * Handles playing of sprite animations and loading of relevant sprite assets.
+ *
  * @property {number} spriteAsset The id of the sprite asset used to play the animation.
  * @property {Sprite} sprite The current sprite used to play the animation.
  * @property {number} frame The index of the frame of the {@link Sprite} currently being rendered.
@@ -24,8 +16,19 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
  * @property {number} duration The total duration of the animation in seconds.
  * @property {boolean} isPlaying Whether the animation is currently playing.
  * @property {boolean} isPaused Whether the animation is currently paused.
+ * @augments EventHandler
  */
 class SpriteAnimationClip extends EventHandler {
+    /**
+     * Create a new SpriteAnimationClip instance.
+     *
+     * @param {SpriteComponent} component - The sprite component managing this clip.
+     * @param {object} data - Data for the new animation clip.
+     * @param {number} [data.fps] - Frames per second for the animation clip.
+     * @param {object} [data.loop] - Whether to loop the animation clip.
+     * @param {string} [data.name] - The name of the new animation clip.
+     * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
+     */
     constructor(component, data) {
         super();
 

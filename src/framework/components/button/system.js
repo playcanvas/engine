@@ -23,14 +23,16 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name ButtonComponentSystem
+ * Manages creation of {@link ButtonComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ButtonComponent}s.
- * @description Create a new ButtonComponentSystem.
- * @param {Application} app - The application.
  */
 class ButtonComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ButtonComponentSystem.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

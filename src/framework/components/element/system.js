@@ -20,13 +20,16 @@ import { ElementComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name ElementComponentSystem
+ * Manages creation of {@link ElementComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ElementComponent}s.
- * @param {Application} app - The application.
  */
 class ElementComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ElementComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

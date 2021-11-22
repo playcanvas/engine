@@ -7,13 +7,17 @@ import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
 /**
- * @class
- * @name ComponentSystem
+ * Component Systems contain the logic and functionality to update all Components of a particular
+ * type.
+ *
  * @augments EventHandler
- * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
- * @param {Application} app - The application managing this system.
  */
 class ComponentSystem extends EventHandler {
+    /**
+     * Create a new ComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     */
     constructor(app) {
         super();
 
