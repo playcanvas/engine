@@ -111,6 +111,10 @@ function BasisWorker() {
         return result;
     };
 
+    const isPOT = (width, height) => {
+        return ((width & (width - 1)) === 0) && ((height & (height - 1)) === 0);
+    };
+
     const performanceNow = () => {
         return (typeof performance !== 'undefined') ? performance.now() : 0;
     };
@@ -151,6 +155,35 @@ function BasisWorker() {
         return testInOrder(hasAlpha ? rgbaPriority : rgbPriority);
     };
 
+    // return true if the texture dimensions are valid for the target format
+    const dimensionsValid = (width, height, format, webgl2) => {
+        switch (format) {
+            // etc1, 2
+            case BASIS_FORMAT.cTFETC1:
+            case BASIS_FORMAT.cTFETC2:
+                // no size restrictions
+                return true;
+            // dxt1, 5
+            case BASIS_FORMAT.cTFBC1:
+            case BASIS_FORMAT.cTFBC3:
+                // width and height must be multiple of 4
+                return ((width & 0x3) === 0) && ((height & 0x3) === 0);
+            // pvrtc
+            case BASIS_FORMAT.cTFPVRTC1_4_RGB:
+            case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
+                return isPOT(width, height) && ((width === height) || webgl2);
+            // astc
+            case BASIS_FORMAT.cTFASTC_4x4:
+                return true;
+            // atc
+            case BASIS_FORMAT.cTFATC_RGB:
+            case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA:
+                // TODO: remove atc support? looks like it's been removed from the webgl spec, see
+                // https://www.khronos.org/registry/webgl/extensions/rejected/WEBGL_compressed_texture_atc/
+                return true;
+        }
+    };
+
     const transcodeKTX2 = (url, data, options) => {
         if (!basis.KTX2File) {
             throw new Error('Basis transcoder module does not include support for KTX2.');
@@ -186,11 +219,8 @@ function BasisWorker() {
             // select output format based on supported formats
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-            // transcode to uncompressed format if the texture is PVRTC or webgl1, and has invalid dimensions
-            const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
-            const notPOT = ((width & (width - 1)) !== 0) || ((height & (height - 1)) !== 0);
-            const notSquare = (width !== height);
-            if ((isPVRTC && (notPOT || notSquare)) || (!options.deviceDetails.webgl2 && notPOT)) {
+            // if image dimensions don't work on target, fall back to uncompressed
+            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -275,11 +305,8 @@ function BasisWorker() {
             // select output format based on supported formats
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-            // transcode to uncompressed format if the texture is PVRTC or webgl1, and has invalid dimensions
-            const isPVRTC = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB || basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA);
-            const notPOT = ((width & (width - 1)) !== 0) || ((height & (height - 1)) !== 0);
-            const notSquare = (width !== height);
-            if ((isPVRTC && (notPOT || notSquare)) || (!options.deviceDetails.webgl2 && notPOT)) {
+            // if image dimensions don't work on target, fall back to uncompressed
+            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
