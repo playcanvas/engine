@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from './graphics-device.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * A shader is a program that is responsible for rendering graphical primitives on a device's
  * graphics processor. The shader is generated from a shader definition. This shader definition

@@ -1,5 +1,10 @@
 import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from './constants.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from './graphics-device.js';
+import { VertexFormat } from './vertex-format.js';
+/* eslint-enable no-unused-vars */
+
 let id = 0;
 
 /**

@@ -43,6 +43,12 @@ import { Texture } from './texture.js';
 import { VertexFormat } from './vertex-format.js';
 import { GrabPass } from './grab-pass.js';
 
+/* eslint-disable no-unused-vars */
+import { IndexBuffer } from './index-buffer.js';
+import { Shader } from './shader.js';
+import { VertexBuffer } from './vertex-buffer.js';
+/* eslint-enable no-unused-vars */
+
 const EVENT_RESIZE = 'resizecanvas';
 
 function downsampleImage(image, size) {

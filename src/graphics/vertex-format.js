@@ -7,6 +7,10 @@ import {
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
 } from './constants.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from './graphics-device.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
  * {@link VertexBuffer}.

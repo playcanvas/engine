@@ -1,5 +1,11 @@
 import { typedArrayTypes } from './constants.js';
 
+/* eslint-disable no-unused-vars */
+import { ScopeId } from './scope-id.js';
+import { VertexBuffer } from './vertex-buffer.js';
+import { VertexFormat } from './vertex-format.js';
+/* eslint-enable no-unused-vars */
+
 function set1(a) {
     this.array[this.index] = a;
 }

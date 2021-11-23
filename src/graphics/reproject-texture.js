@@ -10,6 +10,10 @@ import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
+/* eslint-disable no-unused-vars */
+import { Texture } from './texture.js';
+/* eslint-enable no-unused-vars */
+
 // get a coding string for texture based on its type and pixel format.
 function getCoding(texture) {
     switch (texture.type) {

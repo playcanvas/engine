@@ -3,6 +3,10 @@ import {
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32
 } from './constants.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from './graphics-device.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * An index buffer stores index values into a {@link VertexBuffer}. Indexed graphical primitives
  * can normally utilize less memory that unindexed primitives (if vertices are shared).
