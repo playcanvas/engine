@@ -7,7 +7,7 @@ import { hasAudioContext } from './capabilities.js';
  * created internally by {@link SoundManager#playSound} or {@link SoundManager#playSound3d}.
  * Developers usually won't have to create Channels manually.
  *
- * @private
+ * @protected
  */
 class Channel {
     /**
@@ -20,7 +20,7 @@ class Channel {
      * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
      * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
      * end or not.
-     * @private
+     * @protected
      */
     constructor(manager, sound, options = {}) {
         this.volume = (options.volume === undefined) ? 1 : options.volume;

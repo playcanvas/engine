@@ -12,8 +12,8 @@ class AnimComponentLayer {
      * @param {string} name - The name of the layer.
      * @param {object} controller - The controller to manage this layers animations.
      * @param {AnimComponent} component - The component that this layer is a member of.
-     * @param {number} weight - The weight of this layer. Defaults to 1.
-     * @param blendType
+     * @param {number} [weight] - The weight of this layer. Defaults to 1.
+     * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
      */
     constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
