@@ -13,10 +13,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 14.x
       uses: actions/setup-node@v2.4.1
       with:
-        node-version: 12.x
+        node-version: 14.x
     - name: Install dependencies
       run: npm ci
     - name: Build PlayCanvas
@@ -28,10 +28,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 14.x
       uses: actions/setup-node@v2.4.1
       with:
-        node-version: 12.x
+        node-version: 14.x
     - name: Install dependencies
       run: npm ci
     - name: Run ESLint
@@ -43,10 +43,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 14.x
       uses: actions/setup-node@v2.4.1
       with:
-        node-version: 12.x
+        node-version: 14.x
     - name: Install dependencies
       run: npm ci
     - name: Build Typescript definitions
@@ -58,10 +58,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 14.x
       uses: actions/setup-node@v2.4.1
       with:
-        node-version: 12.x
+        node-version: 14.x
     - name: Install dependencies
       run: npm ci
     - name: Build PlayCanvas (ES5-only)
