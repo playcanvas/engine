@@ -3,6 +3,10 @@ import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
+/* eslint-disable no-unused-vars */
+import { Quat } from './quat.js';
+/* eslint-enable no-unused-vars */
+
 const _halfSize = new Vec2();
 const x = new Vec3();
 const y = new Vec3();

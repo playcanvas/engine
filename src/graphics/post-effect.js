@@ -3,6 +3,13 @@ import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { VertexIterator } from './vertex-iterator.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from './graphics-device.js';
+import { RenderTarget } from './render-target.js';
+import { Shader } from './shader.js';
+import { Vec4 } from '../math/vec4.js';
+/* eslint-enable no-unused-vars */
+
 // Primitive for drawFullscreenQuad
 const primitive = {
     type: PRIMITIVE_TRISTRIP,

@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-vars */
+import { Keyboard } from './keyboard.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * The KeyboardEvent is passed into all event callbacks from the {@link Keyboard}. It corresponds
  * to a key press or release.

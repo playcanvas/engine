@@ -1,5 +1,9 @@
 import { Vec3 } from './vec3.js';
 
+/* eslint-disable no-unused-vars */
+import { Mat4 } from './mat4.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * A 3x3 matrix.
  *
