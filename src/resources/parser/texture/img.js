@@ -6,7 +6,7 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
 
-import { TextureParser } from '../../texture.js';
+import { TextureParser } from '../../texture.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Parser for browser-supported image formats.

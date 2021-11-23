@@ -5,7 +5,7 @@ import { http } from '../net/http.js';
 
 import { Font } from '../font/font.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema

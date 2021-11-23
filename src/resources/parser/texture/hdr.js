@@ -11,7 +11,7 @@ import {
 
 import { Asset } from '../../../asset/asset.js';
 
-import { TextureParser } from '../../texture.js';
+import { TextureParser } from '../../texture.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Texture parser for hdr files.

@@ -13,7 +13,7 @@ import {
 
 import { TextureAtlas } from '../scene/texture-atlas.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,

@@ -15,7 +15,7 @@ import { Ktx2Parser } from './parser/texture/ktx2.js';
 import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,

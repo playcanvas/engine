@@ -4,7 +4,7 @@ import { basisTranscode } from '../../basis.js';
 import { ReadStream } from '../../../core/read-stream.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 
-import { TextureParser } from '../../texture.js';
+import { TextureParser } from '../../texture.js'; // eslint-disable-line no-unused-vars
 
 const KHRConstants = {
     KHR_DF_MODEL_ETC1S: 163,

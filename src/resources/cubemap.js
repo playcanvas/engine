@@ -6,7 +6,7 @@ import {
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.

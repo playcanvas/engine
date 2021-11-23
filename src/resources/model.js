@@ -7,7 +7,7 @@ import { JsonModelParser } from './parser/json-model.js';
 
 import { DefaultMaterial } from '../scene/materials/default-material.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.

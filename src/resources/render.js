@@ -1,6 +1,6 @@
 import { Render } from '../scene/render.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {

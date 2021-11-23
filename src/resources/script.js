@@ -1,6 +1,6 @@
 import { script } from '../framework/script.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be

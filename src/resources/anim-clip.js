@@ -4,7 +4,7 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Resource handler used for loading {@link AnimClip} resources.

@@ -1,7 +1,7 @@
 import { path } from '../core/path.js';
 import { GlbParser } from './parser/glb-parser.js';
 
-import { ResourceHandler } from './handler.js';
+import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 
 /**
  * @interface
