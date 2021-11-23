@@ -10,6 +10,12 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
+/* eslint-disable no-unused-vars */
+import { CameraComponent } from '../framework/components/camera/component.js';
+import { LightComponent } from '../framework/components/light/component.js';
+import { MeshInstance } from './mesh-instance.js';
+/* eslint-enable no-unused-vars */
+
 let keyA, keyB, sortPos, sortDir;
 
 function sortManual(drawCallA, drawCallB) {

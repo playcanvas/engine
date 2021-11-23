@@ -4,6 +4,11 @@ import { Mat4 } from '../math/mat4.js';
 import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
+/* eslint-disable no-unused-vars */
+import { Skin } from './skin.js';
+/* eslint-enable no-unused-vars */
+
+
 const _invMatrix = new Mat4();
 
 /**

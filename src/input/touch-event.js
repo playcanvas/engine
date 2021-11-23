@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { TouchDevice} from './touch-device.js';
+import { TouchDevice } from './touch-device.js';
 /* eslint-enable no-unused-vars */
 
 /**

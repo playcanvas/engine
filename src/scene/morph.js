@@ -9,6 +9,11 @@ import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from '../graphics/graphics-device.js';
+import { MorphTarget } from './morph-target.js';
+/* eslint-enable no-unused-vars */
+
 // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
 const _floatRounding = 0.2;
 

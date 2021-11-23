@@ -14,6 +14,12 @@ import { LayerComposition } from './composition/layer-composition.js';
 import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
 
+/* eslint-disable no-unused-vars */
+import { Application } from '../framework/application.js';
+import { CameraComponent } from '../framework/components/camera/component.js';
+import { Scene } from './scene.js';
+/* eslint-enable no-unused-vars */
+
 let _deviceDeprecationWarning = false;
 let _getSelectionDeprecationWarning = false;
 let _prepareDeprecationWarning = false;

@@ -16,6 +16,13 @@ import {
 import { GraphNode } from './graph-node.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
+/* eslint-disable no-unused-vars */
+import { Material } from './materials/material.js';
+import { Mesh } from './mesh.js';
+import { Texture } from '../../graphics/texture.js';
+import { VertexBuffer } from '../../graphics/vertex-buffer.js';
+/* eslint-enable no-unused-vars */
+
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();

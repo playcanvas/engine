@@ -5,6 +5,12 @@ import { Vec2 } from '../math/vec2.js';
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { createMesh } from './procedural.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from '../graphics/graphics-device.js';
+import { TextureAtlas } from './texture-atlas.js';
+/* eslint-enable no-unused-vars */
+
+
 // normals are the same for every mesh
 const spriteNormals = [
     0, 0, 1,

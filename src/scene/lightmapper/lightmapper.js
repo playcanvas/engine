@@ -21,6 +21,14 @@ import { Texture } from '../../graphics/texture.js';
 
 import { MeshInstance } from '../mesh-instance.js';
 
+/* eslint-disable no-unused-vars */
+import { AssetRegistry } from '../../asset/asset-registry.js';
+import { Entity } from '../../framework/entity.js';
+import { ForwardRenderer } from '../renderer/forward-renderer.js';
+import { GraphicsDevice } from '../../graphics/graphics-device.js';
+import { Scene } from '../scene.js';
+/* eslint-enable no-unused-vars */
+
 import {
     BAKE_COLORDIR,
     FOG_NONE,

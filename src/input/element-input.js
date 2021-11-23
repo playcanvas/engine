@@ -10,8 +10,8 @@ import { getApplication } from '../framework/globals.js';
 import { Mouse } from './mouse.js';
 
 /* eslint-disable no-unused-vars */
-import { CameraComponent } from '../framework/components/element/camera-component.js';
-import { ElementComponent } from '../framework/components/element/element-component.js';
+import { CameraComponent } from '../framework/components/camera/component.js';
+import { ElementComponent } from '../framework/components/element/component.js';
 import { XrInputSource } from '../xr/xr-input-source.js';
 /* eslint-enable no-unused-vars */
 

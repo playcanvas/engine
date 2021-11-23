@@ -1,3 +1,8 @@
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from '../graphics/graphicsDevice.js';
+import { Mat4 } from '../math/mat4.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
  * Specifically, the skin stores the bone name and inverse bind matrix and for each bone. Inverse

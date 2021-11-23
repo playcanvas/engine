@@ -20,6 +20,10 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 
 import { getApplication } from '../framework/globals.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphicsDevice } from '../graphics/graphics-device.js';
+/* eslint-enable no-unused-vars */
+
 let id = 0;
 
 // Helper class used to store vertex / index data streams and related properties, when mesh is programmatically modified
