@@ -171,7 +171,7 @@ const standard = {
     optionsContext: {},
     optionsContextMin: {},
 
-    /** @type { function } */
+    /** @type { Function } */
     generateKey: function (options) {
         const buildPropertiesList = function (options) {
             const props = [];
@@ -562,7 +562,7 @@ const standard = {
         return code;
     },
 
-    /** @type { function } */
+    /** @type { Function } */
     createShaderDefinition: function (device, options) {
         let lighting = options.lights.length > 0;
 
