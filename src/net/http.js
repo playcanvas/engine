@@ -60,12 +60,6 @@ class Http {
 
     static retryDelay = 100;
 
-    ContentType = Http.ContentType;
-
-    ResponseType = Http.ResponseType;
-
-    binaryExtensions = Http.binaryExtensions;
-
     /**
      * @function
      * @name Http#get
@@ -529,7 +523,7 @@ class Http {
         }
         try {
             // Check the content type to see if we want to parse it
-            if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
+            if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
                 // It's a JSON response
                 response = JSON.parse(xhr.responseText);
             } else if (this._isBinaryContentType(contentType)) {
@@ -546,7 +540,7 @@ class Http {
                 } else if (xhr.responseType === Http.ResponseType.BLOB || xhr.responseType === Http.ResponseType.JSON) {
                     response = xhr.response;
                 } else {
-                    if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
+                    if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === Http.ContentType.XML) {
                         // It's an XML response
                         response = xhr.responseXML;
                     } else {

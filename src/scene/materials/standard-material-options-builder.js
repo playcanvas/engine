@@ -211,7 +211,7 @@ class StandardMaterialOptionsBuilder {
         if (LayerComposition.clusteredLightingEnabled && scene.layers) {
             options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
             options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled && device.supportsAreaLights;
+            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
     }
 

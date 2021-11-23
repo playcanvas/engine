@@ -822,7 +822,6 @@ class GraphicsDevice extends EventHandler {
             this.extStandardDerivatives = true;
             this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
-            this.extTextureHalfFloatLinear = true;
             this.extTextureLod = true;
             this.extUintElement = true;
             this.extVertexArrayObject = true;
@@ -845,7 +844,6 @@ class GraphicsDevice extends EventHandler {
             this.extStandardDerivatives = getExtension("OES_standard_derivatives");
             this.extTextureFloat = getExtension("OES_texture_float");
             this.extTextureHalfFloat = getExtension("OES_texture_half_float");
-            this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
             this.extTextureLod = getExtension('EXT_shader_texture_lod');
             this.extUintElement = getExtension("OES_element_index_uint");
             this.extVertexArrayObject = getExtension("OES_vertex_array_object");
@@ -863,6 +861,7 @@ class GraphicsDevice extends EventHandler {
 
         this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
         this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
+        this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
         this.extFloatBlend = getExtension("EXT_float_blend");
         this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
@@ -919,9 +918,13 @@ class GraphicsDevice extends EventHandler {
         this.samples = gl.getParameter(gl.SAMPLES);
         this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
 
-        // Don't allow area lights on old android devices, they often fail to compile the shader,
-        // run it incorrectly or are very slow.
+        // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.webgl2 || !platform.android;
+
+        // Also do not allow them when we only have small number of texture units
+        if (this.maxTextures <= 8) {
+            this.supportsAreaLights = false;
+        }
     }
 
     initializeRenderState() {
@@ -1948,8 +1951,8 @@ class GraphicsDevice extends EventHandler {
                             gl.TEXTURE_2D,
                             mipLevel,
                             texture._glInternalFormat,
-                            Math.max((Math.floor((texture._width * resMult)) + 3) & ~3, 1),
-                            Math.max((Math.floor((texture._height * resMult)) + 3) & ~3, 1),
+                            Math.max(Math.floor(texture._width * resMult), 1),
+                            Math.max(Math.floor(texture._height * resMult), 1),
                             0,
                             mipObject
                         );

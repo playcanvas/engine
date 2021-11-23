@@ -590,9 +590,9 @@ const standard = {
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular ||
-                            LayerComposition.clusteredLightingEnabled || options.clearCoatNormalMap;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
+        const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular ||
+                            (LayerComposition.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
         this.options = options;
 
