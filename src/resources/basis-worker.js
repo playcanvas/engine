@@ -219,7 +219,7 @@ function BasisWorker() {
             // select output format based on supported formats
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-            // if image dimensions don't work on target target, fall back to uncompressed
+            // if image dimensions don't work on target, fall back to uncompressed
             if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
@@ -305,7 +305,7 @@ function BasisWorker() {
             // select output format based on supported formats
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-            // if image dimensions don't work on target target, fall back to uncompressed
+            // if image dimensions don't work on target, fall back to uncompressed
             if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
