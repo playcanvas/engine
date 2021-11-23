@@ -9,18 +9,18 @@ import { Component } from '../component.js';
  * performance reasons. And many other possible options. Zones are building blocks and meant to be
  * used in many different ways.
  *
+ * @property {Vec3} size The size of the axis-aligned box of this ZoneComponent.
  * @augments Component
  * @component
  * @private
  */
-
 class ZoneComponent extends Component {
     /**
      * Create a new ZoneComponent instance.
      *
      * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Vec3} size - The Size of Box of a Zone.
-     * @param entity
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @private
      */
     constructor(system, entity) {
         super(system, entity);

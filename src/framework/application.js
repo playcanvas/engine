@@ -183,7 +183,7 @@ class Application extends EventHandler {
      * Create a new Application instance.
      *
      * @param {Element} canvas - The canvas element.
-     * @param {object} [options]
+     * @param {object} [options] - The options object to configure the Application.
      * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
      * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
      * @param {Mouse} [options.mouse] - Mouse handler for input.
