@@ -1,6 +1,11 @@
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
+/* eslint-disable no-unused-vars */
+import { GraphNode } from '../scene/graph-node.js';
+/* eslint-enable no-unused-vars */
+
+
 class InterpolatedKey {
     constructor() {
         this._written = false;

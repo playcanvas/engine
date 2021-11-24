@@ -1,3 +1,8 @@
+/* eslint-disable no-unused-vars */
+import { AssetRegistry } from '../asset/asset-registry.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Keeps track of which assets are in bundles and loads files from bundles.
  *

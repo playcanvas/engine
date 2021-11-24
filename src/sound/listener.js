@@ -1,6 +1,11 @@
 import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
+/* eslint-disable no-unused-vars */
+import { SoundManager } from './manager.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Represents an audio listener - used internally.
  *

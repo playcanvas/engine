@@ -8,6 +8,11 @@ import { script } from '../framework/script.js';
 
 import { Asset } from './asset.js';
 
+/* eslint-disable no-unused-vars */
+import { ResourceLoader } from '../resources/loader.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.
  *

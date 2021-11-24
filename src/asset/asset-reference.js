@@ -1,3 +1,8 @@
+/* eslint-disable no-unused-vars */
+import { Asset } from './asset.js';
+import { AssetRegistry } from './asset-registry.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * An object that manages the case where an object holds a reference to an asset and needs to be
  * notified when changes occur in the asset. e.g. notifications include load, add and remove

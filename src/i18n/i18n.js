@@ -4,6 +4,11 @@ import { Asset } from '../asset/asset.js';
 
 import { I18nParser } from './i18n-parser.js';
 
+/* eslint-disable no-unused-vars */
+import { Application } from '../framework/application.js';
+/* eslint-enable no-unused-vars */
+
+
 import {
     DEFAULT_LOCALE,
     DEFAULT_LOCALE_FALLBACKS
