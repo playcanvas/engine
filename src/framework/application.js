@@ -120,6 +120,15 @@ import {
     setApplication
 } from './globals.js';
 
+/* eslint-disable no-unused-vars */
+import { ElementInput } from '../input/element-input.js';
+import { GamePads } from '../input/game-pads.js';
+import { Keyboard } from '../input/keyboard.js';
+import { Mouse } from '../input/mouse.js';
+import { TouchDevice } from '../input/touch-device.js';
+/* eslint-enable no-unused-vars */
+
+
 // Mini-object used to measure progress of loading sets
 class Progress {
     constructor(length) {

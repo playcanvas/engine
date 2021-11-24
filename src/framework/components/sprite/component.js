@@ -17,6 +17,11 @@ import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
 
+/* eslint-disable no-unused-vars */
+import { Asset } from '../../../asset/asset.js';
+/* eslint-enable no-unused-vars */
+
+
 const PARAM_EMISSIVE_MAP = 'texture_emissiveMap';
 const PARAM_OPACITY_MAP = 'texture_opacityMap';
 const PARAM_EMISSIVE = 'material_emissive';

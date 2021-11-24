@@ -14,6 +14,11 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
 import { Entity } from "../../entity.js";
 
+/* eslint-disable no-unused-vars */
+import { AnimComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
  *

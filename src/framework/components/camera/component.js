@@ -5,6 +5,12 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
+/* eslint-disable no-unused-vars */
+import { RenderTarget } from '../../../graphics/render-target.js';
+import { Vec3 } from '../../../math/vec3.js';
+/* eslint-enable no-unused-vars */
+
+
 // note: when this list is modified, the copy() function needs to be adjusted
 const properties = [
     { name: 'aspectRatio', readonly: false },

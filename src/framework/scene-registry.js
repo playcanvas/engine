@@ -4,6 +4,12 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
 
+/* eslint-disable no-unused-vars */
+import { Application } from './application.js';
+import { Entity } from './entity.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
  *

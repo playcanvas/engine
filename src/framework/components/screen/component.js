@@ -6,6 +6,11 @@ import { Entity } from '../../entity.js';
 import { SCALEMODE_BLEND, SCALEMODE_NONE } from './constants.js';
 import { Component } from '../component.js';
 
+/* eslint-disable no-unused-vars */
+import { ScreenComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 const _transform = new Mat4();
 
 /**

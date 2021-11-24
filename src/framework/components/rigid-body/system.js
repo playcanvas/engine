@@ -11,6 +11,11 @@ import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+/* eslint-enable no-unused-vars */
+
+
 let ammoRayStart, ammoRayEnd;
 
 /**

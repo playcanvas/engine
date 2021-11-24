@@ -4,6 +4,12 @@ import { ComponentSystem } from '../system.js';
 import { AudioListenerComponent } from './component.js';
 import { AudioListenerComponentData } from './data.js';
 
+/* eslint-disable no-unused-vars */
+import { Application } from '../../application.js';
+import { SoundManager } from '../../../sound/manager.js';
+/* eslint-enable no-unused-vars */
+
+
 const _schema = ['enabled'];
 
 /**

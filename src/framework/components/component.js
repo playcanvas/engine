@@ -1,5 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
 
+/* eslint-disable no-unused-vars */
+import { ComponentSystem } from './system.js';
+import { Entity } from '../entity.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Components are used to attach functionality on a {@link Entity}. Components can receive update
  * events each frame, and expose properties to the PlayCanvas Editor.

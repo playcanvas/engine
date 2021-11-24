@@ -6,6 +6,11 @@ import { Asset } from '../../../asset/asset.js';
 
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
+/* eslint-disable no-unused-vars */
+import { SpriteComponent } from './component.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Handles playing of sprite animations and loading of relevant sprite assets.
  *

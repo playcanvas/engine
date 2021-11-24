@@ -4,6 +4,11 @@ import { Component } from '../component.js';
 
 import { SoundSlot } from './slot.js';
 
+/* eslint-disable no-unused-vars */
+import { SoundInstance } from '../../../sound/instance.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * The Sound Component controls playback of {@link Sound}s.
  *
