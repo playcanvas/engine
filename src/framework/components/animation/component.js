@@ -9,6 +9,12 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+import { AnimationComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * The Animation Component allows an Entity to playback animations on models.
  *

@@ -1,5 +1,11 @@
 import { Component } from '../component.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+import { LayoutChildComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent
  * {@link LayoutGroupComponent}.

@@ -10,6 +10,12 @@ import {
 } from './constants.js';
 import { Component } from '../component.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+import { RigidBodyComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
 let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;

@@ -16,6 +16,12 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+import { LightComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 const _lightProps = [];
 const _lightPropsDefault = [];
 

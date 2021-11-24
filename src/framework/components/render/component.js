@@ -13,6 +13,12 @@ import { Component } from '../component.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+import { RenderComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches
  * {@link MeshInstance} geometry to the Entity.

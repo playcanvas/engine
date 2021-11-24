@@ -6,8 +6,10 @@ import { Component } from '../component.js';
 import { PostEffectQueue } from './post-effect-queue.js';
 
 /* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Vec3 } from '../../../math/vec3.js';
+import { CameraComponentSystem } from './system.js';
 /* eslint-enable no-unused-vars */
 
 

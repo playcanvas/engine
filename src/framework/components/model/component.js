@@ -11,6 +11,12 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../entity.js';
+import { ModelComponentSystem } from './system.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
  * model geometry in to the scene graph below the Entity.
