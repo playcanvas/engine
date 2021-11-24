@@ -8,6 +8,11 @@ import { XrJoint } from './xr-joint.js';
 
 import { Vec3 } from '../math/vec3.js';
 
+/* eslint-disable no-unused-vars */
+import { XrInputSource } from './xr-input-source.js';
+/* eslint-enable no-unused-vars */
+
+
 let fingerJointIds = [];
 
 const vecA = new Vec3();

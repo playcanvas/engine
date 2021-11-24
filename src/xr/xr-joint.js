@@ -3,6 +3,12 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
+/* eslint-disable no-unused-vars */
+import { XrFinger } from './xr-finger.js';
+import { XrHand } from './xr-hand.js';
+/* eslint-enable no-unused-vars */
+
+
 const tipJointIds = platform.browser && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
