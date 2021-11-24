@@ -1,5 +1,10 @@
 import { Vec3 } from '../math/vec3.js';
 
+/* eslint-disable no-unused-vars */
+import { Ray } from './ray.js';
+/* eslint-enable no-unused-vars */
+
+
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 

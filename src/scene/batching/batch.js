@@ -1,5 +1,9 @@
 import { BoundingBox } from '../../shape/bounding-box.js';
 
+/* eslint-disable no-unused-vars */
+import { MeshInstance } from '../mesh-instance.js';
+/* eslint-enable no-unused-vars */
+
 /**
  * Holds information about batched mesh instances. Created in {@link BatchManager#create}.
  *

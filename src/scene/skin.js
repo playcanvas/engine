@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../graphics/graphicsDevice.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { Mat4 } from '../math/mat4.js';
 /* eslint-enable no-unused-vars */
 

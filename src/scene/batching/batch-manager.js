@@ -22,6 +22,12 @@ import { Batch } from './batch.js';
 import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
 
+/* eslint-disable no-unused-vars */
+import { Entity } from '../../framework/entity.js';
+import { GraphicsDevice } from '../../graphics/graphics-device.js';
+import { Scene } from '../scene.js';
+/* eslint-enable no-unused-vars */
+
 
 function paramsIdentical(a, b) {
     if (a && !b) return false;

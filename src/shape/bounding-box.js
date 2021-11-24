@@ -1,5 +1,12 @@
 import { Vec3 } from '../math/vec3.js';
 
+/* eslint-disable no-unused-vars */
+import { BoundingSphere } from './bounding-sphere.js';
+import { Mat4 } from '../math/mat4.js';
+import { Ray } from './ray.js';
+/* eslint-enable no-unused-vars */
+
+
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 const tmpVecC = new Vec3();
