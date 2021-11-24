@@ -1,5 +1,10 @@
 import { platform } from '../core/platform.js';
 
+/* eslint-disable no-unused-vars */
+import { XrManager } from './xr-manager.js';
+/* eslint-enable no-unused-vars */
+
+
 /**
  * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It
  * requires that the root DOM element is provided for session start. That way, input source select

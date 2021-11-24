@@ -8,6 +8,11 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
+/* eslint-disable no-unused-vars */
+import { XrManager } from './xr-manager.js';
+/* eslint-enable no-unused-vars */
+
+
 const quat = new Quat();
 let ids = 0;
 

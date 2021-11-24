@@ -7,6 +7,11 @@ import { Vec3 } from '../math/vec3.js';
 
 import { XRTYPE_AR } from './constants.js';
 
+/* eslint-disable no-unused-vars */
+import { XrManager } from './xr-manager.js';
+/* eslint-enable no-unused-vars */
+
+
 const vec3A = new Vec3();
 const vec3B = new Vec3();
 const mat4A = new Mat4();
