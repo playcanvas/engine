@@ -912,8 +912,13 @@ const standard = {
             code += versionCode(device);
         }
 
-        if (device.extStandardDerivatives && !device.webgl2) {
-            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        if (!device.webgl2) {
+            if (device.extStandardDerivatives) {
+                code += "#extension GL_OES_standard_derivatives : enable\n";
+            }
+            if (device.extTextureLod) {
+                code += "#extension GL_EXT_shader_texture_lod : enable\n";
+            }
         }
         if (chunks.extensionPS) {
             code += chunks.extensionPS + "\n";
