@@ -58,6 +58,7 @@ function getProjectionName(projection) {
  * the function performs a standard resample.
  * @param {number} [options.numSamples] - Optional number of samples (default is 1024).
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
+ * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert', 'phong', 'ggx'. Default depends on specularPower.
  */
 function reprojectTexture(source, target, options = {}) {
     // maintain backwards compatibility with previous function signature
@@ -65,10 +66,13 @@ function reprojectTexture(source, target, options = {}) {
     if (source instanceof GraphicsDevice) {
         source = arguments[1];
         target = arguments[2];
-        options = {
-            specularPower: arguments[3] === undefined ? 1 : arguments[3],
-            numSamples: arguments[4] === undefined ? 1024 : arguments[4]
-        };
+        options = { };
+        if (arguments[3] !== undefined) {
+            options.specularPower = arguments[3];
+        }
+        if (arguments[4] !== undefined) {
+            options.numSamples = arguments[4];
+        }
 
         DeprecatedLog.log('DEPRECATED: please use the updated pc.reprojectTexture API.');
     }
@@ -78,8 +82,16 @@ function reprojectTexture(source, target, options = {}) {
     const specularPower = options.hasOwnProperty('specularPower') ? options.specularPower : 1;
     const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
     const face = options.hasOwnProperty('face') ? options.face : null;
+    const distribution = options.hasOwnProperty('distribution') ? options.distribution : (specularPower === 1) ? 'none' : 'phong';
 
-    const processFunc = (specularPower === 1) ? 'reproject' : 'prefilter';
+    const funcNames = {
+        'none': 'reproject',
+        'lambert': 'prefilterLambert',
+        'phong': 'prefilterPhong',
+        'ggx': 'prefilterGGX'
+    };
+
+    const processFunc = funcNames[distribution] || 'reproject';
     const decodeFunc = "decode" + getCoding(source);
     const encodeFunc = "encode" + getCoding(target);
 
@@ -98,11 +110,12 @@ function reprojectTexture(source, target, options = {}) {
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
         "#define NUM_SAMPLES " + numSamples + "\n" +
-        "#define NUM_SAMPLES_SQRT " + Math.round(Math.sqrt(numSamples)).toFixed(1) + "\n\n" +
+        "#define NUM_SAMPLES_SQRT " + Math.round(Math.sqrt(numSamples)).toFixed(1) + "\n" +
+        "#define SUPPORTS_TEXLOD " + (device.extTextureLod ? '1' : '0') + '\n\n' +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
-        device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n"
+        device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n" + (device.extTextureLod ? "#extension GL_EXT_shader_texture_lod: enable\n" : "")
     );
 
     // #if _DEBUG
@@ -113,11 +126,20 @@ function reprojectTexture(source, target, options = {}) {
     constantSource.setValue(source);
 
     const constantParams = device.scope.resolve("params");
+    const constantParams2 = device.scope.resolve("params2");
+
     const params = [
         0,
         specularPower,
         1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0),          // source seam scale
         1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0)           // target seam scale
+    ];
+
+    const params2 = [
+        target.width * target.height * (target.cubemap ? 6 : 1),
+        source.width * source.height * (source.cubemap ? 6 : 1),
+        target.width,
+        source.width
     ];
 
     for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
@@ -129,6 +151,7 @@ function reprojectTexture(source, target, options = {}) {
             });
             params[0] = f;
             constantParams.setValue(params);
+            constantParams2.setValue(params2);
 
             drawQuadWithShader(device, renderTarget, shader);
 

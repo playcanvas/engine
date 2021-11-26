@@ -9,6 +9,9 @@
 // When filtering:
 // NUM_SAMPLES - number of samples
 // NUM_SAMPLES_SQRT - sqrt of number of samples
+//
+// SUPPORTS_TEXLOD - whether supports texlod is supported
+//
 
 varying vec2 vUv0;
 
@@ -23,10 +26,20 @@ uniform samplerCube sourceCube;
 // w - target cubemap size for seam calc (0 to disable)
 uniform vec4 params;
 
+// params2:
+// x - target image total pixels
+// y - source cubemap size
+uniform vec4 params2;
+
 float targetFace() { return params.x; }
 float specularPower() { return params.y; }
 float sourceCubeSeamScale() { return params.z; }
 float targetCubeSeamScale() { return params.w; }
+
+float targetTotalPixels() { return params2.x; }
+float sourceTotalPixels() { return params2.y; }
+float targetSize() {  return params2.z; }
+float sourceSize() {  return params2.w; }
 
 float PI = 3.141592653589793;
 
@@ -89,23 +102,14 @@ vec4 encodeRGBE(vec3 source) {
 
 //-- supported projections
 
-vec3 modifySeams(vec3 dir, float amount) {
-    if (amount != 1.0) {
-        vec3 adir = abs(dir);
-        float M = max(max(adir.x, adir.y), adir.z);
-        if (adir.x == M) {
-            dir.y *= amount;
-            dir.z *= amount;
-        }
-        else if (adir.y == M) {
-            dir.x *= amount;
-            dir.z *= amount;
-        } else {
-            dir.x *= amount;
-            dir.y *= amount;
-        }
-    }
-    return dir;
+vec3 modifySeams(vec3 dir, float scale) {
+    vec3 adir = abs(dir);
+    float M = max(max(adir.x, adir.y), adir.z);
+    return dir / M * vec3(
+        adir.x == M ? 1.0 : scale,
+        adir.y == M ? 1.0 : scale,
+        adir.z == M ? 1.0 : scale
+    );
 }
 
 vec2 toSpherical(vec3 dir) {
@@ -116,6 +120,10 @@ vec3 fromSpherical(vec2 uv) {
     return vec3(cos(uv.y) * cos(uv.x),
                 sin(uv.y),
                 cos(uv.y) * sin(uv.x));
+}
+
+vec3 getDirectionEquirect() {
+    return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
 
 vec4 sampleEquirect(vec2 sph) {
@@ -135,8 +143,29 @@ vec4 sampleCubemap(vec2 sph) {
     return sampleCubemap(fromSpherical(sph));
 }
 
-vec3 getDirectionEquirect() {
-    return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
+vec4 sampleEquirect(vec2 sph, float mipLevel) {
+    vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
+#if SUPPORTS_TEXLOD == 1
+    return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+#else
+    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
+#endif
+}
+
+vec4 sampleEquirect(vec3 dir, float mipLevel) {
+    return sampleEquirect(toSpherical(dir), mipLevel);
+}
+
+vec4 sampleCubemap(vec3 dir, float mipLevel) {
+#if SUPPORTS_TEXLOD == 1
+    return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) / sourceSize()), mipLevel);
+#else
+    return textureCube(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) / sourceSize()));
+#endif
+}
+
+vec4 sampleCubemap(vec2 sph, float mipLevel) {
+    return sampleCubemap(fromSpherical(sph), mipLevel);
 }
 
 // octahedral code, based on http://jcgt.org/published/0003/02/01
@@ -182,6 +211,19 @@ vec4 sampleOctahedral(vec2 sph) {
     return sampleOctahedral(fromSpherical(sph));
 }
 
+vec4 sampleOctahedral(vec3 dir, float mipLevel) {
+    vec2 uv = octEncode(dir) * 0.5 + 0.5;
+#if SUPPORTS_TEXLOD == 1
+    return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+#else
+    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
+#endif
+}
+
+vec4 sampleOctahedral(vec2 sph, float mipLevel) {
+    return sampleOctahedral(fromSpherical(sph), mipLevel);
+}
+
 /////////////////////////////////////////////////////////////////////
 
 vec3 getDirectionCubemap() {
@@ -215,22 +257,68 @@ mat3 matrixFromVector(vec3 n) { // frisvad
 }
 
 mat3 matrixFromVectorSlow(vec3 n) {
-    vec3 a = normalize(cross(n, vec3(0, 1, 0)));
-    vec3 b = cross(n, a);
-    return mat3(a, b, n);
+    vec3 up = (1.0 - abs(n.y) <= 0.0000001) ? vec3(0.0, 0.0, n.y > 0.0 ? 1.0 : -1.0) : vec3(0.0, 1.0, 0.0);
+    vec3 x = normalize(cross(up, n));
+    vec3 y = cross(n, x);
+    return mat3(x, y, n);
 }
 
-float rnd(int i) {
-    float sini = sin(float(i));
-    float cosi = cos(float(i));
-    return fract(sin(dot(vec2(sini, cosi), vec2(12.9898, 78.233) * 2.0)) * 43758.5453);
+#ifdef GL2
+    float radicalInverse(uint i, uint numSamples) {
+        // Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+        uint bits = (i << 16u) | (i >> 16u);
+        bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+        bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+        bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+        bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+        return float(bits) * 2.3283064365386963e-10;
+    }
+
+    vec2 rnd(int i, int numSamples) {
+        // Taken from https://github.com/SaschaWillems/Vulkan-glTF-PBR/blob/master/data/shaders/genbrdflut.frag
+        // hammersly
+        return vec2(float(i)/float(numSamples), radicalInverse(uint(i), uint(numSamples)));
+    }
+#else
+    vec2 rnd(int i, int numSamples) {
+        float sini = sin(float(i));
+        float cosi = cos(float(i));
+        return vec2(float(i)/float(numSamples), fract(sin(dot(vec2(sini, cosi), vec2(12.9898, 78.233) * 2.0)) * 43758.5453));
+    }
+#endif
+
+// vec3 hemisphereSampleUniform(vec2 uv) {
+//     float phi = uv.y * 2.0 * PI;
+//     float cosTheta = 1.0 - uv.x;
+//     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+//     return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+// }
+
+vec3 hemisphereSampleLambert(vec2 uv) {
+    float phi = uv.y * 2.0 * PI;
+    float cosTheta = sqrt(1.0 - uv.x);
+    float sinTheta = sqrt(uv.x);                // == sqrt(1.0 - cosTheta * cosTheta);
+    return normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
 }
 
 vec3 hemisphereSamplePhong(vec2 uv, float specPow) {
     float phi = uv.y * 2.0 * PI;
     float cosTheta = pow(1.0 - uv.x, 1.0 / (specPow + 1.0));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+    return normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
+}
+
+vec3 hemisphereSampleGGX(vec2 uv, float a) {
+    float phi = uv.y * 2.0 * PI;
+    float cosTheta = sqrt((1.0 - uv.x) / (1.0 + (a * a - 1.0) * uv.x));
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    return normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
+}
+
+float D_GGX(float NoH, float linearRoughness) {
+    float a = NoH * linearRoughness;
+    float k = linearRoughness / (1.0 - NoH * NoH + a * a);
+    return k * k * (1.0 / PI);
 }
 
 vec4 reproject() {
@@ -255,7 +343,28 @@ vec4 reproject() {
     }
 }
 
-vec4 prefilter() {
+vec4 prefilterLambert() {
+    // construct vector space given target direction
+    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+
+    float pixelsPerSample = sourceTotalPixels() / float(NUM_SAMPLES);
+
+    // tangent space normal is (0, 0, 1)
+
+    vec3 result = vec3(0.0);
+    for (int i = 0; i < int(NUM_SAMPLES); ++i) {
+        vec2 uv = rnd(i, int(NUM_SAMPLES));
+        vec3 H = hemisphereSampleLambert(uv);
+
+        float pdf = H.z / PI;
+        float mipLevel = 0.5 * log2(pixelsPerSample / pdf);
+        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * H, mipLevel));
+    }
+
+    return ENCODE_FUNC(result / float(NUM_SAMPLES));
+}
+
+vec4 prefilterPhong() {
     // get the target direction
     vec3 vec = TARGET_FUNC();
 
@@ -264,12 +373,45 @@ vec4 prefilter() {
 
     vec3 result = vec3(0.0);
     for (int i=0; i<NUM_SAMPLES; ++i) {
-        vec2 uv = vec2(float(i) / float(NUM_SAMPLES), rnd(i));
+        vec2 uv = rnd(i, NUM_SAMPLES);
         vec3 dir = vecSpace * hemisphereSamplePhong(uv, specularPower());
-        result += DECODE_FUNC(SOURCE_FUNC(dir));
+        result += DECODE_FUNC(SOURCE_FUNC(dir, 0.0));
     }
 
     return ENCODE_FUNC(result / float(NUM_SAMPLES));
+}
+
+vec4 prefilterGGX() {
+    // construct vector space given target direction
+    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+
+    float pixelsPerSample = sourceTotalPixels() / float(NUM_SAMPLES);
+
+    // tangent space normal
+    vec3 N = vec3(0, 0, 1);
+
+    // convert specular power to linear roughness
+    float roughness = 1.0 - (log2(specularPower()) / 11.0);
+    float a = roughness * roughness;
+
+    vec3 result = vec3(0.0);
+    float totalWeight = 0.0;
+    for (int i = 0; i < int(NUM_SAMPLES); ++i) {
+        vec2 uv = rnd(i, int(NUM_SAMPLES));
+        vec3 H = hemisphereSampleGGX(uv, a);
+
+        float NoH = H.z;                // since N is (0, 0, 1)
+        vec3 L = 2.0 * NoH * H - N;
+        float NoL = L.z;                // since N is (0, 0, 1)
+        if (NoL > 0.0) {
+            float pdf = D_GGX(saturate(NoH), a) / 4.0 + 0.001;
+            float mipLevel = 0.5 * log2(pixelsPerSample / pdf);
+            result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * NoL;
+            totalWeight += NoL;
+        }
+    }
+
+    return ENCODE_FUNC(result / totalWeight);
 }
 
 void main(void) {
