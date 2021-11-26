@@ -104,14 +104,14 @@ function reprojectTexture(source, target, options = {}) {
     const shader = createShaderFromCode(
         device,
         shaderChunks.fullscreenQuadVS,
-        "#define PROCESS_FUNC " + processFunc + "\n" +
-        "#define DECODE_FUNC " + decodeFunc + "\n" +
-        "#define ENCODE_FUNC " + encodeFunc + "\n" +
-        "#define SOURCE_FUNC " + sourceFunc + "\n" +
-        "#define TARGET_FUNC " + targetFunc + "\n" +
-        "#define NUM_SAMPLES " + numSamples + "\n" +
-        "#define NUM_SAMPLES_SQRT " + Math.round(Math.sqrt(numSamples)).toFixed(1) + "\n" +
-        "#define SUPPORTS_TEXLOD " + (device.extTextureLod ? '1' : '0') + '\n\n' +
+        `#define PROCESS_FUNC ${processFunc}\n` +
+        `#define DECODE_FUNC ${decodeFunc}\n` +
+        `#define ENCODE_FUNC ${encodeFunc}\n` +
+        `#define SOURCE_FUNC ${sourceFunc}\n` +
+        `#define TARGET_FUNC ${targetFunc}\n` +
+        `#define NUM_SAMPLES ${numSamples}\n` +
+        `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n` +
+        (device.extTextureLod ? '#define SUPPORTS_TEXLOD\n\n' : '\n') +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
