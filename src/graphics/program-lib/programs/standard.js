@@ -674,6 +674,10 @@ const standard = {
             codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
         }
 
+        if (shadowPass) {
+            code += '#define SHADOWPASS\n';
+        }
+
         if (options.useInstancing) {
             attributes.instance_line1 = SEMANTIC_ATTR12;
             attributes.instance_line2 = SEMANTIC_ATTR13;
