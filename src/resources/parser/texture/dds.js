@@ -6,7 +6,7 @@ import {
     PIXELFORMAT_ETC1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
-    PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 
@@ -39,7 +39,8 @@ class DdsParser {
 
         const FCC_DXT1 = 827611204; // DXT1
         const FCC_DXT5 = 894720068; // DXT5
-        const FCC_FP32 = 116; // RGBA32f
+        const FCC_FP16 = 113;       // RGBA16f
+        const FCC_FP32 = 116;       // RGBA32f
 
         // non standard
         const FCC_ETC1 = 826496069;
@@ -49,11 +50,11 @@ class DdsParser {
         const FCC_PVRTC_4BPP_RGBA_1 = 825504848;
 
         let compressed = false;
-        let floating = false;
         let etc1 = false;
         let pvrtc2 = false;
         let pvrtc4 = false;
         let format = null;
+        let componentSize = 1;
 
         let texture;
 
@@ -64,9 +65,12 @@ class DdsParser {
             } else if (fcc === FCC_DXT5) {
                 format = PIXELFORMAT_DXT5;
                 compressed = true;
+            } else if (fcc === FCC_FP16) {
+                format = PIXELFORMAT_RGBA16F;
+                componentSize = 2;
             } else if (fcc === FCC_FP32) {
                 format = PIXELFORMAT_RGBA32F;
-                floating = true;
+                componentSize = 4;
             } else if (fcc === FCC_ETC1) {
                 format = PIXELFORMAT_ETC1;
                 compressed = true;
@@ -109,7 +113,8 @@ class DdsParser {
             width: width,
             height: height,
             format: format,
-            cubemap: isCubemap
+            cubemap: isCubemap,
+            mipmaps: mips > 1
         });
 
         let offset = 128;
@@ -140,14 +145,17 @@ class DdsParser {
                     mipSize = mipWidth * mipHeight * 4;
                 }
 
-                const mipBuff = floating ? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
+                const mipBuff = format === PIXELFORMAT_RGBA32F ? new Float32Array(data, offset, mipSize) :
+                    (format === PIXELFORMAT_RGBA16F ? new Uint16Array(data, offset, mipSize) :
+                        new Uint8Array(data, offset, mipSize));
+
                 if (!isCubemap) {
                     texture._levels[i] = mipBuff;
                 } else {
                     if (!texture._levels[i]) texture._levels[i] = [];
                     texture._levels[i][face] = mipBuff;
                 }
-                offset += floating ? mipSize * 4 : mipSize;
+                offset += mipSize * componentSize;
                 mipWidth = Math.max(mipWidth * 0.5, 1);
                 mipHeight = Math.max(mipHeight * 0.5, 1);
             }
