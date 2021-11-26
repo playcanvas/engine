@@ -381,6 +381,7 @@ vec4 prefilterPhong() {
     return ENCODE_FUNC(result / float(NUM_SAMPLES));
 }
 
+// some of this based on https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/source/shaders/ibl_filtering.frag
 vec4 prefilterGGX() {
     // construct vector space given target direction
     mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
