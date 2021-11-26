@@ -2,35 +2,35 @@ import { Texture } from './texture.js';
 import { RenderTarget } from './render-target.js';
 import { reprojectTexture } from './reproject-texture.js';
 import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
-         ADDRESS_CLAMP_TO_EDGE,
-         PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from './constants';
+    ADDRESS_CLAMP_TO_EDGE,
+    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from './constants';
 
 const fixCubemapSeams = true;
 
 // calculate the number of mipmap levels given texture dimensions
 const calcLevels = (width, height) => {
     return 1 + Math.floor(Math.log2(Math.max(width, height)));
-}
+};
 
 const supportsFloat16 = (device) => {
     return device.extTextureHalfFloat && device.textureHalfFloatRenderable;
-}
+};
 
 const supportsFloat32 = (device) => {
     return device.extTextureFloat && device.textureFloatRenderable;
-}
+};
 
 // lighting source should be stored HDR
 const lightingSourcePixelFormat = (device) => {
     return supportsFloat16(device) ? PIXELFORMAT_RGBA16F :
         supportsFloat32(device) ? PIXELFORMAT_RGBA32F :
             PIXELFORMAT_R8_G8_B8_A8;
-}
+};
 
 // runtime lighting can be RGBM
 const lightingPixelFormat = (device) => {
     return PIXELFORMAT_R8_G8_B8_A8;
-}
+};
 
 const createCubemap = (device, size, format) => {
     return new Texture(device, {
@@ -39,7 +39,7 @@ const createCubemap = (device, size, format) => {
         width: size,
         height: size,
         format: format,
-        type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,    
+        type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
         addressU: ADDRESS_CLAMP_TO_EDGE,
         addressV: ADDRESS_CLAMP_TO_EDGE,
         fixCubemapSeams: fixCubemapSeams,
@@ -59,7 +59,7 @@ const copyMipmapSlow = (target, mipmap) => {
             case PIXELFORMAT_RGBA16F:
                 return new Uint16Array(texture.width * texture.height * 4);
             case PIXELFORMAT_RGBA32F:
-                    return new Float32Array(texture.width * texture.height * 4);
+                return new Float32Array(texture.width * texture.height * 4);
             default:
                 return new Uint8ClampedArray(texture.width * texture.height * 4);
         }
@@ -73,7 +73,7 @@ const copyMipmapSlow = (target, mipmap) => {
         device.initRenderTarget(rt);
         device.gl.readPixels(0, 0, texture.width, texture.height, texture._glFormat, texture._glPixelType, data);
         rt.destroy();
-    }
+    };
 
     const device = target.device;
     const gl = device.gl;
@@ -99,7 +99,7 @@ const copyMipmapSlow = (target, mipmap) => {
             data
         );
     }
-}
+};
 
 // copy mipmap texture into one of the target's mipmaps (level is calculated from texture sizes)
 // target and mipmap can be 2d or cubemap textures
@@ -108,56 +108,57 @@ const copyMipmap = (target, mipmap) => {
     // so for now we use the slow version.
     return copyMipmapSlow(target, mipmap);
 
-    const device = target.device;
-    const gl = device.gl;
-    const level = calcLevels(target.width, target.height) - calcLevels(mipmap.width, mipmap.height);
+    // this version should be much faster, but crashes safari
+    // const device = target.device;
+    // const gl = device.gl;
+    // const level = calcLevels(target.width, target.height) - calcLevels(mipmap.width, mipmap.height);
 
-    const oldRt = device.renderTarget;
+    // const oldRt = device.renderTarget;
 
-    for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
-        const glTarget = target.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + f : gl.TEXTURE_2D;
-        const renderTarget = new RenderTarget({
-            colorBuffer: mipmap,
-            face: f,
-            depth: false
-        });
+    // for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
+    //     const glTarget = target.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + f : gl.TEXTURE_2D;
+    //     const renderTarget = new RenderTarget({
+    //         colorBuffer: mipmap,
+    //         face: f,
+    //         depth: false
+    //     });
 
-        // get the device to create gl interfaces
-        device.setRenderTarget(renderTarget);
-        device.updateBegin();
+    //     // get the device to create gl interfaces
+    //     device.setRenderTarget(renderTarget);
+    //     device.updateBegin();
 
-        device.setTexture(target, 0);
+    //     device.setTexture(target, 0);
 
-        // create the target mipmap level
-        gl.texImage2D(
-            glTarget,
-            level,
-            mipmap._glInternalFormat,
-            mipmap.width,
-            mipmap.height,
-            0,
-            mipmap._glFormat,
-            mipmap._glPixelType,
-            null
-        );
+    //     // create the target mipmap level
+    //     gl.texImage2D(
+    //         glTarget,
+    //         level,
+    //         mipmap._glInternalFormat,
+    //         mipmap.width,
+    //         mipmap.height,
+    //         0,
+    //         mipmap._glFormat,
+    //         mipmap._glPixelType,
+    //         null
+    //     );
 
-        // copy it
-        gl.copyTexImage2D(
-            glTarget,
-            level,
-            mipmap._glInternalFormat,
-            0, 0, mipmap.width, mipmap.height,
-            0
-        );
+    //     // copy it
+    //     gl.copyTexImage2D(
+    //         glTarget,
+    //         level,
+    //         mipmap._glInternalFormat,
+    //         0, 0, mipmap.width, mipmap.height,
+    //         0
+    //     );
 
-        device.updateEnd();
-        renderTarget.destroy();
-    }
+    //     device.updateEnd();
+    //     renderTarget.destroy();
+    // }
 
-    // restore render target
-    device.setRenderTarget(oldRt);
-    device.updateBegin();
-}
+    // // restore render target
+    // device.setRenderTarget(oldRt);
+    // device.updateBegin();
+};
 
 // generate mipmaps for the given target texture
 // target is either 2d equirect or cubemap with mipmaps = false
@@ -204,7 +205,7 @@ const generateMipmaps = (target) => {
     gl.texParameteri(target._glTarget, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(target._glTarget, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     target._mipmaps = true;
-}
+};
 
 // helper functions to support prefiltering lighting data
 class EnvLighting {
