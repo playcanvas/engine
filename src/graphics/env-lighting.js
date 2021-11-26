@@ -215,11 +215,11 @@ class EnvLighting {
      * @name generateSkyboxCubemap
      * @description Generate a skybox cubemap in the correct pixel format from the source texture.
      * @param {Texture} source - The source texture. This is either a 2d texture in equirect format or a cubemap.
-     * @param {number} size - Size of the resulting texture. Specify 0 for automatic sizing.
+     * @param {number} [size] - Size of the resulting texture. Otherwise use automatic sizing.
      * @returns {Texture} The resulting cubemap.
      */
-    static generateSkyboxCubemap(source, size = 0) {
-        if (size === 0) {
+    static generateSkyboxCubemap(source, size) {
+        if (!size) {
             size = source.cubemap ? source.width : source.width / 4;
         }
 
