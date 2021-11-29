@@ -250,7 +250,7 @@ class Morph extends RefCountedObject {
 
         // calculate min and max expansion size
         // Note: This represents average case, where most morph targets expand the mesh within the same area. It does not
-        // represents the stacked worst case scenario where all morphs could be enabled at the same time, as this can result
+        // represent the stacked worst case scenario where all morphs could be enabled at the same time, as this can result
         // in a very large aabb. In cases like this, the users should specify customAabb for Model/Render component.
         const min = new Vec3();
         const max = new Vec3();
