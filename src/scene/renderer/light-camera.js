@@ -14,12 +14,12 @@ const _viewportMatrix = new Mat4();
 class LightCamera {
     // camera rotation angles used when rendering cubemap faces
     static pointLightRotations = [
-        new Quat().setFromEulerAngles(0, 90, 0),
-        new Quat().setFromEulerAngles(0, -90, 0),
-        new Quat().setFromEulerAngles(-90, 0, 180),
-        new Quat().setFromEulerAngles(90, 0, 180),
-        new Quat().setFromEulerAngles(0, 180, 0),
-        new Quat().setFromEulerAngles(0, 0, 0)
+        new Quat().setFromEulerAngles(0, 90, 180),
+        new Quat().setFromEulerAngles(0, -90, 180),
+        new Quat().setFromEulerAngles(90, 0, 0),
+        new Quat().setFromEulerAngles(-90, 0, 0),
+        new Quat().setFromEulerAngles(0, 180, 180),
+        new Quat().setFromEulerAngles(0, 0, 180)
     ];
 
     static create(name, lightType, face) {
