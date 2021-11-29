@@ -260,8 +260,8 @@ class Morph extends RefCountedObject {
             max.max(targetAabb.getMax());
         }
 
-        this.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
-        this.aabb._expand(min, max);
+        this.aabb = new BoundingBox();
+        this.aabb.setMinMax(min, max);
     }
 
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
