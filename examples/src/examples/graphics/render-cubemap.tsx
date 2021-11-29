@@ -34,8 +34,6 @@ class RenderCubemapExample extends Example {
         app.scene.skyboxMip = 0;        // use top mipmap level of cubemap (full resolution)
         app.scene.skyboxIntensity = 2;  // make it brighter
 
-        const skybox = assets['helipad.dds'].resources;
-
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
@@ -226,7 +224,7 @@ class RenderCubemapExample extends Example {
 
             // project textures, and display them on the screen
             // @ts-ignore engine-tsd
-            const srcCube = time % 2 < 1 ? shinyBall.script.cubemapRenderer.cubeMap : skybox[1];
+            const srcCube = shinyBall.script.cubemapRenderer.cubeMap;
 
             // cube -> equi1
             pc.reprojectTexture(srcCube, textureEqui, {
