@@ -15,9 +15,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.
 
     vec3 refl = cubeMapProject(tReflDirW);
-#ifndef RIGHT_HANDED_CUBEMAP
-    refl.x *= -1.0;
-#endif    
     vec3 seam = calcSeam(refl);
     vec4 c0 = textureCube(texture_prefilteredCubeMap128, applySeam(refl, seam, 1.0 / 128.0));
     vec4 c1 = textureCube(texture_prefilteredCubeMap64, applySeam(refl, seam, 2.0 / 128.0));
