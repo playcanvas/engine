@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -21,6 +22,10 @@ const tmpMat4 = new Mat4();
  */
 class OrientedBox {
     constructor(worldTransform = new Mat4(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
+
+        Debug.assert(!Object.isFrozen(worldTransform), "Frozen object is not allowed");
+        Debug.assert(!Object.isFrozen(halfExtents), "Frozen object is not allowed");
+
         this.halfExtents = halfExtents;
 
         this._modelTransform = worldTransform.clone().invert();

@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
@@ -18,6 +19,10 @@ import { Vec3 } from '../math/vec3.js';
  */
 class Ray {
     constructor(origin = new Vec3(), direction = new Vec3(0, 0, -1)) {
+
+        Debug.assert(!Object.isFrozen(origin), "Frozen object is not allowed");
+        Debug.assert(!Object.isFrozen(direction), "Frozen object is not allowed");
+
         this.origin = origin;
         this.direction = direction;
     }

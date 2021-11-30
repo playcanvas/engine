@@ -1,5 +1,6 @@
 import { extend } from '../../../core/core.js';
 import { events } from '../../../core/events.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Color } from '../../../math/color.js';
 import { Curve } from '../../../math/curve.js';
@@ -260,9 +261,8 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     broadcast(name, functionName) {
-        // #if _DEBUG
-        console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-        // #endif
+        Debug.deprecated("ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
+
         const args = Array.prototype.slice.call(arguments, 2);
 
         const dataStore = this.store;

@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
@@ -8,7 +9,6 @@ import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 // get a coding string for texture based on its type and pixel format.
 function getCoding(texture) {
@@ -70,7 +70,7 @@ function reprojectTexture(source, target, options = {}) {
             numSamples: arguments[4] === undefined ? 1024 : arguments[4]
         };
 
-        DeprecatedLog.log('DEPRECATED: please use the updated pc.reprojectTexture API.');
+        Debug.deprecated('please use the updated pc.reprojectTexture API.');
     }
 
     // extract options

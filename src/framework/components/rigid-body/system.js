@@ -1,5 +1,6 @@
 import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -9,7 +10,6 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
-import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
 
 let ammoRayStart, ammoRayEnd;
 
@@ -341,7 +341,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
+                    Debug.deprecated('pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
 
                     const callback = arguments[2];
                     callback(result);

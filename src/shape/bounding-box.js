@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 const tmpVecA = new Vec3();
@@ -18,6 +19,10 @@ const tmpVecE = new Vec3();
  */
 class BoundingBox {
     constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
+
+        Debug.assert(!Object.isFrozen(center), "Frozen object is not allowed");
+        Debug.assert(!Object.isFrozen(halfExtents), "Frozen object is not allowed");
+
         this.center = center;
         this.halfExtents = halfExtents;
         this._min = new Vec3();

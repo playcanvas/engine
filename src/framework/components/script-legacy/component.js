@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { path } from '../../../core/path.js';
 
 import { Component } from '../component.js';
@@ -9,9 +10,8 @@ class ScriptLegacyComponent extends Component {
     }
 
     send(name, functionName) {
-        // #if _DEBUG
-        console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-        // #endif
+        Debug.deprecated("ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
+
         const args = Array.prototype.slice.call(arguments, 2);
         const instances = this.entity.script.instances;
         let fn;
