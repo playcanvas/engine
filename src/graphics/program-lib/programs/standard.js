@@ -1054,10 +1054,6 @@ const standard = {
             code += "#define CUBEMAP_ROTATION\n";
         }
 
-        if (options.useRightHandedCubeMap) {
-            code += "#define RIGHT_HANDED_CUBEMAP\n";
-        }
-
         if (needsNormal) {
             code += chunks.cubeMapRotatePS;
 
