@@ -1,8 +1,8 @@
 import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
-    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA32F,
-    TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
 } from '../../graphics/constants.js';
 import {
     BLEND_NONE,
@@ -200,7 +200,7 @@ class StandardMaterialOptionsBuilder {
         options.useRgbm = rgbmReflection || rgbmAmbient || (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
         options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
         options.prefilteredCubemap = !!prefilteredCubeMap128;
-        options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);
+        options.skyboxIntensity = (scene.skyboxIntensity !== 1);
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
         options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
@@ -213,6 +213,27 @@ class StandardMaterialOptionsBuilder {
             options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
             options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
+
+        // handle env lighting
+        const textureFormat = (texture) => {
+            if (!texture) {
+                return null;
+            }
+
+            if (texture.type === TEXTURETYPE_RGBM) {
+                return 'rgbm';
+            }
+
+            if (texture.type === TEXTURETYPE_RGBE) {
+                return 'rgbe';
+            }
+
+            return texture.format === PIXELFORMAT_RGBA16F || texture.format === PIXELFORMAT_RGBA32F ? 'linear' : 'srgb';
+        }
+
+        const envLighting = stdMat.envLighting || (stdMat.useSkybox ? scene.envLighting : null);
+        options.envAmbientFormat = textureFormat(envLighting?.ambient);
+        options.envReflectionFormat = textureFormat(envLighting?.reflection);
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {

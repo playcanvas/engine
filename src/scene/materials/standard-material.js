@@ -633,8 +633,16 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
+    updateEnvUniforms(device, scene) {
+        if (scene.envLighting) {
+            this._setParameter('texture_envAmbient', scene.envLighting.ambient);
+            this._setParameter('texture_envReflection', scene.envLighting.reflection);
+        }
+    }
+
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // update prefiltered lighting data
+        this.updateEnvUniforms(device, scene);
         this.updateLightingUniforms(device, scene);
         const prefilteredCubeMap128 = this.prefilteredCubeMap128 || (this.useSkybox && scene._skyboxPrefiltered[0]);
 

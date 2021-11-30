@@ -452,6 +452,14 @@ const standard = {
         return code;
     },
 
+    _decodeFunc: function (textureFormat) {
+        return {
+            'rgbm': 'decodeRGBM',
+            'rgbe': 'decodeRGBE',
+            'linear': 'decodeLinear'
+        }[textureFormat] || 'decodeGamma';
+    },
+
     /**
      * @private
      * @function
@@ -583,7 +591,7 @@ const standard = {
         }
 
         const cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
-        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
+        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas || options.envReflectionFormat;
         const useTexCubeLod = options.useTexCubeLod;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
@@ -1189,9 +1197,14 @@ const standard = {
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
 
+        // FIXME: only add decode when needed
+        code += chunks.decodePS;
+
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+        } else if (options.envReflectionFormat || options.envAmbientFormat) {
+            code += chunks.fixCubemapSeamsStretchPS;
         }
 
         if (options.useCubeMapRotation) {
@@ -1286,6 +1299,9 @@ const standard = {
             }
         } else if (options.dpAtlas) {
             code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+        } else if (options.envReflectionFormat) {
+            code += `#define SUPPORTS_TEXLOD ${device.extTextureLod ? '1' : '0'}\n`;
+            code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.envReflectionFormat));
         }
 
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
@@ -1398,7 +1414,6 @@ const standard = {
         }
 
         if (addAmbient) {
-
             const ambientDecode = options.rgbmAmbient ? "decodeRGBM" : (options.hdrAmbient ? "" : "gammaCorrectInput");
 
             if (options.ambientSH) {
@@ -1409,6 +1424,8 @@ const standard = {
                 } else {
                     code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, ambientDecode);
                 }
+            } else if (options.envAmbientFormat) {
+                code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.envAmbientFormat));
             } else {
                 code += chunks.ambientConstantPS;
             }
@@ -1582,7 +1599,7 @@ const standard = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+            if (cubemapReflection || options.sphereMap || options.dpAtlas || options.envReflectionFormat) {
                 if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }

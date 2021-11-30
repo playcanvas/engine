@@ -20,6 +20,7 @@ const skybox = {
         fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
         fshader += gammaCode(options.gamma);
         fshader += tonemapCode(options.toneMapping);
+        fshader += shaderChunks.decodePS;
         fshader += shaderChunks.rgbmPS;
         fshader += shaderChunks.skyboxPS
             .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))

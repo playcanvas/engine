@@ -35,6 +35,7 @@ import cookiePS from './cookie.frag';
 import cubeMapProjectBoxPS from './cubeMapProjectBox.frag';
 import cubeMapProjectNonePS from './cubeMapProjectNone.frag';
 import cubeMapRotatePS from './cubeMapRotate.frag';
+import decodePS from './decode.frag';
 import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
@@ -44,8 +45,10 @@ import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
 import endVS from './end.vert';
+import envAmbientPS from './envAmbient.frag';
 import envConstPS from './envConst.frag';
 import envMultiplyPS from './envMultiply.frag';
+import envReflectionPS from './envReflection.frag';
 import extensionPS from './extension.frag';
 import extensionVS from './extension.vert';
 import falloffInvSquaredPS from './falloffInvSquared.frag';
@@ -246,12 +249,15 @@ const shaderChunks = {
     diffuseDetailMapPS: diffuseDetailMapPS,
     dilatePS: dilatePS,
     bilateralDeNoisePS: bilateralDeNoisePS,
+    decodePS: decodePS,
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
     endVS: endVS,
+    envAmbientPS: envAmbientPS,
     envConstPS: envConstPS,
     envMultiplyPS: envMultiplyPS,
+    envReflectionPS: envReflectionPS,
     extensionPS: extensionPS,
     extensionVS: extensionVS,
     falloffInvSquaredPS: falloffInvSquaredPS,
