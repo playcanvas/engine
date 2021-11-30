@@ -24,13 +24,6 @@ attribute vec2 vertex_texCoord0;
 // Additional shader outputs
 varying vec2 vUv0;
 
-vec4 getPosition() {
-    vec3 localPos = vertex_position;
-    vec4 posW = matrix_model * vec4(localPos, 1.0);
-    posW.zw = vec2(0.0, 1.0);
-    return posW;
-}
-
 void main(void) {
     // UV is simply passed along as varying
     vUv0 = vertex_texCoord0;
@@ -54,7 +47,7 @@ const fshader = `
  */
 
 // The following line is for setting the shader precision for floats. It is commented out because, ideally, it must be configured
-// on a per-device basis before loading the Shader. Please check the accompaning JavaScript code and look for 'app.graphicsDevice.precision'
+// on a per-device basis before loading the Shader. Please check the accompaning JavaScript code and look for 'app.graphicsDevice.precision'.
 
 // precision mediump float;
 
