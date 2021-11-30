@@ -19,6 +19,9 @@ varying vec2 vUv0;
 uniform sampler2D sourceTex;
 uniform samplerCube sourceCube;
 
+// rnd
+uniform sampler2D rndTex;
+
 // params:
 // x - target cubemap face 0..6
 // y - specular power (when prefiltering)
@@ -263,29 +266,38 @@ mat3 matrixFromVectorSlow(vec3 n) {
     return mat3(x, y, n);
 }
 
-#ifdef GL2
-    float radicalInverse(uint i, uint numSamples) {
-        // Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-        uint bits = (i << 16u) | (i >> 16u);
-        bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-        bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-        bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-        bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-        return float(bits) * 2.3283064365386963e-10;
-    }
+// #ifdef GL2
+//     float radicalInverse(uint i) {
+//         // Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+//         uint bits = (i << 16u) | (i >> 16u);
+//         bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+//         bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+//         bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+//         bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+//         return float(bits) * 2.3283064365386963e-10;
+//     }
 
-    vec2 rnd(int i, int numSamples) {
-        // Taken from https://github.com/SaschaWillems/Vulkan-glTF-PBR/blob/master/data/shaders/genbrdflut.frag
-        // hammersly
-        return vec2(float(i)/float(numSamples), radicalInverse(uint(i), uint(numSamples)));
-    }
-#else
-    vec2 rnd(int i, int numSamples) {
-        float sini = sin(float(i));
-        float cosi = cos(float(i));
-        return vec2(float(i)/float(numSamples), fract(sin(dot(vec2(sini, cosi), vec2(12.9898, 78.233) * 2.0)) * 43758.5453));
-    }
-#endif
+//     vec2 rnd(int i, int numSamples) {
+//         // Taken from https://github.com/SaschaWillems/Vulkan-glTF-PBR/blob/master/data/shaders/genbrdflut.frag
+//         // hammersly
+//         return vec2(float(i)/float(numSamples), radicalInverse(uint(i), uint(numSamples)));
+//     }
+// #else
+//     vec2 rnd(int i, int numSamples) {
+//         float sini = sin(float(i));
+//         float cosi = cos(float(i));
+//         return vec2(float(i)/float(numSamples), fract(sin(dot(vec2(sini, cosi), vec2(12.9898, 78.233) * 2.0)) * 43758.5453));
+//     }
+// #endif
+
+float unpackBytesToFloat(vec4 data) {
+    return dot(data, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+}
+
+vec2 rnd(int i, int numSamples) {
+    float u = float(i) / 1024.0;
+    return vec2(float(i) / float(numSamples), unpackBytesToFloat(texture2D(rndTex, vec2(u, 0.5))));
+}
 
 // vec3 hemisphereSampleUniform(vec2 uv) {
 //     float phi = uv.y * 2.0 * PI;

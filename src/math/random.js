@@ -71,7 +71,17 @@ const random = {
         point.x = Math.cos(theta) * radius;
         point.y = y;
         point.z = Math.sin(theta) * radius;
-    }
+    },
+
+    radicalInverse: function (i) {
+        // Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+        let bits = (i << 16) | (i >> 16);
+        bits = ((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >> 1);
+        bits = ((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >> 2);
+        bits = ((bits & 0x0F0F0F0F) << 4) | ((bits & 0xF0F0F0F0) >> 4);
+        bits = ((bits & 0x00FF00FF) << 8) | ((bits & 0xFF00FF00) >> 8);
+        return bits * 2.3283064365386963e-10;
+    } 
 };
 
 export { random };

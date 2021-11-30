@@ -1,13 +1,17 @@
 import {
+    FILTER_NEAREST,
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE, TEXTUREPROJECTION_NONE
 } from './constants.js';
+import { random } from '../math/random.js';
+import { FloatPacking } from '../math/float-packing.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
+import { Texture } from './texture.js';
 import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 // get a coding string for texture based on its type and pixel format.
@@ -41,6 +45,26 @@ function getProjectionName(projection) {
         case TEXTUREPROJECTION_OCTAHEDRAL: return "Octahedral";
     }
 }
+
+// generate random sequence
+function generateRndTex(device, numSamples) {
+    const level = new Uint8ClampedArray(numSamples * 4);
+    for (let i = 0; i < numSamples; ++i) {
+        FloatPacking.float2Bytes(random.radicalInverse(i), level, i * 4, 4);
+    }
+    return new Texture(device, {
+        name: 'rnd',
+        width: numSamples,
+        height: 1,
+        mipmaps: false,
+        minFilter: FILTER_NEAREST,
+        magFilter: FILTER_NEAREST,
+        levels: [level]
+    });
+}
+
+// cached random texture
+let rndTex = null;
 
 /**
  * @static
@@ -124,6 +148,11 @@ function reprojectTexture(source, target, options = {}) {
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
     constantSource.setValue(source);
+
+    if (!rndTex) {
+        rndTex = generateRndTex(device, 1024);
+        device.scope.resolve("rndTex").setValue(rndTex);
+    }
 
     const constantParams = device.scope.resolve("params");
     const constantParams2 = device.scope.resolve("params2");
