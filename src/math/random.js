@@ -81,7 +81,7 @@ const random = {
         bits = (((bits & 0x0F0F0F0F) << 4) | ((bits & 0xF0F0F0F0) >>> 4)) >>> 0;
         bits = (((bits & 0x00FF00FF) << 8) | ((bits & 0xFF00FF00) >>> 8)) >>> 0;
         return bits * 2.3283064365386963e-10;
-    } 
+    }
 };
 
 export { random };
