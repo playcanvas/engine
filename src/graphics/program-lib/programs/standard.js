@@ -26,146 +26,9 @@ import { LayerComposition } from '../../../scene/composition/layer-composition.j
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
-const _oldChunkWarn = function (oldName, newName) {
-    // #if _DEBUG
-    console.warn(`Shader chunk ${oldName} is deprecated - override ${newName} instead`);
-    // #endif
-};
-
-const _oldChunkFloat = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkColor = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTex = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTexColor = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
-            "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTexFloat = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
-            "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkVert = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkVertColor = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
-            "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkVertFloat = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
-            "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformSkin = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef SKIN\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformDynbatch = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformInstanced = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformPixelSnap = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformScreenSpace = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
-            "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformUv1 = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
 const _matTex2D = [];
 
 const standard = {
-
-    _oldChunkToNew: {
-        aoTexPS: { n: "aoPS", f: _oldChunkTex },
-        aoVertPS: { n: "aoPS", f: _oldChunkVert },
-
-        diffuseConstPS: { n: "diffusePS", f: _oldChunkColor },
-        diffuseTexPS: { n: "diffusePS", f: _oldChunkTex },
-        diffuseTexConstPS: { n: "diffusePS", f: _oldChunkTexColor },
-        diffuseVertPS: { n: "diffusePS", f: _oldChunkVert },
-        diffuseVertConstPS: { n: "diffusePS", f: _oldChunkVertColor },
-
-        emissiveConstPS: { n: "emissivePS", f: _oldChunkColor },
-        emissiveTexPS: { n: "emissivePS", f: _oldChunkTex },
-        emissiveTexConstPS: { n: "emissivePS", f: _oldChunkTexColor },
-        emissiveTexConstFloatPS: { n: "emissivePS", f: _oldChunkTexFloat },
-        emissiveVertPS: { n: "emissivePS", f: _oldChunkVert },
-        emissiveVertConstPS: { n: "emissivePS", f: _oldChunkVertColor },
-        emissiveVertConstFloatPS: { n: "emissivePS", f: _oldChunkVertFloat },
-
-        glossConstPS: { n: "glossPS", f: _oldChunkFloat },
-        glossTexPS: { n: "glossPS", f: _oldChunkTex },
-        glossTexConstPS: { n: "glossPS", f: _oldChunkTexFloat },
-        glossVertPS: { n: "glossPS", f: _oldChunkVert },
-        glossVertConstPS: { n: "glossPS", f: _oldChunkVertFloat },
-
-        metalnessConstPS: { n: "metalnessPS", f: _oldChunkFloat },
-        metalnessTexPS: { n: "metalnessPS", f: _oldChunkTex },
-        metalnessTexConstPS: { n: "metalnessPS", f: _oldChunkTexFloat },
-        metalnessVertPS: { n: "metalnessPS", f: _oldChunkVert },
-        metalnessVertConstPS: { n: "metalnessPS", f: _oldChunkVertFloat },
-
-        opacityConstPS: { n: "opacityPS", f: _oldChunkFloat },
-        opacityTexPS: { n: "opacityPS", f: _oldChunkTex },
-        opacityTexConstPS: { n: "opacityPS", f: _oldChunkTexFloat },
-        opacityVertPS: { n: "opacityPS", f: _oldChunkVert },
-        opacityVertConstPS: { n: "opacityPS", f: _oldChunkVertFloat },
-
-        specularConstPS: { n: "specularPS", f: _oldChunkColor },
-        specularTexPS: { n: "specularPS", f: _oldChunkTex },
-        specularTexConstPS: { n: "specularPS", f: _oldChunkTexColor },
-        specularVertPS: { n: "specularPS", f: _oldChunkVert },
-        specularVertConstPS: { n: "specularPS", f: _oldChunkVertColor },
-
-        transformBatchSkinnedVS: { n: "transformVS", f: _oldChunkTransformDynbatch },
-        transformInstancedVS: { n: "transformVS", f: _oldChunkTransformInstanced },
-        transformPixelSnapVS: { n: "transformVS", f: _oldChunkTransformPixelSnap },
-        transformScreenSpaceVS: { n: "transformVS", f: _oldChunkTransformScreenSpace },
-        transformScreenSpaceBatchSkinned: { n: "transformVS", f: _oldChunkTransformScreenSpaceBatch },
-        transformSkinned: { n: "transformVS", f: _oldChunkTransformSkin },
-        transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
-    },
 
     // Shared Sandard Material option structures
     optionsContext: {},
@@ -642,13 +505,6 @@ const standard = {
                         }
                         customChunks[p] = chunk;
                     }
-                }
-            }
-
-            for (const p in options.chunks) {
-                const newP = this._oldChunkToNew[p];
-                if (newP) {
-                    customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);
                 }
             }
 
