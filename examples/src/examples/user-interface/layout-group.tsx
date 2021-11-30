@@ -70,7 +70,7 @@ class LayoutGroupExample extends Example {
         });
         screen.addChild(group);
 
-        // create 15 children to show off the layout group
+        // create 16 children to show off the layout group
         for (let i = 0; i < 15; ++i) {
             // create a random-colored panel
             const child = new pc.Entity();
@@ -94,7 +94,7 @@ class LayoutGroupExample extends Example {
                 margin: [0, 0, 0, 0],
                 pivot: [0.5, 0.5],
                 color: new pc.Color(1, 1, 1),
-                fontAsset: assets.font,
+                font: assets.font,
                 text: `${i + 1}`,
                 type: pc.ELEMENTTYPE_TEXT,
                 // auto font size

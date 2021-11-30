@@ -54,7 +54,7 @@ class TextExample extends Example {
         textBasic.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 42,
             text: "Basic Text",
             type: pc.ELEMENTTYPE_TEXT
@@ -67,7 +67,7 @@ class TextExample extends Example {
         textMarkup.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 32,
             text: 'There are seven colors in the rainbow: [color="#ff0000"]red[/color], [color="#ffa500"]orange[/color], [color="#ffff00"]yellow[/color], [color="#00ff00"]green[/color], [color="#0000ff"]blue[/color], [color="#4b0082"]indigo[/color] and [color="#7f00ff"]violet[/color].',
             width: 500,
@@ -86,7 +86,7 @@ class TextExample extends Example {
         textOutline.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 62,
             text: "Outline",
             color: new pc.Color(0, 0, 0),
@@ -102,7 +102,7 @@ class TextExample extends Example {
         textDropShadow.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 62,
             text: "Drop Shadow",
             shadowColor: new pc.Color(1, 0, 0),

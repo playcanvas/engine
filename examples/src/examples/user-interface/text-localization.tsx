@@ -116,6 +116,7 @@ class TextLocalizationExample extends Example {
             label.addComponent("element", {
                 anchor: [0.5, 0.5, 0.5, 0.5],
                 color: new pc.Color(0, 0, 0),
+                fontAsset: assets.font.id,
                 fontSize: 32,
                 height: 64,
                 pivot: [0.5, 0.5],
@@ -140,14 +141,6 @@ class TextLocalizationExample extends Example {
         screen.addChild(createButton("fr-FR", -75, -100));
         screen.addChild(createButton("es-ES", 75, -100));
         screen.addChild(createButton("pt-BR", 225, -100));
-
-        // Apply the font to the text element
-        screen.findComponents('element').forEach(function (elementComponent: pc.ElementComponent) {
-            if (elementComponent.type === pc.ELEMENTTYPE_TEXT) {
-                elementComponent.fontAsset = assets.font.id;
-            }
-        });
-
     }
 }
 

@@ -65,7 +65,7 @@ class TextAutoFontSizeExample extends Example {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0, 0, 1, 1),
             margin: new pc.Vec4(0, 0, 0, 0),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             autoWidth: false,
             autoHeight: false,
             autoFitWidth: true,

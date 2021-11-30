@@ -100,7 +100,7 @@ class WorldScreenExample extends Example {
         playerText.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 20,
             text: "Player 1",
             type: pc.ELEMENTTYPE_TEXT

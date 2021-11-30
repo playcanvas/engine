@@ -124,7 +124,7 @@ class ScrollViewExample extends Example {
             anchor: new pc.Vec4(0, 1, 0, 1),
             autoHeight: true,
             autoWidth: false,
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 32,
             lineHeight: 36,
             pivot: new pc.Vec2(0, 1),

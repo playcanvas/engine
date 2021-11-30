@@ -67,6 +67,7 @@ class UserInterfaceParticleSystemExample extends Example {
         label.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(1, 1, 0),
+            fontAsset: assets.font.id,
             fontSize: 36,
             height: 64,
             pivot: [0.5, 0.5],
@@ -76,7 +77,6 @@ class UserInterfaceParticleSystemExample extends Example {
             wrapLines: true
         });
         panel.addChild(label);
-        label.element.fontAsset = assets.font.id;
 
         // Create entity for particle system
         const particles = new pc.Entity();

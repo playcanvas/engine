@@ -77,7 +77,6 @@ class TextEmojisExample extends Example {
         canvasElementEntity1.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            // fontAsset: assets.font,
             fontSize: elSize,
             text: firstLineText,
             type: pc.ELEMENTTYPE_TEXT
@@ -91,7 +90,6 @@ class TextEmojisExample extends Example {
         canvasElementEntity2.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            // fontAsset: assets.font,
             fontSize: elSize,
             text: flagsText,
             type: pc.ELEMENTTYPE_TEXT
@@ -105,7 +103,6 @@ class TextEmojisExample extends Example {
         canvasElementEntity3.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            // fontAsset: assets.font,
             fontSize: elSize,
             text: complexText,
             type: pc.ELEMENTTYPE_TEXT
@@ -120,7 +117,7 @@ class TextEmojisExample extends Example {
         debugText.addComponent("element", {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: elSize,
             text: "The following are the CanvasFont's Texture Atlases,\ncontaining all the rendered characters:",
             type: pc.ELEMENTTYPE_TEXT

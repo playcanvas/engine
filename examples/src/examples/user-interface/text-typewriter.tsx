@@ -46,6 +46,7 @@ class TextTypewriterExample extends Example {
         text.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
+            fontAsset: assets.font.id,
             fontSize: 32,
             pivot: [0.5, 0.5],
             text: loremIpsum,
@@ -54,9 +55,6 @@ class TextTypewriterExample extends Example {
             wrapLines: true
         });
         screen.addChild(text);
-
-        // Apply the font to the text element
-        text.element.fontAsset = assets.font.id;
 
         // Start with no text printed
         text.element.rangeStart = 0;

@@ -47,7 +47,7 @@ const fshader = `
  */
 
 // The following line is for setting the shader precision for floats. It is commented out because, ideally, it must be configured
-// on a per-device basis before loading the Shader. Please check the accompaning JavaScript code and look for 'app.graphicsDevice.precision'.
+// on a per-device basis before loading the Shader. Please check the accompaning TypeScript code and look for 'app.graphicsDevice.precision'.
 
 // precision mediump float;
 
