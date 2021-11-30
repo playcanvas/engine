@@ -54,8 +54,8 @@ function generateRndTex(device, numSamples) {
     }
     return new Texture(device, {
         name: 'rnd',
-        width: numSamples,
-        height: 1,
+        width: 512,
+        height: numSamples / 512,
         mipmaps: false,
         minFilter: FILTER_NEAREST,
         magFilter: FILTER_NEAREST,
@@ -150,8 +150,9 @@ function reprojectTexture(source, target, options = {}) {
     constantSource.setValue(source);
 
     if (!rndTex) {
-        rndTex = generateRndTex(device, 1024);
+        rndTex = generateRndTex(device, 2048);
         device.scope.resolve("rndTex").setValue(rndTex);
+        device.scope.resolve("rndTexSize").setValue([rndTex.width, rndTex.height]);
     }
 
     const constantParams = device.scope.resolve("params");
