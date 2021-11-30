@@ -315,7 +315,6 @@ let _params = new Set();
  * - refraction: if refraction is used.
  * - skyboxIntensity: if reflected skybox intensity should be modulated.
  * - useCubeMapRotation: if cube map rotation is enabled.
- * - useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
  * - useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link VertexBuffer} instead of shader's uniforms.
  * - useMorphPosition: if morphing code should be generated to morph positions.
