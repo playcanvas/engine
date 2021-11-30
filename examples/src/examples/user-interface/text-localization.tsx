@@ -88,6 +88,7 @@ class TextLocalizationExample extends Example {
         text.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
+            fontAsset: assets.font.id,
             fontSize: 128,
             pivot: [0.5, 0.5],
             key: "HELLO",

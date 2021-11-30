@@ -94,7 +94,7 @@ class LayoutGroupExample extends Example {
                 margin: [0, 0, 0, 0],
                 pivot: [0.5, 0.5],
                 color: new pc.Color(1, 1, 1),
-                font: assets.font,
+                fontAsset: assets.font.id,
                 text: `${i + 1}`,
                 type: pc.ELEMENTTYPE_TEXT,
                 // auto font size
