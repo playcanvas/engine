@@ -15,14 +15,18 @@ class TextTypewriterExample extends Example {
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
 
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
+        // Create the application with input and start the update loop
+        const app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body),
+            elementInput: new pc.ElementInput(canvas)
+        });
         app.start();
 
         // Create a camera
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
         });
         app.root.addChild(camera);
 
@@ -58,13 +62,13 @@ class TextTypewriterExample extends Example {
         text.element.rangeStart = 0;
         text.element.rangeEnd = 0;
 
-        // Render a new character every 100ms
+        // Render a new character every 75ms
         setInterval(function () {
             text.element.rangeEnd += 1;
             if (text.element.rangeEnd >= loremIpsum.length) {
                 text.element.rangeEnd = 0;
             }
-        }, 100);
+        }, 75);
     }
 }
 
