@@ -205,8 +205,6 @@ class StandardMaterialOptionsBuilder {
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
         options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
 
-        options.useRightHandedCubeMap = stdMat.cubeMap ? stdMat.cubeMap._isRenderTarget : (!stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene._skyboxIsRenderTarget);
-
         // clustered lighting features
         if (LayerComposition.clusteredLightingEnabled && scene.layers) {
             options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;

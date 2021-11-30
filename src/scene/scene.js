@@ -133,8 +133,6 @@ class Scene extends EventHandler {
         this._skyboxRotationMat3 = null;
         this._skyboxRotationMat4 = null;
 
-        this._skyboxIsRenderTarget = false;
-
         // ambient light lightmapping properties
         this._ambientBake = false;
         this._ambientBakeNumSamples = 1;
@@ -439,12 +437,6 @@ class Scene extends EventHandler {
                 return;
             }
 
-            if (usedTex._isRenderTarget) {
-                this._skyboxIsRenderTarget = true;
-            } else {
-                this._skyboxIsRenderTarget = false;
-            }
-
             const material = new Material();
             const scene = this;
             material.updateShader = function (dev, sc, defs, staticLightList, pass) {
@@ -453,7 +445,6 @@ class Scene extends EventHandler {
                     rgbm: usedTex.type === TEXTURETYPE_RGBM,
                     hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity !== 1,
-                    useRightHandedCubeMap: scene._skyboxIsRenderTarget,
                     mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: usedTex.fixCubemapSeams,
                     gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
