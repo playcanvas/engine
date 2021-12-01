@@ -64,28 +64,6 @@ class WorldScreenExample extends Example {
         light.setLocalEulerAngles(45, 30, 0);
         app.root.addChild(light);
 
-        // Create a capsule entity to represent a player in the 3d world
-        const entity = new pc.Entity();
-        entity.setLocalScale(new pc.Vec3(0.5, 0.5, 0.5));
-        entity.addComponent("render", {
-            type: "capsule"
-        });
-        app.root.addChild(entity);
-
-        // update the player position every frame with some mock logic
-        // normally, this would be taking inputs, running physics simulation, etc
-        let angle = 135;
-        const radius = 1.5;
-        const height = 0.5;
-        app.on("update", function (dt) {
-            angle += 30 * dt;
-            if (angle > 360) {
-                angle -= 360;
-            }
-            entity.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
-            entity.setLocalEulerAngles(0, angle + 90, 0);
-        });
-
         // Create a 3D world screen
         const screen = new pc.Entity();
         screen.setLocalScale(0.01, 0.01, 0.01);
@@ -95,23 +73,59 @@ class WorldScreenExample extends Example {
         });
         app.root.addChild(screen);
 
-        // Create a text element that will hover the player's head
-        const playerText = new pc.Entity();
-        playerText.addComponent("element", {
-            pivot: new pc.Vec2(0.5, 0.5),
-            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontAsset: assets.font.id,
-            fontSize: 20,
-            text: "Player 1",
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        screen.addChild(playerText);
+        function createPlayer(id: number, startingAngle: number, speed: number, radius: number) {
+            // Create a capsule entity to represent a player in the 3d world
+            const entity = new pc.Entity();
+            entity.setLocalScale(new pc.Vec3(0.5, 0.5, 0.5));
+            entity.addComponent("render", {
+                type: "capsule"
+            });
+            app.root.addChild(entity);
 
-        // update the player text's position to always hover the player
-        app.on("update", function () {
-            const playerPosition = entity.getPosition();
-            playerText.setPosition(playerPosition.x, playerPosition.y + 0.6, playerPosition.z);
-        });
+            // update the player position every frame with some mock logic
+            // normally, this would be taking inputs, running physics simulation, etc
+            let angle = startingAngle;
+            const height = 0.5;
+            app.on("update", function (dt) {
+                angle += dt * speed;
+                if (angle > 360) {
+                    angle -= 360;
+                }
+                entity.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
+                entity.setLocalEulerAngles(0, angle + 90, 0);
+            });
+
+            // Create a text element that will hover the player's head
+            const playerText = new pc.Entity();
+            playerText.addComponent("element", {
+                pivot: new pc.Vec2(0.5, 0.5),
+                anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                fontAsset: assets.font.id,
+                fontSize: 20,
+                text: `Player ${id}`,
+                useInput: true,
+                type: pc.ELEMENTTYPE_TEXT
+            });
+            playerText.addComponent("button", {
+                imageEntity: playerText
+            });
+            playerText.button.on('click', function (e) {
+                const color = new pc.Color(Math.random(), Math.random(), Math.random());
+                playerText.element.color = color;
+                entity.render.material.setParameter("material_diffuse", [color.r, color.g, color.b]);
+            });
+            screen.addChild(playerText);
+
+            // update the player text's position to always hover the player
+            app.on("update", function () {
+                const playerPosition = entity.getPosition();
+                playerText.setPosition(playerPosition.x, playerPosition.y + 0.6, playerPosition.z);
+            });
+        }
+
+        createPlayer(1, 135, 30, 1.5);
+        createPlayer(2, 65, -18, 1);
+        createPlayer(3, 0, 15, 2.5);
     }
 }
 

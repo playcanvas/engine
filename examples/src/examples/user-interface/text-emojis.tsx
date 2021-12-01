@@ -71,47 +71,26 @@ class TextEmojisExample extends Example {
         canvasFont.updateTextures(flagsText);
         canvasFont.updateTextures(complexText);
 
-        // First line text
-        const canvasElementEntity1 = new pc.Entity();
-        canvasElementEntity1.setLocalPosition(0, 225, 0);
-        canvasElementEntity1.addComponent("element", {
-            pivot: new pc.Vec2(0.5, 0.5),
-            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontSize: elSize,
-            text: firstLineText,
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        canvasElementEntity1.element.font = canvasFont;
-        screen.addChild(canvasElementEntity1);
-
-        // Second line text
-        const canvasElementEntity2 = new pc.Entity();
-        canvasElementEntity2.setLocalPosition(0, 150, 0);
-        canvasElementEntity2.addComponent("element", {
-            pivot: new pc.Vec2(0.5, 0.5),
-            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontSize: elSize,
-            text: flagsText,
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        canvasElementEntity2.element.font = canvasFont;
-        screen.addChild(canvasElementEntity2);
-
-        // Third line text
-        const canvasElementEntity3 = new pc.Entity();
-        canvasElementEntity3.setLocalPosition(0, 100, 0);
-        canvasElementEntity3.addComponent("element", {
-            pivot: new pc.Vec2(0.5, 0.5),
-            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontSize: elSize,
-            text: complexText,
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        canvasElementEntity3.element.font = canvasFont;
-        screen.addChild(canvasElementEntity3);
+        // Create the text entities
+        function createText(y: number, text: string) {
+            const canvasElementEntity = new pc.Entity();
+            canvasElementEntity.setLocalPosition(0, y, 0);
+            canvasElementEntity.addComponent("element", {
+                pivot: new pc.Vec2(0.5, 0.5),
+                anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                fontSize: elSize,
+                text: text,
+                type: pc.ELEMENTTYPE_TEXT
+            });
+            canvasElementEntity.element.font = canvasFont;
+            screen.addChild(canvasElementEntity);
+        }
+        createText(225, firstLineText);
+        createText(150, flagsText);
+        createText(100, complexText);
 
 
-        /** Canvas Fonts Debug - you shouldn't do this in your actual project. */
+        // Canvas Fonts Debug - you shouldn't do this in your actual project
         const debugText = new pc.Entity();
         debugText.setLocalPosition(0, -50, 0);
         debugText.addComponent("element", {

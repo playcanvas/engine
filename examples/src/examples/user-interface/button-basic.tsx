@@ -48,7 +48,7 @@ class ButtonBasicExample extends Example {
         });
         app.root.addChild(screen);
 
-        /** Button */
+        // Button
         const button = new pc.Entity();
         button.addComponent("button", {
             imageEntity: button

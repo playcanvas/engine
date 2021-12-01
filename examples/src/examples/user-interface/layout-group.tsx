@@ -70,7 +70,7 @@ class LayoutGroupExample extends Example {
         });
         screen.addChild(group);
 
-        // create 16 children to show off the layout group
+        // create 15 children to show off the layout group
         for (let i = 0; i < 15; ++i) {
             // create a random-colored panel
             const child = new pc.Entity();

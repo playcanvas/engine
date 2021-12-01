@@ -48,7 +48,7 @@ class TextExample extends Example {
         });
         app.root.addChild(screen);
 
-        /** Basic Text */
+        // Basic Text
         const textBasic = new pc.Entity();
         textBasic.setLocalPosition(0, 200, 0);
         textBasic.addComponent("element", {
@@ -61,7 +61,7 @@ class TextExample extends Example {
         });
         screen.addChild(textBasic);
 
-        /** Markup Text with wrap */
+        // Markup Text with wrap
         const textMarkup = new pc.Entity();
         textMarkup.setLocalPosition(0, 50, 0);
         textMarkup.addComponent("element", {
@@ -80,7 +80,7 @@ class TextExample extends Example {
         });
         screen.addChild(textMarkup);
 
-        /** Text with outline */
+        // Text with outline
         const textOutline = new pc.Entity();
         textOutline.setLocalPosition(0, -100, 0);
         textOutline.addComponent("element", {
@@ -96,7 +96,7 @@ class TextExample extends Example {
         });
         screen.addChild(textOutline);
 
-        /** Text with drop shadow */
+        // Text with drop shadow
         const textDropShadow = new pc.Entity();
         textDropShadow.setLocalPosition(0, -200, 0);
         textDropShadow.addComponent("element", {
