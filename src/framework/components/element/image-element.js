@@ -1139,10 +1139,10 @@ class ImageElement {
             } else {
                 this.sprite = null;
             }
+        }
 
-            if (this._element) {
-                this._element.fire('set:spriteAsset', _id);
-            }
+        if (this._element) {
+            this._element.fire('set:spriteAsset', _id);
         }
     }
 
@@ -1207,9 +1207,9 @@ class ImageElement {
             this._spriteFrame = value;
         }
 
-        if (this._spriteFrame === oldValue) return;
-
-        this._updateSprite();
+        if (this._spriteFrame !== oldValue) {
+            this._updateSprite();
+        }
 
         if (this._element) {
             this._element.fire('set:spriteFrame', value);
