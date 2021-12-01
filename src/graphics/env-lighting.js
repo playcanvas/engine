@@ -104,60 +104,63 @@ const copyMipmapSlow = (target, mipmap) => {
 // copy mipmap texture into one of the target's mipmaps (level is calculated from texture sizes)
 // target and mipmap can be 2d or cubemap textures
 const copyMipmap = (target, mipmap) => {
-    // copying directly from framebuffer to texture results in safari crashing
-    // so for now we use the slow version.
-    return copyMipmapSlow(target, mipmap);
+    const device = target.device;
+
+    if (!device.webgl2) {
+        // copying directly from framebuffer to texture results in safari crashing
+        // so for now we use the slow version.
+        return copyMipmapSlow(target, mipmap);
+    }
 
     // this version should be much faster, but crashes safari
-    // const device = target.device;
-    // const gl = device.gl;
-    // const level = calcLevels(target.width, target.height) - calcLevels(mipmap.width, mipmap.height);
+    const gl = device.gl;
+    const level = calcLevels(target.width, target.height) - calcLevels(mipmap.width, mipmap.height);
 
-    // const oldRt = device.renderTarget;
+    const oldRt = device.renderTarget;
 
-    // for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
-    //     const glTarget = target.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + f : gl.TEXTURE_2D;
-    //     const renderTarget = new RenderTarget({
-    //         colorBuffer: mipmap,
-    //         face: f,
-    //         depth: false
-    //     });
+    for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
+        const glTarget = target.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + f : gl.TEXTURE_2D;
+        const renderTarget = new RenderTarget({
+            colorBuffer: mipmap,
+            face: f,
+            depth: false
+        });
 
-    //     // get the device to create gl interfaces
-    //     device.setRenderTarget(renderTarget);
-    //     device.updateBegin();
+        // get the device to create gl interfaces
+        device.setRenderTarget(renderTarget);
+        device.updateBegin();
 
-    //     device.setTexture(target, 0);
+        device.setTexture(target, 0);
 
-    //     // create the target mipmap level
-    //     gl.texImage2D(
-    //         glTarget,
-    //         level,
-    //         mipmap._glInternalFormat,
-    //         mipmap.width,
-    //         mipmap.height,
-    //         0,
-    //         mipmap._glFormat,
-    //         mipmap._glPixelType,
-    //         null
-    //     );
+        // create the target mipmap level
+        gl.texImage2D(
+            glTarget,
+            level,
+            mipmap._glInternalFormat,
+            mipmap.width,
+            mipmap.height,
+            0,
+            mipmap._glFormat,
+            mipmap._glPixelType,
+            null
+        );
 
-    //     // copy it
-    //     gl.copyTexImage2D(
-    //         glTarget,
-    //         level,
-    //         mipmap._glInternalFormat,
-    //         0, 0, mipmap.width, mipmap.height,
-    //         0
-    //     );
+        // copy it
+        gl.copyTexImage2D(
+            glTarget,
+            level,
+            mipmap._glInternalFormat,
+            0, 0, mipmap.width, mipmap.height,
+            0
+        );
 
-    //     device.updateEnd();
-    //     renderTarget.destroy();
-    // }
+        device.updateEnd();
+        renderTarget.destroy();
+    }
 
-    // // restore render target
-    // device.setRenderTarget(oldRt);
-    // device.updateBegin();
+    // restore render target
+    device.setRenderTarget(oldRt);
+    device.updateBegin();
 };
 
 // generate mipmaps for the given target texture
