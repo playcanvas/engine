@@ -66,6 +66,24 @@ function generateRndTex(device, numSamples) {
 // cached random texture
 let rndTex = null;
 
+// generate precomputed GGX data
+function generateGGXData(numSamples, roughness) {
+    const result = new Float32Array(numSamples * 4);
+
+    const hemisphereSampleGGX = (u, v, a) => {
+        const phi = v * 2 * Math.PI;
+        const cosTheta = Math.sqrt((1 - u) / (1 + (a * a) - 1) * u);
+        const sinTheta = Math.sqrt(1 - cosTheta * cosTheta);
+    }
+
+    const a = roughness * roughness;
+
+    for (let i = 0; i < numSamples; ++i) {
+        const u = i / numSamples;
+        const v = random.radicalInverse(i);
+    }
+}
+
 /**
  * @static
  * @function
