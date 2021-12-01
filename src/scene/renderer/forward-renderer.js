@@ -1516,7 +1516,7 @@ class ForwardRenderer {
         }
     }
 
-    updateShaders(drawCalls) {
+    updateShaders(drawCalls, onlyLitShaders) {
         const count = drawCalls.length;
         for (let i = 0; i < count; i++) {
             const mat = drawCalls[i].material;
@@ -1526,6 +1526,13 @@ class ForwardRenderer {
                     _tempMaterialSet.add(mat);
 
                     if (mat.updateShader !== Material.prototype.updateShader) {
+
+                        if (onlyLitShaders) {
+                            // skip materials not using lighting
+                            if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting))
+                                continue;
+                        }
+
                         mat.clearVariants();
                         mat.shader = null;
                     }
@@ -1537,46 +1544,15 @@ class ForwardRenderer {
         _tempMaterialSet.clear();
     }
 
-    updateLitShaders(drawCalls) {
-        const count = drawCalls.length;
-        for (let i = 0; i < count; i++) {
-            const mat = drawCalls[i].material;
-            if (mat) {
-                // material not processed yet
-                if (!_tempMaterialSet.has(mat)) {
-                    _tempMaterialSet.add(mat);
-
-                    if (mat.updateShader !== Material.prototype.updateShader) {
-
-                        // only process lit materials
-                        if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
-                            mat.clearVariants();
-                            mat.shader = null;
-                        }
-                    }
-                }
-            }
-        }
-
-        // keep temp set empty
-        _tempMaterialSet.clear();
-    }
-
-    beginFrame(comp) {
-        const scene = this.scene;
+    beginFrame(comp, lightsChanged) {
         const meshInstances = comp._meshInstances;
-        const lights = comp._lights;
 
         // Update shaders if needed
-        // all mesh instances (TODO: ideally can update less if only lighting changed)
-        if (scene.updateShaders) {
-            this.updateShaders(meshInstances);
+        const scene = this.scene;
+        if (scene.updateShaders || lightsChanged) {
+            const onlyLitShaders = !scene.updateShaders && lightsChanged;
+            this.updateShaders(meshInstances, onlyLitShaders);
             scene.updateShaders = false;
-            scene.updateLitShaders = false;
-            scene._shaderVersion++;
-        } else if (scene.updateLitShaders) {
-            this.updateLitShaders(meshInstances);
-            scene.updateLitShaders = false;
             scene._shaderVersion++;
         }
 
@@ -1589,6 +1565,7 @@ class ForwardRenderer {
         }
 
         // clear light visibility
+        const lights = comp._lights;
         const lightCount = lights.length;
         for (let i = 0; i < lightCount; i++) {
             lights[i].visibleThisFrame = lights[i]._type === LIGHTTYPE_DIRECTIONAL;
@@ -1854,9 +1831,7 @@ class ForwardRenderer {
 
         // Update static layer data, if something's changed
         const updated = comp._update();
-        if (updated & COMPUPDATED_LIGHTS) {
-            this.scene.updateLitShaders = true;
-        }
+        const lightsChanged = (updated & COMPUPDATED_LIGHTS) !== 0;
 
         // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
@@ -1865,7 +1840,7 @@ class ForwardRenderer {
         this.updateLightStats(comp, updated);
 
         // Single per-frame calculations
-        this.beginFrame(comp);
+        this.beginFrame(comp, lightsChanged);
         this.setSceneConstants();
 
         // visibility culling of lights, meshInstances, shadows casters
