@@ -213,6 +213,22 @@ class Scene extends EventHandler {
         this.worldClustersParams.maxLights = value;
     }
 
+    get clusteredLightingCookieMapResolution() {
+        return this.worldClustersParams.cookieMapResolution;
+    }
+
+    set clusteredLightingCookieMapResolution(value) {
+        this.worldClustersParams.cookieMapResolution = value;
+    }
+
+    get clusteredLightingShadowMapResolution() {
+        return this.worldClustersParams.shadowMapResolution;
+    }
+
+    set clusteredLightingShadowMapResolution(value) {
+        this.worldClustersParams.shadowMapResolution = value;
+    }
+
     get clusteredLightingCookiesEnabled() {
         return this.worldClustersParams.cookiesEnabled;
     }

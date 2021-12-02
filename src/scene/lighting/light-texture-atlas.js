@@ -142,7 +142,10 @@ class LightTextureAtlas {
         }
     }
 
-    collectLights(spotLights, omniLights, cookiesEnabled, shadowsEnabled) {
+    collectLights(spotLights, omniLights, worldClustersParams) {
+
+        const cookiesEnabled = worldClustersParams.cookiesEnabled;
+        const shadowsEnabled = worldClustersParams.shadowsEnabled;
 
         // get all lights that need shadows or cookies, if those are enabled
         let needsShadow = false;
@@ -185,9 +188,14 @@ class LightTextureAtlas {
     }
 
     // update texture atlas for a list of lights
-    update(spotLights, omniLights, cookiesEnabled, shadowsEnabled) {
+    update(spotLights, omniLights, worldClustersParams) {
 
-        const lights = this.collectLights(spotLights, omniLights, cookiesEnabled, shadowsEnabled);
+        // update texture resolutions
+        this.shadowMapResolution = worldClustersParams.shadowMapResolution;
+        this.cookieMapResolution = worldClustersParams.cookieMapResolution;
+
+        // process lights
+        const lights = this.collectLights(spotLights, omniLights, worldClustersParams);
         if (lights.length > 0) {
 
             // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (4 pixels - should be enough for PCF5)

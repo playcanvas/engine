@@ -1818,8 +1818,7 @@ class ForwardRenderer {
     }
 
     updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI],
-                                      this.scene.clusteredLightingCookiesEnabled, this.scene.clusteredLightingShadowsEnabled);
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.worldClustersParams);
     }
 
     updateClusters(comp) {

@@ -44,6 +44,10 @@ class ClusteredSpotShadowsExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingCookiesEnabled = true;
 
+        // resolution of the shadow and cookie atlas
+        app.scene.clusteredLightingShadowMapResolution = 2048;
+        app.scene.clusteredLightingCookieMapResolution = 1500;
+
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
