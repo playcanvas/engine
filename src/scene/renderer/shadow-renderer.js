@@ -13,7 +13,6 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 import { LightCamera } from './light-camera.js';
 
 import { FUNC_LESSEQUAL } from '../../graphics/constants.js';

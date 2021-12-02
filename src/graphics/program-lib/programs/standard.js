@@ -22,7 +22,6 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
-import { LayerComposition } from '../../../scene/composition/layer-composition.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 

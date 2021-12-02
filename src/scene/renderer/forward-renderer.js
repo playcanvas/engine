@@ -28,7 +28,6 @@ import {
     VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
 } from '../constants.js';
 import { Material } from '../materials/material.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { DefaultMaterial } from '../materials/default-material.js';
 

@@ -15,7 +15,6 @@ import {
 } from '../constants.js';
 
 import { Quat } from '../../math/quat.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
