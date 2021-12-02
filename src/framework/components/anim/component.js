@@ -381,15 +381,11 @@ class AnimComponent extends Component {
                 // check whether assigned animation asset still exists
                 if (asset) {
                     if (asset.resource) {
-                        const animTrack = asset.resource;
-                        if (asset.data.events) {
-                            animTrack.events = new AnimEvents(Object.values(asset.data.events));
-                        }
-                        this.findAnimationLayer(layer.name).assignAnimation(stateName, animTrack);
+                        this.onAnimAssetLoaded(layer.name, stateName, asset);
                     } else {
                         asset.once('load', function (layerName, stateName) {
                             return function (asset) {
-                                this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
+                                this.onAnimAssetLoaded(layerName, stateName, asset);
                             }.bind(this);
                         }.bind(this)(layer.name, stateName));
                         this.system.app.assets.load(asset);
@@ -397,6 +393,14 @@ class AnimComponent extends Component {
                 }
             }
         }
+    }
+
+    onAnimAssetLoaded(layerName, stateName, asset) {
+        const animTrack = asset.resource;
+        if (asset.data.events) {
+            animTrack.events = new AnimEvents(Object.values(asset.data.events));
+        }
+        this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
     }
 
     /**
