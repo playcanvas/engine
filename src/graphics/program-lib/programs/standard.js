@@ -454,7 +454,7 @@ const standard = {
         }
 
         const cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
-        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas || options.envReflectionFormat;
+        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas || options.envAtlasFormat;
         const useTexCubeLod = options.useTexCubeLod;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
@@ -1059,8 +1059,6 @@ const standard = {
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
-        } else if (options.envReflectionFormat || options.envAmbientFormat) {
-            code += chunks.fixCubemapSeamsStretchPS;
         }
 
         if (options.useCubeMapRotation) {
@@ -1151,9 +1149,8 @@ const standard = {
             }
         } else if (options.dpAtlas) {
             code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-        } else if (options.envReflectionFormat) {
-            code += `#define SUPPORTS_TEXLOD ${device.extTextureLod ? '1' : '0'}\n`;
-            code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.envReflectionFormat));
+        } else if (options.envAtlasFormat) {
+            code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
         }
 
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
@@ -1276,8 +1273,8 @@ const standard = {
                 } else {
                     code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, ambientDecode);
                 }
-            } else if (options.envAmbientFormat) {
-                code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.envAmbientFormat));
+            } else if (options.envAtlasFormat) {
+                code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
             } else {
                 code += chunks.ambientConstantPS;
             }
@@ -1451,7 +1448,7 @@ const standard = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap || options.dpAtlas || options.envReflectionFormat) {
+            if (cubemapReflection || options.sphereMap || options.dpAtlas || options.envAtlasFormat) {
                 if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }

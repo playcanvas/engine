@@ -18,3 +18,19 @@ vec3 decodeRGBE(vec4 source) {
         return source.xyz * pow(2.0, source.w * 255.0 - 128.0);
     }
 }
+
+float PI = 3.141592653589793;
+
+vec2 toSpherical(vec3 dir) {
+    return vec2(atan(dir.z, dir.x), asin(dir.y));
+}
+
+vec2 toSphericalUv(vec3 dir) {
+    vec2 uv = toSpherical(dir) / vec2(PI * 2.0, PI) + 0.5;
+    return vec2(uv.x, 1.0 - uv.y);
+}
+
+vec2 mapUv(vec2 uv, vec4 rect) {
+    return vec2(mix(rect.x, rect.x + rect.z, uv.x),
+                mix(rect.y, rect.y + rect.w, uv.y));
+}

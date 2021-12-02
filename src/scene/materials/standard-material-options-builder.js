@@ -229,9 +229,8 @@ class StandardMaterialOptionsBuilder {
             return texture.format === PIXELFORMAT_RGBA16F || texture.format === PIXELFORMAT_RGBA32F ? 'linear' : 'srgb';
         }
 
-        const envLighting = stdMat.envLighting || (stdMat.useSkybox ? scene.envLighting : null);
-        options.envAmbientFormat = textureFormat(envLighting?.ambient);
-        options.envReflectionFormat = textureFormat(envLighting?.reflection);
+        const envAtlas = stdMat.envAtlas || (stdMat.useSkybox ? scene.envAtlas : null);
+        options.envAtlasFormat = textureFormat(envAtlas);
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {

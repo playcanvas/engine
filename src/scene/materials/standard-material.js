@@ -633,9 +633,8 @@ class StandardMaterial extends Material {
     }
 
     updateEnvUniforms(device, scene) {
-        if (scene.envLighting) {
-            this._setParameter('texture_envAmbient', scene.envLighting.ambient);
-            this._setParameter('texture_envReflection', scene.envLighting.reflection);
+        if (scene.envAtlas) {
+            this._setParameter('texture_envAtlas', scene.envAtlas);
         }
     }
 

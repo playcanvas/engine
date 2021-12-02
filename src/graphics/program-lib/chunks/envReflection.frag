@@ -1,24 +1,23 @@
-uniform samplerCube texture_envReflection;
+#ifndef ENV_ATLAS
+#define ENV_ATLAS
+uniform sampler2D texture_envAtlas;
+#endif
 uniform float material_reflectivity;
 
+vec2 mapRoughnessUv(vec2 uv, float t) {
+    return mapUv(uv, vec4(0, 1.0 - t, t, t * 0.5));
+}
+
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
-    vec3 dir = cubeMapProject(tReflDirW);
-#ifndef RIGHT_HANDED_CUBEMAP
-    dir.x *= -1.0;
-#endif
-    float level = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
+    vec3 dir = cubeMapProject(tReflDirW) * vec3(-1.0, 1.0, 1.0);
+    vec2 uv = toSphericalUv(dir);
 
-#if SUPPORTS_TEXLOD == 1
-    // fix seams
-    dir = fixSeams(dir, level);
+    float level = saturate(1.0 - tGlossiness) * 5.0;
+    float ilevel = floor(level);
+    vec3 linear0 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, 1.0 / exp2(ilevel))));
+    vec3 linear1 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, 1.0 / exp2(ilevel + 1.0))));
 
-    vec4 raw = textureCubeLodEXT(texture_envReflection, dir, level);
-#else
-    vec4 raw = textureCube(texture_envReflection, dir);
-#endif
-
-    vec3 linear = $DECODE(raw);
-    return processEnvironment(linear);
+    return processEnvironment(mix(linear0, linear1, level - ilevel));
 }
 
 void addReflection() {   
