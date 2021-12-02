@@ -655,6 +655,13 @@ const standard = {
             chunks = customChunks;
         }
 
+        if (options.pass === SHADER_PICK) {
+            code += '#define PICKPASS\n';
+        } else if (options.pass === SHADER_DEPTH) {
+            code += '#define DEPTHPASS\n';
+        } else if (shadowPass) {
+            code += '#define SHADOWPASS\n';
+        }
 
         // code += chunks.baseVS;
         code = this._vsAddBaseCode(code, device, chunks, options);
@@ -672,10 +679,6 @@ const standard = {
             code += 'uniform vec4 camera_params;\n\n';
             code += '#endif\n';
             codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
-        }
-
-        if (shadowPass) {
-            code += '#define SHADOWPASS\n';
         }
 
         if (options.useInstancing) {
@@ -936,6 +939,7 @@ const standard = {
 
         if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
+            code += '#define PICKPASS\n';
             code += "uniform vec4 uColor;\n";
             code += varyings;
             if (options.alphaTest) {
@@ -958,6 +962,7 @@ const standard = {
 
         } else if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
+            code += '#define DEPTHPASS\n';
             code += 'varying float vDepth;\n';
             code += varyings;
             code += chunks.packDepthPS;
@@ -981,6 +986,7 @@ const standard = {
 
         } else if (shadowPass) {
             // ##### SHADOW PASS #####
+            code += '#define SHADOWPASS\n';
             return {
                 attributes: attributes,
                 vshader: vshader,
