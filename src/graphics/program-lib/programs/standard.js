@@ -1379,7 +1379,7 @@ const standard = {
 
             code += "   getNormal();\n";
             if (options.useSpecular) {
-                if (options.enableGGXSpecular) {
+                if (lighting && options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
                 }
