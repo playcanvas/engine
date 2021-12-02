@@ -15,11 +15,13 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
+import { WorldClustersParams } from './lighting/world-clusters-params.js';
 
 /**
  * @class
  * @name Scene
  * @augments EventHandler
+ * @hideconstructor
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
  * @description Creates a new Scene.
@@ -100,9 +102,10 @@ import { Model } from './model.js';
  * child to the Application root entity.
  */
 class Scene extends EventHandler {
-    constructor() {
+    constructor(graphicsDevice) {
         super();
 
+        this.device = graphicsDevice;
         this.root = null;
 
         this._gravity = new Vec3(0, -9.8, 0);
@@ -147,6 +150,10 @@ class Scene extends EventHandler {
         this._lightmapFilterRange = 10;
         this._lightmapFilterSmoothness = 0.2;
 
+        // clustered lighting
+        this.worldClustersParams = new WorldClustersParams();
+        this._clusteredLightingEnabled = false;
+
         this._stats = {
             meshInstances: 0,
             lights: 0,
@@ -174,6 +181,79 @@ class Scene extends EventHandler {
         this._resetSkyboxModel();
         this.root = null;
         this.off();
+    }
+
+    get clusteredLightingEnabled() {
+        return this._clusteredLightingEnabled;
+    }
+
+    set clusteredLightingEnabled(value) {
+
+        if (this._clusteredLightingEnabled && !value) {
+            console.error("Turning off enabled clustered lighting is not currently supported");
+            return;
+        }
+
+        this._clusteredLightingEnabled = value;
+    }
+
+    get clusteredLightingCells() {
+        return this.worldClustersParams.cells;
+    }
+
+    set clusteredLightingCells(value) {
+        this.worldClustersParams.cells.copy(value);
+    }
+
+    get clusteredLightingMaxLights() {
+        return this.worldClustersParams.maxLights;
+    }
+
+    set clusteredLightingMaxLights(value) {
+        this.worldClustersParams.maxLights = value;
+    }
+
+    get clusteredLightingCookiesEnabled() {
+        return this.worldClustersParams.cookiesEnabled;
+    }
+
+    set clusteredLightingCookiesEnabled(value) {
+        if (this.worldClustersParams.cookiesEnabled !== value) {
+            this.worldClustersParams.cookiesEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._layers._dirtyLights = true;
+        }
+    }
+
+    get clusteredLightingAreaLightsEnabled() {
+        return this.worldClustersParams.areaLightsEnabled;
+    }
+
+    set clusteredLightingAreaLightsEnabled(value) {
+
+        // ignore if not supported
+        if (this.device.supportsAreaLights) {
+            if (this.worldClustersParams.areaLightsEnabled !== value) {
+                this.worldClustersParams.areaLightsEnabled = value;
+
+                // lit shaders need to be rebuilt
+                this._layers._dirtyLights = true;
+            }
+        }
+    }
+
+    get clusteredLightingShadowsEnabled() {
+        return this.worldClustersParams.shadowsEnabled;
+    }
+
+    set clusteredLightingShadowsEnabled(value) {
+        if (this.worldClustersParams.shadowsEnabled !== value) {
+            this.worldClustersParams.shadowsEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._layers._dirtyLights = true;
+        }
     }
 
     get fog() {
@@ -413,7 +493,7 @@ class Scene extends EventHandler {
         this.updateShaders = true;
     }
 
-    _updateSkybox(device) {
+    _updateSkybox() {
         if (!this.updateSkybox) {
             return;
         }
@@ -421,6 +501,8 @@ class Scene extends EventHandler {
 
         // Create skybox
         if (!this.skyboxModel) {
+
+            const device = this.device;
 
             // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
             // we can't simply fix this and map 3 to the correct level, since doing so has the potential

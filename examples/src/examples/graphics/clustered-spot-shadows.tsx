@@ -29,20 +29,20 @@ class ClusteredSpotShadowsExample extends Example {
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(20, 2, 20);
+        app.scene.clusteredLightingCells = new pc.Vec3(20, 2, 20);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 16;
+        app.scene.clusteredLightingMaxLights = 16;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCookiesEnabled = true;
+        app.scene.clusteredLightingCookiesEnabled = true;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);

@@ -1820,7 +1820,7 @@ class ForwardRenderer {
 
     updateLightTextureAtlas(comp) {
         this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI],
-                                      comp.clusteredLightingCookiesEnabled, comp.clusteredLightingShadowsEnabled);
+                                      this.scene.clusteredLightingCookiesEnabled, this.scene.clusteredLightingShadowsEnabled);
     }
 
     updateClusters(comp) {
@@ -1831,7 +1831,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < comp._worldClusters.length; i++) {
             const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection);
+            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.worldClustersParams);
         }
 
         // #if _PROFILER
@@ -1842,9 +1842,10 @@ class ForwardRenderer {
 
     renderComposition(comp) {
         const device = this.device;
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSkybox(device);
+        this.scene._updateSkybox();
 
         this.beginLayers(comp);
 
@@ -1853,7 +1854,7 @@ class ForwardRenderer {
         // #endif
 
         // Update static layer data, if something's changed
-        const updated = comp._update();
+        const updated = comp._update(clusteredLightingEnabled);
         if (updated & COMPUPDATED_LIGHTS) {
             this.scene.updateLitShaders = true;
         }
@@ -1875,26 +1876,26 @@ class ForwardRenderer {
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (clusteredLightingEnabled) {
 
             // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(comp);
 
             // render cookies for all local visible lights
-            if (comp.clusteredLightingCookiesEnabled) {
+            if (this.scene.clusteredLightingCookiesEnabled) {
                 this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
                 this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
             }
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        if (!LayerComposition.clusteredLightingEnabled || (LayerComposition.clusteredLightingEnabled && comp.clusteredLightingShadowsEnabled)) {
+        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.clusteredLightingShadowsEnabled)) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
 
         // update light clusters
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (clusteredLightingEnabled) {
             this.updateClusters(comp);
         }
 
@@ -1990,7 +1991,7 @@ class ForwardRenderer {
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
-                if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
+                if (clusteredLightingEnabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate(this.lightTextureAtlas);
                 }
 

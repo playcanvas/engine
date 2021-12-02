@@ -340,7 +340,6 @@ const standard = {
 
     _buildShadowPassFragmentCode: function (code, device, chunks, options, varyings) {
 
-        const isClustered = LayerComposition.clusteredLightingEnabled;
         const smode = options.pass - SHADER_SHADOW;
         const numShadowModes = SHADOW_COUNT;
         const lightType = Math.floor(smode / numShadowModes);
@@ -398,7 +397,7 @@ const standard = {
             code += "   float depth = gl_FragCoord.z;\n";
         }
 
-        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !isClustered))) {
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
             if (device.extStandardDerivatives && !device.webgl2) {
                 code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
                 code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
@@ -410,7 +409,7 @@ const standard = {
             code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
-            if (isClustered && lightType === LIGHTTYPE_OMNI && device.webgl2) {
+            if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.webgl2) {
                 code += "   gl_FragDepth = depth;\n";
             }
         } else if (shadowType === SHADOW_VSM8) {
@@ -431,7 +430,7 @@ const standard = {
             lighting = true;
         }
 
-        if (LayerComposition.clusteredLightingEnabled && options.useLighting) {
+        if (options.clusteredLightingEnabled && options.useLighting) {
             lighting = true;
         }
 
@@ -453,7 +452,7 @@ const standard = {
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
         const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular ||
-                            (LayerComposition.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
+                            (options.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
         this.options = options;
 
@@ -881,7 +880,6 @@ const standard = {
         let shadowedDirectionalLightUsed = false;
         let useVsm = false;
         let usePerspZbufferShadow = false;
-        const isClustered = LayerComposition.clusteredLightingEnabled;
 
         let hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
@@ -889,7 +887,7 @@ const standard = {
 
         // if clustered lighting has area lights enabled, it always runs in 'area lights mode'
         // TODO: maybe we should always use it and remove the other way?
-        if (isClustered && options.clusteredLightingAreaLightsEnabled) {
+        if (options.clusteredLightingEnabled && options.clusteredLightingAreaLightsEnabled) {
             hasAreaLights = true;
         }
 
@@ -901,7 +899,7 @@ const standard = {
             code += "#define AREA_LUTS_PRECISION highp\n";
         }
 
-        if (hasAreaLights || isClustered) {
+        if (hasAreaLights || options.clusteredLightingEnabled) {
             code += "#define AREA_LIGHTS\n";
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex1;\n";
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
@@ -914,7 +912,7 @@ const standard = {
             const lightType = light._type;
 
             // skip uniform generation for local lights if clustered lighting is enabled
-            if (isClustered && lightType !== LIGHTTYPE_DIRECTIONAL)
+            if (options.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL)
                 continue;
 
             if (hasAreaLights && light._shape) {
@@ -1150,7 +1148,7 @@ const standard = {
         }
 
         // clustered lighting
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (options.clusteredLightingEnabled) {
 
             // include this before shadow / cookie code
             code += chunks.clusteredLightUtilsPS;
@@ -1161,7 +1159,7 @@ const standard = {
             usePerspZbufferShadow = true;
         }
 
-        if (numShadowLights > 0 || LayerComposition.clusteredLightingEnabled) {
+        if (numShadowLights > 0 || options.clusteredLightingEnabled) {
             if (shadowedDirectionalLightUsed) {
                 code += chunks.shadowCascadesPS;
             }
@@ -1193,7 +1191,7 @@ const standard = {
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
         }
 
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (options.clusteredLightingEnabled) {
             code += chunks.clusteredLightShadowsPS;
         }
 
@@ -1201,7 +1199,7 @@ const standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if (hasAreaLights || isClustered) code += chunks.ltc;
+            if (hasAreaLights || options.clusteredLightingEnabled) code += chunks.ltc;
         }
         let useOldAmbient = false;
         if (options.useSpecular) {
@@ -1293,7 +1291,7 @@ const standard = {
         let usesCookieNow;
 
         // clustered lighting
-        if (LayerComposition.clusteredLightingEnabled && lighting) {
+        if (options.clusteredLightingEnabled && lighting) {
 
             usesSpot = true;
             hasPointLights = true;
@@ -1461,7 +1459,7 @@ const standard = {
                 const lightType = light._type;
 
                 // if clustered lights are used, skip normal lights other than directional
-                if (LayerComposition.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
+                if (options.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL) {
                     continue;
                 }
 
@@ -1637,7 +1635,7 @@ const standard = {
             }
 
             // clustered lighting
-            if (LayerComposition.clusteredLightingEnabled && lighting) {
+            if (options.clusteredLightingEnabled && lighting) {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;

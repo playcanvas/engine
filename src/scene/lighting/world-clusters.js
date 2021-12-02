@@ -28,7 +28,7 @@ class ClusterLight {
 // Main class implementing clustered lighting. Internally it organizes the omni / spot lights placement in world space 3d cell structure,
 // and also uses LightsBuffer class to store light properties in textures
 class WorldClusters {
-    constructor(device, cells, maxCellLightCount, cookiesEnabled = false, shadowsEnabled = false, areaLightsEnabled = false) {
+    constructor(device) {
         this.device = device;
         this.name = "Untitled";
 
@@ -44,14 +44,14 @@ class WorldClusters {
         this.boundsDelta = new Vec3();
 
         // number of cells along 3 axes
-        this._cells = new Vec3();       // number of cells
+        this._cells = new Vec3(1, 1, 1);       // number of cells
         this._cellsLimit = new Vec3();  // number of cells minus one
-        this.cells = cells;
+        this.cells = this._cells;
 
         // number of lights each cell can store, and number of pixels this takes (4 lights per pixel)
         this._maxCellLightCount = 0;
         this._pixelsPerCellCount = 0;
-        this.maxCellLightCount = maxCellLightCount;
+        this.maxCellLightCount = 4;
 
         // limits on some light properties, used for compression to 8bit texture
         this._maxAttenuation = 0;
@@ -64,7 +64,7 @@ class WorldClusters {
         this._usedLights.push(new ClusterLight());
 
         // allocate textures to store lights
-        this.lightsBuffer = new LightsBuffer(device, cookiesEnabled, shadowsEnabled, areaLightsEnabled);
+        this.lightsBuffer = new LightsBuffer(device);
 
         // register shader uniforms
         this.registerUniforms(device);
@@ -144,28 +144,17 @@ class WorldClusters {
         }
     }
 
-    get cookiesEnabled() {
-        return this.lightsBuffer.cookiesEnabled;
-    }
+    // updates itself based on parameters stored in the scene
+    updateParams(worldClustersParams) {
+        if (worldClustersParams) {
+            this.cells = worldClustersParams.cells;
+            this.maxCellLightCount = worldClustersParams.maxLights;
 
-    set cookiesEnabled(value) {
-        this.lightsBuffer.cookiesEnabled = value;
-    }
+            this.lightsBuffer.cookiesEnabled = worldClustersParams.cookiesEnabled;
+            this.lightsBuffer.shadowsEnabled = worldClustersParams.shadowsEnabled;
 
-    get shadowsEnabled() {
-        return this.lightsBuffer.shadowsEnabled;
-    }
-
-    set shadowsEnabled(value) {
-        this.lightsBuffer.shadowsEnabled = value;
-    }
-
-    get areaLightsEnabled() {
-        return this.lightsBuffer.areaLightsEnabled;
-    }
-
-    set areaLightsEnabled(value) {
-        this.lightsBuffer.areaLightsEnabled = value;
+            this.lightsBuffer.areaLightsEnabled = worldClustersParams.areaLightsEnabled;
+        }
     }
 
     updateCells() {
@@ -188,7 +177,7 @@ class WorldClusters {
             // if the texture is allowed size
             if (width > maxTextureSize || height > maxTextureSize) {
                 // #if _DEBUG
-                console.error("LightCluster parameters cause the texture size to be over the limit.");
+                console.error("Clustered lights parameters cause the texture size to be over the limit, please adjust them.");
                 // #endif
             }
 
@@ -450,7 +439,8 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, gammaCorrection) {
+    update(lights, gammaCorrection, worldClustersParams) {
+        this.updateParams(worldClustersParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();

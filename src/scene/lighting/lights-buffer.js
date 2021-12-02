@@ -147,14 +147,14 @@ class LightsBuffer {
         return tex;
     }
 
-    constructor(device, cookiesEnabled, shadowsEnabled, areaLightsEnabled) {
+    constructor(device) {
 
         this.device = device;
 
         // features
-        this.cookiesEnabled = cookiesEnabled;
-        this.shadowsEnabled = shadowsEnabled;
-        this.areaLightsEnabled = areaLightsEnabled;
+        this.cookiesEnabled = false;
+        this.shadowsEnabled = false;
+        this.areaLightsEnabled = false;
 
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;

@@ -32,24 +32,24 @@ class ClusteredShadowsOmniExample extends Example {
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(16, 12, 16);
+        app.scene.clusteredLightingCells = new pc.Vec3(16, 12, 16);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 80;
+        app.scene.clusteredLightingMaxLights = 80;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingShadowsEnabled = true;
+        app.scene.clusteredLightingShadowsEnabled = true;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCookiesEnabled = true;
+        app.scene.clusteredLightingCookiesEnabled = true;
 
 
         // helper function to create a 3d primitive including its material

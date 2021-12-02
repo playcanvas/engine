@@ -206,10 +206,11 @@ class StandardMaterialOptionsBuilder {
         options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
 
         // clustered lighting features
-        if (LayerComposition.clusteredLightingEnabled && scene.layers) {
-            options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
-            options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
+        if (scene.clusteredLightingEnabled) {
+            options.clusteredLightingEnabled = true;
+            options.clusteredLightingCookiesEnabled = scene.clusteredLightingCookiesEnabled;
+            options.clusteredLightingShadowsEnabled = scene.clusteredLightingShadowsEnabled;
+            options.clusteredLightingAreaLightsEnabled = scene.clusteredLightingAreaLightsEnabled;
         }
     }
 

@@ -62,19 +62,19 @@ class AreaLightsExample extends Example {
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(30, 2, 30);
+        app.scene.clusteredLightingCells = new pc.Vec3(30, 2, 30);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 20;
+        app.scene.clusteredLightingMaxLights = 20;
 
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingAreaLightsEnabled = true;
+        app.scene.clusteredLightingAreaLightsEnabled = true;
 
 
         // pure black material - used on back side of light objects
