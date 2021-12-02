@@ -883,18 +883,16 @@ class ImageElement {
         }
         // #endif
 
-        if (this._color.r === r && this._color.g === g && this._color.b === b) {
-            return;
+        if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
+
+            this._colorUniform[0] = r;
+            this._colorUniform[1] = g;
+            this._colorUniform[2] = b;
+            this._renderable.setParameter('material_emissive', this._colorUniform);
         }
-
-        this._color.r = r;
-        this._color.g = g;
-        this._color.b = b;
-
-        this._colorUniform[0] = r;
-        this._colorUniform[1] = g;
-        this._colorUniform[2] = b;
-        this._renderable.setParameter('material_emissive', this._colorUniform);
 
         if (this._element) {
             this._element.fire('set:color', this._color);
@@ -906,11 +904,10 @@ class ImageElement {
     }
 
     set opacity(value) {
-        if (value === this._color.a) return;
-
-        this._color.a = value;
-
-        this._renderable.setParameter('material_opacity', value);
+        if (value !== this._color.a) {
+            this._color.a = value;
+            this._renderable.setParameter('material_opacity', value);
+        }
 
         if (this._element) {
             this._element.fire('set:opacity', value);
@@ -1142,10 +1139,10 @@ class ImageElement {
             } else {
                 this.sprite = null;
             }
+        }
 
-            if (this._element) {
-                this._element.fire('set:spriteAsset', _id);
-            }
+        if (this._element) {
+            this._element.fire('set:spriteAsset', _id);
         }
     }
 
@@ -1210,9 +1207,9 @@ class ImageElement {
             this._spriteFrame = value;
         }
 
-        if (this._spriteFrame === oldValue) return;
-
-        this._updateSprite();
+        if (this._spriteFrame !== oldValue) {
+            this._updateSprite();
+        }
 
         if (this._element) {
             this._element.fire('set:spriteFrame', value);
