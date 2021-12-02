@@ -381,11 +381,11 @@ class AnimComponent extends Component {
                 // check whether assigned animation asset still exists
                 if (asset) {
                     if (asset.resource) {
-                        this.onAnimAssetLoaded(layer.name, stateName, asset);
+                        this.onAnimationAssetLoaded(layer.name, stateName, asset);
                     } else {
                         asset.once('load', function (layerName, stateName) {
                             return function (asset) {
-                                this.onAnimAssetLoaded(layerName, stateName, asset);
+                                this.onAnimationAssetLoaded(layerName, stateName, asset);
                             }.bind(this);
                         }.bind(this)(layer.name, stateName));
                         this.system.app.assets.load(asset);
@@ -395,7 +395,7 @@ class AnimComponent extends Component {
         }
     }
 
-    onAnimAssetLoaded(layerName, stateName, asset) {
+    onAnimationAssetLoaded(layerName, stateName, asset) {
         const animTrack = asset.resource;
         if (asset.data.events) {
             animTrack.events = new AnimEvents(Object.values(asset.data.events));
