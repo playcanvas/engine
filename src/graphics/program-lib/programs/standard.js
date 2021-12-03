@@ -277,6 +277,17 @@ const standard = {
         }
     },
 
+    _getPassDefineString: function (pass) {
+        if (pass === SHADER_PICK) {
+            return '#define PICK_PASS\n';
+        } else if (pass === SHADER_DEPTH) {
+            return '#define DEPTH_PASS\n';
+        } else if (pass >= SHADER_SHADOW && pass <= 17) {
+            return '#define SHADOW_PASS\n';
+        }
+        return '';
+    },
+
     _vsAddTransformCode: function (code, device, chunks, options) {
         code += chunks.transformVS;
 
@@ -514,6 +525,7 @@ const standard = {
             chunks = customChunks;
         }
 
+        code += this._getPassDefineString(options.pass);
 
         // code += chunks.baseVS;
         code = this._vsAddBaseCode(code, device, chunks, options);
@@ -788,6 +800,8 @@ const standard = {
         }
 
         code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : precisionCode(device);
+
+        code += this._getPassDefineString(options.pass);
 
         if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
@@ -1364,7 +1378,7 @@ const standard = {
 
             code += "   getNormal();\n";
             if (options.useSpecular) {
-                if (options.enableGGXSpecular) {
+                if (lighting && options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
                 }
