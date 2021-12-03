@@ -95,6 +95,22 @@ class StandardMaterialOptionsBuilder {
         options.lights = [];
     }
 
+    _textureFormat(texture) {
+        if (!texture) {
+            return null;
+        }
+
+        if (texture.type === TEXTURETYPE_RGBM) {
+            return 'rgbm';
+        }
+
+        if (texture.type === TEXTURETYPE_RGBE) {
+            return 'rgbe';
+        }
+
+        return texture.format === PIXELFORMAT_RGBA16F || texture.format === PIXELFORMAT_RGBA32F ? 'linear' : 'srgb';
+    }
+
     _updateMaterialOptions(options, stdMat) {
         const diffuseTint = ((stdMat.diffuse.r !== 1 || stdMat.diffuse.g !== 1 || stdMat.diffuse.b !== 1) &&
             (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor))) ? 3 : 0;
@@ -129,8 +145,6 @@ class StandardMaterialOptionsBuilder {
         options.emissiveTint = emissiveTint;
         options.alphaToCoverage = stdMat.alphaToCoverage;
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
-        options.sphereMap = !!stdMat.sphereMap;
-        options.cubeMap = !!stdMat.cubeMap;
         options.useSpecular = useSpecular;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.emissiveMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
@@ -165,22 +179,6 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateEnvOptions(options, device, stdMat, scene) {
-        const textureFormat = (texture) => {
-            if (!texture) {
-                return null;
-            }
-
-            if (texture.type === TEXTURETYPE_RGBM) {
-                return 'rgbm';
-            }
-
-            if (texture.type === TEXTURETYPE_RGBE) {
-                return 'rgbe';
-            }
-
-            return texture.format === PIXELFORMAT_RGBA16F || texture.format === PIXELFORMAT_RGBA32F ? 'linear' : 'srgb';
-        };
-
         options.fog = stdMat.useFog ? scene.fog : "none";
         options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
@@ -198,10 +196,18 @@ class StandardMaterialOptionsBuilder {
             options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
 
-        const envAtlas = stdMat.envAtlas || (stdMat.useSkybox ? scene.envAtlas : null);
-        options.envAtlasFormat = textureFormat(envAtlas);
-        options.cubemapFormat = textureFormat(stdMat.cubeMap);
-        options.sphereMapFormat = textureFormat(stdMat.sphereMap);
+        // only one of these are ever used, in the following order of priority:
+        // stdMat.envAtlas, stdMat.cubeMap, stdMat.sphereMap, scene.envAtlas
+        options.envAtlasFormat = this._textureFormat(stdMat.envAtlas);
+        options.cubeMapFormat = options.envAtlasFormat ? null : this._textureFormat(stdMat.cubeMap);
+        options.sphereMapFormat = options.cubeMapFormat ? null : this._textureFormat(stdMat.sphereMap);
+
+        // no material overrides, fall back to scene envAtlas
+        if (options.envAtlasFormat === null &&
+            options.cubeMapFormat === null &&
+            options.sphereMapFormat === null) {
+            options.envAtlasFormat = this._textureFormat(stdMat.useSkybox ? scene.envAtlas : null);
+        }
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {

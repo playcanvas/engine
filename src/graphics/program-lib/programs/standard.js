@@ -461,9 +461,7 @@ const standard = {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        const cubemapReflection = options.cubeMap && !options.sphereMap;
-        const reflections = options.sphereMap || cubemapReflection || options.envAtlasFormat;
-        if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
+        const reflections = !!(options.envAtlasFormat || options.cubeMapFormat || options.sphereMapFormat);
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
         const needsNormal = lighting || reflections || options.heightMap || options.enableGGXSpecular ||
@@ -557,7 +555,7 @@ const standard = {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             codeBody += "   vNormalW = getNormal();\n";
 
-            if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
+            if (options.sphereMapFormat && device.fragmentUniformsCount <= 16) {
                 code += chunks.viewNormalVS;
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
@@ -1066,7 +1064,7 @@ const standard = {
         code += chunks.decodePS;
 
         if (options.useRgbm) code += chunks.rgbmPS;
-        if (cubemapReflection) {
+        if (options.cubeMapFormat) {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
@@ -1138,17 +1136,16 @@ const standard = {
             }
         }
 
-        const reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
-
-        if (options.sphereMap) {
-            let scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-            code += scode;
-        } else if (options.envAtlasFormat) {
+        if (options.envAtlasFormat) {
             code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
+        } else if (options.cubeMapFormat) {
+            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.cubeMapFormat));
+        } else if (options.sphereMapFormat) {
+            const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.sphereMapFormat));
         }
 
-        if (cubemapReflection || options.sphereMap || options.envAtlasFormat) {
+        if (reflections) {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
@@ -1222,18 +1219,19 @@ const standard = {
                 code += "#define CLUSTER_CONSERVE_ENERGY\n";
             }
 
-            if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
-            if (options.sphereMap || cubemapReflection || options.envAtlasFormat || (options.fresnelModel > 0)) {
-                if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy && !hasAreaLights) {
-                        // NB if there are area lights, energy conservation is done differently
-                        code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
-                    } else {
-                        code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
-                    }
+            if (lighting) {
+                code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
+            }
+
+            if (options.fresnelModel > 0) {
+                if (options.conserveEnergy && !hasAreaLights) {
+                    // NB if there are area lights, energy conservation is done differently
+                    code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                 } else {
-                    code += chunks.combineDiffuseSpecularOldPS;
+                    code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
                 }
+            } else if (reflections) {
+                code += chunks.combineDiffuseSpecularOldPS;
             } else {
                 if (options.diffuseMap) {
                     code += chunks.combineDiffuseSpecularNoReflPS;
@@ -1433,7 +1431,7 @@ const standard = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap || options.envAtlasFormat) {
+            if (reflections) {
                 if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }
@@ -1653,7 +1651,7 @@ const standard = {
                 }
             }
 
-            if ((cubemapReflection || options.sphereMap || options.envAtlasFormat) && options.refraction) {
+            if (reflections && options.refraction) {
                 code += "   addRefraction();\n";
             }
         }
