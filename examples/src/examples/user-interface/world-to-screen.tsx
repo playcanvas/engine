@@ -5,7 +5,7 @@ import Example from '../../app/example';
 
 class WorldScreenExample extends Example {
     static CATEGORY = 'User Interface';
-    static NAME = 'World Screen';
+    static NAME = 'World to Screen';
 
     load() {
         return <>
@@ -27,7 +27,7 @@ class WorldScreenExample extends Example {
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(1, 0, 0)
+            clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
         });
         camera.rotateLocal(-30, 0, 0);
         camera.translateLocal(0, 0, 7);
@@ -64,12 +64,12 @@ class WorldScreenExample extends Example {
         light.setLocalEulerAngles(45, 30, 0);
         app.root.addChild(light);
 
-        // Create a 3D world screen
+        // Create a 2D screen
         const screen = new pc.Entity();
         screen.setLocalScale(0.01, 0.01, 0.01);
         screen.addComponent("screen", {
             referenceResolution: new pc.Vec2(1280, 720),
-            screenSpace: false
+            screenSpace: true
         });
         app.root.addChild(screen);
 
@@ -96,30 +96,80 @@ class WorldScreenExample extends Example {
             });
 
             // Create a text element that will hover the player's head
-            const playerText = new pc.Entity();
-            playerText.addComponent("element", {
+            const playerInfo = new pc.Entity();
+            playerInfo.addComponent("element", {
+                pivot: new pc.Vec2(0.5, 0),
+                anchor: new pc.Vec4(0, 0, 0, 0),
+                width: 150,
+                height: 50,
+                opacity: 0.05,
+                type: pc.ELEMENTTYPE_IMAGE
+            });
+            screen.addChild(playerInfo);
+
+            const name = new pc.Entity();
+            name.addComponent("element", {
                 pivot: new pc.Vec2(0.5, 0.5),
-                anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                anchor: new pc.Vec4(0, 0.4, 1, 1),
+                margin: new pc.Vec4(0, 0, 0, 0),
                 fontAsset: assets.font.id,
                 fontSize: 20,
                 text: `Player ${id}`,
                 useInput: true,
                 type: pc.ELEMENTTYPE_TEXT
             });
-            playerText.addComponent("button", {
-                imageEntity: playerText
+            name.addComponent("button", {
+                imageEntity: name
             });
-            playerText.button.on('click', function (e) {
+            name.button.on('click', function (e) {
                 const color = new pc.Color(Math.random(), Math.random(), Math.random());
-                playerText.element.color = color;
+                name.element.color = color;
                 entity.render.material.setParameter("material_diffuse", [color.r, color.g, color.b]);
             });
-            screen.addChild(playerText);
+            playerInfo.addChild(name);
+
+            const healthBar = new pc.Entity();
+            healthBar.addComponent("element", {
+                pivot: new pc.Vec2(0.5, 0),
+                anchor: new pc.Vec4(0, 0, 1, 0.4),
+                margin: new pc.Vec4(0, 0, 0, 0),
+                color: new pc.Color(0.2, 0.6, 0.2, 1),
+                opacity: 1,
+                type: pc.ELEMENTTYPE_IMAGE
+            });
+            playerInfo.addChild(healthBar);
 
             // update the player text's position to always hover the player
             app.on("update", function () {
-                const playerPosition = entity.getPosition();
-                playerText.setPosition(playerPosition.x, playerPosition.y + 0.6, playerPosition.z);
+                // get the desired world position
+                const worldPosition = entity.getPosition();
+                worldPosition.y += 0.6; // slightly above the player's head
+
+                // convert to screen position
+                const screenPos = camera.camera.worldToScreen(worldPosition);
+
+                if (screenPos.z > 0) {
+                    // if world position is in front of the camera, show it
+                    playerInfo.enabled = true;
+
+                    // take pixel ratio into account
+                    const pixelRatio = app.graphicsDevice.maxPixelRatio;
+                    screenPos.x *= pixelRatio;
+                    screenPos.y *= pixelRatio;
+
+                    // account for screen scalng
+                    // @ts-ignore engine-tsd
+                    const scale = screen.screen.scale;
+
+                    // invert the y position
+                    screenPos.y = screen.screen.resolution.y - screenPos.y;
+
+                    // set the UI position
+                    playerInfo.setLocalPosition(screenPos.x / scale, screenPos.y / scale, 0);
+                } else {
+                    // if world position is actually *behind* the camera, hide the UI
+                    playerInfo.enabled = false;
+                }
             });
         }
 
