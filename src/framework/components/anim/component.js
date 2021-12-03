@@ -344,7 +344,6 @@ class AnimComponent extends Component {
             this._addLayer.bind(this)({ ...layer });
         }
         this.setupAnimationAssets();
-        console.log('here');
     }
 
     setupAnimationAssets() {
