@@ -73,6 +73,34 @@ class WorldScreenExample extends Example {
         });
         app.root.addChild(screen);
 
+        /**
+         * Converts a coordinate in world space into a screen's space.
+         *
+         * @param {pc.Vec3} worldPosition - the Vec3 representing the world-space coordinate.
+         * @param {pc.CameraComponent} camera - the Camera.
+         * @param {pc.ScreenComponent} screen - the Screen
+         * @returns {pc.Vec3} a Vec3 of the input worldPosition relative to the camera and screen. The Z coordinate represents the depth,
+         * and negative numbers signal that the worldPosition is behind the camera.
+         */
+        function worldToScreenSpace(worldPosition: pc.Vec3, camera: pc.CameraComponent, screen: pc.ScreenComponent): pc.Vec3 {
+            const screenPos = camera.worldToScreen(worldPosition);
+
+            // take pixel ratio into account
+            const pixelRatio = app.graphicsDevice.maxPixelRatio;
+            screenPos.x *= pixelRatio;
+            screenPos.y *= pixelRatio;
+
+            // account for screen scaling
+            // @ts-ignore engine-tsd
+            const scale = screen.scale;
+
+            // invert the y position
+            screenPos.y = screen.resolution.y - screenPos.y;
+
+            // put that into a Vec3
+            return new pc.Vec3(screenPos.x / scale, screenPos.y / scale, screenPos.z / scale);
+        }
+
         function createPlayer(id: number, startingAngle: number, speed: number, radius: number) {
             // Create a capsule entity to represent a player in the 3d world
             const entity = new pc.Entity();
@@ -146,26 +174,14 @@ class WorldScreenExample extends Example {
                 worldPosition.y += 0.6; // slightly above the player's head
 
                 // convert to screen position
-                const screenPos = camera.camera.worldToScreen(worldPosition);
+                const screenPosition = worldToScreenSpace(worldPosition, camera.camera, screen.screen);
 
-                if (screenPos.z > 0) {
+                if (screenPosition.z > 0) {
                     // if world position is in front of the camera, show it
                     playerInfo.enabled = true;
 
-                    // take pixel ratio into account
-                    const pixelRatio = app.graphicsDevice.maxPixelRatio;
-                    screenPos.x *= pixelRatio;
-                    screenPos.y *= pixelRatio;
-
-                    // account for screen scalng
-                    // @ts-ignore engine-tsd
-                    const scale = screen.screen.scale;
-
-                    // invert the y position
-                    screenPos.y = screen.screen.resolution.y - screenPos.y;
-
                     // set the UI position
-                    playerInfo.setLocalPosition(screenPos.x / scale, screenPos.y / scale, 0);
+                    playerInfo.setLocalPosition(screenPosition);
                 } else {
                     // if world position is actually *behind* the camera, hide the UI
                     playerInfo.enabled = false;
