@@ -35,13 +35,13 @@ class StandardMaterialOptionsBuilder {
 
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
-        this._updateSharedOptions(options, stdMat, objDefs, pass);
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
     updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
-        this._updateSharedOptions(options, stdMat, objDefs, pass);
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         options.useTexCubeLod = device.useTexCubeLod;
         this._updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128);
         this._updateMaterialOptions(options, stdMat);
@@ -54,7 +54,7 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
-    _updateSharedOptions(options, stdMat, objDefs, pass) {
+    _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.pass = pass;
         options.alphaTest = stdMat.alphaTest > 0;
         options.forceFragmentPrecision = stdMat.forceFragmentPrecision || "";
@@ -70,6 +70,14 @@ class StandardMaterialOptionsBuilder {
         options.useMorphTextureBased = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
 
         options.nineSlicedMode = stdMat.nineSlicedMode || 0;
+
+        // clustered lighting features (in shared options as shadow pass needs this too)
+        if (scene.clusteredLightingEnabled) {
+            options.clusteredLightingEnabled = true;
+            options.clusteredLightingCookiesEnabled = scene.clusteredLightingCookiesEnabled;
+            options.clusteredLightingShadowsEnabled = scene.clusteredLightingShadowsEnabled;
+            options.clusteredLightingAreaLightsEnabled = scene.clusteredLightingAreaLightsEnabled;
+        }
     }
 
     _updateUVOptions(options, stdMat, objDefs, minimalOptions) {
@@ -203,14 +211,6 @@ class StandardMaterialOptionsBuilder {
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
         options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
-
-        // clustered lighting features
-        if (scene.clusteredLightingEnabled) {
-            options.clusteredLightingEnabled = true;
-            options.clusteredLightingCookiesEnabled = scene.clusteredLightingCookiesEnabled;
-            options.clusteredLightingShadowsEnabled = scene.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.clusteredLightingAreaLightsEnabled;
-        }
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
