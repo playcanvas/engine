@@ -446,21 +446,16 @@ const standard = {
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAntialias = false;
-            options.prefilteredCubemap = false;
-            options.dpAtlas = false;
-            options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        const cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
-        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas || options.envAtlasFormat;
-        const useTexCubeLod = options.useTexCubeLod;
+        const cubemapReflection = options.cubeMap && !options.sphereMap;
+        const reflections = options.sphereMap || cubemapReflection || options.envAtlasFormat;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
-        if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
-        const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular ||
+        const needsNormal = lighting || reflections || options.heightMap || options.enableGGXSpecular ||
                             (LayerComposition.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
         this.options = options;
@@ -1057,7 +1052,7 @@ const standard = {
         code += chunks.decodePS;
 
         if (options.useRgbm) code += chunks.rgbmPS;
-        if (cubemapReflection || options.prefilteredCubemap) {
+        if (cubemapReflection) {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
@@ -1135,25 +1130,11 @@ const standard = {
             let scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
             scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
             code += scode;
-        } else if (cubemapReflection) {
-            if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-
-                } else {
-                    code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                }
-            } else {
-                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                                                        options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
-            }
-        } else if (options.dpAtlas) {
-            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
         } else if (options.envAtlasFormat) {
             code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
         }
 
-        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+        if (cubemapReflection || options.sphereMap || options.envAtlasFormat) {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
@@ -1228,7 +1209,7 @@ const standard = {
             }
 
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
-            if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
+            if (options.sphereMap || cubemapReflection || options.envAtlasFormat || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy && !hasAreaLights) {
                         // NB if there are area lights, energy conservation is done differently
@@ -1263,17 +1244,7 @@ const standard = {
         }
 
         if (addAmbient) {
-            const ambientDecode = options.rgbmAmbient ? "decodeRGBM" : (options.hdrAmbient ? "" : "gammaCorrectInput");
-
-            if (options.ambientSH) {
-                code += chunks.ambientSHPS;
-            } else if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, ambientDecode);
-                } else {
-                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, ambientDecode);
-                }
-            } else if (options.envAtlasFormat) {
+            if (options.envAtlasFormat) {
                 code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
             } else {
                 code += chunks.ambientConstantPS;
@@ -1448,7 +1419,7 @@ const standard = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap || options.dpAtlas || options.envAtlasFormat) {
+            if (cubemapReflection || options.sphereMap || options.envAtlasFormat) {
                 if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }
@@ -1668,7 +1639,7 @@ const standard = {
                 }
             }
 
-            if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
+            if ((cubemapReflection || options.sphereMap || options.envAtlasFormat) && options.refraction) {
                 code += "   addRefraction();\n";
             }
         }

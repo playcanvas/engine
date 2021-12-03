@@ -478,6 +478,21 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
+// scene.skyboxPrefiltered**** are deprecated
+['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
+    Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
+        get: function () {
+            DeprecatedLog.log(`DEPRECATED: pc.Scene#skyboxPrefiltered${size} is deprecated.`);
+            return this._prefilteredCubemaps[index];
+        },
+        set: function (value) {
+            DeprecatedLog.log(`DEPRECATED: pc.Scene#skyboxPrefiltered${size} is deprecated.`);
+            this._prefilteredCubemaps[index] = value;
+            this.updateShaders = true;
+        }
+    });
+});
+
 Object.defineProperty(Batch.prototype, 'model', {
     get: function () {
         DeprecatedLog.log('DEPRECATED: pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');

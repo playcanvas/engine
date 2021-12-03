@@ -161,8 +161,6 @@ class ProgramLibrary {
                         if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
                             opt[p] = defaultMat[p];
                     }
-                    // Patch device specific properties
-                    opt.useTexCubeLod = this._device.useTexCubeLod;
                 }
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }

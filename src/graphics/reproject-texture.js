@@ -101,6 +101,7 @@ function generateGGXData(numSamples, roughness) {
  * @param {number} [options.numSamples] - Optional number of samples (default is 1024).
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert', 'phong', 'ggx'. Default depends on specularPower.
+ * @param {Vec4} [options.rect] - Optional viewport rectangle.
  */
 function reprojectTexture(source, target, options = {}) {
     // maintain backwards compatibility with previous function signature
@@ -201,7 +202,7 @@ function reprojectTexture(source, target, options = {}) {
             constantParams.setValue(params);
             constantParams2.setValue(params2);
 
-            drawQuadWithShader(device, renderTarget, shader);
+            drawQuadWithShader(device, renderTarget, shader, options?.rect);
 
             renderTarget.destroy();
         }

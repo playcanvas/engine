@@ -1,7 +1,8 @@
+import { Vec4 } from '../math/vec4.js';
 import { Texture } from './texture.js';
-import { RenderTarget } from './render-target.js';
 import { reprojectTexture } from './reproject-texture.js';
 import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
+    TEXTUREPROJECTION_EQUIRECT,
     ADDRESS_CLAMP_TO_EDGE,
     PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from './constants';
 
@@ -32,7 +33,7 @@ const lightingPixelFormat = (device) => {
     return PIXELFORMAT_R8_G8_B8_A8;
 };
 
-const createCubemap = (device, size, format) => {
+const createCubemap = (device, size, format, mipmaps) => {
     return new Texture(device, {
         name: `lighting-${size}`,
         cubemap: true,
@@ -43,171 +44,37 @@ const createCubemap = (device, size, format) => {
         addressU: ADDRESS_CLAMP_TO_EDGE,
         addressV: ADDRESS_CLAMP_TO_EDGE,
         fixCubemapSeams: fixCubemapSeams,
-        mipmaps: false
+        mipmaps: !!mipmaps
     });
-};
-
-// copy a texture into one of the target's mipmaps (target level is calculated from mipmap
-// texture size)
-// target and mipmap can be either 2d or cubemap textures
-// this is the slow version. it downloads the GPU data to CPU and then uploads it again to
-// GPU.
-const copyMipmapSlow = (target, mipmap) => {
-    // allocate buffer for reading back the texture data
-    const allocData = (texture) => {
-        switch (texture.format) {
-            case PIXELFORMAT_RGBA16F:
-                return new Uint16Array(texture.width * texture.height * 4);
-            case PIXELFORMAT_RGBA32F:
-                return new Float32Array(texture.width * texture.height * 4);
-            default:
-                return new Uint8ClampedArray(texture.width * texture.height * 4);
-        }
-    };
-
-    // read texture data of the given texture face
-    const readPixels = (texture, face, data) => {
-        const device = texture.device;
-        const rt = new RenderTarget({ colorBuffer: texture, face: face, depth: false });
-        device.setFramebuffer(rt._glFrameBuffer);
-        device.initRenderTarget(rt);
-        device.gl.readPixels(0, 0, texture.width, texture.height, texture._glFormat, texture._glPixelType, data);
-        rt.destroy();
-    };
-
-    const device = target.device;
-    const gl = device.gl;
-    const level = calcLevels(target.width, target.height) - calcLevels(mipmap.width, mipmap.height);
-    const data = allocData(mipmap);
-
-    for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
-        const glTarget = target.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + f : gl.TEXTURE_2D;
-
-        // read data back to CPU
-        readPixels(mipmap, f, data);
-
-        device.setTexture(target, 0);
-        gl.texImage2D(
-            glTarget,
-            level,
-            target._glInternalFormat,
-            mipmap.width,
-            mipmap.height,
-            0,
-            mipmap._glFormat,
-            mipmap._glPixelType,
-            data
-        );
-    }
-};
-
-// copy mipmap texture into one of the target's mipmaps (level is calculated from texture sizes)
-// target and mipmap can be 2d or cubemap textures
-const copyMipmap = (target, mipmap) => {
-    const device = target.device;
-
-    if (!device.webgl2) {
-        // copying directly from framebuffer to texture results in safari crashing
-        // so for now we use the slow version.
-        return copyMipmapSlow(target, mipmap);
-    }
-
-    // this version should be much faster, but crashes safari
-    const gl = device.gl;
-    const level = calcLevels(target.width, target.height) - calcLevels(mipmap.width, mipmap.height);
-
-    const oldRt = device.renderTarget;
-
-    for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
-        const glTarget = target.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + f : gl.TEXTURE_2D;
-        const renderTarget = new RenderTarget({
-            colorBuffer: mipmap,
-            face: f,
-            depth: false
-        });
-
-        // get the device to create gl interfaces
-        device.setRenderTarget(renderTarget);
-        device.updateBegin();
-
-        device.setTexture(target, 0);
-
-        // create the target mipmap level
-        gl.texImage2D(
-            glTarget,
-            level,
-            mipmap._glInternalFormat,
-            mipmap.width,
-            mipmap.height,
-            0,
-            mipmap._glFormat,
-            mipmap._glPixelType,
-            null
-        );
-
-        // copy it
-        gl.copyTexImage2D(
-            glTarget,
-            level,
-            mipmap._glInternalFormat,
-            0, 0, mipmap.width, mipmap.height,
-            0
-        );
-
-        device.updateEnd();
-        renderTarget.destroy();
-    }
-
-    // restore render target
-    device.setRenderTarget(oldRt);
-    device.updateBegin();
 };
 
 // generate mipmaps for the given target texture
 // target is either 2d equirect or cubemap with mipmaps = false
 const generateMipmaps = (target) => {
     const device = target.device;
-    const gl = device.gl;
-    const numLevels = calcLevels(target.width, target.height);
 
-    let prevLevel = null;
-    for (let i = 1; i < numLevels; ++i) {
-        const level = new Texture(device, {
-            name: target.name + '-tmp-' + i,
-            cubemap: target.cubemap,
-            width: Math.max(1, Math.floor(target.width >> i)),
-            height: Math.max(1, Math.floor(target.height >> i)),
-            format: target.format,
-            type: target.type,
-            addressU: target.addressU,
-            addressV: target.addressV,
-            fixCubemapSeams: target.fixCubemapSeams,
-            mipmaps: false
-        });
+    // create mipmapped result
+    const result = new Texture(device, {
+        name: target.name + '-mipmaps',
+        cubemap: target.cubemap,
+        width: target.width,
+        height: target.height,
+        format: target.format,
+        type: target.type,
+        addressU: target.addressU,
+        addressV: target.addressV,
+        fixCubemapSeams: target.fixCubemapSeams,
+        mipmaps: true
+    });
 
-        // downsample texture using single sample reproject
-        reprojectTexture(prevLevel || target, level, {
-            numSamples: 1
-        });
+    // copy top level
+    reprojectTexture(target, result, {
+        numSamples: 1
+    });
 
-        // copy into target's mipmap
-        copyMipmap(target, level);
+    target.destroy();
 
-        if (prevLevel) {
-            prevLevel.destroy();
-        }
-        prevLevel = level;
-    }
-
-    if (prevLevel) {
-        prevLevel.destroy();
-    }
-
-    // set filtering while bypassing the engine
-    device.setTexture(target, 0);
-    gl.texParameteri(target._glTarget, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(target._glTarget, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    target._mipmaps = true;
+    return result;
 };
 
 // helper functions to support prefiltering lighting data
@@ -222,24 +89,8 @@ class EnvLighting {
      * @returns {Texture} The resulting cubemap.
      */
     static generateSkyboxCubemap(source, size) {
-        if (!size) {
-            size = source.cubemap ? source.width : source.width / 4;
-        }
-
         const device = source.device;
-
-        // generate faces cubemap
-        const result = new Texture(device, {
-            name: 'skyboxFaces',
-            cubemap: true,
-            width: size,
-            height: size,
-            type: TEXTURETYPE_RGBM,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            fixCubemapSeams: fixCubemapSeams,
-            mipmaps: false
-        });
+        const result = createCubemap(device, size || (source.cubemap ? source.width : source.width / 4), PIXELFORMAT_R8_G8_B8_A8, false);
 
         reprojectTexture(source, result, {
             numSamples: 1024
@@ -258,20 +109,8 @@ class EnvLighting {
      */
     static generateLightingSource(source) {
         const device = source.device;
-        const format = lightingSourcePixelFormat(device);
 
-        const result = new Texture(device, {
-            name: 'lightingSource',
-            cubemap: true,
-            width: 128,
-            height: 128,
-            format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            fixCubemapSeams: fixCubemapSeams,
-            mipmaps: false
-        });
+        const result = createCubemap(device, 128, lightingSourcePixelFormat(device), false);
 
         // copy into top level
         reprojectTexture(source, result, {
@@ -279,90 +118,72 @@ class EnvLighting {
         });
 
         // generate mipmaps
-        generateMipmaps(result);
-
-        return result;
+        return generateMipmaps(result);
     }
 
     /**
      * @private
      * @function
-     * @name generateReflection
-     * @description Generate a prefiltered reflection texture for use in IBL.
-     * @param {Texture} source - The source lighting texture, as returned from generateLightingSource.
-     * @param {object} [options] - The optional options object.
-     * @param {number} [options.numSamples] - Number of samples. Default is 1024.
-     * @param {string} [options.distribution] - The specular distribution, either 'phong' or 'ggx'. Default is 'ggx'.
-     * @returns {Texture} The prefiltered cubemap
+     * @name generateAtlas
+     * @description Generate the environment lighting atlas containing prefiltered reflections and ambient.
+     * @param {Texture} source - The source lighting texture, generated by generateLightingSource.
+     * @param {object} options - Specify prefilter options.
+     * @returns {Texture} The resulting atlas
      */
-    static generateReflection(source, options) {
+    static generateAtlas(source, options) {
         const device = source.device;
         const format = lightingPixelFormat(device);
-        const result = createCubemap(device, 128, format);
 
-        // generate the top level specular - just a copy of source
-        reprojectTexture(source, result, {
-            numSamples: 1
+        const result = options?.target || new Texture(device, {
+            width: 512,
+            height: 512,
+            format: format,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            projection: TEXTUREPROJECTION_EQUIRECT,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            mipmaps: false
         });
 
-        // generate convolved mipmaps
+        const rect = new Vec4(0, 0, 512, 256);
+
+        // generate top-level reflection
+        reprojectTexture(source, result, {
+            numSamples: 1,
+            rect: rect
+        });
+
+        // generate blurry reflections
         const levels = calcLevels(result.width, result.height);
         for (let i = 1; i < levels; ++i) {
-            const level = createCubemap(device, Math.max(1, result.width >> i), format);
-            reprojectTexture(source, level, {
+            rect.y += rect.w;
+            rect.z = Math.max(1, Math.floor(rect.z * 0.5));
+            rect.w = Math.max(1, Math.floor(rect.w * 0.5));
+            reprojectTexture(source, result, {
                 numSamples: options?.numSamples || 1024,
                 distribution: options?.distribution || 'ggx',
-                specularPower: Math.max(1, 2048 >> (i * 2))
+                specularPower: Math.max(1, 2048 >> (i * 2)),
+                rect: rect
             });
-            copyMipmap(result, level);
-            level.destroy();
         }
 
-        // set filtering while bypassing engine
-        device.setTexture(result, 0);
-        device.gl.texParameteri(result._glTarget, device.gl.TEXTURE_MAG_FILTER, device.gl.LINEAR);
-        device.gl.texParameteri(result._glTarget, device.gl.TEXTURE_MIN_FILTER, device.gl.LINEAR_MIPMAP_LINEAR);
-        result._mipmaps = true;
+        rect.set(256, 256, 64, 32);
 
-        return result;
-    }
-
-    /**
-     * @private
-     * @function
-     * @name generateAmbient
-     * @description Generate a prefiltered ambient texture for use in IBL.
-     * @param {Texture} source - The source lighting texture, as returned from generateLightingSource.
-     * @param {object} [options] - The optional options object.
-     * @param {number} [options.numSamples] - Number of samples to use. Default is 2048.
-     * @returns {Texture} The prefiltered cubemap
-     */
-    static generateAmbient(source, options) {
-        const device = source.device;
-        const format = lightingPixelFormat(device);
-        const result = createCubemap(device, 16, format);
-
-        reprojectTexture(source, result, {
-            numSamples: options?.numSamples || 2048,
-            distribution: 'lambert'
-        });
-
-        const levels = calcLevels(result.width, result.height);
-        for (let i = 1; i < levels; ++i) {
-            const level = createCubemap(device, Math.max(1, result.width >> i), format);
-            reprojectTexture(source, level, {
+        // generate ambient
+        if (options.legacyAmbient) {
+            reprojectTexture(source, result, {
+                numSamples: options?.numSamples || 4096,
+                distribution: 'phong',
+                specularPower: 2,
+                rect: rect
+            });
+        } else {
+            reprojectTexture(source, result, {
                 numSamples: options?.numSamples || 2048,
-                distribution: 'lambert'
+                distribution: 'lambert',
+                rect: rect
             });
-            copyMipmap(result, level);
-            level.destroy();
         }
-
-        // set filtering while bypassing engine
-        device.setTexture(result, 0);
-        device.gl.texParameteri(result._glTarget, device.gl.TEXTURE_MAG_FILTER, device.gl.LINEAR);
-        device.gl.texParameteri(result._glTarget, device.gl.TEXTURE_MIN_FILTER, device.gl.LINEAR_MIPMAP_LINEAR);
-        result._mipmaps = true;
 
         return result;
     }
@@ -370,26 +191,55 @@ class EnvLighting {
     /**
      * @private
      * @function
-     * @name generateAmbientLegacy
-     * @description Generate a legacy prefiltered ambient texture for use in IBL.
-     * @param {Texture} source - The source lighting texture, as returned from generateLightingSource.
-     * @param {object} [options] - The optional options object.
-     * @param {number} [options.numSamples] - Number of samples to use. Default is 4096.
-     * @returns {Texture} The prefiltered cubemap
+     * @name packPrefiltered
+     * @description Generate the environment lighting atlas from prefiltered cubemap data.
+     * @param {Texture[]} sources - Array of 6 prefiltered textures.
+     * @param {object} options - The options object
+     * @returns {Texture} The resulting atlas
      */
-    static generateAmbientLegacy(source, options) {
-        const device = source.device;
+    static generatePrefilteredAtlas(sources, options) {
+        const device = sources[0].device;
         const format = lightingPixelFormat(device);
-        const result = createCubemap(device, 16, format);
 
-        reprojectTexture(source, result, {
-            numSamples: options?.numSamples || 4096,
-            distribution: 'phong',
-            specularPower: 2
+        const result = options?.target || new Texture(device, {
+            width: 512,
+            height: 512,
+            format: format,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            projection: TEXTUREPROJECTION_EQUIRECT,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            mipmaps: false
         });
 
-        // generate mipmaps
-        generateMipmaps(result);
+        const rect = new Vec4(0, 0, 512, 256);
+
+        // copy blurry reflections
+        for (let i = 0; i < sources.length; ++i) {
+            reprojectTexture(sources[i], result, {
+                numSamples: 1,
+                rect: rect
+            });
+            rect.y += rect.w;
+            rect.z = Math.max(1, Math.floor(rect.z * 0.5));
+            rect.w = Math.max(1, Math.floor(rect.w * 0.5));
+        }
+
+        rect.set(256, 256, 64, 32);
+
+        // generate ambient
+        if (options.legacyAmbient) {
+            reprojectTexture(sources[5], result, {
+                numSamples: 1,
+                rect: rect
+            });
+        } else {
+            reprojectTexture(sources[0], result, {
+                numSamples: options?.numSamples || 2048,
+                distribution: 'lambert',
+                rect: rect
+            });
+        }
 
         return result;
     }

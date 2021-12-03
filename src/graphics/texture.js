@@ -417,8 +417,6 @@ class Texture {
     set mipmaps(v) {
         if (this._mipmaps !== v) {
             this._mipmaps = v;
-            this._minFilterDirty = true;
-
             if (v) this._needsMipmapsUpload = true;
         }
     }

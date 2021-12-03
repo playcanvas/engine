@@ -35,16 +35,15 @@ class StandardMaterialOptionsBuilder {
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
+    updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
         this._updateSharedOptions(options, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
+    updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
         this._updateSharedOptions(options, stdMat, objDefs, pass);
-        options.useTexCubeLod = device.useTexCubeLod;
-        this._updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128);
+        this._updateEnvOptions(options, device, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
             if (options.gamma) options.gamma = GAMMA_SRGBHDR;
@@ -101,7 +100,7 @@ class StandardMaterialOptionsBuilder {
             (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor))) ? 3 : 0;
 
         let specularTint = false;
-        let useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap) || (!!stdMat.dpAtlas);
+        let useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap);
         useSpecular = useSpecular || (stdMat.useMetalness ? true : !(stdMat.specular.r === 0 && stdMat.specular.g === 0 && stdMat.specular.b === 0));
         useSpecular = useSpecular || stdMat.enableGGXSpecular;
         useSpecular = useSpecular || (stdMat.clearCoat > 0);
@@ -132,8 +131,6 @@ class StandardMaterialOptionsBuilder {
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.sphereMap = !!stdMat.sphereMap;
         options.cubeMap = !!stdMat.cubeMap;
-        options.dpAtlas = !!stdMat.dpAtlas;
-        options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.emissiveMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
@@ -167,52 +164,7 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
     }
 
-    _updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128) {
-        const rgbmAmbient = (prefilteredCubeMap128 && prefilteredCubeMap128.type === TEXTURETYPE_RGBM) ||
-            (stdMat.cubeMap && stdMat.cubeMap.type === TEXTURETYPE_RGBM) ||
-            (stdMat.dpAtlas && stdMat.dpAtlas.type === TEXTURETYPE_RGBM);
-
-        const hdrAmbient = (prefilteredCubeMap128 && (prefilteredCubeMap128.type === TEXTURETYPE_RGBM || prefilteredCubeMap128.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.cubeMap && (stdMat.cubeMap.type === TEXTURETYPE_RGBM || stdMat.cubeMap.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.dpAtlas && (stdMat.dpAtlas.type === TEXTURETYPE_RGBM || stdMat.dpAtlas.format === PIXELFORMAT_RGBA32F));
-
-        const rgbmReflection = (prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas && prefilteredCubeMap128.type === TEXTURETYPE_RGBM) ||
-            (stdMat.cubeMap && stdMat.cubeMap.type === TEXTURETYPE_RGBM) ||
-            (stdMat.sphereMap && stdMat.sphereMap.type === TEXTURETYPE_RGBM) ||
-            (stdMat.dpAtlas && stdMat.dpAtlas.type === TEXTURETYPE_RGBM);
-
-        const hdrReflection = ((prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas) ? prefilteredCubeMap128.type === TEXTURETYPE_RGBM || prefilteredCubeMap128.format === PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.cubeMap && (stdMat.cubeMap.type === TEXTURETYPE_RGBM || stdMat.cubeMap.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.sphereMap && (stdMat.sphereMap.type === TEXTURETYPE_RGBM || stdMat.sphereMap.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.dpAtlas && (stdMat.dpAtlas.type === TEXTURETYPE_RGBM || stdMat.dpAtlas.format === PIXELFORMAT_RGBA32F));
-
-        let globalSky128;
-        if (stdMat.useSkybox && scene._skyboxPrefiltered)
-            globalSky128 = scene._skyboxPrefiltered[0];
-
-        options.fog = stdMat.useFog ? scene.fog : "none";
-        options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
-        options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
-        options.rgbmAmbient = rgbmAmbient;
-        options.hdrAmbient = hdrAmbient;
-        options.rgbmReflection = rgbmReflection;
-        options.hdrReflection = hdrReflection;
-        options.useRgbm = rgbmReflection || rgbmAmbient || (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
-        options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
-        options.prefilteredCubemap = !!prefilteredCubeMap128;
-        options.skyboxIntensity = (scene.skyboxIntensity !== 1);
-
-        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
-
-        // clustered lighting features
-        if (LayerComposition.clusteredLightingEnabled && scene.layers) {
-            options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
-            options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
-        }
-
-        // handle env lighting
+    _updateEnvOptions(options, device, stdMat, scene) {
         const textureFormat = (texture) => {
             if (!texture) {
                 return null;
@@ -227,10 +179,29 @@ class StandardMaterialOptionsBuilder {
             }
 
             return texture.format === PIXELFORMAT_RGBA16F || texture.format === PIXELFORMAT_RGBA32F ? 'linear' : 'srgb';
+        };
+
+        options.fog = stdMat.useFog ? scene.fog : "none";
+        options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
+        options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
+        options.useRgbm = (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
+        options.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
+        options.skyboxIntensity = (scene.skyboxIntensity !== 1);
+
+        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
+        options.useCubeMapRotation = (!stdMat.cubeMap && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
+
+        // clustered lighting features
+        if (LayerComposition.clusteredLightingEnabled && scene.layers) {
+            options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
+            options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
+            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
 
         const envAtlas = stdMat.envAtlas || (stdMat.useSkybox ? scene.envAtlas : null);
         options.envAtlasFormat = textureFormat(envAtlas);
+        options.cubemapFormat = textureFormat(stdMat.cubeMap);
+        options.sphereMapFormat = textureFormat(stdMat.sphereMap);
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
