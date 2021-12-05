@@ -13,6 +13,7 @@ import { Component } from '../component.js';
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
 let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
+const quat = new Quat();
 
 /**
  * @component
@@ -804,8 +805,23 @@ class RigidBodyComponent extends Component {
         const pos = entity.getPosition();
         const rot = entity.getRotation();
 
-        ammoVec1.setValue(pos.x, pos.y, pos.z);
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        const data = entity.collision && entity.collision.data;
+        let lo, ao;
+
+        if (data) {
+            lo = data.linearOffset;
+            ao = data.angularOffset;
+            quat.copy(rot).mul(ao);
+        } else {
+            quat.copy(rot);
+        }
+
+        const x = lo ? pos.x + lo.x : pos.x;
+        const y = lo ? pos.y + lo.y : pos.y;
+        const z = lo ? pos.z + lo.z : pos.z;
+
+        ammoVec1.setValue(x, y, z);
+        ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);
@@ -853,12 +869,20 @@ class RigidBodyComponent extends Component {
             // state is technically redundant since the engine creates one for all bodies.
             const motionState = body.getMotionState();
             if (motionState) {
+                const entity = this.entity;
+                const data = entity.collision.data;
+                const lo = data.linearOffset;
+                const ao = data.angularOffset;
+
                 motionState.getWorldTransform(ammoTransform);
 
                 const p = ammoTransform.getOrigin();
                 const q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+
+                quat.set(q.x(), q.y(), q.z(), q.w()).invert().mul(ao);
+
+                entity.setPosition(p.x() - lo.x, p.y() - lo.y, p.z() - lo.z);
+                entity.setRotation(quat);
             }
         }
     }

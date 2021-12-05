@@ -63,6 +63,8 @@ class CollisionComponent extends Component {
 
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
+        this.on('set_linearOffset', this.onSetLinearOffset, this);
+        this.on('set_angularOffset', this.onSetAngularOffset, this);
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
@@ -119,6 +121,18 @@ class CollisionComponent extends Component {
     onSetHalfExtents(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && t === 'box') {
+            this.system.recreatePhysicalShapes(this);
+        }
+    }
+
+    onSetLinearOffset(name, oldValue, newValue) {
+        if (this.data.initialized) {
+            this.system.recreatePhysicalShapes(this);
+        }
+    }
+
+    onSetAngularOffset(name, oldValue, newValue) {
+        if (this.data.initialized) {
             this.system.recreatePhysicalShapes(this);
         }
     }

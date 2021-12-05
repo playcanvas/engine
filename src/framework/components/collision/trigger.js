@@ -1,5 +1,8 @@
 let ammoVec1, ammoQuat, ammoTransform;
 
+const quat = new Quat();
+
+import { Quat } from 'src/math/quat.js';
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
 
 /**
@@ -40,9 +43,13 @@ class Trigger {
 
             const pos = entity.getPosition();
             const rot = entity.getRotation();
+            const lo = data.linearOffset;
+            const ao = data.angularOffset;
+            
+            quat.copy(rot).mul(ao);
 
-            ammoVec1.setValue(pos.x, pos.y, pos.z);
-            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+            ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
+            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
 
             ammoTransform.setOrigin(ammoVec1);
             ammoTransform.setRotation(ammoQuat);
@@ -77,11 +84,17 @@ class Trigger {
     }
 
     _getEntityTransform(transform) {
+        const data = this.component.data;
+        const lo = data.linearOffset;
+        const ao = data.angularOffset;
+
         const pos = this.entity.getPosition();
         const rot = this.entity.getRotation();
 
-        ammoVec1.setValue(pos.x, pos.y, pos.z);
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        quat.copy(rot).mul(ao);
+
+        ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
+        ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);
