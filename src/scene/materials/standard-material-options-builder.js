@@ -112,37 +112,35 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat) {
-        const diffuseTint = ((stdMat.diffuse.r !== 1 || stdMat.diffuse.g !== 1 || stdMat.diffuse.b !== 1) &&
-            (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor))) ? 3 : 0;
+        const notWhite = (color) => {
+            return color.r !== 1 || color.g !== 1 || color.b !== 1;
+        };
 
-        let specularTint = false;
-        let useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap);
-        useSpecular = useSpecular || (stdMat.useMetalness ? true : !(stdMat.specular.r === 0 && stdMat.specular.g === 0 && stdMat.specular.b === 0));
-        useSpecular = useSpecular || stdMat.enableGGXSpecular;
-        useSpecular = useSpecular || (stdMat.clearCoat > 0);
+        const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor)) &&
+                            notWhite(stdMat.diffuse);
 
-        if (useSpecular) {
-            if ((stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) && !stdMat.useMetalness) {
-                specularTint = stdMat.specular.r !== 1 || stdMat.specular.g !== 1 || stdMat.specular.b !== 1;
-            }
-        }
+        const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
+                            notWhite(stdMat.specular) ||
+                            stdMat.enableGGXSpecular ||
+                            (stdMat.clearCoat > 0));
 
-        let emissiveTint = stdMat.emissiveMap ? 0 : 3;
-        if (!emissiveTint) {
-            emissiveTint = (stdMat.emissive.r !== 1 || stdMat.emissive.g !== 1 || stdMat.emissive.b !== 1 || stdMat.emissiveIntensity !== 1) && stdMat.emissiveTint;
-            emissiveTint = emissiveTint ? 3 : (stdMat.emissiveIntensity !== 1 ? 1 : 0);
-        }
+        const specularTint = useSpecular && !stdMat.useMetalness &&
+                             (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
+                             notWhite(stdMat.specular);
+
+        const emissiveTintColor = notWhite(stdMat.emissive) && (stdMat.emissiveTint || !stdMat.emissiveMap);
+        const emissiveTintIntensity = (stdMat.emissiveIntensity !== 1);
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
         options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== BLEND_NONE) ? 1 : 0;
         options.blendMapsWithColors = true;
         options.ambientTint = stdMat.ambientTint;
-        options.diffuseTint = diffuseTint;
-        options.specularTint = specularTint ? 3 : 0;
+        options.diffuseTint = diffuseTint ? 2 : 0;
+        options.specularTint = specularTint ? 2 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;
-        options.emissiveTint = emissiveTint;
+        options.emissiveTint = (emissiveTintColor ? 2 : 0) + (emissiveTintIntensity ? 1 : 0);
         options.alphaToCoverage = stdMat.alphaToCoverage;
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.ambientSH = !!stdMat.ambientSH;

@@ -214,8 +214,8 @@ const standard = {
             subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
         }
 
-        const isFloatTint = (tintOption === 1);
-        const isVecTint = (tintOption === 3);
+        const isFloatTint = !!(tintOption & 1);
+        const isVecTint = !!(tintOption & 2);
 
         subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
         return subCode.replace(/\$/g, "");

@@ -485,7 +485,7 @@ class StandardMaterial extends Material {
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
         }
-        if (this.emissiveMap) {
+        if (this.emissiveIntensity !== 1) {
             this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
         }
 
@@ -764,9 +764,7 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     });
 }
 
-function _defineColor(name, defaultValue, hasIntensity) {
-    const intensityName = `${name}Intensity`;
-
+function _defineColor(name, defaultValue) {
     defineProp({
         name: name,
         defaultValue: defaultValue,
@@ -783,28 +781,20 @@ function _defineColor(name, defaultValue, hasIntensity) {
     defineUniform(name, (material, device, scene) => {
         const uniform = material._allocUniform(name, () => new Float32Array(3));
         const color = material[name];
-        const intensity = hasIntensity ? material[intensityName] : 1.0;
         const gamma = material.useGammaTonemap && scene.gammaCorrection;
 
         if (gamma) {
-            uniform[0] = Math.pow(color.r, 2.2) * intensity;
-            uniform[1] = Math.pow(color.g, 2.2) * intensity;
-            uniform[2] = Math.pow(color.b, 2.2) * intensity;
+            uniform[0] = Math.pow(color.r, 2.2);
+            uniform[1] = Math.pow(color.g, 2.2);
+            uniform[2] = Math.pow(color.b, 2.2);
         } else {
-            uniform[0] = color.r * intensity;
-            uniform[1] = color.g * intensity;
-            uniform[2] = color.b * intensity;
+            uniform[0] = color.r;
+            uniform[1] = color.g;
+            uniform[2] = color.b;
         }
 
         return uniform;
     });
-
-    if (hasIntensity) {
-        defineProp({
-            name: intensityName,
-            defaultValue: 1
-        });
-    }
 }
 
 function _defineFloat(name, defaultValue, getUniformFunc) {
@@ -870,7 +860,8 @@ function _defineMaterialProps() {
     _defineColor("ambient", new Color(0.7, 0.7, 0.7));
     _defineColor("diffuse", new Color(1, 1, 1));
     _defineColor("specular", new Color(0, 0, 0));
-    _defineColor("emissive", new Color(0, 0, 0), true);
+    _defineColor("emissive", new Color(0, 0, 0));
+    _defineFloat("emissiveIntensity", 1);
 
     _defineFloat("shininess", 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
