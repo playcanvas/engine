@@ -290,6 +290,7 @@ let _params = new Set();
  * - alphaFade: fade value. See {@link Material#alphaFade}.
  * - sphereMap: if {@link StandardMaterial#sphereMap} is used.
  * - cubeMap: if {@link StandardMaterial#cubeMap} is used.
+ * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.
  * - useSpecular: if any specular or reflections are needed at all.
  * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
  * - emissiveFormat: how emissiveMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
@@ -509,6 +510,10 @@ class StandardMaterial extends Material {
 
         for (const p in _matTex2D) {
             this._updateMap(p);
+        }
+
+        if (this.ambientSH) {
+            this._setParameter('ambientSH[0]', this.ambientSH);
         }
 
         if (this.normalMap) {
@@ -892,6 +897,8 @@ function _defineMaterialProps() {
     _defineFloat("clearCoatGlossiness", 1);
     _defineFloat("clearCoatBumpiness", 1);
     _defineFloat("aoUvSet", 0, null); // legacy
+
+    _defineObject("ambientSH");
 
     _defineObject("cubeMapProjectionBox", (material, device, scene) => {
         const uniform = material._allocUniform('cubeMapProjectionBox', () => {

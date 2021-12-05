@@ -457,6 +457,7 @@ const standard = {
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAntialias = false;
+            options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
@@ -464,7 +465,7 @@ const standard = {
         const reflections = !!(options.envAtlasFormat || options.cubeMapFormat || options.sphereMapFormat);
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
-        const needsNormal = lighting || reflections || options.heightMap || options.enableGGXSpecular ||
+        const needsNormal = lighting || reflections || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
                             (LayerComposition.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
         this.options = options;
@@ -1256,7 +1257,9 @@ const standard = {
         }
 
         if (addAmbient) {
-            if (options.envAtlasFormat) {
+            if (options.ambientSH) {
+                code += chunks.ambientSHPS;
+            } else if (options.envAtlasFormat) {
                 code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
             } else {
                 code += chunks.ambientConstantPS;
