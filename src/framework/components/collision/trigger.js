@@ -1,6 +1,6 @@
 let ammoVec1, ammoQuat, ammoTransform;
 
-import { Quat } from 'src/math/quat.js';
+import { Quat } from '../../../math/quat.js';
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
 
 const quat = new Quat();
