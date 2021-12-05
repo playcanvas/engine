@@ -1,4 +1,4 @@
-import { Quat } from 'src/math/quat.js';
+import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
 
 class CollisionComponentData {
