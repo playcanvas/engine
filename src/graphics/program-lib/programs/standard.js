@@ -462,7 +462,7 @@ const standard = {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        const reflections = !!(options.envAtlasFormat || options.cubeMapFormat || options.sphereMapFormat);
+        const reflections = !!options.reflectionSource;
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
         const needsNormal = lighting || reflections || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
@@ -556,7 +556,7 @@ const standard = {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             codeBody += "   vNormalW = getNormal();\n";
 
-            if (options.sphereMapFormat && device.fragmentUniformsCount <= 16) {
+            if (options.reflectionSource === 'sphereMap' && device.fragmentUniformsCount <= 16) {
                 code += chunks.viewNormalVS;
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
@@ -1065,9 +1065,6 @@ const standard = {
         code += chunks.decodePS;
 
         if (options.useRgbm) code += chunks.rgbmPS;
-        if (options.cubeMapFormat) {
-            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
-        }
 
         if (options.useCubeMapRotation) {
             code += "#define CUBEMAP_ROTATION\n";
@@ -1137,13 +1134,14 @@ const standard = {
             }
         }
 
-        if (options.envAtlasFormat) {
-            code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
-        } else if (options.cubeMapFormat) {
-            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.cubeMapFormat));
-        } else if (options.sphereMapFormat) {
+        if (options.reflectionSource === 'envAtlas') {
+            code += chunks.envReflectionPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionFormat));
+        } else if (options.reflectionSource === 'cubeMap') {
+            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionFormat));
+        } else if (options.reflectionSource === 'sphereMap') {
             const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.sphereMapFormat));
+            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.reflectionFormat));
         }
 
         if (reflections) {
@@ -1257,10 +1255,10 @@ const standard = {
         }
 
         if (addAmbient) {
-            if (options.ambientSH) {
+            if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
-            } else if (options.envAtlasFormat) {
-                code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.envAtlasFormat));
+            } else if (options.ambientSource === 'envAtlas') {
+                code += chunks.envAmbientPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientFormat));
             } else {
                 code += chunks.ambientConstantPS;
             }

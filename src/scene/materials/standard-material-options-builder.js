@@ -195,17 +195,37 @@ class StandardMaterialOptionsBuilder {
             options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
 
-        // only one of these are ever used, in the following order of priority:
-        // stdMat.envAtlas, stdMat.cubeMap, stdMat.sphereMap, scene.envAtlas
-        options.envAtlasFormat = this._textureFormat(stdMat.envAtlas);
-        options.cubeMapFormat = options.envAtlasFormat ? null : this._textureFormat(stdMat.cubeMap);
-        options.sphereMapFormat = options.cubeMapFormat ? null : this._textureFormat(stdMat.sphereMap);
+        // source of environment reflections is as follows:
+        if (stdMat.envAtlas) {
+            options.reflectionSource = 'envAtlas';
+            options.reflectionFormat = this._textureFormat(stdMat.envAtlas);
+        } else if (stdMat.cubeMap) {
+            options.reflectionSource = 'cubeMap';
+            options.reflectionFormat = this._textureFormat(stdMat.cubeMap);
+        } else if (stdMat.sphereMap) {
+            options.reflectionSource = 'sphereMap';
+            options.reflectionFormat = this._textureFormat(stdMat.sphereMap);
+        } else if (stdMat.useSkybox && scene.envAtlas) {
+            options.reflectionSource = 'envAtlas';
+            options.reflectionFormat = this._textureFormat(scene.envAtlas);
+        } else {
+            options.reflectionSource = null;
+            options.reflectionFormat = null;
+        }
 
-        // no material overrides, fall back to scene envAtlas
-        if (options.envAtlasFormat === null &&
-            options.cubeMapFormat === null &&
-            options.sphereMapFormat === null) {
-            options.envAtlasFormat = this._textureFormat(stdMat.useSkybox ? scene.envAtlas : null);
+        // source of environment ambient is as follows:
+        if (stdMat.ambientSH) {
+            options.ambientSource = 'ambientSH';
+            options.ambientFormat = null;
+        } else {
+            const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
+            if (envAtlas) {
+                options.ambientSource = 'envAtlas';
+                options.ambientFormat = this._textureFormat(envAtlas);
+            } else {
+                options.ambientSource = 'constant';
+                options.ambientFormat = null;
+            }
         }
     }
 
