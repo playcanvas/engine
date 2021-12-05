@@ -1,9 +1,9 @@
 let ammoVec1, ammoQuat, ammoTransform;
 
-const quat = new Quat();
-
 import { Quat } from 'src/math/quat.js';
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
+
+const quat = new Quat();
 
 /**
  * @private
@@ -45,7 +45,7 @@ class Trigger {
             const rot = entity.getRotation();
             const lo = data.linearOffset;
             const ao = data.angularOffset;
-            
+
             quat.copy(rot).mul(ao);
 
             ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
