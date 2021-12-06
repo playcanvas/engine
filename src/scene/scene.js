@@ -229,6 +229,19 @@ class Scene extends EventHandler {
         this.worldClustersParams.shadowAtlasResolution = value;
     }
 
+    get shadowType() {
+        return this.worldClustersParams.shadowType;
+    }
+
+    set shadowType(value) {
+        if (this.worldClustersParams.shadowType !== value) {
+            this.worldClustersParams.shadowType = value;
+
+            // lit shaders need to be rebuilt
+            this._layers._dirtyLights = true;
+        }
+    }
+
     get cookiesEnabled() {
         return this.worldClustersParams.cookiesEnabled;
     }

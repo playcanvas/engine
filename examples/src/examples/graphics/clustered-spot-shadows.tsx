@@ -1,8 +1,20 @@
 import React from 'react';
 // @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.prf.js';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import SelectInput from '@playcanvas/pcui/SelectInput/component';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
 
 class ClusteredSpotShadowsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -16,11 +28,33 @@ class ClusteredSpotShadowsExample extends Example {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Settings'>
+                {<LabelGroup text='Filter'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowType' }} type="number" options={[
+                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
+                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
+                        { v: pc.SHADOW_PCF5, t: 'PCF5' }
+                    ]} />
+                </LabelGroup>}
+                <LabelGroup text='ShadowRes'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowAtlasResolution' }} min={256} max={4096} precision={0}/>
+                </LabelGroup>
+            </Panel>
+        </>;
+    }
+
+    example(canvas: HTMLCanvasElement, assets: any, data: any): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
+
+        data.set('settings', {
+            shadowAtlasResolution: 1024,     // shadow map resolution storing all shadows
+            shadowType: pc.SHADOW_PCF3    // shadow filter type
+        });
 
         // setup skydome as ambient light
         app.scene.skyboxMip = 3;
@@ -40,12 +74,16 @@ class ClusteredSpotShadowsExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.maxLights = 16;
 
+        // enable clustered shadows (it's enabled by default as well)
+        // @ts-ignore engine-tsd
+        app.scene.shadowsEnabled = true;
+
         // enable clustered cookies
         // @ts-ignore engine-tsd
         app.scene.cookiesEnabled = true;
 
         // resolution of the shadow and cookie atlas
-        app.scene.shadowAtlasResolution = 2048;
+        app.scene.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
         app.scene.cookieAtlasResolution = 1500;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -157,6 +195,13 @@ class ClusteredSpotShadowsExample extends Example {
             nearClip: 0.1
         });
         app.root.addChild(camera);
+
+        // handle HUD changes - update properties on the scene
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+            // @ts-ignore
+            app.scene[pathArray[1]] = value;
+        });
 
         // Set an update function on the app's update event
         let time = 0;

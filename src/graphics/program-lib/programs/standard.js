@@ -19,7 +19,7 @@ import {
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
     SPECOCC_AO,
     SPECULAR_PHONG,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
 } from '../../../scene/constants.js';
 import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 
@@ -1169,6 +1169,7 @@ const standard = {
 
             // always include shadow chunks clustered lights support
             shadowTypeUsed[SHADOW_PCF3] = true;
+            shadowTypeUsed[SHADOW_PCF5] = true;
             usePerspZbufferShadow = true;
         }
 
@@ -1179,7 +1180,7 @@ const standard = {
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
             }
-            if (shadowTypeUsed[SHADOW_PCF5]) {
+            if (shadowTypeUsed[SHADOW_PCF5] && device.webgl2) {
                 code += chunks.shadowStandardGL2PS;
             }
             if (useVsm) {
@@ -1202,10 +1203,6 @@ const standard = {
             // otherwise bias is applied on render
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
-        }
-
-        if (options.clusteredLightingEnabled) {
-            code += chunks.clusteredLightShadowsPS;
         }
 
         if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
@@ -1315,12 +1312,16 @@ const standard = {
 
             if (options.clusteredLightingCookiesEnabled)
                 code += "\n#define CLUSTER_COOKIES";
-            if (options.clusteredLightingShadowsEnabled && !options.noShadow)
+            if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 code += "\n#define CLUSTER_SHADOWS";
+                code += "\n#define CLUSTER_SHADOW_TYPE_" + shadowTypeToString[options.clusteredLightingShadowType];
+            }
+
             if (options.clusteredLightingAreaLightsEnabled)
                 code += "\n#define CLUSTER_AREALIGHTS";
 
             code += LightsBuffer.shaderDefines;
+            code += chunks.clusteredLightShadowsPS;
             code += chunks.clusteredLightPS;
         }
 

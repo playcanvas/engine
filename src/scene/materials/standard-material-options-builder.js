@@ -76,6 +76,7 @@ class StandardMaterialOptionsBuilder {
             options.clusteredLightingEnabled = true;
             options.clusteredLightingCookiesEnabled = scene.cookiesEnabled;
             options.clusteredLightingShadowsEnabled = scene.shadowsEnabled;
+            options.clusteredLightingShadowType = scene.shadowType;
             options.clusteredLightingAreaLightsEnabled = scene.areaLightsEnabled;
         }
     }

@@ -197,7 +197,7 @@ class LightTextureAtlas {
         const lights = this.collectLights(spotLights, omniLights, worldClustersParams);
         if (lights.length > 0) {
 
-            // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (4 pixels - should be enough for PCF5)
+            // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (5 pixels is enough for PCF5)
             // note that this only fades / removes shadows on the edges, which is still not correct - a shader clipping is needed?
             const scissorOffset = 4 / this.shadowAtlasResolution;
             const scissorVec = new Vec4(scissorOffset, scissorOffset, -2 * scissorOffset, -2 * scissorOffset);

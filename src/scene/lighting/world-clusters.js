@@ -4,6 +4,7 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 import { PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
+import { Debug } from '../../core/debug.js';
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -175,11 +176,8 @@ class WorldClusters {
             const height = Math.ceil(totalPixels / width);
 
             // if the texture is allowed size
-            if (width > maxTextureSize || height > maxTextureSize) {
-                // #if _DEBUG
-                console.error("Clustered lights parameters cause the texture size to be over the limit, please adjust them.");
-                // #endif
-            }
+            Debug.assert(width <= maxTextureSize && height <= maxTextureSize,
+                         "Clustered lights parameters cause the texture size to be over the limit, please adjust them.");
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
