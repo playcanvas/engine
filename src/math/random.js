@@ -73,8 +73,9 @@ const random = {
         point.z = Math.sin(theta) * radius;
     },
 
+    // Calculate the radical inverse
+    // Based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
     radicalInverse: function (i) {
-        // Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
         let bits = ((i << 16) | (i >>> 16)) >>> 0;
         bits = (((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >>> 1)) >>> 0;
         bits = (((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >>> 2)) >>> 0;

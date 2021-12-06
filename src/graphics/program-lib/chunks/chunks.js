@@ -1,7 +1,6 @@
 import alphaTestPS from './alphaTest.frag';
 import ambientConstantPS from './ambientConstant.frag';
-import ambientPrefilteredCubePS from './ambientPrefilteredCube.frag';
-import ambientPrefilteredCubeLodPS from './ambientPrefilteredCubeLod.frag';
+import ambientEnvPS from './ambientEnv.frag';
 import ambientSHPS from './ambientSH.frag';
 import aoPS from './ao.frag';
 import aoSpecOccPS from './aoSpecOcc.frag';
@@ -41,14 +40,11 @@ import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
 import dilatePS from './dilate.frag';
 import bilateralDeNoisePS from './bilateralDeNoise.frag';
-import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
 import endVS from './end.vert';
-import envAmbientPS from './envAmbient.frag';
 import envConstPS from './envConst.frag';
 import envMultiplyPS from './envMultiply.frag';
-import envReflectionPS from './envReflection.frag';
 import extensionPS from './extension.frag';
 import extensionVS from './extension.vert';
 import falloffInvSquaredPS from './falloffInvSquared.frag';
@@ -65,7 +61,6 @@ import fullscreenQuadPS from './fullscreenQuad.frag';
 import fullscreenQuadVS from './fullscreenQuad.vert';
 import gamma1_0PS from './gamma1_0.frag';
 import gamma2_2PS from './gamma2_2.frag';
-import genParaboloidPS from './genParaboloid.frag';
 import gles3PS from './gles3.frag';
 import gles3VS from './gles3.vert';
 import glossPS from './gloss.frag';
@@ -146,9 +141,7 @@ import reflDirPS from './reflDir.frag';
 import reflDirAnisoPS from './reflDirAniso.frag';
 import reflectionCCPS from './reflectionCC.frag';
 import reflectionCubePS from './reflectionCube.frag';
-import reflectionDpAtlasPS from './reflectionDpAtlas.frag';
-import reflectionPrefilteredCubePS from './reflectionPrefilteredCube.frag';
-import reflectionPrefilteredCubeLodPS from './reflectionPrefilteredCubeLod.frag';
+import reflectionEnvPS from './reflectionEnv.frag';
 import reflectionSpherePS from './reflectionSphere.frag';
 import reflectionSphereLowPS from './reflectionSphereLow.frag';
 import refractionPS from './refraction.frag';
@@ -209,8 +202,7 @@ import viewNormalVS from './viewNormal.vert';
 const shaderChunks = {
     alphaTestPS: alphaTestPS,
     ambientConstantPS: ambientConstantPS,
-    ambientPrefilteredCubePS: ambientPrefilteredCubePS,
-    ambientPrefilteredCubeLodPS: ambientPrefilteredCubeLodPS,
+    ambientEnvPS: ambientEnvPS,
     ambientSHPS: ambientSHPS,
     aoPS: aoPS,
     aoSpecOccPS: aoSpecOccPS,
@@ -250,14 +242,11 @@ const shaderChunks = {
     dilatePS: dilatePS,
     bilateralDeNoisePS: bilateralDeNoisePS,
     decodePS: decodePS,
-    dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
     endVS: endVS,
-    envAmbientPS: envAmbientPS,
     envConstPS: envConstPS,
     envMultiplyPS: envMultiplyPS,
-    envReflectionPS: envReflectionPS,
     extensionPS: extensionPS,
     extensionVS: extensionVS,
     falloffInvSquaredPS: falloffInvSquaredPS,
@@ -274,7 +263,6 @@ const shaderChunks = {
     fullscreenQuadVS: fullscreenQuadVS,
     gamma1_0PS: gamma1_0PS,
     gamma2_2PS: gamma2_2PS,
-    genParaboloidPS: genParaboloidPS,
     gles3PS: gles3PS,
     gles3VS: gles3VS,
     glossPS: glossPS,
@@ -355,9 +343,7 @@ const shaderChunks = {
     reflDirAnisoPS: reflDirAnisoPS,
     reflectionCCPS: reflectionCCPS,
     reflectionCubePS: reflectionCubePS,
-    reflectionDpAtlasPS: reflectionDpAtlasPS,
-    reflectionPrefilteredCubePS: reflectionPrefilteredCubePS,
-    reflectionPrefilteredCubeLodPS: reflectionPrefilteredCubeLodPS,
+    reflectionEnvPS: reflectionEnvPS,
     reflectionSpherePS: reflectionSpherePS,
     reflectionSphereLowPS: reflectionSphereLowPS,
     refractionPS: refractionPS,
