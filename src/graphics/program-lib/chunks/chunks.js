@@ -136,7 +136,6 @@ import particle_TBNVS from './particle_TBN.vert';
 import particle_wrapVS from './particle_wrap.vert';
 import precisionTestPS from './precisionTest.frag';
 import precisionTest2PS from './precisionTest2.frag';
-import prefilterCubemapPS from './prefilterCubemap.frag';
 import reflDirPS from './reflDir.frag';
 import reflDirAnisoPS from './reflDirAniso.frag';
 import reflectionCCPS from './reflectionCC.frag';
@@ -338,7 +337,6 @@ const shaderChunks = {
     particle_wrapVS: particle_wrapVS,
     precisionTestPS: precisionTestPS,
     precisionTest2PS: precisionTest2PS,
-    prefilterCubemapPS: prefilterCubemapPS,
     reflDirPS: reflDirPS,
     reflDirAnisoPS: reflDirAnisoPS,
     reflectionCCPS: reflectionCCPS,

@@ -1073,6 +1073,10 @@ export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
     });
 }
 
+export function prefilterCubemap(options) {
+    Debug.deprecated('pc.prefilterCubemap is deprecated. Use pc.envLighting instead.');
+}
+
 export class AssetListLoader extends EventHandler {
     constructor(assetList, assetRegistry) {
         Debug.deprecated('pc.AssetListLoader is deprecated.');
