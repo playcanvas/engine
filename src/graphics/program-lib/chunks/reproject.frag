@@ -8,10 +8,8 @@
 //
 // When filtering:
 // NUM_SAMPLES - number of samples
-// NUM_SAMPLES_SQRT - sqrt of number of samples
 //
 // SUPPORTS_TEXLOD - whether supports texlod is supported
-//
 
 varying vec2 vUv0;
 
@@ -19,9 +17,9 @@ varying vec2 vUv0;
 uniform sampler2D sourceTex;
 uniform samplerCube sourceCube;
 
-// rnd
-uniform sampler2D rndTex;
-uniform vec2 rndTexSize;
+// samples
+uniform sampler2D samplesTex;
+uniform vec2 samplesTexInverseSize;
 
 // params:
 // x - target cubemap face 0..6
@@ -267,47 +265,6 @@ mat3 matrixFromVectorSlow(vec3 n) {
     return mat3(x, y, n);
 }
 
-vec2 rnd(int i, int numSamples) {
-    float u = (float(i) + 0.5) / rndTexSize.x;
-    float v = (floor(u) + 0.5) / rndTexSize.y;
-    vec4 raw = texture2D(rndTex, vec2(u, v));
-    return vec2(float(i) / float(numSamples), dot(raw, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0)));
-}
-
-// vec3 hemisphereSampleUniform(vec2 uv) {
-//     float phi = uv.y * 2.0 * PI;
-//     float cosTheta = 1.0 - uv.x;
-//     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-//     return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
-// }
-
-vec3 hemisphereSampleLambert(vec2 uv) {
-    float phi = uv.y * 2.0 * PI;
-    float cosTheta = sqrt(1.0 - uv.x);
-    float sinTheta = sqrt(uv.x);                // == sqrt(1.0 - cosTheta * cosTheta);
-    return normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
-}
-
-vec3 hemisphereSamplePhong(vec2 uv, float specPow) {
-    float phi = uv.y * 2.0 * PI;
-    float cosTheta = pow(1.0 - uv.x, 1.0 / (specPow + 1.0));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-    return normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
-}
-
-vec3 hemisphereSampleGGX(vec2 uv, float a) {
-    float phi = uv.y * 2.0 * PI;
-    float cosTheta = sqrt((1.0 - uv.x) / (1.0 + (a * a - 1.0) * uv.x));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-    return normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
-}
-
-float D_GGX(float NoH, float linearRoughness) {
-    float a = NoH * linearRoughness;
-    float k = linearRoughness / (1.0 - NoH * NoH + a * a);
-    return k * k * (1.0 / PI);
-}
-
 vec4 reproject() {
     if (NUM_SAMPLES <= 1) {
         // single sample
@@ -317,6 +274,10 @@ vec4 reproject() {
         vec2 sph = toSpherical(TARGET_FUNC());
         vec2 sphu = dFdx(sph);
         vec2 sphv = dFdy(sph);
+
+        // TODO: check this declartion works on old old devices.
+        // might need to be placed globally or be made a #define
+        const float NUM_SAMPLES_SQRT = sqrt(float(NUM_SAMPLES));
 
         vec3 result = vec3(0.0);
         for (float u = 0.0; u < NUM_SAMPLES_SQRT; ++u) {
@@ -330,76 +291,57 @@ vec4 reproject() {
     }
 }
 
-vec4 prefilterLambert() {
+vec4 unpackFloat = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
+
+void unpackSample(int i, out vec3 L, out float mipLevel) {
+    float u = (float(i * 4) + 0.5) * samplesTexInverseSize.x;
+    float v = (floor(u) + 0.5) * samplesTexInverseSize.y;
+
+    vec4 raw;
+    raw.x = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+    raw.y = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+    raw.z = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+    raw.w = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat);
+
+    L.xyz = raw.xyz * 2.0 - 1.0;
+    mipLevel = raw.w * 8.0;
+}
+
+// convolve an environment given pre-generated samples
+vec4 prefilterSamples() {
     // construct vector space given target direction
     mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
 
-    float pixelsPerSample = sourceTotalPixels() / float(NUM_SAMPLES);
-
-    // tangent space normal is (0, 0, 1)
-
-    vec3 result = vec3(0.0);
-    for (int i = 0; i < NUM_SAMPLES; ++i) {
-        vec2 uv = rnd(i, NUM_SAMPLES);
-        vec3 H = hemisphereSampleLambert(uv);
-
-        float pdf = H.z / PI;
-        float mipLevel = 0.5 * log2(pixelsPerSample / pdf);
-        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * H, mipLevel));
-    }
-
-    return ENCODE_FUNC(result / float(NUM_SAMPLES));
-}
-
-vec4 prefilterPhong() {
-    // get the target direction
-    vec3 vec = TARGET_FUNC();
-
-    // construct vector space given target direction
-    mat3 vecSpace = matrixFromVectorSlow(vec);
-
-    vec3 result = vec3(0.0);
-    for (int i=0; i<NUM_SAMPLES; ++i) {
-        vec2 uv = rnd(i, NUM_SAMPLES);
-        vec3 dir = vecSpace * hemisphereSamplePhong(uv, specularPower());
-        result += DECODE_FUNC(SOURCE_FUNC(dir, 0.0));
-    }
-
-    return ENCODE_FUNC(result / float(NUM_SAMPLES));
-}
-
-// some of this based on https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/source/shaders/ibl_filtering.frag
-vec4 prefilterGGX() {
-    // construct vector space given target direction
-    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
-
-    float pixelsPerSample = sourceTotalPixels() / float(NUM_SAMPLES);
-
-    // tangent space normal
-    vec3 N = vec3(0, 0, 1);
-
-    // convert specular power to linear roughness
-    float roughness = 1.0 - (log2(specularPower()) / 11.0);
-    float a = roughness * roughness;
+    vec3 L;
+    float mipLevel;
 
     vec3 result = vec3(0.0);
     float totalWeight = 0.0;
     for (int i = 0; i < NUM_SAMPLES; ++i) {
-        vec2 uv = rnd(i, NUM_SAMPLES);
-        vec3 H = hemisphereSampleGGX(uv, a);
-
-        float NoH = H.z;                // since N is (0, 0, 1)
-        vec3 L = 2.0 * NoH * H - N;
-        float NoL = L.z;                // since N is (0, 0, 1)
-        if (NoL > 0.0) {
-            float pdf = D_GGX(saturate(NoH), a) / 4.0 + 0.001;
-            float mipLevel = 0.5 * log2(pixelsPerSample / pdf);
-            result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * NoL;
-            totalWeight += NoL;
-        }
+        unpackSample(i, L, mipLevel);
+        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * L.z;
+        totalWeight += L.z;
     }
 
     return ENCODE_FUNC(result / totalWeight);
+}
+
+// unweighted version of prefilterSamples
+vec4 prefilterSamplesUnweighted() {
+    // construct vector space given target direction
+    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+
+    vec3 L;
+    float mipLevel;
+
+    vec3 result = vec3(0.0);
+    float totalWeight = 0.0;
+    for (int i = 0; i < NUM_SAMPLES; ++i) {
+        unpackSample(i, L, mipLevel);
+        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel));
+    }
+
+    return ENCODE_FUNC(result / float(NUM_SAMPLES));
 }
 
 void main(void) {

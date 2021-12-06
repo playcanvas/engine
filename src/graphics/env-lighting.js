@@ -170,7 +170,7 @@ class EnvLighting {
         rect.set(256, 256, 64, 32);
 
         // generate ambient
-        if (options.legacyAmbient) {
+        if (options?.legacyAmbient) {
             reprojectTexture(source, result, {
                 numSamples: options?.numSamples || 4096,
                 distribution: 'phong',
@@ -228,7 +228,7 @@ class EnvLighting {
         rect.set(256, 256, 64, 32);
 
         // generate ambient
-        if (options.legacyAmbient) {
+        if (options?.legacyAmbient) {
             reprojectTexture(sources[5], result, {
                 numSamples: 1,
                 rect: rect

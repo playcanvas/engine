@@ -4,8 +4,8 @@ import {
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE, TEXTUREPROJECTION_NONE
 } from './constants.js';
+import { Vec3 } from '../math/vec3.js';
 import { random } from '../math/random.js';
-import { FloatPacking } from '../math/float-packing.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
@@ -15,7 +15,7 @@ import { Texture } from './texture.js';
 import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 // get a coding string for texture based on its type and pixel format.
-function getCoding(texture) {
+const getCoding = (texture) => {
     switch (texture.type) {
         case TEXTURETYPE_RGBM:
             return "RGBM";
@@ -32,9 +32,9 @@ function getCoding(texture) {
                     return "Gamma";
             }
     }
-}
+};
 
-function getProjectionName(projection) {
+const getProjectionName = (projection) => {
     // default to equirect if not specified
     if (projection === TEXTUREPROJECTION_NONE) {
         projection = TEXTUREPROJECTION_EQUIRECT;
@@ -44,45 +44,306 @@ function getProjectionName(projection) {
         case TEXTUREPROJECTION_EQUIRECT: return "Equirect";
         case TEXTUREPROJECTION_OCTAHEDRAL: return "Octahedral";
     }
-}
+};
 
-// generate random sequence
-function generateRndTex(device, numSamples) {
-    const level = new Uint8ClampedArray(numSamples * 4);
-    for (let i = 0; i < numSamples; ++i) {
-        FloatPacking.float2Bytes(random.radicalInverse(i), level, i * 4, 4);
+// pack a 32bit floating point value into RGBA8
+const packFloat32ToRGBA8 = (value, array, offset) => {
+    if (value <= 0) {
+        array[offset + 0] = 0;
+        array[offset + 1] = 0;
+        array[offset + 2] = 0;
+        array[offset + 3] = 0;
+    } else if (value >= 1.0) {
+        array[offset + 0] = 255;
+        array[offset + 1] = 0;
+        array[offset + 2] = 0;
+        array[offset + 3] = 0;
+    } else {
+        let encX = (1 * value) % 1;
+        let encY = (255 * value) % 1;
+        let encZ = (65025 * value) % 1;
+        const encW = (16581375.0 * value) % 1;
+
+        encX -= encY / 255;
+        encY -= encZ / 255;
+        encZ -= encW / 255;
+
+        array[offset + 0] = Math.min(255, Math.floor(encX * 256));
+        array[offset + 1] = Math.min(255, Math.floor(encY * 256));
+        array[offset + 2] = Math.min(255, Math.floor(encZ * 256));
+        array[offset + 3] = Math.min(255, Math.floor(encW * 256));
     }
+};
+
+// vec3 hemisphereSampleUniform(vec2 uv) {
+//     float phi = uv.y * 2.0 * PI;
+//     float cosTheta = 1.0 - uv.x;
+//     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+//     return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+// }
+
+// generate a vector on the hemisphere with phong reflection distribution
+const hemisphereSamplePhong = (dstVec, x, y, specularPower) => {
+    const phi = y * 2 * Math.PI;
+    const cosTheta = Math.pow(1 - x, 1 / (specularPower + 1));
+    const sinTheta = Math.sqrt(1 - cosTheta * cosTheta);
+    dstVec.set(Math.cos(phi) * sinTheta, Math.sin(phi) * sinTheta, cosTheta).normalize();
+};
+
+// generate a vector on the hemisphere with lambert distribution
+const hemisphereSampleLambert = (dstVec, x, y) => {
+    const phi = y * 2 * Math.PI;
+    const cosTheta = Math.sqrt(1 - x);
+    const sinTheta = Math.sqrt(x);
+    dstVec.set(Math.cos(phi) * sinTheta, Math.sin(phi) * sinTheta, cosTheta).normalize();
+};
+
+// generate a vector on the hemisphere with GGX distribution.
+// a is linear roughness^2
+const hemisphereSampleGGX = (dstVec, x, y, a) => {
+    const phi = y * 2 * Math.PI;
+    const cosTheta = Math.sqrt((1 - x) / (1 + (a * a - 1) * x));
+    const sinTheta = Math.sqrt(1 - cosTheta * cosTheta);
+    dstVec.set(Math.cos(phi) * sinTheta, Math.sin(phi) * sinTheta, cosTheta).normalize();
+};
+
+const D_GGX = (NoH, linearRoughness) => {
+    const a = NoH * linearRoughness;
+    const k = linearRoughness / (1.0 - NoH * NoH + a * a);
+    return k * k * (1 / Math.PI);
+};
+
+// generate precomputed samples for phong reflections of the given power
+const generatePhongSamples = (numSamples, specularPower) => {
+    const H = new Vec3();
+    const result = [];
+
+    for (let i = 0; i < numSamples; ++i) {
+        hemisphereSamplePhong(H, i / numSamples, random.radicalInverse(i), specularPower);
+        result.push(H.x, H.y, H.z, 0);
+    }
+
+    return result;
+};
+
+// generate precomputed samples for lambert convolution
+const generateLambertSamples = (numSamples, sourceTotalPixels) => {
+    const pixelsPerSample = sourceTotalPixels / numSamples;
+
+    const H = new Vec3();
+    const result = [];
+
+    for (let i = 0; i < numSamples; ++i) {
+        hemisphereSampleLambert(H, i / numSamples, random.radicalInverse(i));
+        const pdf = H.z / Math.PI;
+        const mipLevel = 0.5 * Math.log2(pixelsPerSample / pdf);
+        result.push(H.x, H.y, H.z, mipLevel);
+    }
+
+    return result;
+};
+
+// generate a table storing the number of samples required to get 'numSamples'
+// valid samples for the given specularPower.
+const calculateRequiredSamplesGGX = () => {
+    const countValidSamplesGGX = (numSamples, specularPower) => {
+        const roughness = 1 - Math.log2(specularPower) / 11.0;
+        const a = roughness * roughness;
+        const H = new Vec3();
+        const L = new Vec3();
+        const N = new Vec3(0, 0, 1);
+
+        let validSamples = 0;
+        for (let i = 0; i < numSamples; ++i) {
+            hemisphereSampleGGX(H, i / numSamples, random.radicalInverse(i), a);
+
+            const NoH = H.z;                                    // since N is (0, 0, 1)
+            L.set(H.x, H.y, H.z).mulScalar(2 * NoH).sub(N);
+
+            validSamples += L.z > 0 ? 1 : 0;
+        }
+
+        return validSamples;
+    };
+
+    const numSamples = [1024, 128, 32, 16];
+    const specularPowers = [512, 128, 32, 8, 2];
+
+    const requiredTable = {};
+    numSamples.forEach((numSamples) => {
+        const table = { };
+        specularPowers.forEach((specularPower) => {
+            let requiredSamples = numSamples;
+            while (countValidSamplesGGX(requiredSamples, specularPower) < numSamples) {
+                requiredSamples++;
+            }
+            table[specularPower] = requiredSamples;
+        });
+        requiredTable[numSamples] = table;
+    });
+
+    return requiredTable;
+};
+
+// print to the console the required samples table for GGX reflection convolution
+// console.log(calculateRequiredSamplesGGX());
+
+// this is a table with pre-calculated number of samples required for GGX.
+// the table is generated by calculateRequiredSamplesGGX()
+// the table is organized by [numSamples][specularPower]
+//
+// we use a repeatable pseudo-random sequence of numbers when generating samples
+// for use in prefiltering GGX reflections. however not all the random samples
+// will be valid. this is because some resulting reflection vectors will be below
+// the hemisphere. this is especially apparent when calculating vectors for the
+// higher roughnesses. (since vectors are more wild, more of them are invalid).
+// for example, specularPower 2 results in half the generated vectors being
+// invalid. (meaning the GPU would spend half the time on vectors that don't
+// contribute to the final result).
+//
+// calculating how many samples are required to generate 'n' valid samples is a
+// slow operation, so this table stores the pre-calculated numbers of samples
+// required for the sets of (numSamples, specularPowers) pairs we expect to
+// encounter at runtime.
+const requiredSamplesGGX = {
+    "16": {
+        "2": 26,
+        "8": 20,
+        "32": 17,
+        "128": 16,
+        "512": 16
+    },
+    "32": {
+        "2": 53,
+        "8": 40,
+        "32": 34,
+        "128": 32,
+        "512": 32
+    },
+    "128": {
+        "2": 214,
+        "8": 163,
+        "32": 139,
+        "128": 130,
+        "512": 128
+    },
+    "1024": {
+        "2": 1722,
+        "8": 1310,
+        "32": 1114,
+        "128": 1041,
+        "512": 1025
+    }
+};
+
+// get the number of random samples required to generate numSamples valid samples.
+const getRequiredSamplesGGX = (numSamples, specularPower) => {
+    const table = requiredSamplesGGX[numSamples];
+    return (table && table[specularPower]) || numSamples;
+};
+
+// generate precomputed GGX samples
+const generateGGXSamples = (numSamples, specularPower, sourceTotalPixels) => {
+    const pixelsPerSample = sourceTotalPixels / numSamples;
+    const roughness = 1 - Math.log2(specularPower) / 11.0;
+    const a = roughness * roughness;
+    const H = new Vec3();
+    const L = new Vec3();
+    const N = new Vec3(0, 0, 1);
+    const result = [];
+
+    const requiredSamples = getRequiredSamplesGGX(numSamples, specularPower);
+
+    for (let i = 0; i < requiredSamples; ++i) {
+        hemisphereSampleGGX(H, i / requiredSamples, random.radicalInverse(i), a);
+
+        const NoH = H.z;                                    // since N is (0, 0, 1)
+        L.set(H.x, H.y, H.z).mulScalar(2 * NoH).sub(N);
+
+        if (L.z > 0) {
+            const pdf = D_GGX(Math.min(1, NoH), a) / 4 + 0.001;
+            const mipLevel = 0.5 * Math.log2(pixelsPerSample / pdf);
+            result.push(L.x, L.y, L.z, mipLevel);
+        }
+    }
+
+    while (result.length < numSamples * 4) {
+        result.push(0, 0, 0, 0);
+    }
+
+    return result;
+};
+
+// pack float samples data into an rgba8 texture
+const packSamplesTex = (device, name, samples) => {
+    const numSamples = samples.length;
+
+    const w = Math.min(numSamples, 512);
+    const h = Math.max(1, Math.floor(numSamples / w));
+    const data = new Uint8ClampedArray(w * h * 4);
+
+    // normlize float data and pack into rgba8
+    let off = 0;
+    for (let i = 0; i < numSamples; ++i) {
+        packFloat32ToRGBA8(samples[i * 4 + 0] * 0.5 + 0.5, data, off + 0);
+        packFloat32ToRGBA8(samples[i * 4 + 1] * 0.5 + 0.5, data, off + 4);
+        packFloat32ToRGBA8(samples[i * 4 + 2] * 0.5 + 0.5, data, off + 8);
+        packFloat32ToRGBA8(samples[i * 4 + 3] / 8, data, off + 12);
+        off += 16;
+    }
+
     return new Texture(device, {
-        name: 'rnd',
-        width: 512,
-        height: numSamples / 512,
+        name: name,
+        width: w,
+        height: h,
         mipmaps: false,
         minFilter: FILTER_NEAREST,
         magFilter: FILTER_NEAREST,
-        levels: [level]
+        levels: [data]
     });
-}
+};
 
-// cached random texture
-let rndTex = null;
+// cache of float sample data packed into rgba8 textures
+const samplesTexCache = { };
 
-// generate precomputed GGX data
-function generateGGXData(numSamples, roughness) {
-    const result = new Float32Array(numSamples * 4);
+const generateLambertSamplesTex = (device, numSamples, sourceTotalPixels) => {
+    const key = `lambert-samples-${numSamples}-${sourceTotalPixels}`;
 
-    const hemisphereSampleGGX = (u, v, a) => {
-        const phi = v * 2 * Math.PI;
-        const cosTheta = Math.sqrt((1 - u) / (1 + (a * a) - 1) * u);
-        const sinTheta = Math.sqrt(1 - cosTheta * cosTheta);
+    if (samplesTexCache.hasOwnProperty(key)) {
+        return samplesTexCache[key];
     }
 
-    const a = roughness * roughness;
+    const samples = generateLambertSamples(numSamples, sourceTotalPixels);
+    const samplesTex = packSamplesTex(device, key, samples);
+    samplesTexCache[key] = samplesTex;
+    return samplesTex;
+};
 
-    for (let i = 0; i < numSamples; ++i) {
-        const u = i / numSamples;
-        const v = random.radicalInverse(i);
+const generatePhongSamplesTex = (device, numSamples, specularPower) => {
+    const key = `phong-samples-${numSamples}-${specularPower}`;
+
+    if (samplesTexCache.hasOwnProperty(key)) {
+        return samplesTexCache[key];
     }
-}
+
+    const samples = generatePhongSamples(numSamples, specularPower);
+    const samplesTex = packSamplesTex(device, key, samples);
+    samplesTexCache[key] = samplesTex;
+    return samplesTex;
+};
+
+const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPixels) => {
+    const key = `ggx-samples-${numSamples}-${specularPower}-${sourceTotalPixels}`;
+
+    if (samplesTexCache.hasOwnProperty(key)) {
+        return samplesTexCache[key];
+    }
+
+    const samples = generateGGXSamples(numSamples, specularPower, sourceTotalPixels);
+    const samplesTex = packSamplesTex(device, key, samples);
+    samplesTexCache[key] = samplesTex;
+    return samplesTex;
+};
 
 /**
  * @static
@@ -120,46 +381,55 @@ function reprojectTexture(source, target, options = {}) {
         DeprecatedLog.log('DEPRECATED: please use the updated pc.reprojectTexture API.');
     }
 
+    // table of distribution -> function name
+    const funcNames = {
+        'none': 'reproject',
+        'lambert': 'prefilterSamplesUnweighted',
+        'phong': 'prefilterSamplesUnweighted',
+        'ggx': 'prefilterSamples'
+    };
+
     // extract options
-    const device = source.device;
     const specularPower = options.hasOwnProperty('specularPower') ? options.specularPower : 1;
-    const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
     const face = options.hasOwnProperty('face') ? options.face : null;
     const distribution = options.hasOwnProperty('distribution') ? options.distribution : (specularPower === 1) ? 'none' : 'phong';
 
-    const funcNames = {
-        'none': 'reproject',
-        'lambert': 'prefilterLambert',
-        'phong': 'prefilterPhong',
-        'ggx': 'prefilterGGX'
-    };
-
     const processFunc = funcNames[distribution] || 'reproject';
-    const decodeFunc = "decode" + getCoding(source);
-    const encodeFunc = "encode" + getCoding(target);
+    const decodeFunc = `decode${getCoding(source)}`;
+    const encodeFunc = `encode${getCoding(target)}`;
+    const sourceFunc = `sample${getProjectionName(source.projection)}`;
+    const targetFunc = `getDirection${getProjectionName(target.projection)}`;
+    const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
 
-    // source projection type
-    const sourceFunc = "sample" + getProjectionName(source.projection);
+    // generate unique shader key
+    const shaderKey = `${processFunc}_${decodeFunc}_${encodeFunc}_${sourceFunc}_${targetFunc}_${numSamples}`;
 
-    // target projection type
-    const targetFunc = "getDirection" + getProjectionName(target.projection);
+    const device = source.device;
 
-    const shader = createShaderFromCode(
-        device,
-        shaderChunks.fullscreenQuadVS,
-        `#define PROCESS_FUNC ${processFunc}\n` +
-        `#define DECODE_FUNC ${decodeFunc}\n` +
-        `#define ENCODE_FUNC ${encodeFunc}\n` +
-        `#define SOURCE_FUNC ${sourceFunc}\n` +
-        `#define TARGET_FUNC ${targetFunc}\n` +
-        `#define NUM_SAMPLES ${numSamples}\n` +
-        `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n` +
-        (device.extTextureLod ? '#define SUPPORTS_TEXLOD\n\n' : '\n') +
-        shaderChunks.reprojectPS,
-        processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
-        null,
-        device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n" + (device.extTextureLod ? "#extension GL_EXT_shader_texture_lod: enable\n" : "")
-    );
+    let shader = device.programLib._cache[shaderKey];
+    if (!shader) {
+        const defines =
+            `#define PROCESS_FUNC ${processFunc}\n` +
+            `#define DECODE_FUNC ${decodeFunc}\n` +
+            `#define ENCODE_FUNC ${encodeFunc}\n` +
+            `#define SOURCE_FUNC ${sourceFunc}\n` +
+            `#define TARGET_FUNC ${targetFunc}\n` +
+            `#define NUM_SAMPLES ${numSamples}\n` +
+            (device.extTextureLod ? `#define SUPPORTS_TEXLOD\n` : '');
+
+        const extensions =
+            device.webgl2 ?
+                null : `#extension GL_OES_standard_derivatives: enable\n${device.extTextureLod ? "#extension GL_EXT_shader_texture_lod: enable\n" : ""}`;
+
+        shader = createShaderFromCode(
+            device,
+            shaderChunks.fullscreenQuadVS,
+            `${defines}\n${shaderChunks.reprojectPS}`,
+            shaderKey,
+            false,
+            extensions
+        );
+    }
 
     // #if _DEBUG
     device.pushMarker("ReprojectTexture");
@@ -167,12 +437,6 @@ function reprojectTexture(source, target, options = {}) {
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
     constantSource.setValue(source);
-
-    if (!rndTex) {
-        rndTex = generateRndTex(device, 2048);
-        device.scope.resolve("rndTex").setValue(rndTex);
-        device.scope.resolve("rndTexSize").setValue([rndTex.width, rndTex.height]);
-    }
 
     const constantParams = device.scope.resolve("params");
     const constantParams2 = device.scope.resolve("params2");
@@ -190,6 +454,17 @@ function reprojectTexture(source, target, options = {}) {
         target.width,
         source.width
     ];
+
+    if (processFunc.startsWith('prefilterSamples')) {
+        // set or generate the pre-calculated samples data
+        const sourceTotalPixels = source.width * source.height * (source.cubemap ? 6 : 1);
+        const samplesTex =
+            (distribution === 'ggx') ? generateGGXSamplesTex(device, numSamples, specularPower, sourceTotalPixels) :
+                ((distribution === 'lambert') ? generateLambertSamplesTex(device, numSamples, sourceTotalPixels) :
+                    generatePhongSamplesTex(device, numSamples, specularPower));
+        device.scope.resolve("samplesTex").setValue(samplesTex);
+        device.scope.resolve("samplesTexInverseSize").setValue([1.0 / samplesTex.width, 1.0 / samplesTex.height]);
+    }
 
     for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
         if (face === null || f === face) {
