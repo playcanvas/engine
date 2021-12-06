@@ -34,19 +34,19 @@ class ClusteredSpotShadowsExample extends Example {
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingCells = new pc.Vec3(20, 2, 20);
+        app.scene.lightCells = new pc.Vec3(20, 2, 20);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingMaxLights = 16;
+        app.scene.maxLights = 16;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingCookiesEnabled = true;
+        app.scene.cookiesEnabled = true;
 
         // resolution of the shadow and cookie atlas
-        app.scene.clusteredLightingShadowMapResolution = 2048;
-        app.scene.clusteredLightingCookieMapResolution = 1500;
+        app.scene.shadowAtlasResolution = 2048;
+        app.scene.cookieAtlasResolution = 1500;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -186,7 +186,7 @@ class ClusteredSpotShadowsExample extends Example {
             // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
 
             // display cookie texture (debug feature)
-            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
+            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
         });
     }
 }

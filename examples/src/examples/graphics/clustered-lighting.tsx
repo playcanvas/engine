@@ -32,11 +32,11 @@ class ClusteredLightingExample extends Example {
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingCells = new pc.Vec3(12, 16, 12);
+        app.scene.lightCells = new pc.Vec3(12, 16, 12);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingMaxLights = 48;
+        app.scene.maxLights = 48;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);

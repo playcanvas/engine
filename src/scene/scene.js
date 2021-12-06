@@ -197,43 +197,43 @@ class Scene extends EventHandler {
         this._clusteredLightingEnabled = value;
     }
 
-    get clusteredLightingCells() {
+    get lightCells() {
         return this.worldClustersParams.cells;
     }
 
-    set clusteredLightingCells(value) {
+    set lightCells(value) {
         this.worldClustersParams.cells.copy(value);
     }
 
-    get clusteredLightingMaxLights() {
+    get maxLights() {
         return this.worldClustersParams.maxLights;
     }
 
-    set clusteredLightingMaxLights(value) {
+    set maxLights(value) {
         this.worldClustersParams.maxLights = value;
     }
 
-    get clusteredLightingCookieMapResolution() {
-        return this.worldClustersParams.cookieMapResolution;
+    get cookieAtlasResolution() {
+        return this.worldClustersParams.cookieAtlasResolution;
     }
 
-    set clusteredLightingCookieMapResolution(value) {
-        this.worldClustersParams.cookieMapResolution = value;
+    set cookieAtlasResolution(value) {
+        this.worldClustersParams.cookieAtlasResolution = value;
     }
 
-    get clusteredLightingShadowMapResolution() {
-        return this.worldClustersParams.shadowMapResolution;
+    get shadowAtlasResolution() {
+        return this.worldClustersParams.shadowAtlasResolution;
     }
 
-    set clusteredLightingShadowMapResolution(value) {
-        this.worldClustersParams.shadowMapResolution = value;
+    set shadowAtlasResolution(value) {
+        this.worldClustersParams.shadowAtlasResolution = value;
     }
 
-    get clusteredLightingCookiesEnabled() {
+    get cookiesEnabled() {
         return this.worldClustersParams.cookiesEnabled;
     }
 
-    set clusteredLightingCookiesEnabled(value) {
+    set cookiesEnabled(value) {
         if (this.worldClustersParams.cookiesEnabled !== value) {
             this.worldClustersParams.cookiesEnabled = value;
 
@@ -242,11 +242,11 @@ class Scene extends EventHandler {
         }
     }
 
-    get clusteredLightingAreaLightsEnabled() {
+    get areaLightsEnabled() {
         return this.worldClustersParams.areaLightsEnabled;
     }
 
-    set clusteredLightingAreaLightsEnabled(value) {
+    set areaLightsEnabled(value) {
 
         // ignore if not supported
         if (this.device.supportsAreaLights) {
@@ -259,11 +259,11 @@ class Scene extends EventHandler {
         }
     }
 
-    get clusteredLightingShadowsEnabled() {
+    get shadowsEnabled() {
         return this.worldClustersParams.shadowsEnabled;
     }
 
-    set clusteredLightingShadowsEnabled(value) {
+    set shadowsEnabled(value) {
         if (this.worldClustersParams.shadowsEnabled !== value) {
             this.worldClustersParams.shadowsEnabled = value;
 

@@ -229,7 +229,7 @@ class ShadowRenderer {
 
                 // when rendering omni shadows to an atlas, use larger fov by few pixels to allow shadow filtering to stay on a single face
                 if (isClustered) {
-                    const tileSize = this.lightTextureAtlas.shadowMapResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
+                    const tileSize = this.lightTextureAtlas.shadowAtlasResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
                     const texelSize = 2 / tileSize;
                     const filterSize = texelSize * this.lightTextureAtlas.shadowEdgePixels;
                     shadowCam.fov = Math.atan(1 + filterSize) * math.RAD_TO_DEG * 2;

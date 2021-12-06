@@ -37,19 +37,19 @@ class ClusteredShadowsOmniExample extends Example {
         // adjust default clusterered lighting parameters to handle many lights:
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingCells = new pc.Vec3(16, 12, 16);
+        app.scene.lightCells = new pc.Vec3(16, 12, 16);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingMaxLights = 80;
+        app.scene.maxLights = 80;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingShadowsEnabled = true;
+        app.scene.shadowsEnabled = true;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        app.scene.clusteredLightingCookiesEnabled = true;
+        app.scene.cookiesEnabled = true;
 
 
         // helper function to create a 3d primitive including its material
@@ -165,7 +165,7 @@ class ClusteredShadowsOmniExample extends Example {
         });
 
         // and position it in the world
-        camera.setLocalPosition(300, 60, 25);
+        camera.setLocalPosition(300, 120, 25);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
@@ -194,7 +194,7 @@ class ClusteredShadowsOmniExample extends Example {
             // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
 
             // display cookie texture (debug feature)
-            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
+            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
         });
     }
 }

@@ -8,8 +8,8 @@ class WorldClustersParams {
         this.cookiesEnabled = false;
         this.shadowsEnabled = true;
         this.areaLightsEnabled = false;
-        this.shadowMapResolution = 2048;
-        this.cookieMapResolution = 2048;
+        this.shadowAtlasResolution = 2048;
+        this.cookieAtlasResolution = 2048;
     }
 }
 

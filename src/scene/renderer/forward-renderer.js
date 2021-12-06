@@ -1855,14 +1855,14 @@ class ForwardRenderer {
             this.updateLightTextureAtlas(comp);
 
             // render cookies for all local visible lights
-            if (this.scene.clusteredLightingCookiesEnabled) {
+            if (this.scene.cookiesEnabled) {
                 this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
                 this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
             }
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.clusteredLightingShadowsEnabled)) {
+        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.shadowsEnabled)) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
