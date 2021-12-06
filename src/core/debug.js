@@ -24,6 +24,7 @@ class Debug {
         console.warn(...args);
     }
 
+    // error message
     static error(...args) {
         console.error(...args);
     }
