@@ -58,13 +58,14 @@ class CollisionComponent extends Component {
         super(system, entity);
 
         this._compoundParent = null;
+        this._isOffset = false;
 
         this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
-        this.on('set_linearOffset', this.onSetLinearOffset, this);
-        this.on('set_angularOffset', this.onSetAngularOffset, this);
+        this.on('set_linearOffset', this.onSetOffset, this);
+        this.on('set_angularOffset', this.onSetOffset, this);
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
@@ -125,13 +126,8 @@ class CollisionComponent extends Component {
         }
     }
 
-    onSetLinearOffset(name, oldValue, newValue) {
-        if (this.data.initialized) {
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    onSetAngularOffset(name, oldValue, newValue) {
+    onSetOffset(name, oldValue, newValue) {
+        this._isOffset = true;
         if (this.data.initialized) {
             this.system.recreatePhysicalShapes(this);
         }

@@ -595,6 +595,8 @@ class CollisionComponentSystem extends ComponentSystem {
         properties = [
             'type',
             'halfExtents',
+            'linearOffset',
+            'angularOffset',
             'radius',
             'axis',
             'height',
@@ -781,10 +783,22 @@ class CollisionComponentSystem extends ComponentSystem {
         const transform = new Ammo.btTransform();
         transform.setIdentity();
         const origin = transform.getOrigin();
-        origin.setValue(pos.x, pos.y, pos.z);
-
+        
         const ammoQuat = new Ammo.btQuaternion();
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+
+        const col = node.collision;
+        if (col && col._isOffset) {
+            const lo = col.linearOffset;
+            const ao = col.angularOffset;
+
+            origin.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
+            quat.copy(rot).mul(ao);
+            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+        } else {
+            origin.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        }
+        
         transform.setRotation(ammoQuat);
         Ammo.destroy(ammoQuat);
         Ammo.destroy(origin);

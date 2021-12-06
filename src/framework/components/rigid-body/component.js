@@ -804,24 +804,19 @@ class RigidBodyComponent extends Component {
         const entity = this.entity;
         const pos = entity.getPosition();
         const rot = entity.getRotation();
+        const col = entity.collision;
 
-        const data = entity.collision && entity.collision.data;
-        let lo, ao;
-
-        if (data) {
-            lo = data.linearOffset;
-            ao = data.angularOffset;
+        if (col && col._isOffset) {
+            const lo = col.linearOffset;
+            const ao = col.angularOffset;
             quat.copy(rot).mul(ao);
+
+            ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
+            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
         } else {
-            quat.copy(rot);
+            ammoVec1.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
         }
-
-        const x = lo ? pos.x + lo.x : pos.x;
-        const y = lo ? pos.y + lo.y : pos.y;
-        const z = lo ? pos.z + lo.z : pos.z;
-
-        ammoVec1.setValue(x, y, z);
-        ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);
@@ -870,19 +865,24 @@ class RigidBodyComponent extends Component {
             const motionState = body.getMotionState();
             if (motionState) {
                 const entity = this.entity;
-                const data = entity.collision.data;
-                const lo = data.linearOffset;
-                const ao = data.angularOffset;
-
+                
                 motionState.getWorldTransform(ammoTransform);
-
+                
                 const p = ammoTransform.getOrigin();
                 const q = ammoTransform.getRotation();
 
-                quat.set(q.x(), q.y(), q.z(), q.w()).invert().mul(ao);
+                const col = entity.collision;
+                if (col && col._isOffset) {
+                    const lo = col.linearOffset;
+                    const ao = col.angularOffset;
 
-                entity.setPosition(p.x() - lo.x, p.y() - lo.y, p.z() - lo.z);
-                entity.setRotation(quat);
+                    quat.set(q.x(), q.y(), q.z(), q.w()).invert().mul(ao);
+                    entity.setPosition(p.x() - lo.x, p.y() - lo.y, p.z() - lo.z);
+                    entity.setRotation(quat);
+                } else {
+                    entity.setPosition(p.x(), p.y(), p.z());
+                    entity.setRotation(p.x(), p.y(), p.z(), p.w());
+                }
             }
         }
     }
