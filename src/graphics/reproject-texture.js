@@ -75,6 +75,8 @@ const packFloat32ToRGBA8 = (value, array, offset) => {
     }
 };
 
+// generate a vector on the hemisphere with constant distribution.
+// function kept because it's useful for debugging
 // vec3 hemisphereSampleUniform(vec2 uv) {
 //     float phi = uv.y * 2.0 * PI;
 //     float cosTheta = 1.0 - uv.x;

@@ -311,9 +311,10 @@ let _params = new Set();
  * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link VertexBuffer} instead of shader's uniforms.
  * - useMorphPosition: if morphing code should be generated to morph positions.
  * - useMorphNormal: if morphing code should be generated to morph normals.
- * - envAtlasFormat: Format of the environment atlas texture, or null if there isn't one.
- * - cubeMapFormat: Format of the cubemap texture, or null if there isn't one.
- * - sphereMapFormat: Format of the sphere map texture, or null if there isn't one.
+ * - reflectionSource: one of "envAtlas", "cubeMap", "sphereMap"
+ * - reflectionFormat: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * - ambientSource: one of "ambientSH", "envAtlas", "constant"
+ * - ambientFormat: one of null, "rgbm", "rgbe", "linear", "srgb"
  * @example
  * // Create a new Standard material
  * var material = new pc.StandardMaterial();
