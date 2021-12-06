@@ -509,7 +509,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#assignAnimation
      * @description Associates an animation with a state or blend tree node in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodePath parameter.
-     * @param {string} nodePath - Either the state name or the path to a blend tree node that this animation should be associated with. Each section of a blend tree path is split using a punctuation mark therefore state names should not include this character (e.g "MyStateName" or "MyStateName.BlendTreeNode").
+     * @param {string} nodePath - Either the state name or the path to a blend tree node that this animation should be associated with. Each section of a blend tree path is split using a period (`.`) therefore state names should not include this character (e.g "MyStateName" or "MyStateName.BlendTreeNode").
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
