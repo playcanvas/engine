@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
@@ -18,6 +19,10 @@ import { Vec3 } from '../math/vec3.js';
  */
 class Ray {
     constructor(origin = new Vec3(), direction = new Vec3(0, 0, -1)) {
+
+        Debug.assert(!Object.isFrozen(origin), `The constructor of 'Ray' does not accept a constant (frozen) object as a 'origin' parameter`);
+        Debug.assert(!Object.isFrozen(direction), `The constructor of 'Ray' does not accept a constant (frozen) object as a 'direction' parameter`);
+
         this.origin = origin;
         this.direction = direction;
     }

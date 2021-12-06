@@ -166,7 +166,7 @@ import skinBatchConstVS from './skinBatchConst.vert';
 import skinBatchTexVS from './skinBatchTex.vert';
 import skinConstVS from './skinConst.vert';
 import skinTexVS from './skinTex.vert';
-import skyboxPS from './skybox.frag';
+import skyboxHDRPS from './skyboxHDR.frag';
 import skyboxVS from './skybox.vert';
 import specularPS from './specular.frag';
 import specularAaNonePS from './specularAaNone.frag';
@@ -372,7 +372,7 @@ const shaderChunks = {
     skinBatchTexVS: skinBatchTexVS,
     skinConstVS: skinConstVS,
     skinTexVS: skinTexVS,
-    skyboxPS: skyboxPS,
+    skyboxHDRPS: skyboxHDRPS,
     skyboxVS: skyboxVS,
     specularPS: specularPS,
     specularAaNonePS: specularAaNonePS,
