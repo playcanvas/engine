@@ -1,9 +1,9 @@
+import { Debug } from '../core/debug.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 
 import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/constants.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 /**
  * @class
@@ -23,7 +23,7 @@ class MorphTarget {
     constructor(options) {
 
         if (arguments.length === 2) {
-            DeprecatedLog.log('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
+            Debug.deprecated('Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
             options = arguments[1];
         }
 

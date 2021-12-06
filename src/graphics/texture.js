@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { math } from '../math/math.js';
 
 import {
@@ -161,14 +162,10 @@ class Texture {
             if (options.hasOwnProperty('type')) {
                 this.type = options.type;
             } else if (options.hasOwnProperty('rgbm')) {
-                // #if _DEBUG
-                console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
-                // #endif
+                Debug.deprecated("options.rgbm is deprecated. Use options.type instead.");
                 this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
             } else if (options.hasOwnProperty('swizzleGGGR')) {
-                // #if _DEBUG
-                console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
-                // #endif
+                Debug.deprecated("options.swizzleGGGR is deprecated. Use options.type instead.");
                 this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
             }
 
