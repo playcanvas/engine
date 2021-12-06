@@ -118,7 +118,7 @@ const moduleOptions = {
 };
 
 const stripOptions = {
-    functions: ['DeprecatedLog.log']
+    functions: ['Debug.assert', 'Debug.deprecated']
 };
 
 const target_release_es5 = {

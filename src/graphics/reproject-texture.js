@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import {
     FILTER_NEAREST,
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
@@ -12,7 +13,6 @@ import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 // get a coding string for texture based on its type and pixel format.
 const getCoding = (texture) => {
@@ -378,7 +378,7 @@ function reprojectTexture(source, target, options = {}) {
             options.numSamples = arguments[4];
         }
 
-        DeprecatedLog.log('DEPRECATED: please use the updated pc.reprojectTexture API.');
+        Debug.deprecated('please use the updated pc.reprojectTexture API.');
     }
 
     // table of distribution -> function name

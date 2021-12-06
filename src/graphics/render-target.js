@@ -1,4 +1,4 @@
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
+import { Debug } from '../core/debug.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
 import { GraphicsDevice } from './graphics-device.js';
@@ -67,7 +67,7 @@ class RenderTarget {
             this._colorBuffer = _arg2;
             options = _arg3;
 
-            DeprecatedLog.log('DEPRECATED: pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+            Debug.deprecated('pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
 
         } else {
             // new constructor

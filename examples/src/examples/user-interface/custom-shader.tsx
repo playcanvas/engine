@@ -68,7 +68,7 @@ void main(void)
 
 class UserInterfaceCustomShaderExample extends Example {
     static CATEGORY = 'User Interface';
-    static NAME = 'Custom Shaders';
+    static NAME = 'Custom Shader';
 
     load() {
         return <>
