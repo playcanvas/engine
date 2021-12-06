@@ -93,24 +93,24 @@ class AnimComponentLayer {
     /**
      * @function
      * @name AnimComponentLayer#assignAnimation
-     * @description Assigns an animation track to a state in the current graph. If a state for the given nodeName doesn't exist, it will be created. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
-     * @param {string} nodeName - The name of the node that this animation should be associated with.
+     * @description Assigns an animation track to a state or blend tree node in the current graph. If a state for the given nodePath doesn't exist, it will be created. If all states nodes are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * @param {string} nodePath - Either the state name or the path to a blend tree node that this animation should be associated with. Each section of a blend tree path is split using a period (`.`) therefore state names should not include this character (e.g "MyStateName" or "MyStateName.BlendTreeNode").
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
      * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
-    assignAnimation(nodeName, animTrack, speed, loop) {
+    assignAnimation(nodePath, animTrack, speed, loop) {
         if (animTrack.constructor !== AnimTrack) {
             // #if _DEBUG
             console.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             // #endif
             return;
         }
-        this._controller.assignAnimation(nodeName, animTrack, speed, loop);
+        this._controller.assignAnimation(nodePath, animTrack, speed, loop);
         if (this._controller._transitions.length === 0) {
             this._controller._transitions.push(new AnimTransition({
                 from: 'START',
-                to: nodeName
+                to: nodePath
             }));
         }
         if (this._component.activate && this._component.playable) {

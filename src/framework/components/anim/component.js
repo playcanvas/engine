@@ -507,16 +507,16 @@ class AnimComponent extends Component {
     /**
      * @function
      * @name AnimComponent#assignAnimation
-     * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
-     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodeName parameter.
-     * @param {string} nodeName - The name of the state node that this animation should be associated with.
+     * @description Associates an animation with a state or blend tree node in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodePath parameter.
+     * @param {string} nodePath - Either the state name or the path to a blend tree node that this animation should be associated with. Each section of a blend tree path is split using a period (`.`) therefore state names should not include this character (e.g "MyStateName" or "MyStateName.BlendTreeNode").
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
      * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
-    assignAnimation(nodeName, animTrack, layerName, speed = 1, loop = true) {
-        if (!this._stateGraph) {
+    assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
+        if (!this._stateGraph && nodePath.indexOf('.') !== -1) {
             this.loadStateGraph(new AnimStateGraph({
                 "layers": [
                     {
@@ -527,7 +527,7 @@ class AnimComponent extends Component {
                                 "speed": 1
                             },
                             {
-                                "name": nodeName,
+                                "name": nodePath,
                                 "speed": speed,
                                 "loop": loop,
                                 "defaultState": true
@@ -536,14 +536,14 @@ class AnimComponent extends Component {
                         "transitions": [
                             {
                                 "from": 'START',
-                                "to": nodeName
+                                "to": nodePath
                             }
                         ]
                     }
                 ],
                 "parameters": {}
             }));
-            this.baseLayer.assignAnimation(nodeName, animTrack);
+            this.baseLayer.assignAnimation(nodePath, animTrack);
             return;
         }
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
@@ -553,7 +553,7 @@ class AnimComponent extends Component {
             // #endif
             return;
         }
-        layer.assignAnimation(nodeName, animTrack, speed, loop);
+        layer.assignAnimation(nodePath, animTrack, speed, loop);
     }
 
     /**
