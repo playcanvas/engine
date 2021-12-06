@@ -14,6 +14,8 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 import SelectInput from '@playcanvas/pcui/SelectInput/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
 
 class ClusteredShadowsOmniExample extends Example {
     static CATEGORY = 'Graphics';
@@ -42,8 +44,14 @@ class ClusteredShadowsOmniExample extends Example {
                         { v: pc.SHADOW_PCF5, t: 'PCF5' }
                     ]} />
                 </LabelGroup>}
-                <LabelGroup text='ShadowRes'>
+                <LabelGroup text='Shadow Res'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowAtlasResolution' }} min={512} max={4096} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Shadows On'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowsEnabled' }} value={data.get('settings.shadowsEnabled')}/>
+                </LabelGroup>
+                <LabelGroup text='Cookies On'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.cookiesEnabled' }} value={data.get('settings.cookiesEnabled')}/>
                 </LabelGroup>
             </Panel>
         </>;
@@ -57,7 +65,9 @@ class ClusteredShadowsOmniExample extends Example {
 
         data.set('settings', {
             shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
-            shadowType: pc.SHADOW_PCF3    // shadow filter type
+            shadowType: pc.SHADOW_PCF3,      // shadow filter type
+            shadowsEnabled: true,
+            cookiesEnabled: true
         });
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
