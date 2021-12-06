@@ -783,7 +783,7 @@ class CollisionComponentSystem extends ComponentSystem {
         const transform = new Ammo.btTransform();
         transform.setIdentity();
         const origin = transform.getOrigin();
-        
+
         const ammoQuat = new Ammo.btQuaternion();
 
         const col = node.collision;
@@ -798,7 +798,7 @@ class CollisionComponentSystem extends ComponentSystem {
             origin.setValue(pos.x, pos.y, pos.z);
             ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
         }
-        
+
         transform.setRotation(ammoQuat);
         Ammo.destroy(ammoQuat);
         Ammo.destroy(origin);

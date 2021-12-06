@@ -865,9 +865,9 @@ class RigidBodyComponent extends Component {
             const motionState = body.getMotionState();
             if (motionState) {
                 const entity = this.entity;
-                
+
                 motionState.getWorldTransform(ammoTransform);
-                
+
                 const p = ammoTransform.getOrigin();
                 const q = ammoTransform.getRotation();
 
