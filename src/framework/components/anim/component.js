@@ -118,7 +118,7 @@ class AnimComponent extends Component {
      * @type {object}
      * @readonly
      * @description Returns paths to animation states in the current graph and their associated animation asset id's.
-     * @example 
+     * @example
      * {
      *     "BaseLayer:InitialState": {
      *        asset: 1
