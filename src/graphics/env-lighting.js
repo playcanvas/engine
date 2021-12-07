@@ -150,7 +150,8 @@ class EnvLighting {
         // generate top-level reflection
         reprojectTexture(source, result, {
             numSamples: 1,
-            rect: rect
+            rect: rect,
+            seamPixels: 1
         });
 
         // generate blurry reflections
@@ -163,7 +164,8 @@ class EnvLighting {
                 numSamples: options?.numSamples || 1024,
                 distribution: options?.distribution || 'ggx',
                 specularPower: Math.max(1, 2048 >> (i * 2)),
-                rect: rect
+                rect: rect,
+                seamPixels: 1
             });
         }
 
@@ -175,13 +177,15 @@ class EnvLighting {
                 numSamples: options?.numSamples || 4096,
                 distribution: 'phong',
                 specularPower: 2,
-                rect: rect
+                rect: rect,
+                seamPixels: 1
             });
         } else {
             reprojectTexture(source, result, {
                 numSamples: options?.numSamples || 2048,
                 distribution: 'lambert',
-                rect: rect
+                rect: rect,
+                seamPixels: 1
             });
         }
 
@@ -218,7 +222,8 @@ class EnvLighting {
         for (let i = 0; i < sources.length; ++i) {
             reprojectTexture(sources[i], result, {
                 numSamples: 1,
-                rect: rect
+                rect: rect,
+                seamPixels: 1
             });
             rect.y += rect.w;
             rect.z = Math.max(1, Math.floor(rect.z * 0.5));
@@ -231,13 +236,15 @@ class EnvLighting {
         if (options?.legacyAmbient) {
             reprojectTexture(sources[5], result, {
                 numSamples: 1,
-                rect: rect
+                rect: rect,
+                seamPixels: 1
             });
         } else {
             reprojectTexture(sources[0], result, {
                 numSamples: options?.numSamples || 2048,
                 distribution: 'lambert',
-                rect: rect
+                rect: rect,
+                seamPixels: 1
             });
         }
 

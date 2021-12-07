@@ -347,6 +347,19 @@ const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPix
     return samplesTex;
 };
 
+const vsCode = `
+attribute vec2 vertex_position;
+
+uniform vec4 uvMod;
+
+varying vec2 vUv0;
+
+void main(void) {
+    gl_Position = vec4(vertex_position, 0.5, 1.0);
+    vUv0 = (vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw;
+}
+`;
+
 /**
  * @static
  * @function
@@ -365,6 +378,7 @@ const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPix
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert', 'phong', 'ggx'. Default depends on specularPower.
  * @param {Vec4} [options.rect] - Optional viewport rectangle.
+ * @param {number} [options.seamPixels] - Optional number of seam pixels to render
  */
 function reprojectTexture(source, target, options = {}) {
     // maintain backwards compatibility with previous function signature
@@ -425,7 +439,7 @@ function reprojectTexture(source, target, options = {}) {
 
         shader = createShaderFromCode(
             device,
-            shaderChunks.fullscreenQuadVS,
+            vsCode,
             `${defines}\n${shaderChunks.reprojectPS}`,
             shaderKey,
             false,
@@ -442,6 +456,25 @@ function reprojectTexture(source, target, options = {}) {
 
     const constantParams = device.scope.resolve("params");
     const constantParams2 = device.scope.resolve("params2");
+
+    const uvModParam = device.scope.resolve("uvMod");
+    if (options?.seamPixels) {
+        const p = options.seamPixels;
+        const w = options.rect ? options.rect.z : target.width;
+        const h = options.rect ? options.rect.w : target.height;
+
+        const innerWidth = w - p * 2;
+        const innerHeight = h - p * 2;
+
+        uvModParam.setValue([
+            (innerWidth + p * 2) / innerWidth,
+            (innerHeight + p * 2) / innerHeight,
+            -p / innerWidth,
+            -p / innerHeight
+        ]);
+    } else {
+        uvModParam.setValue([1, 1, 0, 0]);
+    }
 
     const params = [
         0,

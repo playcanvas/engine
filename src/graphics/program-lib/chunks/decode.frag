@@ -22,7 +22,7 @@ vec3 decodeRGBE(vec4 raw) {
 float PI = 3.141592653589793;
 
 vec2 toSpherical(vec3 dir) {
-    return vec2(atan(dir.z, dir.x), asin(dir.y));
+    return vec2(atan(dir.x, dir.z), asin(dir.y));
 }
 
 vec2 toSphericalUv(vec3 dir) {
@@ -30,7 +30,9 @@ vec2 toSphericalUv(vec3 dir) {
     return vec2(uv.x, 1.0 - uv.y);
 }
 
+const float seamSize = 1.0 / 512.0;
+
 vec2 mapUv(vec2 uv, vec4 rect) {
-    return vec2(mix(rect.x, rect.x + rect.z, uv.x),
-                mix(rect.y, rect.y + rect.w, uv.y));
+    return vec2(mix(rect.x + seamSize, rect.x + rect.z - seamSize, uv.x),
+                mix(rect.y + seamSize, rect.y + rect.w - seamSize, uv.y));
 }

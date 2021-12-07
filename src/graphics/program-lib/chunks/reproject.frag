@@ -115,13 +115,13 @@ vec3 modifySeams(vec3 dir, float scale) {
 }
 
 vec2 toSpherical(vec3 dir) {
-    return vec2(atan(dir.z, dir.x), asin(dir.y));
+    return vec2(atan(dir.x, dir.z), asin(dir.y));
 }
 
 vec3 fromSpherical(vec2 uv) {
-    return vec3(cos(uv.y) * cos(uv.x),
+    return vec3(cos(uv.y) * sin(uv.x),
                 sin(uv.y),
-                cos(uv.y) * sin(uv.x));
+                cos(uv.y) * cos(uv.x));
 }
 
 vec3 getDirectionEquirect() {
