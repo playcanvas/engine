@@ -106,7 +106,9 @@ class AnimComponent extends Component {
         this.animationAssets = prevAnimationAssets;
         this.loadAnimationAssets();
         // assign the previous layer masks then rebind all anim targets
-        this.layers.forEach((layer, i) => { layer.mask = prevMasks[i] });
+        this.layers.forEach((layer, i) => {
+            layer.mask = prevMasks[i];
+        });
         this.rebind();
     }
 
