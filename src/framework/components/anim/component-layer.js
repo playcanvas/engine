@@ -66,6 +66,7 @@ class AnimComponentLayer {
     }
 
     /**
+     * @private
      * @function
      * @name AnimComponentLayer#assignMask
      * @description Add a mask to this layer.
@@ -81,6 +82,27 @@ class AnimComponentLayer {
      * });
      */
     assignMask(mask) {
+        if (this._controller.assignMask(mask)) {
+            this._component.rebind();
+        }
+        this._mask = mask;
+    }
+
+    /**
+     * @name AnimComponent#mask
+     * @type {object}
+     * @description A mask of bones which should be animated or ignored by this layer.
+     * @example
+     * entity.anim.baseLayer.mask = {
+     *     // include the spine of the current model and all of its children
+     *     "path/to/spine": {
+     *         children: true
+     *     },
+     *     // include the hip of the current model but not all of its children
+     *     "path/to/hip": true
+     * };
+     */
+    set mask(value) {
         if (this._controller.assignMask(mask)) {
             this._component.rebind();
         }

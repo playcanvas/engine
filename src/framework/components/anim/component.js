@@ -113,6 +113,21 @@ class AnimComponent extends Component {
         this.rebind();
     }
 
+    /**
+     * @name AnimComponent#animationAssets
+     * @type {object}
+     * @readonly
+     * @description Returns paths to animation states in the current graph and their associated animation asset id's.
+     * @example 
+     * {
+     *     "BaseLayer:InitialState": {
+     *        asset: 1
+     *     },
+     *     "SecondLayer:InitialState": {
+     *         asset: 2
+     *     }
+     * }
+     */
     get animationAssets() {
         return this._animationAssets;
     }
@@ -122,6 +137,11 @@ class AnimComponent extends Component {
         this.loadAnimationAssets();
     }
 
+    /**
+     * @name AnimComponent#speed
+     * @type {number}
+     * @description The playback speed of the anim component.
+     */
     get speed() {
         return this._speed;
     }
@@ -130,6 +150,11 @@ class AnimComponent extends Component {
         this._speed = value;
     }
 
+    /**
+     * @name AnimComponent#activate
+     * @type {boolean}
+     * @description If set to true, the anim component will automatically begin playing when all animations have been assigned to its state graph.
+     */
     get activate() {
         return this._activate;
     }
@@ -138,6 +163,11 @@ class AnimComponent extends Component {
         this._activate = value;
     }
 
+    /**
+     * @name AnimComponent#playing
+     * @type {boolean}
+     * @description Whether the anim component should be playing.
+     */
     get playing() {
         return this._playing;
     }
@@ -176,6 +206,12 @@ class AnimComponent extends Component {
         this._stateGraph = value;
     }
 
+    /**
+     * @readonly
+     * @name AnimComponent#layers
+     * @type {AnimComponentLayer[]}
+     * @description Returns the animation layers available in this anim component.
+     */
     get layers() {
         return this._layers;
     }
