@@ -16,10 +16,23 @@ class AnimData {
         this._data = data;
     }
 
+    /**
+     * @readonly
+     * @name AnimData#components
+     * @type {number}
+     * @description Returns the number of components in this AnimData.
+     */
     get components() {
         return this._components;
     }
 
+
+    /**
+     * @readonly
+     * @name AnimData#data
+     * @type {Float32Array|number[]}
+     * @description Returns the data.
+     */
     get data() {
         return this._data;
     }

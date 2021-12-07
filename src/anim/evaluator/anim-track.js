@@ -22,26 +22,62 @@ class AnimTrack {
         this._animEvents = animEvents;
     }
 
+    /**
+     * @readonly
+     * @name AnimTrack#name
+     * @type {string}
+     * @description Returns the name of the AnimTrack.
+     */
     get name() {
         return this._name;
     }
 
+    /**
+     * @readonly
+     * @name AnimTrack#duration
+     * @type {string}
+     * @description Returns the duration of the AnimTrack.
+     */
     get duration() {
         return this._duration;
     }
 
+    /**
+     * @readonly
+     * @name AnimTrack#inputs
+     * @type {AnimData[]}
+     * @description Returns the list of curve key data contained in the AnimTrack.
+     */
     get inputs() {
         return this._inputs;
     }
 
+    /**
+     * @readonly
+     * @name AnimTrack#outputs
+     * @type {AnimData[]}
+     * @description Returns the list of curve values contained in the AnimTrack.
+     */
     get outputs() {
         return this._outputs;
     }
 
+    /**
+     * @readonly
+     * @name AnimTrack#curves
+     * @type {AnimCurve[]}
+     * @description Returns the list of curves contained in the AnimTrack.
+     */
     get curves() {
         return this._curves;
     }
 
+
+    /**
+     * @name AnimTrack#events
+     * @type {AnimEvents}
+     * @description Returns the animation events that will fire during the playback of this anim track.
+     */
     get events() {
         return this._animEvents.events;
     }
