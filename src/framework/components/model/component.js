@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import {
     LAYERID_WORLD
 } from '../../../scene/constants.js';
@@ -583,9 +584,7 @@ class ModelComponent extends Component {
 
         // return if the model has been flagged as immutable
         if (value && value._immutable) {
-            // #if _DEBUG
-            console.error('Invalid attempt to assign a model to multiple ModelComponents');
-            // #endif
+            Debug.error('Invalid attempt to assign a model to multiple ModelComponents');
             return;
         }
 

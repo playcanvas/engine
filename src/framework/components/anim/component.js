@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../../asset/asset.js';
 
 import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
@@ -157,12 +158,8 @@ class AnimComponent extends Component {
     set rootBone(value) {
         if (typeof value === 'string') {
             const entity = this.entity.root.findByGuid(value);
+            Debug.assert(entity, `rootBone entity for supplied guid:${value} cannot be found in the scene`);
             this._rootBone = entity;
-            // #if _DEBUG
-            if (!entity) {
-                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
-            }
-            // #endif
         } else if (value instanceof Entity) {
             this._rootBone = value;
         } else {
@@ -548,9 +545,7 @@ class AnimComponent extends Component {
         }
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #if _DEBUG
-            console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
-            // #endif
+            Debug.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             return;
         }
         layer.assignAnimation(nodePath, animTrack, speed, loop);
@@ -566,9 +561,7 @@ class AnimComponent extends Component {
     removeNodeAnimations(nodeName, layerName) {
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #if _DEBUG
-            console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
-            // #endif
+            Debug.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
             return;
         }
         layer.removeNodeAnimations(nodeName);
@@ -579,9 +572,7 @@ class AnimComponent extends Component {
         if (param && param.type === type) {
             return param.value;
         }
-        // #if _DEBUG
-        console.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
-        // #endif
+        Debug.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
     setParameterValue(name, type, value) {
@@ -590,9 +581,7 @@ class AnimComponent extends Component {
             param.value = value;
             return;
         }
-        // #if _DEBUG
-        console.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
-        // #endif
+        Debug.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
     /**
@@ -639,9 +628,7 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            // #if _DEBUG
-            console.error('Attempting to assign non integer value to integer parameter');
-            // #endif
+            Debug.error('Attempting to assign non integer value to integer parameter');
         }
     }
 

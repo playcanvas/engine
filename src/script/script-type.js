@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { ScriptComponent } from '../framework/components/script/component.js';
@@ -53,12 +54,7 @@ class ScriptType extends EventHandler {
 
     initScriptType(args) {
         const script = this.constructor; // get script type, i.e. function (class)
-
-        // #if _DEBUG
-        if (!args || !args.app || !args.entity) {
-            console.warn('script \'' + script.__name + '\' has missing arguments in constructor');
-        }
-        // #endif
+        Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
 
         this.app = args.app;
         this.entity = args.entity;

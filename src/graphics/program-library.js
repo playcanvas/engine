@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { version, revision } from '../core/core.js';
 
 import { Shader } from './shader.js';
@@ -45,9 +46,7 @@ class ProgramLibrary {
     getProgram(name, options) {
         const generator = this._generators[name];
         if (generator === undefined) {
-            // #if _DEBUG
-            console.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
-            // #endif
+            Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
             return null;
         }
         const gd = this._device;

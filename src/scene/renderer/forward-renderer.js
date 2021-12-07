@@ -1,4 +1,5 @@
 import { now } from '../../core/time.js';
+import { Debug } from '../../core/debug.js';
 
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -1339,9 +1340,7 @@ class ForwardRenderer {
                 if (newMaterial) {
 
                     if (!drawCall._shader[pass].failed && !device.setShader(drawCall._shader[pass])) {
-                        // #if _DEBUG
-                        console.error(`Error in material "${material.name}" with flags ${objDefs}`);
-                        // #endif
+                        Debug.error(`Error in material "${material.name}" with flags ${objDefs}`);
                         drawCall._shader[pass].failed = true;
                     }
 

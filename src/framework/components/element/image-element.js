@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { math } from '../../../math/math.js';
 import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
@@ -879,7 +881,7 @@ class ImageElement {
 
         // #if _DEBUG
         if (this._color === value) {
-            console.warn("Setting element.color to itself will have no effect");
+            Debug.warn("Setting element.color to itself will have no effect");
         }
         // #endif
 

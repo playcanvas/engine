@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
@@ -466,9 +467,7 @@ class AnimController {
         }
         const state = this._findState(nodeName);
         if (!state) {
-            // #if _DEBUG
-            console.error('Attempting to unassign animation tracks from a state that does not exist.');
-            // #endif
+            Debug.error('Attempting to unassign animation tracks from a state that does not exist.');
             return;
         }
 
