@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -622,9 +624,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #if _DEBUG
-                console.error('ERROR: applyTorque: function takes 1 or 3 arguments');
-                // #endif
+                Debug.error('ERROR: applyTorque: function takes 1 or 3 arguments');
                 return;
         }
         const body = this._body;
@@ -699,9 +699,7 @@ class RigidBodyComponent extends Component {
                 pz = arguments[5];
                 break;
             default:
-                // #if _DEBUG
-                console.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
-                // #endif
+                Debug.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
                 return;
         }
         const body = this._body;
@@ -749,9 +747,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #if _DEBUG
-                console.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
-                // #endif
+                Debug.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
                 return;
         }
         const body = this._body;

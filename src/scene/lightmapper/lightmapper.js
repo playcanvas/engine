@@ -1,4 +1,5 @@
 import { now } from '../../core/time.js';
+import { Debug } from '../../core/debug.js';
 
 import { math } from '../../math/math.js';
 import { Color } from '../../math/color.js';
@@ -291,12 +292,8 @@ class Lightmapper {
 
             for (let i = 0; i < meshInstances.length; i++) {
                 if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
+                    Debug.log(`Lightmapper - node [${node.name}] contains meshes without required uv1, excluding it from baking.`);
                     hasUv1 = false;
-
-                    // #if _DEBUG
-                    console.log(`Lightmapper - node [${node.name}] contains meshes without required uv1, excluding it from baking.`);
-                    // #endif
-
                     break;
                 }
             }
@@ -954,10 +951,7 @@ class Lightmapper {
             // direction baking is not currently compatible with virtual lights, as we end up with no valid direction in lights penumbra
             if (passCount > 1 && numVirtualLights > 1) {
                 numVirtualLights = 1;
-
-                // #if _DEBUG
-                console.warn("Lightmapper's BAKE_COLORDIR mode is not compatible with Light's bakeNumSamples larger than one. Forcing it to one.");
-                // #endif
+                Debug.warn("Lightmapper's BAKE_COLORDIR mode is not compatible with Light's bakeNumSamples larger than one. Forcing it to one.");
             }
 
             for (let virtualLightIndex = 0; virtualLightIndex < numVirtualLights; virtualLightIndex++) {

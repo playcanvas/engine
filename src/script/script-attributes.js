@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 import { Color } from '../math/color.js';
 import { Curve } from '../math/curve.js';
 import { CurveSet } from '../math/curve-set.js';
@@ -237,14 +239,10 @@ class ScriptAttributes {
      */
     add(name, args) {
         if (this.index[name]) {
-            // #if _DEBUG
-            console.warn(`attribute '${name}' is already defined for script type '${this.scriptType.name}'`);
-            // #endif
+            Debug.warn(`attribute '${name}' is already defined for script type '${this.scriptType.name}'`);
             return;
         } else if (ScriptAttributes.reservedNames.has(name)) {
-            // #if _DEBUG
-            console.warn(`attribute '${name}' is a reserved attribute name`);
-            // #endif
+            Debug.warn(`attribute '${name}' is a reserved attribute name`);
             return;
         }
 

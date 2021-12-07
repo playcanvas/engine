@@ -19,6 +19,11 @@ class Debug {
         }
     }
 
+    // info message
+    static log(...args) {
+        console.log(...args);
+    }
+
     // warning message
     static warn(...args) {
         console.warn(...args);

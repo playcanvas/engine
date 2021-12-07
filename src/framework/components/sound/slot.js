@@ -1,4 +1,5 @@
 import { EventHandler } from '../../../core/event-handler.js';
+import { Debug } from '../../../core/debug.js';
 
 import { math } from '../../../math/math.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -109,9 +110,7 @@ class SoundSlot extends EventHandler {
 
         // If not loaded and doesn't have asset - then we cannot play it.  Warn and exit.
         if (!this.isLoaded && !this._hasAsset()) {
-            // #if _DEBUG
-            console.warn(`Trying to play SoundSlot ${this.name} but it is not loaded and doesn't have an asset.`);
-            // #endif
+            Debug.warn(`Trying to play SoundSlot ${this.name} but it is not loaded and doesn't have an asset.`);
             return;
         }
 

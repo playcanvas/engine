@@ -187,9 +187,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
-                // #if _DEBUG
-                console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
-                // #endif
+                Debug.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
             }
 
             // Lazily create temp vars
@@ -365,11 +363,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
-        // #if _DEBUG
-        if (!Ammo.AllHitsRayResultCallback) {
-            console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
-        }
-        // #endif
+        Debug.assert(Ammo.AllHitsRayResultCallback, "pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
 
         const results = [];
 

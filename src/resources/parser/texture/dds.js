@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../../asset/asset.js';
 import { Texture } from '../../../graphics/texture.js';
 import {
@@ -91,9 +92,7 @@ class DdsParser {
         }
 
         if (!format) {
-            // #if _DEBUG
-            console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
-            // #endif
+            Debug.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
             texture = new Texture(device, {
                 width: 4,
                 height: 4,
