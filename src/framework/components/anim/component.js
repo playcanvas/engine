@@ -24,9 +24,6 @@ import { Entity } from "../../entity.js";
  * @description Create a new AnimComponent.
  * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
- * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
- * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
     constructor(system, entity) {
@@ -109,7 +106,7 @@ class AnimComponent extends Component {
         this.animationAssets = prevAnimationAssets;
         this.loadAnimationAssets();
         // assign the previous layer masks then rebind all anim targets
-        this.layers.forEach((layer, i) => layer.mask = prevMasks[i]);
+        this.layers.forEach((layer, i) => { layer.mask = prevMasks[i] });
         this.rebind();
     }
 
