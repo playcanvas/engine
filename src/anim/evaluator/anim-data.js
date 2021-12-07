@@ -7,8 +7,6 @@
  * For example, specify 3 for a set of 3-dimensional vectors. The number of elements in
  * data array must be a multiple of components.
  * @param {Float32Array|number[]} data - The set of data.
- * @property {number} components - The number of components that make up and element.
- * @property {Float32Array|number[]} data - The data.
  */
 class AnimData {
     constructor(components, data) {
