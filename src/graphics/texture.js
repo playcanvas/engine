@@ -870,10 +870,8 @@ class Texture {
     }
 
     getDds() {
-        // #if _DEBUG
-        if (this.format !== PIXELFORMAT_R8_G8_B8_A8)
-            console.error("This format is not implemented yet");
-        // #endif
+
+        Debug.assert(this.format === PIXELFORMAT_R8_G8_B8_A8, "This format is not implemented yet");
 
         let fsize = 128;
         let idx = 0;
