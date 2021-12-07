@@ -516,7 +516,7 @@ class AnimComponent extends Component {
      * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
-        if (!this._stateGraph && nodePath.indexOf('.') !== -1) {
+        if (!this._stateGraph && nodePath.indexOf('.') === -1) {
             this.loadStateGraph(new AnimStateGraph({
                 "layers": [
                     {
