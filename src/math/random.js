@@ -76,7 +76,7 @@ const random = {
     /**
      * @function
      * @private
-     * @name random.spherePointDeterministic
+     * @name random.radicalInverse
      * @description Generate a repeatable pseudo-random sequence using radical inverse.
      * Based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
      * @param {number} [i] - The index in the sequence to return.
