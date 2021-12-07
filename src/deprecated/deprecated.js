@@ -482,11 +482,11 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
 ['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
     Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
         get: function () {
-            DeprecatedLog.log(`DEPRECATED: pc.Scene#skyboxPrefiltered${size} is deprecated.`);
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
             return this._prefilteredCubemaps[index];
         },
         set: function (value) {
-            DeprecatedLog.log(`DEPRECATED: pc.Scene#skyboxPrefiltered${size} is deprecated.`);
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
             this._prefilteredCubemaps[index] = value;
             this.updateShaders = true;
         }

@@ -8,11 +8,6 @@ import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
 
 const fixCubemapSeams = true;
 
-// calculate the number of mipmap levels given texture dimensions
-const calcLevels = (width, height) => {
-    return 1 + Math.floor(Math.log2(Math.max(width, height)));
-};
-
 const supportsFloat16 = (device) => {
     return device.extTextureHalfFloat && device.textureHalfFloatRenderable;
 };

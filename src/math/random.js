@@ -73,8 +73,15 @@ const random = {
         point.z = Math.sin(theta) * radius;
     },
 
-    // Calculate the radical inverse
-    // Based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+    /**
+     * @function
+     * @private
+     * @name random.spherePointDeterministic
+     * @description Generate a repeatable pseudo-random sequence using radical inverse.
+     * Based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+     * @param {number} [i] - The index in the sequence to return.
+     * @returns {number} The pseudo-random value.
+     */
     radicalInverse: function (i) {
         let bits = ((i << 16) | (i >>> 16)) >>> 0;
         bits = (((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >>> 1)) >>> 0;

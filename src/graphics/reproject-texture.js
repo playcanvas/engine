@@ -147,6 +147,7 @@ const generateLambertSamples = (numSamples, sourceTotalPixels) => {
 
 // generate a table storing the number of samples required to get 'numSamples'
 // valid samples for the given specularPower.
+/* eslint-disable no-unused-vars */
 const calculateRequiredSamplesGGX = () => {
     const countValidSamplesGGX = (numSamples, specularPower) => {
         const roughness = 1 - Math.log2(specularPower) / 11.0;

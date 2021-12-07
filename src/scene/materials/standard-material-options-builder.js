@@ -1,8 +1,8 @@
 import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
-    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
+    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA32F,
+    TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from '../../graphics/constants.js';
 import {
     BLEND_NONE,
