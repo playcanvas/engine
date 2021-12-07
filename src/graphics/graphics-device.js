@@ -2153,10 +2153,7 @@ class GraphicsDevice extends EventHandler {
             // don't capture index buffer in VAO
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            // #if _DEBUG
             let locZero = false;
-            // #endif
-
             for (let i = 0; i < vertexBuffers.length; i++) {
 
                 // bind buffer
@@ -2169,11 +2166,9 @@ class GraphicsDevice extends EventHandler {
                     const e = elements[j];
                     const loc = semanticToLocation[e.name];
 
-                    // #if _DEBUG
                     if (loc === 0) {
                         locZero = true;
                     }
-                    // #endif
 
                     gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
                     gl.enableVertexAttribArray(loc);
