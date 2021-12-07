@@ -1,5 +1,4 @@
 /**
- * @private
  * @class
  * @name AnimData
  * @classdesc Wraps a set of data used in animation.

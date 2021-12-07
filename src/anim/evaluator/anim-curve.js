@@ -1,5 +1,4 @@
 /**
- * @private
  * @class
  * @name AnimCurve
  * @classdesc Animation curve links an input data set to an output data set
