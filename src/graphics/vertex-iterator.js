@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
 function set1(a) {
@@ -291,9 +292,7 @@ class VertexIterator {
         if (element) {
 
             if (numVertices > this.vertexBuffer.numVertices) {
-                // #if _DEBUG
-                console.error(`NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`);
-                // #endif
+                Debug.error(`NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`);
 
                 // avoid overwrite
                 numVertices = this.vertexBuffer.numVertices;

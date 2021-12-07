@@ -1,6 +1,7 @@
 import { setupVertexArrayObject } from '../polyfill/OESVertexArrayObject.js';
 import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
+import { Debug } from '../core/debug.js';
 import { platform } from '../core/platform.js';
 
 import {
@@ -54,9 +55,7 @@ function downsampleImage(image, size) {
         const dstW = Math.floor(srcW * scale);
         const dstH = Math.floor(srcH * scale);
 
-        // #if _DEBUG
-        console.warn(`Image dimensions larger than max supported texture size of ${size}. Resizing from ${srcW}, ${srcH} to ${dstW}, ${dstH}.`);
-        // #endif
+        Debug.warn(`Image dimensions larger than max supported texture size of ${size}. Resizing from ${srcW}, ${srcH} to ${dstW}, ${dstH}.`);
 
         const canvas = document.createElement('canvas');
         canvas.width = dstW;
@@ -276,16 +275,12 @@ class GraphicsDevice extends EventHandler {
             event.preventDefault();
             this.contextLost = true;
             this.loseContext();
-            // #if _DEBUG
-            console.log('pc.GraphicsDevice: WebGL context lost.');
-            // #endif
+            Debug.log('pc.GraphicsDevice: WebGL context lost.');
             this.fire('devicelost');
         };
 
         this._contextRestoredHandler = () => {
-            // #if _DEBUG
-            console.log('pc.GraphicsDevice: WebGL context restored.');
-            // #endif
+            Debug.log('pc.GraphicsDevice: WebGL context restored.');
             this.restoreContext();
             this.contextLost = false;
             this.fire('devicerestored');
@@ -775,14 +770,10 @@ class GraphicsDevice extends EventHandler {
             if (!highpAvailable) {
                 if (mediumpAvailable) {
                     precision = "mediump";
-                    // #if _DEBUG
-                    console.warn("WARNING: highp not supported, using mediump");
-                    // #endif
+                    Debug.warn("WARNING: highp not supported, using mediump");
                 } else {
                     precision = "lowp";
-                    // #if _DEBUG
-                    console.warn("WARNING: highp and mediump not supported, using lowp");
-                    // #endif
+                    Debug.warn("WARNING: highp and mediump not supported, using lowp");
                 }
             }
         }
@@ -1207,47 +1198,35 @@ class GraphicsDevice extends EventHandler {
         const gl = this.gl;
 
         if (!this.webgl2 && depth) {
-            // #if _DEBUG
-            console.error("Depth is not copyable on WebGL 1.0");
-            // #endif
+            Debug.error("Depth is not copyable on WebGL 1.0");
             return false;
         }
         if (color) {
             if (!dest) {
                 // copying to backbuffer
                 if (!source._colorBuffer) {
-                    // #if _DEBUG
-                    console.error("Can't copy empty color buffer to backbuffer");
-                    // #endif
+                    Debug.error("Can't copy empty color buffer to backbuffer");
                     return false;
                 }
             } else {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
-                    // #if _DEBUG
-                    console.error("Can't copy color buffer, because one of the render targets doesn't have it");
-                    // #endif
+                    Debug.error("Can't copy color buffer, because one of the render targets doesn't have it");
                     return false;
                 }
                 if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    // #if _DEBUG
-                    console.error("Can't copy render targets of different color formats");
-                    // #endif
+                    Debug.error("Can't copy render targets of different color formats");
                     return false;
                 }
             }
         }
         if (depth) {
             if (!source._depthBuffer || !dest._depthBuffer) {
-                // #if _DEBUG
-                console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
-                // #endif
+                Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
                 return false;
             }
             if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                // #if _DEBUG
-                console.error("Can't copy render targets of different depth formats");
-                // #endif
+                Debug.error("Can't copy render targets of different depth formats");
                 return false;
             }
         }
@@ -2173,10 +2152,7 @@ class GraphicsDevice extends EventHandler {
             // don't capture index buffer in VAO
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            // #if _DEBUG
             let locZero = false;
-            // #endif
-
             for (let i = 0; i < vertexBuffers.length; i++) {
 
                 // bind buffer
@@ -2189,11 +2165,9 @@ class GraphicsDevice extends EventHandler {
                     const e = elements[j];
                     const loc = semanticToLocation[e.name];
 
-                    // #if _DEBUG
                     if (loc === 0) {
                         locZero = true;
                     }
-                    // #endif
 
                     gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
                     gl.enableVertexAttribArray(loc);
@@ -2215,11 +2189,9 @@ class GraphicsDevice extends EventHandler {
                 this._vaoMap.set(key, vao);
             }
 
-            // #if _DEBUG
             if (!locZero) {
-                console.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
+                Debug.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
             }
-            // #endif
         }
 
         return vao;
@@ -2322,9 +2294,9 @@ class GraphicsDevice extends EventHandler {
                     // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
                     if (this.renderTarget._samples < 2) {
                         if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
-                            console.error("Trying to bind current color buffer as a texture");
+                            Debug.error("Trying to bind current color buffer as a texture");
                         } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
-                            console.error("Trying to bind current depth buffer as a texture");
+                            Debug.error("Trying to bind current depth buffer as a texture");
                         }
                     }
                 }
@@ -3171,28 +3143,21 @@ class GraphicsDevice extends EventHandler {
     }
 
     compileAndLinkShader(shader) {
-        const gl = this.gl;
 
         const definition = shader.definition;
-        const attrs = definition.attributes;
-
-        // #if _DEBUG
-        if (!definition.vshader) {
-            console.error('No vertex shader has been specified when creating a shader.');
-        }
-        if (!definition.fshader) {
-            console.error('No fragment shader has been specified when creating a shader.');
-        }
-        // #endif
+        Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
+        Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
         const glVertexShader = this.compileShaderSource(definition.vshader, true);
         const glFragmentShader = this.compileShaderSource(definition.fshader, false);
 
+        const gl = this.gl;
         const glProgram = gl.createProgram();
 
         gl.attachShader(glProgram, glVertexShader);
         gl.attachShader(glProgram, glFragmentShader);
 
+        const attrs = definition.attributes;
         if (this.webgl2 && definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
             const outNames = [];
@@ -3210,12 +3175,7 @@ class GraphicsDevice extends EventHandler {
             if (attrs.hasOwnProperty(attr)) {
                 const semantic = attrs[attr];
                 const loc = semanticToLocation[semantic];
-
-                // #if _DEBUG
-                if (locations.hasOwnProperty(loc)) {
-                    console.warn(`WARNING: Two attribues are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
-                }
-                // #endif
+                Debug.assert(!locations.hasOwnProperty(loc), `WARNING: Two attribues are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
 
                 locations[loc] = attr;
                 gl.bindAttribLocation(glProgram, loc, attr);

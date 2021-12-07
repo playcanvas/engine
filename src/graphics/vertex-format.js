@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { hashCode } from '../core/hash.js';
 
 import { math } from '../math/math.js';
@@ -130,12 +131,10 @@ class VertexFormat {
             if (vertexCount) {
                 offset = math.roundUp(offset, elementSize);
 
-                // #if _DEBUG
                 // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
                 // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
-                if ((elementSize % 4) !== 0)
-                    console.warn("Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: " + elementSize);
-                // #endif
+                Debug.assert((elementSize % 4) === 0,
+                             `Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: ${elementSize}`);
             }
 
             const element = {

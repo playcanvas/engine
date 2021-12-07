@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { ScriptHandler } from '../resources/script.js';
@@ -53,9 +54,7 @@ const reservedScriptNames = new Set([
 /* eslint-enable jsdoc/no-undefined-types */
 function createScript(name, app) {
     if (script.legacy) {
-        // #if _DEBUG
-        console.error("This project is using the legacy script system. You cannot call pc.createScript().");
-        // #endif
+        Debug.error("This project is using the legacy script system. You cannot call pc.createScript().");
         return null;
     }
 
@@ -126,9 +125,7 @@ createScript.reservedAttributes = reservedAttributes;
 /* eslint-enable jsdoc/no-undefined-types */
 function registerScript(script, name, app) {
     if (script.legacy) {
-        // #if _DEBUG
-        console.error("This project is using the legacy script system. You cannot call pc.registerScript().");
-        // #endif
+        Debug.error("This project is using the legacy script system. You cannot call pc.registerScript().");
         return;
     }
 

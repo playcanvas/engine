@@ -319,9 +319,7 @@ class Texture {
     set addressW(addressW) {
         if (!this.device.webgl2) return;
         if (!this._volume) {
-            // #if _DEBUG
-            console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
-            // #endif
+            Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             return;
         }
         if (addressW !== this._addressW) {
@@ -843,11 +841,9 @@ class Texture {
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
-        // #if _DEBUG
         if (this._lockedLevel === -1) {
-            console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
+            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
         }
-        // #endif
 
         // Upload the new pixel data
         this.upload();
@@ -877,25 +873,19 @@ class Texture {
             if (!this.cubemap) {
                 const mipSize = this._levels[idx].length;
                 if (!mipSize) {
-                    // #if _DEBUG
-                    console.error(`No byte array for mip ${idx}`);
-                    // #endif
+                    Debug.error(`No byte array for mip ${idx}`);
                     return;
                 }
                 fsize += mipSize;
             } else {
                 for (let face = 0; face < 6; face++) {
                     if (!this._levels[idx][face]) {
-                        // #if _DEBUG
-                        console.error(`No level data for mip ${idx}, face ${face}`);
-                        // #endif
+                        Debug.error(`No level data for mip ${idx}, face ${face}`);
                         return;
                     }
                     const mipSize = this._levels[idx][face].length;
                     if (!mipSize) {
-                        // #if _DEBUG
-                        console.error(`No byte array for mip ${idx}, face ${face}`);
-                        // #endif
+                        Debug.error(`No byte array for mip ${idx}, face ${face}`);
                         return;
                     }
                     fsize += mipSize;

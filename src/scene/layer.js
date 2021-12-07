@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { hashCode } from '../core/hash.js';
 
 import {
@@ -368,9 +369,7 @@ class Layer {
             if (this.onDisable) this.onDisable();
 
         } else if (this._refCounter === 0) {
-            // #if _DEBUG
-            console.warn("Trying to decrement layer counter below 0");
-            // #endif
+            Debug.warn("Trying to decrement layer counter below 0");
             return;
         }
         this._refCounter--;

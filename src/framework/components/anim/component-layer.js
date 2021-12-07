@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
@@ -101,9 +102,7 @@ class AnimComponentLayer {
      */
     assignAnimation(nodePath, animTrack, speed, loop) {
         if (animTrack.constructor !== AnimTrack) {
-            // #if _DEBUG
-            console.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
-            // #endif
+            Debug.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             return;
         }
         this._controller.assignAnimation(nodePath, animTrack, speed, loop);

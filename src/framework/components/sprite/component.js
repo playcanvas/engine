@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { math } from '../../../math/math.js';
 import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
@@ -511,9 +513,7 @@ class SpriteComponent extends Component {
             this._currentClip = clip;
             this._currentClip.play();
         } else {
-            // #if _DEBUG
-            console.warn(`Trying to play sprite animation ${name} which does not exist.`);
-            // #endif
+            Debug.warn(`Trying to play sprite animation ${name} which does not exist.`);
         }
 
         return clip;

@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 
@@ -740,7 +741,7 @@ class LayerComposition extends EventHandler {
 
         // #if _DEBUG
         if (this.logRenderActions) {
-            console.log("Render Actions for composition: " + this.name);
+            Debug.log("Render Actions for composition: " + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
@@ -751,7 +752,7 @@ class LayerComposition extends EventHandler {
                 const dirLightCount = ra.directionalLights.length;
                 const clear = (ra.clearColor ? "Color " : "..... ") + (ra.clearDepth ? "Depth " : "..... ") + (ra.clearStencil ? "Stencil" : ".......");
 
-                console.log(i +
+                Debug.log(i +
                     (" Cam: " + (camera ? camera.entity.name : "-")).padEnd(22, " ") +
                     (" Lay: " + layer.name).padEnd(22, " ") +
                     (transparent ? " TRANSP" : " OPAQUE") +
@@ -772,9 +773,7 @@ class LayerComposition extends EventHandler {
 
     _isLayerAdded(layer) {
         if (this.layerList.indexOf(layer) >= 0) {
-            // #if _DEBUG
-            console.error("Layer is already added.");
-            // #endif
+            Debug.error("Layer is already added.");
             return true;
         }
         return false;
@@ -783,9 +782,7 @@ class LayerComposition extends EventHandler {
     _isSublayerAdded(layer, transparent) {
         for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                // #if _DEBUG
-                console.error("Sublayer is already added.");
-                // #endif
+                Debug.error("Sublayer is already added.");
                 return true;
             }
         }

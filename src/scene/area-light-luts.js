@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { FloatPacking } from '../math/float-packing.js';
 import { Texture } from '../graphics/texture.js';
 
@@ -94,7 +95,7 @@ class AreaLightLuts {
         const minorVersion = versions[1];
 
         if (majorVersion !== 0 || minorVersion !== 1) {
-            console.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
+            Debug.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
         } else {
 
             const srcData1 = new Float32Array(resource, 4, 16384);
