@@ -1,3 +1,4 @@
+import { Debug } from "../core/debug.js";
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8 } from "./constants.js";
 import { RenderTarget } from "./render-target.js";
 import { Texture } from "./texture.js";
@@ -64,11 +65,7 @@ class GrabPass {
 
         // print error if we cannot grab framebuffer at this point
         if (!device.grabPassAvailable) {
-
-            // #if _DEBUG
-            console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
-            // #endif
-
+            Debug.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
             return false;
         }
 
