@@ -409,6 +409,32 @@ Object.defineProperty(shaderChunks, "transformSkinnedVS", {
     }
 });
 
+const deprecatedChunks = {
+    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
+    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
+    'dpAtlasQuad.frag': null,
+    'genParaboloid.frag': null,
+    'prefilterCubemap.frag': null,
+    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
+};
+
+Object.keys(deprecatedChunks).forEach((chunkName) => {
+    const replacement = deprecatedChunks[chunkName];
+    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : ``;
+    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
+    Object.defineProperty(shaderChunks, chunkName, {
+        get: function () {
+            Debug.error(msg);
+            return null;
+        },
+        set: function () {
+            Debug.error(msg);
+        }
+    });
+});
+
 Object.defineProperties(Texture.prototype, {
     rgbm: {
         get: function () {
