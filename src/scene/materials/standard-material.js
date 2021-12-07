@@ -312,9 +312,9 @@ let _params = new Set();
  * - useMorphPosition: if morphing code should be generated to morph positions.
  * - useMorphNormal: if morphing code should be generated to morph normals.
  * - reflectionSource: one of "envAtlas", "cubeMap", "sphereMap"
- * - reflectionFormat: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
  * - ambientSource: one of "ambientSH", "envAtlas", "constant"
- * - ambientFormat: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
  * @example
  * // Create a new Standard material
  * var material = new pc.StandardMaterial();

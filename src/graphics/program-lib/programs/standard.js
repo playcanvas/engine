@@ -1135,13 +1135,13 @@ const standard = {
         }
 
         if (options.reflectionSource === 'envAtlas') {
-            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionFormat));
+            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'cubeMap') {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
-            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionFormat));
+            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'sphereMap') {
             const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.reflectionFormat));
+            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
         }
 
         if (reflections) {
@@ -1258,7 +1258,7 @@ const standard = {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
-                code += chunks.ambientEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientFormat));
+                code += chunks.ambientEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
             }

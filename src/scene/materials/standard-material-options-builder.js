@@ -95,22 +95,6 @@ class StandardMaterialOptionsBuilder {
         options.lights = [];
     }
 
-    _textureFormat(texture) {
-        if (!texture) {
-            return null;
-        }
-
-        if (texture.type === TEXTURETYPE_RGBM) {
-            return 'rgbm';
-        }
-
-        if (texture.type === TEXTURETYPE_RGBE) {
-            return 'rgbe';
-        }
-
-        return texture.format === PIXELFORMAT_RGBA16F || texture.format === PIXELFORMAT_RGBA32F ? 'linear' : 'srgb';
-    }
-
     _updateMaterialOptions(options, stdMat) {
         const notWhite = (color) => {
             return color.r !== 1 || color.g !== 1 || color.b !== 1;
@@ -198,33 +182,33 @@ class StandardMaterialOptionsBuilder {
         // source of environment reflections is as follows:
         if (stdMat.envAtlas) {
             options.reflectionSource = 'envAtlas';
-            options.reflectionFormat = this._textureFormat(stdMat.envAtlas);
+            options.reflectionEncoding = stdMat.envAtlas.encoding;
         } else if (stdMat.cubeMap) {
             options.reflectionSource = 'cubeMap';
-            options.reflectionFormat = this._textureFormat(stdMat.cubeMap);
+            options.reflectionEncoding = stdMat.cubeMap.encoding;
         } else if (stdMat.sphereMap) {
             options.reflectionSource = 'sphereMap';
-            options.reflectionFormat = this._textureFormat(stdMat.sphereMap);
+            options.reflectionEncoding = stdMat.sphereMap.encoding;
         } else if (stdMat.useSkybox && scene.envAtlas) {
             options.reflectionSource = 'envAtlas';
-            options.reflectionFormat = this._textureFormat(scene.envAtlas);
+            options.reflectionEncoding = scene.envAtlas.encoding;
         } else {
             options.reflectionSource = null;
-            options.reflectionFormat = null;
+            options.reflectionEncoding = null;
         }
 
         // source of environment ambient is as follows:
         if (stdMat.ambientSH) {
             options.ambientSource = 'ambientSH';
-            options.ambientFormat = null;
+            options.ambientEncoding = null;
         } else {
             const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
             if (envAtlas) {
                 options.ambientSource = 'envAtlas';
-                options.ambientFormat = this._textureFormat(envAtlas);
+                options.ambientEncoding = envAtlas.encoding;
             } else {
                 options.ambientSource = 'constant';
-                options.ambientFormat = null;
+                options.ambientEncoding = null;
             }
         }
     }

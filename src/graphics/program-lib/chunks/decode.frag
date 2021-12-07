@@ -36,3 +36,7 @@ vec2 mapUv(vec2 uv, vec4 rect) {
     return vec2(mix(rect.x + seamSize, rect.x + rect.z - seamSize, uv.x),
                 mix(rect.y + seamSize, rect.y + rect.w - seamSize, uv.y));
 }
+
+vec2 mapRoughnessUv(vec2 uv, float t) {
+    return mapUv(uv, vec4(0, 1.0 - t, t, t * 0.5));
+}

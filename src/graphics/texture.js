@@ -14,7 +14,7 @@ import {
     PIXELFORMAT_ATC_RGBA,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
 let _pixelSizeTable = null;
@@ -977,6 +977,23 @@ class Texture {
         }
 
         return buff;
+    }
+
+    // get the texture's encoding type
+    get encoding() {
+        if (this.type === TEXTURETYPE_RGBM) {
+            return 'rgbm';
+        }
+
+        if (this.type === TEXTURETYPE_RGBE) {
+            return 'rgbe';
+        }
+
+        if (this.format === PIXELFORMAT_RGBA16F || this.format === PIXELFORMAT_RGBA32F) {
+            return 'linear';
+        }
+
+        return 'srgb';
     }
 }
 

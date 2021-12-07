@@ -62,7 +62,6 @@ import { EnvLighting } from '../graphics/env-lighting.js';
  * @property {number} exposure The exposure value tweaks the overall brightness of
  * the scene. Defaults to 1.
  * @property {Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
- * @property {Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
  * @property {Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
  * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
@@ -405,44 +404,71 @@ class Scene extends EventHandler {
         this._resetSkyboxModel();
     }
 
+    // get the actual texture to use for skybox rendering
+    _getSkyboxTex() {
+        const cubemaps = this._prefilteredCubemaps;
+
+        if (this._skyboxMip) {
+            // skybox selection for some reason has always skipped the 32x32 prefiltered mipmap, presumably a bug.
+            // we can't simply fix this and map 3 to the correct level, since doing so has the potential
+            // to change the look of existing scenes dramatically.
+            // NOTE: the table skips the 32x32 mipmap
+            const skyboxMapping = [0, 1, 3, 4, 5, 6];
+
+            // select blurry texture for use on the skybox
+            return cubemaps[skyboxMapping[this._skyboxMip]] || this._envAtlas || cubemaps[0] || this._skyboxCubeMap;
+        }
+
+        return this._skyboxCubeMap || cubemaps[0] || this._envAtlas;
+    }
+
     _updateSkybox(device) {
         if (this.skyboxModel) {
             return;
         }
 
-        // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
-        // we can't simply fix this and map 3 to the correct level, since doing so has the potential
-        // to change the look of existing scenes dramatically.
-        // NOTE: the table skips the 32x32 mipmap
-        const skyboxMapping = [0, 1, 3, 4, 5, 6];
-
-        // select which texture to use for the backdrop
-        const usedTex =
-            this._skyboxMip ?
-                this._prefilteredCubemaps[skyboxMapping[this._skyboxMip]] || this._prefilteredCubemaps[0] || this._skyboxCubeMap :
-                this._skyboxCubeMap || this._prefilteredCubemaps[0];
-        if (!usedTex) {
+        // get the used texture
+        const skyboxTex = this._getSkyboxTex();
+        if (!skyboxTex) {
             return;
         }
 
         const material = new Material();
         const scene = this;
+
         material.updateShader = function (dev, sc, defs, staticLightList, pass) {
             const library = device.getProgramLibrary();
-            const shader = library.getProgram('skybox', {
-                rgbm: usedTex.type === TEXTURETYPE_RGBM,
-                hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
-                useIntensity: scene.skyboxIntensity !== 1,
-                mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
-                fixSeams: usedTex.fixCubemapSeams,
-                gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
-            });
-            this.shader = shader;
+
+            if (skyboxTex.cubemap) {
+                this.shader = library.getProgram('skybox', {
+                    type: 'cubemap',
+                    rgbm: skyboxTex.type === TEXTURETYPE_RGBM,
+                    hdr: (skyboxTex.type === TEXTURETYPE_RGBM || skyboxTex.format === PIXELFORMAT_RGBA32F),
+                    useIntensity: scene.skyboxIntensity !== 1,
+                    mip: skyboxTex.fixCubemapSeams ? scene.skyboxMip : 0,
+                    fixSeams: skyboxTex.fixCubemapSeams,
+                    gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
+                    toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
+                });
+            } else {
+                this.shader = library.getProgram('skybox', {
+                    type: 'envAtlas',
+                    encoding: skyboxTex.encoding,
+                    useIntensity: scene.skyboxIntensity !== 1,
+                    gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
+                    toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
+                });
+            }
         };
 
         material.updateShader();
-        material.setParameter("texture_cubeMap", usedTex);
+
+        if (skyboxTex.cubemap) {
+            material.setParameter("texture_cubeMap", skyboxTex);
+        } else {
+            material.setParameter("texture_envAtlas", skyboxTex);
+            material.setParameter("mipLevel", this._skyboxMip);
+        }
 
         if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
             if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
@@ -476,7 +502,7 @@ class Scene extends EventHandler {
             skyLayer.addMeshInstances(model.meshInstances);
             this.skyLayer = skyLayer;
 
-            this.fire("set:skybox", usedTex);
+            this.fire("set:skybox", skyboxTex);
         }
     }
 

@@ -155,8 +155,7 @@ class EnvLighting {
         });
 
         // generate blurry reflections
-        const levels = calcLevels(result.width, result.height);
-        for (let i = 1; i < levels; ++i) {
+        for (let i = 1; i < 7; ++i) {
             rect.y += rect.w;
             rect.z = Math.max(1, Math.floor(rect.z * 0.5));
             rect.w = Math.max(1, Math.floor(rect.w * 0.5));
