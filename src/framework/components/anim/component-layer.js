@@ -103,10 +103,10 @@ class AnimComponentLayer {
      * };
      */
     set mask(value) {
-        if (this._controller.assignMask(mask)) {
+        if (this._controller.assignMask(value)) {
             this._component.rebind();
         }
-        this._mask = mask;
+        this._mask = value;
     }
 
     get mask() {
