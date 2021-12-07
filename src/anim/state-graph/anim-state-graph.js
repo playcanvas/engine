@@ -2,7 +2,7 @@
  * @class
  * @name AnimStateGraph
  * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
- * @param {object} data The data which represents an anim state graph.
+ * - @param {object} data The data which represents an anim state graph.
  * @example
  * const animStateGraph = new AnimStateGraph({
  *     "layers": [
