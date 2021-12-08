@@ -48,7 +48,6 @@ import { Entity } from '../../framework/entity.js';
 import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
 import { AnimData } from '../../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { AnimBinder } from '../../anim/binder/anim-binder.js';
 
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
