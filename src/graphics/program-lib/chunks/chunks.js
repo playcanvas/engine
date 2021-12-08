@@ -1,6 +1,6 @@
 import alphaTestPS from './alphaTest.frag';
 import ambientConstantPS from './ambientConstant.frag';
-import ambientEnvPS from './ambientEnv.frag';
+import ambientEnvAtlasPS from './ambientEnvAtlas.frag';
 import ambientSHPS from './ambientSH.frag';
 import aoPS from './ao.frag';
 import aoSpecOccPS from './aoSpecOcc.frag';
@@ -140,7 +140,7 @@ import reflDirPS from './reflDir.frag';
 import reflDirAnisoPS from './reflDirAniso.frag';
 import reflectionCCPS from './reflectionCC.frag';
 import reflectionCubePS from './reflectionCube.frag';
-import reflectionEnvPS from './reflectionEnv.frag';
+import reflectionEnvAtlasPS from './reflectionEnvAtlas.frag';
 import reflectionSpherePS from './reflectionSphere.frag';
 import reflectionSphereLowPS from './reflectionSphereLow.frag';
 import refractionPS from './refraction.frag';
@@ -202,7 +202,7 @@ import viewNormalVS from './viewNormal.vert';
 const shaderChunks = {
     alphaTestPS: alphaTestPS,
     ambientConstantPS: ambientConstantPS,
-    ambientEnvPS: ambientEnvPS,
+    ambientEnvAtlasPS: ambientEnvAtlasPS,
     ambientSHPS: ambientSHPS,
     aoPS: aoPS,
     aoSpecOccPS: aoSpecOccPS,
@@ -342,7 +342,7 @@ const shaderChunks = {
     reflDirAnisoPS: reflDirAnisoPS,
     reflectionCCPS: reflectionCCPS,
     reflectionCubePS: reflectionCubePS,
-    reflectionEnvPS: reflectionEnvPS,
+    reflectionEnvAtlasPS: reflectionEnvAtlasPS,
     reflectionSpherePS: reflectionSpherePS,
     reflectionSphereLowPS: reflectionSphereLowPS,
     refractionPS: refractionPS,
