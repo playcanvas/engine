@@ -71,6 +71,24 @@ const random = {
         point.x = Math.cos(theta) * radius;
         point.y = y;
         point.z = Math.sin(theta) * radius;
+    },
+
+    /**
+     * @function
+     * @private
+     * @name random.radicalInverse
+     * @description Generate a repeatable pseudo-random sequence using radical inverse.
+     * Based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+     * @param {number} [i] - The index in the sequence to return.
+     * @returns {number} The pseudo-random value.
+     */
+    radicalInverse: function (i) {
+        let bits = ((i << 16) | (i >>> 16)) >>> 0;
+        bits = (((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >>> 1)) >>> 0;
+        bits = (((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >>> 2)) >>> 0;
+        bits = (((bits & 0x0F0F0F0F) << 4) | ((bits & 0xF0F0F0F0) >>> 4)) >>> 0;
+        bits = (((bits & 0x00FF00FF) << 8) | ((bits & 0xFF00FF00) >>> 8)) >>> 0;
+        return bits * 2.3283064365386963e-10;
     }
 };
 

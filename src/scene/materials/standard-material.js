@@ -3,9 +3,8 @@ import { Vec2 } from '../../math/vec2.js';
 import { Quat } from '../../math/quat.js';
 import { math } from '../../math/math.js';
 
-import { generateDpAtlas } from '../../graphics/paraboloid.js';
-import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
 import { _matTex2D, standard } from '../../graphics/program-lib/programs/standard.js';
+import { EnvLighting } from '../../graphics/env-lighting.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
@@ -291,15 +290,9 @@ let _params = new Set();
  * - alphaFade: fade value. See {@link Material#alphaFade}.
  * - sphereMap: if {@link StandardMaterial#sphereMap} is used.
  * - cubeMap: if {@link StandardMaterial#cubeMap} is used.
- * - dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
  * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.
  * - useSpecular: if any specular or reflections are needed at all.
- * - rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.
- * - hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.
- * - rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.
- * - hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.
  * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * - prefilteredCubemap: if prefiltered cubemaps are used.
  * - emissiveFormat: how emissiveMap must be sampled. This value is based on {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
  *   - 0: sRGB texture
  *   - 1: RGBM-encoded HDR texture
@@ -315,10 +308,13 @@ let _params = new Set();
  * - refraction: if refraction is used.
  * - skyboxIntensity: if reflected skybox intensity should be modulated.
  * - useCubeMapRotation: if cube map rotation is enabled.
- * - useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link VertexBuffer} instead of shader's uniforms.
  * - useMorphPosition: if morphing code should be generated to morph positions.
  * - useMorphNormal: if morphing code should be generated to morph normals.
+ * - reflectionSource: one of "envAtlas", "cubeMap", "sphereMap"
+ * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * - ambientSource: one of "ambientSH", "envAtlas", "constant"
+ * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
  * @example
  * // Create a new Standard material
  * var material = new pc.StandardMaterial();
@@ -490,7 +486,7 @@ class StandardMaterial extends Material {
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
         }
-        if (this.emissiveMap) {
+        if (this.emissiveIntensity !== 1) {
             this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
         }
 
@@ -540,9 +536,6 @@ class StandardMaterial extends Material {
         if (this.sphereMap) {
             this._setParameter('texture_sphereMap', this.sphereMap);
         }
-        if (this.dpAtlas) {
-            this._setParameter('texture_sphereMap', this.dpAtlas);
-        }
         this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
@@ -554,97 +547,30 @@ class StandardMaterial extends Material {
         }
     }
 
-    updateLightingUniforms(device, scene) {
-        let globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
-        if (this.useSkybox) {
-            globalSky128 = scene._skyboxPrefiltered[0];
-            globalSky64 = scene._skyboxPrefiltered[1];
-            globalSky32 = scene._skyboxPrefiltered[2];
-            globalSky16 = scene._skyboxPrefiltered[3];
-            globalSky8 = scene._skyboxPrefiltered[4];
-            globalSky4 = scene._skyboxPrefiltered[5];
-        }
-
-        const prefilteredCubeMap128 = this.prefilteredCubeMap128 || globalSky128;
-        const prefilteredCubeMap64 = this.prefilteredCubeMap64 || globalSky64;
-        const prefilteredCubeMap32 = this.prefilteredCubeMap32 || globalSky32;
-        const prefilteredCubeMap16 = this.prefilteredCubeMap16 || globalSky16;
-        const prefilteredCubeMap8 = this.prefilteredCubeMap8 || globalSky8;
-        const prefilteredCubeMap4 = this.prefilteredCubeMap4 || globalSky4;
-
-        if (prefilteredCubeMap128) {
-            const allMips = prefilteredCubeMap128 &&
-                         prefilteredCubeMap64 &&
-                         prefilteredCubeMap32 &&
-                         prefilteredCubeMap16 &&
-                         prefilteredCubeMap8 &&
-                         prefilteredCubeMap4;
-
-            // no basic extension? likely slow device, attempt tp use dual paraboloid map with spherical harmonic ambient
-            const useDp = !device.extTextureLod && allMips;
-
-            // if prefilteredCubeMap16 is not the correct format or doesn't have CPU-side data
-            // then shFromCubemap will fail. here we check that the spherical harmonic is
-            // successfully generated before committing to dual paraboloid lighting.
-            const sh = useDp ? prefilteredCubeMap128.sh || shFromCubemap(device, prefilteredCubeMap16) : null;
-
-            if (useDp && sh) {
-                if (!prefilteredCubeMap128.dpAtlas) {
-                    const atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
-                        prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
-                    prefilteredCubeMap128.dpAtlas = generateDpAtlas(device, atlas);
-                    prefilteredCubeMap128.sh = sh;
-                }
-                this.dpAtlas = prefilteredCubeMap128.dpAtlas;
-                this.ambientSH = prefilteredCubeMap128.sh;
-                this._setParameter('ambientSH[0]', this.ambientSH);
-                this._setParameter('texture_sphereMap', this.dpAtlas);
-            } else if (device.useTexCubeLod) {
-                if (prefilteredCubeMap128._levels.length < 6) {
-                    if (allMips) {
-                        // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
-                        this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
-                    } else {
-                        console.log(`Can't use prefiltered cubemap: ${allMips}, ${device.useTexCubeLod}, ${prefilteredCubeMap128._levels}`);
-                    }
-                } else {
-                    // Single (able to use single cubemap with texCubeLod)
-                    this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
-                }
-            } else if (allMips) {
-                // Multiple (no texCubeLod, but able to use cubemap per mip)
-                this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
-                this._setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
-                this._setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
-                this._setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
-                this._setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
-                this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
-            } else {
-                console.log(`Can't use prefiltered cubemap: ${allMips}, ${device.useTexCubeLod}, ${prefilteredCubeMap128._levels}`);
-            }
+    updateEnvUniforms(device, scene) {
+        const envAtlas = this.envAtlas || (this.useSkybox ? scene.envAtlas : null);
+        if (envAtlas) {
+            this._setParameter('texture_envAtlas', envAtlas);
 
             if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
-
-        // remove unused lighting params
         this._processParameters('_activeLightingParams');
     }
 
     updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // update prefiltered lighting data
-        this.updateLightingUniforms(device, scene);
-        const prefilteredCubeMap128 = this.prefilteredCubeMap128 || (this.useSkybox && scene._skyboxPrefiltered[0]);
+        this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
         const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
-            this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights);
 
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
@@ -683,60 +609,54 @@ const defineUniform = (name, getUniformFunc) => {
     _uniforms[name] = getUniformFunc;
 };
 
-// define a standard material property
-const defineProp = (prop) => {
-    const name = prop.name;
-    const internalName = `_${name}`;
-    const defaultValue = prop.defaultValue;
-    const dirtyShaderFunc = prop.dirtyShaderFunc || null;
-    const getUniformFunc = prop.getUniformFunc || null;
-
-    const aggFuncs = {
-        equals: (a, b) => a.equals(b),
-        clone: a => a.clone(),
-        copy: (dest, src) => dest.copy(src)
-    };
-
-    const valueFuncs = {
-        equals: (a, b) => a === b,
-        clone: a => a,
-        copy: (dest, src) => src
-    };
-
-    const funcs = defaultValue && defaultValue.clone ? aggFuncs : valueFuncs;
-    const isColor = prop.default instanceof Color;
-
+const definePropInternal = (name, constructorFunc, setterFunc, getterFunc) => {
     Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            if (isColor) {
-                // HACK: since we can't detect whether a user is going to set a color property
-                // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
-                // the worst and flag the shader as dirty.
-                // This means currently animating a material colour is horribly slow.
-                this._dirtyShader = true;
-            }
-            return this[internalName];
+        get: getterFunc || function () {
+            return this[`_${name}`];
         },
-        set: function (value) {
-            const oldValue = this[internalName];
-            if (!funcs.equals(oldValue, value)) {
-                if (!this._dirtyShader) {
-                    this._dirtyShader = dirtyShaderFunc ? dirtyShaderFunc(oldValue, value) : true;
-                }
-                this[internalName] = funcs.copy(oldValue, value);
-            }
-        }
+        set: setterFunc
     });
 
     _props[name] = {
-        value: () => {
-            return funcs.clone(defaultValue);
+        value: constructorFunc
+    };
+};
+
+// define a simple value property (float, string etc)
+const defineValueProp = (prop) => {
+    const internalName = `_${prop.name}`;
+    const dirtyShaderFunc = prop.dirtyShaderFunc || (() => true);
+
+    const setterFunc = function (value) {
+        const oldValue = this[internalName];
+        if (oldValue !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderFunc(oldValue, value);
+            this[internalName] = value;
         }
     };
 
-    if (getUniformFunc) {
-        defineUniform(name, getUniformFunc);
-    }
+    definePropInternal(prop.name, () => prop.defaultValue, setterFunc, prop.getterFunc);
+};
+
+// define an aggregate property (color, vec3 etc)
+const defineAggProp = (prop) => {
+    const internalName = `_${prop.name}`;
+    const dirtyShaderFunc = prop.dirtyShaderFunc || (() => true);
+
+    const setterFunc = function (value) {
+        const oldValue = this[internalName];
+        if (!oldValue.equals(value)) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderFunc(oldValue, value);
+            this[internalName] = oldValue.copy(value);
+        }
+    };
+
+    definePropInternal(prop.name, () => prop.defaultValue.clone(), setterFunc, prop.getterFunc);
+};
+
+// define either a value or aggregate property
+const defineProp = (prop) => {
+    return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
 };
 
 function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
@@ -845,43 +765,42 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     });
 }
 
-function _defineColor(name, defaultValue, hasIntensity) {
-    const intensityName = `${name}Intensity`;
-
+function _defineColor(name, defaultValue) {
     defineProp({
         name: name,
         defaultValue: defaultValue,
-        getUniformFunc: (material, device, scene) => {
-            const uniform = material._allocUniform(name, () => new Float32Array(3));
-            const color = material[name];
-            const intensity = hasIntensity ? material[intensityName] : 1.0;
-            const gamma = material.useGammaTonemap && scene.gammaCorrection;
-
-            if (gamma) {
-                uniform[0] = Math.pow(color.r, 2.2) * intensity;
-                uniform[1] = Math.pow(color.g, 2.2) * intensity;
-                uniform[2] = Math.pow(color.b, 2.2) * intensity;
-            } else {
-                uniform[0] = color.r * intensity;
-                uniform[1] = color.g * intensity;
-                uniform[2] = color.b * intensity;
-            }
-
-            return uniform;
+        getterFunc: function () {
+            // HACK: since we can't detect whether a user is going to set a color property
+            // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
+            // the worst and flag the shader as dirty.
+            // This means currently animating a material colour is horribly slow.
+            this._dirtyShader = true;
+            return this[`_${name}`];
         }
     });
 
-    if (hasIntensity) {
-        defineProp({
-            name: intensityName,
-            defaultValue: 1
-        });
-    }
+    defineUniform(name, (material, device, scene) => {
+        const uniform = material._allocUniform(name, () => new Float32Array(3));
+        const color = material[name];
+        const gamma = material.useGammaTonemap && scene.gammaCorrection;
+
+        if (gamma) {
+            uniform[0] = Math.pow(color.r, 2.2);
+            uniform[1] = Math.pow(color.g, 2.2);
+            uniform[2] = Math.pow(color.b, 2.2);
+        } else {
+            uniform[0] = color.r;
+            uniform[1] = color.g;
+            uniform[2] = color.b;
+        }
+
+        return uniform;
+    });
 }
 
 function _defineFloat(name, defaultValue, getUniformFunc) {
     defineProp({
-        name: `${name}`,
+        name: name,
         defaultValue: defaultValue,
         dirtyShaderFunc: (oldValue, newValue) => {
             // This is not always optimal and will sometimes trigger redundant shader
@@ -889,9 +808,10 @@ function _defineFloat(name, defaultValue, getUniformFunc) {
             // triggers a shader recompile if the previous and current values both
             // have a fractional part.
             return (oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1);
-        },
-        getUniformFunc: getUniformFunc
+        }
     });
+
+    defineUniform(name, getUniformFunc);
 }
 
 function _defineObject(name, getUniformFunc) {
@@ -900,9 +820,10 @@ function _defineObject(name, getUniformFunc) {
         defaultValue: null,
         dirtyShaderFunc: (oldValue, newValue) => {
             return !!oldValue === !!newValue;
-        },
-        getUniformFunc: getUniformFunc
+        }
     });
+
+    defineUniform(name, getUniformFunc);
 }
 
 function _defineAlias(newName, oldName) {
@@ -940,7 +861,8 @@ function _defineMaterialProps() {
     _defineColor("ambient", new Color(0.7, 0.7, 0.7));
     _defineColor("diffuse", new Color(1, 1, 1));
     _defineColor("specular", new Color(0, 0, 0));
-    _defineColor("emissive", new Color(0, 0, 0), true);
+    _defineColor("emissive", new Color(0, 0, 0));
+    _defineFloat("emissiveIntensity", 1);
 
     _defineFloat("shininess", 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
@@ -1044,13 +966,7 @@ function _defineMaterialProps() {
 
     _defineObject("cubeMap");
     _defineObject("sphereMap");
-    _defineObject("dpAtlas");
-    _defineObject("prefilteredCubeMap128");
-    _defineObject("prefilteredCubeMap64");
-    _defineObject("prefilteredCubeMap32");
-    _defineObject("prefilteredCubeMap16");
-    _defineObject("prefilteredCubeMap8");
-    _defineObject("prefilteredCubeMap4");
+    _defineObject("envAtlas");
 
     _defineAlias("diffuseTint", "diffuseMapTint");
     _defineAlias("specularTint", "specularMapTint");
@@ -1063,6 +979,47 @@ function _defineMaterialProps() {
     _defineAlias("glossVertexColor", "glossMapVertexColor");
     _defineAlias("opacityVertexColor", "opacityMapVertexColor");
     _defineAlias("lightVertexColor", "lightMapVertexColor");
+
+    // prefiltered cubemap getter
+    const getterFunc = function () {
+        return this._prefilteredCubemaps;
+    };
+
+    // prefiltered cubemap setter
+    const setterFunc = function (value) {
+        const cubemaps = this._prefilteredCubemaps;
+
+        value = value || [];
+
+        let changed = false;
+        let complete = true;
+        for (let i = 0; i < 6; ++i) {
+            const v = value[i] || null;
+            if (cubemaps[i] !== v) {
+                cubemaps[i] = v;
+                changed = true;
+            }
+            complete = complete && (!!cubemaps[i]);
+        }
+
+        if (changed) {
+            if (complete) {
+                this.envAtlas = EnvLighting.generatePrefilteredAtlas(cubemaps, {
+                    target: this.envAtlas
+                });
+            } else {
+                if (this.envAtlas) {
+                    this.envAtlas.destroy();
+                    this.envAtlas = null;
+                }
+            }
+            this._dirtyShader = true;
+        }
+    };
+
+    const empty = [null, null, null, null, null, null];
+
+    definePropInternal("prefilteredCubemaps", () => empty.slice(), setterFunc, getterFunc);
 }
 
 _defineMaterialProps();

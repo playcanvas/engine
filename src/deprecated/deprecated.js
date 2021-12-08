@@ -409,6 +409,32 @@ Object.defineProperty(shaderChunks, "transformSkinnedVS", {
     }
 });
 
+const deprecatedChunks = {
+    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
+    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
+    'dpAtlasQuad.frag': null,
+    'genParaboloid.frag': null,
+    'prefilterCubemap.frag': null,
+    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
+};
+
+Object.keys(deprecatedChunks).forEach((chunkName) => {
+    const replacement = deprecatedChunks[chunkName];
+    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : ``;
+    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
+    Object.defineProperty(shaderChunks, chunkName, {
+        get: function () {
+            Debug.error(msg);
+            return null;
+        },
+        set: function () {
+            Debug.error(msg);
+        }
+    });
+});
+
 Object.defineProperties(Texture.prototype, {
     rgbm: {
         get: function () {
@@ -476,6 +502,21 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
         return DefaultMaterial.get(getApplication().graphicsDevice);
     }
+});
+
+// scene.skyboxPrefiltered**** are deprecated
+['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
+    Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
+        get: function () {
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
+            return this._prefilteredCubemaps[index];
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
+            this._prefilteredCubemaps[index] = value;
+            this.updateShaders = true;
+        }
+    });
 });
 
 Object.defineProperty(Batch.prototype, 'model', {
@@ -1056,6 +1097,10 @@ export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
         fallbackUrl: fallbackUrl,
         lazyInit: true
     });
+}
+
+export function prefilterCubemap(options) {
+    Debug.deprecated('pc.prefilterCubemap is deprecated. Use pc.envLighting instead.');
 }
 
 export class AssetListLoader extends EventHandler {
