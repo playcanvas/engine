@@ -980,11 +980,12 @@ function _defineMaterialProps() {
     _defineAlias("opacityVertexColor", "opacityMapVertexColor");
     _defineAlias("lightVertexColor", "lightMapVertexColor");
 
-    // prefiltered cubemaps property
+    // prefiltered cubemap getter
     const getterFunc = function () {
         return this._prefilteredCubemaps;
     };
 
+    // prefiltered cubemap setter
     const setterFunc = function (value) {
         const cubemaps = this._prefilteredCubemaps;
 
