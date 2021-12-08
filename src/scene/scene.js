@@ -15,7 +15,7 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-import { WorldClustersParams } from './lighting/world-clusters-params.js';
+import { LightingParams } from './lighting/lighting-params.js';
 
 /**
  * @class
@@ -151,8 +151,10 @@ class Scene extends EventHandler {
         this._lightmapFilterSmoothness = 0.2;
 
         // clustered lighting
-        this.worldClustersParams = new WorldClustersParams();
         this._clusteredLightingEnabled = false;
+        this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
+            this._layers._dirtyLights = true;
+        });
 
         this._stats = {
             meshInstances: 0,
@@ -197,92 +199,8 @@ class Scene extends EventHandler {
         this._clusteredLightingEnabled = value;
     }
 
-    get lightCells() {
-        return this.worldClustersParams.cells;
-    }
-
-    set lightCells(value) {
-        this.worldClustersParams.cells.copy(value);
-    }
-
-    get maxLights() {
-        return this.worldClustersParams.maxLights;
-    }
-
-    set maxLights(value) {
-        this.worldClustersParams.maxLights = value;
-    }
-
-    get cookieAtlasResolution() {
-        return this.worldClustersParams.cookieAtlasResolution;
-    }
-
-    set cookieAtlasResolution(value) {
-        this.worldClustersParams.cookieAtlasResolution = value;
-    }
-
-    get shadowAtlasResolution() {
-        return this.worldClustersParams.shadowAtlasResolution;
-    }
-
-    set shadowAtlasResolution(value) {
-        this.worldClustersParams.shadowAtlasResolution = value;
-    }
-
-    get shadowType() {
-        return this.worldClustersParams.shadowType;
-    }
-
-    set shadowType(value) {
-        if (this.worldClustersParams.shadowType !== value) {
-            this.worldClustersParams.shadowType = value;
-
-            // lit shaders need to be rebuilt
-            this._layers._dirtyLights = true;
-        }
-    }
-
-    get cookiesEnabled() {
-        return this.worldClustersParams.cookiesEnabled;
-    }
-
-    set cookiesEnabled(value) {
-        if (this.worldClustersParams.cookiesEnabled !== value) {
-            this.worldClustersParams.cookiesEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._layers._dirtyLights = true;
-        }
-    }
-
-    get areaLightsEnabled() {
-        return this.worldClustersParams.areaLightsEnabled;
-    }
-
-    set areaLightsEnabled(value) {
-
-        // ignore if not supported
-        if (this.device.supportsAreaLights) {
-            if (this.worldClustersParams.areaLightsEnabled !== value) {
-                this.worldClustersParams.areaLightsEnabled = value;
-
-                // lit shaders need to be rebuilt
-                this._layers._dirtyLights = true;
-            }
-        }
-    }
-
-    get shadowsEnabled() {
-        return this.worldClustersParams.shadowsEnabled;
-    }
-
-    set shadowsEnabled(value) {
-        if (this.worldClustersParams.shadowsEnabled !== value) {
-            this.worldClustersParams.shadowsEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._layers._dirtyLights = true;
-        }
+    get lightingParams() {
+        return this._lightingParams;
     }
 
     get fog() {

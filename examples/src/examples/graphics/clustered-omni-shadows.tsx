@@ -79,25 +79,27 @@ class ClusteredShadowsOmniExample extends Example {
         app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
+        const lightingParams = app.scene.lightingParams;
+
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.lightCells = new pc.Vec3(16, 12, 16);
+        lightingParams.cells = new pc.Vec3(16, 12, 16);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.maxLights = 80;
+        lightingParams.maxLightsPerCell = 16;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
-        app.scene.shadowsEnabled = true;
+        lightingParams.shadowsEnabled = true;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        app.scene.cookiesEnabled = true;
+        lightingParams.cookiesEnabled = true;
 
         // resolution of the shadow and cookie atlas
-        app.scene.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
-        app.scene.cookieAtlasResolution = 2048;
+        lightingParams.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
+        lightingParams.cookieAtlasResolution = 2048;
 
         // helper function to create a 3d primitive including its material
         function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
@@ -231,7 +233,7 @@ class ClusteredShadowsOmniExample extends Example {
         data.on('*:set', (path: string, value: any) => {
             const pathArray = path.split('.');
             // @ts-ignore
-            app.scene[pathArray[1]] = value;
+            lightingParams[pathArray[1]] = value;
         });
 
         // Set an update function on the app's update event

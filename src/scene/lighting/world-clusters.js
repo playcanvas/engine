@@ -146,15 +146,15 @@ class WorldClusters {
     }
 
     // updates itself based on parameters stored in the scene
-    updateParams(worldClustersParams) {
-        if (worldClustersParams) {
-            this.cells = worldClustersParams.cells;
-            this.maxCellLightCount = worldClustersParams.maxLights;
+    updateParams(lightingParams) {
+        if (lightingParams) {
+            this.cells = lightingParams.cells;
+            this.maxCellLightCount = lightingParams.maxLightsPerCell;
 
-            this.lightsBuffer.cookiesEnabled = worldClustersParams.cookiesEnabled;
-            this.lightsBuffer.shadowsEnabled = worldClustersParams.shadowsEnabled;
+            this.lightsBuffer.cookiesEnabled = lightingParams.cookiesEnabled;
+            this.lightsBuffer.shadowsEnabled = lightingParams.shadowsEnabled;
 
-            this.lightsBuffer.areaLightsEnabled = worldClustersParams.areaLightsEnabled;
+            this.lightsBuffer.areaLightsEnabled = lightingParams.areaLightsEnabled;
         }
     }
 
@@ -437,8 +437,8 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, gammaCorrection, worldClustersParams) {
-        this.updateParams(worldClustersParams);
+    update(lights, gammaCorrection, lightingParams) {
+        this.updateParams(lightingParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();

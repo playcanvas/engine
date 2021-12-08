@@ -74,10 +74,10 @@ class StandardMaterialOptionsBuilder {
         // clustered lighting features (in shared options as shadow pass needs this too)
         if (scene.clusteredLightingEnabled) {
             options.clusteredLightingEnabled = true;
-            options.clusteredLightingCookiesEnabled = scene.cookiesEnabled;
-            options.clusteredLightingShadowsEnabled = scene.shadowsEnabled;
-            options.clusteredLightingShadowType = scene.shadowType;
-            options.clusteredLightingAreaLightsEnabled = scene.areaLightsEnabled;
+            options.clusteredLightingCookiesEnabled = scene.lightingParams.cookiesEnabled;
+            options.clusteredLightingShadowsEnabled = scene.lightingParams.shadowsEnabled;
+            options.clusteredLightingShadowType = scene.lightingParams.shadowType;
+            options.clusteredLightingAreaLightsEnabled = scene.lightingParams.areaLightsEnabled;
         }
     }
 

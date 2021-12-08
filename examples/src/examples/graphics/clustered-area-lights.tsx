@@ -65,16 +65,21 @@ class AreaLightsExample extends Example {
         app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
+        const lightingParams = app.scene.lightingParams;
+
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.lightCells = new pc.Vec3(30, 2, 30);
+        lightingParams.cells = new pc.Vec3(30, 2, 30);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.maxLights = 20;
+        lightingParams.maxLightsPerCell = 20;
 
         // @ts-ignore engine-tsd
-        app.scene.areaLightsEnabled = true;
+        lightingParams.areaLightsEnabled = true;
+
+        // @ts-ignore engine-tsd
+        lightingParams.shadowsEnabled = false;
 
 
         // pure black material - used on back side of light objects

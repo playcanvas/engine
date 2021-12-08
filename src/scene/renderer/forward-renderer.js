@@ -1794,7 +1794,7 @@ class ForwardRenderer {
     }
 
     updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.worldClustersParams);
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lightingParams);
     }
 
     updateClusters(comp) {
@@ -1805,7 +1805,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < comp._worldClusters.length; i++) {
             const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.worldClustersParams);
+            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.lightingParams);
         }
 
         // #if _PROFILER
@@ -1854,14 +1854,14 @@ class ForwardRenderer {
             this.updateLightTextureAtlas(comp);
 
             // render cookies for all local visible lights
-            if (this.scene.cookiesEnabled) {
+            if (this.scene.lightingParams.cookiesEnabled) {
                 this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
                 this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
             }
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.shadowsEnabled)) {
+        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lightingParams.shadowsEnabled)) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
