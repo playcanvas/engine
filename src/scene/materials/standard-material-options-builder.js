@@ -11,7 +11,8 @@ import {
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
-    TONEMAP_LINEAR
+    TONEMAP_LINEAR,
+    SPECULAR_PHONG
 } from '../constants.js';
 
 import { Quat } from '../../math/quat.js';
@@ -179,8 +180,10 @@ class StandardMaterialOptionsBuilder {
             options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
         }
 
+        const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
+
         // source of environment reflections is as follows:
-        if (stdMat.envAtlas) {
+        if (stdMat.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = stdMat.envAtlas.encoding;
         } else if (stdMat.cubeMap) {
@@ -189,7 +192,7 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.sphereMap) {
             options.reflectionSource = 'sphereMap';
             options.reflectionEncoding = stdMat.sphereMap.encoding;
-        } else if (stdMat.useSkybox && scene.envAtlas) {
+        } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = scene.envAtlas.encoding;
         } else {
@@ -198,12 +201,12 @@ class StandardMaterialOptionsBuilder {
         }
 
         // source of environment ambient is as follows:
-        if (stdMat.ambientSH) {
+        if (stdMat.ambientSH && !isPhong) {
             options.ambientSource = 'ambientSH';
             options.ambientEncoding = null;
         } else {
             const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
-            if (envAtlas) {
+            if (envAtlas && !isPhong) {
                 options.ambientSource = 'envAtlas';
                 options.ambientEncoding = envAtlas.encoding;
             } else {
