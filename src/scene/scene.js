@@ -413,7 +413,7 @@ class Scene extends EventHandler {
             // we can't simply fix this and map 3 to the correct level, since doing so has the potential
             // to change the look of existing scenes dramatically.
             // NOTE: the table skips the 32x32 mipmap
-            const skyboxMapping = [0, 1, 3, 4, 5, 6];
+            const skyboxMapping = [0, 1, /* 2 */ 3, 4, 5, 6];
 
             // select blurry texture for use on the skybox
             return cubemaps[skyboxMapping[this._skyboxMip]] || this._envAtlas || cubemaps[0] || this._skyboxCubeMap;

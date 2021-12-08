@@ -14,7 +14,7 @@ const skybox = {
 
         let fshader;
         if (options.type === 'cubemap') {
-            const mip2size = [128, 64, 32, 16, 8, 4, 2];
+            const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
 
             fshader = precisionCode(device);
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
