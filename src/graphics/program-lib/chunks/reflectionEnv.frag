@@ -10,8 +10,8 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
 
     float level = saturate(1.0 - tGlossiness) * 5.0;
     float ilevel = floor(level);
-    vec3 linear0 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, 1.0 / exp2(ilevel))));
-    vec3 linear1 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, 1.0 / exp2(ilevel + 1.0))));
+    vec3 linear0 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel)));
+    vec3 linear1 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
 
     return processEnvironment(mix(linear0, linear1, level - ilevel));
 }

@@ -410,14 +410,14 @@ Object.defineProperty(shaderChunks, "transformSkinnedVS", {
 });
 
 const deprecatedChunks = {
-    'ambientPrefilteredCube.frag': 'ambientEnvAtlas.frag',
-    'ambientPrefilteredCubeLod.frag': 'ambientEnvAtlas.frag',
+    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
+    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
     'dpAtlasQuad.frag': null,
     'genParaboloid.frag': null,
     'prefilterCubemap.frag': null,
-    'reflectionDpAtlas.frag': 'reflectionEnvAtlas.frag',
-    'reflectionPrefilteredCube.frag': 'reflectionEnvAtlas.frag',
-    'reflectionPrefilteredCubeLod.frag': 'reflectionEnvAtlas.frag'
+    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
 };
 
 Object.keys(deprecatedChunks).forEach((chunkName) => {

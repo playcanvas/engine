@@ -28,6 +28,12 @@ import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, v
 
 const _matTex2D = [];
 
+const decodeTable = {
+    'rgbm': 'decodeRGBM',
+    'rgbe': 'decodeRGBE',
+    'linear': 'decodeLinear'
+};
+
 const standard = {
 
     // Shared Sandard Material option structures
@@ -327,11 +333,7 @@ const standard = {
     },
 
     _decodeFunc: function (textureFormat) {
-        return {
-            'rgbm': 'decodeRGBM',
-            'rgbe': 'decodeRGBE',
-            'linear': 'decodeLinear'
-        }[textureFormat] || 'decodeGamma';
+        return decodeTable[textureFormat] || 'decodeGamma';
     },
 
     /**
@@ -1135,7 +1137,7 @@ const standard = {
         }
 
         if (options.reflectionSource === 'envAtlas') {
-            code += chunks.reflectionEnvAtlasPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'cubeMap') {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
             code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
@@ -1258,7 +1260,7 @@ const standard = {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
-                code += chunks.ambientEnvAtlasPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientEncoding));
+                code += chunks.ambientEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
             }

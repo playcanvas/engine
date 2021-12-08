@@ -1,6 +1,6 @@
 import alphaTestPS from './alphaTest.frag';
 import ambientConstantPS from './ambientConstant.frag';
-import ambientEnvAtlasPS from './ambientEnvAtlas.frag';
+import ambientEnvPS from './ambientEnv.frag';
 import ambientSHPS from './ambientSH.frag';
 import aoPS from './ao.frag';
 import aoSpecOccPS from './aoSpecOcc.frag';
@@ -140,7 +140,7 @@ import reflDirPS from './reflDir.frag';
 import reflDirAnisoPS from './reflDirAniso.frag';
 import reflectionCCPS from './reflectionCC.frag';
 import reflectionCubePS from './reflectionCube.frag';
-import reflectionEnvAtlasPS from './reflectionEnvAtlas.frag';
+import reflectionEnvPS from './reflectionEnv.frag';
 import reflectionSpherePS from './reflectionSphere.frag';
 import reflectionSphereLowPS from './reflectionSphereLow.frag';
 import refractionPS from './refraction.frag';
@@ -161,7 +161,7 @@ import skinBatchConstVS from './skinBatchConst.vert';
 import skinBatchTexVS from './skinBatchTex.vert';
 import skinConstVS from './skinConst.vert';
 import skinTexVS from './skinTex.vert';
-import skyboxEnvAtlasPS from './skyboxEnvAtlas.frag';
+import skyboxEnvPS from './skyboxEnv.frag';
 import skyboxHDRPS from './skyboxHDR.frag';
 import skyboxVS from './skybox.vert';
 import specularPS from './specular.frag';
@@ -202,7 +202,7 @@ import viewNormalVS from './viewNormal.vert';
 const shaderChunks = {
     alphaTestPS: alphaTestPS,
     ambientConstantPS: ambientConstantPS,
-    ambientEnvAtlasPS: ambientEnvAtlasPS,
+    ambientEnvPS: ambientEnvPS,
     ambientSHPS: ambientSHPS,
     aoPS: aoPS,
     aoSpecOccPS: aoSpecOccPS,
@@ -342,7 +342,7 @@ const shaderChunks = {
     reflDirAnisoPS: reflDirAnisoPS,
     reflectionCCPS: reflectionCCPS,
     reflectionCubePS: reflectionCubePS,
-    reflectionEnvAtlasPS: reflectionEnvAtlasPS,
+    reflectionEnvPS: reflectionEnvPS,
     reflectionSpherePS: reflectionSpherePS,
     reflectionSphereLowPS: reflectionSphereLowPS,
     refractionPS: refractionPS,
@@ -363,7 +363,7 @@ const shaderChunks = {
     skinBatchTexVS: skinBatchTexVS,
     skinConstVS: skinConstVS,
     skinTexVS: skinTexVS,
-    skyboxEnvAtlasPS: skyboxEnvAtlasPS,
+    skyboxEnvPS: skyboxEnvPS,
     skyboxHDRPS: skyboxHDRPS,
     skyboxVS: skyboxVS,
     specularPS: specularPS,

@@ -19,7 +19,7 @@ vec3 decodeRGBE(vec4 raw) {
     }
 }
 
-float PI = 3.141592653589793;
+const float PI = 3.141592653589793;
 
 vec2 toSpherical(vec3 dir) {
     return vec2(atan(dir.x, dir.z), asin(dir.y));
@@ -30,13 +30,19 @@ vec2 toSphericalUv(vec3 dir) {
     return vec2(uv.x, 1.0 - uv.y);
 }
 
+// equirectangular helper functions
+
+// envAtlas is fixed at 512 pixels. every equirect is generated with 1 pixel boundary.
 const float seamSize = 1.0 / 512.0;
 
+// map a normalized equirect UV to the given rectangle (taking 1 pixel seam into account).
 vec2 mapUv(vec2 uv, vec4 rect) {
     return vec2(mix(rect.x + seamSize, rect.x + rect.z - seamSize, uv.x),
                 mix(rect.y + seamSize, rect.y + rect.w - seamSize, uv.y));
 }
 
-vec2 mapRoughnessUv(vec2 uv, float t) {
+// map a normalized equirect UV and roughness level to the correct atlas rect.
+vec2 mapRoughnessUv(vec2 uv, float level) {
+    float t = 1.0 / exp2(level);
     return mapUv(uv, vec4(0, 1.0 - t, t, t * 0.5));
 }
