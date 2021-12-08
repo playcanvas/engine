@@ -1356,6 +1356,15 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         'weights': 'weights'
     };
 
+    const constructNodePath = (node) => {
+        const path = [];
+        while (node) {
+            path.splice(0, 0, node.name);
+            node = node.parent;
+        }
+        return path;
+    };
+
     // convert anim channels
     for (i = 0; i < gltfAnimation.channels.length; ++i) {
         const channel = gltfAnimation.channels[i];
@@ -1363,7 +1372,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         const curve = curves[channel.sampler];
 
         const node = nodes[target.node];
-        const entityPath = [nodes[0].name, ...AnimBinder.splitPath(node.path, '/')];
+        const entityPath = constructNodePath(node);
         curve._paths.push({
             entityPath: entityPath,
             component: 'graph',
@@ -1632,10 +1641,16 @@ const createNodes = function (gltf, options) {
     for (let i = 0; i < gltf.nodes.length; ++i) {
         const gltfNode = gltf.nodes[i];
         if (gltfNode.hasOwnProperty('children')) {
+            const parent = nodes[i];
+            const uniqueNames = { };
             for (let j = 0; j < gltfNode.children.length; ++j) {
-                const parent = nodes[i];
                 const child = nodes[gltfNode.children[j]];
                 if (!child.parent) {
+                    if (uniqueNames.hasOwnProperty(child.name)) {
+                        child.name += uniqueNames[child.name]++;
+                    } else {
+                        uniqueNames[child.name] = 1;
+                    }
                     parent.addChild(child);
                 }
             }
