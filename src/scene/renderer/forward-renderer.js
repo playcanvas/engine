@@ -1819,7 +1819,7 @@ class ForwardRenderer {
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSkybox();
+        this.scene._updateSkybox(this.device);
 
         this.beginLayers(comp);
 
