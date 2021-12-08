@@ -1,36 +1,11 @@
 /**
  * @class
+ * @hideconstructor
  * @name AnimStateGraph
- * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
- * - @param {object} data The data which represents an anim state graph.
+ * @classdesc An AnimStateGraph asset resource, created from a blob of JSON data that represents an anim state graph. Can be loaded into an anim component using the {@link AnimComponent#loadStateGraph} method.
  * @example
- * const animStateGraph = new AnimStateGraph({
- *     "layers": [
- *        {
- *            "name": "Base",
- *            "states": [
- *                {
- *                    "name": "START",
- *                    "speed": 1
- *                },
- *                {
- *                    "name": "New State",
- *                    "speed": 1,
- *                    "loop": true,
- *                    "defaultState": true,
- *                }
- *            ],
- *            "transitions": [
- *                {
- *                    "from": 0,
- *                    "to": 1,
- *                    "conditions": {}
- *                }
- *            ]
- *        }
- *    ],
- *    "parameters": {}
- * });
+ * const animStateGraph = asset.resource;
+ * entity.anim.loadStateGraph(animStateGraph);
  */
 class AnimStateGraph {
     constructor(data) {
