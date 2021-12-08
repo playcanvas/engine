@@ -229,7 +229,13 @@ class AnimComponentLayer {
     }
 
     set activeStateCurrentTime(time) {
+        const layerPlaying = this._controller.playing;
+        this._controller.playing = true;
         this._controller.activeStateCurrentTime = time;
+        if (!layerPlaying) {
+            this._controller.update(0);
+        }
+        this._controller.playing = layerPlaying;
     }
 
     /**

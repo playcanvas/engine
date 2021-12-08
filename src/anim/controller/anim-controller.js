@@ -352,7 +352,7 @@ class AnimController {
 
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
-            const interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
+            const interpolatedTime = Math.min(this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1, 1.0);
             for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (!this._isTransitioning) {
@@ -520,7 +520,7 @@ class AnimController {
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                const interpolatedTime = this._totalTransitionTime === 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
+                const interpolatedTime = this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);
