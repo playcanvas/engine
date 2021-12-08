@@ -38,7 +38,7 @@ const skybox = {
             fshader += gammaCode(options.gamma);
             fshader += tonemapCode(options.toneMapping);
             fshader += shaderChunks.decodePS;
-            fshader += shaderChunks.skyboxEnvAtlasPS.replace(/\$DECODE/g, decodeTable[options.encoding] || "decodeGamma");
+            fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, decodeTable[options.encoding] || "decodeGamma");
         }
 
         return {
