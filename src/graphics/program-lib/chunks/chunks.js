@@ -1,7 +1,6 @@
 import alphaTestPS from './alphaTest.frag';
 import ambientConstantPS from './ambientConstant.frag';
-import ambientPrefilteredCubePS from './ambientPrefilteredCube.frag';
-import ambientPrefilteredCubeLodPS from './ambientPrefilteredCubeLod.frag';
+import ambientEnvPS from './ambientEnv.frag';
 import ambientSHPS from './ambientSH.frag';
 import aoPS from './ao.frag';
 import aoSpecOccPS from './aoSpecOcc.frag';
@@ -35,12 +34,12 @@ import cookiePS from './cookie.frag';
 import cubeMapProjectBoxPS from './cubeMapProjectBox.frag';
 import cubeMapProjectNonePS from './cubeMapProjectNone.frag';
 import cubeMapRotatePS from './cubeMapRotate.frag';
+import decodePS from './decode.frag';
 import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
 import dilatePS from './dilate.frag';
 import bilateralDeNoisePS from './bilateralDeNoise.frag';
-import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
 import endVS from './end.vert';
@@ -62,7 +61,6 @@ import fullscreenQuadPS from './fullscreenQuad.frag';
 import fullscreenQuadVS from './fullscreenQuad.vert';
 import gamma1_0PS from './gamma1_0.frag';
 import gamma2_2PS from './gamma2_2.frag';
-import genParaboloidPS from './genParaboloid.frag';
 import gles3PS from './gles3.frag';
 import gles3VS from './gles3.vert';
 import glossPS from './gloss.frag';
@@ -138,14 +136,11 @@ import particle_TBNVS from './particle_TBN.vert';
 import particle_wrapVS from './particle_wrap.vert';
 import precisionTestPS from './precisionTest.frag';
 import precisionTest2PS from './precisionTest2.frag';
-import prefilterCubemapPS from './prefilterCubemap.frag';
 import reflDirPS from './reflDir.frag';
 import reflDirAnisoPS from './reflDirAniso.frag';
 import reflectionCCPS from './reflectionCC.frag';
 import reflectionCubePS from './reflectionCube.frag';
-import reflectionDpAtlasPS from './reflectionDpAtlas.frag';
-import reflectionPrefilteredCubePS from './reflectionPrefilteredCube.frag';
-import reflectionPrefilteredCubeLodPS from './reflectionPrefilteredCubeLod.frag';
+import reflectionEnvPS from './reflectionEnv.frag';
 import reflectionSpherePS from './reflectionSphere.frag';
 import reflectionSphereLowPS from './reflectionSphereLow.frag';
 import refractionPS from './refraction.frag';
@@ -166,6 +161,7 @@ import skinBatchConstVS from './skinBatchConst.vert';
 import skinBatchTexVS from './skinBatchTex.vert';
 import skinConstVS from './skinConst.vert';
 import skinTexVS from './skinTex.vert';
+import skyboxEnvPS from './skyboxEnv.frag';
 import skyboxHDRPS from './skyboxHDR.frag';
 import skyboxVS from './skybox.vert';
 import specularPS from './specular.frag';
@@ -206,8 +202,7 @@ import viewNormalVS from './viewNormal.vert';
 const shaderChunks = {
     alphaTestPS: alphaTestPS,
     ambientConstantPS: ambientConstantPS,
-    ambientPrefilteredCubePS: ambientPrefilteredCubePS,
-    ambientPrefilteredCubeLodPS: ambientPrefilteredCubeLodPS,
+    ambientEnvPS: ambientEnvPS,
     ambientSHPS: ambientSHPS,
     aoPS: aoPS,
     aoSpecOccPS: aoSpecOccPS,
@@ -246,7 +241,7 @@ const shaderChunks = {
     diffuseDetailMapPS: diffuseDetailMapPS,
     dilatePS: dilatePS,
     bilateralDeNoisePS: bilateralDeNoisePS,
-    dpAtlasQuadPS: dpAtlasQuadPS,
+    decodePS: decodePS,
     emissivePS: emissivePS,
     endPS: endPS,
     endVS: endVS,
@@ -268,7 +263,6 @@ const shaderChunks = {
     fullscreenQuadVS: fullscreenQuadVS,
     gamma1_0PS: gamma1_0PS,
     gamma2_2PS: gamma2_2PS,
-    genParaboloidPS: genParaboloidPS,
     gles3PS: gles3PS,
     gles3VS: gles3VS,
     glossPS: glossPS,
@@ -344,14 +338,11 @@ const shaderChunks = {
     particle_wrapVS: particle_wrapVS,
     precisionTestPS: precisionTestPS,
     precisionTest2PS: precisionTest2PS,
-    prefilterCubemapPS: prefilterCubemapPS,
     reflDirPS: reflDirPS,
     reflDirAnisoPS: reflDirAnisoPS,
     reflectionCCPS: reflectionCCPS,
     reflectionCubePS: reflectionCubePS,
-    reflectionDpAtlasPS: reflectionDpAtlasPS,
-    reflectionPrefilteredCubePS: reflectionPrefilteredCubePS,
-    reflectionPrefilteredCubeLodPS: reflectionPrefilteredCubeLodPS,
+    reflectionEnvPS: reflectionEnvPS,
     reflectionSpherePS: reflectionSpherePS,
     reflectionSphereLowPS: reflectionSphereLowPS,
     refractionPS: refractionPS,
@@ -372,6 +363,7 @@ const shaderChunks = {
     skinBatchTexVS: skinBatchTexVS,
     skinConstVS: skinConstVS,
     skinTexVS: skinTexVS,
+    skyboxEnvPS: skyboxEnvPS,
     skyboxHDRPS: skyboxHDRPS,
     skyboxVS: skyboxVS,
     specularPS: specularPS,

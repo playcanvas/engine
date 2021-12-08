@@ -584,7 +584,6 @@ class GraphicsDevice extends EventHandler {
             this.programLib.register(generator, programlib[generator]);
 
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-        this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
 
         // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
         // based on the number of available uniforms and the number of uniforms required for non-

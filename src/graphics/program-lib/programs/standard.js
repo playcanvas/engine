@@ -27,6 +27,12 @@ import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, v
 
 const _matTex2D = [];
 
+const decodeTable = {
+    'rgbm': 'decodeRGBM',
+    'rgbe': 'decodeRGBE',
+    'linear': 'decodeLinear'
+};
+
 const standard = {
 
     // Shared Sandard Material option structures
@@ -213,8 +219,8 @@ const standard = {
             subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
         }
 
-        const isFloatTint = (tintOption === 1);
-        const isVecTint = (tintOption === 3);
+        const isFloatTint = !!(tintOption & 1);
+        const isVecTint = !!(tintOption & 2);
 
         subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
         return subCode.replace(/\$/g, "");
@@ -323,6 +329,10 @@ const standard = {
         }
 
         return code;
+    },
+
+    _decodeFunc: function (textureFormat) {
+        return decodeTable[textureFormat] || 'decodeGamma';
     },
 
     /**
@@ -447,21 +457,15 @@ const standard = {
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAntialias = false;
-            options.prefilteredCubemap = false;
-            options.dpAtlas = false;
             options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        const cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
-        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
-        const useTexCubeLod = options.useTexCubeLod;
-        if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
-        if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
+        const reflections = !!options.reflectionSource;
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
-        const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular ||
+        const needsNormal = lighting || reflections || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
                             (options.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
         this.options = options;
@@ -552,7 +556,7 @@ const standard = {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             codeBody += "   vNormalW = getNormal();\n";
 
-            if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
+            if (options.reflectionSource === 'sphereMap' && device.fragmentUniformsCount <= 16) {
                 code += chunks.viewNormalVS;
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
@@ -1056,10 +1060,10 @@ const standard = {
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
 
+        // FIXME: only add decode when needed
+        code += chunks.decodePS;
+
         if (options.useRgbm) code += chunks.rgbmPS;
-        if (cubemapReflection || options.prefilteredCubemap) {
-            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
-        }
 
         if (options.useCubeMapRotation) {
             code += "#define CUBEMAP_ROTATION\n";
@@ -1129,29 +1133,17 @@ const standard = {
             }
         }
 
-        const reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
-
-        if (options.sphereMap) {
-            let scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-            code += scode;
-        } else if (cubemapReflection) {
-            if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-
-                } else {
-                    code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                }
-            } else {
-                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                                                        options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
-            }
-        } else if (options.dpAtlas) {
-            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+        if (options.reflectionSource === 'envAtlas') {
+            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+        } else if (options.reflectionSource === 'cubeMap') {
+            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+        } else if (options.reflectionSource === 'sphereMap') {
+            const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
         }
 
-        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+        if (reflections) {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
@@ -1222,18 +1214,19 @@ const standard = {
                 code += "#define CLUSTER_CONSERVE_ENERGY\n";
             }
 
-            if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
-            if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
-                if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy && !hasAreaLights) {
-                        // NB if there are area lights, energy conservation is done differently
-                        code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
-                    } else {
-                        code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
-                    }
+            if (lighting) {
+                code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
+            }
+
+            if (options.fresnelModel > 0) {
+                if (options.conserveEnergy && !hasAreaLights) {
+                    // NB if there are area lights, energy conservation is done differently
+                    code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                 } else {
-                    code += chunks.combineDiffuseSpecularOldPS;
+                    code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
                 }
+            } else if (reflections) {
+                code += chunks.combineDiffuseSpecularOldPS;
             } else {
                 if (options.diffuseMap) {
                     code += chunks.combineDiffuseSpecularNoReflPS;
@@ -1258,17 +1251,10 @@ const standard = {
         }
 
         if (addAmbient) {
-
-            const ambientDecode = options.rgbmAmbient ? "decodeRGBM" : (options.hdrAmbient ? "" : "gammaCorrectInput");
-
-            if (options.ambientSH) {
+            if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
-            } else if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, ambientDecode);
-                } else {
-                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, ambientDecode);
-                }
+            } else if (options.ambientSource === 'envAtlas') {
+                code += chunks.ambientEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
             }
@@ -1446,7 +1432,7 @@ const standard = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+            if (reflections) {
                 if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }
@@ -1666,7 +1652,7 @@ const standard = {
                 }
             }
 
-            if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
+            if (reflections && options.refraction) {
                 code += "   addRefraction();\n";
             }
         }
