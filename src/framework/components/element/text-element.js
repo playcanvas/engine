@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
 
 import { math } from '../../../math/math.js';
@@ -1684,7 +1685,7 @@ class TextElement {
 
         // #if _DEBUG
         if (this._shadowColor === value) {
-            console.warn("Setting element.shadowColor to itself will have no effect");
+            Debug.warn("Setting element.shadowColor to itself will have no effect");
         }
         // #endif
 

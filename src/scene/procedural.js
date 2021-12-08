@@ -260,7 +260,7 @@ function createMesh(device, positions, opts) {
         }
 
         if (opts.blendIndices) {
-            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, TYPE_UINT8);
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, opts.blendIndices.length / 4, TYPE_UINT8);
         }
 
         if (opts.blendWeights) {
