@@ -161,10 +161,10 @@ class GraphNode extends EventHandler {
      * the root of the hierarchy.
      */
     get path() {
-        let result = '';
+        let result = this.name;
         let node = this._parent;
-        while (node) {
-            result = node.name + (result.length > 0 ? `/${result}` : '');
+        while (node && node._parent) {
+            result = `node.name/${result}`;
             node = node._parent;
         }
         return result;
