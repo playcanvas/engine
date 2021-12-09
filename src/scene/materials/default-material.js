@@ -1,5 +1,4 @@
-import { SPECULAR_BLINN } from "../constants.js";
-import { StandardMaterial } from "./standard-material.js";
+import { Debug } from "../../core/debug.js";
 
 // Default material used in case no other material is available.
 // There is one instance of it per device (application) stored in the cache in this class.
@@ -9,19 +8,19 @@ class DefaultMaterial {
 
     // returns a default material for the device
     static get(device) {
-        let material = this.cache.get(device);
-        if (!material) {
-            material = new StandardMaterial();
-            material.name = "Default Material";
-            material.shadingModel = SPECULAR_BLINN;
-
-            this.cache.set(device, material);
-        }
+        const material = this.cache.get(device);
+        Debug.assert(material);
         return material;
+    }
+
+    static add(device, material) {
+        Debug.assert(!this.cache.has(device));
+        this.cache.set(device, material);
     }
 
     // releases a default material for the device (when device is getting destroyed)
     static remove(device) {
+        Debug.assert(this.cache.has(device));
         this.cache.delete(device);
     }
 }
