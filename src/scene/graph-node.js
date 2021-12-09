@@ -164,7 +164,7 @@ class GraphNode extends EventHandler {
         let result = this.name;
         let node = this._parent;
         while (node && node._parent) {
-            result = `node.name/${result}`;
+            result = `${node.name}/${result}`;
             node = node._parent;
         }
         return result;
