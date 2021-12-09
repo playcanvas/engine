@@ -76,27 +76,27 @@ class ClusteredSpotShadowsExample extends Example {
         app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
-        const lightingParams = app.scene.lightingParams;
+        const lighting = app.scene.lighting;
 
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        lightingParams.cells = new pc.Vec3(20, 2, 20);
+        lighting.cells = new pc.Vec3(20, 2, 20);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        lightingParams.maxLightsPerCell = 16;
+        lighting.maxLightsPerCell = 16;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
-        lightingParams.shadowsEnabled = true;
+        lighting.shadowsEnabled = true;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        lightingParams.cookiesEnabled = true;
+        lighting.cookiesEnabled = true;
 
         // resolution of the shadow and cookie atlas
-        lightingParams.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
-        lightingParams.cookieAtlasResolution = 1500;
+        lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
+        lighting.cookieAtlasResolution = 1500;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -212,7 +212,7 @@ class ClusteredSpotShadowsExample extends Example {
         data.on('*:set', (path: string, value: any) => {
             const pathArray = path.split('.');
             // @ts-ignore
-            lightingParams[pathArray[1]] = value;
+            lighting[pathArray[1]] = value;
         });
 
         // Set an update function on the app's update event

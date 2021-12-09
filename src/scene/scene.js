@@ -206,7 +206,7 @@ class Scene extends EventHandler {
         this._clusteredLightingEnabled = value;
     }
 
-    get lightingParams() {
+    get lighting() {
         return this._lightingParams;
     }
 
