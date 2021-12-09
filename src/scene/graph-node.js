@@ -484,7 +484,7 @@ class GraphNode extends EventHandler {
         for (let i = 0, imax = parts.length; i < imax; ++i) {
             result = result.children.find(c => c.name === parts[i]);
             if (!result) {
-                break;
+                return null;
             }
         }
 
