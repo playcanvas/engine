@@ -1,4 +1,6 @@
 import { Asset } from '../../../asset/asset.js';
+import { Quat } from '../../../math/quat.js';
+import { Vec3 } from '../../../math/vec3.js';
 
 import { Component } from '../component.js';
 
@@ -57,6 +59,7 @@ class CollisionComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
+        this._angularOffset = new Quat();
         this._compoundParent = null;
         this._isOffset = false;
 
@@ -127,7 +130,16 @@ class CollisionComponent extends Component {
     }
 
     onSetOffset(name, oldValue, newValue) {
-        this._isOffset = true;
+        if (name === 'angularOffset') {
+            if (newValue.equals(Vec3.ZERO)) {
+                this._angularOffset.set(0, 0, 0, 1);
+            } else {
+                this._angularOffset.setFromEulerAngles(newValue.x, newValue.y, newValue.z);
+            }
+        }
+
+        this._isOffset = !this.data.linearOffset.equals(Vec3.ZERO) || !this.data.angularOffset.equals(Vec3.ZERO);
+
         if (this.data.initialized) {
             this.system.recreatePhysicalShapes(this);
         }

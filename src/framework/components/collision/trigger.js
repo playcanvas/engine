@@ -43,13 +43,20 @@ class Trigger {
 
             const pos = entity.getPosition();
             const rot = entity.getRotation();
-            const lo = data.linearOffset;
-            const ao = data.angularOffset;
+            const component = this.component;
 
-            quat.copy(rot).mul(ao);
+            if (component && component._isOffset) {
+                const lo = data.linearOffset;
+                const ao = component._angularOffset;
 
-            ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
-            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+                quat.copy(rot).mul(ao);
+
+                ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
+                ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+            } else {
+                ammoVec1.setValue(pos.x, pos.y, pos.z);
+                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+            }
 
             ammoTransform.setOrigin(ammoVec1);
             ammoTransform.setRotation(ammoQuat);
@@ -84,17 +91,22 @@ class Trigger {
     }
 
     _getEntityTransform(transform) {
-        const data = this.component.data;
-        const lo = data.linearOffset;
-        const ao = data.angularOffset;
-
+        const component = this.component;
         const pos = this.entity.getPosition();
         const rot = this.entity.getRotation();
 
-        quat.copy(rot).mul(ao);
+        if (component && component._isOffset) {
+            const lo = component.data.linearOffset;
+            const ao = component._angularOffset;
 
-        ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
-        ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+            quat.copy(rot).mul(ao);
+
+            ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
+            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+        } else {
+            ammoVec1.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        }
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);

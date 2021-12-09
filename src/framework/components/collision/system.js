@@ -780,16 +780,16 @@ class CollisionComponentSystem extends ComponentSystem {
             rot = node.getRotation();
         }
 
+        const ammoQuat = new Ammo.btQuaternion();
         const transform = new Ammo.btTransform();
+
         transform.setIdentity();
         const origin = transform.getOrigin();
 
-        const ammoQuat = new Ammo.btQuaternion();
-
-        const col = node.collision;
-        if (col && col._isOffset) {
-            const lo = col.linearOffset;
-            const ao = col.angularOffset;
+        const component = node.collision;
+        if (component && component._isOffset) {
+            const lo = component.data.linearOffset;
+            const ao = component._angularOffset;
 
             origin.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
             quat.copy(rot).mul(ao);

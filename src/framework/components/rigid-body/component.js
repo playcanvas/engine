@@ -804,11 +804,12 @@ class RigidBodyComponent extends Component {
         const entity = this.entity;
         const pos = entity.getPosition();
         const rot = entity.getRotation();
-        const col = entity.collision;
+        const component = entity.collision;
 
-        if (col && col._isOffset) {
-            const lo = col.linearOffset;
-            const ao = col.angularOffset;
+        if (component && component._isOffset) {
+            const lo = component.data.linearOffset;
+            const ao = component._angularOffset;
+
             quat.copy(rot).mul(ao);
 
             ammoVec1.setValue(pos.x + lo.x, pos.y + lo.y, pos.z + lo.z);
@@ -871,17 +872,17 @@ class RigidBodyComponent extends Component {
                 const p = ammoTransform.getOrigin();
                 const q = ammoTransform.getRotation();
 
-                const col = entity.collision;
-                if (col && col._isOffset) {
-                    const lo = col.linearOffset;
-                    const ao = col.angularOffset;
+                const component = entity.collision;
+                if (component && component._isOffset) {
+                    const lo = component.data.linearOffset;
+                    const ao = component._angularOffset;
 
                     quat.set(q.x(), q.y(), q.z(), q.w()).invert().mul(ao);
                     entity.setPosition(p.x() - lo.x, p.y() - lo.y, p.z() - lo.z);
                     entity.setRotation(quat);
                 } else {
                     entity.setPosition(p.x(), p.y(), p.z());
-                    entity.setRotation(p.x(), p.y(), p.z(), p.w());
+                    entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
             }
         }
