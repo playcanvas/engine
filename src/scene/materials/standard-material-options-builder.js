@@ -30,6 +30,14 @@ const arraysEqual = (a, b) => {
     return true;
 };
 
+const notWhite = (color) => {
+    return color.r !== 1 || color.g !== 1 || color.b !== 1;
+};
+
+const notBlack = (color) => {
+    return color.r !== 0 || color.g !== 0 || color.b !== 0;
+};
+
 class StandardMaterialOptionsBuilder {
     constructor() {
         this._mapXForms = null;
@@ -97,15 +105,11 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat) {
-        const notWhite = (color) => {
-            return color.r !== 1 || color.g !== 1 || color.b !== 1;
-        };
-
         const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor)) &&
                             notWhite(stdMat.diffuse);
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notWhite(stdMat.specular) ||
+                            notBlack(stdMat.specular) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 

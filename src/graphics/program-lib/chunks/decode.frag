@@ -22,7 +22,7 @@ vec3 decodeRGBE(vec4 raw) {
 const float PI = 3.141592653589793;
 
 vec2 toSpherical(vec3 dir) {
-    return vec2(atan(dir.x, dir.z), asin(dir.y));
+    return vec2(dir.xz == vec2(0.0) ? 0.0 : atan(dir.x, dir.z), asin(dir.y));
 }
 
 vec2 toSphericalUv(vec3 dir) {
