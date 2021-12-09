@@ -164,7 +164,7 @@ class DefaultAnimBinder {
             if (this.graph.name === entityPath[0]) {
                 node = this.graph;
                 for (let i = 1; i < entityPath.length; ++i) {
-                    node = node.children.find((c) => c.name === entityPath[i]);
+                    node = node.children.find(c => c.name === entityPath[i]);
                     if (!node) {
                         break;
                     }
