@@ -401,6 +401,9 @@ class Application extends EventHandler {
     constructor(canvas, options = {}) {
         super();
 
+        // this allows us to detect if an instance is an application without having to import the class
+        this.isApplication = true;
+
         // #if _DEBUG
         console.log(`Powered by PlayCanvas ${version} ${revision}`);
         // #endif

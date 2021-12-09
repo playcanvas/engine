@@ -1,8 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
-import { GraphicsDevice } from './graphics-device.js';
-
 const defaultOptions = {
     depth: true,
     face: 0
@@ -62,7 +60,7 @@ class RenderTarget {
         const _arg2 = arguments[1];
         const _arg3 = arguments[2];
 
-        if (options instanceof GraphicsDevice) {
+        if (options?.isGraphicsDevice) {
             // old constructor
             this._colorBuffer = _arg2;
             options = _arg3;

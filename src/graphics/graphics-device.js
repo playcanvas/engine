@@ -250,6 +250,9 @@ class GraphicsDevice extends EventHandler {
     constructor(canvas, options = {}) {
         super();
 
+        // this allows us to detect if an instance is a device without having to import the class
+        this.isGraphicsDevice = true;
+
         this.canvas = canvas;
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;

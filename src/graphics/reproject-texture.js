@@ -11,7 +11,6 @@ import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
-import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
 
 // get a coding string for texture based on its type and pixel format.
@@ -384,7 +383,7 @@ void main(void) {
 function reprojectTexture(source, target, options = {}) {
     // maintain backwards compatibility with previous function signature
     // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
-    if (source instanceof GraphicsDevice) {
+    if (source.isGraphicsDevice) {
         source = arguments[1];
         target = arguments[2];
         options = { };

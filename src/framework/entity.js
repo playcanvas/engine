@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { Application } from './application.js';
+import { getApplication } from './globals.js';
 
 /**
  * @class
@@ -71,13 +71,16 @@ class Entity extends GraphNode {
     constructor(name, app) {
         super(name);
 
-        if (name instanceof Application) app = name;
+        // handle old constructor where first parameter was the application
+        if (name?.isApplication) {
+            app = name;
+        }
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
 
         this._app = app; // store app
         if (!app) {
-            this._app = Application.getApplication(); // get the current application
+            this._app = getApplication(); // get the current application
             if (!this._app) {
                 throw new Error("Couldn't find current application");
             }
