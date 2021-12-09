@@ -1,4 +1,5 @@
 import { now } from '../../core/time.js';
+import { Debug } from '../../core/debug.js';
 
 import { Vec3 } from '../../math/vec3.js';
 import { Mat3 } from '../../math/mat3.js';
@@ -142,9 +143,7 @@ class BatchManager {
         }
 
         if (this._batchGroups[id]) {
-            // #if _DEBUG
-            console.error(`batch group with id ${id} already exists`);
-            // #endif
+            Debug.error(`batch group with id ${id} already exists`);
             return;
         }
 
@@ -163,9 +162,7 @@ class BatchManager {
      */
     removeGroup(id) {
         if (!this._batchGroups[id]) {
-            // #if _DEBUG
-            console.error(`batch group with id ${id} doesn't exist`);
-            // #endif
+            Debug.error(`batch group with id ${id} doesn't exist`);
             return;
         }
 
@@ -260,30 +257,26 @@ class BatchManager {
 
     insert(type, groupId, node) {
         const group = this._batchGroups[groupId];
+        Debug.assert(group, `Invalid batch ${groupId} insertion`);
+
         if (group) {
             if (group._obj[type].indexOf(node) < 0) {
                 group._obj[type].push(node);
                 this.markGroupDirty(groupId);
             }
-        } else {
-            // #if _DEBUG
-            console.warn(`Invalid batch ${groupId} insertion`);
-            // #endif
         }
     }
 
     remove(type, groupId, node) {
         const group = this._batchGroups[groupId];
+        Debug.assert(group, `Invalid batch ${groupId} insertion`);
+
         if (group) {
             const idx = group._obj[type].indexOf(node);
             if (idx >= 0) {
                 group._obj[type].splice(idx, 1);
                 this.markGroupDirty(groupId);
             }
-        } else {
-            // #if _DEBUG
-            console.warn(`Invalid batch ${groupId} insertion`);
-            // #endif
         }
     }
 
@@ -460,9 +453,7 @@ class BatchManager {
 
             groupData = this._batchGroups[groupId];
             if (!groupData) {
-                // #if _DEBUG
-                console.error(`batch group ${groupId} not found`);
-                // #endif
+                Debug.error(`batch group ${groupId} not found`);
                 continue;
             }
 

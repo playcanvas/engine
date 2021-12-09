@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { math } from '../math/math.js';
 
 import {
@@ -13,7 +14,7 @@ import {
     PIXELFORMAT_ATC_RGBA,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
 /* eslint-disable no-unused-vars */
@@ -188,14 +189,10 @@ class Texture {
             if (options.hasOwnProperty('type')) {
                 this.type = options.type;
             } else if (options.hasOwnProperty('rgbm')) {
-                // #if _DEBUG
-                console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
-                // #endif
+                Debug.deprecated("options.rgbm is deprecated. Use options.type instead.");
                 this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
             } else if (options.hasOwnProperty('swizzleGGGR')) {
-                // #if _DEBUG
-                console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
-                // #endif
+                Debug.deprecated("options.swizzleGGGR is deprecated. Use options.type instead.");
                 this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
             }
 
@@ -349,9 +346,7 @@ class Texture {
     set addressW(addressW) {
         if (!this.device.webgl2) return;
         if (!this._volume) {
-            // #if _DEBUG
-            console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
-            // #endif
+            Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             return;
         }
         if (addressW !== this._addressW) {
@@ -444,8 +439,6 @@ class Texture {
     set mipmaps(v) {
         if (this._mipmaps !== v) {
             this._mipmaps = v;
-            this._minFilterDirty = true;
-
             if (v) this._needsMipmapsUpload = true;
         }
     }
@@ -868,11 +861,9 @@ class Texture {
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
-        // #if _DEBUG
         if (this._lockedLevel === -1) {
-            console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
+            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
         }
-        // #endif
 
         // Upload the new pixel data
         this.upload();
@@ -893,10 +884,8 @@ class Texture {
     }
 
     getDds() {
-        // #if _DEBUG
-        if (this.format !== PIXELFORMAT_R8_G8_B8_A8)
-            console.error("This format is not implemented yet");
-        // #endif
+
+        Debug.assert(this.format === PIXELFORMAT_R8_G8_B8_A8, "This format is not implemented yet");
 
         let fsize = 128;
         let idx = 0;
@@ -904,25 +893,19 @@ class Texture {
             if (!this.cubemap) {
                 const mipSize = this._levels[idx].length;
                 if (!mipSize) {
-                    // #if _DEBUG
-                    console.error(`No byte array for mip ${idx}`);
-                    // #endif
+                    Debug.error(`No byte array for mip ${idx}`);
                     return;
                 }
                 fsize += mipSize;
             } else {
                 for (let face = 0; face < 6; face++) {
                     if (!this._levels[idx][face]) {
-                        // #if _DEBUG
-                        console.error(`No level data for mip ${idx}, face ${face}`);
-                        // #endif
+                        Debug.error(`No level data for mip ${idx}, face ${face}`);
                         return;
                     }
                     const mipSize = this._levels[idx][face].length;
                     if (!mipSize) {
-                        // #if _DEBUG
-                        console.error(`No byte array for mip ${idx}, face ${face}`);
-                        // #endif
+                        Debug.error(`No byte array for mip ${idx}, face ${face}`);
                         return;
                     }
                     fsize += mipSize;
@@ -1004,6 +987,23 @@ class Texture {
         }
 
         return buff;
+    }
+
+    // get the texture's encoding type
+    get encoding() {
+        if (this.type === TEXTURETYPE_RGBM) {
+            return 'rgbm';
+        }
+
+        if (this.type === TEXTURETYPE_RGBE) {
+            return 'rgbe';
+        }
+
+        if (this.format === PIXELFORMAT_RGBA16F || this.format === PIXELFORMAT_RGBA32F) {
+            return 'linear';
+        }
+
+        return 'srgb';
     }
 }
 

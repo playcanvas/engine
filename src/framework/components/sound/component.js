@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { DISTANCE_LINEAR } from '../../../audio/constants.js';
 
 import { Component } from '../component.js';
@@ -206,9 +208,7 @@ class SoundComponent extends Component {
     addSlot(name, options) {
         const slots = this._slots;
         if (slots[name]) {
-            // #if _DEBUG
-            console.warn(`A sound slot with name ${name} already exists on Entity ${this.entity.path}`);
-            // #endif
+            Debug.warn(`A sound slot with name ${name} already exists on Entity ${this.entity.path}`);
             return null;
         }
 
@@ -276,9 +276,7 @@ class SoundComponent extends Component {
 
         const slot = this._slots[name];
         if (!slot) {
-            // #if _DEBUG
-            console.warn(`Trying to play sound slot with name ${name} which does not exist`);
-            // #endif
+            Debug.warn(`Trying to play sound slot with name ${name} which does not exist`);
             return null;
         }
 
@@ -302,9 +300,7 @@ class SoundComponent extends Component {
         if (name) {
             const slot = slots[name];
             if (!slot) {
-                // #if _DEBUG
-                console.warn(`Trying to pause sound slot with name ${name} which does not exist`);
-                // #endif
+                Debug.warn(`Trying to pause sound slot with name ${name} which does not exist`);
                 return;
             }
 
@@ -334,9 +330,7 @@ class SoundComponent extends Component {
         if (name) {
             const slot = slots[name];
             if (!slot) {
-                // #if _DEBUG
-                console.warn(`Trying to resume sound slot with name ${name} which does not exist`);
-                // #endif
+                Debug.warn(`Trying to resume sound slot with name ${name} which does not exist`);
                 return;
             }
 
@@ -368,9 +362,7 @@ class SoundComponent extends Component {
         if (name) {
             const slot = slots[name];
             if (!slot) {
-                // #if _DEBUG
-                console.warn(`Trying to stop sound slot with name ${name} which does not exist`);
-                // #endif
+                Debug.warn(`Trying to stop sound slot with name ${name} which does not exist`);
                 return;
             }
 

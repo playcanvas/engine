@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../../asset/asset.js';
 
 import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
@@ -168,12 +169,8 @@ class AnimComponent extends Component {
     set rootBone(value) {
         if (typeof value === 'string') {
             const entity = this.entity.root.findByGuid(value);
+            Debug.assert(entity, `rootBone entity for supplied guid:${value} cannot be found in the scene`);
             this._rootBone = entity;
-            // #if _DEBUG
-            if (!entity) {
-                console.warn(`rootBone entity for supplied guid:${value} cannot be found in the scene`);
-            }
-            // #endif
         } else if (value instanceof Entity) {
             this._rootBone = value;
         } else {
@@ -390,15 +387,11 @@ class AnimComponent extends Component {
                 // check whether assigned animation asset still exists
                 if (asset) {
                     if (asset.resource) {
-                        const animTrack = asset.resource;
-                        if (asset.data.events) {
-                            animTrack.events = new AnimEvents(Object.values(asset.data.events));
-                        }
-                        this.findAnimationLayer(layer.name).assignAnimation(stateName, animTrack);
+                        this.onAnimationAssetLoaded(layer.name, stateName, asset);
                     } else {
                         asset.once('load', function (layerName, stateName) {
                             return function (asset) {
-                                this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
+                                this.onAnimationAssetLoaded(layerName, stateName, asset);
                             }.bind(this);
                         }.bind(this)(layer.name, stateName));
                         this.system.app.assets.load(asset);
@@ -406,6 +399,14 @@ class AnimComponent extends Component {
                 }
             }
         }
+    }
+
+    onAnimationAssetLoaded(layerName, stateName, asset) {
+        const animTrack = asset.resource;
+        if (asset.data.events) {
+            animTrack.events = new AnimEvents(Object.values(asset.data.events));
+        }
+        this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
     }
 
     /**
@@ -512,16 +513,16 @@ class AnimComponent extends Component {
     /**
      * @function
      * @name AnimComponent#assignAnimation
-     * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
-     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodeName parameter.
-     * @param {string} nodeName - The name of the state node that this animation should be associated with.
+     * @description Associates an animation with a state or blend tree node in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
+     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodePath parameter.
+     * @param {string} nodePath - Either the state name or the path to a blend tree node that this animation should be associated with. Each section of a blend tree path is split using a period (`.`) therefore state names should not include this character (e.g "MyStateName" or "MyStateName.BlendTreeNode").
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
      * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
      */
-    assignAnimation(nodeName, animTrack, layerName, speed = 1, loop = true) {
-        if (!this._stateGraph) {
+    assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
+        if (!this._stateGraph && nodePath.indexOf('.') === -1) {
             this.loadStateGraph(new AnimStateGraph({
                 "layers": [
                     {
@@ -532,7 +533,7 @@ class AnimComponent extends Component {
                                 "speed": 1
                             },
                             {
-                                "name": nodeName,
+                                "name": nodePath,
                                 "speed": speed,
                                 "loop": loop,
                                 "defaultState": true
@@ -541,24 +542,22 @@ class AnimComponent extends Component {
                         "transitions": [
                             {
                                 "from": 'START',
-                                "to": nodeName
+                                "to": nodePath
                             }
                         ]
                     }
                 ],
                 "parameters": {}
             }));
-            this.baseLayer.assignAnimation(nodeName, animTrack);
+            this.baseLayer.assignAnimation(nodePath, animTrack);
             return;
         }
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #if _DEBUG
-            console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
-            // #endif
+            Debug.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             return;
         }
-        layer.assignAnimation(nodeName, animTrack, speed, loop);
+        layer.assignAnimation(nodePath, animTrack, speed, loop);
     }
 
     /**
@@ -571,9 +570,7 @@ class AnimComponent extends Component {
     removeNodeAnimations(nodeName, layerName) {
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            // #if _DEBUG
-            console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
-            // #endif
+            Debug.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
             return;
         }
         layer.removeNodeAnimations(nodeName);
@@ -584,9 +581,7 @@ class AnimComponent extends Component {
         if (param && param.type === type) {
             return param.value;
         }
-        // #if _DEBUG
-        console.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
-        // #endif
+        Debug.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
     setParameterValue(name, type, value) {
@@ -595,9 +590,7 @@ class AnimComponent extends Component {
             param.value = value;
             return;
         }
-        // #if _DEBUG
-        console.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
-        // #endif
+        Debug.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
     /**
@@ -644,9 +637,7 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            // #if _DEBUG
-            console.error('Attempting to assign non integer value to integer parameter');
-            // #endif
+            Debug.error('Attempting to assign non integer value to integer parameter');
         }
     }
 

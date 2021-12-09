@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from './constants.js';
 
 /* eslint-disable no-unused-vars */
@@ -173,7 +174,7 @@ class VertexBuffer {
      */
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            console.error(`VertexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
+            Debug.error(`VertexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
             return false;
         }
         this.storage = data;

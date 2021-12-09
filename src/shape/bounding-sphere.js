@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /* eslint-disable no-unused-vars */
@@ -26,6 +27,9 @@ class BoundingSphere {
      * var sphere = new pc.BoundingSphere();
      */
     constructor(center = new Vec3(), radius = 0.5) {
+
+        Debug.assert(!Object.isFrozen(center), `The constructor of 'BoundingSphere' does not accept a constant (frozen) object as a 'center' parameter`);
+
         this.center = center;
         this.radius = radius;
     }

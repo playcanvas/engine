@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
 
 import { math } from '../../../math/math.js';
@@ -1304,28 +1305,30 @@ class TextElement {
         }
         // #endif
 
-        if (this._color.r === r && this._color.g === g && this._color.b === b) {
-            return;
+        if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
+
+            if (this._symbolColors) {
+                // color is baked into vertices, update text
+                if (this._font) {
+                    this._updateText();
+                }
+            } else {
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+
+                for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    const mi = this._model.meshInstances[i];
+                    mi.setParameter('material_emissive', this._colorUniform);
+                }
+            }
         }
 
-        this._color.r = r;
-        this._color.g = g;
-        this._color.b = b;
-
-        if (this._symbolColors) {
-            // color is baked into vertices, update text
-            if (this._font) {
-                this._updateText();
-            }
-        } else {
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
-
-            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                const mi = this._model.meshInstances[i];
-                mi.setParameter('material_emissive', this._colorUniform);
-            }
+        if (this._element) {
+            this._element.fire('set:color', this._color);
         }
     }
 
@@ -1334,15 +1337,19 @@ class TextElement {
     }
 
     set opacity(value) {
-        if (this._color.a === value) return;
+        if (this._color.a !== value) {
+            this._color.a = value;
 
-        this._color.a = value;
-
-        if (this._model) {
-            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                const mi = this._model.meshInstances[i];
-                mi.setParameter('material_opacity', value);
+            if (this._model) {
+                for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    const mi = this._model.meshInstances[i];
+                    mi.setParameter('material_opacity', value);
+                }
             }
+        }
+
+        if (this._element) {
+            this._element.fire('set:opacity', value);
         }
     }
 
@@ -1678,7 +1685,7 @@ class TextElement {
 
         // #if _DEBUG
         if (this._shadowColor === value) {
-            console.warn("Setting element.shadowColor to itself will have no effect");
+            Debug.warn("Setting element.shadowColor to itself will have no effect");
         }
         // #endif
 

@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { math } from '../../../math/math.js';
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
@@ -41,11 +43,7 @@ class JointComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        // #if _DEBUG
-        if (typeof Ammo === 'undefined') {
-            console.error('ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
-        }
-        // #endif
+        Debug.assert(typeof Ammo !== 'undefined', 'ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
 
         this._constraint = null;
 

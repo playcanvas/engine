@@ -15,7 +15,7 @@ class TextLocalizationExample extends Example {
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
 
-        // Create the application and start the update loop
+        // Create the application with input and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
@@ -48,6 +48,13 @@ class TextLocalizationExample extends Example {
                 messages: {
                     "HELLO": "Hola"
                 }
+            }, {
+                info: {
+                    locale: 'pt-BR'
+                },
+                messages: {
+                    "HELLO": "Oi!"
+                }
             }]
         });
 
@@ -62,7 +69,7 @@ class TextLocalizationExample extends Example {
         // Create a camera
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
         });
         app.root.addChild(camera);
 
@@ -81,6 +88,7 @@ class TextLocalizationExample extends Example {
         text.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
+            fontAsset: assets.font.id,
             fontSize: 128,
             pivot: [0.5, 0.5],
             key: "HELLO",
@@ -109,6 +117,7 @@ class TextLocalizationExample extends Example {
             label.addComponent("element", {
                 anchor: [0.5, 0.5, 0.5, 0.5],
                 color: new pc.Color(0, 0, 0),
+                fontAsset: assets.font.id,
                 fontSize: 32,
                 height: 64,
                 pivot: [0.5, 0.5],
@@ -129,17 +138,10 @@ class TextLocalizationExample extends Example {
             return button;
         }
 
-        screen.addChild(createButton("en-US", -150, -100));
-        screen.addChild(createButton("fr-FR", 0, -100));
-        screen.addChild(createButton("es-ES", 150, -100));
-
-        // Apply the font to the text element
-        screen.findComponents('element').forEach(function (elementComponent: pc.ElementComponent) {
-            if (elementComponent.type === pc.ELEMENTTYPE_TEXT) {
-                elementComponent.fontAsset = assets.font.id;
-            }
-        });
-
+        screen.addChild(createButton("en-US", -225, -100));
+        screen.addChild(createButton("fr-FR", -75, -100));
+        screen.addChild(createButton("es-ES", 75, -100));
+        screen.addChild(createButton("pt-BR", 225, -100));
     }
 }
 

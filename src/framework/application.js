@@ -6,6 +6,7 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
+import { Debug } from '../core/debug.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
@@ -1559,9 +1560,7 @@ class Application extends EventHandler {
             });
             this.assets.load(asset);
         } else {
-            // #if _DEBUG
-            console.warn("setAreaLightLuts: asset is not valid");
-            // #endif
+            Debug.warn("setAreaLightLuts: asset is not valid");
         }
     }
 

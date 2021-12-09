@@ -1,4 +1,5 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
@@ -74,9 +75,7 @@ class SceneRegistry {
      */
     add(name, url) {
         if (this._index.hasOwnProperty(name)) {
-            // #if _DEBUG
-            console.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
-            // #endif
+            Debug.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
             return false;
         }
 

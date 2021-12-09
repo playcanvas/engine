@@ -1,4 +1,4 @@
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
+import { Debug } from '../core/debug.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
 import { GraphicsDevice } from './graphics-device.js';
@@ -78,7 +78,7 @@ class RenderTarget {
             this._colorBuffer = _arg2;
             options = _arg3;
 
-            DeprecatedLog.log('DEPRECATED: pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+            Debug.deprecated('pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
 
         } else {
             // new constructor
@@ -110,9 +110,7 @@ class RenderTarget {
                 this._depth = true;
                 this._stencil = true;
             } else {
-                // #if _DEBUG
-                console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
-                // #endif
+                Debug.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
                 this._depth = false;
                 this._stencil = false;
             }
@@ -257,9 +255,7 @@ class RenderTarget {
             if (source._device) {
                 this._device = source._device;
             } else {
-                // #if _DEBUG
-                console.error("Render targets are not initialized");
-                // #endif
+                Debug.error("Render targets are not initialized");
                 return false;
             }
         }

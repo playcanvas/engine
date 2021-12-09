@@ -1,5 +1,6 @@
 import { Vec2 } from '../math/vec2.js';
 import { Vec3 } from '../math/vec3.js';
+import { Debug } from '../core/debug.js';
 
 import {
     SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
@@ -7,7 +8,6 @@ import {
 } from '../graphics/constants.js';
 
 import { Mesh } from './mesh.js';
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
 
 /* eslint-disable no-unused-vars */
 import { GraphicsDevice } from '../graphics/graphics-device.js';
@@ -265,7 +265,7 @@ function createMesh(device, positions, opts) {
         }
 
         if (opts.blendIndices) {
-            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, TYPE_UINT8);
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, opts.blendIndices.length / 4, TYPE_UINT8);
         }
 
         if (opts.blendWeights) {
@@ -597,7 +597,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 function createCylinder(device, opts) {
     // #if _DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
-        DeprecatedLog.log('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        Debug.deprecated('"baseRadius" in arguments, use "radius" instead');
     }
     // #endif
 

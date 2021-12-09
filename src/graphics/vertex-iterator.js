@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
 /* eslint-disable no-unused-vars */
@@ -255,13 +256,13 @@ class VertexIterator {
      * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to 1.
      * @example
      * var iterator = new pc.VertexIterator(vertexBuffer);
-     * iterator.element[pc.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
+     * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSTIION].set(0.9, -0.9, 0.0);
+     * iterator.element[pc.SEMANTIC_POSITION].set(0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(0, 255, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSTIION].set(0.0, 0.9, 0.0);
+     * iterator.element[pc.SEMANTIC_POSITION].set(0.0, 0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(0, 0, 255, 255);
      * iterator.end();
      */
@@ -282,13 +283,13 @@ class VertexIterator {
      * the vertex buffer is unlocked and vertex data is uploaded to video memory.
      * @example
      * var iterator = new pc.VertexIterator(vertexBuffer);
-     * iterator.element[pc.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
+     * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSTIION].set(0.9, -0.9, 0.0);
+     * iterator.element[pc.SEMANTIC_POSITION].set(0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(0, 255, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSTIION].set(0.0, 0.9, 0.0);
+     * iterator.element[pc.SEMANTIC_POSITION].set(0.0, 0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(0, 0, 255, 255);
      * iterator.end();
      */
@@ -304,9 +305,7 @@ class VertexIterator {
         if (element) {
 
             if (numVertices > this.vertexBuffer.numVertices) {
-                // #if _DEBUG
-                console.error(`NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`);
-                // #endif
+                Debug.error(`NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`);
 
                 // avoid overwrite
                 numVertices = this.vertexBuffer.numVertices;

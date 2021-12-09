@@ -1,4 +1,5 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { TagsCache } from '../core/tags-cache.js';
 
@@ -565,9 +566,7 @@ class AssetRegistry extends EventHandler {
 
         const data = materialAsset.data;
         if (data.mappingFormat !== 'path') {
-            // #if _DEBUG
-            console.warn(`Skipping: ${materialAsset.name}, material files must be mappingFormat: "path" to be loaded from URL`);
-            // #endif
+            Debug.warn(`Skipping: ${materialAsset.name}, material files must be mappingFormat: "path" to be loaded from URL`);
             callback(null, textures);
             return;
         }

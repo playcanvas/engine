@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { AnimClip } from '../../../anim/evaluator/anim-clip.js';
 import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
@@ -65,9 +67,7 @@ class AnimationComponent extends Component {
         const data = this.data;
 
         if (!data.animations[name]) {
-            // #if _DEBUG
-            console.error(`Trying to play animation '${name}' which doesn't exist`);
-            // #endif
+            Debug.error(`Trying to play animation '${name}' which doesn't exist`);
             return;
         }
 

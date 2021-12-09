@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -676,9 +678,7 @@ class CollisionComponentSystem extends ComponentSystem {
                     impl = new CollisionCompoundSystemImpl(this);
                     break;
                 default:
-                    // #if _DEBUG
-                    console.error("_createImplementation: Invalid collision system type: " + type);
-                    // #endif
+                    Debug.error(`_createImplementation: Invalid collision system type: ${type}`);
             }
             this.implementations[type] = impl;
         }

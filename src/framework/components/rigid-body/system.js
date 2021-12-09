@@ -1,5 +1,6 @@
 import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -9,7 +10,6 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
-import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
 
 /* eslint-disable no-unused-vars */
 import { Entity } from '../../entity.js';
@@ -213,9 +213,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
-                // #if _DEBUG
-                console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
-                // #endif
+                Debug.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
             }
 
             // Lazily create temp vars
@@ -367,7 +365,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
+                    Debug.deprecated('pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
 
                     const callback = arguments[2];
                     callback(result);
@@ -391,11 +389,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
-        // #if _DEBUG
-        if (!Ammo.AllHitsRayResultCallback) {
-            console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
-        }
-        // #endif
+        Debug.assert(Ammo.AllHitsRayResultCallback, "pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
 
         const results = [];
 

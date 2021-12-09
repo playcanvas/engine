@@ -1,4 +1,5 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { http, Http } from '../net/http.js';
 
@@ -86,9 +87,7 @@ class ModelHandler {
                 return p.parser.parse(data);
             }
         }
-        // #if _DEBUG
-        console.warn("pc.ModelHandler#open: No model parser found for: " + url);
-        // #endif
+        Debug.warn("pc.ModelHandler#open: No model parser found for: " + url);
         return null;
     }
 

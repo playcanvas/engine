@@ -1,4 +1,5 @@
 import { now } from '../../core/time.js';
+import { Debug } from '../../core/debug.js';
 
 import { math } from '../../math/math.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -229,9 +230,7 @@ class ParticleEmitter {
         setProperty("numParticles", 1);                          // Amount of particles allocated (max particles = max GL texture width at this moment)
 
         if (this.numParticles > graphicsDevice.maxTextureSize) {
-            // #if _DEBUG
-            console.warn(`WARNING: can't create more than ${graphicsDevice.maxTextureSize} particles on this device.`);
-            // #endif
+            Debug.warn(`WARNING: can't create more than ${graphicsDevice.maxTextureSize} particles on this device.`);
             this.numParticles = graphicsDevice.maxTextureSize;
         }
 
@@ -598,7 +597,7 @@ class ParticleEmitter {
         if (this.mesh) {
             const totalVertCount = this.numParticles * this.mesh.vertexBuffer.numVertices;
             if (totalVertCount > 65535) {
-                console.warn("WARNING: particle system can't render mesh particles because numParticles * numVertices is more than 65k. Reverting to quad particles.");
+                Debug.warn("WARNING: particle system can't render mesh particles because numParticles * numVertices is more than 65k. Reverting to quad particles.");
             } else {
                 this.useMesh = true;
             }

@@ -54,12 +54,12 @@ export { Ray } from './shape/ray.js';
 // GRAPHICS
 export * from './graphics/constants.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
-export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
+export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
-export { Prefilter } from './graphics/prefilter.js';
+export { EnvLighting } from './graphics/env-lighting.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
 export { ProgramLibrary } from './graphics/program-library.js';

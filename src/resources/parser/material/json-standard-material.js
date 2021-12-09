@@ -74,6 +74,12 @@ class JsonStandardMaterialParser {
                 } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
                     material[key] = null;
                 }
+
+                // clearing the cubemap must also clear the prefiltered data
+                if (key === 'cubeMap' && !value) {
+                    material.prefilteredCubemaps = null;
+                }
+
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
                 // leave current texture (probably a placeholder) until the asset is loaded
             } else if (type === 'boundingbox') {

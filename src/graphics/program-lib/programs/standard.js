@@ -30,148 +30,16 @@ import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, v
 import { GraphicsDevice } from '../../graphics-device.js';
 /* eslint-enable no-unused-vars */
 
-const _oldChunkWarn = function (oldName, newName) {
-    // #if _DEBUG
-    console.warn(`Shader chunk ${oldName} is deprecated - override ${newName} instead`);
-    // #endif
-};
-
-const _oldChunkFloat = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkColor = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTex = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTexColor = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
-            "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTexFloat = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
-            "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkVert = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkVertColor = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
-            "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkVertFloat = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
-            "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformSkin = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef SKIN\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformDynbatch = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformInstanced = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformPixelSnap = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformScreenSpace = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
-            "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
-const _oldChunkTransformUv1 = function (s, o, p) {
-    _oldChunkWarn(p, o);
-    return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
-};
-
 const _matTex2D = [];
 
+const decodeTable = {
+    'rgbm': 'decodeRGBM',
+    'rgbe': 'decodeRGBE',
+    'linear': 'decodeLinear'
+};
+
 const standard = {
-
-    _oldChunkToNew: {
-        aoTexPS: { n: "aoPS", f: _oldChunkTex },
-        aoVertPS: { n: "aoPS", f: _oldChunkVert },
-
-        diffuseConstPS: { n: "diffusePS", f: _oldChunkColor },
-        diffuseTexPS: { n: "diffusePS", f: _oldChunkTex },
-        diffuseTexConstPS: { n: "diffusePS", f: _oldChunkTexColor },
-        diffuseVertPS: { n: "diffusePS", f: _oldChunkVert },
-        diffuseVertConstPS: { n: "diffusePS", f: _oldChunkVertColor },
-
-        emissiveConstPS: { n: "emissivePS", f: _oldChunkColor },
-        emissiveTexPS: { n: "emissivePS", f: _oldChunkTex },
-        emissiveTexConstPS: { n: "emissivePS", f: _oldChunkTexColor },
-        emissiveTexConstFloatPS: { n: "emissivePS", f: _oldChunkTexFloat },
-        emissiveVertPS: { n: "emissivePS", f: _oldChunkVert },
-        emissiveVertConstPS: { n: "emissivePS", f: _oldChunkVertColor },
-        emissiveVertConstFloatPS: { n: "emissivePS", f: _oldChunkVertFloat },
-
-        glossConstPS: { n: "glossPS", f: _oldChunkFloat },
-        glossTexPS: { n: "glossPS", f: _oldChunkTex },
-        glossTexConstPS: { n: "glossPS", f: _oldChunkTexFloat },
-        glossVertPS: { n: "glossPS", f: _oldChunkVert },
-        glossVertConstPS: { n: "glossPS", f: _oldChunkVertFloat },
-
-        metalnessConstPS: { n: "metalnessPS", f: _oldChunkFloat },
-        metalnessTexPS: { n: "metalnessPS", f: _oldChunkTex },
-        metalnessTexConstPS: { n: "metalnessPS", f: _oldChunkTexFloat },
-        metalnessVertPS: { n: "metalnessPS", f: _oldChunkVert },
-        metalnessVertConstPS: { n: "metalnessPS", f: _oldChunkVertFloat },
-
-        opacityConstPS: { n: "opacityPS", f: _oldChunkFloat },
-        opacityTexPS: { n: "opacityPS", f: _oldChunkTex },
-        opacityTexConstPS: { n: "opacityPS", f: _oldChunkTexFloat },
-        opacityVertPS: { n: "opacityPS", f: _oldChunkVert },
-        opacityVertConstPS: { n: "opacityPS", f: _oldChunkVertFloat },
-
-        specularConstPS: { n: "specularPS", f: _oldChunkColor },
-        specularTexPS: { n: "specularPS", f: _oldChunkTex },
-        specularTexConstPS: { n: "specularPS", f: _oldChunkTexColor },
-        specularVertPS: { n: "specularPS", f: _oldChunkVert },
-        specularVertConstPS: { n: "specularPS", f: _oldChunkVertColor },
-
-        transformBatchSkinnedVS: { n: "transformVS", f: _oldChunkTransformDynbatch },
-        transformInstancedVS: { n: "transformVS", f: _oldChunkTransformInstanced },
-        transformPixelSnapVS: { n: "transformVS", f: _oldChunkTransformPixelSnap },
-        transformScreenSpaceVS: { n: "transformVS", f: _oldChunkTransformScreenSpace },
-        transformScreenSpaceBatchSkinned: { n: "transformVS", f: _oldChunkTransformScreenSpaceBatch },
-        transformSkinned: { n: "transformVS", f: _oldChunkTransformSkin },
-        transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
-    },
-
-    // Shared Standard Material option structures
+    // Shared Sandard Material option structures
     optionsContext: {},
     optionsContextMin: {},
 
@@ -356,8 +224,8 @@ const standard = {
             subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
         }
 
-        const isFloatTint = (tintOption === 1);
-        const isVecTint = (tintOption === 3);
+        const isFloatTint = !!(tintOption & 1);
+        const isVecTint = !!(tintOption & 2);
 
         subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
         return subCode.replace(/\$/g, "");
@@ -419,6 +287,17 @@ const standard = {
         }
     },
 
+    _getPassDefineString: function (pass) {
+        if (pass === SHADER_PICK) {
+            return '#define PICK_PASS\n';
+        } else if (pass === SHADER_DEPTH) {
+            return '#define DEPTH_PASS\n';
+        } else if (pass >= SHADER_SHADOW && pass <= 17) {
+            return '#define SHADOW_PASS\n';
+        }
+        return '';
+    },
+
     _vsAddTransformCode: function (code, device, chunks, options) {
         code += chunks.transformVS;
 
@@ -455,6 +334,10 @@ const standard = {
         }
 
         return code;
+    },
+
+    _decodeFunc: function (textureFormat) {
+        return decodeTable[textureFormat] || 'decodeGamma';
     },
 
     /**
@@ -581,21 +464,15 @@ const standard = {
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAntialias = false;
-            options.prefilteredCubemap = false;
-            options.dpAtlas = false;
             options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        const cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
-        const reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
-        const useTexCubeLod = options.useTexCubeLod;
-        if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
-        if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
+        const reflections = !!options.reflectionSource;
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
-        const needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular ||
+        const needsNormal = lighting || reflections || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
                             (LayerComposition.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
         this.options = options;
@@ -651,16 +528,10 @@ const standard = {
                 }
             }
 
-            for (const p in options.chunks) {
-                const newP = this._oldChunkToNew[p];
-                if (newP) {
-                    customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);
-                }
-            }
-
             chunks = customChunks;
         }
 
+        code += this._getPassDefineString(options.pass);
 
         // code += chunks.baseVS;
         code = this._vsAddBaseCode(code, device, chunks, options);
@@ -692,7 +563,7 @@ const standard = {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             codeBody += "   vNormalW = getNormal();\n";
 
-            if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
+            if (options.reflectionSource === 'sphereMap' && device.fragmentUniformsCount <= 16) {
                 code += chunks.viewNormalVS;
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
@@ -918,8 +789,13 @@ const standard = {
             code += versionCode(device);
         }
 
-        if (device.extStandardDerivatives && !device.webgl2) {
-            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        if (!device.webgl2) {
+            if (device.extStandardDerivatives) {
+                code += "#extension GL_OES_standard_derivatives : enable\n";
+            }
+            if (device.extTextureLod) {
+                code += "#extension GL_EXT_shader_texture_lod : enable\n";
+            }
         }
         if (chunks.extensionPS) {
             code += chunks.extensionPS + "\n";
@@ -930,6 +806,8 @@ const standard = {
         }
 
         code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : precisionCode(device);
+
+        code += this._getPassDefineString(options.pass);
 
         if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
@@ -1190,17 +1068,13 @@ const standard = {
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
 
+        // FIXME: only add decode when needed
+        code += chunks.decodePS;
+
         if (options.useRgbm) code += chunks.rgbmPS;
-        if (cubemapReflection || options.prefilteredCubemap) {
-            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
-        }
 
         if (options.useCubeMapRotation) {
             code += "#define CUBEMAP_ROTATION\n";
-        }
-
-        if (options.useRightHandedCubeMap) {
-            code += "#define RIGHT_HANDED_CUBEMAP\n";
         }
 
         if (needsNormal) {
@@ -1267,29 +1141,17 @@ const standard = {
             }
         }
 
-        const reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
-
-        if (options.sphereMap) {
-            let scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-            code += scode;
-        } else if (cubemapReflection) {
-            if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-
-                } else {
-                    code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                }
-            } else {
-                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                                                        options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
-            }
-        } else if (options.dpAtlas) {
-            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+        if (options.reflectionSource === 'envAtlas') {
+            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+        } else if (options.reflectionSource === 'cubeMap') {
+            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+        } else if (options.reflectionSource === 'sphereMap') {
+            const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
         }
 
-        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+        if (reflections) {
             if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
@@ -1363,18 +1225,19 @@ const standard = {
                 code += "#define CLUSTER_CONSERVE_ENERGY\n";
             }
 
-            if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
-            if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
-                if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy && !hasAreaLights) {
-                        // NB if there are area lights, energy conservation is done differently
-                        code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
-                    } else {
-                        code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
-                    }
+            if (lighting) {
+                code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
+            }
+
+            if (options.fresnelModel > 0) {
+                if (options.conserveEnergy && !hasAreaLights) {
+                    // NB if there are area lights, energy conservation is done differently
+                    code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                 } else {
-                    code += chunks.combineDiffuseSpecularOldPS;
+                    code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
                 }
+            } else if (reflections) {
+                code += chunks.combineDiffuseSpecularOldPS;
             } else {
                 if (options.diffuseMap) {
                     code += chunks.combineDiffuseSpecularNoReflPS;
@@ -1399,17 +1262,10 @@ const standard = {
         }
 
         if (addAmbient) {
-
-            const ambientDecode = options.rgbmAmbient ? "decodeRGBM" : (options.hdrAmbient ? "" : "gammaCorrectInput");
-
-            if (options.ambientSH) {
+            if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
-            } else if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, ambientDecode);
-                } else {
-                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, ambientDecode);
-                }
+            } else if (options.ambientSource === 'envAtlas') {
+                code += chunks.ambientEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
             }
@@ -1528,7 +1384,7 @@ const standard = {
 
             code += "   getNormal();\n";
             if (options.useSpecular) {
-                if (options.enableGGXSpecular) {
+                if (lighting && options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
                 }
@@ -1583,7 +1439,7 @@ const standard = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+            if (reflections) {
                 if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }
@@ -1803,7 +1659,7 @@ const standard = {
                 }
             }
 
-            if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
+            if (reflections && options.refraction) {
                 code += "   addRefraction();\n";
             }
         }

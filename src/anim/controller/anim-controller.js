@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
@@ -478,9 +479,7 @@ class AnimController {
         }
         const state = this._findState(nodeName);
         if (!state) {
-            // #if _DEBUG
-            console.error('Attempting to unassign animation tracks from a state that does not exist.');
-            // #endif
+            Debug.error('Attempting to unassign animation tracks from a state that does not exist.');
             return;
         }
 
@@ -533,7 +532,7 @@ class AnimController {
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                const interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+                const interpolatedTime = this._totalTransitionTime === 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);

@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -25,6 +26,10 @@ class OrientedBox {
      * constructor takes a reference of this parameter.
      */
     constructor(worldTransform = new Mat4(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
+
+        Debug.assert(!Object.isFrozen(worldTransform), `The constructor of 'OrientedBox' does not accept a constant (frozen) object as a 'worldTransform' parameter`);
+        Debug.assert(!Object.isFrozen(halfExtents), `The constructor of 'OrientedBox' does not accept a constant (frozen) object as a 'halfExtents' parameter`);
+
         this.halfExtents = halfExtents;
 
         this._modelTransform = worldTransform.clone().invert();

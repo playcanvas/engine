@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -165,9 +166,7 @@ class Skeleton {
                 // Determine the interpolated keyframe for this animated node
                 const interpKey = this._interpolatedKeyDict[nodeName];
                 if (interpKey === undefined) {
-                    // #if _DEBUG
-                    console.warn(`Unknown skeleton node name: ${nodeName}`);
-                    // #endif
+                    Debug.warn(`Unknown skeleton node name: ${nodeName}`);
                     continue;
                 }
                 // If there's only a single key, just copy the key to the interpolated key...

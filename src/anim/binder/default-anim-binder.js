@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
 import { Entity } from '../../framework/entity.js';
@@ -164,7 +165,7 @@ class DefaultAnimBinder {
             // #if _DEBUG
             const fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
-                console.warn(`Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`);
+                Debug.warn(`Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`);
             }
             if (!Number.isFinite(this.visitedFallbackGraphPaths[fallbackGraphPath])) {
                 this.visitedFallbackGraphPaths[fallbackGraphPath] = 0;

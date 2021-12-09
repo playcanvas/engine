@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { math } from '../math/math.js';
 import { Mat4 } from '../math/mat4.js';
 
@@ -98,9 +99,7 @@ class SkinInstance {
             let bone = rootBone.findByName(boneName);
 
             if (!bone) {
-                // #if _DEBUG
-                console.error(`Failed to find bone [${boneName}] in the entity hierarchy, RenderComponent on ${entity.name}, rootBone: ${rootBone.entity.name}`);
-                // #endif
+                Debug.error(`Failed to find bone [${boneName}] in the entity hierarchy, RenderComponent on ${entity.name}, rootBone: ${rootBone.entity.name}`);
                 bone = entity;
             }
 

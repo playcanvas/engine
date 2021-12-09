@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -60,15 +61,6 @@ class GeometryData {
         this.indices = null;
     }
 
-    _validateVertexCount(count, semantic) {
-
-        // #if _DEBUG
-        if (this.vertexCount !== count) {
-            console.error(`Vertex stream ${semantic} has ${count} vertices, which does not match already set streams with ${this.vertexCount} vertices.`);
-        }
-        // #endif
-    }
-
     // function called when vertex stream is requested to be updated, and validates / updates currently used vertex count
     _changeVertexCount(count, semantic) {
 
@@ -76,7 +68,7 @@ class GeometryData {
         if (!this.vertexCount) {
             this.vertexCount = count;
         } else {
-            this._validateVertexCount(count, semantic);
+            Debug.assert(this.vertexCount === count, `Vertex stream ${semantic} has ${count} vertices, which does not match already set streams with ${this.vertexCount} vertices.`);
         }
     }
 

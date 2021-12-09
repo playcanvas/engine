@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../../asset/asset.js';
 import { Texture } from '../../../graphics/texture.js';
 import {
@@ -92,9 +93,7 @@ class KtxParser {
         if (IDENTIFIER[0] !== dataU32[0] ||
             IDENTIFIER[1] !== dataU32[1] ||
             IDENTIFIER[2] !== dataU32[2]) {
-            // #if _DEBUG
-            console.warn("Invalid definition header found in KTX file. Expected 0xAB4B5458, 0x203131BB, 0x0D0A1A0A");
-            // #endif
+            Debug.warn("Invalid definition header found in KTX file. Expected 0xAB4B5458, 0x203131BB, 0x0D0A1A0A");
             return null;
         }
 
@@ -117,17 +116,13 @@ class KtxParser {
 
         // don't support volume textures
         if (header.pixelDepth > 1) {
-            // #if _DEBUG
-            console.warn("More than 1 pixel depth not supported!");
-            // #endif
+            Debug.warn("More than 1 pixel depth not supported!");
             return null;
         }
 
         // don't support texture arrays
         if (header.numberOfArrayElements !== 0) {
-            // #if _DEBUG
-            console.warn("Array texture not supported!");
-            // #endif
+            Debug.warn("Array texture not supported!");
             return null;
         }
 
@@ -135,9 +130,7 @@ class KtxParser {
 
         // only support subset of pixel formats
         if (format === undefined) {
-            // #if _DEBUG
-            console.warn("Unknown glInternalFormat: " + header.glInternalFormat);
-            // #endif
+            Debug.warn("Unknown glInternalFormat: " + header.glInternalFormat);
             return null;
         }
 

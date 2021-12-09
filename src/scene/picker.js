@@ -13,6 +13,7 @@ import { LayerComposition } from './composition/layer-composition.js';
 
 import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
+import { Debug } from '../core/debug.js';
 
 /* eslint-disable no-unused-vars */
 import { Application } from '../framework/application.js';
@@ -20,9 +21,6 @@ import { CameraComponent } from '../framework/components/camera/component.js';
 import { Scene } from './scene.js';
 /* eslint-enable no-unused-vars */
 
-let _deviceDeprecationWarning = false;
-let _getSelectionDeprecationWarning = false;
-let _prepareDeprecationWarning = false;
 const tempSet = new Set();
 
 const clearDepthOptions = {
@@ -49,12 +47,7 @@ class Picker {
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = getApplication();
-            if (!_deviceDeprecationWarning) {
-                _deviceDeprecationWarning = true;
-                // #if _DEBUG
-                console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
-                // #endif
-            }
+            Debug.deprecated("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
         }
 
         this.app = app;
@@ -108,12 +101,7 @@ class Picker {
         const device = this.device;
 
         if (typeof x === 'object') {
-            // #if _DEBUG
-            if (!_prepareDeprecationWarning) {
-                _prepareDeprecationWarning = true;
-                console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
-            }
-            // #endif
+            Debug.deprecated("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
 
             const rect = x;
             x = rect.x;
@@ -248,12 +236,7 @@ class Picker {
 
         // handle deprecated arguments
         if (camera instanceof Camera) {
-            // #if _DEBUG
-            if (!_getSelectionDeprecationWarning) {
-                _getSelectionDeprecationWarning = true;
-                console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
-            }
-            // #endif
+            Debug.deprecated("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
 
             // Get the camera component
             camera = camera.node.camera;

@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
@@ -147,15 +148,11 @@ class Entity extends GraphNode {
     addComponent(type, data) {
         const system = this._app.systems[type];
         if (!system) {
-            // #if _DEBUG
-            console.error(`addComponent: System ${type} doesn't exist`);
-            // #endif
+            Debug.error(`addComponent: System ${type} doesn't exist`);
             return null;
         }
         if (this.c[type]) {
-            // #if _DEBUG
-            console.warn(`addComponent: Entity already has ${type} component`);
-            // #endif
+            Debug.warn(`addComponent: Entity already has ${type} component`);
             return null;
         }
         return system.addComponent(this, data);
@@ -175,15 +172,11 @@ class Entity extends GraphNode {
     removeComponent(type) {
         const system = this._app.systems[type];
         if (!system) {
-            // #if _DEBUG
-            console.error(`removeComponent: System ${type} doesn't exist`);
-            // #endif
+            Debug.error(`addComponent: System ${type} doesn't exist`);
             return;
         }
         if (!this.c[type]) {
-            // #if _DEBUG
-            console.warn(`removeComponent: Entity doesn't have ${type} component`);
-            // #endif
+            Debug.warn(`removeComponent: Entity doesn't have ${type} component`);
             return;
         }
         system.removeComponent(this);
@@ -468,7 +461,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
                     if (newEntityReferenceId) {
                         newEntity.c[componentName][propertyName] = newEntityReferenceId;
                     } else {
-                        console.warn('Could not find corresponding entity id when resolving duplicated entity references');
+                        Debug.warn('Could not find corresponding entity id when resolving duplicated entity references');
                     }
                 }
             }

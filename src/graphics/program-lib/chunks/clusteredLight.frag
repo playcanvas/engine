@@ -529,15 +529,11 @@ void addClusteredLights() {
             // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
             for (int i = 0; i < 4; i++) {
                 
-                float index = indices.x;
-                if (i == 1) index = indices.y;
-                else if (i == 2) index = indices.z;
-                else if (i == 3) index = indices.w;
-
-                if (index <= 0.0)
+                if (indices.x <= 0.0)
                     return;
 
-                evaluateClusterLight(index); 
+                evaluateClusterLight(indices.x); 
+                indices = indices.yzwx;
             }
 
             // end of the cell array

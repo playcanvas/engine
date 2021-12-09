@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import {
     BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32
@@ -184,9 +185,7 @@ class IndexBuffer {
 
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            // #if _DEBUG
-            console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
-            // #endif
+            Debug.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
             return false;
         }
 

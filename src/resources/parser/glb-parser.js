@@ -1,4 +1,5 @@
 import { path } from '../../core/path.js';
+import { Debug } from '../../core/debug.js';
 
 import { http } from '../../net/http.js';
 
@@ -824,9 +825,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                         canUseMorph = false;
                     }
                 } else {
-                    // #if _DEBUG
-                    console.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
-                    // #endif
+                    Debug.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
                 }
             }
         }

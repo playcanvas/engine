@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Mat4 } from '../../../math/mat4.js';
 import { Vec2 } from '../../../math/vec2.js';
 
@@ -276,9 +278,7 @@ class ScreenComponent extends Component {
 
     set priority(value) {
         if (value > 0xFF) {
-            // #if _DEBUG
-            console.warn(`Clamping screen priority from ${value} to 255`);
-            // #endif
+            Debug.warn(`Clamping screen priority from ${value} to 255`);
             value = 0xFF;
         }
 

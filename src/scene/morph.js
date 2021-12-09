@@ -254,13 +254,20 @@ class Morph extends RefCountedObject {
 
     _calculateAabb() {
 
-        this.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
-
-        // calc bounding box of the relative change this morph can add
+        // calculate min and max expansion size
+        // Note: This represents average case, where most morph targets expand the mesh within the same area. It does not
+        // represent the stacked worst case scenario where all morphs could be enabled at the same time, as this can result
+        // in a very large aabb. In cases like this, the users should specify customAabb for Model/Render component.
+        const min = new Vec3();
+        const max = new Vec3();
         for (let i = 0; i < this._targets.length; i++) {
-            const target = this._targets[i];
-            this.aabb._expand(target.aabb.getMin(), target.aabb.getMax());
+            const targetAabb = this._targets[i].aabb;
+            min.min(targetAabb.getMin());
+            max.max(targetAabb.getMax());
         }
+
+        this.aabb = new BoundingBox();
+        this.aabb.setMinMax(min, max);
     }
 
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals

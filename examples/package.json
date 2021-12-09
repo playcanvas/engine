@@ -59,7 +59,6 @@
     "awesome-typescript-loader": "^5.2.1",
     "babel-loader": "^8.1.0",
     "concurrently": "^6.2.0",
-    "copy-webpack-plugin": "^9.0.1",
     "cross-env": "^7.0.2",
     "css-loader": "^5.2.6",
     "error-overlay-webpack-plugin": "^0.4.2",
@@ -84,7 +83,8 @@
     "webpack": "^5.42.1",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "webpack-shell-plugin-next": "^2.2.2"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT"

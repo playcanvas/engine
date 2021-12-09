@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { hasAudioContext } from '../../../audio/capabilities.js';
 
 import { Component } from '../component.js';
@@ -159,9 +161,7 @@ class SoundComponentSystem extends ComponentSystem {
 
     get context() {
         if (!hasAudioContext()) {
-            // #if _DEBUG
-            console.warn('WARNING: Audio context is not supported on this browser');
-            // #endif
+            Debug.warn('WARNING: Audio context is not supported on this browser');
             return null;
         }
 

@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Mat4 } from '../../../math/mat4.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -1154,9 +1156,7 @@ Object.defineProperty(ElementComponent.prototype, "drawOrder", {
         }
 
         if (value > 0xFFFFFF) {
-            // #if _DEBUG
-            console.warn("Element.drawOrder larger than max size of: " + 0xFFFFFF);
-            // #endif
+            Debug.warn("Element.drawOrder larger than max size of: " + 0xFFFFFF);
             value = 0xFFFFFF;
         }
 

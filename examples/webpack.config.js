@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const WebpackShellPlugin = require('webpack-shell-plugin-next');
 const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
@@ -91,14 +91,6 @@ const config = {
             filename: '../index.html',
             hasPublicPath: !!process.env.PUBLIC_PATH
         }),
-        new CopyWebpackPlugin({
-            patterns: [
-                { from: 'src/wasm-loader.js', to: '' },
-                { from: 'assets', to: 'assets' },
-                { from: 'src/lib', to: 'lib' },
-                { from: '../scripts', to: 'scripts' }
-            ]
-        }),
         new webpack.DefinePlugin({
             __PUBLIC_PATH__: JSON.stringify(process.env.PUBLIC_PATH)
         }),
@@ -123,7 +115,24 @@ const config = {
         new webpack.NormalModuleReplacementPlugin(
             /^playcanvas\/build\/playcanvas-extras\.js$/,
             path.resolve(__dirname, process.env.EXTRAS_PATH || '../build/playcanvas-extras.js')
-        )
+        ),
+        new WebpackShellPlugin({
+            onBuildStart: {
+                scripts: ['rm -rf dist/static'],
+                blocking: true,
+                parallel: false
+            },
+            onBuildEnd: {
+                scripts: [
+                    'cp ./src/wasm-loader.js ./dist/static/',
+                    'cp -r ./assets ./dist/static/assets/',
+                    'cp -r ./src/lib/ ./dist/static/lib/',
+                    'cp -r ../scripts ./dist/static/scripts/'
+                ],
+                blocking: true,
+                parallel: false
+            }
+        })
     ]
 };
 

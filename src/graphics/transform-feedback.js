@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
@@ -90,11 +91,8 @@ class TransformFeedback {
         this.device = inputBuffer.device;
         const gl = this.device.gl;
 
-        // #if _DEBUG
-        if (!inputBuffer.format.interleaved && inputBuffer.format.elements.length > 1) {
-            console.error("Vertex buffer used by TransformFeedback needs to be interleaved.");
-        }
-        // #endif
+        Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
+                     "Vertex buffer used by TransformFeedback needs to be interleaved.");
 
         this._inputBuffer = inputBuffer;
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
