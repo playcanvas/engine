@@ -160,20 +160,8 @@ class DefaultAnimBinder {
         let node;
         if (this.graph) {
             const entityPath = path.entityPath;
-
-            if (this.graph.name === entityPath[0]) {
-                node = this.graph;
-                for (let i = 1; i < entityPath.length; ++i) {
-                    node = node.children.find(c => c.name === entityPath[i]);
-                    if (!node) {
-                        break;
-                    }
-                }
-            }
-
-            // fall back to old method if node wasn't found
-            if (!node) {
-                node = this.graph.findByPath(path.entityPath);
+            if (entityPath[0] === this.graph.name) {
+                node = this.graph.findByPath(entityPath.slice(1));
             }
         }
         if (!node) {
