@@ -159,7 +159,10 @@ class DefaultAnimBinder {
 
         let node;
         if (this.graph) {
-            node = this.graph.findByPath(path.entityPath);
+            const entityPath = path.entityPath;
+            if (entityPath[0] === this.graph.name) {
+                node = this.graph.findByPath(entityPath.slice(1));
+            }
         }
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
