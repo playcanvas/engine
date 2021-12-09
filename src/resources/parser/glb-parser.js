@@ -1358,7 +1358,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     const constructNodePath = (node) => {
         const path = [];
         while (node) {
-            path.splice(0, 0, node.name);
+            path.unshift(node.name);
             node = node.parent;
         }
         return path;
