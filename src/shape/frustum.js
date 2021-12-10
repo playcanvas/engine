@@ -142,17 +142,12 @@ class Frustum {
      * @function
      * @name Frustum#containsSphere
      * @description Tests whether a bounding sphere intersects the frustum. If the sphere is outside the frustum,
-     * zero is returned. If the sphere intersects the frustum, 1 is returned. If the sphere is completely inside
-     * the frustum, 2 is returned. Note that a sphere touching a frustum plane from the outside is considered to
-     * be outside the frustum.
+     * false is returned. Otherwse true is returned. Note that a sphere touching a frustum plane from the outside
+     * is considered to be outside the frustum.
      * @param {BoundingSphere} sphere - The sphere to test.
-     * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if
-     * it is contained by the frustum.
+     * @returns {boolean} false if the bounding sphere is outside the frustum, true otherwise.
      */
     containsSphere(sphere) {
-        let c = 0;
-        let d;
-        let p;
 
         const sr = sphere.radius;
         const sc = sphere.center;
@@ -160,18 +155,15 @@ class Frustum {
         const scy = sc.y;
         const scz = sc.z;
         const planes = this.planes;
-        let plane;
 
-        for (p = 0; p < 6; p++) {
-            plane = planes[p];
-            d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
+        for (let p = 0; p < 6; p++) {
+            const plane = planes[p];
+            const d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
             if (d <= -sr)
-                return 0;
-            if (d > sr)
-                c++;
+                return false;
         }
 
-        return (c === 6) ? 2 : 1;
+        return true;
     }
 
     // returns an array of corners of the frustum of the camera, using specified near and far distance
