@@ -172,12 +172,14 @@ class VoxLoader {
                     break;
                 }
                 case 'RGBA': {
-                    const tmp = new Uint32Array(arrayBuffer, rs.offset, 256);
-                    const data = new Uint32Array(256);
+                    const tmp = new Uint8Array(arrayBuffer, rs.offset, 256 * 4);
+                    const data = new Uint8Array(256 * 4);
                     for (let i = 0; i < 255; ++i) {
-                        data[i + 1] = tmp[i];
+                        data[(i + 1) * 4 + 0] = tmp[i * 4 + 0];
+                        data[(i + 1) * 4 + 1] = tmp[i * 4 + 1];
+                        data[(i + 1) * 4 + 2] = tmp[i * 4 + 2];
+                        data[(i + 1) * 4 + 3] = tmp[i * 4 + 3];
                     }
-
                     voxModel.setPalette(new VoxPalette(new Uint8Array(data.buffer)));
                     rs.skip(256 * 6);
                     break;
