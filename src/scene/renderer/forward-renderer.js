@@ -990,9 +990,7 @@ class ForwardRenderer {
     // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
     drawInstance(device, meshInstance, mesh, style, normal) {
 
-        // #if _DEBUG
-        device.pushMarker(meshInstance.node.name);
-        // #endif
+        Debug.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1023,9 +1021,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style]);
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         return 0;
     }
@@ -1033,9 +1029,7 @@ class ForwardRenderer {
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
 
-        // #if _DEBUG
-        device.pushMarker(meshInstance.node.name);
-        // #endif
+        Debug.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1053,9 +1047,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style], undefined, true);
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         return 0;
     }
@@ -1894,10 +1886,8 @@ class ForwardRenderer {
                 continue;
             }
 
-            // #if _DEBUG
-            this.device.pushMarker(camera ? camera.entity.name : "noname");
-            this.device.pushMarker(layer.name);
-            // #endif
+            Debug.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
+            Debug.pushGpuMarker(this.device, layer.name);
 
             // #if _PROFILER
             drawTime = now();
@@ -2012,10 +2002,8 @@ class ForwardRenderer {
                 }
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            this.device.popMarker();
-            // #endif
+            Debug.popGpuMarker(this.device);
+            Debug.popGpuMarker(this.device);
 
             // #if _PROFILER
             layer._renderTime += now() - drawTime;

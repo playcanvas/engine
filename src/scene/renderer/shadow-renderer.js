@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -525,19 +527,13 @@ class ShadowRenderer {
             forwardRenderer._shadowMapUpdates += faceCount;
             const isClustered = forwardRenderer.scene.clusteredLightingEnabled;
 
-            // #if _DEBUG
-            device.pushMarker("SHADOW " + light._node.name);
-            // #endif
+            Debug.pushGpuMarker(device, `SHADOW ${light._node.name}`);
 
             this.setupRenderState(device, light);
 
             for (let face = 0; face < faceCount; face++) {
 
-                // #if _DEBUG
-                if (faceCount > 1) {
-                    device.pushMarker("FACE " + face);
-                }
-                // #endif
+                Debug.pushGpuMarker(device, `FACE ${face}`);
 
                 // directional shadows are per camera, so get appropriate render data
                 const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
@@ -558,11 +554,7 @@ class ShadowRenderer {
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);
 
-                // #if _DEBUG
-                if (faceCount > 1) {
-                    device.popMarker();
-                }
-                // #endif
+                Debug.popGpuMarker(device);
             }
 
             // VSM blur
@@ -572,9 +564,7 @@ class ShadowRenderer {
 
             this.restoreRenderState(device);
 
-            // #if _DEBUG
-            device.popMarker();
-            // #endif
+            Debug.popGpuMarker(device);
         }
     }
 
@@ -608,9 +598,7 @@ class ShadowRenderer {
 
         const device = this.device;
 
-        // #if _DEBUG
-        this.device.pushMarker("VSM");
-        // #endif
+        Debug.pushGpuMarker(device, "VSM");
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;
@@ -648,9 +636,7 @@ class ShadowRenderer {
         // return the temporary shadow map back to the cache
         this.shadowMapCache.add(light, tempShadowMap);
 
-        // #if _DEBUG
-        this.device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
     }
 }
 

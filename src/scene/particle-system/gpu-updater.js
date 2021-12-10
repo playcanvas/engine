@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { math } from '../../math/math.js';
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -84,9 +86,7 @@ class ParticleGPUUpdater {
     // This shouldn't change emitter state, only read from it
     update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
 
-        // #if _DEBUG
-        device.pushMarker("ParticleGPU");
-        // #endif
+        Debug.pushGpuMarker(device, "ParticleGPU");
 
         const emitter = this._emitter;
 
@@ -192,9 +192,7 @@ class ParticleGPUUpdater {
         if (emitter.pack8)
             this._setInputBounds();
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
     }
 }
 

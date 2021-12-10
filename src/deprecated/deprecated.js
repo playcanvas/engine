@@ -521,10 +521,14 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
 
 Object.defineProperty(Batch.prototype, 'model', {
     get: function () {
-        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');
+        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
         return null;
     }
 });
+
+MeshInstance.prototype.syncAabb = function () {
+    Debug.deprecated('pc.MeshInstance#syncAabb is deprecated.');
+};
 
 Morph.prototype.getTarget = function (index) {
     Debug.deprecated('pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
