@@ -161,18 +161,17 @@ class GraphNode extends EventHandler {
      * the root of the hierarchy.
      */
     get path() {
-        let parent = this._parent;
-        if (parent) {
-            let path = this.name;
-
-            while (parent && parent._parent) {
-                path = parent.name + "/" + path;
-                parent = parent._parent;
-            }
-
-            return path;
+        let node = this._parent;
+        if (!node) {
+            return '';
         }
-        return '';
+
+        let result = this.name;
+        while (node && node._parent) {
+            result = `${node.name}/${result}`;
+            node = node._parent;
+        }
+        return result;
     }
 
     /**
@@ -182,14 +181,11 @@ class GraphNode extends EventHandler {
      * @description A read-only property to get highest graph node from current node.
      */
     get root() {
-        let parent = this._parent;
-        if (!parent)
-            return this;
-
-        while (parent._parent)
-            parent = parent._parent;
-
-        return parent;
+        let result = this;
+        while (result._parent) {
+            result = result._parent;
+        }
+        return result;
     }
 
     /**
