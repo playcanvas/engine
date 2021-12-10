@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 import {
@@ -45,15 +46,11 @@ function texelCoordSolidAngle(u, v, size) {
 
 function shFromCubemap(device, source, dontFlipX) {
     if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
-        // #if _DEBUG
-        console.error("ERROR: SH: cubemap must be RGBA8");
-        // #endif
+        Debug.error("ERROR: SH: cubemap must be RGBA8");
         return null;
     }
     if (!source._levels[0] || !source._levels[0][0]) {
-        // #if _DEBUG
-        console.error("ERROR: SH: cubemap must be synced to CPU");
-        // #endif
+        Debug.error("ERROR: SH: cubemap must be synced to CPU");
         return null;
     }
 
@@ -109,9 +106,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
-            // #if _DEBUG
-            console.error("ERROR: SH: cubemap must be composed of arrays or images");
-            // #endif
+            Debug.error("ERROR: SH: cubemap must be composed of arrays or images");
             return null;
         }
     }
