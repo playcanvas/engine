@@ -33,6 +33,16 @@ class Debug {
     static error(...args) {
         console.error(...args);
     }
+
+    // push GPU marker to the stack on the device
+    static pushGpuMarker(device, name) {
+        device.pushMarker(name);
+    }
+
+    // pop GPU marker from the stack on the device
+    static popGpuMarker(device) {
+        device.popMarker();
+    }
 }
 
 export { Debug };
