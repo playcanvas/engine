@@ -17,6 +17,7 @@ import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
+import { getApplication } from '../framework/globals.js';
 
 /**
  * @class
@@ -102,7 +103,7 @@ class Scene extends EventHandler {
     constructor(graphicsDevice) {
         super();
 
-        this.device = graphicsDevice;
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this.root = null;
 
         this._gravity = new Vec3(0, -9.8, 0);
