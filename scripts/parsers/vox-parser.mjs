@@ -171,10 +171,17 @@ class VoxLoader {
                     rs.skip(numVoxels * 4);
                     break;
                 }
-                case 'RGBA':
-                    voxModel.setPalette(new VoxPalette(new Uint8Array(arrayBuffer, rs.offset, 256 * 4)));
+                case 'RGBA': {
+                    const tmp = new Uint32Array(arrayBuffer, rs.offset, 256);
+                    const data = new Uint32Array(256);
+                    for (let i = 0; i < 255; ++i) {
+                        data[i + 1] = tmp[i];
+                    }
+
+                    voxModel.setPalette(new VoxPalette(new Uint8Array(data.buffer)));
                     rs.skip(256 * 6);
                     break;
+                }
                 default:
                     // skip other chunks
                     rs.skip(chunk.numBytes + chunk.numChildBytes);
@@ -183,7 +190,7 @@ class VoxLoader {
         }
 
         if (!voxModel.palette) {
-            voxModel.setPalette(defaultPalette);
+            voxModel.setPalette(new VoxPalette(defaultPalette));
         }
 
         return voxModel;
@@ -250,7 +257,7 @@ class VoxGen {
             normals.push(normal[0], normal[1], normal[2]);
 
             // colors
-            const clr = voxMesh.palette.clr(paletteIndex - 1);
+            const clr = voxMesh.palette.clr(paletteIndex);
             colors.push(clr[0], clr[1], clr[2], clr[3]);
             colors.push(clr[0], clr[1], clr[2], clr[3]);
             colors.push(clr[0], clr[1], clr[2], clr[3]);
