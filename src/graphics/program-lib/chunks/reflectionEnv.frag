@@ -4,13 +4,29 @@ uniform sampler2D texture_envAtlas;
 #endif
 uniform float material_reflectivity;
 
+float mipLevel(vec2 uv) {
+    vec2 dx = dFdx(uv);
+    vec2 dy = dFdy(uv);
+    return clamp(0.5 * log2(max(dot(dx, dx), dot(dy, dy))), 0.0, 10.0);
+}
+
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec3 dir = cubeMapProject(tReflDirW) * vec3(-1.0, 1.0, 1.0);
     vec2 uv = toSphericalUv(dir);
 
     float level = saturate(1.0 - tGlossiness) * 5.0;
     float ilevel = floor(level);
-    vec3 linear0 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel)));
+
+    vec3 linear0;
+    if (ilevel == 0.0) {
+        float level2 = mipLevel(uv * atlasSize);
+        float ilevel2 = floor(level2);
+        vec3 linearA = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2)));
+        vec3 linearB = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2 + 1.0)));
+        linear0 = mix(linearA, linearB, level2 - ilevel2);
+    } else {
+        linear0 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel)));
+    }
     vec3 linear1 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
 
     return processEnvironment(mix(linear0, linear1, level - ilevel));

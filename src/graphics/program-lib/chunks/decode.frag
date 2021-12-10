@@ -33,7 +33,8 @@ vec2 toSphericalUv(vec3 dir) {
 // equirectangular helper functions
 
 // envAtlas is fixed at 512 pixels. every equirect is generated with 1 pixel boundary.
-const float seamSize = 1.0 / 512.0;
+const float atlasSize = 512.0;
+const float seamSize = 1.0 / atlasSize;
 
 // map a normalized equirect UV to the given rectangle (taking 1 pixel seam into account).
 vec2 mapUv(vec2 uv, vec4 rect) {
@@ -45,4 +46,10 @@ vec2 mapUv(vec2 uv, vec4 rect) {
 vec2 mapRoughnessUv(vec2 uv, float level) {
     float t = 1.0 / exp2(level);
     return mapUv(uv, vec4(0, 1.0 - t, t, t * 0.5));
+}
+
+// 
+vec2 mapMip(vec2 uv, float level) {
+    float t = 1.0 / exp2(level);
+    return mapUv(uv, vec4(1.0 - t, 1.0 - t, t, t * 0.5));
 }

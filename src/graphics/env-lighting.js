@@ -8,6 +8,11 @@ import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
 
 const fixCubemapSeams = true;
 
+// calculate the number of mipmap levels given texture dimensions
+const calcLevels = (width, height) => {
+    return 1 + Math.floor(Math.log2(Math.max(width, height)));
+};
+
 const supportsFloat16 = (device) => {
     return device.extTextureHalfFloat && device.textureHalfFloatRenderable;
 };
@@ -140,16 +145,24 @@ class EnvLighting {
             mipmaps: false
         });
 
+        // generate mipmaps
         const rect = new Vec4(0, 0, 512, 256);
+        const levels = calcLevels(result.width, result.height);
+        for (let i = 0; i < levels; ++i) {
+            reprojectTexture(source, result, {
+                numSamples: 1,
+                rect: rect,
+                seamPixels: 1
+            });
 
-        // generate top-level reflection
-        reprojectTexture(source, result, {
-            numSamples: 1,
-            rect: rect,
-            seamPixels: 1
-        });
+            rect.x += rect.w;
+            rect.y += rect.w;
+            rect.z = Math.max(1, Math.floor(rect.z * 0.5));
+            rect.w = Math.max(1, Math.floor(rect.w * 0.5));
+        }
 
         // generate blurry reflections
+        rect.set(0, 0, 512, 256);
         for (let i = 1; i < 7; ++i) {
             rect.y += rect.w;
             rect.z = Math.max(1, Math.floor(rect.z * 0.5));
@@ -163,9 +176,8 @@ class EnvLighting {
             });
         }
 
-        rect.set(256, 256, 64, 32);
-
         // generate ambient
+        rect.set(128, 256 + 128, 64, 32);
         if (options?.legacyAmbient) {
             reprojectTexture(source, result, {
                 numSamples: options?.numSamples || 4096,
