@@ -379,13 +379,27 @@ void evaluateLight(ClusterLightData light) {
 
                         // spot shadow
                         getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
-                        dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
+                        
+                        #if defined(CLUSTER_SHADOW_TYPE_PCF1)
+                            dAtten *= getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
+                            dAtten *= getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
+                            dAtten *= getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
+                        #endif
 
                     } else {
 
                         // omni shadow
                         normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
-                        dAtten *= getShadowOmniClusteredPCF3x3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+
+                        #if defined(CLUSTER_SHADOW_TYPE_PCF1)
+                            dAtten *= getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
+                            dAtten *= getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
+                            dAtten *= getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                        #endif
                     }
                 }
 

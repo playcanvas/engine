@@ -287,9 +287,25 @@ export const SHADOW_VSM32 = 3;
  * @description Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
  */
 export const SHADOW_PCF5 = 4;
+/**
+ * @constant
+ * @name SHADOW_PCF1
+ * @type {number}
+ * @description Render depth (color-packed on WebGL 1.0), can be used for PCF 1x1 sampling.
+ */
+export const SHADOW_PCF1 = 5;
 
 // non-public: number of supported depth shadow modes
-export const SHADOW_COUNT = 5;
+export const SHADOW_COUNT = 6;
+
+// map of engine SHADOW__*** to a string representation
+export const shadowTypeToString = {};
+shadowTypeToString[SHADOW_PCF3] = "PCF3";
+shadowTypeToString[SHADOW_VSM8] = "VSM8";
+shadowTypeToString[SHADOW_VSM16] = "VSM16";
+shadowTypeToString[SHADOW_VSM32] = "VSM32";
+shadowTypeToString[SHADOW_PCF5] = "PCF5";
+shadowTypeToString[SHADOW_PCF1] = "PCF1";
 
 /**
  * @constant

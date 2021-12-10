@@ -22,15 +22,15 @@ class LightTextureAtlas {
         this.device = device;
         this.subdivision = 0;
 
-        this.shadowMapResolution = 2048;
-        this.shadowMap = null;
+        this.shadowAtlasResolution = 2048;
+        this.shadowAtlas = null;
 
         // number of additional pixels to render past the required shadow camera angle (90deg for omni, outer for spot) of the shadow camera for clustered lights.
         // This needs to be a pixel more than a shadow filter needs to access.
         this.shadowEdgePixels = 3;
 
-        this.cookieMapResolution = 2048;
-        this.cookieMap = null;
+        this.cookieAtlasResolution = 2048;
+        this.cookieAtlas = null;
         this.cookieRenderTarget = null;
 
         // available slots
@@ -46,27 +46,27 @@ class LightTextureAtlas {
             new Vec2(2, 1)
         ];
 
-        this.allocateShadowMap(1);  // placeholder as shader requires it
-        this.allocateCookieMap(1);  // placeholder as shader requires it
+        this.allocateShadowAtlas(1);  // placeholder as shader requires it
+        this.allocateCookieAtlas(1);  // placeholder as shader requires it
         this.allocateUniforms();
     }
 
     destroy() {
-        this.destroyShadowMap();
-        this.destroyCookieMap();
+        this.destroyShadowAtlas();
+        this.destroyCookieAtlas();
     }
 
-    destroyShadowMap() {
-        if (this.shadowMap) {
-            this.shadowMap.destroy();
-            this.shadowMap = null;
+    destroyShadowAtlas() {
+        if (this.shadowAtlas) {
+            this.shadowAtlas.destroy();
+            this.shadowAtlas = null;
         }
     }
 
-    destroyCookieMap() {
-        if (this.cookieMap) {
-            this.cookieMap.destroy();
-            this.cookieMap = null;
+    destroyCookieAtlas() {
+        if (this.cookieAtlas) {
+            this.cookieAtlas.destroy();
+            this.cookieAtlas = null;
         }
         if (this.cookieRenderTarget) {
             this.cookieRenderTarget.destroy();
@@ -74,23 +74,23 @@ class LightTextureAtlas {
         }
     }
 
-    allocateShadowMap(resolution) {
-        if (!this.shadowMap || this.shadowMap.texture.width !== resolution) {
-            this.destroyShadowMap();
-            this.shadowMap = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
+    allocateShadowAtlas(resolution) {
+        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution) {
+            this.destroyShadowAtlas();
+            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
 
             // avoid it being destroyed by lights
-            this.shadowMap.cached = true;
+            this.shadowAtlas.cached = true;
         }
     }
 
-    allocateCookieMap(resolution) {
-        if (!this.cookieMap || this.cookieMap.width !== resolution) {
-            this.destroyCookieMap();
-            this.cookieMap = CookieRenderer.createTexture(this.device, resolution);
+    allocateCookieAtlas(resolution) {
+        if (!this.cookieAtlas || this.cookieAtlas.width !== resolution) {
+            this.destroyCookieAtlas();
+            this.cookieAtlas = CookieRenderer.createTexture(this.device, resolution);
 
             this.cookieRenderTarget = new RenderTarget({
-                colorBuffer: this.cookieMap,
+                colorBuffer: this.cookieAtlas,
                 depth: false,
                 flipY: true
             });
@@ -109,18 +109,17 @@ class LightTextureAtlas {
 
         // shadow atlas texture
         const isShadowFilterPcf = true;
-        const shadowMap = this.shadowMap;
-        const rt = shadowMap.renderTargets[0];
+        const rt = this.shadowAtlas.renderTargets[0];
         const shadowBuffer = (this.device.webgl2 && isShadowFilterPcf) ? rt.depthBuffer : rt.colorBuffer;
         this._shadowAtlasTextureId.setValue(shadowBuffer);
 
         // shadow atlas params
-        this._shadowAtlasParams[0] = this.shadowMapResolution;
+        this._shadowAtlasParams[0] = this.shadowAtlasResolution;
         this._shadowAtlasParams[1] = this.shadowEdgePixels;
         this._shadowAtlasParamsId.setValue(this._shadowAtlasParams);
 
         // cookie atlas textures
-        this._cookieAtlasTextureId.setValue(this.cookieMap);
+        this._cookieAtlasTextureId.setValue(this.cookieAtlas);
     }
 
     subdivide(numLights) {
@@ -142,7 +141,10 @@ class LightTextureAtlas {
         }
     }
 
-    collectLights(spotLights, omniLights, cookiesEnabled, shadowsEnabled) {
+    collectLights(spotLights, omniLights, lightingParams) {
+
+        const cookiesEnabled = lightingParams.cookiesEnabled;
+        const shadowsEnabled = lightingParams.shadowsEnabled;
 
         // get all lights that need shadows or cookies, if those are enabled
         let needsShadow = false;
@@ -170,11 +172,11 @@ class LightTextureAtlas {
         }
 
         if (needsShadow) {
-            this.allocateShadowMap(this.shadowMapResolution);
+            this.allocateShadowAtlas(this.shadowAtlasResolution);
         }
 
         if (needsCookie) {
-            this.allocateCookieMap(this.cookieMapResolution);
+            this.allocateCookieAtlas(this.cookieAtlasResolution);
         }
 
         if (needsShadow || needsCookie) {
@@ -185,14 +187,19 @@ class LightTextureAtlas {
     }
 
     // update texture atlas for a list of lights
-    update(spotLights, omniLights, cookiesEnabled, shadowsEnabled) {
+    update(spotLights, omniLights, lightingParams) {
 
-        const lights = this.collectLights(spotLights, omniLights, cookiesEnabled, shadowsEnabled);
+        // update texture resolutions
+        this.shadowAtlasResolution = lightingParams.shadowAtlasResolution;
+        this.cookieAtlasResolution = lightingParams.cookieAtlasResolution;
+
+        // process lights
+        const lights = this.collectLights(spotLights, omniLights, lightingParams);
         if (lights.length > 0) {
 
-            // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (4 pixels - should be enough for PCF5)
+            // leave gap between individual tiles to avoid shadow / cookie sampling other tiles (5 pixels is enough for PCF5)
             // note that this only fades / removes shadows on the edges, which is still not correct - a shader clipping is needed?
-            const scissorOffset = 4 / this.shadowMapResolution;
+            const scissorOffset = 4 / this.shadowAtlasResolution;
             const scissorVec = new Vec4(scissorOffset, scissorOffset, -2 * scissorOffset, -2 * scissorOffset);
 
             // assign atlas slots to lights
@@ -202,7 +209,7 @@ class LightTextureAtlas {
                 const light = lights[i];
 
                 if (light.castShadows)
-                    light._shadowMap = this.shadowMap;
+                    light._shadowMap = this.shadowAtlas;
 
                 // use a single slot for spot, and single slot for all 6 faces of cubemap as well
                 const slot = this.slots[usedCount];
