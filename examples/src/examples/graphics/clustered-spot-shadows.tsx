@@ -17,6 +17,10 @@ import SelectInput from '@playcanvas/pcui/SelectInput/component';
 import { Observer } from '@playcanvas/observer';
 // @ts-ignore: library file import
 import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import Button from '@playcanvas/pcui/Button/component';
+// @ts-ignore: library file import
+import Label from '@playcanvas/pcui/Label/component';
 
 class ClusteredSpotShadowsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -49,6 +53,11 @@ class ClusteredSpotShadowsExample extends Example {
                 <LabelGroup text='Cookies On'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.cookiesEnabled' }} value={data.get('settings.cookiesEnabled')}/>
                 </LabelGroup>
+                <LabelGroup text='Light Count'>
+                    <Label binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.numLights' }} value={data.get('settings.numLights')}/>
+                </LabelGroup>
+                <Button text='Add Light' onClick={() => data.emit('add')}/>
+                <Button text='Remove Light' onClick={() => data.emit('remove')}/>
             </Panel>
         </>;
     }
@@ -63,7 +72,8 @@ class ClusteredSpotShadowsExample extends Example {
             shadowAtlasResolution: 1024,     // shadow map resolution storing all shadows
             shadowType: pc.SHADOW_PCF3,      // shadow filter type
             shadowsEnabled: true,
-            cookiesEnabled: true
+            cookiesEnabled: true,
+            numLights: 0
         });
 
         // setup skydome as ambient light
@@ -84,7 +94,8 @@ class ClusteredSpotShadowsExample extends Example {
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        lighting.maxLightsPerCell = 16;
+        const maxLights = 24;
+        lighting.maxLightsPerCell = maxLights;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
@@ -155,15 +166,13 @@ class ClusteredSpotShadowsExample extends Example {
             scale -= 1.5;
         }
 
+        const spotLightList: Array<pc.Entity> = [];
         const cookieChannels = ["r", "g", "b", "a", "rgb"];
 
-        // create many spot lights
-        const count = 10;
-        const spotLightList: Array<pc.Entity> = [];
-        for (let i = 0; i < count; i++) {
+        function createLight() {
             const intensity = 1.5;
             const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
-            const lightSpot = new pc.Entity("Spot" + i);
+            const lightSpot = new pc.Entity("Spot");
             const cookieChannel = cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
 
             lightSpot.addComponent("light", {
@@ -199,6 +208,13 @@ class ClusteredSpotShadowsExample extends Example {
             spotLightList.push(lightSpot);
         }
 
+        // create many spot lights
+        const count = 10;
+        for (let i = 0; i < count; i++) {
+            createLight();
+        }
+        updateLightCount();
+
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -213,6 +229,26 @@ class ClusteredSpotShadowsExample extends Example {
             const pathArray = path.split('.');
             // @ts-ignore
             lighting[pathArray[1]] = value;
+        });
+
+        function updateLightCount() {
+            data.set('settings.numLights', spotLightList.length);
+        }
+
+        data.on('add', function () {
+            if (spotLightList.length < maxLights) {
+                createLight();
+                updateLightCount();
+            }
+        });
+
+        data.on('remove', function () {
+            if (spotLightList.length) {
+                const light = spotLightList.pop();
+                app.root.removeChild(light);
+                light.destroy();
+                updateLightCount();
+            }
         });
 
         // Set an update function on the app's update event
