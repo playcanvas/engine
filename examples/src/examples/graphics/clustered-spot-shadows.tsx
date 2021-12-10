@@ -237,7 +237,6 @@ class ClusteredSpotShadowsExample extends Example {
 
         data.on('add', function () {
             if (spotLightList.length < maxLights) {
-                console.log("add");
                 createLight();
                 updateLightCount();
             }
@@ -245,7 +244,6 @@ class ClusteredSpotShadowsExample extends Example {
 
         data.on('remove', function () {
             if (spotLightList.length) {
-                console.log("rem");
                 const light = spotLightList.pop();
                 app.root.removeChild(light);
                 light.destroy();
