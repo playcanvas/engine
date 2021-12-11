@@ -16,7 +16,6 @@ import {
 } from '../constants.js';
 
 import { Quat } from '../../math/quat.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -30,6 +29,14 @@ const arraysEqual = (a, b) => {
     return true;
 };
 
+const notWhite = (color) => {
+    return color.r !== 1 || color.g !== 1 || color.b !== 1;
+};
+
+const notBlack = (color) => {
+    return color.r !== 0 || color.g !== 0 || color.b !== 0;
+};
+
 class StandardMaterialOptionsBuilder {
     constructor() {
         this._mapXForms = null;
@@ -37,13 +44,13 @@ class StandardMaterialOptionsBuilder {
 
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        this._updateSharedOptions(options, stdMat, objDefs, pass);
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
     updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        this._updateSharedOptions(options, stdMat, objDefs, pass);
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, device, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
@@ -55,7 +62,7 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
-    _updateSharedOptions(options, stdMat, objDefs, pass) {
+    _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.pass = pass;
         options.alphaTest = stdMat.alphaTest > 0;
         options.forceFragmentPrecision = stdMat.forceFragmentPrecision || "";
@@ -71,6 +78,15 @@ class StandardMaterialOptionsBuilder {
         options.useMorphTextureBased = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
 
         options.nineSlicedMode = stdMat.nineSlicedMode || 0;
+
+        // clustered lighting features (in shared options as shadow pass needs this too)
+        if (scene.clusteredLightingEnabled) {
+            options.clusteredLightingEnabled = true;
+            options.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
+            options.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
+            options.clusteredLightingShadowType = scene.lighting.shadowType;
+            options.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+        }
     }
 
     _updateUVOptions(options, stdMat, objDefs, minimalOptions) {
@@ -97,15 +113,11 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat) {
-        const notWhite = (color) => {
-            return color.r !== 1 || color.g !== 1 || color.b !== 1;
-        };
-
         const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor)) &&
                             notWhite(stdMat.diffuse);
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notWhite(stdMat.specular) ||
+                            notBlack(stdMat.specular) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
@@ -172,13 +184,6 @@ class StandardMaterialOptionsBuilder {
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
         options.useCubeMapRotation = (!stdMat.cubeMap && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
-
-        // clustered lighting features
-        if (LayerComposition.clusteredLightingEnabled && scene.layers) {
-            options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
-            options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
-        }
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 

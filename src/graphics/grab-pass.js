@@ -77,9 +77,7 @@ class GrabPass {
         const width = device.width;
         const height = device.height;
 
-        // #if _DEBUG
-        device.pushMarker("grabPass");
-        // #endif
+        Debug.pushGpuMarker(device, "grabPass");
 
         if (device.webgl2 && !device._tempMacChromeBlitFramebufferWorkaround && width === texture._width && height === texture._height) {
             if (resolveRenderTarget) {
@@ -123,9 +121,7 @@ class GrabPass {
             }
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         return true;
     }

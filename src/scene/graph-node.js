@@ -177,18 +177,17 @@ class GraphNode extends EventHandler {
      * the root of the hierarchy.
      */
     get path() {
-        let parent = this._parent;
-        if (parent) {
-            let path = this.name;
-
-            while (parent && parent._parent) {
-                path = parent.name + "/" + path;
-                parent = parent._parent;
-            }
-
-            return path;
+        let node = this._parent;
+        if (!node) {
+            return '';
         }
-        return '';
+
+        let result = this.name;
+        while (node && node._parent) {
+            result = `${node.name}/${result}`;
+            node = node._parent;
+        }
+        return result;
     }
 
     /**
@@ -197,14 +196,11 @@ class GraphNode extends EventHandler {
      * @description A read-only property to get highest graph node from current node.
      */
     get root() {
-        let parent = this._parent;
-        if (!parent)
-            return this;
-
-        while (parent._parent)
-            parent = parent._parent;
-
-        return parent;
+        let result = this;
+        while (result._parent) {
+            result = result._parent;
+        }
+        return result;
     }
 
     /**
@@ -490,33 +486,15 @@ class GraphNode extends EventHandler {
      * var path = this.entity.findByPath('child/another_child');
      */
     findByPath(path) {
-        // if the path isn't an array, split the path in parts. Each part represents a deeper hierarchy level
-        let parts;
-        if (Array.isArray(path)) {
-            if (path.length === 0) return null;
-            parts = path;
-        } else {
-            parts = path.split('/');
-        }
-        let currentParent = this;
-        let result = null;
+        // accept either string path with '/' separators or array of parts.
+        const parts = Array.isArray(path) ? path : path.split('/');
 
-        for (let i = 0, imax = parts.length; i < imax && currentParent; i++) {
-            const part = parts[i];
-
-            result = null;
-
-            // check all the children
-            const children = currentParent._children;
-            for (let j = 0, jmax = children.length; j < jmax; j++) {
-                if (children[j].name === part) {
-                    result = children[j];
-                    break;
-                }
+        let result = this;
+        for (let i = 0, imax = parts.length; i < imax; ++i) {
+            result = result.children.find(c => c.name === parts[i]);
+            if (!result) {
+                return null;
             }
-
-            // keep going deeper in the hierarchy
-            currentParent = result;
         }
 
         return result;

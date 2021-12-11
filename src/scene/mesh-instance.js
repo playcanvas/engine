@@ -503,10 +503,6 @@ class MeshInstance {
             this.instancingData.count = value;
     }
 
-    syncAabb() {
-        // Deprecated
-    }
-
     // test if meshInstance is visible by camera. It requires the frustum of the camera to be up to date, which forward-renderer
     // takes care of. This function should  not be called elsewhere.
     _isVisible(camera) {

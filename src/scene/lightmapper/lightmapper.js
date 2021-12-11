@@ -521,9 +521,7 @@ class Lightmapper {
 
         }
 
-        // #if _DEBUG
-        this.device.pushMarker("LMBake");
-        // #endif
+        Debug.pushGpuMarker(this.device, "LMBake");
 
         // bake nodes
         if (bakeNodes.length > 0) {
@@ -552,9 +550,7 @@ class Lightmapper {
             this.finishBake(bakeNodes);
         }
 
-        // #if _DEBUG
-        this.device.popMarker();
-        // #endif
+        Debug.popGpuMarker(this.device);
 
         const nowTime = now();
         this.stats.totalRenderTime = nowTime - startTime;
@@ -852,9 +848,7 @@ class Lightmapper {
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
 
-            // #if _DEBUG
-            this.device.pushMarker(`LMPost:${node}`);
-            // #endif
+            Debug.pushGpuMarker(this.device, `LMPost:${node}`);
 
             for (let pass = 0; pass < passCount; pass++) {
 
@@ -878,9 +872,7 @@ class Lightmapper {
                 }
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            // #endif
+            Debug.popGpuMarker(this.device);
         }
     }
 
@@ -963,9 +955,7 @@ class Lightmapper {
 
             for (let virtualLightIndex = 0; virtualLightIndex < numVirtualLights; virtualLightIndex++) {
 
-                // #if _DEBUG
-                device.pushMarker(`Light:${bakeLight.light._node.name}:${virtualLightIndex}`);
-                // #endif
+                Debug.pushGpuMarker(device, `Light:${bakeLight.light._node.name}:${virtualLightIndex}`);
 
                 // prepare virtual light
                 if (numVirtualLights > 1) {
@@ -1007,9 +997,7 @@ class Lightmapper {
                             break;
                         }
 
-                        // #if _DEBUG
-                        device.pushMarker(`LMPass:${pass}`);
-                        // #endif
+                        Debug.pushGpuMarker(device, `LMPass:${pass}`);
 
                         // lightmap size
                         const nodeRT = bakeNode.renderTargets[pass];
@@ -1072,9 +1060,7 @@ class Lightmapper {
                             m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                         }
 
-                        // #if _DEBUG
-                        device.popMarker();
-                        // #endif
+                        Debug.popGpuMarker(device);
                     }
 
                     // Revert to original materials
@@ -1083,9 +1069,7 @@ class Lightmapper {
 
                 bakeLight.endBake(this.shadowMapCache);
 
-                // #if _DEBUG
-                device.popMarker();
-                // #endif
+                Debug.popGpuMarker(device);
             }
         }
 

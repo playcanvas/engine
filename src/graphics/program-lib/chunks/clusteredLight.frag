@@ -116,12 +116,19 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     );
 }
 
+// use LOD sampling if supported to sample data textures as it has better chance of getting skipped inside dynamic branches
+#ifdef SUPPORTS_TEXLOD
+    #define textureData(texture, uv) texture2DLodEXT(texture, uv, 0.0)
+#else
+    #define textureData(texture, uv) texture2D(texture, uv)
+#endif
+
 vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-    return texture2D(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV));
+    return textureData(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV));
 }
 
 vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
-    return texture2D(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV));
+    return textureData(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV));
 }
 
 void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
@@ -379,13 +386,27 @@ void evaluateLight(ClusterLightData light) {
 
                         // spot shadow
                         getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
-                        dAtten *= getShadowSpotPCF3x3(shadowAtlasTexture, shadowParams);
+                        
+                        #if defined(CLUSTER_SHADOW_TYPE_PCF1)
+                            dAtten *= getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
+                            dAtten *= getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
+                            dAtten *= getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
+                        #endif
 
                     } else {
 
                         // omni shadow
                         normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
-                        dAtten *= getShadowOmniClusteredPCF3x3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+
+                        #if defined(CLUSTER_SHADOW_TYPE_PCF1)
+                            dAtten *= getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
+                            dAtten *= getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
+                            dAtten *= getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                        #endif
                     }
                 }
 
@@ -523,7 +544,7 @@ void addClusteredLights() {
         const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
         for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-            vec4 lightIndices = texture2D(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
+            vec4 lightIndices = textureData(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
             vec4 indices = lightIndices * 255.0;
 
             // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller

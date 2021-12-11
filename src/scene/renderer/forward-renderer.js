@@ -29,7 +29,6 @@ import {
     VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
 } from '../constants.js';
 import { Material } from '../materials/material.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { DefaultMaterial } from '../materials/default-material.js';
 
@@ -992,9 +991,7 @@ class ForwardRenderer {
     // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
     drawInstance(device, meshInstance, mesh, style, normal) {
 
-        // #if _DEBUG
-        device.pushMarker(meshInstance.node.name);
-        // #endif
+        Debug.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1025,9 +1022,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style]);
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         return 0;
     }
@@ -1035,9 +1030,7 @@ class ForwardRenderer {
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
 
-        // #if _DEBUG
-        device.pushMarker(meshInstance.node.name);
-        // #endif
+        Debug.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1055,9 +1048,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style], undefined, true);
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         return 0;
     }
@@ -1796,8 +1787,7 @@ class ForwardRenderer {
     }
 
     updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI],
-                                      comp.clusteredLightingCookiesEnabled, comp.clusteredLightingShadowsEnabled);
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
     }
 
     updateClusters(comp) {
@@ -1808,7 +1798,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < comp._worldClusters.length; i++) {
             const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection);
+            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.lighting);
         }
 
         // #if _PROFILER
@@ -1819,9 +1809,10 @@ class ForwardRenderer {
 
     renderComposition(comp) {
         const device = this.device;
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSkybox(device);
+        this.scene._updateSkybox(this.device);
 
         this.beginLayers(comp);
 
@@ -1830,7 +1821,7 @@ class ForwardRenderer {
         // #endif
 
         // Update static layer data, if something's changed
-        const updated = comp._update();
+        const updated = comp._update(clusteredLightingEnabled);
         const lightsChanged = (updated & COMPUPDATED_LIGHTS) !== 0;
 
         // #if _PROFILER
@@ -1850,26 +1841,26 @@ class ForwardRenderer {
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (clusteredLightingEnabled) {
 
             // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(comp);
 
             // render cookies for all local visible lights
-            if (comp.clusteredLightingCookiesEnabled) {
+            if (this.scene.lighting.cookiesEnabled) {
                 this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
                 this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
             }
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        if (!LayerComposition.clusteredLightingEnabled || (LayerComposition.clusteredLightingEnabled && comp.clusteredLightingShadowsEnabled)) {
+        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
 
         // update light clusters
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (clusteredLightingEnabled) {
             this.updateClusters(comp);
         }
 
@@ -1896,10 +1887,8 @@ class ForwardRenderer {
                 continue;
             }
 
-            // #if _DEBUG
-            this.device.pushMarker(camera ? camera.entity.name : "noname");
-            this.device.pushMarker(layer.name);
-            // #endif
+            Debug.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
+            Debug.pushGpuMarker(this.device, layer.name);
 
             // #if _PROFILER
             drawTime = now();
@@ -1965,7 +1954,7 @@ class ForwardRenderer {
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
-                if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
+                if (clusteredLightingEnabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate(this.lightTextureAtlas);
                 }
 
@@ -2014,10 +2003,8 @@ class ForwardRenderer {
                 }
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            this.device.popMarker();
-            // #endif
+            Debug.popGpuMarker(this.device);
+            Debug.popGpuMarker(this.device);
 
             // #if _PROFILER
             layer._renderTime += now() - drawTime;

@@ -118,7 +118,7 @@ const moduleOptions = {
 };
 
 const stripOptions = {
-    functions: ['Debug.assert', 'Debug.deprecated', 'Debug.warn', 'Debug.error', 'Debug.log']
+    functions: ['Debug.assert', 'Debug.deprecated', 'Debug.warn', 'Debug.error', 'Debug.log', 'Debug.pushGpuMarker', 'Debug.popGpuMarker']
 };
 
 const target_release_es5 = {

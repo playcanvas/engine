@@ -8,6 +8,7 @@ import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 
 import { LIGHTTYPE_OMNI } from '../constants.js';
 import { LightCamera } from './light-camera.js';
+import { Debug } from '../../core/debug.js';
 
 const textureBlitVertexShader = `
     attribute vec2 vertex_position;
@@ -112,9 +113,7 @@ class CookieRenderer {
 
         if (light.enabled && light.cookie && light.visibleThisFrame) {
 
-            // #if _DEBUG
-            this.device.pushMarker("COOKIE " + light._node.name);
-            // #endif
+            Debug.pushGpuMarker(this.device, `COOKIE ${light._node.name}`);
 
             const faceCount = light.numShadowFaces;
             const shader = faceCount > 1 ? this.shaderCube : this.shader2d;
@@ -150,9 +149,7 @@ class CookieRenderer {
                 drawQuadWithShader(device, renderTarget, shader, _viewport);
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            // #endif
+            Debug.popGpuMarker(this.device);
         }
     }
 }

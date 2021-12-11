@@ -1,8 +1,26 @@
 import React from 'react';
 // @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.prf.js';
+import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
+// @ts-ignore: library file import
+import Panel from '@playcanvas/pcui/Panel/component';
+// @ts-ignore: library file import
+import SliderInput from '@playcanvas/pcui/SliderInput/component';
+// @ts-ignore: library file import
+import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
+// @ts-ignore: library file import
+import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+// @ts-ignore: library file import
+import SelectInput from '@playcanvas/pcui/SelectInput/component';
+// @ts-ignore: library file import
+import { Observer } from '@playcanvas/observer';
+// @ts-ignore: library file import
+import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
+// @ts-ignore: library file import
+import Button from '@playcanvas/pcui/Button/component';
+// @ts-ignore: library file import
+import Label from '@playcanvas/pcui/Label/component';
 
 class ClusteredSpotShadowsExample extends Example {
     static CATEGORY = 'Graphics';
@@ -16,11 +34,47 @@ class ClusteredSpotShadowsExample extends Example {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Settings'>
+                {<LabelGroup text='Filter'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowType' }} type="number" options={[
+                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
+                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
+                        { v: pc.SHADOW_PCF5, t: 'PCF5' }
+                    ]} />
+                </LabelGroup>}
+                <LabelGroup text='Shadow Res'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowAtlasResolution' }} min={256} max={4096} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Shadows On'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowsEnabled' }} value={data.get('settings.shadowsEnabled')}/>
+                </LabelGroup>
+                <LabelGroup text='Cookies On'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.cookiesEnabled' }} value={data.get('settings.cookiesEnabled')}/>
+                </LabelGroup>
+                <LabelGroup text='Light Count'>
+                    <Label binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.numLights' }} value={data.get('settings.numLights')}/>
+                </LabelGroup>
+                <Button text='Add Light' onClick={() => data.emit('add')}/>
+                <Button text='Remove Light' onClick={() => data.emit('remove')}/>
+            </Panel>
+        </>;
+    }
+
+    example(canvas: HTMLCanvasElement, assets: any, data: any): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
+
+        data.set('settings', {
+            shadowAtlasResolution: 1024,     // shadow map resolution storing all shadows
+            shadowType: pc.SHADOW_PCF3,      // shadow filter type
+            shadowsEnabled: true,
+            cookiesEnabled: true,
+            numLights: 0
+        });
 
         // setup skydome as ambient light
         app.scene.skyboxMip = 3;
@@ -29,20 +83,31 @@ class ClusteredSpotShadowsExample extends Example {
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
+        const lighting = app.scene.lighting;
+
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(20, 2, 20);
+        lighting.cells = new pc.Vec3(20, 2, 20);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 16;
+        const maxLights = 24;
+        lighting.maxLightsPerCell = maxLights;
+
+        // enable clustered shadows (it's enabled by default as well)
+        // @ts-ignore engine-tsd
+        lighting.shadowsEnabled = true;
 
         // enable clustered cookies
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCookiesEnabled = true;
+        lighting.cookiesEnabled = true;
+
+        // resolution of the shadow and cookie atlas
+        lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
+        lighting.cookieAtlasResolution = 1500;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -101,15 +166,13 @@ class ClusteredSpotShadowsExample extends Example {
             scale -= 1.5;
         }
 
+        const spotLightList: Array<pc.Entity> = [];
         const cookieChannels = ["r", "g", "b", "a", "rgb"];
 
-        // create many spot lights
-        const count = 10;
-        const spotLightList: Array<pc.Entity> = [];
-        for (let i = 0; i < count; i++) {
+        function createLight() {
             const intensity = 1.5;
             const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
-            const lightSpot = new pc.Entity("Spot" + i);
+            const lightSpot = new pc.Entity("Spot");
             const cookieChannel = cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
 
             lightSpot.addComponent("light", {
@@ -145,6 +208,13 @@ class ClusteredSpotShadowsExample extends Example {
             spotLightList.push(lightSpot);
         }
 
+        // create many spot lights
+        const count = 10;
+        for (let i = 0; i < count; i++) {
+            createLight();
+        }
+        updateLightCount();
+
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -153,6 +223,33 @@ class ClusteredSpotShadowsExample extends Example {
             nearClip: 0.1
         });
         app.root.addChild(camera);
+
+        // handle HUD changes - update properties on the scene
+        data.on('*:set', (path: string, value: any) => {
+            const pathArray = path.split('.');
+            // @ts-ignore
+            lighting[pathArray[1]] = value;
+        });
+
+        function updateLightCount() {
+            data.set('settings.numLights', spotLightList.length);
+        }
+
+        data.on('add', function () {
+            if (spotLightList.length < maxLights) {
+                createLight();
+                updateLightCount();
+            }
+        });
+
+        data.on('remove', function () {
+            if (spotLightList.length) {
+                const light = spotLightList.pop();
+                app.root.removeChild(light);
+                light.destroy();
+                updateLightCount();
+            }
+        });
 
         // Set an update function on the app's update event
         let time = 0;
@@ -182,7 +279,7 @@ class ClusteredSpotShadowsExample extends Example {
             // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
 
             // display cookie texture (debug feature)
-            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieMap);
+            // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
         });
     }
 }

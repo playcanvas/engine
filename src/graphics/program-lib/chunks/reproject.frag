@@ -115,7 +115,7 @@ vec3 modifySeams(vec3 dir, float scale) {
 }
 
 vec2 toSpherical(vec3 dir) {
-    return vec2(atan(dir.x, dir.z), asin(dir.y));
+    return vec2(dir.xz == vec2(0.0) ? 0.0 : atan(dir.x, dir.z), asin(dir.y));
 }
 
 vec3 fromSpherical(vec2 uv) {

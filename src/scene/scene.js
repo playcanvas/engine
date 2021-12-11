@@ -15,7 +15,9 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
+import { LightingParams } from './lighting/lighting-params.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
+import { getApplication } from '../framework/globals.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 
@@ -115,10 +117,14 @@ import { EnvLighting } from '../graphics/env-lighting.js';
 class Scene extends EventHandler {
     /**
      * Create a new Scene instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
+     * @hideconstructor
      */
-    constructor() {
+    constructor(graphicsDevice) {
         super();
 
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this.root = null;
 
         this._gravity = new Vec3(0, -9.8, 0);
@@ -172,6 +178,12 @@ class Scene extends EventHandler {
         this._lightmapFilterRange = 10;
         this._lightmapFilterSmoothness = 0.2;
 
+        // clustered lighting
+        this._clusteredLightingEnabled = false;
+        this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
+            this._layers._dirtyLights = true;
+        });
+
         this._stats = {
             meshInstances: 0,
             lights: 0,
@@ -200,6 +212,24 @@ class Scene extends EventHandler {
         this._resetSkyboxModel();
         this.root = null;
         this.off();
+    }
+
+    get clusteredLightingEnabled() {
+        return this._clusteredLightingEnabled;
+    }
+
+    set clusteredLightingEnabled(value) {
+
+        if (this._clusteredLightingEnabled && !value) {
+            console.error("Turning off enabled clustered lighting is not currently supported");
+            return;
+        }
+
+        this._clusteredLightingEnabled = value;
+    }
+
+    get lighting() {
+        return this._lightingParams;
     }
 
     get fog() {

@@ -134,9 +134,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         const device = this.device;
 
-        // #if _DEBUG
-        device.pushMarker("TransformFeedback");
-        // #endif
+        Debug.pushGpuMarker(device, "TransformFeedback");
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
@@ -156,9 +154,7 @@ class TransformFeedback {
         device.updateEnd();
         device.setRenderTarget(oldRt);
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         // swap buffers
         if (swap) {
