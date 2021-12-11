@@ -6,10 +6,9 @@ import { Component } from '../component.js';
 
 import { SoundSlot } from './slot.js';
 
-/* eslint-disable no-unused-vars */
-import { SoundInstance } from '../../../sound/instance.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('../../../sound/instance.js').SoundInstance} SoundInstance */
+/** @typedef {import('./system.js').SoundComponentSystem} SoundComponentSystem */
 
 /**
  * The Sound Component controls playback of {@link Sound}s.

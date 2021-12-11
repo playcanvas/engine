@@ -5,6 +5,8 @@ import { ComponentSystem } from '../system.js';
 import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 const METHOD_INITIALIZE = '_onInitialize';
 const METHOD_POST_INITIALIZE = '_onPostInitialize';

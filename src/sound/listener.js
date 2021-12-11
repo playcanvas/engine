@@ -1,10 +1,7 @@
 import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
-/* eslint-disable no-unused-vars */
-import { SoundManager } from './manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./manager.js').SoundManager} SoundManager */
 
 /**
  * Represents an audio listener - used internally.

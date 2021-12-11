@@ -8,10 +8,7 @@ import { XrJoint } from './xr-joint.js';
 
 import { Vec3 } from '../math/vec3.js';
 
-/* eslint-disable no-unused-vars */
-import { XrInputSource } from './xr-input-source.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-input-source.js').XrInputSource} XrInputSource */
 
 let fingerJointIds = [];
 

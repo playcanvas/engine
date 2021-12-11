@@ -7,6 +7,8 @@ import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 const MAX_ITERATIONS = 100;

@@ -6,7 +6,8 @@ import { Bundle } from '../bundles/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
  * Loads Bundle Assets.

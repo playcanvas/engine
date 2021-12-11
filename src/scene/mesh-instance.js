@@ -16,12 +16,10 @@ import {
 import { GraphNode } from './graph-node.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
-/* eslint-disable no-unused-vars */
-import { Material } from './materials/material.js';
-import { Mesh } from './mesh.js';
-import { Texture } from '../graphics/texture.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('./materials/material.js').Material} Material */
+/** @typedef {import('./mesh.js').Mesh} Mesh */
 
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();

@@ -12,7 +12,7 @@ import {
 
 import { Asset } from '../../../asset/asset.js';
 
-import { TextureParser } from '../../texture.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
 
 /**
  * Texture parser for hdr files.

@@ -1,9 +1,6 @@
 import { platform } from '../core/platform.js';
 
-/* eslint-disable no-unused-vars */
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It

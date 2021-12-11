@@ -4,11 +4,8 @@ import { math } from '../math/math.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 
-/* eslint-disable no-unused-vars */
-import { Sound } from './sound.js';
-import { SoundManager } from './manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./sound.js').Sound} Sound */
+/** @typedef {import('./manager.js').SoundManager} SoundManager */
 
 const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;

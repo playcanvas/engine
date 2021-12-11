@@ -12,6 +12,9 @@ import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_
 import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../input/constants.js';
 
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').ScrollViewComponentSystem} ScrollViewComponentSystem */
+
 const _tempScrollValue = new Vec2();
 
 /**

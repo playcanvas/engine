@@ -1,5 +1,7 @@
 import { AnimSnapshot } from './anim-snapshot.js';
 
+/** @typedef {import('./anim-track.js').AnimTrack} AnimTrack */
+
 // TODO: add configurable looping start/end times?
 
 /**

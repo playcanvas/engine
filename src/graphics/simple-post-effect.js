@@ -2,13 +2,11 @@ import { BUFFER_STATIC, CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TY
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from './graphics-device.js';
-import { RenderTarget } from './render-target.js';
-import { Shader } from './shader.js';
-import { Texture } from './texture.js';
-import { Vec4 } from '../math/vec4.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('./shader.js').Shader} Shader */
+/** @typedef {import('./texture.js').Texture} Texture */
 
 // Draws shaded full-screen quad in a single call
 let _postEffectQuadVB = null;

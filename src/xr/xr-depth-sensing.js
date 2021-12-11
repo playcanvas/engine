@@ -5,10 +5,7 @@ import { Texture } from '../graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../graphics/constants.js';
 import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * Depth Sensing provides depth information which is reconstructed using the underlying AR system.

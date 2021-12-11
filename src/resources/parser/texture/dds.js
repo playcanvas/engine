@@ -11,7 +11,7 @@ import {
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 
-import { TextureParser } from '../../texture.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
 
 /**
  * Legacy texture parser for dds files.

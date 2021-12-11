@@ -10,11 +10,8 @@ import { Component } from '../component.js';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from "../element/constants";
 
-/* eslint-disable no-unused-vars */
-import { Entity } from '../../entity.js';
-import { ButtonComponentSystem } from './system.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').ButtonComponentSystem} ButtonComponentSystem */
 
 const VisualState = {
     DEFAULT: 'DEFAULT',

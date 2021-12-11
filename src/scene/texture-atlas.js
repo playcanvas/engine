@@ -1,10 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
-/* eslint-disable no-unused-vars */
-import { Vec2 } from '../math/vec2.js';
-import { Vec4 } from '../math/vec4.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../math/vec2.js').Vec2} Vec2 */
+/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 
 /**
  * A TextureAtlas contains a number of frames from a texture. Each frame defines a region in a

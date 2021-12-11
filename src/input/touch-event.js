@@ -1,6 +1,4 @@
-/* eslint-disable no-unused-vars */
-import { TouchDevice } from './touch-device.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./touch-device.js').TouchDevice} TouchDevice */
 
 /**
  * @function

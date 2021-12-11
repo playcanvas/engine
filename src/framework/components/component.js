@@ -1,10 +1,7 @@
 import { EventHandler } from '../../core/event-handler.js';
 
-/* eslint-disable no-unused-vars */
-import { ComponentSystem } from './system.js';
-import { Entity } from '../entity.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./system.js').ComponentSystem} ComponentSystem */
+/** @typedef {import('../entity.js').Entity} Entity */
 
 /**
  * Components are used to attach functionality on a {@link Entity}. Components can receive update

@@ -26,9 +26,7 @@ import { LayerComposition } from '../../../scene/composition/layer-composition.j
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../../graphics-device.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const _matTex2D = [];
 
@@ -39,7 +37,7 @@ const decodeTable = {
 };
 
 const standard = {
-    // Shared Sandard Material option structures
+    // Shared Standard Material option structures
     optionsContext: {},
     optionsContextMin: {},
 

@@ -1,10 +1,8 @@
 import { Debug } from '../core/debug.js';
 import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from './graphics-device.js';
-import { VertexFormat } from './vertex-format.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
 
 let id = 0;
 

@@ -9,11 +9,9 @@ import { getApplication } from '../framework/globals.js';
 
 import { Mouse } from './mouse.js';
 
-/* eslint-disable no-unused-vars */
-import { CameraComponent } from '../framework/components/camera/component.js';
-import { ElementComponent } from '../framework/components/element/component.js';
-import { XrInputSource } from '../xr/xr-input-source.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../framework/components/element/component.js').ElementComponent} ElementComponent */
+/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
 
 let targetX, targetY;
 const vecA = new Vec3();

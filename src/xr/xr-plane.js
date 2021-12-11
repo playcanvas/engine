@@ -2,6 +2,8 @@ import { EventHandler } from '../core/event-handler.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 
+/** @typedef {import('./xr-plane-detection.js').XrPlaneDetection} XrPlaneDetection */
+
 let ids = 0;
 
 /**

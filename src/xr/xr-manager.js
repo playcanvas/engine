@@ -16,6 +16,9 @@ import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
  *

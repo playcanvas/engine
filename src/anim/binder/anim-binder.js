@@ -1,3 +1,5 @@
+/** @typedef {import('../evaluator/anim-target.js').AnimTarget} AnimTarget */
+
 /**
  * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.

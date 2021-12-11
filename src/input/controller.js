@@ -10,9 +10,7 @@ import {
 import { Keyboard } from './keyboard.js';
 import { Mouse } from './mouse.js';
 
-/* eslint-disable no-unused-vars */
-import { GamePads } from './game-pads.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./game-pads.js').GamePads} GamePads */
 
 /**
  * A general input handler which handles both mouse and keyboard input assigned to named actions.

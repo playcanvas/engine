@@ -1,6 +1,8 @@
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
 import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from './parser/scene.js';
+
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
  * Resource handler used for loading {@link Scene} resources.

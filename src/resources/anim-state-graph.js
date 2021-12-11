@@ -1,7 +1,7 @@
 import { http, Http } from '../net/http.js';
 import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
  * Resource handler used for loading {@link AnimStateGraph} resources.

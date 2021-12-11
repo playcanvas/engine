@@ -22,13 +22,11 @@ import { Texture } from '../../graphics/texture.js';
 
 import { MeshInstance } from '../mesh-instance.js';
 
-/* eslint-disable no-unused-vars */
-import { AssetRegistry } from '../../asset/asset-registry.js';
-import { Entity } from '../../framework/entity.js';
-import { ForwardRenderer } from '../renderer/forward-renderer.js';
-import { GraphicsDevice } from '../../graphics/graphics-device.js';
-import { Scene } from '../scene.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../../framework/entity.js').Entity} Entity */
+/** @typedef {import('../renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../scene.js').Scene} Scene */
 
 import {
     BAKE_COLORDIR,

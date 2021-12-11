@@ -14,6 +14,8 @@ import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
 
+/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
+
 // get a coding string for texture based on its type and pixel format.
 const getCoding = (texture) => {
     switch (texture.type) {
@@ -285,7 +287,7 @@ const packSamplesTex = (device, name, samples) => {
     const h = Math.max(1, Math.floor(numSamples / w));
     const data = new Uint8ClampedArray(w * h * 4);
 
-    // normlize float data and pack into rgba8
+    // normalize float data and pack into rgba8
     let off = 0;
     for (let i = 0; i < numSamples; ++i) {
         packFloat32ToRGBA8(samples[i * 4 + 0] * 0.5 + 0.5, data, off + 0);

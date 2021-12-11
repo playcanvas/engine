@@ -3,10 +3,8 @@ import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from './graphics-device.js';
-import { Shader } from './shader.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./shader.js').Shader} Shader */
 
 /**
  * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to

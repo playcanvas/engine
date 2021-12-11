@@ -11,10 +11,8 @@ import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-/* eslint-disable no-unused-vars */
-import { Entity } from '../../entity.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../entity.js').Entity} Entity */
 
 let ammoRayStart, ammoRayEnd;
 

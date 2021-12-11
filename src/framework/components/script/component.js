@@ -5,10 +5,8 @@ import { ScriptAttributes } from '../../../script/script-attributes.js';
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
-/* eslint-disable no-unused-vars */
-import { ScriptType } from '../../../script/script-type.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../../script/script-type.js').ScriptType} ScriptType */
+/** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
 
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own

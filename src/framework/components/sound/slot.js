@@ -9,10 +9,7 @@ import { Asset } from '../../../asset/asset.js';
 import { SoundInstance } from '../../../sound/instance.js';
 import { SoundInstance3d } from '../../../sound/instance3d.js';
 
-/* eslint-disable no-unused-vars */
-import { SoundComponent } from './component.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./component.js').SoundComponent} SoundComponent */
 
 // temporary object for creating instances
 const instanceOptions = {

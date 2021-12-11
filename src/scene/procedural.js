@@ -9,10 +9,7 @@ import {
 
 import { Mesh } from './mesh.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../graphics/graphics-device.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const primitiveUv1Padding = 4.0 / 64;
 const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;

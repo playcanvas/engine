@@ -121,14 +121,11 @@ import {
     setApplication
 } from './globals.js';
 
-/* eslint-disable no-unused-vars */
-import { ElementInput } from '../input/element-input.js';
-import { GamePads } from '../input/game-pads.js';
-import { Keyboard } from '../input/keyboard.js';
-import { Mouse } from '../input/mouse.js';
-import { TouchDevice } from '../input/touch-device.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
 
 // Mini-object used to measure progress of loading sets
 class Progress {

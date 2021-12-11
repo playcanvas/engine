@@ -6,6 +6,8 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
+/** @typedef {import('../application.js').Application} Application */
+
 /**
  * Component Systems contain the logic and functionality to update all Components of a particular
  * type.

@@ -17,9 +17,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from './graphics-device.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 let _pixelSizeTable = null;
 let _blockSizeTable = null;

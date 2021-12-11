@@ -1,11 +1,8 @@
 import { Vec3 } from '../math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../scene/constants.js';
 
-/* eslint-disable no-unused-vars */
-import { BoundingSphere } from './bounding-sphere.js';
-import { Mat4 } from '../math/mat4.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
+/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
 
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 

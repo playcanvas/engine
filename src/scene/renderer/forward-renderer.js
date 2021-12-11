@@ -38,9 +38,7 @@ import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../../graphics/graphics-device.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();

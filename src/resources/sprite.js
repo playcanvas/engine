@@ -4,7 +4,9 @@ import { http } from '../net/http.js';
 
 import { Sprite } from '../scene/sprite.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {

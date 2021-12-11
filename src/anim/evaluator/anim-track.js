@@ -1,5 +1,8 @@
 import { AnimEvents } from './anim-events.js';
 
+/** @typedef {import('./anim-curve.js').AnimCurve} AnimCurve */
+/** @typedef {import('./anim-data.js').AnimData} AnimData */
+
 /**
  * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
  *

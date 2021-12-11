@@ -6,11 +6,8 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-/* eslint-disable no-unused-vars */
-import { Application } from '../../application.js';
-import { CameraComponent } from './component.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('./component.js').CameraComponent} CameraComponent */
 
 let depthLayer;
 

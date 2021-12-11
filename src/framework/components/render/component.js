@@ -13,11 +13,8 @@ import { Component } from '../component.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
-/* eslint-disable no-unused-vars */
-import { Entity } from '../../entity.js';
-import { RenderComponentSystem } from './system.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').RenderComponentSystem} RenderComponentSystem */
 
 /**
  * Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches

@@ -7,6 +7,8 @@ import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**

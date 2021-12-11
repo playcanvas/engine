@@ -5,6 +5,9 @@ import { ScriptComponent } from '../framework/components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/entity.js').Entity} Entity */
+
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**

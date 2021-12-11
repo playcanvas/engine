@@ -9,7 +9,7 @@ import { Animation, Key, Node } from '../animation/animation.js';
 
 import { GlbParser } from '../resources/parser/glb-parser.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
  * Resource handler used for loading {@link Animation} resources.

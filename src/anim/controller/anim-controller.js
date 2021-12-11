@@ -10,6 +10,9 @@ import {
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
+/** @typedef {import('../../core/event-handler.js').EventHandler} EventHandler */
+/** @typedef {import('../evaluator/anim-evaluator.js').AnimEvaluator} AnimEvaluator */
+
 /**
  * The AnimController manages the animations for its entity, based on the provided state graph and
  * parameters. Its update method determines which state the controller should be in based on the

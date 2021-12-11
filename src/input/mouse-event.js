@@ -1,8 +1,6 @@
 import { MOUSEBUTTON_NONE } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { Mouse } from './mouse.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./mouse.js').Mouse} Mouse */
 
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);

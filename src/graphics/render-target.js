@@ -3,9 +3,7 @@ import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
 import { GraphicsDevice } from './graphics-device.js';
 
-/* eslint-disable no-unused-vars */
-import { Texture } from './texture.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./texture.js').Texture} Texture */
 
 const defaultOptions = {
     depth: true,

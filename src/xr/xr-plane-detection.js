@@ -2,10 +2,7 @@ import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
-/* eslint-disable no-unused-vars */
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * Plane Detection provides the ability to detect real world surfaces based on estimations of the

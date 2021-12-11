@@ -5,10 +5,7 @@ import { GraphNode } from '../scene/graph-node.js';
 
 import { Application } from './application.js';
 
-/* eslint-disable no-unused-vars */
-import { Component } from './components/component.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./components/component.js').Component} Component */
 
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link Entity},

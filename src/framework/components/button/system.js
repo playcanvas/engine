@@ -4,6 +4,8 @@ import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = [
     'enabled',
     'active',

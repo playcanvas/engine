@@ -4,11 +4,8 @@ import { EventHandler } from '../core/event-handler.js';
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
-/* eslint-disable no-unused-vars */
-import { Ray } from '../shape/ray.js';
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+/** @typedef {import('../shape/ray.js').Ray} Ray */
 
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.

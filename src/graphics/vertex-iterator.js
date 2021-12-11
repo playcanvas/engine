@@ -1,11 +1,9 @@
 import { Debug } from '../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { ScopeId } from './scope-id.js';
-import { VertexBuffer } from './vertex-buffer.js';
-import { VertexFormat } from './vertex-format.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
+/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
 
 function set1(a) {
     this.array[this.index] = a;

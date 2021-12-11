@@ -1,6 +1,4 @@
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from './graphics-device.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * A shader is a program that is responsible for rendering graphical primitives on a device's

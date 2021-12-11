@@ -12,6 +12,8 @@ import { ComponentSystem } from '../system.js';
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = [
     'enabled',
     'autoPlay',

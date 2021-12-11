@@ -19,10 +19,7 @@ import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './consta
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
-/* eslint-disable no-unused-vars */
-import { ElementComponentSystem } from './system.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./system.js').ElementComponentSystem} ElementComponentSystem */
 
 // #if _DEBUG
 const _debugLogging = false;

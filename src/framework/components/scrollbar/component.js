@@ -8,6 +8,10 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').ScrollbarComponentSystem} ScrollbarComponentSystem */
+
 /**
  * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
  *

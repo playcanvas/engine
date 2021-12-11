@@ -1,10 +1,7 @@
 import { SceneParser } from '../resources/parser/scene.js';
 
-/* eslint-disable no-unused-vars */
-import { Application } from '../framework/application.js';
-import { Entity } from '../framework/entity.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**
  * Create a Template resource from raw database data.

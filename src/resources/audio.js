@@ -6,7 +6,8 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // checks if user is running IE
 const ie = (function () {

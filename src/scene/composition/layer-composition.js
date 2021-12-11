@@ -17,10 +17,8 @@ import { LightCompositionData } from './light-composition-data.js';
 
 import { getApplication } from '../../framework/globals.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../../graphics/graphics-device.js';
-import { Layer } from '../layer.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../layer.js').Layer} Layer */
 
 const tempSet = new Set();
 const tempClusterArray = [];

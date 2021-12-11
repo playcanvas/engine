@@ -1,5 +1,8 @@
 import { EventHandler } from '../core/event-handler.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./script-type.js').ScriptType} ScriptType */
+
 /**
  * Container for all {@link ScriptType}s that are available to this application. Note that
  * PlayCanvas scripts can access the Script Registry from inside the application with

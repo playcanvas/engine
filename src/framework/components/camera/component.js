@@ -5,13 +5,11 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
-/* eslint-disable no-unused-vars */
-import { Entity } from '../../entity.js';
-import { RenderTarget } from '../../../graphics/render-target.js';
-import { Vec3 } from '../../../math/vec3.js';
-import { CameraComponentSystem } from './system.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../../../xr/xr-manager.js').xrErrorCallback} xrErrorCallback */
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').CameraComponentSystem} CameraComponentSystem */
 
 // note: when this list is modified, the copy() function needs to be adjusted
 const properties = [

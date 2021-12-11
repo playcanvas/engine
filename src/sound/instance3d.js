@@ -6,11 +6,8 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { SoundInstance } from './instance.js';
 
-/* eslint-disable no-unused-vars */
-import { Sound } from './sound.js';
-import { SoundManager } from './manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./sound.js').Sound} Sound */
+/** @typedef {import('./manager.js').SoundManager} SoundManager */
 
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;

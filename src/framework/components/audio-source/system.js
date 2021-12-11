@@ -8,10 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { AudioSourceComponent } from './component.js';
 import { AudioSourceComponentData } from './data.js';
 
-/* eslint-disable no-unused-vars */
-import { SoundManager } from '../../../sound/manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
 
 const _schema = [
     'enabled',

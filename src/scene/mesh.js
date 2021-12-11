@@ -21,9 +21,7 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 
 import { getApplication } from '../framework/globals.js';
 
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../graphics/graphics-device.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 let id = 0;
 

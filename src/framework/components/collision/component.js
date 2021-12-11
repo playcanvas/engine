@@ -2,11 +2,8 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/* eslint-disable no-unused-vars */
-import { Entity } from '../../entity.js';
-import { CollisionComponentSystem } from './system.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').CollisionComponentSystem} CollisionComponentSystem */
 
 /**
  * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a

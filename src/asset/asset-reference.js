@@ -1,7 +1,5 @@
-/* eslint-disable no-unused-vars */
-import { Asset } from './asset.js';
-import { AssetRegistry } from './asset-registry.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./asset.js').Asset} Asset */
+/** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
 
 /**
  * An object that manages the case where an object holds a reference to an asset and needs to be

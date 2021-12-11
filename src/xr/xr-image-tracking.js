@@ -2,10 +2,7 @@ import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
-/* eslint-disable no-unused-vars */
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * Image Tracking provides the ability to track real world images by provided image samples and

@@ -17,9 +17,7 @@ import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
 
-/* eslint-disable no-unused-vars */
-import { Texture } from '../graphics/texture.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../graphics/texture.js').Texture} Texture */
 
 /**
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all

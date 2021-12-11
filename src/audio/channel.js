@@ -2,11 +2,8 @@ import { math } from '../math/math.js';
 
 import { hasAudioContext } from './capabilities.js';
 
-/* eslint-disable no-unused-vars */
-import { Sound } from '../sound/sound.js';
-import { SoundManager } from '../sound/manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../sound/sound.js').Sound} Sound */
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 
 /**
  * A channel is created when the {@link SoundManager} begins playback of a {@link Sound}. Usually

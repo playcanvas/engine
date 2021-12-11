@@ -10,10 +10,7 @@ import {
 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
-/* eslint-disable no-unused-vars */
-import { Application } from '../framework/application.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../application.js').Application} Application */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;

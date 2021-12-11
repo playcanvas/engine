@@ -1,5 +1,7 @@
 import { AnimTargetValue } from './anim-target-value.js';
 
+/** @typedef {import('../binder/anim-binder.js').AnimBinder} AnimBinder */
+
 /**
  * AnimEvaluator blends multiple sets of animation clips together.
  *

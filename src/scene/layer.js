@@ -11,11 +11,9 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
-/* eslint-disable no-unused-vars */
-import { CameraComponent } from '../framework/components/camera/component.js';
-import { LightComponent } from '../framework/components/light/component.js';
-import { MeshInstance } from './mesh-instance.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
+/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 
 let keyA, keyB, sortPos, sortDir;
 

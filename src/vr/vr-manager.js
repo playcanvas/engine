@@ -2,6 +2,8 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { VrDisplay } from './vr-display.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+
 /**
  * Manage and update {@link VrDisplay}s that are attached to this device.
  *

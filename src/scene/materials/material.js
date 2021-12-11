@@ -14,9 +14,7 @@ import {
 } from '../constants.js';
 import { DefaultMaterial } from './default-material.js';
 
-/* eslint-disable no-unused-vars */
-import { Texture } from '../../graphics/texture.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../../graphics/texture.js').Texture} Texture */
 
 let id = 0;
 

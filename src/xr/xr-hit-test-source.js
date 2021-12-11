@@ -3,10 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-/* eslint-disable no-unused-vars */
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 const poolVec3 = [];
 const poolQuat = [];

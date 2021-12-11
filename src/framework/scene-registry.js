@@ -5,11 +5,8 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
 
-/* eslint-disable no-unused-vars */
-import { Application } from './application.js';
-import { Entity } from './entity.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./application.js').Application} Application */
+/** @typedef {import('./entity.js').Entity} Entity */
 
 /**
  * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
@@ -32,6 +29,14 @@ import { Entity } from './entity.js';
  * @callback loadSceneCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ */
+
+/**
+ * Callback used by {@link SceneRegistry#loadSceneData}.
+ *
+ * @callback loadSceneDataCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @param {SceneRegistryItem} [sceneItem] - The scene registry item if no errors were encountered.
  */
 
 /**
@@ -217,7 +222,7 @@ class SceneRegistry {
      * {@link SceneRegistry#loadSceneHierarchy} and {@link SceneRegistry#loadSceneSettings} to make
      * scene loading quicker for the user.
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
-     * @param {loadSceneCallbackData} callback - The function to call after loading,
+     * @param {loadSceneDataCallback} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
      * var sceneItem = app.scenes.find("Scene Name");

@@ -7,10 +7,7 @@ import { Vec3 } from '../math/vec3.js';
 
 import { XRTYPE_AR } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { XrManager } from './xr-manager.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 const vec3A = new Vec3();
 const vec3B = new Vec3();

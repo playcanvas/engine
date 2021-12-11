@@ -3,7 +3,7 @@ import { Texture } from '../../../graphics/texture.js';
 import { basisTranscode } from '../../basis.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 
-import { TextureParser } from '../../texture.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
 
 /**
  * Parser for basis files.

@@ -15,10 +15,7 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
-/* eslint-disable no-unused-vars */
-import { Application } from '../../application.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../application.js').Application} Application */
 
 const _schema = ['enabled'];
 

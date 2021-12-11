@@ -15,11 +15,10 @@ import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
 import { Debug } from '../core/debug.js';
 
-/* eslint-disable no-unused-vars */
-import { Application } from '../framework/application.js';
-import { CameraComponent } from '../framework/components/camera/component.js';
-import { Scene } from './scene.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('./scene.js').Scene} Scene */
 
 const tempSet = new Set();
 

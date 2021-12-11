@@ -8,6 +8,8 @@ import { BoundingBox } from '../../../shape/bounding-box';
 import { Vec3 } from '../../../math/vec3';
 import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = [
     { name: 'rootBone', type: 'entity' },
     'enabled'

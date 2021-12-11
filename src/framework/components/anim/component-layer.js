@@ -3,10 +3,7 @@ import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
-/* eslint-disable no-unused-vars */
-import { AnimComponent } from './component.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./component.js').AnimComponent} AnimComponent */
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.

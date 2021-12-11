@@ -1,10 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
-/* eslint-disable no-unused-vars */
-import { Ray } from './ray.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('./ray.js').Ray} Ray */
 
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();

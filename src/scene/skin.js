@@ -1,7 +1,5 @@
-/* eslint-disable no-unused-vars */
-import { GraphicsDevice } from '../graphics/graphics-device.js';
-import { Mat4 } from '../math/mat4.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
 
 /**
  * A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.

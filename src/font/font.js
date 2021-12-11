@@ -1,9 +1,6 @@
 import { FONT_MSDF } from './constants.js';
 
-/* eslint-disable no-unused-vars */
-import { Texture } from '../graphics/texture.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../graphics/texture.js').Texture} Texture */
 
 /**
  * Represents the resource of a font asset.

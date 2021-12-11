@@ -1,6 +1,7 @@
 import { Render } from '../scene/render.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {

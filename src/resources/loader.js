@@ -1,3 +1,8 @@
+/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
  * @callback resourceLoaderCallback
  * @description Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).

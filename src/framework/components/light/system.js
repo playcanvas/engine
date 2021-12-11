@@ -9,6 +9,8 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
     'omni': LIGHTTYPE_OMNI,

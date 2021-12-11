@@ -6,7 +6,10 @@ import {
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
-import { ResourceHandler } from './handler.js'; // eslint-disable-line no-unused-vars
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.

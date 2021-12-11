@@ -1,10 +1,7 @@
 import { Component } from '../component.js';
 
-/* eslint-disable no-unused-vars */
-import { Entity } from '../../entity.js';
-import { AudioListenerComponentSystem } from './system.js';
-/* eslint-enable no-unused-vars */
-
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').AudioListenerComponentSystem} AudioListenerComponentSystem */
 
 /**
  * Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard
