@@ -298,7 +298,12 @@ export const SHADOW_PCF1 = 5;
 // non-public: number of supported depth shadow modes
 export const SHADOW_COUNT = 6;
 
-// map of engine SHADOW__*** to a string representation
+/**
+ * map of engine SHADOW__*** to a string representation
+ *
+ * @type {object}
+ * @private
+ */
 export const shadowTypeToString = {};
 shadowTypeToString[SHADOW_PCF3] = "PCF3";
 shadowTypeToString[SHADOW_VSM8] = "VSM8";

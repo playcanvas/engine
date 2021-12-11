@@ -19,6 +19,7 @@ import { LightingParams } from './lighting/lighting-params.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
 import { getApplication } from '../framework/globals.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 
 /**

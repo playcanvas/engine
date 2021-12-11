@@ -7,6 +7,7 @@ import { Vec3 } from '../math/vec3.js';
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
 /** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {object} VRDisplay */
 
 /**
  * Represents a single Display for VR content. This could be a Head Mounted display that can
