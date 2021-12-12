@@ -36,7 +36,6 @@ class AnimComponent extends Component {
      * Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
-
     constructor(system, entity) {
         super(system, entity);
 
