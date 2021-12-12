@@ -2,8 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 
-import { Vec3 } from '../../math/vec3.js';
-
 import {
     LAYERID_DEPTH,
     BLEND_NONE,
@@ -39,9 +37,6 @@ const tempClusterArray = [];
  */
 // Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
-    // temporary way to enable clustered lighting, will be removed later when this becomes default
-    static clusteredLightingEnabled = false;
-
     constructor(graphicsDevice, name = "Untitled") {
         super();
 
@@ -97,13 +92,6 @@ class LayerComposition extends EventHandler {
 
         // empty cluster with no lights
         this._emptyWorldClusters = null;
-
-        // clustered lighting parameters
-        this._clusteredLightingCells = new Vec3(10, 3, 10);
-        this._clusteredLightingMaxLights = 64;
-        this._clusteredLightingCookiesEnabled = false;
-        this._clusteredLightingShadowsEnabled = true;
-        this._clusteredLightingAreaLightsEnabled = false;
     }
 
     destroy() {
@@ -120,99 +108,16 @@ class LayerComposition extends EventHandler {
         this._worldClusters = null;
     }
 
-    get clusteredLightingCells() {
-        return this._clusteredLightingCells;
-    }
-
-    set clusteredLightingCells(value) {
-        if (!this._clusteredLightingCells.equals(value)) {
-            this._clusteredLightingCells.copy(value);
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingMaxLights() {
-        return this._clusteredLightingMaxLights;
-    }
-
-    set clusteredLightingMaxLights(value) {
-        if (this._clusteredLightingMaxLights !== value) {
-            this._clusteredLightingMaxLights = value;
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingCookiesEnabled() {
-        return this._clusteredLightingCookiesEnabled;
-    }
-
-    set clusteredLightingCookiesEnabled(value) {
-        if (this._clusteredLightingCookiesEnabled !== value) {
-            this._clusteredLightingCookiesEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._dirtyLights = true;
-
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingAreaLightsEnabled() {
-        return this._clusteredLightingAreaLightsEnabled;
-    }
-
-    set clusteredLightingAreaLightsEnabled(value) {
-
-        if (!this.device.supportsAreaLights) {
-            value = false;
-        }
-
-        if (this._clusteredLightingAreaLightsEnabled !== value) {
-            this._clusteredLightingAreaLightsEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._dirtyLights = true;
-
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingShadowsEnabled() {
-        return this._clusteredLightingShadowsEnabled;
-    }
-
-    set clusteredLightingShadowsEnabled(value) {
-        if (this._clusteredLightingShadowsEnabled !== value) {
-            this._clusteredLightingShadowsEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._dirtyLights = true;
-
-            this.updateWorldClusters();
-        }
-    }
-
-    // update clusters with parameter changes
-    updateWorldClusters() {
-        this._worldClusters.forEach((cluster) => {
-            cluster.cells = this._clusteredLightingCells;
-            cluster.maxCellLightCount = this._clusteredLightingMaxLights;
-            cluster.cookiesEnabled = this._clusteredLightingCookiesEnabled;
-            cluster.shadowsEnabled = this._clusteredLightingShadowsEnabled;
-            cluster.areaLightsEnabled = this._clusteredLightingAreaLightsEnabled;
-        });
-    }
-
     // returns an empty light cluster object to be used when no lights are used
     get emptyWorldClusters() {
         if (!this._emptyWorldClusters) {
 
             // create cluster structure with no lights
-            this._emptyWorldClusters = new WorldClusters(this.device, new Vec3(1, 1, 1), 4);
+            this._emptyWorldClusters = new WorldClusters(this.device);
             this._emptyWorldClusters.name = "ClusterEmpty";
 
             // update it once to avoid doing it each frame
-            this._emptyWorldClusters.update([], false);
+            this._emptyWorldClusters.update([], false, null);
         }
 
         return this._emptyWorldClusters;
@@ -233,7 +138,7 @@ class LayerComposition extends EventHandler {
         }
     }
 
-    _update() {
+    _update(clusteredLightingEnabled = false) {
         const len = this.layerList.length;
         let result = 0;
 
@@ -459,7 +364,7 @@ class LayerComposition extends EventHandler {
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions
-            if (LayerComposition.clusteredLightingEnabled) {
+            if (clusteredLightingEnabled) {
                 this.allocateLightClusters();
             }
         }
@@ -618,8 +523,7 @@ class LayerComposition extends EventHandler {
 
                         // create new cluster
                         if (!clusters) {
-                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights,
-                                                         this._clusteredLightingCookiesEnabled, this._clusteredLightingShadowsEnabled, this._clusteredLightingAreaLightsEnabled);
+                            clusters = new WorldClusters(this.device);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;

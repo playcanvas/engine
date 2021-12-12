@@ -454,7 +454,7 @@ class Application extends EventHandler {
         // for this app by guid
         this._entityIndex = {};
 
-        this.scene = new Scene();
+        this.scene = new Scene(this.graphicsDevice);
         this.root = new Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [];

@@ -125,7 +125,8 @@ class LightsBuffer {
     static init(device) {
 
         // precision for texture storage
-        LightsBuffer.lightTextureFormat = device.extTextureFloat ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
+        // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
+        LightsBuffer.lightTextureFormat = (device.extTextureFloat && device.maxTextures > 8) ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
 
         LightsBuffer.initShaderDefines();
     }
@@ -147,14 +148,14 @@ class LightsBuffer {
         return tex;
     }
 
-    constructor(device, cookiesEnabled, shadowsEnabled, areaLightsEnabled) {
+    constructor(device) {
 
         this.device = device;
 
         // features
-        this.cookiesEnabled = cookiesEnabled;
-        this.shadowsEnabled = shadowsEnabled;
-        this.areaLightsEnabled = areaLightsEnabled;
+        this.cookiesEnabled = false;
+        this.shadowsEnabled = false;
+        this.areaLightsEnabled = false;
 
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;

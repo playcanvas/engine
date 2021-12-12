@@ -4,6 +4,7 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 import { PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
+import { Debug } from '../../core/debug.js';
 
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
@@ -28,7 +29,7 @@ class ClusterLight {
 // Main class implementing clustered lighting. Internally it organizes the omni / spot lights placement in world space 3d cell structure,
 // and also uses LightsBuffer class to store light properties in textures
 class WorldClusters {
-    constructor(device, cells, maxCellLightCount, cookiesEnabled = false, shadowsEnabled = false, areaLightsEnabled = false) {
+    constructor(device) {
         this.device = device;
         this.name = "Untitled";
 
@@ -44,14 +45,14 @@ class WorldClusters {
         this.boundsDelta = new Vec3();
 
         // number of cells along 3 axes
-        this._cells = new Vec3();       // number of cells
+        this._cells = new Vec3(1, 1, 1);       // number of cells
         this._cellsLimit = new Vec3();  // number of cells minus one
-        this.cells = cells;
+        this.cells = this._cells;
 
         // number of lights each cell can store, and number of pixels this takes (4 lights per pixel)
         this._maxCellLightCount = 0;
         this._pixelsPerCellCount = 0;
-        this.maxCellLightCount = maxCellLightCount;
+        this.maxCellLightCount = 4;
 
         // limits on some light properties, used for compression to 8bit texture
         this._maxAttenuation = 0;
@@ -64,7 +65,7 @@ class WorldClusters {
         this._usedLights.push(new ClusterLight());
 
         // allocate textures to store lights
-        this.lightsBuffer = new LightsBuffer(device, cookiesEnabled, shadowsEnabled, areaLightsEnabled);
+        this.lightsBuffer = new LightsBuffer(device);
 
         // register shader uniforms
         this.registerUniforms(device);
@@ -144,28 +145,17 @@ class WorldClusters {
         }
     }
 
-    get cookiesEnabled() {
-        return this.lightsBuffer.cookiesEnabled;
-    }
+    // updates itself based on parameters stored in the scene
+    updateParams(lightingParams) {
+        if (lightingParams) {
+            this.cells = lightingParams.cells;
+            this.maxCellLightCount = lightingParams.maxLightsPerCell;
 
-    set cookiesEnabled(value) {
-        this.lightsBuffer.cookiesEnabled = value;
-    }
+            this.lightsBuffer.cookiesEnabled = lightingParams.cookiesEnabled;
+            this.lightsBuffer.shadowsEnabled = lightingParams.shadowsEnabled;
 
-    get shadowsEnabled() {
-        return this.lightsBuffer.shadowsEnabled;
-    }
-
-    set shadowsEnabled(value) {
-        this.lightsBuffer.shadowsEnabled = value;
-    }
-
-    get areaLightsEnabled() {
-        return this.lightsBuffer.areaLightsEnabled;
-    }
-
-    set areaLightsEnabled(value) {
-        this.lightsBuffer.areaLightsEnabled = value;
+            this.lightsBuffer.areaLightsEnabled = lightingParams.areaLightsEnabled;
+        }
     }
 
     updateCells() {
@@ -186,11 +176,8 @@ class WorldClusters {
             const height = Math.ceil(totalPixels / width);
 
             // if the texture is allowed size
-            if (width > maxTextureSize || height > maxTextureSize) {
-                // #if _DEBUG
-                console.error("LightCluster parameters cause the texture size to be over the limit.");
-                // #endif
-            }
+            Debug.assert(width <= maxTextureSize && height <= maxTextureSize,
+                         "Clustered lights parameters cause the texture size to be over the limit, please adjust them.");
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
@@ -450,7 +437,8 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, gammaCorrection) {
+    update(lights, gammaCorrection, lightingParams) {
+        this.updateParams(lightingParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();

@@ -448,9 +448,7 @@ function reprojectTexture(source, target, options = {}) {
         );
     }
 
-    // #if _DEBUG
-    device.pushMarker("ReprojectTexture");
-    // #endif
+    Debug.pushGpuMarker(device, "ReprojectTexture");
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
     constantSource.setValue(source);
@@ -519,9 +517,7 @@ function reprojectTexture(source, target, options = {}) {
         }
     }
 
-    // #if _DEBUG
-    device.popMarker();
-    // #endif
+    Debug.popGpuMarker(device);
 }
 
 export { reprojectTexture };

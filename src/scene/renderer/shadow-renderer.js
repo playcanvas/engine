@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -13,7 +15,6 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 import { LightCamera } from './light-camera.js';
 
 import { FUNC_LESSEQUAL } from '../../graphics/constants.js';
@@ -143,22 +144,28 @@ class ShadowRenderer {
         const shadowCam = LightCamera.create("ShadowCamera", type, face);
 
         // don't clear the color buffer if rendering a depth map
-        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
-        if (type === LIGHTTYPE_OMNI && !LayerComposition.clusteredLightingEnabled) {
-            hwPcf = false;
-        }
-
         if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
             shadowCam.clearColor = new Color(0, 0, 0, 0);
         } else {
             shadowCam.clearColor = new Color(1, 1, 1, 1);
         }
 
-        shadowCam.clearColorBuffer = !hwPcf;
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
         return shadowCam;
+    }
+
+    static setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered) {
+
+        // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
+        // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
+        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
+        if (type === LIGHTTYPE_OMNI && !isClustered) {
+            hwPcf = false;
+        }
+
+        shadowCam.clearColorBuffer = !hwPcf;
     }
 
     // culls the list of meshes instances by the camera, storing visible mesh instances in the specified array
@@ -185,11 +192,13 @@ class ShadowRenderer {
     // cull local shadow map
     cullLocal(light, drawCalls) {
 
+        const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
 
         // allocate shadow map unless in clustered lighting mode
-        if (!LayerComposition.clusteredLightingEnabled) {
+        if (!isClustered) {
             if (!light._shadowMap) {
                 light._shadowMap = ShadowMap.create(this.device, light);
             }
@@ -221,8 +230,8 @@ class ShadowRenderer {
             } else if (type === LIGHTTYPE_OMNI) {
 
                 // when rendering omni shadows to an atlas, use larger fov by few pixels to allow shadow filtering to stay on a single face
-                if (LayerComposition.clusteredLightingEnabled) {
-                    const tileSize = this.lightTextureAtlas.shadowMapResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
+                if (isClustered) {
+                    const tileSize = this.lightTextureAtlas.shadowAtlasResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
                     const texelSize = 2 / tileSize;
                     const filterSize = texelSize * this.lightTextureAtlas.shadowEdgePixels;
                     shadowCam.fov = Math.atan(1 + filterSize) * math.RAD_TO_DEG * 2;
@@ -365,7 +374,7 @@ class ShadowRenderer {
 
     setupRenderState(device, light) {
 
-        const isClustered = LayerComposition.clusteredLightingEnabled;
+        const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
 
         // depth bias
         if (device.webgl2) {
@@ -511,28 +520,28 @@ class ShadowRenderer {
             }
 
             const type = light._type;
+            const shadowType = light._shadowType;
             const faceCount = light.numShadowFaces;
 
             const forwardRenderer = this.forwardRenderer;
             forwardRenderer._shadowMapUpdates += faceCount;
+            const isClustered = forwardRenderer.scene.clusteredLightingEnabled;
 
-            // #if _DEBUG
-            this.device.pushMarker("SHADOW " + light._node.name);
-            // #endif
+            Debug.pushGpuMarker(device, `SHADOW ${light._node.name}`);
 
             this.setupRenderState(device, light);
 
             for (let face = 0; face < faceCount; face++) {
 
-                // #if _DEBUG
-                if (faceCount > 1) {
-                    this.device.pushMarker("FACE " + face);
-                }
-                // #endif
+                Debug.pushGpuMarker(device, `FACE ${face}`);
 
                 // directional shadows are per camera, so get appropriate render data
                 const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
                 const shadowCam = lightRenderData.shadowCamera;
+
+                // camera clear setting
+                // Note: when clustered lighting is the only light type, this code can be moved to createShadowCamera function
+                ShadowRenderer.setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered);
 
                 // assign render target for the face
                 const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
@@ -545,11 +554,7 @@ class ShadowRenderer {
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);
 
-                // #if _DEBUG
-                if (faceCount > 1) {
-                    this.device.popMarker();
-                }
-                // #endif
+                Debug.popGpuMarker(device);
             }
 
             // VSM blur
@@ -559,9 +564,7 @@ class ShadowRenderer {
 
             this.restoreRenderState(device);
 
-            // #if _DEBUG
-            this.device.popMarker();
-            // #endif
+            Debug.popGpuMarker(device);
         }
     }
 
@@ -595,9 +598,7 @@ class ShadowRenderer {
 
         const device = this.device;
 
-        // #if _DEBUG
-        this.device.pushMarker("VSM");
-        // #endif
+        Debug.pushGpuMarker(device, "VSM");
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;
@@ -635,9 +636,7 @@ class ShadowRenderer {
         // return the temporary shadow map back to the cache
         this.shadowMapCache.add(light, tempShadowMap);
 
-        // #if _DEBUG
-        this.device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
     }
 }
 

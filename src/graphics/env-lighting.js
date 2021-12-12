@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Vec4 } from '../math/vec4.js';
 import { Texture } from './texture.js';
 import { reprojectTexture } from './reproject-texture.js';
@@ -53,6 +54,8 @@ const createCubemap = (device, size, format, mipmaps) => {
 const generateMipmaps = (target) => {
     const device = target.device;
 
+    Debug.pushGpuMarker(device, "genMipmaps");
+
     // create mipmapped result
     const result = new Texture(device, {
         name: target.name + '-mipmaps',
@@ -74,6 +77,8 @@ const generateMipmaps = (target) => {
 
     target.destroy();
 
+    Debug.popGpuMarker(device);
+
     return result;
 };
 
@@ -90,11 +95,16 @@ class EnvLighting {
      */
     static generateSkyboxCubemap(source, size) {
         const device = source.device;
+
+        Debug.pushGpuMarker(device, "genSkyboxCubemap");
+
         const result = createCubemap(device, size || (source.cubemap ? source.width : source.width / 4), PIXELFORMAT_R8_G8_B8_A8, false);
 
         reprojectTexture(source, result, {
             numSamples: 1024
         });
+
+        Debug.popGpuMarker(device);
 
         return result;
     }
@@ -110,12 +120,16 @@ class EnvLighting {
     static generateLightingSource(source) {
         const device = source.device;
 
+        Debug.pushGpuMarker(device, "genLightingSource");
+
         const result = createCubemap(device, 128, lightingSourcePixelFormat(device), false);
 
         // copy into top level
         reprojectTexture(source, result, {
             numSamples: source.mipmaps ? 1 : 1024
         });
+
+        Debug.popGpuMarker(device);
 
         // generate mipmaps
         return generateMipmaps(result);
@@ -133,6 +147,8 @@ class EnvLighting {
     static generateAtlas(source, options) {
         const device = source.device;
         const format = lightingPixelFormat(device);
+
+        Debug.pushGpuMarker(device, "genAtlas");
 
         const result = options?.target || new Texture(device, {
             width: 512,
@@ -160,6 +176,14 @@ class EnvLighting {
             rect.z = Math.max(1, Math.floor(rect.z * 0.5));
             rect.w = Math.max(1, Math.floor(rect.w * 0.5));
         }
+        Debug.pushGpuMarker(device, "reflection");
+
+        // generate top-level reflection
+        reprojectTexture(source, result, {
+            numSamples: 1,
+            rect: rect,
+            seamPixels: 1
+        });
 
         // generate blurry reflections
         rect.set(0, 0, 512, 256);
@@ -175,6 +199,9 @@ class EnvLighting {
                 seamPixels: 1
             });
         }
+
+        Debug.popGpuMarker(device);
+        Debug.pushGpuMarker(device, "ambient");
 
         // generate ambient
         rect.set(128, 256 + 128, 64, 32);
@@ -195,6 +222,9 @@ class EnvLighting {
             });
         }
 
+        Debug.popGpuMarker(device);
+        Debug.popGpuMarker(device);
+
         return result;
     }
 
@@ -211,6 +241,8 @@ class EnvLighting {
         const device = sources[0].device;
         const format = lightingPixelFormat(device);
 
+        Debug.pushGpuMarker(device, "genPrefilteredAtlas");
+
         const result = options?.target || new Texture(device, {
             width: 512,
             height: 512,
@@ -224,6 +256,8 @@ class EnvLighting {
 
         const rect = new Vec4(0, 0, 512, 256);
 
+        Debug.pushGpuMarker(device, "reflection");
+
         // copy blurry reflections
         for (let i = 0; i < sources.length; ++i) {
             reprojectTexture(sources[i], result, {
@@ -236,7 +270,11 @@ class EnvLighting {
             rect.w = Math.max(1, Math.floor(rect.w * 0.5));
         }
 
+        Debug.popGpuMarker(device);
+
         rect.set(256, 256, 64, 32);
+
+        Debug.pushGpuMarker(device, "ambient");
 
         // generate ambient
         if (options?.legacyAmbient) {
@@ -253,6 +291,9 @@ class EnvLighting {
                 seamPixels: 1
             });
         }
+
+        Debug.popGpuMarker(device);
+        Debug.popGpuMarker(device);
 
         return result;
     }

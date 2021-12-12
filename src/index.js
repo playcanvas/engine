@@ -89,6 +89,7 @@ export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
+export { LightingParams } from './scene/lighting/lighting-params.js';
 export { Lightmapper } from './scene/lightmapper/lightmapper.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
