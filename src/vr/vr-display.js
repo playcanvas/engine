@@ -7,7 +7,6 @@ import { Vec3 } from '../math/vec3.js';
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
 /** @typedef {import('../framework/application.js').Application} Application */
-/** @typedef {object} VRDisplay */
 
 /**
  * Represents a single Display for VR content. This could be a Head Mounted display that can
@@ -15,7 +14,7 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
  * same screen. This object contains the native `navigator.VRDisplay` object from the WebVR API.
  *
  * @property {number} id An identifier for this distinct VRDisplay.
- * @property {VRDisplay} display The native VRDisplay object from the WebVR API.
+ * @property {*} display The native VRDisplay object from the WebVR API.
  * @property {boolean} presenting True if this display is currently presenting VR content.
  * @property {VRDisplayCapabilities} capabilities Returns the
  * [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities) object
@@ -29,7 +28,7 @@ class VrDisplay extends EventHandler {
      * Create a new VrDisplay instance.
      *
      * @param {Application} app - The application outputting to this VR display.
-     * @param {VRDisplay} display - The native VRDisplay object from the WebVR API.
+     * @param {*} display - The native VRDisplay object from the WebVR API.
      */
     constructor(app, display) {
         super();
