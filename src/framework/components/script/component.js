@@ -5,7 +5,9 @@ import { ScriptAttributes } from '../../../script/script-attributes.js';
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
-/** @typedef {import('../../../script/script-type.js').ScriptType} ScriptType */
+/* eslint-disable-next-line no-unused-vars */
+import { ScriptType } from '../../../script/script-type.js';
+
 /** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
 
 /**
