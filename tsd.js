@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 // Add 'export as namespace pc' to the end of the file
-const path = './types/index.d.ts';
+let path = './types/index.d.ts';
 let ts = (fs.readFileSync(path, 'utf8')).toString();
 ts = ts + '\n\nexport as namespace pc;\n';
 fs.writeFileSync(path, ts);
@@ -20,3 +20,10 @@ paths.forEach(path => {
     ts = ts.replace(regex, 'typeof ScriptType');
     fs.writeFileSync(path, ts);
 });
+
+// Fix up description parameter for VertexFormat constructor because tsc
+// doesn't recognize it as an array
+path = './types/graphics/vertex-format.d.ts';
+ts = (fs.readFileSync(path, 'utf8')).toString();
+ts = ts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
+fs.writeFileSync(path, ts);

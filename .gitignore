@@ -6,8 +6,6 @@ docs
 examples/dist
 examples/node_modules
 node_modules
+npm-debug.log
 scripts/parsers/vox-parser.js
 types
-.java-version
-npm-debug.log
-release.py
