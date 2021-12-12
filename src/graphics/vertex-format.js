@@ -213,7 +213,7 @@ class VertexFormat {
         this._evaluateHash();
     }
 
-    // evaluates hash valuees for the format allowing fast compare of batching / rendering compatibility
+    // evaluates hash values for the format allowing fast compare of batching / rendering compatibility
     _evaluateHash() {
         let stringElementBatch;
         const stringElementsBatch = [];
