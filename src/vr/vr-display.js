@@ -9,6 +9,21 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
 /** @typedef {import('../framework/application.js').Application} Application */
 
 /**
+ * Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
+ *
+ * @callback vrDisplayCallback
+ * @param {string|null} err - The error message if presenting fails, or null if the call succeeds.
+ * @private
+ */
+
+/**
+ * Callback used by {@link VrDisplay#requestAnimationFrame}.
+ *
+ * @callback vrFrameCallback
+ * @private
+ */
+
+/**
  * Represents a single Display for VR content. This could be a Head Mounted display that can
  * present content on a separate screen or a phone which can display content full screen on the
  * same screen. This object contains the native `navigator.VRDisplay` object from the WebVR API.
@@ -230,7 +245,7 @@ class VrDisplay extends EventHandler {
      * @function
      * @name VrDisplay#requestPresent
      * @description Try to present full screen VR content on this display.
-     * @param {callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
+     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
      * if presenting fails, or null if the call succeeds. Usually called by {@link CameraComponent#enterVr}.
      */
     requestPresent(callback) {
@@ -257,7 +272,7 @@ class VrDisplay extends EventHandler {
      * @function
      * @name VrDisplay#exitPresent
      * @description Try to stop presenting VR content on this display.
-     * @param {callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
+     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
      * if presenting fails, or null if the call succeeds. Usually called by {@link CameraComponent#exitVr}.
      */
     exitPresent(callback) {
@@ -283,7 +298,7 @@ class VrDisplay extends EventHandler {
      * @function
      * @name VrDisplay#requestAnimationFrame
      * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link Application}.
-     * @param {callbacks.VrFrame} fn - Function called when it is time to update the frame.
+     * @param {vrFrameCallback} fn - Function called when it is time to update the frame.
      */
     requestAnimationFrame(fn) {
         if (this.display) this.display.requestAnimationFrame(fn);

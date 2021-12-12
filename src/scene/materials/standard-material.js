@@ -29,6 +29,16 @@ const _uniforms = {};
 let _params = new Set();
 
 /**
+ * Callback used by {@link StandardMaterial#onUpdateShader}.
+ *
+ * @callback updateShaderCallback
+ * @param {object} options - An object with shader generator settings (based on current material
+ * and scene properties), that you can change and then return. Properties of the object passed into
+ * this function are documented in {@link StandardMaterial#onUpdateShader}.
+ * @returns {object} Returned settings will be used by the shader.
+ */
+
+/**
  * A Standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
  * Most maps can use 3 types of input values in any combination: constant (color or number), mesh
@@ -352,8 +362,8 @@ let _params = new Set();
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
  * @property {object} chunks Object containing custom shader chunks that will replace default ones.
- * @property {callbacks.UpdateShader} onUpdateShader A custom function that will be called after
- * all shader generator properties are collected and before shader code is generated. This function
+ * @property {updateShaderCallback} onUpdateShader A custom function that will be called after all
+ * shader generator properties are collected and before shader code is generated. This function
  * will receive an object with shader generator settings (based on current material and scene
  * properties), that you can change and then return. Returned value will be used instead. This is
  * mostly useful when rendering the same set of objects, but with different shader variations based

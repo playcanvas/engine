@@ -18,6 +18,7 @@ import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 
@@ -52,6 +53,16 @@ class Command {
 }
 
 /**
+ * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
+ * which determines its place in the render order.
+ *
+ * @callback calculateSortDistanceCallback
+ * @param {MeshInstance} meshInstance - The mesh instance.
+ * @param {Vec3} cameraPosition - The position of the camera.
+ * @param {Vec3} cameraForward - The forward vector of the camera.
+ */
+
+/**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
  *
@@ -78,7 +89,7 @@ class Command {
  * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
  * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or
  * {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
- * @property {callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh
+ * @property {calculateSortDistanceCallback} calculateSortDistance In some circumstances mesh
  * instances are sorted by a distance calculation to determine their rendering order. Set this
  * callback to override the default distance calculation, which gives the dot product of the camera
  * forward vector and the vector between the camera position and the center of the mesh instance's

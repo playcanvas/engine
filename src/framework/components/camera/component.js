@@ -6,6 +6,7 @@ import { Component } from '../component.js';
 import { PostEffectQueue } from './post-effect-queue.js';
 
 /** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../../math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../../xr/xr-manager.js').xrErrorCallback} xrErrorCallback */
 /** @typedef {import('../../entity.js').Entity} Entity */
@@ -33,6 +34,21 @@ const properties = [
     { name: 'viewMatrix', readonly: true },
     { name: 'vrDisplay', readonly: false }
 ];
+
+/**
+ * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
+ *
+ * @callback calculateMatrixCallback
+ * @param {Mat4} transformMatrix - Output of the function.
+ * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ */
+
+/**
+ * Callback used by {@link CameraComponent#enterVr} and {@link CameraComponent#exitVr}.
+ *
+ * @callback vrCameraCallback
+ * @param {string|null} err - On success it is null on failure it is the error message.
+ */
 
 /**
  * The Camera Component enables an Entity to render the scene. A scene requires at least one
@@ -105,7 +121,7 @@ const properties = [
  * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
  * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh
  * instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
- * @property {callbacks.CalculateMatrix} calculateTransform Custom function you can provide to
+ * @property {calculateMatrixCallback} calculateTransform Custom function you can provide to
  * calculate the camera transformation matrix manually. Can be used for complex effects like
  * reflections. Function is called using component's scope. Arguments:
  *
@@ -113,7 +129,7 @@ const properties = [
  * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
  *
  * Left and right are only used in stereo rendering.
- * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can provide to
+ * @property {calculateMatrixCallback} calculateProjection Custom function you can provide to
  * calculate the camera projection matrix manually. Can be used for complex effects like doing
  * oblique projection. Function is called using component's scope. Arguments:
  *
@@ -462,7 +478,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#enterVr
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate success
+     * @param {vrCameraCallback} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
      * @example
@@ -484,7 +500,7 @@ class CameraComponent extends Component {
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
      * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
      * {@link VrManager#display} as the default.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate success
+     * @param {vrCameraCallback} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err). On success it returns null on
      * failure it returns the error message.
      * @example
@@ -546,7 +562,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#exitVr
      * @description Attempt to stop presenting this camera.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate
+     * @param {vrCameraCallback} callback - Function called once to indicate
      * success of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
      * @example
