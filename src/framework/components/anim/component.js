@@ -184,12 +184,12 @@ class AnimComponent extends Component {
         this._layers = value;
     }
 
-    get layerIndicies() {
-        return this._layerIndicies;
+    get layerIndices() {
+        return this._layerIndices;
     }
 
-    set layerIndicies(value) {
-        this._layerIndicies = value;
+    set layerIndices(value) {
+        this._layerIndices = value;
     }
 
     get parameters() {
