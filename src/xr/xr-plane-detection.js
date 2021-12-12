@@ -20,12 +20,6 @@ import { XrPlane } from './xr-plane.js';
  *     // new plane been added
  * });
  * ```
- *
- * @property {boolean} supported True if Plane Detection is supported.
- * @property {boolean} available True if Plane Detection is available. This property can be set to
- * true only during a running session.
- * @property {XrPlane[]|null} planes Array of {@link XrPlane} instances that contain individual
- * plane information, or null if plane detection is not available.
  */
 class XrPlaneDetection extends EventHandler {
     /**
@@ -150,14 +144,31 @@ class XrPlaneDetection extends EventHandler {
         }
     }
 
+    /**
+     * True if Plane Detection is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
+    /**
+     * True if Plane Detection is available. This property can be set to true only during a running
+     * session.
+     *
+     * @type {boolean}
+     */
     get available() {
         return this._available;
     }
 
+    /**
+     * Array of {@link XrPlane} instances that contain individual plane information, or null if
+     * plane detection is not available.
+     *
+     * @type {XrPlane[]|null}
+     */
     get planes() {
         return this._planes;
     }

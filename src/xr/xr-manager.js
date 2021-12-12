@@ -16,8 +16,9 @@ import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -29,17 +30,9 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
 /**
  * Manage and update XR session and its states.
  *
- * @property {boolean} supported True if XR is supported.
- * @property {boolean} active True if XR session is running.
- * @property {string|null} type Returns type of currently running XR session or null if no session
- * is running. Can be any of XRTYPE_*.
- * @property {string|null} spaceType Returns reference space type of currently running XR session
- * or null if no session is running. Can be any of XRSPACE_*.
- * @property {Entity|null} camera Active camera for which XR session is running or null.
  * @property {XrInput} input Provides access to Input Sources.
  * @property {XrHitTest} hitTest Provides ability to hit test representation of real world geometry
  * of underlying AR system.
- * @property {object|null} session Provides access to XRSession of WebXR.
  * @augments EventHandler
  */
 class XrManager extends EventHandler {
@@ -568,22 +561,49 @@ class XrManager extends EventHandler {
         this.fire('update', frame);
     }
 
+    /**
+     * True if XR is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
+    /**
+     * True if XR session is running.
+     *
+     * @type {boolean}
+     */
     get active() {
         return !!this._session;
     }
 
+    /**
+     * Returns type of currently running XR session or null if no session is running. Can be any of
+     * XRTYPE_*.
+     *
+     * @type {string|null}
+     */
     get type() {
         return this._type;
     }
 
+    /**
+     * Returns reference space type of currently running XR session or null if no session is
+     * running. Can be any of XRSPACE_*.
+     *
+     * @type {string|null}
+     */
     get spaceType() {
         return this._spaceType;
     }
 
+    /**
+     * Provides access to XRSession of WebXR.
+     *
+     * @type {object|null}
+     */
     get session() {
         return this._session;
     }
@@ -595,6 +615,11 @@ class XrManager extends EventHandler {
         return this._session.visibilityState;
     }
 
+    /**
+     * Active camera for which XR session is running or null.
+     *
+     * @type {Entity|null}
+     */
     get camera() {
         return this._camera ? this._camera.entity : null;
     }
