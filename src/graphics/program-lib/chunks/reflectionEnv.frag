@@ -4,14 +4,17 @@ uniform sampler2D texture_envAtlas;
 #endif
 uniform float material_reflectivity;
 
-float mipLevel(vec2 uv) {
+// calculate mip level for shiny reflection given equirect coords uv.
+float shinyMipLevel(vec2 uv) {
     vec2 dx = dFdx(uv);
     vec2 dy = dFdy(uv);
 
+    // calculate second dF at 180 degrees
     vec2 uv2 = vec2(fract(uv.x + 0.5), uv.y);
     vec2 dx2 = dFdx(uv2);
     vec2 dy2 = dFdy(uv2);
 
+    // calculate min of both sets of dF to handle discontinuity at the azim edge
     float maxd = min(max(dot(dx, dx), dot(dy, dy)), max(dot(dx2, dx2), dot(dy2, dy2)));
 
     return clamp(0.5 * log2(maxd), 0.0, 10.0);
@@ -26,7 +29,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
 
     vec3 linear0;
     if (ilevel == 0.0) {
-        float level2 = mipLevel(uv * atlasSize);
+        float level2 = shinyMipLevel(uv * atlasSize);
         float ilevel2 = floor(level2);
         vec3 linearA = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2)));
         vec3 linearB = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2 + 1.0)));
