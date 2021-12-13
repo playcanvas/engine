@@ -80,9 +80,7 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#destroy
-     * @description Frees resources associated with this index buffer.
+     * Frees resources associated with this index buffer.
      */
     destroy() {
         const device = this.device;
@@ -109,9 +107,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#getFormat
-     * @description Returns the data format of the specified index buffer.
+     * Returns the data format of the specified index buffer.
+     *
      * @returns {number} The data format of the specified index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}
@@ -123,9 +120,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#getNumIndices
-     * @description Returns the number of indices stored in the specified index buffer.
+     * Returns the number of indices stored in the specified index buffer.
+     *
      * @returns {number} The number of indices stored in the specified index buffer.
      */
     getNumIndices() {
@@ -133,9 +129,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#lock
-     * @description Gives access to the block of memory that stores the buffer's indices.
+     * Gives access to the block of memory that stores the buffer's indices.
+     *
      * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
      */
     lock() {
@@ -143,11 +138,9 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#unlock
-     * @description Signals that the block of memory returned by a call to the lock function is
-     * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
-     * currently active device.
+     * Signals that the block of memory returned by a call to the lock function is ready to be
+     * given to the graphics hardware. Only unlocked index buffers can be set on the currently
+     * active device.
      */
     unlock() {
         // Upload the new index data

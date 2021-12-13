@@ -25,8 +25,6 @@ let _blockSizeTable = null;
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
  * the texel data represents an image that is mapped over geometry.
- *
- * @property {string} name The name of the texture. Defaults to null.
  */
 class Texture {
     /**
@@ -142,7 +140,13 @@ class Texture {
     constructor(graphicsDevice, options) {
         this.device = graphicsDevice;
 
+        /**
+         * The name of the texture. Defaults to null.
+         *
+         * @type {string}
+         */
         this.name = null;
+
         this._width = 4;
         this._height = 4;
         this._depth = 1;
@@ -252,15 +256,16 @@ class Texture {
     }
 
     /**
-     * @name Texture#minFilter
-     * @type {number}
-     * @description The minification filter to be applied to the texture. Can be:
+     * The minification filter to be applied to the texture. Can be:
+     *
      * - {@link FILTER_NEAREST}
      * - {@link FILTER_LINEAR}
      * - {@link FILTER_NEAREST_MIPMAP_NEAREST}
      * - {@link FILTER_NEAREST_MIPMAP_LINEAR}
      * - {@link FILTER_LINEAR_MIPMAP_NEAREST}
      * - {@link FILTER_LINEAR_MIPMAP_LINEAR}
+     *
+     * @type {number}
      */
     get minFilter() {
         return this._minFilter;
@@ -274,11 +279,12 @@ class Texture {
     }
 
     /**
-     * @name Texture#magFilter
-     * @type {number}
-     * @description The magnification filter to be applied to the texture. Can be:
+     * The magnification filter to be applied to the texture. Can be:
+     *
      * - {@link FILTER_NEAREST}
      * - {@link FILTER_LINEAR}
+     *
+     * @type {number}
      */
     get magFilter() {
         return this._magFilter;
@@ -292,12 +298,13 @@ class Texture {
     }
 
     /**
-     * @name Texture#addressU
-     * @type {number}
-     * @description The addressing mode to be applied to the texture horizontally. Can be:
+     * The addressing mode to be applied to the texture horizontally. Can be:
+     *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
      * - {@link ADDRESS_MIRRORED_REPEAT}
+     *
+     * @type {number}
      */
     get addressU() {
         return this._addressU;
@@ -311,12 +318,13 @@ class Texture {
     }
 
     /**
-     * @name Texture#addressV
-     * @type {number}
-     * @description The addressing mode to be applied to the texture vertically. Can be:
+     * The addressing mode to be applied to the texture vertically. Can be:
+     *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
      * - {@link ADDRESS_MIRRORED_REPEAT}
+     *
+     * @type {number}
      */
     get addressV() {
         return this._addressV;
@@ -330,12 +338,13 @@ class Texture {
     }
 
     /**
-     * @name Texture#addressW
-     * @type {number}
-     * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
+     * The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
+     *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
      * - {@link ADDRESS_MIRRORED_REPEAT}
+     *
+     * @type {number}
      */
     get addressW() {
         return this._addressW;
@@ -354,10 +363,11 @@ class Texture {
     }
 
     /**
-     * @name Texture#compareOnRead
+     * When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or
+     * {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for this texture, and you can get
+     * filtered results of comparison using texture() in your shader (WebGL2 only).
+     *
      * @type {boolean}
-     * @description When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL},
-     * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
     get compareOnRead() {
         return this._compareOnRead;
@@ -371,16 +381,16 @@ class Texture {
     }
 
     /**
-     * @name Texture#compareFunc
-     * @type {number}
-     * @description Comparison function when compareOnRead is enabled (WebGL2 only).
-     * Possible values:
+     * Comparison function when compareOnRead is enabled (WebGL2 only). Possible values:
+     *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
      * - {@link FUNC_GREATER}
      * - {@link FUNC_GREATEREQUAL}
      * - {@link FUNC_EQUAL}
      * - {@link FUNC_NOTEQUAL}
+     *
+     * @type {number}
      */
     get compareFunc() {
         return this._compareFunc;
@@ -394,10 +404,10 @@ class Texture {
     }
 
     /**
-     * @name Texture#anisotropy
+     * Integer value specifying the level of anisotropic to apply to the texture ranging from 1 (no
+     * anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
+     *
      * @type {number}
-     * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
      */
     get anisotropy() {
         return this._anisotropy;
@@ -411,11 +421,11 @@ class Texture {
     }
 
     /**
+     * Toggles automatic mipmap generation. Can't be used on non power of two textures.
+     *
+     * @type {boolean}
      * @private
      * @deprecated
-     * @name Texture#autoMipmap
-     * @type {boolean}
-     * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
     get autoMipmap() {
         return this._mipmaps;
@@ -426,9 +436,9 @@ class Texture {
     }
 
     /**
-     * @name Texture#mipmaps
+     * Defines if texture should generate/upload mipmaps if possible.
+     *
      * @type {boolean}
-     * @description Defines if texture should generate/upload mipmaps if possible.
      */
     get mipmaps() {
         return this._mipmaps;
@@ -442,36 +452,35 @@ class Texture {
     }
 
     /**
-     * @name Texture#width
+     * The width of the texture in pixels.
+     *
      * @type {number}
-     * @description The width of the texture in pixels.
      */
     get width() {
         return this._width;
     }
 
     /**
-     * @name Texture#height
+     * The height of the texture in pixels.
+     *
      * @type {number}
-     * @description The height of the texture in pixels.
      */
     get height() {
         return this._height;
     }
 
     /**
-     * @name Texture#depth
+     * The number of depth slices in a 3D texture (WebGL2 only).
+     *
      * @type {number}
-     * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
     get depth() {
         return this._depth;
     }
 
     /**
-     * @name Texture#format
-     * @type {number}
-     * @description The pixel format of the texture. Can be:
+     * The pixel format of the texture. Can be:
+     *
      * - {@link PIXELFORMAT_A8}
      * - {@link PIXELFORMAT_L8}
      * - {@link PIXELFORMAT_L8_A8}
@@ -496,15 +505,17 @@ class Texture {
      * - {@link PIXELFORMAT_ASTC_4x4}>/li>
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
+     *
+     * @type {number}
      */
     get format() {
         return this._format;
     }
 
     /**
-     * @name Texture#cubemap
+     * Returns true if this texture is a cube map and false otherwise.
+     *
      * @type {boolean}
-     * @description Returns true if this texture is a cube map and false otherwise.
      */
     get cubemap() {
         return this._cubemap;
@@ -516,20 +527,20 @@ class Texture {
     }
 
     /**
-     * @name Texture#volume
+     * Returns true if this texture is a 3D volume and false otherwise.
+     *
      * @type {boolean}
-     * @description Returns true if this texture is a 3D volume and false otherwise.
      */
     get volume() {
         return this._volume;
     }
 
     /**
-     * @name Texture#flipY
+     * Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * with a source that is an image, canvas or video element. Does not affect cubemaps,
+     * compressed textures or textures set from raw pixel data. Defaults to true.
+     *
      * @type {boolean}
-     * @description Specifies whether the texture should be flipped in the Y-direction. Only affects textures
-     * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
-     * or textures set from raw pixel data. Defaults to true.
      */
     get flipY() {
         return this._flipY;
@@ -554,9 +565,9 @@ class Texture {
     }
 
     /**
-     * @name Texture#pot
+     * Returns true if all dimensions of the texture are power of two, and false otherwise.
+     *
      * @type {boolean}
-     * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
      */
     get pot() {
         return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
@@ -564,17 +575,16 @@ class Texture {
 
     // static functions
     /**
+     * Calculate the GPU memory required for a texture.
+     *
+     * @param {number} width - Texture's width.
+     * @param {number} height - Texture's height.
+     * @param {number} depth - Texture's depth.
+     * @param {number} format - Texture's pixel format PIXELFORMAT_***.
+     * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
+     * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
+     * @returns {number} The number of bytes of GPU memory required for the texture.
      * @private
-     * @function
-     * @name Texture.calcGpuSize
-     * @description Calculate the GPU memory required for a texture.
-     * @param {number} [width] - Texture's width.
-     * @param {number} [height] - Texture's height.
-     * @param {number} [depth] - Texture's depth.
-     * @param {number} [format] - Texture's pixel format PIXELFORMAT_***.
-     * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise.
-     * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise.
-     * @returns {number} The amount of GPU memory required for the texture, in bytes.
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
         if (!_pixelSizeTable) {
@@ -651,9 +661,7 @@ class Texture {
 
     // Public methods
     /**
-     * @function
-     * @name Texture#destroy
-     * @description Forcibly free up the underlying WebGL resource owned by the texture.
+     * Forcibly free up the underlying WebGL resource owned by the texture.
      */
     destroy() {
         if (this.device) {
@@ -675,17 +683,19 @@ class Texture {
     }
 
     /**
-     * @function
-     * @name Texture#lock
-     * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
+     * Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
+     *
      * @param {object} [options] - Optional options object. Valid properties are as follows:
-     * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
-     * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
+     * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults
+     * to 0.
+     * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face
+     * to lock.
      * @param {number} [options.mode] - The lock mode. Can be:
      * - {@link TEXTURELOCK_READ}
      * - {@link TEXTURELOCK_WRITE}
      * Defaults to {@link TEXTURELOCK_WRITE}.
-     * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
+     * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of
+     * the locked mip level.
      */
     lock(options = {}) {
         // Initialize options to some sensible defaults
@@ -747,14 +757,14 @@ class Texture {
     }
 
     /**
-     * @function
-     * @name Texture#setSource
-     * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
-     * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A canvas, image or video element,
-     * or an array of 6 canvas, image or video elements.
-     * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
-     * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
+     * Set the pixel data of the texture from a canvas, image, video DOM element. If the texture is
+     * a cubemap, the supplied source must be an array of 6 canvases, images or videos.
+     *
+     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
+     * canvas, image or video element, or an array of 6 canvas, image or video elements.
+     * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
+     * Defaults to 0, which represents the base image source. A level value of N, that is greater
+     * than 0, represents the image source for the Nth mipmap reduction level.
      */
     setSource(source, mipLevel = 0) {
         let invalid = false;
@@ -841,22 +851,21 @@ class Texture {
     }
 
     /**
-     * @function
-     * @name Texture#getSource
-     * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
-     * a single image.
-     * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
-     * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
-     * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
+     * Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be
+     * returned otherwise a single image.
+     *
+     * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
+     * Defaults to 0, which represents the base image source. A level value of N, that is greater
+     * than 0, represents the image source for the Nth mipmap reduction level.
+     * @returns {HTMLImageElement} The source image of this texture. Can be null if source not
+     * assigned for specific image level.
      */
     getSource(mipLevel = 0) {
         return this._levels[mipLevel];
     }
 
     /**
-     * @function
-     * @name Texture#unlock
-     * @description Unlocks the currently locked mip level and uploads it to VRAM.
+     * Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
         if (this._lockedLevel === -1) {
@@ -869,12 +878,11 @@ class Texture {
     }
 
     /**
-     * @function
-     * @name Texture#upload
-     * @description Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link Texture#setSource} and {@link Texture#unlock}. However, it still needs to
-     * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,
-     * this is done once every frame before video textured geometry is rendered.
+     * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
+     * is called by internally by {@link Texture#setSource} and {@link Texture#unlock}. However, it
+     * still needs to be called explicitly in the case where an HTMLVideoElement is set as the
+     * source of the texture.  Normally, this is done once every frame before video textured
+     * geometry is rendered.
      */
     upload() {
         this._needsUpload = true;

@@ -51,9 +51,7 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#destroy
-     * @description Frees resources associated with this vertex buffer.
+     * Frees resources associated with this vertex buffer.
      */
     destroy() {
         const device = this.device;
@@ -83,9 +81,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#getFormat
-     * @description Returns the data format of the specified vertex buffer.
+     * Returns the data format of the specified vertex buffer.
+     *
      * @returns {VertexFormat} The data format of the specified vertex buffer.
      */
     getFormat() {
@@ -93,12 +90,11 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#getUsage
-     * @description Returns the usage type of the specified vertex buffer. This indicates
-     * whether the buffer can be modified once and used many times {@link BUFFER_STATIC},
-     * modified repeatedly and used many times {@link BUFFER_DYNAMIC} or modified once
-     * and used at most a few times {@link BUFFER_STREAM}.
+     * Returns the usage type of the specified vertex buffer. This indicates whether the buffer can
+     * be modified once and used many times {@link BUFFER_STATIC}, modified repeatedly and used
+     * many times {@link BUFFER_DYNAMIC} or modified once and used at most a few times
+     * {@link BUFFER_STREAM}.
+     *
      * @returns {number} The usage type of the vertex buffer (see BUFFER_*).
      */
     getUsage() {
@@ -106,9 +102,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#getNumVertices
-     * @description Returns the number of vertices stored in the specified vertex buffer.
+     * Returns the number of vertices stored in the specified vertex buffer.
+     *
      * @returns {number} The number of vertices stored in the vertex buffer.
      */
     getNumVertices() {
@@ -116,9 +111,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#lock
-     * @description Returns a mapped memory block representing the content of the vertex buffer.
+     * Returns a mapped memory block representing the content of the vertex buffer.
+     *
      * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
      */
     lock() {
@@ -126,10 +120,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#unlock
-     * @description Notifies the graphics engine that the client side copy of the vertex buffer's
-     * memory can be returned to the control of the graphics driver.
+     * Notifies the graphics engine that the client side copy of the vertex buffer's memory can be
+     * returned to the control of the graphics driver.
      */
     unlock() {
         // Upload the new vertex data
@@ -164,9 +156,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#setData
-     * @description Copies data into vertex buffer's memory.
+     * Copies data into vertex buffer's memory.
+     *
      * @param {ArrayBuffer} [data] - Source data to copy.
      * @returns {boolean} True if function finished successfully, false otherwise.
      */

@@ -194,20 +194,16 @@ class VertexFormat {
     }
 
     /**
-     * @field
-     * @static
-     * @name VertexFormat.defaultInstancingFormat
+     * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
+     *
      * @type {VertexFormat}
-     * @description Returns {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      */
     static get defaultInstancingFormat() {
         return VertexFormat._defaultInstancingFormat;
     }
 
     /**
-     * @function
-     * @name VertexFormat#update
-     * @description Applies any changes made to the VertexFormat's properties.
+     * Applies any changes made to the VertexFormat's properties.
      */
     update() {
         this._evaluateHash();

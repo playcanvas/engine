@@ -2,8 +2,6 @@ import { ScopeId } from './scope-id.js';
 
 /**
  * The scope for variables.
- *
- * @property {string} name The scope name.
  */
 class ScopeSpace {
     /**
@@ -12,8 +10,11 @@ class ScopeSpace {
      * @param {string} name - The scope name.
      */
     constructor(name) {
-
-        // Store the name
+        /**
+         * The scope name.
+         *
+         * @type {string}
+         */
         this.name = name;
 
         // Create map which maps a uniform name into ScopeId
@@ -21,9 +22,8 @@ class ScopeSpace {
     }
 
     /**
-     * @function
-     * @name ScopeSpace#resolve
-     * @description Get (or create, if it doesn't already exist) a variable in the scope.
+     * Get (or create, if it doesn't already exist) a variable in the scope.
+     *
      * @param {string} name - The variable name.
      * @returns {ScopeId} The variable instance.
      */

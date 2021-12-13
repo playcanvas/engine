@@ -66,9 +66,7 @@ class Shader {
     }
 
     /**
-     * @function
-     * @name Shader#destroy
-     * @description Frees resources associated with this shader.
+     * Frees resources associated with this shader.
      */
     destroy() {
         this.device.destroyShader(this);

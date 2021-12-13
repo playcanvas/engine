@@ -103,9 +103,8 @@ class TransformFeedback {
     }
 
     /**
-     * @function
-     * @name TransformFeedback.createShader
-     * @description Creates a transform feedback ready vertex shader from code.
+     * Creates a transform feedback ready vertex shader from code.
+     *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
@@ -116,20 +115,20 @@ class TransformFeedback {
     }
 
     /**
-     * @function
-     * @name TransformFeedback#destroy
-     * @description Destroys the transform feedback helper object.
+     * Destroys the transform feedback helper object.
      */
     destroy() {
         this._outputBuffer.destroy();
     }
 
     /**
-     * @function
-     * @name TransformFeedback#process
-     * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
-     * @param {Shader} shader - A vertex shader to run. Should be created with {@link TransformFeedback.createShader}.
-     * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
+     * Runs the specified shader on the input buffer, writes results into the new buffer, then
+     * optionally swaps input/output.
+     *
+     * @param {Shader} shader - A vertex shader to run. Should be created with
+     * {@link TransformFeedback.createShader}.
+     * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer
+     * processing. Default is true.
      */
     process(shader, swap = true) {
         const device = this.device;
@@ -170,18 +169,18 @@ class TransformFeedback {
     }
 
     /**
-     * @name TransformFeedback#inputBuffer
+     * The current input buffer.
+     *
      * @type {VertexBuffer}
-     * @description The current input buffer.
      */
     get inputBuffer() {
         return this._inputBuffer;
     }
 
     /**
-     * @name TransformFeedback#outputBuffer
+     * The current output buffer.
+     *
      * @type {VertexBuffer}
-     * @description The current output buffer.
      */
     get outputBuffer() {
         return this._outputBuffer;

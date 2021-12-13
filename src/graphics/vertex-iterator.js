@@ -167,9 +167,8 @@ class VertexIteratorAccessor {
     }
 
     /**
-     * @function
-     * @name VertexIteratorAccessor#get
-     * @description Get a attribute component at the iterator's current index.
+     * Get a attribute component at the iterator's current index.
+     *
      * @param {number} offset - The component offset. Should be either 0, 1, 2, or 3.
      * @returns {number} The value of a attribute component.
      */
@@ -178,9 +177,8 @@ class VertexIteratorAccessor {
     }
 
     /**
-     * @function
-     * @name VertexIteratorAccessor#set
-     * @description Set all the attribute components at the iterator's current index.
+     * Set all the attribute components at the iterator's current index.
+     *
      * @param {number} a - The first component value.
      * @param {number} [b] - The second component value (if applicable).
      * @param {number} [c] - The third component value (if applicable).
@@ -191,10 +189,10 @@ class VertexIteratorAccessor {
     }
 
     /**
-     * @function
-     * @name VertexIteratorAccessor#getToArray
-     * @description Read attribute components to an output array.
-     * @param {number} offset - The component offset at which to read data from the buffer. Will be used instead of the iterator's current index.
+     * Read attribute components to an output array.
+     *
+     * @param {number} offset - The component offset at which to read data from the buffer. Will be
+     * used instead of the iterator's current index.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} outputArray - The output array to write data into.
      * @param {number} outputIndex - The output index at which to write into the output array.
      */
@@ -203,10 +201,10 @@ class VertexIteratorAccessor {
     }
 
     /**
-     * @function
-     * @name VertexIteratorAccessor#setFromArray
-     * @description Write attribute components from an input array.
-     * @param {number} index - The starting index at which to write data into the buffer. Will be used instead of the iterator's current index.
+     * Write attribute components from an input array.
+     *
+     * @param {number} index - The starting index at which to write data into the buffer. Will be
+     * used instead of the iterator's current index.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
      * @param {number} inputIndex - The input index at which to read from the input array.
      */
@@ -217,8 +215,6 @@ class VertexIteratorAccessor {
 
 /**
  * A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
- *
- * @property {object<string, VertexIteratorAccessor>} element The vertex buffer elements.
  */
 class VertexIterator {
     /**
@@ -236,7 +232,15 @@ class VertexIterator {
 
         // Create an empty list
         this.accessors = [];
+
+        /* eslint-disable jsdoc/check-types */
+        /**
+         * The vertex buffer elements.
+         *
+         * @type {Object.<string, VertexIteratorAccessor>}
+         */
         this.element = {};
+        /* eslint-enable jsdoc/check-types */
 
         // Add a new 'setter' function for each element
         const vertexFormat = this.vertexBuffer.getFormat();
@@ -248,10 +252,10 @@ class VertexIterator {
     }
 
     /**
-     * @function
-     * @name VertexIterator#next
-     * @description Moves the vertex iterator on to the next vertex.
-     * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to 1.
+     * Moves the vertex iterator on to the next vertex.
+     *
+     * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to
+     * 1.
      * @example
      * var iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
@@ -275,10 +279,9 @@ class VertexIterator {
     }
 
     /**
-     * @function
-     * @name VertexIterator#end
-     * @description Notifies the vertex buffer being iterated that writes are complete. Internally
-     * the vertex buffer is unlocked and vertex data is uploaded to video memory.
+     * Notifies the vertex buffer being iterated that writes are complete. Internally the vertex
+     * buffer is unlocked and vertex data is uploaded to video memory.
+     *
      * @example
      * var iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
@@ -341,10 +344,11 @@ class VertexIterator {
         }
     }
 
-    // Function to extract elements of a specified semantic from vertex buffer into flat array (data).
-    // Works with both interleaved (slower) and non-interleaved (fast) vertex buffer
-    // returns number of verticies
-    // Note: when data is typed array and is smaller than needed, only part of data gets copied out (typed arrays ignore read/write out of range)
+    // Function to extract elements of a specified semantic from vertex buffer into flat array
+    // (data). Works with both interleaved (slower) and non-interleaved (fast) vertex buffer
+    // returns number of vertices.
+    // Note: when data is typed array and is smaller than needed, only part of data gets copied out
+    // (typed arrays ignore read/write out of range).
     readData(semantic, data) {
         const element = this.element[semantic];
         let count = 0;
