@@ -29,6 +29,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
 
     vec3 linear0;
     if (ilevel == 0.0) {
+        // we're accessing the top level reflection - perform manual mipmap
         float level2 = shinyMipLevel(uv * atlasSize);
         float ilevel2 = floor(level2);
         vec3 linearA = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2)));
