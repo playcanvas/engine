@@ -3501,6 +3501,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Frees memory from all shaders ever allocated with this device.
+     *
+     * @private
      */
     clearShaderCache() {
         const gl = this.gl;
@@ -3518,6 +3520,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Frees memory from all vertex array objects ever allocated with this device.
+     *
+     * @private
      */
     clearVertexArrayObjectCache() {
 
