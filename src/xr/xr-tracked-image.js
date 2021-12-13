@@ -107,7 +107,7 @@ class XrTrackedImage extends EventHandler {
         if (this._pose) this._rotation.copy(this._pose.transform.orientation);
         return this._rotation;
     }
-   
+
     /**
      * Image that is used for tracking.
      *
