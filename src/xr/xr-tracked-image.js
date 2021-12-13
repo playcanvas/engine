@@ -7,18 +7,7 @@ import { Quat } from '../math/quat.js';
  * list from {@link XrImageTracking#images}. It contains information about the tracking state as
  * well as the position and rotation of the tracked image.
  *
- * @property {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image Image
- * that is used for tracking.
- * @property {number} width Width that is provided to assist tracking performance. This property
- * can be updated only when the AR session is not running.
- * @property {boolean} trackable True if image is trackable. A too small resolution or invalid
- * images can be untrackable by the underlying AR system.
- * @property {boolean} tracking True if image is in tracking state and being tracked in real world
- * by the underlying AR system.
- * @property {boolean} emulated True if image was recently tracked but currently is not actively
- * tracked due to inability of identifying the image by the underlying AR system. Position and
- * rotation will be based on the previously known transformation assuming the tracked image has not
- * moved.
+ * @augments EventHandler
  */
 class XrTrackedImage extends EventHandler {
     /**
@@ -92,9 +81,9 @@ class XrTrackedImage extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrTrackedImage#getPosition
-     * @description Get the position of the tracked image. The position is the most recent one based on the tracked image state.
+     * Get the position of the tracked image. The position is the most recent one based on the
+     * tracked image state.
+     *
      * @returns {Vec3} Position in world space.
      * @example
      * // update entity position to match tracked image position
@@ -106,9 +95,9 @@ class XrTrackedImage extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrTrackedImage#getRotation
-     * @description Get the rotation of the tracked image. The rotation is the most recent based on the tracked image state.
+     * Get the rotation of the tracked image. The rotation is the most recent based on the tracked
+     * image state.
+     *
      * @returns {Quat} Rotation in world space.
      * @example
      * // update entity rotation to match tracked image rotation
@@ -118,11 +107,22 @@ class XrTrackedImage extends EventHandler {
         if (this._pose) this._rotation.copy(this._pose.transform.orientation);
         return this._rotation;
     }
-
+   
+    /**
+     * Image that is used for tracking.
+     *
+     * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
+     */
     get image() {
         return this._image;
     }
 
+    /**
+     * Width that is provided to assist tracking performance. This property can be updated only
+     * when the AR session is not running.
+     *
+     * @type {number}
+     */
     get width() {
         return this._width;
     }
@@ -131,14 +131,33 @@ class XrTrackedImage extends EventHandler {
         this._width = value;
     }
 
+    /**
+     * True if image is trackable. A too small resolution or invalid images can be untrackable by
+     * the underlying AR system.
+     *
+     * @type {boolean}
+     */
     get trackable() {
         return this._trackable;
     }
 
+    /**
+     * True if image is in tracking state and being tracked in real world by the underlying AR
+     * system.
+     *
+     * @type {boolean}
+     */
     get tracking() {
         return this._tracking;
     }
 
+    /**
+     * True if image was recently tracked but currently is not actively tracked due to inability of
+     * identifying the image by the underlying AR system. Position and rotation will be based on
+     * the previously known transformation assuming the tracked image has not moved.
+     *
+     * @type {boolean}
+     */
     get emulated() {
         return this._emulated;
     }

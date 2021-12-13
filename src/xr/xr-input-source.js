@@ -99,7 +99,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#selectend
-     * @description Fired when input source has ended triggerring primary action.
+     * @description Fired when input source has ended triggering primary action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
@@ -113,7 +113,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#squeezestart
-     * @description Fired when input source has started to trigger sqeeze action.
+     * @description Fired when input source has started to trigger squeeze action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
      * inputSource.on('squeezestart', function (evt) {
@@ -126,7 +126,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#squeezeend
-     * @description Fired when input source has ended triggerring sqeeze action.
+     * @description Fired when input source has ended triggering squeeze action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
@@ -237,9 +237,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getPosition
-     * @description Get the world space position of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     * Get the world space position of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Otherwise it will return null.
+     *
      * @returns {Vec3|null} The world space position of handheld input source.
      */
     getPosition() {
@@ -252,9 +252,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getLocalPosition
-     * @description Get the local space position of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * Get the local space position of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     *
      * @returns {Vec3|null} The world space position of handheld input source.
      */
     getLocalPosition() {
@@ -262,9 +262,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getRotation
-     * @description Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     * Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Otherwise it will return null.
+     *
      * @returns {Quat|null} The world space rotation of handheld input source.
      */
     getRotation() {
@@ -277,9 +277,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getLocalRotation
-     * @description Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     *
      * @returns {Vec3|null} The world space rotation of handheld input source.
      */
     getLocalRotation() {
@@ -287,9 +287,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getOrigin
-     * @description Get the world space origin of input source ray.
+     * Get the world space origin of input source ray.
+     *
      * @returns {Vec3} The world space origin of input source ray.
      */
     getOrigin() {
@@ -298,9 +297,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getDirection
-     * @description Get the world space direction of input source ray.
+     * Get the world space direction of input source ray.
+     *
      * @returns {Vec3} The world space direction of input source ray.
      */
     getDirection() {
@@ -309,24 +307,23 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#hitTestStart
-     * @description Attempts to start hit test source based on this input source.
-     * @param {object} [options] - Object for passing optional arguments.
-     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types
-     * against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ].
-     * Can be any combination of the following:
+     * Attempts to start hit test source based on this input source.
      *
-     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
-     * computed based on the feature points detected by the underlying Augmented Reality system.
-     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
-     * computed based on the planes detected by the underlying Augmented Reality system.
-     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
-     * computed based on the meshes detected by the underlying Augmented Reality system.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against
+     * which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any
+     * combination of the following:
+     *
+     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed
+     * based on the feature points detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed
+     * based on the planes detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed
+     * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function
-     * called once hit test source is created or failed.
+     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     inputSource.hitTestStart({
@@ -400,7 +397,7 @@ class XrInputSource extends EventHandler {
      * follow the direction it is facing. This is commonly referred to as a "gaze input" device in
      * the context of head-mounted displays.
      * - {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction
-     * with the canvas element associated with an inline session’s output context, such as a mouse
+     * with the canvas element associated with an inline session's output context, such as a mouse
      * click or touch event.
      * - {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates
      * from either a handheld device or other hand-tracking mechanism and represents that the user
