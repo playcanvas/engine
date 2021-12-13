@@ -101,7 +101,7 @@ function calculateNormals(positions, indices) {
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
 function calculateTangents(positions, normals, uvs, indices) {
-    // Lengyel’s Method
+    // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
     const triangleCount = indices.length / 3;
     const vertexCount   = positions.length / 3;

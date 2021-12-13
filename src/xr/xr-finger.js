@@ -2,12 +2,6 @@
 
 /**
  * Represents finger with related joints and index.
- *
- * @property {number} index Index of a finger, numeration is: thumb, index, middle, ring, little.
- * @property {XrHand} hand Hand that finger relates to.
- * @property {XrJoint[]} joints List of joints that relates to this finger, starting from joint
- * closest to wrist all the way to the tip of a finger.
- * @property {XrJoint|null} tip Tip of a finger, or null if not available.
  */
 class XrFinger {
     /**
@@ -25,18 +19,39 @@ class XrFinger {
         this._tip = null;
     }
 
+    /**
+     * Index of a finger, numeration is: thumb, index, middle, ring, little.
+     *
+     * @type {number}
+     */
     get index() {
         return this._index;
     }
 
+    /**
+     * Hand that finger relates to.
+     *
+     * @type {XrHand}
+     */
     get hand() {
         return this._hand;
     }
 
+    /**
+     * List of joints that relates to this finger, starting from joint closest to wrist all the way
+     * to the tip of a finger.
+     *
+     * @type {XrJoint[]}
+     */
     get joints() {
         return this._joints;
     }
 
+    /**
+     * Tip of a finger, or null if not available.
+     *
+     * @type {XrJoint|null}
+     */
     get tip() {
         return this._tip;
     }

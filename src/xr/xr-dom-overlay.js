@@ -22,20 +22,6 @@ import { platform } from '../core/platform.js';
  *     evt.preventDefault();
  * });
  * ```
- *
- * @property {boolean} supported True if DOM Overlay is supported.
- * @property {boolean} available True if DOM Overlay is available. It can only be available if it
- * is supported, during a valid WebXR session and if a valid root element is provided.
- * @property {string|null} state State of the DOM Overlay, which defines how the root DOM element
- * is rendered. Possible options:
- *
- * - screen: Screen - indicates that the DOM element is covering whole physical screen, matching XR
- * viewports.
- * - floating: Floating - indicates that the underlying platform renders the DOM element as
- * floating in space, which can move during the WebXR session or allow the application to move the
- * element.
- * - head-locked: Head Locked - indicates that the DOM element follows the user's head movement
- * consistently, appearing similar to a helmet heads-up display.
  */
 class XrDomOverlay {
     /**
@@ -54,14 +40,39 @@ class XrDomOverlay {
         this._root = null;
     }
 
+    /**
+     * True if DOM Overlay is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
+    /**
+     * True if DOM Overlay is available. It can only be available if it is supported, during a
+     * valid WebXR session and if a valid root element is provided.
+     *
+     * @type {boolean}
+     */
     get available() {
         return this._supported && this._manager.active && this._manager._session.domOverlayState !== null;
     }
 
+    /**
+     * State of the DOM Overlay, which defines how the root DOM element is rendered. Possible
+     * options:
+     *
+     * - screen: Screen - indicates that the DOM element is covering whole physical screen,
+     * matching XR viewports.
+     * - floating: Floating - indicates that the underlying platform renders the DOM element as
+     * floating in space, which can move during the WebXR session or allow the application to move
+     * the element.
+     * - head-locked: Head Locked - indicates that the DOM element follows the user's head movement
+     * consistently, appearing similar to a helmet heads-up display.
+     *
+     * @type {string|null}
+     */
     get state() {
         if (!this._supported || !this._manager.active || !this._manager._session.domOverlayState)
             return null;
@@ -70,9 +81,10 @@ class XrDomOverlay {
     }
 
     /**
-     * @name XrDomOverlay#root
+     * The DOM element to be used as the root for DOM Overlay. Can be changed only outside of an
+     * active WebXR session.
+     *
      * @type {object|null}
-     * @description The DOM element to be used as the root for DOM Overlay. Can be changed only outside of an active WebXR session.
      * @example
      * app.xr.domOverlay.root = element;
      * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);

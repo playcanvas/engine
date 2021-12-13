@@ -7,7 +7,6 @@ import { XrInputSource } from './xr-input-source.js';
 /**
  * Provides access to input sources for WebXR.
  *
- * @property {XrInputSource[]} inputSources List of active {@link XrInputSource}.
  * @augments EventHandler
  */
 class XrInput extends EventHandler {
@@ -238,6 +237,11 @@ class XrInput extends EventHandler {
         }
     }
 
+    /**
+     * List of active {@link XrInputSource} instances.
+     *
+     * @type {XrInputSource[]}
+     */
     get inputSources() {
         return this._inputSources;
     }

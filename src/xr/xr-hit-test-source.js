@@ -56,9 +56,7 @@ class XrHitTestSource extends EventHandler {
      */
 
     /**
-     * @function
-     * @name XrHitTestSource#remove
-     * @description Stop and remove hit test source.
+     * Stop and remove hit test source.
      */
     remove() {
         if (!this._xrHitTestSource)

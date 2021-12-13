@@ -62,9 +62,6 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  * }
  * ```
  *
- * @property {boolean} supported True if Depth Sensing is supported.
- * @property {number} width Width of depth texture or 0 if not available.
- * @property {number} height Height of depth texture or 0 if not available.
  * @augments EventHandler
  */
 class XrDepthSensing extends EventHandler {
@@ -243,17 +240,20 @@ class XrDepthSensing extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrDepthSensing#getDepth
-     * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to 1.0 (left to right).
-     * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to 1.0 (top to bottom).
-     * @description Get depth value from depth information in meters. UV is in range of 0..1, with origin in top-left corner of a texture.
+     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
+     * top-left corner of a texture.
+     *
+     * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
+     * 1.0 (left to right).
+     * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to
+     * 1.0 (top to bottom).
+     * @returns {number|null} Depth in meters or null if depth information is currently not
+     * available.
      * @example
      * var depth = app.xr.depthSensing.getDepth(u, v);
      * if (depth !== null) {
      *     // depth in meters
      * }
-     * @returns {number|null} Depth in meters or null if depth information is currently not available.
      */
     getDepth(u, v) {
         // TODO
@@ -265,14 +265,19 @@ class XrDepthSensing extends EventHandler {
         return this._depthInfoCpu.getDepthInMeters(u, v);
     }
 
+    /**
+     * True if Depth Sensing is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return platform.browser && !!window.XRDepthInformation;
     }
 
     /**
-     * @name XrDepthSensing#available
+     * True if depth sensing information is available.
+     *
      * @type {boolean}
-     * @description True if depth sensing information is available.
      * @example
      * if (app.xr.depthSensing.available) {
      *     var depth = app.xr.depthSensing.getDepth(x, y);
@@ -290,11 +295,21 @@ class XrDepthSensing extends EventHandler {
         return this._dataFormat;
     }
 
+    /**
+     * Width of depth texture or 0 if not available.
+     *
+     * @type {number}
+     */
     get width() {
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
         return depthInfo && depthInfo.width || 0;
     }
 
+    /**
+     * Height of depth texture or 0 if not available.
+     *
+     * @type {number}
+     */
     get height() {
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
         return depthInfo && depthInfo.height || 0;
@@ -302,9 +317,11 @@ class XrDepthSensing extends EventHandler {
 
     /* eslint-disable jsdoc/check-examples */
     /**
-     * @name XrDepthSensing#texture
+     * Texture that contains packed depth information. The format of this texture is
+     * {@link PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can
+     * be normalized using {@link XrDepthSensing#uvMatrix}.
+     *
      * @type {Texture}
-     * @description Texture that contains packed depth information. The format of this texture is {@link PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can be normalized using {@link XrDepthSensing#uvMatrix}.
      * @example
      * material.diffuseMap = depthSensing.texture;
      * @example
@@ -338,9 +355,10 @@ class XrDepthSensing extends EventHandler {
     }
 
     /**
-     * @name XrDepthSensing#uvMatrix
+     * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
+     * It is updated when the depth texture is resized. Refer to {@link XrDepthSensing#resize}.
+     *
      * @type {Mat4}
-     * @description 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader. It is updated when the depth texture is resized. Refer to {@link XrDepthSensing#resize}.
      * @example
      * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
      */
@@ -349,9 +367,9 @@ class XrDepthSensing extends EventHandler {
     }
 
     /**
-     * @name XrDepthSensing#rawValueToMeters
+     * Multiply this coefficient number by raw depth value to get depth in meters.
+     *
      * @type {number}
-     * @description Multiply this coefficient number by raw depth value to get depth in meters.
      * @example
      * material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
      */

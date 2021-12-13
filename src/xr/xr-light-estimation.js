@@ -21,14 +21,6 @@ const mat4B = new Mat4();
  * Spherical Harmonics data. And the most simple level of light estimation is the most prominent
  * directional light, its rotation, intensity and color.
  *
- * @property {boolean} supported True if Light Estimation is supported. This information is
- * available only during an active AR session.
- * @property {number|null} intensity Intensity of what is estimated to be the most prominent
- * directional light. Or null if data is not available.
- * @property {Color|null} color Color of what is estimated to be the most prominent directional
- * light. Or null if data is not available.
- * @property {Quat|null} rotation Rotation of what is estimated to be the most prominent
- * directional light. Or null if data is not available.
  * @augments EventHandler
  */
 class XrLightEstimation extends EventHandler {
@@ -91,11 +83,10 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrLightEstimation#start
-     * @description Start estimation of illimunation data.
-     * Availability of such data will come later and an `available` event will be fired.
-     * If it failed to start estimation, an `error` event will be fired.
+     * Start estimation of illumination data. Availability of such data will come later and an
+     * `available` event will be fired. If it failed to start estimation, an `error` event will be
+     * fired.
+     *
      * @example
      * app.xr.on('start', function () {
      *     if (app.xr.lightEstimation.supported) {
@@ -177,7 +168,7 @@ class XrLightEstimation extends EventHandler {
         vec3A.set(0, 0, 0);
         vec3B.copy(lightEstimate.primaryLightDirection);
         mat4A.setLookAt(vec3B, vec3A, Vec3.UP);
-        mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // direcitonal light is looking down
+        mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // directional light is looking down
         mat4A.mul(mat4B);
         this._rotation.setFromMat4(mat4A);
 
@@ -185,14 +176,20 @@ class XrLightEstimation extends EventHandler {
         this._sphericalHarmonics.set(lightEstimate.sphericalHarmonicsCoefficients);
     }
 
+    /**
+     * True if Light Estimation is supported. This information is available only during an active AR
+     * session.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
     /**
-     * @name XrLightEstimation#available
+     * True if estimated light information is available.
+     *
      * @type {boolean}
-     * @description True if estimated light information is available.
      * @example
      * if (app.xr.lightEstimation.available) {
      *     entity.light.intensity = app.xr.lightEstimation.intensity;
@@ -202,14 +199,32 @@ class XrLightEstimation extends EventHandler {
         return this._available;
     }
 
+    /**
+     * Intensity of what is estimated to be the most prominent directional light. Or null if data
+     * is not available.
+     *
+     * @type {number|null}
+     */
     get intensity() {
         return this._available ? this._intensity : null;
     }
 
+    /**
+     * Color of what is estimated to be the most prominent directional light. Or null if data is
+     * not available.
+     *
+     * @type {Color|null}
+     */
     get color() {
         return this._available ? this._color : null;
     }
 
+    /**
+     * Rotation of what is estimated to be the most prominent directional light. Or null if data is
+     * not available.
+     *
+     * @type {Quat|null}
+     */
     get rotation() {
         return this._available ? this._rotation : null;
     }
