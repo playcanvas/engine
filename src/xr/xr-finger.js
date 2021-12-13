@@ -1,4 +1,5 @@
 /** @typedef {import('./xr-hand.js').XrHand} XrHand */
+/** @typedef {import('./xr-joint.js').XrJoint} XrJoint */
 
 /**
  * Represents finger with related joints and index.
