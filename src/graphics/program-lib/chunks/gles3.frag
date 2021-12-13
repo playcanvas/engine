@@ -12,4 +12,3 @@ out highp vec4 pc_fragColor;
 #define textureCubeGradEXT textureGrad
 #define GL2
 #define SUPPORTS_TEXLOD
-#define SUPPORTS_STD_DERIVATIVES
