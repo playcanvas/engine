@@ -161,6 +161,8 @@ class EnvLighting {
             mipmaps: false
         });
 
+        Debug.pushGpuMarker(device, "mipmaps");
+
         // generate mipmaps
         const rect = new Vec4(0, 0, 512, 256);
         const levels = calcLevels(result.width, result.height);
@@ -176,21 +178,13 @@ class EnvLighting {
             rect.z = Math.max(1, Math.floor(rect.z * 0.5));
             rect.w = Math.max(1, Math.floor(rect.w * 0.5));
         }
-        Debug.pushGpuMarker(device, "reflection");
 
-        // generate top-level reflection
-        reprojectTexture(source, result, {
-            numSamples: 1,
-            rect: rect,
-            seamPixels: 1
-        });
+        Debug.popGpuMarker(device);
+        Debug.pushGpuMarker(device, "reflections");
 
         // generate blurry reflections
-        rect.set(0, 0, 512, 256);
+        rect.set(0, 256, 256, 128);
         for (let i = 1; i < 7; ++i) {
-            rect.y += rect.w;
-            rect.z = Math.max(1, Math.floor(rect.z * 0.5));
-            rect.w = Math.max(1, Math.floor(rect.w * 0.5));
             reprojectTexture(source, result, {
                 numSamples: options?.numSamples || 1024,
                 distribution: options?.distribution || 'ggx',
@@ -198,6 +192,9 @@ class EnvLighting {
                 rect: rect,
                 seamPixels: 1
             });
+            rect.y += rect.w;
+            rect.z = Math.max(1, Math.floor(rect.z * 0.5));
+            rect.w = Math.max(1, Math.floor(rect.w * 0.5));
         }
 
         Debug.popGpuMarker(device);
@@ -205,22 +202,12 @@ class EnvLighting {
 
         // generate ambient
         rect.set(128, 256 + 128, 64, 32);
-        if (options?.legacyAmbient) {
-            reprojectTexture(source, result, {
-                numSamples: options?.numSamples || 4096,
-                distribution: 'phong',
-                specularPower: 2,
-                rect: rect,
-                seamPixels: 1
-            });
-        } else {
-            reprojectTexture(source, result, {
-                numSamples: options?.numSamples || 2048,
-                distribution: 'lambert',
-                rect: rect,
-                seamPixels: 1
-            });
-        }
+        reprojectTexture(source, result, {
+            numSamples: options?.numSamples || 2048,
+            distribution: 'lambert',
+            rect: rect,
+            seamPixels: 1
+        });
 
         Debug.popGpuMarker(device);
         Debug.popGpuMarker(device);
@@ -254,12 +241,30 @@ class EnvLighting {
             mipmaps: false
         });
 
-        const rect = new Vec4(0, 0, 512, 256);
+        Debug.pushGpuMarker(device, "mipmaps");
 
-        Debug.pushGpuMarker(device, "reflection");
+        // generate mipmaps
+        const rect = new Vec4(0, 0, 512, 256);
+        const levels = calcLevels(result.width, result.height);
+        for (let i = 0; i < levels; ++i) {
+            reprojectTexture(sources[0], result, {
+                numSamples: 1,
+                rect: rect,
+                seamPixels: 1
+            });
+
+            rect.x += rect.w;
+            rect.y += rect.w;
+            rect.z = Math.max(1, Math.floor(rect.z * 0.5));
+            rect.w = Math.max(1, Math.floor(rect.w * 0.5));
+        }
+
+        Debug.popGpuMarker(device);
+        Debug.pushGpuMarker(device, "reflections");
 
         // copy blurry reflections
-        for (let i = 0; i < sources.length; ++i) {
+        rect.set(0, 256, 256, 128);
+        for (let i = 1; i < sources.length; ++i) {
             reprojectTexture(sources[i], result, {
                 numSamples: 1,
                 rect: rect,
@@ -271,12 +276,10 @@ class EnvLighting {
         }
 
         Debug.popGpuMarker(device);
-
-        rect.set(256, 256, 64, 32);
-
         Debug.pushGpuMarker(device, "ambient");
 
         // generate ambient
+        rect.set(128, 256 + 128, 64, 32);
         if (options?.legacyAmbient) {
             reprojectTexture(sources[5], result, {
                 numSamples: 1,

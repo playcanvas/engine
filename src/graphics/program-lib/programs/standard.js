@@ -785,6 +785,7 @@ const standard = {
         if (!device.webgl2) {
             if (device.extStandardDerivatives) {
                 code += "#extension GL_OES_standard_derivatives : enable\n";
+                code += "#define SUPPORTS_STD_DERIVATIVES\n";
             }
             if (device.extTextureLod) {
                 code += "#extension GL_EXT_shader_texture_lod : enable\n";
@@ -1204,6 +1205,9 @@ const standard = {
             code += chunks.lightDiffuseLambertPS;
             if (hasAreaLights || options.clusteredLightingEnabled) code += chunks.ltc;
         }
+
+        code += '\n';
+
         let useOldAmbient = false;
         if (options.useSpecular) {
 

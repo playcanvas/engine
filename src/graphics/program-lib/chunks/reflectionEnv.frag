@@ -7,7 +7,14 @@ uniform float material_reflectivity;
 float mipLevel(vec2 uv) {
     vec2 dx = dFdx(uv);
     vec2 dy = dFdy(uv);
-    return clamp(0.5 * log2(max(dot(dx, dx), dot(dy, dy))), 0.0, 10.0);
+
+    vec2 uv2 = vec2(fract(uv.x + 0.5), uv.y);
+    vec2 dx2 = dFdx(uv2);
+    vec2 dy2 = dFdy(uv2);
+
+    float maxd = min(max(dot(dx, dx), dot(dy, dy)), max(dot(dx2, dx2), dot(dy2, dy2)));
+
+    return clamp(0.5 * log2(maxd), 0.0, 10.0);
 }
 
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
