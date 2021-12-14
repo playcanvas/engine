@@ -1884,6 +1884,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         'image/jpeg': 'jpg',
         'image/basis': 'basis',
         'image/ktx': 'ktx',
+        'image/ktx2': 'ktx2',
         'image/vnd-ms.dds': 'dds'
     };
 
@@ -1895,7 +1896,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
             url: url || name
         };
         if (bufferView) {
-            file.contents = bufferView;
+            file.contents = bufferView.slice(0).buffer;
         }
         if (mimeType) {
             const extension = mimeTypeFileExtensions[mimeType];
