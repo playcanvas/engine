@@ -1,5 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
+/** @typedef {import('./mesh.js').Mesh} Mesh */
+
 /**
  * @event
  * @private
@@ -13,7 +15,6 @@ import { EventHandler } from '../core/event-handler.js';
  * model, and are accessible using {@link ContainerResource#renders} property. The render is the
  * resource of a Render Asset.
  *
- * @property {Mesh[]} meshes The meshes that the render contains
  * @augments EventHandler
  * @private
  */
@@ -63,6 +64,12 @@ class Render extends EventHandler {
         }
     }
 
+    /**
+     * The meshes that the render contains.
+     *
+     * @type {Mesh[]}
+     * @private
+     */
     get meshes() {
         return this._meshes;
     }

@@ -5,6 +5,7 @@ import { Mat4 } from '../math/mat4.js';
 import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
+/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('./skin.js').Skin} Skin */
 
 const _invMatrix = new Mat4();
@@ -12,10 +13,15 @@ const _invMatrix = new Mat4();
 /**
  * A skin instance is responsible for generating the matrix palette that is used to skin vertices
  * from object space to world space.
- *
- * @property {GraphNode[]} bones An array of nodes representing each bone in this skin instance.
  */
 class SkinInstance {
+    /**
+     * An array of nodes representing each bone in this skin instance.
+     *
+     * @type {GraphNode[]}
+     */
+    bones;
+
     /**
      * Create a new SkinInstance instance.
      *

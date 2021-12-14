@@ -349,7 +349,7 @@ class RenderComponent extends Component {
 
                 // if skinned but does not have instance created yet
                 if (mesh.skin && !mesh.skinInstance) {
-                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(mesh.skin, this._rootBone.entity, this.entity);
+                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(mesh.skin, this._rootBone.entity, this.entity);
                 }
             }
         }
