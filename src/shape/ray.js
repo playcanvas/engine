@@ -31,9 +31,8 @@ class Ray {
     }
 
     /**
-     * @function
-     * @name Ray#set
-     * @description Sets origin and direction to the supplied vector values.
+     * Sets origin and direction to the supplied vector values.
+     *
      * @param {Vec3} origin - The starting point of the ray.
      * @param {Vec3} direction - The direction of the ray.
      * @returns {Ray} Self for chaining.

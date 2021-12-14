@@ -13,8 +13,6 @@ const tmpMat4 = new Mat4();
 
 /**
  * Oriented Box.
- *
- * @property {Mat4} [worldTransform] The world transform of the OBB.
  */
 class OrientedBox {
     /**
@@ -39,11 +37,11 @@ class OrientedBox {
     }
 
     /**
-     * @function
-     * @name OrientedBox#intersectsRay
-     * @description Test if a ray intersects with the OBB.
+     * Test if a ray intersects with the OBB.
+     *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -60,9 +58,8 @@ class OrientedBox {
     }
 
     /**
-     * @function
-     * @name OrientedBox#containsPoint
-     * @description Test if a point is inside a OBB.
+     * Test if a point is inside a OBB.
+     *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the OBB and false otherwise.
      */
@@ -72,11 +69,11 @@ class OrientedBox {
     }
 
     /**
-     * @function
-     * @name OrientedBox#intersectsBoundingSphere
-     * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
+     * Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
+     *
      * @param {BoundingSphere} sphere - Bounding Sphere to test.
-     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
+     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping or inside this OBB
+     * and false otherwise.
      */
     intersectsBoundingSphere(sphere) {
         this._modelTransform.transformPoint(sphere.center, tmpSphere.center);
@@ -89,6 +86,11 @@ class OrientedBox {
         return false;
     }
 
+    /**
+     * The world transform of the OBB.
+     *
+     * @type {Mat4}
+     */
     get worldTransform() {
         return this._worldTransform;
     }

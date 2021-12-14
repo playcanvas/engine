@@ -37,9 +37,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#add
-     * @description Combines two bounding boxes into one, enclosing both.
+     * Combines two bounding boxes into one, enclosing both.
+     *
      * @param {BoundingBox} other - Bounding box to add.
      */
     add(other) {
@@ -89,9 +88,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#copy
-     * @description Copies the contents of a source AABB.
+     * Copies the contents of a source AABB.
+     *
      * @param {BoundingBox} src - The AABB to copy from.
      */
     copy(src) {
@@ -100,9 +98,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#clone
-     * @description Returns a clone of the AABB.
+     * Returns a clone of the AABB.
+     *
      * @returns {BoundingBox} A duplicate AABB.
      */
     clone() {
@@ -110,9 +107,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#intersects
-     * @description Test whether two axis-aligned bounding boxes intersect.
+     * Test whether two axis-aligned bounding boxes intersect.
+     *
      * @param {BoundingBox} other - Bounding box to test against.
      * @returns {boolean} True if there is an intersection.
      */
@@ -208,9 +204,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#intersectsRay
-     * @description Test if a ray intersects with the AABB.
+     * Test if a ray intersects with the AABB.
+     *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
      * @returns {boolean} True if there is an intersection.
@@ -224,10 +219,9 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#setMinMax
-     * @description Sets the minimum and maximum corner of the AABB.
-     * Using this function is faster than assigning min and max separately.
+     * Sets the minimum and maximum corner of the AABB. Using this function is faster than
+     * assigning min and max separately.
+     *
      * @param {Vec3} min - The minimum corner of the AABB.
      * @param {Vec3} max - The maximum corner of the AABB.
      */
@@ -237,9 +231,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#getMin
-     * @description Return the minimum corner of the AABB.
+     * Return the minimum corner of the AABB.
+     *
      * @returns {Vec3} Minimum corner.
      */
     getMin() {
@@ -247,9 +240,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#getMax
-     * @description Return the maximum corner of the AABB.
+     * Return the maximum corner of the AABB.
+     *
      * @returns {Vec3} Maximum corner.
      */
     getMax() {
@@ -257,9 +249,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#containsPoint
-     * @description Test if a point is inside a AABB.
+     * Test if a point is inside a AABB.
+     *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
@@ -277,10 +268,9 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#setFromTransformedAabb
-     * @description Set an AABB to enclose the specified AABB if it were to be
-     * transformed by the specified 4x4 matrix.
+     * Set an AABB to enclose the specified AABB if it were to be transformed by the specified 4x4
+     * matrix.
+     *
      * @param {BoundingBox} aabb - Box to transform and enclose.
      * @param {Mat4} m - Transformation matrix to apply to source AABB.
      */
@@ -313,11 +303,12 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#compute
-     * @description Compute the size of the AABB to encapsulate all specified vertices.
-     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
-     * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array. All vertices are used if not specified.
+     * Compute the size of the AABB to encapsulate all specified vertices.
+     *
+     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
+     * AABB.
+     * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array.
+     * All vertices are used if not specified.
      */
     compute(vertices, numVerts) {
         numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
@@ -342,11 +333,11 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#intersectsBoundingSphere
-     * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
+     * Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
+     *
      * @param {BoundingSphere} sphere - Bounding Sphere to test.
-     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
+     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the
+     * AABB and false otherwise.
      */
     intersectsBoundingSphere(sphere) {
         const sq = this._distanceToBoundingSphereSq(sphere);

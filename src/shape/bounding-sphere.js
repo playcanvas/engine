@@ -38,11 +38,11 @@ class BoundingSphere {
     }
 
     /**
-     * @function
-     * @name BoundingSphere#intersectsRay
-     * @description Test if a ray intersects with the sphere.
+     * Test if a ray intersects with the sphere.
+     *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -70,9 +70,8 @@ class BoundingSphere {
     }
 
     /**
-     * @function
-     * @name BoundingSphere#intersectsBoundingSphere
-     * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
+     * Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
+     *
      * @param {BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
      */
