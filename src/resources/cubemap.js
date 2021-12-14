@@ -116,7 +116,8 @@ class CubemapHandler {
                         fixCubemapSeams: true,
                         addressU: ADDRESS_CLAMP_TO_EDGE,
                         addressV: ADDRESS_CLAMP_TO_EDGE,
-                        mipmaps: false
+                        // generate cubemaps on the top level only
+                        mipmaps: i === 0
                     });
                 }
             }
