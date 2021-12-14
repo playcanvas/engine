@@ -3,10 +3,11 @@
  */
 class Vec2 {
     /**
+     * The first element of the vector.
+     *
      * @field
      * @name Vec2#x
      * @type {number}
-     * @description The first element of the vector.
      * @example
      * var vec = new pc.Vec2(10, 20);
      *
@@ -18,10 +19,11 @@ class Vec2 {
      */
 
     /**
+     * The second element of the vector.
+     *
      * @field
      * @name Vec2#y
      * @type {number}
-     * @description The second element of the vector.
      * @example
      * var vec = new pc.Vec2(10, 20);
      *
@@ -52,9 +54,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#add
-     * @description Adds a 2-dimensional vector to another in place.
+     * Adds a 2-dimensional vector to another in place.
+     *
      * @param {Vec2} rhs - The vector to add to the specified vector.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -74,9 +75,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#add2
-     * @description Adds two 2-dimensional vectors together and returns the result.
+     * Adds two 2-dimensional vectors together and returns the result.
+     *
      * @param {Vec2} lhs - The first vector operand for the addition.
      * @param {Vec2} rhs - The second vector operand for the addition.
      * @returns {Vec2} Self for chaining.
@@ -98,9 +98,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#addScalar
-     * @description Adds a number to each element of a vector.
+     * Adds a number to each element of a vector.
+     *
      * @param {number} scalar - The number to add.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -119,9 +118,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#clone
-     * @description Returns an identical copy of the specified 2-dimensional vector.
+     * Returns an identical copy of the specified 2-dimensional vector.
+     *
      * @returns {Vec2} A 2-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec2(10, 20);
@@ -133,9 +131,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#copy
-     * @description Copies the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
+     * Copies the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
+     *
      * @param {Vec2} rhs - A vector to copy to the specified vector.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -154,9 +151,9 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#cross
-     * @description Returns the result of a cross product operation performed on the two specified 2-dimensional vectors.
+     * Returns the result of a cross product operation performed on the two specified 2-dimensional
+     * vectors.
+     *
      * @param {Vec2} rhs - The second 2-dimensional vector operand of the cross product.
      * @returns {number} The cross product of the two vectors.
      * @example
@@ -172,9 +169,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#distance
-     * @description Returns the distance between the two specified 2-dimensional vectors.
+     * Returns the distance between the two specified 2-dimensional vectors.
+     *
      * @param {Vec2} rhs - The second 2-dimensional vector to test.
      * @returns {number} The distance between the two vectors.
      * @example
@@ -190,9 +186,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#div
-     * @description Divides a 2-dimensional vector by another in place.
+     * Divides a 2-dimensional vector by another in place.
+     *
      * @param {Vec2} rhs - The vector to divide the specified vector by.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -212,10 +207,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#div2
-     * @description Divides one 2-dimensional vector by another and writes the result to
-     * the specified vector.
+     * Divides one 2-dimensional vector by another and writes the result to the specified vector.
+     *
      * @param {Vec2} lhs - The dividend vector (the vector being divided).
      * @param {Vec2} rhs - The divisor vector (the vector dividing the dividend).
      * @returns {Vec2} Self for chaining.
@@ -237,9 +230,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#divScalar
-     * @description Divides each element of a vector by a number.
+     * Divides each element of a vector by a number.
+     *
      * @param {number} scalar - The number to divide by.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -258,9 +250,9 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#dot
-     * @description Returns the result of a dot product operation performed on the two specified 2-dimensional vectors.
+     * Returns the result of a dot product operation performed on the two specified 2-dimensional
+     * vectors.
+     *
      * @param {Vec2} rhs - The second 2-dimensional vector operand of the dot product.
      * @returns {number} The result of the dot product operation.
      * @example
@@ -274,9 +266,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#equals
-     * @description Reports whether two vectors are equal.
+     * Reports whether two vectors are equal.
+     *
      * @param {Vec2} rhs - The vector to compare to the specified vector.
      * @returns {boolean} True if the vectors are equal and false otherwise.
      * @example
@@ -289,9 +280,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#length
-     * @description Returns the magnitude of the specified 2-dimensional vector.
+     * Returns the magnitude of the specified 2-dimensional vector.
+     *
      * @returns {number} The magnitude of the specified 2-dimensional vector.
      * @example
      * var vec = new pc.Vec2(3, 4);
@@ -304,9 +294,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#lengthSq
-     * @description Returns the magnitude squared of the specified 2-dimensional vector.
+     * Returns the magnitude squared of the specified 2-dimensional vector.
+     *
      * @returns {number} The magnitude of the specified 2-dimensional vector.
      * @example
      * var vec = new pc.Vec2(3, 4);
@@ -319,14 +308,13 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#lerp
-     * @description Returns the result of a linear interpolation between two specified 2-dimensional vectors.
+     * Returns the result of a linear interpolation between two specified 2-dimensional vectors.
+     *
      * @param {Vec2} lhs - The 2-dimensional to interpolate from.
      * @param {Vec2} rhs - The 2-dimensional to interpolate to.
-     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
-     * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
-     * a ray extrapolated from this line.
+     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
+     * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
+     * range, the linear interpolant will occur on a ray extrapolated from this line.
      * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(0, 0);
@@ -345,9 +333,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#mul
-     * @description Multiplies a 2-dimensional vector to another in place.
+     * Multiplies a 2-dimensional vector to another in place.
+     *
      * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -367,9 +354,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#mul2
-     * @description Returns the result of multiplying the specified 2-dimensional vectors together.
+     * Returns the result of multiplying the specified 2-dimensional vectors together.
+     *
      * @param {Vec2} lhs - The 2-dimensional vector used as the first multiplicand of the operation.
      * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
      * @returns {Vec2} Self for chaining.
@@ -391,9 +377,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#mulScalar
-     * @description Multiplies each element of a vector by a number.
+     * Multiplies each element of a vector by a number.
+     *
      * @param {number} scalar - The number to multiply by.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -412,10 +397,9 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#normalize
-     * @description Returns this 2-dimensional vector converted to a unit vector in place.
-     * If the vector has a length of zero, the vector's elements will be set to zero.
+     * Returns this 2-dimensional vector converted to a unit vector in place. If the vector has a
+     * length of zero, the vector's elements will be set to zero.
+     *
      * @returns {Vec2} Self for chaining.
      * @example
      * var v = new pc.Vec2(25, 0);
@@ -437,9 +421,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#floor
-     * @description Each element is set to the largest integer less than or equal to its value.
+     * Each element is set to the largest integer less than or equal to its value.
+     *
      * @returns {Vec2} Self for chaining.
      */
     floor() {
@@ -449,9 +432,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#ceil
-     * @description Each element is rounded up to the next largest integer.
+     * Each element is rounded up to the next largest integer.
+     *
      * @returns {Vec2} Self for chaining.
      */
     ceil() {
@@ -461,9 +443,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#round
-     * @description Each element is rounded up or down to the nearest integer.
+     * Each element is rounded up or down to the nearest integer.
+     *
      * @returns {Vec2} Self for chaining.
      */
     round() {
@@ -473,9 +454,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#min
-     * @description Each element is assigned a value from rhs parameter if it is smaller.
+     * Each element is assigned a value from rhs parameter if it is smaller.
+     *
      * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
      * @returns {Vec2} Self for chaining.
      */
@@ -486,9 +466,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#max
-     * @description Each element is assigned a value from rhs parameter if it is larger.
+     * Each element is assigned a value from rhs parameter if it is larger.
+     *
      * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
      * @returns {Vec2} Self for chaining.
      */
@@ -499,9 +478,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#set
-     * @description Sets the specified 2-dimensional vector to the supplied numerical values.
+     * Sets the specified 2-dimensional vector to the supplied numerical values.
+     *
      * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
      * @returns {Vec2} Self for chaining.
@@ -520,9 +498,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#sub
-     * @description Subtracts a 2-dimensional vector from another in place.
+     * Subtracts a 2-dimensional vector from another in place.
+     *
      * @param {Vec2} rhs - The vector to add to the specified vector.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -542,9 +519,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#sub2
-     * @description Subtracts two 2-dimensional vectors from one another and returns the result.
+     * Subtracts two 2-dimensional vectors from one another and returns the result.
+     *
      * @param {Vec2} lhs - The first vector operand for the addition.
      * @param {Vec2} rhs - The second vector operand for the addition.
      * @returns {Vec2} Self for chaining.
@@ -566,9 +542,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#subScalar
-     * @description Subtracts a number from each element of a vector.
+     * Subtracts a number from each element of a vector.
+     *
      * @param {number} scalar - The number to subtract.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -587,9 +562,8 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @name Vec2#toString
-     * @description Converts the vector to string form.
+     * Converts the vector to string form.
+     *
      * @returns {string} The vector in string form.
      * @example
      * var v = new pc.Vec2(20, 10);
@@ -601,75 +575,62 @@ class Vec2 {
     }
 
     /**
-     * @function
-     * @private
-     * @name Vec2#angleRad
-     * @description Calculates the angle between two Vec2's in radians.
+     * Calculates the angle between two Vec2's in radians.
+     *
      * @param {Vec2} lhs - The first vector operand for the calculation.
      * @param {Vec2} rhs - The second vector operand for the calculation.
      * @returns {number} The calculated angle in radians.
+     * @private
      */
     static angleRad(lhs, rhs) {
         return Math.atan2(lhs.x * rhs.y - lhs.y * rhs.x, lhs.x * rhs.x + lhs.y * rhs.y);
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Vec2.ZERO
+     * A constant vector set to [0, 0].
+     *
      * @type {Vec2}
-     * @description A constant vector set to [0, 0].
+     * @readonly
      */
     static ZERO = Object.freeze(new Vec2(0, 0));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Vec2.ONE
+     * A constant vector set to [1, 1].
+     *
      * @type {Vec2}
-     * @description A constant vector set to [1, 1].
+     * @readonly
      */
     static ONE = Object.freeze(new Vec2(1, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Vec2.UP
+     * A constant vector set to [0, 1].
+     *
      * @type {Vec2}
-     * @description A constant vector set to [0, 1].
+     * @readonly
      */
     static UP = Object.freeze(new Vec2(0, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Vec2.DOWN
+     * A constant vector set to [0, -1].
+     *
      * @type {Vec2}
-     * @description A constant vector set to [0, -1].
+     * @readonly
      */
     static DOWN = Object.freeze(new Vec2(0, -1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Vec2.RIGHT
+     * A constant vector set to [1, 0].
+     *
      * @type {Vec2}
-     * @description A constant vector set to [1, 0].
+     * @readonly
      */
     static RIGHT = Object.freeze(new Vec2(1, 0));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Vec2.LEFT
+     * A constant vector set to [-1, 0].
+     *
      * @type {Vec2}
-     * @description A constant vector set to [-1, 0].
+     * @readonly
      */
     static LEFT = Object.freeze(new Vec2(-1, 0));
 }

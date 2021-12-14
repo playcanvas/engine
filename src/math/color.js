@@ -34,9 +34,8 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#clone
-     * @description Returns a clone of the specified color.
+     * Returns a clone of the specified color.
+     *
      * @returns {Color} A duplicate color object.
      */
     clone() {
@@ -44,9 +43,8 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#copy
-     * @description Copies the contents of a source color to a destination color.
+     * Copies the contents of a source color to a destination color.
+     *
      * @param {Color} rhs - A color to copy to the specified color.
      * @returns {Color} Self for chaining.
      * @example
@@ -67,9 +65,8 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#equals
-     * @description Reports whether two colors are equal.
+     * Reports whether two colors are equal.
+     *
      * @param {Color} rhs - The color to compare to the specified color.
      * @returns {boolean} True if the colors are equal and false otherwise.
      * @example
@@ -82,9 +79,8 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#set
-     * @description Assign values to the color components, including alpha.
+     * Assign values to the color components, including alpha.
+     *
      * @param {number} r - The value for red (0-1).
      * @param {number} g - The value for blue (0-1).
      * @param {number} b - The value for green (0-1).
@@ -101,14 +97,13 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#lerp
-     * @description Returns the result of a linear interpolation between two specified colors.
+     * Returns the result of a linear interpolation between two specified colors.
+     *
      * @param {Color} lhs - The color to interpolate from.
      * @param {Color} rhs - The color to interpolate to.
-     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
-     * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
-     * a ray extrapolated from this line.
+     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
+     * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
+     * range, the linear interpolant will occur on a ray extrapolated from this line.
      * @returns {Color} Self for chaining.
      * @example
      * var a = new pc.Color(0, 0, 0);
@@ -129,11 +124,11 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#fromString
-     * @description Set the values of the color from a string representation '#11223344' or '#112233'.
-     * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values.
-     * This is the same format used in HTML/CSS.
+     * Set the values of the color from a string representation '#11223344' or '#112233'.
+     *
+     * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where
+     * RR, GG, BB, AA are red, green, blue and alpha values. This is the same format used in
+     * HTML/CSS.
      * @returns {Color} Self for chaining.
      */
     fromString(hex) {
@@ -152,11 +147,10 @@ class Color {
     }
 
     /**
-     * @function
-     * @name Color#toString
-     * @description Converts the color to string form. The format is '#RRGGBBAA', where
-     * RR, GG, BB, AA are the red, green, blue and alpha values. When the alpha value is not
-     * included (the default), this is the same format as used in HTML/CSS.
+     * Converts the color to string form. The format is '#RRGGBBAA', where RR, GG, BB, AA are the
+     * red, green, blue and alpha values. When the alpha value is not included (the default), this
+     * is the same format as used in HTML/CSS.
+     *
      * @param {boolean} alpha - If true, the output string will include the alpha value.
      * @returns {string} The color in string form.
      * @example
@@ -180,92 +174,74 @@ class Color {
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.BLACK
+     * A constant color set to black [0, 0, 0, 1].
+     *
      * @type {Color}
-     * @description A constant color set to black [0, 0, 0, 1].
+     * @readonly
      */
     static BLACK = Object.freeze(new Color(0, 0, 0, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.BLUE
+     * A constant color set to blue [0, 0, 1, 1].
+     *
      * @type {Color}
-     * @description A constant color set to blue [0, 0, 1, 1].
+     * @readonly
      */
     static BLUE = Object.freeze(new Color(0, 0, 1, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.CYAN
+     * A constant color set to cyan [0, 1, 1, 1].
+     *
      * @type {Color}
-     * @description A constant color set to cyan [0, 1, 1, 1].
+     * @readonly
      */
     static CYAN = Object.freeze(new Color(0, 1, 1, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.GRAY
+     * A constant color set to gray [0.5, 0.5, 0.5, 1].
+     *
      * @type {Color}
-     * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
+     * @readonly
      */
     static GRAY = Object.freeze(new Color(0.5, 0.5, 0.5, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.GREEN
+     * A constant color set to green [0, 1, 0, 1].
+     *
      * @type {Color}
-     * @description A constant color set to green [0, 1, 0, 1].
+     * @readonly
      */
     static GREEN = Object.freeze(new Color(0, 1, 0, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.MAGENTA
+     * A constant color set to magenta [1, 0, 1, 1].
+     *
      * @type {Color}
-     * @description A constant color set to magenta [1, 0, 1, 1].
+     * @readonly
      */
     static MAGENTA = Object.freeze(new Color(1, 0, 1, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.RED
+     * A constant color set to red [1, 0, 0, 1].
+     *
      * @type {Color}
-     * @description A constant color set to red [1, 0, 0, 1].
+     * @readonly
      */
     static RED = Object.freeze(new Color(1, 0, 0, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.WHITE
+     * A constant color set to white [1, 1, 1, 1].
+     *
      * @type {Color}
-     * @description A constant color set to white [1, 1, 1, 1].
+     * @readonly
      */
     static WHITE = Object.freeze(new Color(1, 1, 1, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Color.YELLOW
+     * A constant color set to yellow [1, 1, 0, 1].
+     *
      * @type {Color}
-     * @description A constant color set to yellow [1, 1, 0, 1].
+     * @readonly
      */
     static YELLOW = Object.freeze(new Color(1, 1, 0, 1));
 }

@@ -50,9 +50,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#add
-     * @description Add a new key to the curve.
+     * Add a new key to the curve.
+     *
      * @param {number} time - Time to add new key.
      * @param {number} value - Value of new key.
      * @returns {number[]} [time, value] pair.
@@ -74,9 +73,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#get
-     * @description Return a specific key.
+     * Return a specific key.
+     *
      * @param {number} index - The index of the key to return.
      * @returns {number[]} The key at the specified index.
      */
@@ -85,9 +83,7 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#sort
-     * @description Sort keys by time.
+     * Sort keys by time.
      */
     sort() {
         this.keys.sort(function (a, b) {
@@ -96,9 +92,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#value
-     * @description Returns the interpolated value of the curve at specified time.
+     * Returns the interpolated value of the curve at specified time.
+     *
      * @param {number} time - The time at which to calculate the value.
      * @returns {number} The interpolated value.
      */
@@ -128,9 +123,8 @@ class Curve {
     }
 
     /**
-     * @function
-     * @name Curve#clone
-     * @description Returns a clone of the specified curve object.
+     * Returns a clone of the specified curve object.
+     *
      * @returns {Curve} A clone of the specified curve.
      */
     clone() {
@@ -142,12 +136,11 @@ class Curve {
     }
 
     /**
-     * @private
-     * @function
-     * @name Curve#quantize
-     * @description Sample the curve at regular intervals over the range [0..1].
+     * Sample the curve at regular intervals over the range [0..1].
+     *
      * @param {number} precision - The number of samples to return.
      * @returns {Float32Array} The set of quantized values.
+     * @private
      */
     quantize(precision) {
         precision = Math.max(precision, 2);
@@ -165,15 +158,14 @@ class Curve {
     }
 
     /**
-     * @private
-     * @function
-     * @name Curve#quantizeClamped
-     * @description Sample the curve at regular intervals over the range [0..1]
-     * and clamp the resulting samples to [min..max].
+     * Sample the curve at regular intervals over the range [0..1] and clamp the resulting samples
+     * to [min..max].
+     *
      * @param {number} precision - The number of samples to return.
      * @param {number} min - The minimum output value.
      * @param {number} max - The maximum output value.
      * @returns {Float32Array} The set of quantized values.
+     * @private
      */
     quantizeClamped(precision, min, max) {
         const result = this.quantize(precision);
