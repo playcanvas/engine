@@ -106,5 +106,20 @@ CubemapRenderer.prototype.initialize = function () {
 
         // set up its rotation
         e.setRotation(cameraRotations[i]);
+
+        // Before the first camera renders, trigger onCubemapPostRender event on the entity.
+        if (i === 0) {
+            e.camera.onPreRender = () => {
+                this.entity.fire('onCubemapPreRender');
+            };
+        }
+
+        // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
+        // This can be listened to by the user, and the resuling cubemap can be further processed (e.g prefiltered)
+        if (i === 5) {
+            e.camera.onPostRender = () => {
+                this.entity.fire('onCubemapPostRender');
+            };
+        }
     }
 };
