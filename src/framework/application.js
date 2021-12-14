@@ -24,7 +24,7 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL
+    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
@@ -38,6 +38,7 @@ import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -254,6 +255,7 @@ class Application extends EventHandler {
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
         this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
+        this._initDefaultMaterial();
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
@@ -686,6 +688,13 @@ class Application extends EventHandler {
      */
     static getApplication(id) {
         return id ? Application._applications[id] : getApplication();
+    }
+
+    _initDefaultMaterial() {
+        const material = new StandardMaterial();
+        material.name = "Default Material";
+        material.shadingModel = SPECULAR_BLINN;
+        DefaultMaterial.add(this.graphicsDevice, material);
     }
 
     /**

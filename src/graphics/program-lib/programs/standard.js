@@ -1207,6 +1207,9 @@ const standard = {
             code += chunks.lightDiffuseLambertPS;
             if (hasAreaLights || options.clusteredLightingEnabled) code += chunks.ltc;
         }
+
+        code += '\n';
+
         let useOldAmbient = false;
         if (options.useSpecular) {
 

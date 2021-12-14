@@ -354,10 +354,14 @@ class LayerComposition extends EventHandler {
                     }
                 }
 
-                // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
-                // and set these up on the first render action for the camera. Only do it if camera renders any layers.
+                // if the camera renders any layers.
                 if (cameraFirstRenderActionIndex < renderActionCount) {
+                    // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
+                    // and set these up on the first render action for the camera.
                     this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
+
+                    // mark the last render action as last one using the camera
+                    lastRenderAction.lastCameraUse = true;
                 }
 
                 // if no render action for this camera was marked for end of postprocessing, mark last one
@@ -614,6 +618,7 @@ class LayerComposition extends EventHandler {
         renderAction.clearDepth = clearDepth;
         renderAction.clearStencil = clearStencil;
         renderAction.firstCameraUse = cameraFirstRenderAction;
+        renderAction.lastCameraUse = false;
 
         return renderAction;
     }
@@ -678,6 +683,7 @@ class LayerComposition extends EventHandler {
                     " Lights: (" + layer._clusteredLightsSet.size + "/" + layer._lightsSet.size + ")" +
                     " " + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : "").padEnd(10, " ") +
                     (ra.firstCameraUse ? " CAM-FIRST" : "") +
+                    (ra.lastCameraUse ? " CAM-LAST" : "") +
                     (ra.triggerPostprocess ? " POSTPROCESS" : "") +
                     (dirLightCount ? (" DirLights: " + dirLightCount) : "")
                 );
