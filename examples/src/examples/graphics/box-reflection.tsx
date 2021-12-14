@@ -32,6 +32,7 @@ class ClusteredShadowsOmniExample extends Example {
             <Panel headerText='Settings'>
                 {<LabelGroup text='Update'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.updateFrequency' }} type="number" options={[
+                        { v: 0, t: 'Once' },
                         { v: 1, t: 'Every frame' },
                         { v: 5, t: 'Every 5 frames' },
                         { v: 30, t: 'Every 30 frames' }
@@ -59,7 +60,7 @@ class ClusteredShadowsOmniExample extends Example {
         data.set('settings', {
             updateFrequency: 1,
             shininess: 90,
-            metalness: 0.5,
+            metalness: 0.7,
             bumpiness: 0.2
         });
 
@@ -302,10 +303,15 @@ class ClusteredShadowsOmniExample extends Example {
             lightOmni.setLocalPosition(300 * Math.sin(time), 300, 300 * Math.cos(time));
 
             // update the reflection probe as needed
+            const updateFrequency = data.get('settings.updateFrequency');
             updateProbeCount--;
+            if (updateFrequency === 0)
+                updateProbeCount = 1;
+
             if (updateProbeCount <= 0) {
+                // enable probe rendering
                 probe.enabled = true;
-                updateProbeCount = data.get('settings.updateFrequency');
+                updateProbeCount = updateFrequency;
             } else {
                 probe.enabled = false;
             }
