@@ -425,8 +425,15 @@ class ButtonComponent extends Component {
 
         if (this._imageReference.hasComponent('element')) {
             this._isApplyingSprite = true;
-            this._imageReference.entity.element.spriteAsset = spriteAsset;
-            this._imageReference.entity.element.spriteFrame = spriteFrame;
+
+            if (this._imageReference.entity.element.spriteAsset !== spriteAsset) {
+                this._imageReference.entity.element.spriteAsset = spriteAsset;
+            }
+
+            if (this._imageReference.entity.element.spriteFrame !== spriteFrame) {
+                this._imageReference.entity.element.spriteFrame = spriteFrame;
+            }
+
             this._isApplyingSprite = false;
         }
     }
@@ -442,26 +449,39 @@ class ButtonComponent extends Component {
     }
 
     _applyTintImmediately(tintColor) {
-        if (this._imageReference.hasComponent('element') && tintColor) {
-            this._isApplyingTint = true;
-            this._imageReference.entity.element.color = toColor3(tintColor);
+        if (!tintColor || !this._imageReference.hasComponent('element'))
+            return;
+
+        const color3 = toColor3(tintColor);
+
+        this._isApplyingTint = true;
+
+        if (!color3.equals(this._imageReference.entity.element.color))
+            this._imageReference.entity.element.color = color3;
+
+        if (this._imageReference.entity.element.opacity !== tintColor.a)
             this._imageReference.entity.element.opacity = tintColor.a;
-            this._isApplyingTint = false;
-        }
+
+        this._isApplyingTint = false;
     }
 
     _applyTintWithTween(tintColor) {
-        if (this._imageReference.hasComponent('element') && tintColor) {
-            const color = this._imageReference.entity.element.color;
-            const opacity = this._imageReference.entity.element.opacity;
+        if (!tintColor || !this._imageReference.hasComponent('element'))
+            return;
 
-            this._tweenInfo = {
-                startTime: now(),
-                from: new Color(color.r, color.g, color.b, opacity),
-                to: tintColor.clone(),
-                lerpColor: new Color()
-            };
-        }
+        const color3 = toColor3(tintColor);
+        const color = this._imageReference.entity.element.color;
+        const opacity = this._imageReference.entity.element.opacity;
+
+        if (color3.equals(color) && tintColor.a === opacity)
+            return;
+
+        this._tweenInfo = {
+            startTime: now(),
+            from: new Color(color.r, color.g, color.b, opacity),
+            to: tintColor.clone(),
+            lerpColor: new Color()
+        };
     }
 
     _updateTintTween() {
