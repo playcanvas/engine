@@ -1895,6 +1895,11 @@ class ForwardRenderer {
 
             if (camera) {
                 camera.frameBegin(renderAction.renderTarget);
+
+                // callback on the camera component before rendering with this camera for the first time during the frame
+                if (renderAction.firstCameraUse && camera.onPreRender) {
+                    camera.onPreRender();
+                }
             }
 
             // Call prerender callback if there's one
@@ -1981,13 +1986,18 @@ class ForwardRenderer {
 
                 camera.frameEnd();
 
+                // callback on the camera component when we're done rendering all layers with this camera
+                if (renderAction.lastCameraUse && camera.onPostRender) {
+                    camera.onPostRender();
+                }
+
                 // trigger postprocessing for camera
                 if (renderAction.triggerPostprocess && camera.onPostprocessing) {
-                    camera.onPostprocessing(camera);
+                    camera.onPostprocessing();
                 }
             }
 
-            // Call postrender callback if there's one
+            // Call layer's postrender callback if there's one
             if (!transparent && layer.onPostRenderOpaque) {
                 layer.onPostRenderOpaque(cameraPass);
             } else if (transparent && layer.onPostRenderTransparent) {

@@ -133,6 +133,8 @@ const properties = [
  * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of the camera stops being applied to.
  * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
  * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
+ * @property {Function} onPreRender Custom function that is called before the camera renders the scene.
+ * @property {Function} onPostRender Custom function that is called after the camera renders the scene.
  */
 class CameraComponent extends Component {
     constructor(system, entity) {
@@ -145,6 +147,10 @@ class CameraComponent extends Component {
 
         // event called when postprocessing should execute
         this.onPostprocessing = null;
+
+        // events called during the frame before and after the camera renders
+        this.onPreRender = null;
+        this.onPostRender = null;
 
         // layer id at which the postprocessing stops for the camera
         this._disablePostEffectsLayer = LAYERID_UI;
