@@ -135,7 +135,7 @@ const properties = [
  * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
  * @property {Function} onPreRender Custom function that is called before the camera renders the scene.
  * @property {Function} onPostRender Custom function that is called after the camera renders the scene.
-*/
+ */
 class CameraComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
