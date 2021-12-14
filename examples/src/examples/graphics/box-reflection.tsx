@@ -23,7 +23,8 @@ class ClusteredShadowsOmniExample extends Example {
         return <>
             <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
             <AssetLoader name='script' type='script' url='static/scripts/utils/cubemap-renderer.js' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name='normal' type='texture' url='static/assets/textures/black-tiles07-normal.png' />
+            <AssetLoader name='roughness' type='texture' url='static/assets/textures/black-tiles07-roughness.png' />
         </>;
     }
 
@@ -36,6 +37,14 @@ class ClusteredShadowsOmniExample extends Example {
                         { v: 1, t: 'Every frame' },
                         { v: 5, t: 'Every 5 frames' },
                         { v: 30, t: 'Every 30 frames' }
+                    ]} />
+                </LabelGroup>}
+                {<LabelGroup text='Samples'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.numSamples' }} type="number" options={[
+                        { v: 16, t: '16' },
+                        { v: 32, t: '32' },
+                        { v: 128, t: '128' },
+                        { v: 1024, t: '1024' }
                     ]} />
                 </LabelGroup>}
                 <LabelGroup text='Shininess'>
@@ -59,6 +68,7 @@ class ClusteredShadowsOmniExample extends Example {
 
         data.set('settings', {
             updateFrequency: 1,
+            numSamples: 128,
             shininess: 90,
             metalness: 0.7,
             bumpiness: 0.2
@@ -93,9 +103,11 @@ class ClusteredShadowsOmniExample extends Example {
         roomMaterial.useMetalness = true;
         roomMaterial.diffuse = pc.Color.WHITE;
         roomMaterial.normalMap = assets.normal.resource;
-        roomMaterial.normalMapTiling.set(5, 5);
+        roomMaterial.normalMapTiling.set(0.5, 0.5);
         roomMaterial.bumpiness = 0.1;
         roomMaterial.shininess = 90;
+        roomMaterial.glossMap = assets.roughness.resource;
+        roomMaterial.glossMapTiling.set(0.5, 0.5);
         roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
         roomMaterial.metalness = 0.5;
 
@@ -122,9 +134,10 @@ class ClusteredShadowsOmniExample extends Example {
         sphereMaterial.useMetalness = true;
         sphereMaterial.diffuse = pc.Color.WHITE;
         sphereMaterial.normalMap = assets.normal.resource;
-        sphereMaterial.normalMapTiling.set(5, 5);
+        sphereMaterial.normalMapTiling.set(1, 1);
         sphereMaterial.bumpiness = 0.7;
         sphereMaterial.shininess = 90;
+        sphereMaterial.glossMap = assets.roughness.resource;
         sphereMaterial.metalness = 0.6;
         sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
         sphereMaterial.update();
@@ -208,7 +221,7 @@ class ClusteredShadowsOmniExample extends Example {
             layers: [excludedLayer.id], // add it to excluded layer, we don't want the light captured in the reflection
             castShadows: false,
             color: pc.Color.WHITE,
-            intensity: 4,
+            intensity: 2,
             range: 1000
         });
 
@@ -282,7 +295,8 @@ class ClusteredShadowsOmniExample extends Example {
             // prefilter just rendered cubemap into envAtlas, so that it can be used for reflection during the rest of the frame
             // @ts-ignore
             pc.EnvLighting.generateAtlas(probe.script.cubemapRenderer.cubeMap, {
-                target: envAtlas
+                target: envAtlas,
+                numSamples: data.get('settings.numSamples')
             });
         });
 
