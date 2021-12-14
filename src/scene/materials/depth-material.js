@@ -7,11 +7,10 @@ import { Material } from './material.js';
  */
 class DepthMaterial extends Material {
     /**
-     * @private
-     * @function
-     * @name DepthMaterial#clone
-     * @description Duplicates a Depth material.
+     * Duplicates a Depth material.
+     *
      * @returns {DepthMaterial} A cloned Depth material.
+     * @private
      */
     clone() {
         const clone = new DepthMaterial();

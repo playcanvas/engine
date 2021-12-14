@@ -3,16 +3,41 @@ import { MeshInstance } from './mesh-instance.js';
 import { MorphInstance } from './morph-instance.js';
 import { SkinInstance } from './skin-instance.js';
 
+/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
+
 /**
  * A model is a graphical object that can be added to or removed from a scene. It contains a
  * hierarchy and any number of mesh instances.
- *
- * @property {GraphNode} graph The root node of the model's graph node hierarchy.
- * @property {MeshInstance[]} meshInstances An array of MeshInstances contained in this model.
- * @property {SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
- * @property {MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
  */
 class Model {
+    /**
+     * The root node of the model's graph node hierarchy.
+     *
+     * @type {GraphNode}
+     */
+    graph = null;
+
+    /**
+     * An array of MeshInstances contained in this model.
+     *
+     * @type {MeshInstance[]}
+     */
+    meshInstances = [];
+
+    /**
+     * An array of SkinInstances contained in this model.
+     *
+     * @type {SkinInstance[]}
+     */
+    skinInstances = [];
+
+    /**
+     * An array of MorphInstances contained in this model.
+     *
+     * @type {MorphInstance[]}
+     */
+    morphInstances = [];
+
     /**
      * Creates a new model.
      *
@@ -21,11 +46,6 @@ class Model {
      * var model = new pc.Model();
      */
     constructor() {
-        this.graph = null;
-        this.meshInstances = [];
-        this.skinInstances = [];
-        this.morphInstances = [];
-
         this.cameras = [];
         this.lights = [];
 
@@ -71,11 +91,9 @@ class Model {
     }
 
     /**
-     * @function
-     * @name Model#clone
-     * @description Clones a model. The returned model has a newly created hierarchy
-     * and mesh instances, but meshes are shared between the clone and the specified
-     * model.
+     * Clones a model. The returned model has a newly created hierarchy and mesh instances, but
+     * meshes are shared between the clone and the specified model.
+     *
      * @returns {Model} A clone of the specified model.
      * @example
      * var clonedModel = model.clone();
@@ -159,12 +177,11 @@ class Model {
     }
 
     /**
-     * @function
-     * @name Model#destroy
-     * @description Destroys skinning texture and possibly deletes vertex/index buffers of a model.
-     * Mesh is reference-counted, so buffers are only deleted if all models with referencing mesh instances were deleted.
-     * That means all in-scene models + the "base" one (asset.resource) which is created when the model is parsed.
-     * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
+     * Destroys skinning texture and possibly deletes vertex/index buffers of a model. Mesh is
+     * reference-counted, so buffers are only deleted if all models with referencing mesh instances
+     * were deleted. That means all in-scene models + the "base" one (asset.resource) which is
+     * created when the model is parsed. It is recommended to use asset.unload() instead, which
+     * will also remove the model from the scene.
      */
     destroy() {
         const meshInstances = this.meshInstances;
@@ -175,12 +192,10 @@ class Model {
     }
 
     /**
-     * @function
-     * @name Model#generateWireframe
-     * @description Generates the necessary internal data for a model to be
-     * renderable as wireframe. Once this function has been called, any mesh
-     * instance in the model can have its renderStyle property set to
-     * {@link RENDERSTYLE_WIREFRAME}.
+     * Generates the necessary internal data for a model to be renderable as wireframe. Once this
+     * function has been called, any mesh instance in the model can have its renderStyle property
+     * set to {@link RENDERSTYLE_WIREFRAME}.
+     *
      * @example
      * model.generateWireframe();
      * for (var i = 0; i < model.meshInstances.length; i++) {

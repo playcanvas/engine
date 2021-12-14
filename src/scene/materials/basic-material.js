@@ -41,10 +41,9 @@ class BasicMaterial extends Material {
     }
 
     /**
-     * @function
-     * @name BasicMaterial#clone
-     * @description Duplicates a Basic material. All properties are duplicated except textures
-     * where only the references are copied.
+     * Duplicates a Basic material. All properties are duplicated except textures where only the
+     * references are copied.
+     *
      * @returns {BasicMaterial} A cloned Basic material.
      */
     clone() {

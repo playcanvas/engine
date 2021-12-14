@@ -443,29 +443,6 @@ let _params = new Set();
  * - ambientSource: one of "ambientSH", "envAtlas", "constant"
  * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
  * @augments Material
- * @example
- * // Create a new Standard material
- * var material = new pc.StandardMaterial();
- *
- * // Update the material's diffuse and specular properties
- * material.diffuse.set(1, 0, 0);
- * material.specular.set(1, 1, 1);
- *
- * // Notify the material that it has been modified
- * material.update();
- * @example
- * // Create a new Standard material
- * var material = new pc.StandardMaterial();
- *
- * // Assign a texture to the diffuse slot
- * material.diffuseMap = texture;
- *
- * // Use the alpha channel of the texture for alpha testing with a reference value of 0.5
- * material.opacityMap = texture;
- * material.alphaTest = 0.5;
- *
- * // Notify the material that it has been modified
- * material.update();
  */
 class StandardMaterial extends Material {
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;

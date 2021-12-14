@@ -345,9 +345,7 @@ class Material {
     }
 
     /**
-     * @function
-     * @name Material#update
-     * @description Applies any changes made to the material's properties.
+     * Applies any changes made to the material's properties.
      */
     update() {
         this.dirty = true;
@@ -374,9 +372,8 @@ class Material {
     }
 
     /**
-     * @function
-     * @name Material#getParameter
-     * @description Retrieves the specified shader parameter from a material.
+     * Retrieves the specified shader parameter from a material.
+     *
      * @param {string} name - The name of the parameter to query.
      * @returns {object} The named parameter.
      */
@@ -385,9 +382,8 @@ class Material {
     }
 
     /**
-     * @function
-     * @name Material#setParameter
-     * @description Sets a shader parameter on a material.
+     * Sets a shader parameter on a material.
+     *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture} data - The value for the specified parameter.
      */
@@ -417,9 +413,8 @@ class Material {
     }
 
     /**
-     * @function
-     * @name Material#deleteParameter
-     * @description Deletes a shader parameter on a material.
+     * Deletes a shader parameter on a material.
+     *
      * @param {string} name - The name of the parameter to delete.
      */
     deleteParameter(name) {
@@ -445,9 +440,8 @@ class Material {
     }
 
     /**
-     * @function
-     * @name Material#destroy
-     * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
+     * Removes this material from the scene and possibly frees up memory from its shaders (if there
+     * are no other materials using it).
      */
     destroy() {
         this.variants = {};

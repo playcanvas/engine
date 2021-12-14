@@ -542,11 +542,10 @@ class MeshInstance {
     }
 
     /**
-     * @function
-     * @name MeshInstance#setInstancing
-     * @description Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
-     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
-     * Pass null to turn off hardware instancing.
+     * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
+     *
+     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
+     * (usually world matrices). Pass null to turn off hardware instancing.
      */
     setInstancing(vertexBuffer) {
         if (vertexBuffer) {
@@ -574,9 +573,8 @@ class MeshInstance {
     }
 
     /**
-     * @function
-     * @name MeshInstance#getParameter
-     * @description Retrieves the specified shader parameter from a mesh instance.
+     * Retrieves the specified shader parameter from a mesh instance.
+     *
      * @param {string} name - The name of the parameter to query.
      * @returns {object} The named parameter.
      */
@@ -585,13 +583,13 @@ class MeshInstance {
     }
 
     /**
-     * @function
-     * @name MeshInstance#setParameter
-     * @description Sets a shader parameter on a mesh instance. Note that this parameter will take precedence over parameter of the same name
-     * if set on Material this mesh instance uses for rendering.
+     * Sets a shader parameter on a mesh instance. Note that this parameter will take precedence
+     * over parameter of the same name if set on Material this mesh instance uses for rendering.
+     *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture} data - The value for the specified parameter.
-     * @param {number} [passFlags] - Mask describing which passes the material should be included in.
+     * @param {number} [passFlags] - Mask describing which passes the material should be included
+     * in.
      */
     setParameter(name, data, passFlags = -262141) {
 
@@ -646,9 +644,8 @@ class MeshInstance {
     }
 
      /**
-      * @function
-      * @name MeshInstance#deleteParameter
-      * @description Deletes a shader parameter on a mesh instance.
+      * Deletes a shader parameter on a mesh instance.
+      *
       * @param {string} name - The name of the parameter to delete.
       */
     deleteParameter(name) {

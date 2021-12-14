@@ -431,7 +431,7 @@ class Lightmapper {
         return lightmapSize;
     }
 
-    setLightmaping(nodes, value, passCount, shaderDefs) {
+    setLightmapping(nodes, value, passCount, shaderDefs) {
 
         for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
@@ -462,18 +462,18 @@ class Lightmapper {
     }
 
     /**
-     * @function
-     * @name Lightmapper#bake
-     * @description Generates and applies the lightmaps.
-     * @param {Entity[]|null} nodes - An array of entities (with model or render components) to render
-     * lightmaps for. If not supplied, the entire scene will be baked.
+     * Generates and applies the lightmaps.
+     *
+     * @param {Entity[]|null} nodes - An array of entities (with model or render components) to
+     * render lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
      * - {@link BAKE_COLOR}: single color lightmap
-     * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for
+     * bump/specular)
      *
-     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
-     * {@link BAKE_COLORDIR}.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
+     * Defaults to {@link BAKE_COLORDIR}.
      */
     bake(nodes, mode = BAKE_COLORDIR) {
 
@@ -528,7 +528,7 @@ class Lightmapper {
 
             // disable lightmapping
             const passCount = mode === BAKE_COLORDIR ? 2 : 1;
-            this.setLightmaping(bakeNodes, false, passCount);
+            this.setLightmapping(bakeNodes, false, passCount);
 
             this.initBake(device);
             this.bakeInternal(passCount, bakeNodes, allNodes);
@@ -544,7 +544,7 @@ class Lightmapper {
             if (this.scene.ambientBake) {
                 shaderDefs |= SHADERDEF_LMAMBIENT;
             }
-            this.setLightmaping(bakeNodes, true, passCount, shaderDefs);
+            this.setLightmapping(bakeNodes, true, passCount, shaderDefs);
 
             // clean up memory
             this.finishBake(bakeNodes);
@@ -752,7 +752,7 @@ class Lightmapper {
         return shadowCam;
     }
 
-    // preparas camera / frustum of the light for rendering the bakeNode
+    // prepares camera / frustum of the light for rendering the bakeNode
     // returns true if light affects the bakeNode
     lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam, casterBounds) {
 
