@@ -1,13 +1,12 @@
 /** @typedef {import('./touch-device.js').TouchDevice} TouchDevice */
 
 /**
- * @function
- * @name getTouchTargetCoords
- * @description Similar to {@link getTargetCoords} for the MouseEvents.
- * This function takes a browser Touch object and returns the co-ordinates of the
- * touch relative to the target element.
+ * Similar to {@link getTargetCoords} for the MouseEvents. This function takes a browser Touch
+ * object and returns the co-ordinates of the touch relative to the target element.
+ *
  * @param {Touch} touch - The browser Touch object.
- * @returns {object} The co-ordinates of the touch relative to the touch.target element. In the format {x, y}.
+ * @returns {object} The co-ordinates of the touch relative to the touch.target element. In the
+ * format {x, y}.
  */
 function getTouchTargetCoords(touch) {
     let totalOffsetX = 0;
@@ -97,10 +96,10 @@ class TouchEvent {
     }
 
     /**
-     * @function
-     * @name TouchEvent#getTouchById
-     * @description Get an event from one of the touch lists by the id. It is useful to access
-     * touches by their id so that you can be sure you are referencing the same touch.
+     * Get an event from one of the touch lists by the id. It is useful to access
+     * touches by their id so that you can be sure you are referencing the same
+     * touch.
+     *
      * @param {number} id - The identifier of the touch.
      * @param {Touch[]} list - An array of touches to search.
      * @returns {Touch} The {@link Touch} object or null.

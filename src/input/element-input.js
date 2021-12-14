@@ -115,10 +115,6 @@ function intersectLineQuad(p, q, corners) {
 /**
  * Represents an input event fired on a {@link ElementComponent}. When an event is raised on an
  * ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
- *
- * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
- * @property {ElementComponent} element The ElementComponent that this event was originally raised on.
- * @property {CameraComponent} camera The CameraComponent that this event was originally raised via.
  */
 class ElementInputEvent {
     /**
@@ -132,16 +128,33 @@ class ElementInputEvent {
      * via.
      */
     constructor(event, element, camera) {
+        /**
+         * The MouseEvent or TouchEvent that was originally raised.
+         *
+         * @type {MouseEvent|TouchEvent}
+         */
         this.event = event;
+
+        /**
+         * The ElementComponent that this event was originally raised on.
+         *
+         * @type {ElementComponent}
+         */
         this.element = element;
+
+        /**
+         * The CameraComponent that this event was originally raised via.
+         *
+         * @type {CameraComponent}
+         */
         this.camera = camera;
+
         this._stopPropagation = false;
     }
 
     /**
-     * @function
-     * @name ElementInputEvent#stopPropagation
-     * @description Stop propagation of the event to parent {@link ElementComponent}s. This also stops propagation of the event to other event listeners of the original DOM Event.
+     * Stop propagation of the event to parent {@link ElementComponent}s. This also stops
+     * propagation of the event to other event listeners of the original DOM Event.
      */
     stopPropagation() {
         this._stopPropagation = true;
@@ -250,8 +263,6 @@ class ElementTouchEvent extends ElementInputEvent {
 /**
  * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
  *
- * @property {XrInputSource} inputSource The XR input source that this event was originally raised
- * from.
  * @augments ElementInputEvent
  */
 class ElementSelectEvent extends ElementInputEvent {
@@ -268,6 +279,12 @@ class ElementSelectEvent extends ElementInputEvent {
      */
     constructor(event, element, camera, inputSource) {
         super(event, element, camera);
+
+        /**
+         * The XR input source that this event was originally raised from.
+         *
+         * @type {XrInputSource}
+         */
         this.inputSource = inputSource;
     }
 }
@@ -327,9 +344,8 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#attach
-     * @description Attach mouse and touch events to a DOM element.
+     * Attach mouse and touch events to a DOM element.
+     *
      * @param {Element} domElement - The DOM element.
      */
     attach(domElement) {
@@ -372,9 +388,7 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#detach
-     * @description Remove mouse and touch events from the DOM element that it is attached to.
+     * Remove mouse and touch events from the DOM element that it is attached to.
      */
     detach() {
         if (!this._attached) return;
@@ -409,9 +423,9 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#addElement
-     * @description Add a {@link ElementComponent} to the internal list of ElementComponents that are being checked for input.
+     * Add a {@link ElementComponent} to the internal list of ElementComponents that are being
+     * checked for input.
+     *
      * @param {ElementComponent} element - The ElementComponent.
      */
     addElement(element) {
@@ -420,9 +434,9 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#removeElement
-     * @description Remove a {@link ElementComponent} from the internal list of ElementComponents that are being checked for input.
+     * Remove a {@link ElementComponent} from the internal list of ElementComponents that are being
+     * checked for input.
+     *
      * @param {ElementComponent} element - The ElementComponent.
      */
     removeElement(element) {

@@ -28,10 +28,9 @@ class TouchDevice extends EventHandler {
     }
 
     /**
-     * @function
-     * @name TouchDevice#attach
-     * @description Attach a device to an element in the DOM.
-     * If the device is already attached to an element this method will detach it first.
+     * Attach a device to an element in the DOM. If the device is already attached to an element
+     * this method will detach it first.
+     *
      * @param {Element} element - The element to attach to.
      */
     attach(element) {
@@ -48,9 +47,7 @@ class TouchDevice extends EventHandler {
     }
 
     /**
-     * @function
-     * @name TouchDevice#detach
-     * @description Detach a device from the element it is attached to.
+     * Detach a device from the element it is attached to.
      */
     detach() {
         if (this._element) {

@@ -76,10 +76,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @static
-     * @function
-     * @name Mouse.isPointerLocked
-     * @description Check if the mouse pointer has been locked, using {@link Mouse#enabledPointerLock}.
+     * Check if the mouse pointer has been locked, using {@link Mouse#enabledPointerLock}.
+     *
      * @returns {boolean} True if locked.
      */
     static isPointerLocked() {
@@ -87,9 +85,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#attach
-     * @description Attach mouse events to an Element.
+     * Attach mouse events to an Element.
+     *
      * @param {Element} element - The DOM element to attach the mouse to.
      */
     attach(element) {
@@ -106,9 +103,7 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#detach
-     * @description Remove mouse events from the element that it is attached to.
+     * Remove mouse events from the element that it is attached to.
      */
     detach() {
         if (!this._attached) return;
@@ -123,9 +118,7 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#disableContextMenu
-     * @description Disable the context menu usually activated with right-click.
+     * Disable the context menu usually activated with right-click.
      */
     disableContextMenu() {
         if (!this._target) return;
@@ -133,9 +126,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#enableContextMenu
-     * @description Enable the context menu usually activated with right-click. This option is active by default.
+     * Enable the context menu usually activated with right-click. This option is active by
+     * default.
      */
     enableContextMenu() {
         if (!this._target) return;
@@ -143,17 +135,18 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#enablePointerLock
-     * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
-     * Allowing raw access to mouse movement input without risking the mouse exiting the element.
-     * Notes:
+     * Request that the browser hides the mouse cursor and locks the mouse to the element. Allowing
+     * raw access to mouse movement input without risking the mouse exiting the element. Notes:
      *
-     * - In some browsers this will only work when the browser is running in fullscreen mode. See {@link Application#enableFullscreen}
-     * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+     * - In some browsers this will only work when the browser is running in fullscreen mode. See
+     * {@link Application#enableFullscreen}
+     * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for
+     * a mouse or keyboard input.
      *
-     * @param {lockMouseCallback} [success] - Function called if the request for mouse lock is successful.
-     * @param {lockMouseCallback} [error] - Function called if the request for mouse lock is unsuccessful.
+     * @param {lockMouseCallback} [success] - Function called if the request for mouse lock is
+     * successful.
+     * @param {lockMouseCallback} [error] - Function called if the request for mouse lock is
+     * unsuccessful.
      */
     enablePointerLock(success, error) {
         if (!document.body.requestPointerLock) {
@@ -184,9 +177,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#disablePointerLock
-     * @description Return control of the mouse cursor to the user.
+     * Return control of the mouse cursor to the user.
+     *
      * @param {lockMouseCallback} [success] - Function called when the mouse lock is disabled.
      */
     disablePointerLock(success) {
@@ -205,9 +197,7 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#update
-     * @description Update method, should be called once per frame.
+     * Update method, should be called once per frame.
      */
     update() {
         // Copy current button state
@@ -217,9 +207,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#isPressed
-     * @description Returns true if the mouse button is currently pressed.
+     * Returns true if the mouse button is currently pressed.
+     *
      * @param {number} button - The mouse button to test. Can be:
      *
      * - {@link MOUSEBUTTON_LEFT}
@@ -233,9 +222,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#wasPressed
-     * @description Returns true if the mouse button was pressed this frame (since the last call to update).
+     * Returns true if the mouse button was pressed this frame (since the last call to update).
+     *
      * @param {number} button - The mouse button to test. Can be:
      *
      * - {@link MOUSEBUTTON_LEFT}
@@ -249,9 +237,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#wasReleased
-     * @description Returns true if the mouse button was released this frame (since the last call to update).
+     * Returns true if the mouse button was released this frame (since the last call to update).
+     *
      * @param {number} button - The mouse button to test. Can be:
      *
      * - {@link MOUSEBUTTON_LEFT}

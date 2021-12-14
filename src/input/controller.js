@@ -48,9 +48,9 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#attach
-     * @description Attach Controller to a Element, this is required before you can monitor for key/mouse inputs.
+     * Attach Controller to an Element. This is required before you can monitor for key/mouse
+     * inputs.
+     *
      * @param {Element} element - The element to attach mouse and keyboard event handler too.
      */
     attach(element) {
@@ -65,9 +65,7 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#detach
-     * @description Detach Controller from an Element, this should be done before the Controller is destroyed.
+     * Detach Controller from an Element. This should be done before the Controller is destroyed.
      */
     detach() {
         if (this._keyboard) {
@@ -80,9 +78,7 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#disableContextMenu
-     * @description Disable the context menu usually activated with the right mouse button.
+     * Disable the context menu usually activated with the right mouse button.
      */
     disableContextMenu() {
         if (!this._mouse) {
@@ -93,9 +89,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#enableContextMenu
-     * @description Enable the context menu usually activated with the right mouse button. This is enabled by default.
+     * Enable the context menu usually activated with the right mouse button. This is enabled by
+     * default.
      */
     enableContextMenu() {
         if (!this._mouse) {
@@ -106,9 +101,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#update
-     * @description Update the Keyboard and Mouse handlers.
+     * Update the Keyboard and Mouse handlers.
+     *
      * @param {object} dt - The time since the last frame.
      */
     update(dt) {
@@ -132,9 +126,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#registerKeys
-     * @description Create or update a action which is enabled when the supplied keys are pressed.
+     * Create or update a action which is enabled when the supplied keys are pressed.
+     *
      * @param {string} action - The name of the action.
      * @param {number[]} keys - A list of keycodes.
      */
@@ -169,9 +162,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#registerMouse
-     * @description Create or update an action which is enabled when the supplied mouse button is pressed.
+     * Create or update an action which is enabled when the supplied mouse button is pressed.
+     *
      * @param {string} action - The name of the action.
      * @param {number} button - The mouse button.
      */
@@ -199,9 +191,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#registerPadButton
-     * @description Create or update an action which is enabled when the gamepad button is pressed.
+     * Create or update an action which is enabled when the gamepad button is pressed.
+     *
      * @param {string} action - The name of the action.
      * @param {number} pad - The index of the pad to register (use {@link PAD_1}, etc).
      * @param {number} button - The pad button.
@@ -227,8 +218,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#registerAxis
+     * Register an action against a controller axis.
+     *
      * @param {object} [options] - Optional options object.
      * @param {object} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
      */
@@ -292,9 +283,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#isPressed
-     * @description Returns true if the current action is enabled.
+     * Returns true if the current action is enabled.
+     *
      * @param {string} actionName - The name of the action.
      * @returns {boolean} True if the action is enabled.
      */
@@ -334,9 +324,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#wasPressed
-     * @description Returns true if the action was enabled this since the last update.
+     * Returns true if the action was enabled this since the last update.
+     *
      * @param {string} actionName - The name of the action.
      * @returns {boolean} True if the action was enabled this since the last update.
      */
