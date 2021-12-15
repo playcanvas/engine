@@ -125,7 +125,7 @@ class StandardMaterialOptionsBuilder {
                              (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
                              notWhite(stdMat.specular);
 
-        const emissiveTintColor = notWhite(stdMat.emissive) && (stdMat.emissiveTint || !stdMat.emissiveMap);
+        const emissiveTintColor = !stdMat.emissiveMap || (notWhite(stdMat.emissive) && stdMat.emissiveTint);
         const emissiveTintIntensity = (stdMat.emissiveIntensity !== 1);
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
