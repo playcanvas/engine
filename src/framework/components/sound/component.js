@@ -180,19 +180,23 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#addSlot
-     * @description Creates a new {@link SoundSlot} with the specified name.
+     * Creates a new {@link SoundSlot} with the specified name.
+     *
      * @param {string} name - The name of the slot.
      * @param {object} [options] - Settings for the slot.
      * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
      * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
      * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
      * @param {number} [options.startTime=0] - The start time from which the sound will start playing.
-     * @param {number} [options.duration=null] - The duration of the sound that the slot will play starting from startTime.
-     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
-     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
-     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
+     * @param {number} [options.duration=null] - The duration of the sound that the slot will play
+     * starting from startTime.
+     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be
+     * played independently of each other. Otherwise the slot will first stop the current sound
+     * before starting the new one.
+     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as
+     * its audio asset is loaded.
+     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be
+     * played by this slot.
      * @returns {SoundSlot} The new slot.
      * @example
      * // get an asset by id
@@ -222,9 +226,8 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#removeSlot
-     * @description Removes the {@link SoundSlot} with the specified name.
+     * Removes the {@link SoundSlot} with the specified name.
+     *
      * @param {string} name - The name of the slot.
      * @example
      * // remove a slot called 'beep'
@@ -239,9 +242,8 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#slot
-     * @description Returns the slot with the specified name.
+     * Returns the slot with the specified name.
+     *
      * @param {string} name - The name of the slot.
      * @returns {SoundSlot} The slot.
      * @example
@@ -254,10 +256,12 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#play
-     * @description Begins playing the sound slot with the specified name. The slot will restart playing if it is already playing unless the overlap field is true in which case a new sound will be created and played.
+     * Begins playing the sound slot with the specified name. The slot will restart playing if it
+     * is already playing unless the overlap field is true in which case a new sound will be
+     * created and played.
+     *
      * @param {string} name - The name of the {@link SoundSlot} to play.
+     * @returns {SoundInstance} The sound instance that will be played.
      * @example
      * // get asset by id
      * var asset = app.assets.get(10);
@@ -266,7 +270,6 @@ class SoundComponent extends Component {
      *     asset: asset
      * });
      * this.entity.sound.play('beep');
-     * @returns {SoundInstance} The sound instance that will be played.
      */
     play(name) {
         if (!this.enabled || !this.entity.enabled) {
@@ -283,9 +286,9 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#pause
-     * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link SoundComponent#resume}.
+     * Pauses playback of the slot with the specified name. If the name is undefined then all slots
+     * currently played will be paused. The slots can be resumed by calling {@link SoundComponent#resume}.
+     *
      * @param {string} [name] - The name of the slot to pause. Leave undefined to pause everything.
      * @example
      * // pause all sounds
@@ -312,10 +315,9 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#resume
-     * @description Resumes playback of the sound slot with the specified name if it's paused. If no
-     * name is specified all slots will be resumed.
+     * Resumes playback of the sound slot with the specified name if it's paused. If no name is
+     * specified all slots will be resumed.
+     *
      * @param {string} [name] - The name of the slot to resume. Leave undefined to resume everything.
      * @example
      * // resume all sounds
@@ -344,10 +346,9 @@ class SoundComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SoundComponent#stop
-     * @description Stops playback of the sound slot with the specified name if it's paused. If no
-     * name is specified all slots will be stopped.
+     * Stops playback of the sound slot with the specified name if it's paused. If no name is
+     * specified all slots will be stopped.
+     *
      * @param {string} [name] - The name of the slot to stop. Leave undefined to stop everything.
      * @example
      * // stop all sounds

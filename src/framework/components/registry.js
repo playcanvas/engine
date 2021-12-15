@@ -15,11 +15,10 @@ class ComponentSystemRegistry extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystemRegistry#add
-     * @description Add a component system to the registry.
+     * Add a component system to the registry.
+     *
      * @param {object} system - The {@link ComponentSystem} instance.
+     * @private
      */
     add(system) {
         const id = system.id;
@@ -34,11 +33,10 @@ class ComponentSystemRegistry extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystemRegistry#remove
-     * @description Remove a component system from the registry.
+     * Remove a component system from the registry.
+     *
      * @param {object} system - The {@link ComponentSystem} instance.
+     * @private
      */
     remove(system) {
         const id = system.id;

@@ -114,12 +114,11 @@ class AudioSourceComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponentSystem#setVolume
-     * @description Set the volume for the entire AudioSource system. All sources will
-     * have their volume multiplied by this value.
+     * Set the volume for the entire AudioSource system. All sources will have their volume
+     * multiplied by this value.
+     *
      * @param {number} volume - The value to set the volume to. Valid from 0 to 1.
+     * @private
      */
     setVolume(volume) {
         this.manager.setVolume(volume);

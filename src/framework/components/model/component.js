@@ -330,12 +330,11 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ModelComponent#hide
-     * @description Stop rendering model without removing it from the scene hierarchy.
-     * This method sets the {@link MeshInstance#visible} property of every MeshInstance in the model to false
-     * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
-     * So the model component still incurs some CPU overhead.
+     * Stop rendering model without removing it from the scene hierarchy. This method sets the
+     * {@link MeshInstance#visible} property of every MeshInstance in the model to false Note, this
+     * does not remove the model or mesh instances from the scene hierarchy or draw call list. So
+     * the model component still incurs some CPU overhead.
+     *
      * @example
      * this.timer = 0;
      * this.visible = true;
@@ -363,10 +362,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ModelComponent#show
-     * @description Enable rendering of the model if hidden using {@link ModelComponent#hide}.
-     * This method sets all the {@link MeshInstance#visible} property on all mesh instances to true.
+     * Enable rendering of the model if hidden using {@link ModelComponent#hide}. This method sets
+     * all the {@link MeshInstance#visible} property on all mesh instances to true.
      */
     show() {
         if (this._model) {

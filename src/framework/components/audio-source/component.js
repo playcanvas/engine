@@ -58,11 +58,10 @@ class AudioSourceComponent extends Component {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponent#play
-     * @description Begin playback of an audio asset in the component attached to an entity.
+     * Begin playback of an audio asset in the component attached to an entity.
+     *
      * @param {string} name - The name of the Asset to play.
+     * @private
      */
     play(name) {
         if (!this.enabled || !this.entity.enabled) {
@@ -91,10 +90,10 @@ class AudioSourceComponent extends Component {
     }
 
     /**
+     * Pause playback of the audio that is playing on the Entity. Playback can be resumed by
+     * calling {@link AudioSourceComponent#unpause}.
+     *
      * @private
-     * @function
-     * @name AudioSourceComponent#pause
-     * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link AudioSourceComponent#unpause}.
      */
     pause() {
         if (this.channel) {
@@ -103,10 +102,9 @@ class AudioSourceComponent extends Component {
     }
 
     /**
+     * Resume playback of the audio if paused. Playback is resumed at the time it was paused.
+     *
      * @private
-     * @function
-     * @name AudioSourceComponent#unpause
-     * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
      */
     unpause() {
         if (this.channel && this.channel.paused) {
@@ -115,10 +113,9 @@ class AudioSourceComponent extends Component {
     }
 
     /**
+     * Stop playback on an Entity. Playback can not be resumed after being stopped.
+     *
      * @private
-     * @function
-     * @name AudioSourceComponent#stop
-     * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
      */
     stop() {
         if (this.channel) {

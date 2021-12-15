@@ -49,9 +49,8 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimationComponent#play
-     * @description Start playing an animation.
+     * Start playing an animation.
+     *
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
      * animation state to the start of the animation being set. Defaults to 0.
@@ -122,9 +121,8 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimationComponent#getAnimation
-     * @description Return an animation.
+     * Return an animation.
+     *
      * @param {string} name - The name of the animation asset.
      * @returns {Animation} An Animation.
      */

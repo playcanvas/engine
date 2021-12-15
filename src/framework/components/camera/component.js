@@ -203,9 +203,10 @@ class CameraComponent extends Component {
      */
 
     /**
-     * @private
+     * Queries the camera component's underlying Camera instance.
+     *
      * @type {Camera}
-     * @description Queries the camera component's underlying Camera instance.
+     * @private
      */
     get camera() {
         return this._camera;
@@ -312,13 +313,12 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#screenToWorld
-     * @description Convert a point from 2D screen space to 3D world space.
+     * Convert a point from 2D screen space to 3D world space.
+     *
      * @param {number} screenx - X coordinate on PlayCanvas' canvas element.
      * @param {number} screeny - Y coordinate on PlayCanvas' canvas element.
-     * @param {number} cameraz - The distance from the camera in world space to create
-     * the new point.
+     * @param {number} cameraz - The distance from the camera in world space to create the new
+     * point.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
@@ -339,9 +339,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#worldToScreen
-     * @description Convert a point from 3D world space to 2D screen space.
+     * Convert a point from 3D world space to 2D screen space.
+     *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {Vec3} The screen space coordinate.
@@ -443,11 +442,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#calculateAspectRatio
-     * @description Calculates aspect ratio value for a given render target.
-     * @param {RenderTarget} [rt] - Optional render target. If unspecified, the
-     * backbuffer is assumed.
+     * Calculates aspect ratio value for a given render target.
+     *
+     * @param {RenderTarget} [rt] - Optional render target. If unspecified, the backbuffer is used.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
@@ -457,12 +454,11 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
+     * Start rendering the frame for this camera.
+     *
+     * @param {RenderTarget} rt - Render target to which rendering will be performed. Will affect
+     * camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
      * @private
-     * @name CameraComponent#frameBegin
-     * @description Start rendering the frame for this camera.
-     * @param {RenderTarget} rt - Render target to which rendering will be performed.
-     * Will affect camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
      */
     frameBegin(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
@@ -471,10 +467,9 @@ class CameraComponent extends Component {
     }
 
     /**
+     * End rendering the frame for this camera.
+     *
      * @private
-     * @function
-     * @name CameraComponent#frameEnd
-     * @description End rendering the frame for this camera.
      */
     frameEnd() {}
 
@@ -563,14 +558,11 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#exitVr
-     * @description Attempt to stop presenting this camera.
-     * @param {vrCameraCallback} callback - Function called once to indicate
-     * success of failure. The callback takes one argument (err).
-     * On success it returns null on failure it returns the error message.
+     * Attempt to stop presenting this camera.
+     *
+     * @param {vrCameraCallback} callback - Function called once to indicate success of failure.
+     * The callback takes one argument (err). On success it returns null on failure it returns the
+     * error message.
      * @example
      * this.entity.camera.exitVr(function (err) {
      *     if (err) {
@@ -579,6 +571,8 @@ class CameraComponent extends Component {
      *         // exited successfully
      *     }
      * });
+     * @private
+     * @deprecated
      */
     exitVr(callback) {
         if (this.vrDisplay) {
@@ -596,46 +590,51 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#startXr
-     * @description Attempt to start XR session with this camera.
+     * Attempt to start XR session with this camera.
+     *
      * @param {string} type - The type of session. Can be one of the following:
      *
-     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has
-     * limited feature availability and is rendered into HTML element.
-     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access
-     * to the VR device with the best available tracking features.
-     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
-     * to the VR/AR device that is intended to be blended with the real-world environment.
+     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited feature
+     * availability and is rendered into HTML element.
+     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to the VR device
+     * with the best available tracking features.
+     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to the VR/AR
+     * device that is intended to be blended with the real-world environment.
      *
      * @param {string} spaceType - Reference space type. Can be one of the following:
      *
-     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
-     * tracking capabilities.
-     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native
-     * origin near the viewer at the time of creation. It is meant for seated or basic
-     * local XR sessions.
-     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
-     * a native origin at the floor in a safe position for the user to stand. The y-axis
-     * equals 0 at floor level. Floor level value might be estimated by the underlying
-     * platform. It is meant for seated or basic local XR sessions.
-     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
-     * with its native origin at the floor, where the user is expected to move within a
-     * pre-established boundary.
-     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
-     * user is expected to move freely around their environment, potentially long
-     * distances from their starting point.
+     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking
+     * capabilities.
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the
+     * viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin
+     * at the floor in a safe position for the user to stand. The y-axis equals 0 at floor level.
+     * Floor level value might be estimated by the underlying platform. It is meant for seated or
+     * basic local XR sessions.
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native
+     * origin at the floor, where the user is expected to move within a pre-established boundary.
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is
+     * expected to move freely around their environment, potentially long distances from their
+     * starting point.
      *
      * @param {object} [options] - Object with options for XR session initialization.
-     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
+     * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
-     * @param {xrErrorCallback} [options.callback] - Optional callback function called once
-     * the session is started. The callback has one argument Error - it is null if the XR
-     * session started successfully.
-     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
-     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing system.
-     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying depth sensing system.
+     * @param {xrErrorCallback} [options.callback] - Optional callback function called once the
+     * session is started. The callback has one argument Error - it is null if the XR session
+     * started successfully.
+     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
+     * attempt to enable {@link XrDepthSensing}.
+     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth
+     * sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to
+     * 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing
+     * system.
+     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format
+     * preference for depth sensing. Can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*),
+     * defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying
+     * depth sensing system.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
@@ -653,12 +652,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#endXr
-     * @description Attempt to end XR session of this camera.
-     * @param {xrErrorCallback} [callback] - Optional callback function called once
-     * session is ended. The callback has one argument Error - it is null if successfully
-     * ended XR session.
+     * Attempt to end XR session of this camera.
+     *
+     * @param {xrErrorCallback} [callback] - Optional callback function called once session is
+     * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.endXr(function (err) {
