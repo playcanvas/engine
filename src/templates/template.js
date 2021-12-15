@@ -22,9 +22,8 @@ class Template {
     }
 
     /**
-     * @function
-     * @name Template#instantiate
-     * @description Create an instance of this template.
+     * Create an instance of this template.
+     *
      * @returns {Entity} The root entity of the created instance.
      */
     instantiate() {

@@ -184,9 +184,8 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @function
-     * @name AssetRegistry#list
-     * @description Create a filtered list of assets from the registry.
+     * Create a filtered list of assets from the registry.
+     *
      * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
      * @returns {Asset[]} The filtered list of assets.
      */
@@ -202,9 +201,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#add
-     * @description Add an asset to the registry.
+     * Add an asset to the registry.
+     *
      * @param {Asset} asset - The asset to add.
      * @example
      * var asset = new pc.Asset("My Asset", "texture", {
@@ -244,9 +242,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#remove
-     * @description Remove an asset from the registry.
+     * Remove an asset from the registry.
+     *
      * @param {Asset} asset - The asset to remove.
      * @returns {boolean} True if the asset was successfully removed and false otherwise.
      * @example
@@ -304,9 +301,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#get
-     * @description Retrieve an asset from the registry by its id field.
+     * Retrieve an asset from the registry by its id field.
+     *
      * @param {number} id - The id of the asset to get.
      * @returns {Asset} The asset.
      * @example
@@ -318,9 +314,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#getByUrl
-     * @description Retrieve an asset from the registry by its file's URL field.
+     * Retrieve an asset from the registry by its file's URL field.
+     *
      * @param {string} url - The url of the asset to get.
      * @returns {Asset} The asset.
      * @example
@@ -332,9 +327,9 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#load
-     * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded.
+     * Load the asset's file from a remote source. Listen for "load" events on the asset to find
+     * out when it is loaded.
+     *
      * @param {Asset} asset - The asset to load.
      * @example
      * // load some assets
@@ -420,13 +415,13 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#loadFromUrl
-     * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
-     * if you are not integrated with the PlayCanvas Editor.
+     * Use this to load and create an asset if you don't have assets created. Usually you would
+     * only use this if you are not integrated with the PlayCanvas Editor.
+     *
      * @param {string} url - The url to load.
      * @param {string} type - The type of asset to load.
-     * @param {loadAssetCallback} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+     * @param {loadAssetCallback} callback - Function called when asset is loaded, passed (err,
+     * asset), where err is null if no errors were encountered.
      * @example
      * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
      *     var texture = asset.resource;
@@ -437,14 +432,15 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#loadFromUrlAndFilename
-     * @description Use this to load and create an asset when both the URL and filename are required. For example, use this function when loading
-     * BLOB assets, where the URL does not adequately identify the file.
+     * Use this to load and create an asset when both the URL and filename are required. For
+     * example, use this function when loading BLOB assets, where the URL does not adequately
+     * identify the file.
+     *
      * @param {string} url - The url to load.
      * @param {string} filename - The filename of the asset to load.
      * @param {string} type - The type of asset to load.
-     * @param {loadAssetCallback} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+     * @param {loadAssetCallback} callback - Function called when asset is loaded, passed (err,
+     * asset), where err is null if no errors were encountered.
      * @example
      * var file = magicallyAttainAFile();
      * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
@@ -592,9 +588,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#findAll
-     * @description Return all Assets with the specified name and type found in the registry.
+     * Return all Assets with the specified name and type found in the registry.
+     *
      * @param {string} name - The name of the Assets to find.
      * @param {string} [type] - The type of the Assets to find.
      * @returns {Asset[]} A list of all Assets found.
@@ -630,12 +625,11 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#findByTag
-     * @description Return all Assets that satisfy the search query.
-     * Query can be simply a string, or comma separated strings,
-     * to have inclusive results of assets that match at least one query.
-     * A query that consists of an array of tags can be used to match assets that have each tag of array.
+     * Return all Assets that satisfy the search query. Query can be simply a string, or comma
+     * separated strings, to have inclusive results of assets that match at least one query. A
+     * query that consists of an array of tags can be used to match assets that have each tag of
+     * array.
+     *
      * @param {...*} query - Name of a tag or array of tags.
      * @returns {Asset[]} A list of all Assets matched query.
      * @example
@@ -656,9 +650,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#filter
-     * @description Return all Assets that satisfy a filter callback.
+     * Return all Assets that satisfy a filter callback.
+     *
      * @param {filterAssetCallback} callback - The callback function that is used to filter assets.
      * Return `true` to include an asset in the returned array.
      * @returns {Asset[]} A list of all Assets found.
@@ -673,9 +666,8 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @function
-     * @name AssetRegistry#find
-     * @description Return the first Asset with the specified name and type found in the registry.
+     * Return the first Asset with the specified name and type found in the registry.
+     *
      * @param {string} name - The name of the Asset to find.
      * @param {string} [type] - The type of the Asset to find.
      * @returns {Asset} A single Asset or null if no Asset is found.

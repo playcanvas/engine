@@ -209,9 +209,7 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Morph#destroy
-     * @description Frees video memory allocated by this object.
+     * Frees video memory allocated by this object.
      */
     destroy() {
         if (this.vertexBufferIds) {
@@ -226,9 +224,9 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @name Morph#targets
+     * The array of morph targets.
+     *
      * @type {MorphTarget[]}
-     * @description The array of morph targets.
      */
     get targets() {
         return this._targets;

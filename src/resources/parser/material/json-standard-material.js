@@ -33,12 +33,11 @@ class JsonStandardMaterialParser {
     }
 
     /**
-     * @private
-     * @function
-     * @name JsonStandardMaterialParser#initialize
-     * @description Initialize material properties from the material data block e.g. Loading from server.
+     * Initialize material properties from the material data block e.g. Loading from server.
+     *
      * @param {StandardMaterial} material - The material to be initialized.
      * @param {object} data - The data block that is used to initialize.
+     * @private
      */
     initialize(material, data) {
         // usual flow is that data is validated in resource loader

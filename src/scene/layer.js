@@ -366,15 +366,15 @@ class Layer {
     }
 
     /**
+     * Increments the usage counter of this layer. By default, layers are created with counter set
+     * to 1 (if {@link Layer.enabled} is true) or 0 (if it was false). Incrementing the counter
+     * from 0 to 1 will enable the layer and call {@link Layer.onEnable}. Use this function to
+     * "subscribe" multiple effects to the same layer. For example, if the layer is used to render
+     * a reflection texture which is used by 2 mirrors, then each mirror can call this function
+     * when visible and {@link Layer.decrementCounter} if invisible. In such case the reflection
+     * texture won't be updated, when there is nothing to use it, saving performance.
+     *
      * @private
-     * @function
-     * @name Layer#incrementCounter
-     * @description Increments the usage counter of this layer.
-     * By default, layers are created with counter set to 1 (if {@link Layer.enabled} is true) or 0 (if it was false).
-     * Incrementing the counter from 0 to 1 will enable the layer and call {@link Layer.onEnable}.
-     * Use this function to "subscribe" multiple effects to the same layer. For example, if the layer is used to render a reflection texture which is used by 2 mirrors,
-     * then each mirror can call this function when visible and {@link Layer.decrementCounter} if invisible.
-     * In such case the reflection texture won't be updated, when there is nothing to use it, saving performance.
      */
     incrementCounter() {
         if (this._refCounter === 0) {
@@ -385,12 +385,11 @@ class Layer {
     }
 
     /**
+     * Decrements the usage counter of this layer. Decrementing the counter from 1 to 0 will
+     * disable the layer and call {@link Layer.onDisable}. See {@link Layer#incrementCounter} for
+     * more details.
+     *
      * @private
-     * @function
-     * @name Layer#decrementCounter
-     * @description Decrements the usage counter of this layer.
-     * Decrementing the counter from 1 to 0 will disable the layer and call {@link Layer.onDisable}.
-     * See {@link Layer#incrementCounter} for more details.
      */
     decrementCounter() {
         if (this._refCounter === 1) {
@@ -405,11 +404,11 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#addMeshInstances
-     * @description Adds an array of mesh instances to this layer.
+     * Adds an array of mesh instances to this layer.
+     *
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
-     * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
+     * to cast shadows in this layer.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
         const sceneShaderVer = this._shaderVersion;
@@ -466,11 +465,12 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#removeMeshInstances
-     * @description Removes multiple mesh instances from this layer.
-     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
-     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     * Removes multiple mesh instances from this layer.
+     *
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
+     * this layer, they will be removed.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
+     * removed mesh instances or if they never did cast shadows before.
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
 
@@ -499,10 +499,10 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#clearMeshInstances
-     * @description Removes all mesh instances from this layer.
-     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     * Removes all mesh instances from this layer.
+     *
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
+     * removed mesh instances or if they never did cast shadows before.
      */
     clearMeshInstances(skipShadowCasters) {
         if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
@@ -515,9 +515,8 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#addLight
-     * @description Adds a light to this layer.
+     * Adds a light to this layer.
+     *
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
@@ -538,9 +537,8 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#removeLight
-     * @description Removes a light from this layer.
+     * Removes a light from this layer.
+     *
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
@@ -560,9 +558,7 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#clearLights
-     * @description Removes all lights from this layer.
+     * Removes all lights from this layer.
      */
     clearLights() {
         this._lightsSet.clear();
@@ -577,9 +573,9 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#addShadowCasters
-     * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
+     * Adds an array of mesh instances to this layer, but only as shadow casters (they will not be
+     * rendered anywhere, but only cast shadows on other objects).
+     *
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
@@ -593,10 +589,11 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#removeShadowCasters
-     * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
-     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * Removes multiple mesh instances from the shadow casters list of this layer, meaning they
+     * will stop casting shadows.
+     *
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
+     * this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
         const arr = this.shadowCasters;
@@ -642,9 +639,8 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#addCamera
-     * @description Adds a camera to this layer.
+     * Adds a camera to this layer.
+     *
      * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     addCamera(camera) {
@@ -654,9 +650,8 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#removeCamera
-     * @description Removes a camera from this layer.
+     * Removes a camera from this layer.
+     *
      * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
@@ -671,9 +666,7 @@ class Layer {
     }
 
     /**
-     * @function
-     * @name Layer#clearCameras
-     * @description Removes all cameras from this layer.
+     * Removes all cameras from this layer.
      */
     clearCameras() {
         this.cameras.length = 0;

@@ -106,9 +106,7 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#destroy
-     * @description Frees video memory allocated by this object.
+     * Frees video memory allocated by this object.
      */
     destroy() {
 
@@ -152,9 +150,9 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#clone
-     * @description Clones a MorphInstance. The returned clone uses the same {@link Morph} and weights are set to defaults.
+     * Clones a MorphInstance. The returned clone uses the same {@link Morph} and weights are set
+     * to defaults.
+     *
      * @returns {MorphInstance} A clone of the specified MorphInstance.
      */
     clone() {
@@ -163,9 +161,8 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#getWeight
-     * @description Gets current weight of the specified morph target.
+     * Gets current weight of the specified morph target.
+     *
      * @param {number} index - An index of morph target.
      * @returns {number} Weight.
      */
@@ -174,9 +171,8 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#setWeight
-     * @description Sets weight of the specified morph target.
+     * Sets weight of the specified morph target.
+     *
      * @param {number} index - An index of morph target.
      * @param {number} weight - Weight.
      */
@@ -330,9 +326,8 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#update
-     * @description Selects active morph targets and prepares morph for rendering. Called automatically by renderer.
+     * Selects active morph targets and prepares morph for rendering. Called automatically by
+     * renderer.
      */
     update() {
 

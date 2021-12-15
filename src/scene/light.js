@@ -221,11 +221,10 @@ class Light {
     }
 
     /**
-     * @private
-     * @function
-     * @name Light#clone
-     * @description Duplicates a light node but does not 'deep copy' the hierarchy.
+     * Duplicates a light node but does not 'deep copy' the hierarchy.
+     *
      * @returns {Light} A cloned Light.
+     * @private
      */
     clone() {
         const clone = new Light(this.device);

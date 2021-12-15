@@ -235,12 +235,10 @@ class EntityReference extends EventHandler {
     }
 
     /**
+     * Must be called from the parent component's onEnable() method in order for entity references
+     * to be correctly resolved when {@link Entity#clone} is called.
+     *
      * @private
-     * @function
-     * @name EntityReference#onParentComponentEnable
-     * @description Must be called from the parent component's onEnable() method in
-     * order for entity references to be correctly resolved when {@link Entity#clone}
-     * is called.
      */
     onParentComponentEnable() {
         // When an entity is cloned via the JS API, we won't be able to resolve the
@@ -403,13 +401,12 @@ class EntityReference extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name EntityReference#hasComponent
-     * @description Convenience method indicating whether the entity exists and has a
-     * component of the provided type.
+     * Convenience method indicating whether the entity exists and has a component of the provided
+     * type.
+     *
      * @param {string} componentName - Name of the component.
      * @returns {boolean} True if the entity exists and has a component of the provided type.
+     * @private
      */
     hasComponent(componentName) {
         return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;

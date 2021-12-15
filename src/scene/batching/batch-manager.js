@@ -121,16 +121,18 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#addGroup
-     * @description Adds new global batch group.
+     * Adds new global batch group.
+     *
      * @param {string} name - Custom name.
-     * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale after being batched?
-     * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
+     * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale
+     * after being batched?
+     * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched
+     * objects.
      * {@link BatchManager#prepare} will split objects into local groups based on this size.
-     * @param {number} [id] - Optional custom unique id for the group (will be generated automatically otherwise).
-     * @param {number[]} [layers] - Optional layer ID array. Default is [{@link LAYERID_WORLD}]. The whole batch group will
-     * belong to these layers. Layers of source models will be ignored.
+     * @param {number} [id] - Optional custom unique id for the group (will be generated
+     * automatically otherwise).
+     * @param {number[]} [layers] - Optional layer ID array. Default is [{@link LAYERID_WORLD}].
+     * The whole batch group will belong to these layers. Layers of source models will be ignored.
      * @returns {BatchGroup} Group object.
      */
     addGroup(name, dynamic, maxAabbSize, id, layers) {
@@ -151,10 +153,9 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#removeGroup
-     * @description Remove global batch group by id.
-     * Note, this traverses the entire scene graph and clears the batch group id from all components.
+     * Remove global batch group by id. Note, this traverses the entire scene graph and clears the
+     * batch group id from all components.
+     *
      * @param {number} id - Batch Group ID.
      */
     removeGroup(id) {
@@ -179,10 +180,9 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#markGroupDirty
-     * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
-     * Note, re-batching a group is a potentially expensive operation.
+     * Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is
+     * rendered. Note, re-batching a group is a potentially expensive operation.
+     *
      * @param {number} id - Batch Group ID to mark as dirty.
      */
     markGroupDirty(id) {
@@ -192,9 +192,9 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#getGroupByName
-     * @description Retrieves a {@link BatchGroup} object with a corresponding name, if it exists, or null otherwise.
+     * Retrieves a {@link BatchGroup} object with a corresponding name, if it exists, or null
+     * otherwise.
+     *
      * @param {string} name - Name.
      * @returns {BatchGroup} Group object.
      */
@@ -210,12 +210,11 @@ class BatchManager {
     }
 
     /**
-     * @private
-     * @function
-     * @name BatchManager#getBatches
-     * @description Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
+     * Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
+     *
      * @param {number} batchGroupId - The id of the batch group.
      * @returns {Batch[]} A list of batches that are used to render the batch group.
+     * @private
      */
     getBatches(batchGroupId) {
         const results = [];
@@ -406,10 +405,11 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#generate
-     * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
-     * @param {number[]} [groupIds] - Optional array of batch group IDs to update. Otherwise all groups are updated.
+     * Destroys all batches and creates new based on scene models. Hides original models. Called by
+     * engine automatically on app start, and if batchGroupIds on models are changed.
+     *
+     * @param {number[]} [groupIds] - Optional array of batch group IDs to update. Otherwise all
+     * groups are updated.
      */
     generate(groupIds) {
         const groupMeshInstances = {};
@@ -466,24 +466,28 @@ class BatchManager {
 
 
     /**
-     * @function
-     * @name BatchManager#prepare
-     * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
-     * The input list will be split, if:
+     * Takes a list of mesh instances to be batched and sorts them into lists one for each draw
+     * call. The input list will be split, if:
      *
      * - Mesh instances use different materials.
      * - Mesh instances have different parameters (e.g. lightmaps or static lights).
-     * - Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc).
+     * - Mesh instances have different shader defines (shadow receiving, being aligned to screen
+     * space, etc).
      * - Too many vertices for a single batch (65535 is maximum).
-     * - Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end).
+     * - Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024
+     * on high-end).
      * - Bounding box of a batch is larger than maxAabbSize in any dimension.
      *
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances
-     * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
-     * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
+     * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter
+     * then (otherwise not).
+     * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched
+     * objects.
      * @param {boolean} translucent - Are we batching UI elements or sprites
-     * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link BatchManager#create}.
+     * This is useful to keep a balance between the number of draw calls and the number of drawn
+     * triangles, because smaller batches can be hidden when not visible in camera.
+     * @returns {MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to
+     * {@link BatchManager#create}.
      */
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
@@ -672,12 +676,15 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#create
-     * @description Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and returns a {@link Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
+     * Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and
+     * returns a {@link Batch} object. This method assumes that all mesh instances provided can be
+     * rendered in a single draw call.
+     *
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances.
-     * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
-     * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done automatically with default batches.
+     * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed
+     * after batching?
+     * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done
+     * automatically with default batches.
      * @returns {Batch} The resulting batch object.
      */
     create(meshInstances, dynamic, batchGroupId) {
@@ -881,10 +888,9 @@ class BatchManager {
     }
 
     /**
+     * Updates bounding boxes for all dynamic batches. Called automatically.
+     *
      * @private
-     * @function
-     * @name BatchManager#updateAll
-     * @description Updates bounding boxes for all dynamic batches. Called automatically.
      */
     updateAll() {
         // TODO: only call when needed. Applies to skinning matrices as well
@@ -908,9 +914,9 @@ class BatchManager {
     }
 
     /**
-     * @function
-     * @name BatchManager#clone
-     * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
+     * Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and
+     * batch objects, linked to different source mesh instances.
+     *
      * @param {Batch} batch - A batch object.
      * @param {MeshInstance[]} clonedMeshInstances - New mesh instances.
      * @returns {Batch} New batch object.
@@ -945,11 +951,10 @@ class BatchManager {
     }
 
     /**
-     * @private
-     * @function
-     * @name BatchManager#destroyBatch
-     * @description Removes the batch model from all layers and destroys it.
+     * Removes the batch model from all layers and destroys it.
+     *
      * @param {Batch} batch - A batch object.
+     * @private
      */
     destroyBatch(batch) {
         batch.destroy(this.scene, this._batchGroups[batch.batchGroupId].layers);

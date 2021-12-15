@@ -8,15 +8,17 @@ import { Application } from './application.js';
 /** @typedef {import('./components/component.js').Component} Component */
 
 /**
- * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link Entity},
- * and a set of {@link Component}s which are managed by their respective {@link ComponentSystem}s. One of those components maybe a
- * {@link ScriptComponent} which allows you to write custom code to attach to your Entity.
+ * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
+ * will consist of an {@link Entity}, and a set of {@link Component}s which are managed by their
+ * respective {@link ComponentSystem}s. One of those components maybe a {@link ScriptComponent}
+ * which allows you to write custom code to attach to your Entity.
  *
- * The Entity uniquely identifies the object and also provides a transform for position and orientation
- * which it inherits from {@link GraphNode} so can be added into the scene graph.
- * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
- * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
- * ComponentSystems allow access to all Entities and Components and are attached to the {@link Application}.
+ * The Entity uniquely identifies the object and also provides a transform for position and
+ * orientation which it inherits from {@link GraphNode} so can be added into the scene graph. The
+ * Component and ComponentSystem provide the logic to give an Entity a specific type of behavior.
+ * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
+ * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
+ * and Components and are attached to the {@link Application}.
  *
  * @property {AnimComponent} [anim] Gets the {@link AnimComponent} attached to this entity. [read only]
  * @property {AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
@@ -99,10 +101,9 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#addComponent
-     * @description Create a new component and add it to the entity.
-     * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
+     * Create a new component and add it to the entity. Use this to add functionality to the entity
+     * like rendering a model, playing sounds and so on.
+     *
      * @param {string} type - The name of the component to add. Valid strings are:
      *
      * - "anim" - see {@link AnimComponent}
@@ -156,9 +157,8 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#removeComponent
-     * @description Remove a component from the Entity.
+     * Remove a component from the Entity.
+     *
      * @param {string} type - The name of the Component type.
      * @example
      * var entity = new pc.Entity();
@@ -180,12 +180,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#findComponent
-     * @description Search the entity and all of its descendants for the first component of specified type.
+     * Search the entity and all of its descendants for the first component of specified type.
+     *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component} A component of specified type, if the entity or any of its descendants has
-     * one. Returns undefined otherwise.
+     * @returns {Component} A component of specified type, if the entity or any of its descendants
+     * has one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * var light = entity.findComponent("light");
@@ -198,12 +197,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#findComponents
-     * @description Search the entity and all of its descendants for all components of specified type.
+     * Search the entity and all of its descendants for all components of specified type.
+     *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component[]} All components of specified type in the entity or any of its descendants.
-     * Returns empty array if none found.
+     * @returns {Component[]} All components of specified type in the entity or any of its
+     * descendants. Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
      * var lights = entity.findComponents("light");
@@ -218,11 +216,10 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @private
-     * @function
-     * @name Entity#getGuid
-     * @description Get the GUID value for this Entity.
+     * Get the GUID value for this Entity.
+     *
      * @returns {string} The GUID of the Entity.
+     * @private
      */
     getGuid() {
         // if the guid hasn't been set yet then set it now before returning it
@@ -234,13 +231,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @private
-     * @function
-     * @name Entity#setGuid
-     * @description Set the GUID value for this Entity.
+     * Set the GUID value for this Entity. Note that it is unlikely that you should need to change
+     * the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
      *
-     * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
      * @param {string} guid - The GUID to assign to the Entity.
+     * @private
      */
     setGuid(guid) {
         // remove current guid from entityIndex
@@ -313,9 +308,8 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#findByGuid
-     * @description Find a descendant of this Entity with the GUID.
+     * Find a descendant of this Entity with the GUID.
+     *
      * @param {string} guid - The GUID to search for.
      * @returns {Entity} The Entity with the GUID or null.
      */
@@ -331,9 +325,9 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#destroy
-     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
+     * Remove all components from the Entity and detach it from the Entity hierarchy. Then
+     * recursively destroy all ancestor Entities.
+     *
      * @example
      * var firstChild = this.entity.children[0];
      * firstChild.destroy(); // delete child, all components and remove from hierarchy
@@ -385,10 +379,9 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @function
-     * @name Entity#clone
-     * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
-     * Note, this Entity is not in the hierarchy and must be added manually.
+     * Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components
+     * and all descendants. Note, this Entity is not in the hierarchy and must be added manually.
+     *
      * @returns {Entity} A new Entity which is a deep copy of the original.
      * @example
      * var e = this.entity.clone();
