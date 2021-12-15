@@ -86,6 +86,7 @@ class ClusteredSpotShadowsExample extends Example {
         app.scene.clusteredLightingEnabled = true;
 
         // adjust default clusterered lighting parameters to handle many lights:
+        // @ts-ignore
         const lighting = app.scene.lighting;
 
         // 1) subdivide space with lights into this many cells:
