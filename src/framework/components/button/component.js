@@ -425,8 +425,15 @@ class ButtonComponent extends Component {
 
         if (this._imageReference.hasComponent('element')) {
             this._isApplyingSprite = true;
-            this._imageReference.entity.element.spriteAsset = spriteAsset;
-            this._imageReference.entity.element.spriteFrame = spriteFrame;
+
+            if (this._imageReference.entity.element.spriteAsset !== spriteAsset) {
+                this._imageReference.entity.element.spriteAsset = spriteAsset;
+            }
+
+            if (this._imageReference.entity.element.spriteFrame !== spriteFrame) {
+                this._imageReference.entity.element.spriteFrame = spriteFrame;
+            }
+
             this._isApplyingSprite = false;
         }
     }
