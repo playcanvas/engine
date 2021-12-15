@@ -1,9 +1,10 @@
+/** @typedef {import('../evaluator/anim-target.js').AnimTarget} AnimTarget */
+
 /**
- * @private
- * @class
- * @name AnimBinder
- * @classdesc This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
+ * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.
+ *
+ * @private
  */
 class AnimBinder {
     // join a list of path segments into a path string using the full stop character. If another character is supplied,
@@ -68,7 +69,6 @@ class AnimBinder {
     }
 
     /**
-     * @private
      * @function
      * @name AnimBinder#resolve
      * @description Resolve the provided target path and return an instance of {@link AnimTarget} which
@@ -81,7 +81,6 @@ class AnimBinder {
     }
 
     /**
-     * @private
      * @function
      * @name AnimBinder#unresolve
      * @description Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
@@ -92,7 +91,6 @@ class AnimBinder {
     }
 
     /**
-     * @private
      * @function
      * @name AnimBinder#update
      * @description Called by {@link AnimEvaluator} once a frame after animation updates are done.

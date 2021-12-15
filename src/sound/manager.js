@@ -10,17 +10,21 @@ import { Channel3d } from '../audio/channel3d.js';
 import { Listener } from './listener.js';
 
 /**
- * @class
- * @name SoundManager
+ * The SoundManager is used to load and play audio. As well as apply system-wide settings like
+ * global volume, suspend and resume.
+ *
+ * @property {number} volume Global volume for the manager. All {@link SoundInstance}s will scale
+ * their volume with this volume. Valid between [0, 1].
  * @augments EventHandler
- * @classdesc The SoundManager is used to load and play audio. As well as apply system-wide settings
- * like global volume, suspend and resume.
- * @description Creates a new sound manager.
- * @param {object} [options] - Options options object.
- * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available.
- * @property {number} volume Global volume for the manager. All {@link SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
  */
 class SoundManager extends EventHandler {
+    /**
+     * Create a new SoundManager instance.
+     *
+     * @param {object} [options] - Options options object.
+     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check
+     * indicates that it if not available.
+     */
     constructor(options) {
         super();
 

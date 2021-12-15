@@ -23,6 +23,9 @@ import { Batch } from './batch.js';
 import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
 
+/** @typedef {import('../../framework/entity.js').Entity} Entity */
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../scene.js').Scene} Scene */
 
 function paramsIdentical(a, b) {
     if (a && !b) return false;
@@ -79,14 +82,16 @@ function getScaleSign(mi) {
 }
 
 /**
- * @class
- * @name BatchManager
- * @classdesc Glues many mesh instances into a single one for better performance.
- * @param {GraphicsDevice} device - The graphics device used by the batch manager.
- * @param {Entity} root - The entity under which batched models are added.
- * @param {Scene} scene - The scene that the batch manager affects.
+ * Glues many mesh instances into a single one for better performance.
  */
 class BatchManager {
+    /**
+     * Create a new BatchManager instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device used by the batch manager.
+     * @param {Entity} root - The entity under which batched models are added.
+     * @param {Scene} scene - The scene that the batch manager affects.
+     */
     constructor(device, root, scene) {
         this.device = device;
         this.rootNode = root;

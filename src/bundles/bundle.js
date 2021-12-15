@@ -1,11 +1,16 @@
 /**
+ * Represents the resource of a Bundle Asset, which contains an index that maps URLs to blob URLs.
+ *
  * @private
- * @class
- * @name Bundle
- * @param {object[]} files - An array of objects that have a name field and contain a getBlobUrl() function.
- * @classdesc Represents the resource of a Bundle Asset, which contains an index that maps URLs to blob URLs.
  */
 class Bundle {
+    /**
+     * Create a new Bundle instance.
+     *
+     * @param {object[]} files - An array of objects that have a name field and contain a
+     * getBlobUrl() function.
+     * @private
+     */
     constructor(files) {
         this._blobUrls = {};
 

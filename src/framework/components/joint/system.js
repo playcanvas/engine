@@ -7,15 +7,18 @@ import { JointComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @private
- * @class
- * @name JointComponentSystem
- * @classdesc Creates and manages physics joint components.
- * @description Create a new JointComponentSystem.
- * @param {Application} app - The application.
+ * Creates and manages physics joint components.
+ *
  * @augments ComponentSystem
+ * @private
  */
 class JointComponentSystem extends ComponentSystem {
+    /**
+     * Create a new JointComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     * @private
+     */
     constructor(app) {
         super(app);
 

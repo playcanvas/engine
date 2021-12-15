@@ -10,6 +10,9 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
     diffuseMap: 'gray',
@@ -25,13 +28,16 @@ const PLACEHOLDER_MAP = {
 };
 
 /**
- * @class
- * @name MaterialHandler
+ * Resource handler used for loading {@link Material} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Material} resources.
- * @param {Application} app - The running {@link Application}.
  */
 class MaterialHandler {
+    /**
+     * Create a new MaterialHandler instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;

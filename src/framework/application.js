@@ -122,6 +122,12 @@ import {
     setApplication
 } from './globals.js';
 
+/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+
 // Mini-object used to measure progress of loading sets
 class Progress {
     constructor(length) {
@@ -139,14 +145,26 @@ class Progress {
 }
 
 /**
- * @class
- * @name Application
- * @augments EventHandler
- * @classdesc An Application represents and manages your PlayCanvas application.
- * If you are developing using the PlayCanvas Editor, the Application is created
- * for you. You can access your Application instance in your scripts. Below is a
- * skeleton script which shows how you can access the application 'app' property inside
- * the initialize and update functions:
+ * Callback used by {@link Application#configure} when configuration file is loaded and parsed (or
+ * an error occurs).
+ *
+ * @callback configureAppCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ */
+
+/**
+ * Callback used by {@link Application#preload} when all assets (marked as 'preload') are loaded.
+ *
+ * @callback preloadAppCallback
+ */
+
+let app = null;
+
+/**
+ * An Application represents and manages your PlayCanvas application. If you are developing using
+ * the PlayCanvas Editor, the Application is created for you. You can access your Application
+ * instance in your scripts. Below is a skeleton script which shows how you can access the
+ * application 'app' property inside the initialize and update functions:
  *
  * ```javascript
  * // Editor example: accessing the pc.Application from a script
@@ -163,242 +181,33 @@ class Progress {
  * };
  * ```
  *
- * If you are using the Engine without the Editor, you have to create the application
- * instance manually.
- * @description Create a new Application.
- * @param {Element} canvas - The canvas element.
- * @param {object} options
- * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
- * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
- * @param {Mouse} [options.mouse] - Mouse handler for input.
- * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
- * @param {GamePads} [options.gamepads] - Gamepad handler for input.
- * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
- * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
- * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
- * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
- * @example
- * // Engine-only example: create the application manually
- * var app = new pc.Application(canvas, options);
+ * If you are using the Engine without the Editor, you have to create the application instance
+ * manually.
  *
- * // Start the application's main loop
- * app.start();
+ * @augments EventHandler
  */
-
-// PROPERTIES
-
-/**
- * @name Application#scene
- * @type {Scene}
- * @description The scene managed by the application.
- * @example
- * // Set the tone mapping property of the application's scene
- * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
- */
-
-/**
- * @name Application#timeScale
- * @type {number}
- * @description Scales the global time delta. Defaults to 1.
- * @example
- * // Set the app to run at half speed
- * this.app.timeScale = 0.5;
- */
-
-/**
- * @name Application#maxDeltaTime
- * @type {number}
- * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
- * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
- * to 0.1 (seconds).
- * @example
- * // Don't clamp inter-frame times of 200ms or less
- * this.app.maxDeltaTime = 0.2;
- */
-
-/**
- * @name Application#scenes
- * @type {SceneRegistry}
- * @description The scene registry managed by the application.
- * @example
- * // Search the scene registry for a item with the name 'racetrack1'
- * var sceneItem = this.app.scenes.find('racetrack1');
- *
- * // Load the scene using the item's url
- * this.app.scenes.loadScene(sceneItem.url);
- */
-
-/**
- * @name Application#assets
- * @type {AssetRegistry}
- * @description The asset registry managed by the application.
- * @example
- * // Search the asset registry for all assets with the tag 'vehicle'
- * var vehicleAssets = this.app.assets.findByTag('vehicle');
- */
-
-/**
- * @name Application#graphicsDevice
- * @type {GraphicsDevice}
- * @description The graphics device used by the application.
- */
-
-/**
- * @name Application#systems
- * @type {ComponentSystemRegistry}
- * @description The application's component system registry. The Application
- * constructor adds the following component systems to its component system registry:
- *
- * - anim ({@link AnimComponentSystem})
- * - animation ({@link AnimationComponentSystem})
- * - audiolistener ({@link AudioListenerComponentSystem})
- * - button ({@link ButtonComponentSystem})
- * - camera ({@link CameraComponentSystem})
- * - collision ({@link CollisionComponentSystem})
- * - element ({@link ElementComponentSystem})
- * - layoutchild ({@link LayoutChildComponentSystem})
- * - layoutgroup ({@link LayoutGroupComponentSystem})
- * - light ({@link LightComponentSystem})
- * - model ({@link ModelComponentSystem})
- * - particlesystem ({@link ParticleSystemComponentSystem})
- * - rigidbody ({@link RigidBodyComponentSystem})
- * - render ({@link RenderComponentSystem})
- * - screen ({@link ScreenComponentSystem})
- * - script ({@link ScriptComponentSystem})
- * - scrollbar ({@link ScrollbarComponentSystem})
- * - scrollview ({@link ScrollViewComponentSystem})
- * - sound ({@link SoundComponentSystem})
- * - sprite ({@link SpriteComponentSystem})
- * @example
- * // Set global gravity to zero
- * this.app.systems.rigidbody.gravity.set(0, 0, 0);
- * @example
- * // Set the global sound volume to 50%
- * this.app.systems.sound.volume = 0.5;
- */
-
-/**
- * @name Application#xr
- * @type {XrManager}
- * @description The XR Manager that provides ability to start VR/AR sessions.
- * @example
- * // check if VR is available
- * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
- *     // VR is available
- * }
- */
-
-
-/**
- * @name Application#lightmapper
- * @type {Lightmapper}
- * @description The run-time lightmapper.
- */
-
-/**
- * @name Application#loader
- * @type {ResourceLoader}
- * @description The resource loader.
- */
-
-/**
- * @name Application#root
- * @type {Entity}
- * @description The root entity of the application.
- * @example
- * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
- * var camera = this.app.root.findByName('Camera');
- */
-
-/**
- * @name Application#keyboard
- * @type {Keyboard}
- * @description The keyboard device.
- */
-
-/**
- * @name Application#mouse
- * @type {Mouse}
- * @description The mouse device.
- */
-
-/**
- * @name Application#touch
- * @type {TouchDevice}
- * @description Used to get touch events input.
- */
-
-/**
- * @name Application#gamepads
- * @type {GamePads}
- * @description Used to access GamePad input.
- */
-
-/**
- * @name Application#elementInput
- * @type {ElementInput}
- * @description Used to handle input for {@link ElementComponent}s.
- */
-
-/**
- * @name Application#scripts
- * @type {ScriptRegistry}
- * @description The application's script registry.
- */
-
-/**
- * @name Application#batcher
- * @type {BatchManager}
- * @description The application's batch manager. The batch manager is used to
- * merge mesh instances in the scene, which reduces the overall number of draw
- * calls, thereby boosting performance.
- */
-
-/**
- * @name Application#autoRender
- * @type {boolean}
- * @description When true, the application's render function is called every frame.
- * Setting autoRender to false is useful to applications where the rendered image
- * may often be unchanged over time. This can heavily reduce the application's
- * load on the CPU and GPU. Defaults to true.
- * @example
- * // Disable rendering every frame and only render on a keydown event
- * this.app.autoRender = false;
- * this.app.keyboard.on('keydown', function (event) {
- *     this.app.renderNextFrame = true;
- * }, this);
- */
-
-/**
- * @name Application#renderNextFrame
- * @type {boolean}
- * @description Set to true to render the scene on the next iteration of the main loop.
- * This only has an effect if {@link Application#autoRender} is set to false. The
- * value of renderNextFrame is set back to false again as soon as the scene has been
- * rendered.
- * @example
- * // Render the scene only while space key is pressed
- * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
- *     this.app.renderNextFrame = true;
- * }
- */
-
- /**
-  * @name Application#i18n
-  * @type {I18n}
-  * @description Handles localization.
-  */
-
-/**
- * @private
- * @static
- * @name app
- * @type {Application|undefined}
- * @description Gets the current application, if any.
- */
-let app = null;
-
 class Application extends EventHandler {
+    /**
+     * Create a new Application instance.
+     *
+     * @param {Element} canvas - The canvas element.
+     * @param {object} [options] - The options object to configure the Application.
+     * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
+     * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
+     * @param {Mouse} [options.mouse] - Mouse handler for input.
+     * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
+     * @param {GamePads} [options.gamepads] - Gamepad handler for input.
+     * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
+     * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
+     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
+     * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
+     * @example
+     * // Engine-only example: create the application manually
+     * var app = new pc.Application(canvas, options);
+     *
+     * // Start the application's main loop
+     * app.start();
+     */
     constructor(canvas, options = {}) {
         super();
 
@@ -653,6 +462,215 @@ class Application extends EventHandler {
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
+    /**
+     * @name Application#scene
+     * @type {Scene}
+     * @description The scene managed by the application.
+     * @example
+     * // Set the tone mapping property of the application's scene
+     * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+     */
+
+    /**
+     * @name Application#timeScale
+     * @type {number}
+     * @description Scales the global time delta. Defaults to 1.
+     * @example
+     * // Set the app to run at half speed
+     * this.app.timeScale = 0.5;
+     */
+
+    /**
+     * @name Application#maxDeltaTime
+     * @type {number}
+     * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+     * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
+     * to 0.1 (seconds).
+     * @example
+     * // Don't clamp inter-frame times of 200ms or less
+     * this.app.maxDeltaTime = 0.2;
+     */
+
+    /**
+     * @name Application#scenes
+     * @type {SceneRegistry}
+     * @description The scene registry managed by the application.
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * var sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+
+    /**
+     * @name Application#assets
+     * @type {AssetRegistry}
+     * @description The asset registry managed by the application.
+     * @example
+     * // Search the asset registry for all assets with the tag 'vehicle'
+     * var vehicleAssets = this.app.assets.findByTag('vehicle');
+     */
+
+    /**
+     * @name Application#graphicsDevice
+     * @type {GraphicsDevice}
+     * @description The graphics device used by the application.
+     */
+
+    /**
+     * @name Application#systems
+     * @type {ComponentSystemRegistry}
+     * @description The application's component system registry. The Application
+     * constructor adds the following component systems to its component system registry:
+     *
+     * - anim ({@link AnimComponentSystem})
+     * - animation ({@link AnimationComponentSystem})
+     * - audiolistener ({@link AudioListenerComponentSystem})
+     * - button ({@link ButtonComponentSystem})
+     * - camera ({@link CameraComponentSystem})
+     * - collision ({@link CollisionComponentSystem})
+     * - element ({@link ElementComponentSystem})
+     * - layoutchild ({@link LayoutChildComponentSystem})
+     * - layoutgroup ({@link LayoutGroupComponentSystem})
+     * - light ({@link LightComponentSystem})
+     * - model ({@link ModelComponentSystem})
+     * - particlesystem ({@link ParticleSystemComponentSystem})
+     * - rigidbody ({@link RigidBodyComponentSystem})
+     * - render ({@link RenderComponentSystem})
+     * - screen ({@link ScreenComponentSystem})
+     * - script ({@link ScriptComponentSystem})
+     * - scrollbar ({@link ScrollbarComponentSystem})
+     * - scrollview ({@link ScrollViewComponentSystem})
+     * - sound ({@link SoundComponentSystem})
+     * - sprite ({@link SpriteComponentSystem})
+     * @example
+     * // Set global gravity to zero
+     * this.app.systems.rigidbody.gravity.set(0, 0, 0);
+     * @example
+     * // Set the global sound volume to 50%
+     * this.app.systems.sound.volume = 0.5;
+     */
+
+    /**
+     * @name Application#xr
+     * @type {XrManager}
+     * @description The XR Manager that provides ability to start VR/AR sessions.
+     * @example
+     * // check if VR is available
+     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     *     // VR is available
+     * }
+     */
+
+    /**
+     * @name Application#lightmapper
+     * @type {Lightmapper}
+     * @description The run-time lightmapper.
+     */
+
+    /**
+     * @name Application#loader
+     * @type {ResourceLoader}
+     * @description The resource loader.
+     */
+
+    /**
+     * @name Application#root
+     * @type {Entity}
+     * @description The root entity of the application.
+     * @example
+     * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
+     * var camera = this.app.root.findByName('Camera');
+     */
+
+    /**
+     * @name Application#keyboard
+     * @type {Keyboard}
+     * @description The keyboard device.
+     */
+
+    /**
+     * @name Application#mouse
+     * @type {Mouse}
+     * @description The mouse device.
+     */
+
+    /**
+     * @name Application#touch
+     * @type {TouchDevice}
+     * @description Used to get touch events input.
+     */
+
+    /**
+     * @name Application#gamepads
+     * @type {GamePads}
+     * @description Used to access GamePad input.
+     */
+
+    /**
+     * @name Application#elementInput
+     * @type {ElementInput}
+     * @description Used to handle input for {@link ElementComponent}s.
+     */
+
+    /**
+     * @name Application#scripts
+     * @type {ScriptRegistry}
+     * @description The application's script registry.
+     */
+
+    /**
+     * @name Application#batcher
+     * @type {BatchManager}
+     * @description The application's batch manager. The batch manager is used to
+     * merge mesh instances in the scene, which reduces the overall number of draw
+     * calls, thereby boosting performance.
+     */
+
+    /**
+     * @name Application#autoRender
+     * @type {boolean}
+     * @description When true, the application's render function is called every frame.
+     * Setting autoRender to false is useful to applications where the rendered image
+     * may often be unchanged over time. This can heavily reduce the application's
+     * load on the CPU and GPU. Defaults to true.
+     * @example
+     * // Disable rendering every frame and only render on a keydown event
+     * this.app.autoRender = false;
+     * this.app.keyboard.on('keydown', function (event) {
+     *     this.app.renderNextFrame = true;
+     * }, this);
+     */
+
+    /**
+     * @name Application#renderNextFrame
+     * @type {boolean}
+     * @description Set to true to render the scene on the next iteration of the main loop.
+     * This only has an effect if {@link Application#autoRender} is set to false. The
+     * value of renderNextFrame is set back to false again as soon as the scene has been
+     * rendered.
+     * @example
+     * // Render the scene only while space key is pressed
+     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     *     this.app.renderNextFrame = true;
+     * }
+     */
+
+    /**
+     * @name Application#i18n
+     * @type {I18n}
+     * @description Handles localization.
+     */
+
+    /**
+     * @private
+     * @static
+     * @name app
+     * @type {Application|undefined}
+     * @description Gets the current application, if any.
+     */
+
     static _applications = {};
 
     /**
@@ -680,7 +698,6 @@ class Application extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name Application#fillMode
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
@@ -694,7 +711,6 @@ class Application extends EventHandler {
     }
 
     /**
-     * @readonly
      * @name Application#resolutionMode
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
@@ -711,7 +727,7 @@ class Application extends EventHandler {
      * @name Application#configure
      * @description Load the application configuration file and apply application properties and fill the asset registry.
      * @param {string} url - The URL of the configuration file to load.
-     * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
+     * @param {configureAppCallback} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
         http.get(url, (err, response) => {
@@ -740,7 +756,7 @@ class Application extends EventHandler {
      * @function
      * @name Application#preload
      * @description Load all assets in the asset registry that are marked as 'preload'.
-     * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
+     * @param {preloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         this.fire("preload:start");

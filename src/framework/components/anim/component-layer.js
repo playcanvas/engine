@@ -3,18 +3,21 @@ import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
+/** @typedef {import('./component.js').AnimComponent} AnimComponent */
 
 /**
- * @class
- * @name AnimComponentLayer
- * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
- * @description Create a new AnimComponentLayer.
- * @param {string} name - The name of the layer.
- * @param {object} controller - The controller to manage this layers animations.
- * @param {AnimComponent} component - The component that this layer is a member of.
- * @param {number} weight - The weight of this layer. Defaults to 1.
+ * The Anim Component Layer allows managers a single layer of the animation state graph.
  */
 class AnimComponentLayer {
+    /**
+     * Create a new AnimComponentLayer instance.
+     *
+     * @param {string} name - The name of the layer.
+     * @param {object} controller - The controller to manage this layers animations.
+     * @param {AnimComponent} component - The component that this layer is a member of.
+     * @param {number} [weight] - The weight of this layer. Defaults to 1.
+     * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
+     */
     constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;
@@ -147,7 +150,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#name
      * @type {string}
      * @description Returns the name of the layer.
@@ -170,7 +172,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#playable
      * @type {string}
      * @description Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
@@ -180,7 +181,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#activeState
      * @type {string}
      * @description Returns the currently active state name.
@@ -190,7 +190,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#previousState
      * @type {string}
      * @description Returns the previously active state name.
@@ -200,7 +199,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#activeStateProgress
      * @type {number}
      * @description Returns the currently active states progress as a value normalized by the states animation duration. Looped animations will return values greater than 1.
@@ -210,7 +208,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#activeStateDuration
      * @type {number}
      * @description Returns the currently active states duration.
@@ -233,7 +230,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#transitioning
      * @type {boolean}
      * @description Returns whether the anim component layer is currently transitioning between states.
@@ -243,7 +239,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#transitionProgress
      * @type {number}
      * @description If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
@@ -256,7 +251,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * @readonly
      * @name AnimComponentLayer#states
      * @type {string[]}
      * @description Lists all available states in this layers state graph.

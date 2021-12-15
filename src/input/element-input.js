@@ -9,6 +9,10 @@ import { getApplication } from '../framework/globals.js';
 
 import { Mouse } from './mouse.js';
 
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../framework/components/element/component.js').ElementComponent} ElementComponent */
+/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
+
 let targetX, targetY;
 const vecA = new Vec3();
 const vecB = new Vec3();
@@ -109,30 +113,48 @@ function intersectLineQuad(p, q, corners) {
 }
 
 /**
- * @class
- * @name ElementInputEvent
- * @classdesc Represents an input event fired on a {@link ElementComponent}. When an event is raised
- * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
- * @description Create an instance of an ElementInputEvent.
- * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
- * @property {ElementComponent} element The ElementComponent that this event was originally raised on.
- * @property {CameraComponent} camera The CameraComponent that this event was originally raised via.
+ * Represents an input event fired on a {@link ElementComponent}. When an event is raised on an
+ * ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
  */
 class ElementInputEvent {
+    /**
+     * Create a new ElementInputEvent instance.
+     *
+     * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally
+     * raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     */
     constructor(event, element, camera) {
+        /**
+         * The MouseEvent or TouchEvent that was originally raised.
+         *
+         * @type {MouseEvent|TouchEvent}
+         */
         this.event = event;
+
+        /**
+         * The ElementComponent that this event was originally raised on.
+         *
+         * @type {ElementComponent}
+         */
         this.element = element;
+
+        /**
+         * The CameraComponent that this event was originally raised via.
+         *
+         * @type {CameraComponent}
+         */
         this.camera = camera;
+
         this._stopPropagation = false;
     }
 
     /**
-     * @function
-     * @name ElementInputEvent#stopPropagation
-     * @description Stop propagation of the event to parent {@link ElementComponent}s. This also stops propagation of the event to other event listeners of the original DOM Event.
+     * Stop propagation of the event to parent {@link ElementComponent}s. This also stops
+     * propagation of the event to other event listeners of the original DOM Event.
      */
     stopPropagation() {
         this._stopPropagation = true;
@@ -144,18 +166,8 @@ class ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementMouseEvent
- * @augments ElementInputEvent
- * @classdesc Represents a Mouse event fired on a {@link ElementComponent}.
- * @description Create an instance of an ElementMouseEvent.
- * @param {MouseEvent} event - The MouseEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {number} x - The x coordinate.
- * @param {number} y - The y coordinate.
- * @param {number} lastX - The last x coordinate.
- * @param {number} lastY - The last y coordinate.
+ * Represents a Mouse event fired on a {@link ElementComponent}.
+ *
  * @property {boolean} ctrlKey Whether the ctrl key was pressed.
  * @property {boolean} altKey Whether the alt key was pressed.
  * @property {boolean} shiftKey Whether the shift key was pressed.
@@ -164,8 +176,22 @@ class ElementInputEvent {
  * @property {number} dx The amount of horizontal movement of the cursor.
  * @property {number} dy The amount of vertical movement of the cursor.
  * @property {number} wheelDelta The amount of the wheel movement.
+ * @augments ElementInputEvent
  */
 class ElementMouseEvent extends ElementInputEvent {
+    /**
+     * Create an instance of an ElementMouseEvent.
+     *
+     * @param {MouseEvent} event - The MouseEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} lastX - The last x coordinate.
+     * @param {number} lastY - The last y coordinate.
+     */
     constructor(event, element, camera, x, y, lastX, lastY) {
         super(event, element, camera);
 
@@ -201,22 +227,28 @@ class ElementMouseEvent extends ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementTouchEvent
- * @augments ElementInputEvent
- * @classdesc Represents a TouchEvent fired on a {@link ElementComponent}.
- * @description Create an instance of an ElementTouchEvent.
- * @param {TouchEvent} event - The TouchEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {number} x - The x coordinate of the touch that triggered the event.
- * @param {number} y - The y coordinate of the touch that triggered the event.
- * @param {Touch} touch - The touch object that triggered the event.
- * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
- * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+ * Represents a TouchEvent fired on a {@link ElementComponent}.
+ *
+ * @property {Touch[]} touches The Touch objects representing all current points of contact with
+ * the surface, regardless of target or changed status.
+ * @property {Touch[]} changedTouches The Touch objects representing individual points of contact
+ * whose states changed between the previous touch event and this one.
  * @property {Touch} touch The touch object that triggered the event.
+ * @augments ElementInputEvent
  */
 class ElementTouchEvent extends ElementInputEvent {
+    /**
+     * Create an instance of an ElementTouchEvent.
+     *
+     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {number} x - The x coordinate of the touch that triggered the event.
+     * @param {number} y - The y coordinate of the touch that triggered the event.
+     * @param {Touch} touch - The touch object that triggered the event.
+     */
     constructor(event, element, camera, x, y, touch) {
         super(event, element, camera);
 
@@ -229,37 +261,48 @@ class ElementTouchEvent extends ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementSelectEvent
+ * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
+ *
  * @augments ElementInputEvent
- * @classdesc Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
- * @description Create an instance of a ElementSelectEvent.
- * @param {object} event - The XRInputSourceEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {XrInputSource} inputSource - The XR input source that this event was originally raised from.
- * @property {XrInputSource} inputSource The XR input source that this event was originally raised from.
  */
 class ElementSelectEvent extends ElementInputEvent {
+    /**
+     * Create an instance of a ElementSelectEvent.
+     *
+     * @param {object} event - The XRInputSourceEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {XrInputSource} inputSource - The XR input source that this event was originally
+     * raised from.
+     */
     constructor(event, element, camera, inputSource) {
         super(event, element, camera);
+
+        /**
+         * The XR input source that this event was originally raised from.
+         *
+         * @type {XrInputSource}
+         */
         this.inputSource = inputSource;
     }
 }
 
 /**
- * @class
- * @name ElementInput
- * @classdesc Handles mouse and touch events for {@link ElementComponent}s. When input events
- * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
- * @description Create a new ElementInput instance.
- * @param {Element} domElement - The DOM element.
- * @param {object} [options] - Optional arguments.
- * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
- * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
- * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
+ * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
+ * ElementComponent this fires the appropriate events on the ElementComponent.
  */
 class ElementInput {
+    /**
+     * Create a new ElementInput instance.
+     *
+     * @param {Element} domElement - The DOM element.
+     * @param {object} [options] - Optional arguments.
+     * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
+     * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
+     * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
+     */
     constructor(domElement, options) {
         this._app = null;
         this._attached = false;
@@ -301,9 +344,8 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#attach
-     * @description Attach mouse and touch events to a DOM element.
+     * Attach mouse and touch events to a DOM element.
+     *
      * @param {Element} domElement - The DOM element.
      */
     attach(domElement) {
@@ -346,9 +388,7 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#detach
-     * @description Remove mouse and touch events from the DOM element that it is attached to.
+     * Remove mouse and touch events from the DOM element that it is attached to.
      */
     detach() {
         if (!this._attached) return;
@@ -383,9 +423,9 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#addElement
-     * @description Add a {@link ElementComponent} to the internal list of ElementComponents that are being checked for input.
+     * Add a {@link ElementComponent} to the internal list of ElementComponents that are being
+     * checked for input.
+     *
      * @param {ElementComponent} element - The ElementComponent.
      */
     addElement(element) {
@@ -394,9 +434,9 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#removeElement
-     * @description Remove a {@link ElementComponent} from the internal list of ElementComponents that are being checked for input.
+     * Remove a {@link ElementComponent} from the internal list of ElementComponents that are being
+     * checked for input.
+     *
      * @param {ElementComponent} element - The ElementComponent.
      */
     removeElement(element) {

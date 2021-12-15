@@ -5,17 +5,18 @@ import { basisTranscode } from '../../basis.js';
 import { ReadStream } from '../../../core/read-stream.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 const KHRConstants = {
     KHR_DF_MODEL_ETC1S: 163,
     KHR_DF_MODEL_UASTC: 166
 };
 
 /**
- * @private
- * @class
- * @name Ktx2Parser
+ * Texture parser for ktx2 files.
+ *
  * @implements {TextureParser}
- * @classdesc Texture parser for ktx2 files.
+ * @private
  */
 class Ktx2Parser {
     constructor(registry, device) {

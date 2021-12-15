@@ -1,5 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
+/** @typedef {import('./mesh.js').Mesh} Mesh */
+
 /**
  * @event
  * @private
@@ -9,15 +11,18 @@ import { EventHandler } from '../core/event-handler.js';
  */
 
 /**
- * @class
- * @private
- * @name Render
+ * A render contains an array of meshes that are referenced by a single hierarchy node in a GLB
+ * model, and are accessible using {@link ContainerResource#renders} property. The render is the
+ * resource of a Render Asset.
+ *
  * @augments EventHandler
- * @classdesc A render contains an array of meshes that are referenced by a single hierarchy node in a GLB model, and are accessible using {@link ContainerResource#renders} property. The render is the resource of a Render Asset.
- * @description Create a new Render. These are usually created by the GLB loader and not created by hand.
- * @property {Mesh[]} meshes The meshes that the render contains
+ * @private
  */
 class Render extends EventHandler {
+    /**
+     * Create a new Render instance. These are usually created by the GLB loader and not created
+     * by hand.
+     */
     constructor() {
         super();
 
@@ -59,6 +64,12 @@ class Render extends EventHandler {
         }
     }
 
+    /**
+     * The meshes that the render contains.
+     *
+     * @type {Mesh[]}
+     * @private
+     */
     get meshes() {
         return this._meshes;
     }

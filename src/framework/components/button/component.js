@@ -10,6 +10,9 @@ import { Component } from '../component.js';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from "../element/constants";
 
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').ButtonComponentSystem} ButtonComponentSystem */
+
 const VisualState = {
     DEFAULT: 'DEFAULT',
     HOVER: 'HOVER',
@@ -36,14 +39,9 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.PRESSED] = 'pressedSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 
 /**
- * @component
- * @class
- * @name ButtonComponent
- * @augments Component
- * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
- * @description Create a new ButtonComponent.
- * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * A ButtonComponent enables a group of entities to behave like a button, with different visual
+ * states for hover and press interactions.
+ *
  * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
  * @property {Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
  * @property {Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
@@ -58,8 +56,16 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @property {number} pressedSpriteFrame Frame to be used from the pressed sprite.
  * @property {Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
+ * @augments Component
+ * @component
  */
 class ButtonComponent extends Component {
+    /**
+     * Create a new ButtonComponent instance.
+     *
+     * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

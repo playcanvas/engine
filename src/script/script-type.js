@@ -5,17 +5,17 @@ import { ScriptComponent } from '../framework/components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/entity.js').Entity} Entity */
+
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
- * @class
- * @name ScriptType
- * @augments EventHandler
- * @classdesc Represents the type of a script. It is returned by {@link createScript}.
- * Also referred to as Script Type.
+ * Represents the type of a script. It is returned by {@link createScript}. Also referred to as
+ * Script Type.
  *
- * The type is to be extended using its JavaScript prototype. There is a list of methods
- * that will be executed by the engine on instances of this type, such as:
+ * The type is to be extended using its JavaScript prototype. There is a list of methods that will
+ * be executed by the engine on instances of this type, such as:
  *
  * - `initialize`
  * - `postInitialize`
@@ -23,30 +23,35 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * - `postUpdate`
  * - `swap`
  *
- * `initialize` and `postInitialize` - are called (if defined) when a script is about to run
- * for the first time - `postInitialize` will run after all `initialize` methods are executed
- * in the same tick or enabling chain of actions.
+ * `initialize` and `postInitialize` - are called (if defined) when a script is about to run for
+ * the first time - `postInitialize` will run after all `initialize` methods are executed in the
+ * same tick or enabling chain of actions.
  *
- * `update` and `postUpdate` - are called (if defined) for enabled (running state) scripts
- * on each tick.
+ * `update` and `postUpdate` - are called (if defined) for enabled (running state) scripts on each
+ * tick.
  *
- * `swap` - is called when a ScriptType that already exists in the registry gets redefined.
- * If the new ScriptType has a `swap` method in its prototype, then it will be executed to
- * perform hot-reload at runtime.
- * @property {Application} app The {@link Application} that the instance of this type
- * belongs to.
+ * `swap` - is called when a ScriptType that already exists in the registry gets redefined. If the
+ * new ScriptType has a `swap` method in its prototype, then it will be executed to perform hot-
+ * reload at runtime.
+ *
+ * @property {Application} app The {@link Application} that the instance of this type belongs to.
  * @property {Entity} entity The {@link Entity} that the instance of this type belongs to.
- * @property {boolean} enabled True if the instance of this type is in running state. False
- * when script is not running, because the Entity or any of its parents are disabled or the
- * Script Component is disabled or the Script Instance is disabled. When disabled no update
- * methods will be called on each tick. initialize and postInitialize methods will run once
- * when the script instance is in `enabled` state during app tick.
- * @param {object} args - The input arguments object
- * @param {Application} args.app - The {@link Application} that is running the script
- * @param {Entity} args.entity - The {@link Entity} that the script is attached to
+ * @property {boolean} enabled True if the instance of this type is in running state. False when
+ * script is not running, because the Entity or any of its parents are disabled or the
+ * {@link ScriptComponent} is disabled or the Script Instance is disabled. When disabled no update
+ * methods will be called on each tick. initialize and postInitialize methods will run once when
+ * the script instance is in `enabled` state during app tick.
  *
+ * @augments EventHandler
  */
 class ScriptType extends EventHandler {
+    /**
+     * Create a new ScriptType instance.
+     *
+     * @param {object} args - The input arguments object.
+     * @param {Application} args.app - The {@link Application} that is running the script.
+     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
+     */
     constructor(args) {
         super();
         this.initScriptType(args);
@@ -92,7 +97,6 @@ class ScriptType extends EventHandler {
     /**
      * @field
      * @static
-     * @readonly
      * @name ScriptType.scriptName
      * @type {string|null}
      * @description Name of a Script Type.
@@ -104,7 +108,6 @@ class ScriptType extends EventHandler {
     /**
      * @field
      * @static
-     * @readonly
      * @name ScriptType.attributes
      * @type {ScriptAttributes}
      * @description The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
@@ -145,7 +148,6 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @readonly
      * @static
      * @function
      * @name ScriptType.extend

@@ -79,10 +79,9 @@ if (hasAudioContext()) {
         },
 
         /**
+         * Create the buffer source and connect it up to the correct audio nodes.
+         *
          * @private
-         * @function
-         * @name Channel3d#_createSource
-         * @description Create the buffer source and connect it up to the correct audio nodes.
          */
         _createSource: function () {
             const context = this.manager.context;

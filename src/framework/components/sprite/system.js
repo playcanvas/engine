@@ -15,16 +15,21 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name SpriteComponentSystem
+ * Manages creation of {@link SpriteComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link SpriteComponent}s.
- * @param {Application} app - The application.
  */
 class SpriteComponentSystem extends ComponentSystem {
+    /**
+     * Create a new SpriteComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

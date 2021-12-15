@@ -5,6 +5,13 @@ import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
+/** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../../math/mat4.js').Mat4} Mat4 */
+/** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../../../xr/xr-manager.js').xrErrorCallback} xrErrorCallback */
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').CameraComponentSystem} CameraComponentSystem */
+
 // note: when this list is modified, the copy() function needs to be adjusted
 const properties = [
     { name: 'aspectRatio', readonly: false },
@@ -29,19 +36,26 @@ const properties = [
 ];
 
 /**
- * @component
- * @class
- * @name CameraComponent
- * @augments Component
- * @classdesc The Camera Component enables an Entity to render the scene. A scene
- * requires at least one enabled camera component to be rendered. Note that multiple
- * camera components can be enabled simultaneously (for split-screen or offscreen
- * rendering, for example).
- * @description Create a new Camera Component.
- * @param {CameraComponentSystem} system - The ComponentSystem that created this
- * Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @example
+ * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
+ *
+ * @callback calculateMatrixCallback
+ * @param {Mat4} transformMatrix - Output of the function.
+ * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ */
+
+/**
+ * Callback used by {@link CameraComponent#enterVr} and {@link CameraComponent#exitVr}.
+ *
+ * @callback vrCameraCallback
+ * @param {string|null} err - On success it is null on failure it is the error message.
+ */
+
+/**
+ * The Camera Component enables an Entity to render the scene. A scene requires at least one
+ * enabled camera component to be rendered. Note that multiple camera components can be enabled
+ * simultaneously (for split-screen or offscreen rendering, for example).
+ *
+ * ```javascript
  * // Add a pc.CameraComponent to an entity
  * var entity = new pc.Entity();
  * entity.addComponent('camera', {
@@ -49,14 +63,15 @@ const properties = [
  *     farClip: 100,
  *     fov: 55
  * });
- * @example
+ *
  * // Get the pc.CameraComponent on an entity
  * var cameraComponent = entity.camera;
- * @example
+ *
  * // Update a property on a camera component
  * entity.camera.nearClip = 2;
- * @property {number} projection The type of projection used to render the camera.
- * Can be:
+ * ```
+ *
+ * @property {number} projection The type of projection used to render the camera. Can be:
  *
  * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
  * resembles a truncated pyramid.
@@ -64,10 +79,9 @@ const properties = [
  * frustum is a cuboid.
  *
  * Defaults to {@link PROJECTION_PERSPECTIVE}.
- * @property {number} aspectRatio The aspect ratio (width divided by height) of the
- * camera. If aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically
- * calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set
- * the value.
+ * @property {number} aspectRatio The aspect ratio (width divided by height) of the camera. If
+ * aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically calculated every
+ * frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
  * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
  *
  * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
@@ -75,68 +89,78 @@ const properties = [
  * - {@link ASPECT_MANUAL}: use the aspectRatio value.
  *
  * Defaults to {@link ASPECT_AUTO}.
- * @property {Color} clearColor The color used to clear the canvas to before the
- * camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
- * @property {boolean} clearColorBuffer If true the camera will clear the color buffer
- * to the color set in clearColor. Defaults to true.
- * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+ * @property {Color} clearColor The color used to clear the canvas to before the camera starts to
+ * render. Defaults to [0.75, 0.75, 0.75, 1].
+ * @property {boolean} clearColorBuffer If true the camera will clear the color buffer to the color
+ * set in clearColor. Defaults to true.
+ * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer. Defaults to
+ * true.
+ * @property {boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
  * Defaults to true.
- * @property {boolean} clearStencilBuffer If true the camera will clear the stencil
- * buffer. Defaults to true.
- * @property {number} farClip The distance from the camera after which no rendering
- * will take place. Defaults to 1000.
- * @property {number} fov The field of view of the camera in degrees. Usually this is
- * the Y-axis field of view, see {@link CameraComponent#horizontalFov}. Used for
+ * @property {number} farClip The distance from the camera after which no rendering will take
+ * place. Defaults to 1000.
+ * @property {number} fov The field of view of the camera in degrees. Usually this is the Y-axis
+ * field of view, see {@link CameraComponent#horizontalFov}. Used for
  * {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
- * @property {boolean} horizontalFov Set which axis to use for the Field of View
- * calculation. Defaults to false.
- * @property {number} nearClip The distance from the camera before which no rendering
- * will take place. Defaults to 0.1.
- * @property {number} orthoHeight The half-height of the orthographic view window (in
- * the Y-axis). Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
- * @property {number} priority Controls the order in which cameras are rendered. Cameras
- * with smaller values for priority are rendered first. Defaults to 0.
- * @property {RenderTarget} renderTarget Render target to which rendering of the cameras
- * is performed. If not set, it will render simply to the screen.
- * @property {Vec4} rect Controls where on the screen the camera will be rendered in
- * normalized screen coordinates. Defaults to [0, 0, 1, 1].
- * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle.
- * The order of the values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
- * @property {PostEffectQueue} postEffects The post effects queue for this camera.
- * Use this to add or remove post effects from the camera.
- * @property {boolean} frustumCulling Controls the culling of mesh instances against
- * the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
- * If false, all mesh instances in the scene are rendered by the camera, regardless of
- * visibility. Defaults to false.
- * @property {callbacks.CalculateMatrix} calculateTransform Custom function you can
- * provide to calculate the camera transformation matrix manually. Can be used for complex
- * effects like reflections. Function is called using component's scope.
- * Arguments:
+ * @property {boolean} horizontalFov Set which axis to use for the Field of View calculation.
+ * Defaults to false.
+ * @property {number} nearClip The distance from the camera before which no rendering will take
+ * place. Defaults to 0.1.
+ * @property {number} orthoHeight The half-height of the orthographic view window (in the Y-axis).
+ * Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+ * @property {number} priority Controls the order in which cameras are rendered. Cameras with
+ * smaller values for priority are rendered first. Defaults to 0.
+ * @property {RenderTarget} renderTarget Render target to which rendering of the cameras is
+ * performed. If not set, it will render simply to the screen.
+ * @property {Vec4} rect Controls where on the screen the camera will be rendered in normalized
+ * screen coordinates. Defaults to [0, 0, 1, 1].
+ * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle. The order of the
+ * values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
+ * @property {PostEffectQueue} postEffects The post effects queue for this camera. Use this to add
+ * or remove post effects from the camera.
+ * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
+ * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh
+ * instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
+ * @property {calculateMatrixCallback} calculateTransform Custom function you can provide to
+ * calculate the camera transformation matrix manually. Can be used for complex effects like
+ * reflections. Function is called using component's scope. Arguments:
+ *
  * - {@link Mat4} transformMatrix: output of the function.
- * - {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ *
  * Left and right are only used in stereo rendering.
- * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can
- * provide to calculate the camera projection matrix manually. Can be used for complex
- * effects like doing oblique projection. Function is called using component's scope.
- * Arguments:
- * - {{@link Mat4}} transformMatrix: output of the function
- * - {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ * @property {calculateMatrixCallback} calculateProjection Custom function you can provide to
+ * calculate the camera projection matrix manually. Can be used for complex effects like doing
+ * oblique projection. Function is called using component's scope. Arguments:
+ *
+ * - {@link Mat4} transformMatrix: output of the function
+ * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+ *
  * Left and right are only used in stereo rendering.
- * @property {boolean} cullFaces If true the camera will take material.cull into account.
- * Otherwise both front and back faces will be rendered. Defaults to true.
- * @property {boolean} flipFaces If true the camera will invert front and back faces.
- * Can be useful for reflection rendering. Defaults to false.
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this
- * camera should belong. Don't push/pop/splice or modify this array, if you want to
- * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
- * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
- * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of the camera stops being applied to.
- * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
- * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
+ * @property {boolean} cullFaces If true the camera will take material.cull into account. Otherwise
+ * both front and back faces will be rendered. Defaults to true.
+ * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
+ * for reflection rendering. Defaults to false.
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this camera should
+ * belong. Don't push/pop/splice or modify this array, if you want to change it, set a new one
+ * instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI,
+ * LAYERID_IMMEDIATE].
+ * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of
+ * the camera stops being applied to. Defaults to LAYERID_UI, which causes post processing to not
+ * be applied to UI layer and any following layers for the camera. Set to undefined for
+ * post-processing to be applied to all layers of the camera.
  * @property {Function} onPreRender Custom function that is called before the camera renders the scene.
  * @property {Function} onPostRender Custom function that is called after the camera renders the scene.
+ * @augments Component
+ * @component
  */
 class CameraComponent extends Component {
+    /**
+     * Create a new CameraComponent instance.
+     *
+     * @param {CameraComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
@@ -178,6 +202,12 @@ class CameraComponent extends Component {
      * @description Queries the camera's view matrix.
      */
 
+    /**
+     * Queries the camera component's underlying Camera instance.
+     *
+     * @type {Camera}
+     * @private
+     */
     get camera() {
         return this._camera;
     }
@@ -283,13 +313,12 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#screenToWorld
-     * @description Convert a point from 2D screen space to 3D world space.
+     * Convert a point from 2D screen space to 3D world space.
+     *
      * @param {number} screenx - X coordinate on PlayCanvas' canvas element.
      * @param {number} screeny - Y coordinate on PlayCanvas' canvas element.
-     * @param {number} cameraz - The distance from the camera in world space to create
-     * the new point.
+     * @param {number} cameraz - The distance from the camera in world space to create the new
+     * point.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
@@ -310,9 +339,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#worldToScreen
-     * @description Convert a point from 3D world space to 2D screen space.
+     * Convert a point from 3D world space to 2D screen space.
+     *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {Vec3} The screen space coordinate.
@@ -414,11 +442,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#calculateAspectRatio
-     * @description Calculates aspect ratio value for a given render target.
-     * @param {RenderTarget} [rt] - Optional render target. If unspecified, the
-     * backbuffer is assumed.
+     * Calculates aspect ratio value for a given render target.
+     *
+     * @param {RenderTarget} [rt] - Optional render target. If unspecified, the backbuffer is used.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
@@ -428,12 +454,11 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
+     * Start rendering the frame for this camera.
+     *
+     * @param {RenderTarget} rt - Render target to which rendering will be performed. Will affect
+     * camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
      * @private
-     * @name CameraComponent#frameBegin
-     * @description Start rendering the frame for this camera.
-     * @param {RenderTarget} rt - Render target to which rendering will be performed.
-     * Will affect camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
      */
     frameBegin(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
@@ -442,10 +467,9 @@ class CameraComponent extends Component {
     }
 
     /**
+     * End rendering the frame for this camera.
+     *
      * @private
-     * @function
-     * @name CameraComponent#frameEnd
-     * @description End rendering the frame for this camera.
      */
     frameEnd() {}
 
@@ -455,7 +479,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#enterVr
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate success
+     * @param {vrCameraCallback} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
      * @example
@@ -477,7 +501,7 @@ class CameraComponent extends Component {
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
      * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
      * {@link VrManager#display} as the default.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate success
+     * @param {vrCameraCallback} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err). On success it returns null on
      * failure it returns the error message.
      * @example
@@ -534,14 +558,11 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#exitVr
-     * @description Attempt to stop presenting this camera.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate
-     * success of failure. The callback takes one argument (err).
-     * On success it returns null on failure it returns the error message.
+     * Attempt to stop presenting this camera.
+     *
+     * @param {vrCameraCallback} callback - Function called once to indicate success of failure.
+     * The callback takes one argument (err). On success it returns null on failure it returns the
+     * error message.
      * @example
      * this.entity.camera.exitVr(function (err) {
      *     if (err) {
@@ -550,6 +571,8 @@ class CameraComponent extends Component {
      *         // exited successfully
      *     }
      * });
+     * @private
+     * @deprecated
      */
     exitVr(callback) {
         if (this.vrDisplay) {
@@ -567,46 +590,51 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#startXr
-     * @description Attempt to start XR session with this camera.
+     * Attempt to start XR session with this camera.
+     *
      * @param {string} type - The type of session. Can be one of the following:
      *
-     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has
-     * limited feature availability and is rendered into HTML element.
-     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access
-     * to the VR device with the best available tracking features.
-     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
-     * to the VR/AR device that is intended to be blended with the real-world environment.
+     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited feature
+     * availability and is rendered into HTML element.
+     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to the VR device
+     * with the best available tracking features.
+     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to the VR/AR
+     * device that is intended to be blended with the real-world environment.
      *
      * @param {string} spaceType - Reference space type. Can be one of the following:
      *
-     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
-     * tracking capabilities.
-     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native
-     * origin near the viewer at the time of creation. It is meant for seated or basic
-     * local XR sessions.
-     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
-     * a native origin at the floor in a safe position for the user to stand. The y-axis
-     * equals 0 at floor level. Floor level value might be estimated by the underlying
-     * platform. It is meant for seated or basic local XR sessions.
-     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
-     * with its native origin at the floor, where the user is expected to move within a
-     * pre-established boundary.
-     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
-     * user is expected to move freely around their environment, potentially long
-     * distances from their starting point.
+     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking
+     * capabilities.
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the
+     * viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin
+     * at the floor in a safe position for the user to stand. The y-axis equals 0 at floor level.
+     * Floor level value might be estimated by the underlying platform. It is meant for seated or
+     * basic local XR sessions.
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native
+     * origin at the floor, where the user is expected to move within a pre-established boundary.
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is
+     * expected to move freely around their environment, potentially long distances from their
+     * starting point.
      *
      * @param {object} [options] - Object with options for XR session initialization.
-     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
+     * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
-     * @param {callbacks.XrError} [options.callback] - Optional callback function called once
-     * the session is started. The callback has one argument Error - it is null if the XR
-     * session started successfully.
-     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to attempt to enable {@link XrDepthSensing}.
-     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing system.
-     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format preference for depth sensing, can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying depth sensing system.
+     * @param {xrErrorCallback} [options.callback] - Optional callback function called once the
+     * session is started. The callback has one argument Error - it is null if the XR session
+     * started successfully.
+     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
+     * attempt to enable {@link XrDepthSensing}.
+     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth
+     * sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to
+     * 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing
+     * system.
+     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format
+     * preference for depth sensing. Can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*),
+     * defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying
+     * depth sensing system.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
@@ -624,12 +652,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#endXr
-     * @description Attempt to end XR session of this camera.
-     * @param {callbacks.XrError} [callback] - Optional callback function called once
-     * session is ended. The callback has one argument Error - it is null if successfully
-     * ended XR session.
+     * Attempt to end XR session of this camera.
+     *
+     * @param {xrErrorCallback} [callback] - Optional callback function called once session is
+     * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.endXr(function (err) {

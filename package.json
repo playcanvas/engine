@@ -19,7 +19,7 @@
   "license": "MIT",
   "main": "build/playcanvas.js",
   "module": "build/playcanvas.mjs",
-  "types": "build/playcanvas.d.ts",
+  "types": "types/index.d.ts",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
@@ -57,9 +57,9 @@
     "build/playcanvas.mjs",
     "build/playcanvas.dbg.js",
     "build/playcanvas.prf.js",
-    "build/playcanvas.d.ts",
     "build/playcanvas-extras.js",
     "scripts",
+    "types",
     "LICENSE",
     "package.json",
     "README.md",
@@ -79,6 +79,7 @@
     "eslint": "^8.4.1",
     "http-server": "^14.0.0",
     "jsdoc": "^3.6.7",
+    "jsdoc-tsimport-plugin": "^1.0.5",
     "karma": "^6.3.9",
     "karma-chrome-launcher": "3.1.0",
     "karma-mocha": "2.0.1",
@@ -88,7 +89,6 @@
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-terser": "7.0.2",
     "sinon": "^12.0.1",
-    "tsd-jsdoc": "2.5.0",
     "typescript": "^4.5.2"
   },
   "scripts": {
@@ -109,7 +109,7 @@
     "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
-    "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
-    "tsd": "jsdoc -c conf-tsd.json && node tsd.js"
+    "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
+    "tsd": "tsc && node tsd.js"
   }
 }

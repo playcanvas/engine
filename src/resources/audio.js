@@ -6,6 +6,9 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 // checks if user is running IE
 const ie = (function () {
     if (typeof window === 'undefined') {
@@ -41,13 +44,16 @@ const toMIME = {
 };
 
 /**
- * @class
- * @name AudioHandler
+ * Resource handler used for loading {@link Sound} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Sound} resources.
- * @param {SoundManager} manager - The sound manager.
  */
 class AudioHandler {
+    /**
+     * Create a new AudioHandler instance.
+     *
+     * @param {SoundManager} manager - The sound manager.
+     */
     constructor(manager) {
         this.manager = manager;
         this.maxRetries = 0;
@@ -97,6 +103,9 @@ class AudioHandler {
 
     open(url, data) {
         return data;
+    }
+
+    patch(asset, assets) {
     }
 
     /**

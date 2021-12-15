@@ -178,7 +178,7 @@ class GlbContainerResource {
 
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
         skinedMeshInstances.forEach((data) => {
-            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
+            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
         });
 
         // return the scene hierarachy created from scene clones

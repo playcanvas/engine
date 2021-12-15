@@ -85,10 +85,9 @@ class LightRenderData {
 }
 
 /**
+ * A light.
+ *
  * @private
- * @class
- * @name Light
- * @classdesc A light.
  */
 class Light {
     constructor(graphicsDevice) {

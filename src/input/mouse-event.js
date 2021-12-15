@@ -1,18 +1,18 @@
 import { MOUSEBUTTON_NONE } from './constants.js';
 
+/** @typedef {import('./mouse.js').Mouse} Mouse */
+
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
 }
 
 /**
- * @class
- * @name MouseEvent
- * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
- * @description Create an new MouseEvent.
- * @param {Mouse} mouse - The Mouse device that is firing this event.
- * @param {globalThis.MouseEvent} event - The original browser event that fired.
- * @property {number} x The x co-ordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
- * @property {number} y The y co-ordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
+ * MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
+ *
+ * @property {number} x The x co-ordinate of the mouse pointer relative to the element
+ * {@link Mouse} is attached to.
+ * @property {number} y The y co-ordinate of the mouse pointer relative to the element
+ * {@link Mouse} is attached to.
  * @property {number} dx The change in x co-ordinate since the last mouse event.
  * @property {number} dy The change in y co-ordinate since the last mouse event.
  * @property {number} button The mouse button associated with this event. Can be:
@@ -31,6 +31,12 @@ function isMousePointerLocked() {
  * @property {globalThis.MouseEvent} event The original browser event.
  */
 class MouseEvent {
+    /**
+     * Create a new MouseEvent instance.
+     *
+     * @param {Mouse} mouse - The Mouse device that is firing this event.
+     * @param {globalThis.MouseEvent} event - The original browser event that fired.
+     */
     constructor(mouse, event) {
         let coords = {
             x: 0,

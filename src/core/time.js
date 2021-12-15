@@ -10,13 +10,16 @@ const now = (typeof window !== 'undefined') && window.performance && window.perf
 } : Date.now;
 
 /**
+ * A Timer counts milliseconds from when start() is called until when stop() is called.
+ *
  * @private
- * @class
- * @name Timer
- * @description Create a new Timer instance.
- * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
  */
 class Timer {
+    /**
+     * Create a new Timer instance.
+     *
+     * @private
+     */
     constructor() {
         this._isRunning = false;
         this._a = 0;
@@ -24,10 +27,9 @@ class Timer {
     }
 
     /**
+     * Start the timer.
+     *
      * @private
-     * @function
-     * @name Timer#start
-     * @description Start the timer.
      */
     start() {
         this._isRunning = true;
@@ -35,10 +37,9 @@ class Timer {
     }
 
     /**
+     * Stop the timer.
+     *
      * @private
-     * @function
-     * @name Timer#stop
-     * @description Stop the timer.
      */
     stop() {
         this._isRunning = false;
@@ -46,11 +47,10 @@ class Timer {
     }
 
     /**
-     * @private
-     * @function
-     * @name Timer#getMilliseconds
-     * @description Get the number of milliseconds that passed between start() and stop() being called.
+     * Get the number of milliseconds that passed between start() and stop() being called.
+     *
      * @returns {number} The elapsed milliseconds.
+     * @private
      */
     getMilliseconds() {
         return this._b - this._a;

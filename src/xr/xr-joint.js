@@ -3,6 +3,9 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
+/** @typedef {import('./xr-finger.js').XrFinger} XrFinger */
+/** @typedef {import('./xr-hand.js').XrHand} XrHand */
+
 const tipJointIds = platform.browser && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
@@ -18,23 +21,19 @@ for (let i = 0; i < tipJointIds.length; i++) {
 }
 
 /**
- * @class
- * @name XrJoint
- * @classdesc Represents joint of a finger.
- * @description Represents joint of a finger.
- * @hideconstructor
- * @param {number} index - Index of a joint within a finger.
- * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
- * @param {XrHand} hand - Hand that joint relates to.
- * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint.
- * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger.
- * @property {XrHand} hand Hand that joint relates to.
- * @property {XrFinger|null} finger Finger that joint relates to.
- * @property {boolean} wrist True if joint is a wrist.
- * @property {boolean} tip True if joint is a tip of a finger
- * @property {number} radius The radius of a joint, which is a distance from joint to the edge of a skin
+ * Represents the joint of a finger.
  */
 class XrJoint {
+    /**
+     * Create an XrJoint instance.
+     *
+     * @param {number} index - Index of a joint within a finger.
+     * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
+     * @param {XrHand} hand - Hand that joint relates to.
+     * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist.
+     * joint.
+     * @hideconstructor
+     */
     constructor(index, id, hand, finger = null) {
         this._index = index;
         this._id = id;
@@ -82,9 +81,8 @@ class XrJoint {
     }
 
     /**
-     * @function
-     * @name XrJoint#getPosition
-     * @description Get the world space position of a joint.
+     * Get the world space position of a joint.
+     *
      * @returns {Vec3} The world space position of a joint.
      */
     getPosition() {
@@ -94,9 +92,8 @@ class XrJoint {
     }
 
     /**
-     * @function
-     * @name XrJoint#getRotation
-     * @description Get the world space rotation of a joint.
+     * Get the world space rotation of a joint.
+     *
      * @returns {Quat} The world space rotation of a joint.
      */
     getRotation() {
@@ -105,26 +102,57 @@ class XrJoint {
         return this._rotation;
     }
 
+    /**
+     * Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of
+     * the finger.
+     *
+     * @type {number}
+     */
     get index() {
         return this._index;
     }
 
+    /**
+     * Hand that joint relates to.
+     *
+     * @type {XrHand}
+     */
     get hand() {
         return this._hand;
     }
 
+    /**
+     * Finger that joint relates to.
+     *
+     * @type {XrFinger|null}
+     */
     get finger() {
         return this._finger;
     }
 
+    /**
+     * True if joint is a wrist.
+     *
+     * @type {boolean}
+     */
     get wrist() {
         return this._wrist;
     }
 
+    /**
+     * True if joint is a tip of a finger.
+     *
+     * @type {boolean}
+     */
     get tip() {
         return this._tip;
     }
 
+    /**
+     * The radius of a joint, which is a distance from joint to the edge of a skin.
+     *
+     * @type {number}
+     */
     get radius() {
         return this._radius || 0.005;
     }

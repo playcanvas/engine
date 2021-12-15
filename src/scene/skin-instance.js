@@ -5,18 +5,29 @@ import { Mat4 } from '../math/mat4.js';
 import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
+/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
+/** @typedef {import('./skin.js').Skin} Skin */
+
 const _invMatrix = new Mat4();
 
 /**
- * @class
- * @name SkinInstance
- * @classdesc A skin instance is responsible for generating the matrix palette that is used to
- * skin vertices from object space to world space.
- * @param {Skin} skin - The skin that will provide the inverse bind pose matrices to
- * generate the final matrix palette.
- * @property {GraphNode[]} bones An array of nodes representing each bone in this skin instance.
+ * A skin instance is responsible for generating the matrix palette that is used to skin vertices
+ * from object space to world space.
  */
 class SkinInstance {
+    /**
+     * An array of nodes representing each bone in this skin instance.
+     *
+     * @type {GraphNode[]}
+     */
+    bones;
+
+    /**
+     * Create a new SkinInstance instance.
+     *
+     * @param {Skin} skin - The skin that will provide the inverse bind pose matrices to generate
+     * the final matrix palette.
+     */
     constructor(skin) {
         this._dirty = true;
 

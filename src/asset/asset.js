@@ -24,11 +24,15 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
- * @class
- * @name Asset
- * @augments EventHandler
- * @classdesc An asset record of a file or data resource that can be loaded by the engine.
- * The asset contains three important fields:
+ * Callback used by {@link Asset#ready} and called when an asset is ready.
+ *
+ * @callback assetReadyCallback
+ * @param {Asset} asset - The ready asset.
+ */
+
+/**
+ * An asset record of a file or data resource that can be loaded by the engine. The asset contains
+ * three important fields:
  *
  * - `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
  * - `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
@@ -36,22 +40,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * - `resource`: contains the final resource when it is loaded. (e.g. a {@link StandardMaterial} or a {@link Texture}).
  *
  * See the {@link AssetRegistry} for details on loading resources from assets.
- * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
- * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
- * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container", cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", text", "texture"]
- * @param {object} [file] - Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
- * @example
- * var file = {
- *     filename: "filename.txt",
- *     url: "/example/filename.txt"
- * };
- * @param {object} [data] - JSON object with additional data about the asset. (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
- * @param {object} [options] - The asset handler options. For container options see {@link ContainerHandler}
- * @param {boolean} [options.crossOrigin] - For use with texture resources. For browser-supported image formats only, enable cross origin.
- * @example
- * var asset = new pc.Asset("a texture", "texture", {
- *     url: "http://example.com/my/assets/here/texture.png"
- * });
+ *
  * @property {string} name The name of the asset
  * @property {number} id The asset id
  * @property {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"script"|"shader"|"sprite"|"template"|"text"|"texture")} type The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite", "template", "text", "texture"]
@@ -71,8 +60,28 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {boolean} loaded True if the asset has finished attempting to load the resource. It is not guaranteed that the resources are available as there could have been a network error.
  * @property {boolean} loading True if the resource is currently being loaded
  * @property {AssetRegistry} registry The asset registry that this Asset belongs to
+ * @augments EventHandler
  */
 class Asset extends EventHandler {
+    /**
+     * Create a new Asset record. Generally, Assets are created in the loading process and you
+     * won't need to create them by hand.
+     *
+     * @param {string} name - A non-unique but human-readable name which can be later used to
+     * retrieve the asset.
+     * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container",
+     * "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
+     * "template", text", "texture"]
+     * @param {object} [file] - Details about the file the asset is made from. At the least must
+     * contain the 'url' field. For assets that don't contain file data use null.
+     * @param {object} [data] - JSON object with additional data about the asset. (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
+     * @param {object} [options] - The asset handler options. For container options see {@link ContainerHandler}
+     * @param {boolean} [options.crossOrigin] - For use with texture resources. For browser-supported image formats only, enable cross origin.
+     * @example
+     * var asset = new pc.Asset("a texture", "texture", {
+     *     url: "http://example.com/my/assets/here/texture.png"
+     * });
+     */
     constructor(name, type, file, data, options) {
         super();
 
@@ -252,7 +261,7 @@ class Asset extends EventHandler {
      * @function
      * @name Asset#ready
      * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away.
-     * @param {callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
+     * @param {assetReadyCallback} callback - The function called when the asset is ready. Passed the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * var asset = app.assets.find("My Asset");
@@ -445,7 +454,7 @@ class Asset extends EventHandler {
      * ArrayBuffer. If the asset file contents are present, that is returned. Otherwise the file
      * data is be downloaded via http.
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {callbacks.ResourceLoader} callback - The callback function to receive results.
+     * @param {resourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
      */

@@ -12,32 +12,32 @@ import {
 } from './constants.js';
 import { Component } from '../component.js';
 
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').RigidBodyComponentSystem} RigidBodyComponentSystem */
+
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
 let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 
 /**
- * @component
- * @class
- * @name RigidBodyComponent
- * @augments Component
- * @classdesc The rigidbody component, when combined with a {@link CollisionComponent}, allows your
- * entities to be simulated using realistic physics. A rigidbody component will fall under gravity and
- * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid bodies.
+ * The rigidbody component, when combined with a {@link CollisionComponent}, allows your entities
+ * to be simulated using realistic physics. A rigidbody component will fall under gravity and
+ * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid
+ * bodies.
  *
- * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to a
- * {@link Entity}, use {@link Entity#addComponent}:
+ * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to
+ * a {@link Entity}, use {@link Entity#addComponent}:
  *
- * ~~~javascript
+ * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
  * const entity = pc.Entity();
  * entity.addComponent("rigidbody"); // With no options specified, this defaults to a 'static' body
  * entity.addComponent("collision"); // With no options specified, this defaults to a 1x1x1 box shape
- * ~~~
+ * ```
  *
  * To create a dynamic sphere with mass of 10, do:
  *
- * ~~~javascript
+ * ```javascript
  * const entity = pc.Entity();
  * entity.addComponent("rigidbody", {
  *     type: pc.BODYTYPE_DYNAMIC,
@@ -46,15 +46,13 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * entity.addComponent("collision", {
  *     type: "sphere"
  * });
- * ~~~
+ * ```
  *
  * Relevant 'Engine-only' examples:
+ *
  * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
  * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
  *
- * @description Create a new RigidBodyComponent.
- * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
- * @param {Entity} entity - The entity this component is attached to.
  * @property {number} mass The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC}
  * bodies, other types have infinite mass. Defaults to 1.
  * @property {Vec3} linearVelocity Defines the speed of the body in a given direction.
@@ -89,8 +87,16 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * by setting the position and rotation of component's {@link Entity}).
  *
  * Defaults to {@link BODYTYPE_STATIC}.
+ * @augments Component
+ * @component
  */
 class RigidBodyComponent extends Component {
+    /**
+     * Create a new RigidBodyComponent instance.
+     *
+     * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity this component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

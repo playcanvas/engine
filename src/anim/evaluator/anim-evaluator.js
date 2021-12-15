@@ -1,15 +1,20 @@
 import { AnimTargetValue } from './anim-target-value.js';
 
+/** @typedef {import('../binder/anim-binder.js').AnimBinder} AnimBinder */
+
 /**
- * @private
- * @class
- * @name AnimEvaluator
- * @classdesc AnimEvaluator blends multiple sets of animation clips together.
- * @description Create a new animation evaluator.
- * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
+ * AnimEvaluator blends multiple sets of animation clips together.
+ *
  * @property {AnimClip[]} clips - the list of animation clips
+ * @private
  */
 class AnimEvaluator {
+    /**
+     * Create a new animation evaluator.
+     *
+     * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
+     * @private
+     */
     constructor(binder) {
         this._binder = binder;
         this._clips = [];

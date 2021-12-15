@@ -37,6 +37,8 @@ import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
@@ -82,16 +84,15 @@ const _drawCallList = {
 const _tempMaterialSet = new Set();
 
 /**
- * @class
- * @name ForwardRenderer
- * @classdesc The forward renderer render scene objects.
- * @hideconstructor
- * @description Creates a new forward renderer object.
- * @hideconstructor
- * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
- * @param {Scene} A - scene for the rendering.
+ * The forward renderer renders {@link Scene}s.
  */
 class ForwardRenderer {
+    /**
+     * Create a new ForwardRenderer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @hideconstructor
+     */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
         this.scene = null;

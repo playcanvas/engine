@@ -7,6 +7,9 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('./component.js').CameraComponent} CameraComponent */
+
 let depthLayer;
 
 class PostEffect {
@@ -19,14 +22,15 @@ class PostEffect {
 }
 
 /**
- * @class
- * @name PostEffectQueue
- * @classdesc Used to manage multiple post effects for a camera.
- * @description Create a new PostEffectQueue.
- * @param {Application} app - The application.
- * @param {CameraComponent} camera - The camera component.
+ * Used to manage multiple post effects for a camera.
  */
 class PostEffectQueue {
+    /**
+     * Create a new PostEffectQueue instance.
+     *
+     * @param {Application} app - The application.
+     * @param {CameraComponent} camera - The camera component.
+     */
     constructor(app, camera) {
         this.app = app;
         this.camera = camera;
@@ -77,13 +81,12 @@ class PostEffectQueue {
     }
 
     /**
-     * @private
-     * @function
-     * @name PostEffectQueue#_createOffscreenTarget
-     * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer.
-     * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer.
+     * Creates a render target with the dimensions of the canvas, with an optional depth buffer.
+     *
+     * @param {boolean} useDepth - Set to true to create a render target with a depth buffer.
      * @param {boolean} hdr - Use HDR render target format.
      * @returns {RenderTarget} The render target.
+     * @private
      */
     _createOffscreenTarget(useDepth, hdr) {
 
@@ -124,10 +127,9 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#addEffect
-     * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
+     * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
+     *
      * @param {PostEffect} effect - The post effect to add to the queue.
      */
     addEffect(effect) {
@@ -157,9 +159,9 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#removeEffect
-     * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
+     * Removes a post effect from the queue. If the queue becomes empty it will be disabled
+     * automatically.
+     *
      * @param {PostEffect} effect - The post effect to remove.
      */
     removeEffect(effect) {
@@ -242,9 +244,7 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#destroy
-     * @description Removes all the effects from the queue and disables it.
+     * Removes all the effects from the queue and disables it.
      */
     destroy() {
         // release memory for all effects
@@ -258,9 +258,8 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#enable
-     * @description Enables the queue and all of its effects. If there are no effects then the queue will not be enabled.
+     * Enables the queue and all of its effects. If there are no effects then the queue will not be
+     * enabled.
      */
     enable() {
         if (!this.enabled && this.effects.length) {
@@ -314,9 +313,7 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#disable
-     * @description Disables the queue and all of its effects.
+     * Disables the queue and all of its effects.
      */
     disable() {
         if (this.enabled) {

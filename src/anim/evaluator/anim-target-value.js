@@ -2,18 +2,23 @@ import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
 
 /**
+ * Used to store and update the value of an animation target. This combines the values of multiple
+ * layer targets into a single value.
+ *
  * @private
- * @class
- * @name AnimTargetValue
- * @classdesc Used to store and update the value of an animation target. This combines the values of multiple layer targets into a single value.
- * @param {AnimComponent} component - The anim component this target value is associated with.
- * @param {string} type - The type of value stored, either quat or vec3.
  */
 class AnimTargetValue {
     static TYPE_QUAT = 'quaternion';
 
     static TYPE_VEC3 = 'vector3';
 
+    /**
+     * Create a new AnimTargetValue instance.
+     *
+     * @param {AnimComponent} component - The anim component this target value is associated with.
+     * @param {string} type - The type of value stored, either quat or vec3.
+     * @private
+     */
     constructor(component, type) {
         this._component = component;
         this.mask = new Int8Array(component.layers.length);

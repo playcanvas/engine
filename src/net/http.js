@@ -6,11 +6,16 @@ import { URI } from '../core/uri.js';
 import { math } from '../math/math.js';
 
 /**
- * @class
- * @name Http
- * @classdesc Used to send and receive HTTP requests.
- * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
- * object at `http`.
+ * Callback used by {@link Http#get}, {@link Http#post}, {@link Http#put}, {@link Http#del}, and
+ * {@link Http#request}.
+ *
+ * @callback httpResponseCallback
+ * @param {number|string|Error|null} err - The error code, message, or exception in the case where the request fails.
+ * @param {*} [response] - The response data if no errors were encountered. (format depends on response type: text, Object, ArrayBuffer, XML).
+ */
+
+/**
+ * Used to send and receive HTTP requests.
  */
 class Http {
     static ContentType = {
@@ -60,7 +65,7 @@ class Http {
      * @name Http#get
      * @description Perform an HTTP GET request to the given url.
      * @param {string} url - The URL to make the request to.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -88,7 +93,7 @@ class Http {
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum number of retries. Defaults to 5.
      * @param {number} [options.maxRetryDelay] - If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -114,7 +119,7 @@ class Http {
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
      * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
      * Otherwise, by default, the data is sent as form-urlencoded.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -142,7 +147,7 @@ class Http {
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum number of retries. Defaults to 5.
      * @param {number} [options.maxRetryDelay] - If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -169,7 +174,7 @@ class Http {
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
      * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
      * Otherwise, by default, the data is sent as form-urlencoded.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -197,7 +202,7 @@ class Http {
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum number of retries. Defaults to 5.
      * @param {number} [options.maxRetryDelay] - If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -220,7 +225,7 @@ class Http {
      * @name Http#del
      * @description Perform an HTTP DELETE request to the given url.
      * @param {object} url - The URL to make the request to.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -248,7 +253,7 @@ class Http {
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum number of retries. Defaults to 5.
      * @param {number} [options.maxRetryDelay] - If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -271,7 +276,7 @@ class Http {
      * @description Make a general purpose HTTP request.
      * @param {string} method - The HTTP method "GET", "POST", "PUT", "DELETE".
      * @param {string} url - The url to make the request to.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
@@ -300,7 +305,7 @@ class Http {
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
      * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
      * Otherwise, by default, the data is sent as form-urlencoded.
-     * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
+     * @param {httpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example

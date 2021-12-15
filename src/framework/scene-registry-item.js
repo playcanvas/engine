@@ -1,14 +1,17 @@
 /**
- * @class
- * @name SceneRegistryItem
- * @description Item to be stored in the {@link SceneRegistry}.
- * @param {string} name - The name of the scene.
- * @param {string} url - The url of the scene file.
+ * Item to be stored in the {@link SceneRegistry}.
+ *
  * @property {string} name - The name of the scene.
  * @property {string} url - The url of the scene file.
  * @property {boolean} loaded - Returns true if the scene data is still being loaded.
  */
 class SceneRegistryItem {
+    /**
+     * Creates a new SceneRegistryItem instance.
+     *
+     * @param {string} name - The name of the scene.
+     * @param {string} url - The url of the scene file.
+     */
     constructor(name, url) {
         this.name = name;
         this.url = url;

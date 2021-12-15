@@ -4,18 +4,23 @@ import { ComponentSystem } from '../system.js';
 import { AudioListenerComponent } from './component.js';
 import { AudioListenerComponentData } from './data.js';
 
+/** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name AudioListenerComponentSystem
+ * Component System for adding and removing {@link AudioComponent} objects to Entities.
+ *
  * @augments ComponentSystem
- * @classdesc Component System for adding and removing {@link AudioComponent} objects to Entities.
- * @description Create a new AudioListenerComponentSystem.
- * @param {Application} app - The application managing this system.
- * @param {SoundManager} manager - A sound manager instance.
  */
 class AudioListenerComponentSystem extends ComponentSystem {
+    /**
+     * Create a new AudioListenerComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     * @param {SoundManager} manager - A sound manager instance.
+     */
     constructor(app, manager) {
         super(app);
 

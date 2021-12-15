@@ -13,12 +13,11 @@ function makeKeyboardEvent(event) {
 }
 
 /**
- * @private
- * @function
- * @name toKeyCode
- * @description Convert a string or keycode to a keycode.
+ * Convert a string or keycode to a keycode.
+ *
  * @param {string|number} s - Either a character code or the key character.
  * @returns {number} The character code.
+ * @private
  */
 function toKeyCode(s) {
     if (typeof s === "string") {
@@ -76,21 +75,30 @@ const _keyCodeToKeyIdentifier = {
  */
 
 /**
- * @class
- * @name Keyboard
+ * A Keyboard device bound to an Element. Allows you to detect the state of the key presses. Note
+ * that the Keyboard object must be attached to an Element before it can detect any key presses.
+ *
  * @augments EventHandler
- * @classdesc A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
- * Note, Keyboard object must be attached to an Element before it can detect any key presses.
- * @description Create a new Keyboard object.
- * @param {Element|Window} [element] - Element to attach Keyboard to. Note that elements like &lt;div&gt; can't
- * accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>.
- * @param {object} [options] - Optional options object.
- * @param {boolean} [options.preventDefault] - Call preventDefault() in key event handlers. This stops the default action of the event occurring. e.g. Ctrl+T will not open a new browser tab
- * @param {boolean} [options.stopPropagation] - Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
- * @example
- * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
  */
 class Keyboard extends EventHandler {
+    /**
+     * Create a new Keyboard instance.
+     *
+     * @param {Element|Window} [element] - Element to attach Keyboard to. Note that elements like
+     * &lt;div&gt; can't accept focus by default. To use keyboard events on an element like this it
+     * must have a value of 'tabindex' e.g. tabindex="0". See
+     * [here](http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html) for more details.
+     * @param {object} [options] - Optional options object.
+     * @param {boolean} [options.preventDefault] - Call preventDefault() in key event handlers.
+     * This stops the default action of the event occurring. e.g. Ctrl+T will not open a new
+     * browser tab.
+     * @param {boolean} [options.stopPropagation] - Call stopPropagation() in key event handlers.
+     * This stops the event bubbling up the DOM so no parent handlers will be notified of the
+     * event.
+     * @example
+     * // attach keyboard listeners to the window
+     * var keyboard = new pc.Keyboard(window);
+     */
     constructor(element, options = {}) {
         super();
 
@@ -114,9 +122,8 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Keyboard#attach
-     * @description Attach the keyboard event handlers to an Element.
+     * Attach the keyboard event handlers to an Element.
+     *
      * @param {Element} element - The element to listen for keyboard events on.
      */
     attach(element) {
@@ -133,9 +140,7 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Keyboard#detach
-     * @description Detach the keyboard event handlers from the element it is attached to.
+     * Detach the keyboard event handlers from the element it is attached to.
      */
     detach() {
         this._element.removeEventListener("keydown", this._keyDownHandler);
@@ -147,12 +152,11 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Keyboard#toKeyIdentifier
-     * @description Convert a key code into a key identifier.
+     * Convert a key code into a key identifier.
+     *
      * @param {number} keyCode - The key code.
      * @returns {string} The key identifier.
+     * @private
      */
     toKeyIdentifier(keyCode) {
         keyCode = toKeyCode(keyCode);
@@ -241,10 +245,9 @@ class Keyboard extends EventHandler {
     }
 
     /**
+     * Called once per frame to update internal state.
+     *
      * @private
-     * @function
-     * @name Keyboard#update
-     * @description Called once per frame to update internal state.
      */
     update() {
         // clear all keys
@@ -260,9 +263,8 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Keyboard#isPressed
-     * @description Return true if the key is currently down.
+     * Return true if the key is currently down.
+     *
      * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed, false if not.
      */
@@ -274,9 +276,8 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Keyboard#wasPressed
-     * @description Returns true if the key was pressed since the last update.
+     * Returns true if the key was pressed since the last update.
+     *
      * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed.
      */
@@ -288,9 +289,8 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Keyboard#wasReleased
-     * @description Returns true if the key was released since the last update.
+     * Returns true if the key was released since the last update.
+     *
      * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed.
      */

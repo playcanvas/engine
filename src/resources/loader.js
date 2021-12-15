@@ -1,11 +1,25 @@
+/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name ResourceLoader
- * @param {Application} app - The application.
- * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
- * multiple requests. Add ResourceHandlers to handle different types of resources.
+ * @callback resourceLoaderCallback
+ * @description Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
+ * @param {string|null} err - The error message in the case where the load fails.
+ * @param {*} [resource] - The resource that has been successfully loaded.
+ */
+
+/**
+ * Load resource data, potentially from remote sources. Caches resource on load to prevent multiple
+ * requests. Add ResourceHandlers to handle different types of resources.
  */
 class ResourceLoader {
+    /**
+     * Create a new ResourceLoader instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         this._handlers = {};
         this._requests = {};
@@ -74,7 +88,7 @@ class ResourceLoader {
      * the resource.
      * @param {string} url - The URL of the resource to load.
      * @param {string} type - The type of resource expected.
-     * @param {callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an
+     * @param {resourceLoaderCallback} callback - The callback used when the resource is loaded or an
      * error occurs. Passed (err, resource) where err is null if there are no errors.
      * @param {Asset} [asset] - Optional asset that is passed into handler
      * @example

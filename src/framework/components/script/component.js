@@ -5,18 +5,28 @@ import { ScriptAttributes } from '../../../script/script-attributes.js';
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
+/* eslint-disable-next-line no-unused-vars */
+import { ScriptType } from '../../../script/script-type.js';
+
+/** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
+
 /**
- * @component
- * @class
- * @name ScriptComponent
+ * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
+ * Script Types defined in JavaScript files to be executed with access to the Entity. For more
+ * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
+ *
+ * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This
+ * array is read-only and should not be modified by developer.
  * @augments Component
- * @classdesc The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
- * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
- * @param {ScriptComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
+ * @component
  */
 class ScriptComponent extends Component {
+    /**
+     * Create a new ScriptComponent instance.
+     *
+     * @param {ScriptComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 

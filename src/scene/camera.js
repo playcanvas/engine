@@ -17,10 +17,9 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 
 /**
+ * A camera.
+ *
  * @private
- * @class
- * @name Camera
- * @classdesc A camera.
  */
 class Camera {
     constructor() {

@@ -4,12 +4,31 @@ import { ScriptHandler } from '../resources/script.js';
 
 import { getApplication } from './globals.js';
 
+/** @typedef {import('./application.js').Application} Application */
+
 /**
  * @name script
  * @namespace
  * @description The script namespace holds the createLoadingScreen function that
  * is used to override the default PlayCanvas loading screen.
  */
+
+/**
+ * Callback used by {@link script.createLoadingScreen}.
+ *
+ * @callback createScreenCallback
+ * @param {Application} app - The application.
+ */
+
+/**
+ * Callback used by {@link script.create}.
+ *
+ * @callback createScriptCallback
+ * @param {Application} app - The application.
+ * @returns {object} Return the Type of the script resource to be instanced for each Entity.
+ * @private
+ */
+
 let _legacy = false;
 
 // flag to avoid creating multiple loading screens e.g. when
@@ -27,7 +46,7 @@ const script = {
      * @description Create a script resource object. A script file should contain a single call to {@link script.create} and the callback should return a script object which will be
      * instantiated when attached to Entities.
      * @param {string} name - The name of the script object.
-     * @param {callbacks.CreateScript} callback - The callback function which is passed an {@link Application} object,
+     * @param {createScriptCallback} callback - The callback function which is passed an {@link Application} object,
      * which is used to access Entities and Components, and should return the Type of the script resource
      * to be instanced for each Entity.
      * @example
@@ -120,7 +139,7 @@ const script = {
      * @description Handles the creation of the loading screen of the application. A script can subscribe to
      * the events of a {@link Application} to show a loading screen, progress bar etc. In order for this to work
      * you need to set the project's loading screen script to the script that calls this method.
-     * @param {callbacks.CreateScreen} callback - A function which can set up and tear down a customized loading screen.
+     * @param {createScreenCallback} callback - A function which can set up and tear down a customized loading screen.
      * @example
      * pc.script.createLoadingScreen(function (app) {
      *     var showSplashScreen = function () {};

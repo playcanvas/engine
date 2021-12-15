@@ -5,6 +5,10 @@ import { Vec2 } from '../math/vec2.js';
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { createMesh } from './procedural.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./mesh.js').Mesh} Mesh */
+/** @typedef {import('./texture-atlas.js').TextureAtlas} TextureAtlas */
+
 // normals are the same for every mesh
 const spriteNormals = [
     0, 0, 1,
@@ -20,38 +24,31 @@ const spriteIndices = [
 ];
 
 /**
- * @class
- * @name Sprite
+ * A Sprite contains references to one or more frames of a {@link TextureAtlas}. It can be used by
+ * the {@link SpriteComponent} or the {@link ElementComponent} to render a single frame or a sprite
+ * animation.
+ *
  * @augments EventHandler
- * @classdesc A Sprite contains references to one or more frames of a {@link TextureAtlas}.
- * It can be used by the {@link SpriteComponent} or the {@link ElementComponent} to render a
- * single frame or a sprite animation.
- * @param {GraphicsDevice} device - The graphics device of the application.
- * @param {object} [options] - Options for creating the Sprite.
- * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas unit.
- * Defaults to 1.
- * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
- *
- * - {@link SPRITE_RENDERMODE_SIMPLE}
- * - {@link SPRITE_RENDERMODE_SLICED}
- * - {@link SPRITE_RENDERMODE_TILED}
- *
- * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
- * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
- * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
- * using. Defaults to null.
- * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
- * @property {TextureAtlas} atlas The texture atlas.
- * @property {number} renderMode The rendering mode of the sprite. Can be:
- *
- * - {@link SPRITE_RENDERMODE_SIMPLE}
- * - {@link SPRITE_RENDERMODE_SLICED}
- * - {@link SPRITE_RENDERMODE_TILED}
- *
- * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
- * @property {Mesh[]} meshes An array that contains a mesh for each frame.
  */
 class Sprite extends EventHandler {
+    /**
+     * Create a new Sprite instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device of the application.
+     * @param {object} [options] - Options for creating the Sprite.
+     * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas
+     * unit. Defaults to 1.
+     * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
+     *
+     * - {@link SPRITE_RENDERMODE_SIMPLE}
+     * - {@link SPRITE_RENDERMODE_SLICED}
+     * - {@link SPRITE_RENDERMODE_TILED}
+     *
+     * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
+     * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
+     * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this
+     * sprite is using. Defaults to null.
+     */
     constructor(device, options) {
         super();
 
@@ -243,12 +240,9 @@ class Sprite extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Sprite#destroy
-     * @description Free up the meshes created by the sprite.
+     * Free up the meshes created by the sprite.
      */
     destroy() {
-
         for (const mesh of this._meshes) {
             if (mesh)
                 mesh.destroy();
@@ -256,6 +250,11 @@ class Sprite extends EventHandler {
         this._meshes.length = 0;
     }
 
+    /**
+     * The keys of the frames in the sprite atlas that this sprite is using.
+     *
+     * @type {string[]}
+     */
     get frameKeys() {
         return this._frameKeys;
     }
@@ -274,6 +273,11 @@ class Sprite extends EventHandler {
         this.fire('set:frameKeys', value);
     }
 
+    /**
+     * The texture atlas.
+     *
+     * @type {TextureAtlas}
+     */
     get atlas() {
         return this._atlas;
     }
@@ -303,6 +307,11 @@ class Sprite extends EventHandler {
         this.fire('set:atlas', value);
     }
 
+    /**
+     * The number of pixels that map to one PlayCanvas unit.
+     *
+     * @type {number}
+     */
     get pixelsPerUnit() {
         return this._pixelsPerUnit;
     }
@@ -323,6 +332,15 @@ class Sprite extends EventHandler {
         }
     }
 
+    /**
+     * The rendering mode of the sprite. Can be:
+     *
+     * - {@link SPRITE_RENDERMODE_SIMPLE}
+     * - {@link SPRITE_RENDERMODE_SLICED}
+     * - {@link SPRITE_RENDERMODE_TILED}
+     *
+     * @type {number}
+     */
     get renderMode() {
         return this._renderMode;
     }
@@ -347,6 +365,11 @@ class Sprite extends EventHandler {
         }
     }
 
+    /**
+     * An array that contains a mesh for each frame.
+     *
+     * @type {Mesh[]}
+     */
     get meshes() {
         return this._meshes;
     }

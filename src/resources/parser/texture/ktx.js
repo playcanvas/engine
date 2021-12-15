@@ -11,6 +11,8 @@ import {
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
 const IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
 
@@ -44,11 +46,10 @@ function createContainer(pixelFormat, buffer, byteOffset, byteSize) {
 }
 
 /**
- * @private
- * @class
- * @name KtxParser
+ * Texture parser for ktx files.
+ *
  * @implements {TextureParser}
- * @classdesc Texture parser for ktx files.
+ * @private
  */
 class KtxParser {
     constructor(registry) {

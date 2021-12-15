@@ -33,7 +33,7 @@ class SkinInstanceCache {
 
     // returns cached or creates a skin instance for the skin and a rootBone, to be used by render component
     // on the specified entity
-    static createCachedSkinedInstance(skin, rootBone, entity) {
+    static createCachedSkinInstance(skin, rootBone, entity) {
 
         // try and get skin instance from the cache
         let skinInst = SkinInstanceCache.getCachedSkinInstance(skin, rootBone);

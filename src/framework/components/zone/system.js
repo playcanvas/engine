@@ -6,18 +6,22 @@ import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @private
- * @class
- * @name ZoneComponentSystem
- * @classdesc Defines zone in world.
- * @description Create a new ZoneComponentSystem.
- * @param {Application} app - The application.
+ * Creates and manages {@link ZoneComponent} instances.
+ *
  * @augments ComponentSystem
+ * @private
  */
 class ZoneComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ZoneComponentSystem.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 
