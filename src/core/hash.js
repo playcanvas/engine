@@ -1,10 +1,9 @@
 /**
- * @private
- * @function
- * @name hashCode
- * @description Calculates simple hash value of a string. Designed for performance, not perfect.
+ * Calculates simple hash value of a string. Designed for performance, not perfect.
+ *
  * @param {string} str - String.
  * @returns {number} Hash value.
+ * @private
  */
 function hashCode(str) {
     let hash = 0;

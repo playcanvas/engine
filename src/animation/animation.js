@@ -23,25 +23,33 @@ class Node {
 /**
  * An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy. It
  * controls how the nodes of the hierarchy are transformed over time.
- *
- * @property {string} name Human-readable name of the animation.
- * @property {number} duration Duration of the animation in seconds.
  */
 class Animation {
+    /**
+     * Human-readable name of the animation.
+     *
+     * @type {string}
+     */
+    name = '';
+
+    /**
+     * Duration of the animation in seconds.
+     *
+     * @type {number}
+     */
+    duration = 0;
+
     /**
      * Create a new Animation instance.
      */
     constructor() {
-        this.name = '';
-        this.duration = 0;
         this._nodes = [];
         this._nodeDict = {};
     }
 
     /**
-     * @function
-     * @name Animation#getNode
-     * @description Gets a {@link Node} by name.
+     * Gets a {@link Node} by name.
+     *
      * @param {string} name - The name of the {@link Node}.
      * @returns {Node} The {@link Node} with the specified name.
      */
@@ -50,23 +58,22 @@ class Animation {
     }
 
     /**
-     * @name Animation#nodes
-     * @type {Node[]}
-     * @description A read-only property to get array of animation nodes.
-     */
-    get nodes() {
-        return this._nodes;
-    }
-
-    /**
-     * @function
-     * @name Animation#addNode
-     * @description Adds a node to the internal nodes array.
+     * Adds a node to the internal nodes array.
+     *
      * @param {Node} node - The node to add.
      */
     addNode(node) {
         this._nodes.push(node);
         this._nodeDict[node._name] = node;
+    }
+
+    /**
+     * A read-only property to get array of animation nodes.
+     *
+     * @type {Node[]}
+     */
+    get nodes() {
+        return this._nodes;
     }
 }
 

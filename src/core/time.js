@@ -27,10 +27,9 @@ class Timer {
     }
 
     /**
+     * Start the timer.
+     *
      * @private
-     * @function
-     * @name Timer#start
-     * @description Start the timer.
      */
     start() {
         this._isRunning = true;
@@ -38,10 +37,9 @@ class Timer {
     }
 
     /**
+     * Stop the timer.
+     *
      * @private
-     * @function
-     * @name Timer#stop
-     * @description Stop the timer.
      */
     stop() {
         this._isRunning = false;
@@ -49,11 +47,10 @@ class Timer {
     }
 
     /**
-     * @private
-     * @function
-     * @name Timer#getMilliseconds
-     * @description Get the number of milliseconds that passed between start() and stop() being called.
+     * Get the number of milliseconds that passed between start() and stop() being called.
+     *
      * @returns {number} The elapsed milliseconds.
+     * @private
      */
     getMilliseconds() {
         return this._b - this._a;

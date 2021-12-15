@@ -1,8 +1,6 @@
 /**
- * @private
- * @function
- * @name createURI
- * @description Create a URI object from constituent parts.
+ * Create a URI object from constituent parts.
+ *
  * @param {object} options - Parts of the URI to build.
  * @param {string} [options.scheme] - The URI scheme (e.g. http).
  * @param {string} [options.authority] - The URI authority (e.g. `www.example.com`).
@@ -12,6 +10,7 @@
  * @param {string} [options.query] - The query section, after the ?(e.g. `http://example.com?**key=value&another=123**`).
  * @param {string} [options.fragment] - The fragment section, after the # (e.g. `http://example.com#**fragment/data**`).
  * @returns {string} A URI string.
+ * @private
  */
 function createURI(options) {
     let s = "";
@@ -87,11 +86,10 @@ class URI {
     }
 
     /**
-     * @private
-     * @function
-     * @name URI#toString
-     * @description Convert URI back to string.
+     * Convert URI back to string.
+     *
      * @returns {string} The URI as a string.
+     * @private
      */
     toString() {
         let s = "";
@@ -118,10 +116,8 @@ class URI {
     }
 
     /**
-     * @private
-     * @function
-     * @name URI#getQuery
-     * @description Returns the query parameters as an Object.
+     * Returns the query parameters as an Object.
+     *
      * @returns {object} The URI's query parameters converted to an Object.
      * @example
      * var s = "http://example.com?a=1&b=2&c=3";
@@ -130,6 +126,7 @@ class URI {
      * console.log(q.a); // logs "1"
      * console.log(q.b); // logs "2"
      * console.log(q.c); // logs "3"
+     * @private
      */
     getQuery() {
         const result = {};
@@ -146,10 +143,8 @@ class URI {
     }
 
     /**
-     * @private
-     * @function
-     * @name URI#setQuery
-     * @description Set the query section of the URI from a Object.
+     * Set the query section of the URI from a Object.
+     *
      * @param {object} params - Key-Value pairs to encode into the query string.
      * @example
      * var s = "http://example.com";
@@ -159,6 +154,7 @@ class URI {
      *     "b": 2
      * });
      * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
+     * @private
      */
     setQuery(params) {
         let q = "";

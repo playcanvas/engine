@@ -21,9 +21,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#add
-     * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
+     * Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
+     *
      * @param {...*} name - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
      * @example
@@ -59,9 +58,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#remove
-     * @description Remove tag.
+     * Remove tag.
+     *
      * @param {...*} name - Name of a tag or array of tags.
      * @returns {boolean} True if any tag were removed.
      * @example
@@ -101,9 +99,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#clear
-     * @description Remove all tags.
+     * Remove all tags.
+     *
      * @example
      * tags.clear();
      */
@@ -122,13 +119,11 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#has
-     * @description Check if tags satisfy filters.
-     * Filters can be provided by simple name of tag, as well as by array of tags.
-     * When an array is provided it will check if tags contain each tag within the array.
-     * If any of comma separated argument is satisfied, then it will return true.
-     * Any number of combinations are valid, and order is irrelevant.
+     * Check if tags satisfy filters. Filters can be provided by simple name of tag, as well as by
+     * array of tags. When an array is provided it will check if tags contain each tag within the
+     * array. If any of comma separated argument is satisfied, then it will return true. Any number
+     * of combinations are valid, and order is irrelevant.
+     *
      * @param {...*} query - Name of a tag or array of tags.
      * @returns {boolean} True if filters are satisfied.
      * @example
@@ -147,18 +142,17 @@ class Tags extends EventHandler {
         return this._has(this._processArguments(arguments));
     }
 
-
     _has(tags) {
         if (!this._list.length || !tags.length)
             return false;
 
         for (let i = 0; i < tags.length; i++) {
             if (tags[i].length === 1) {
-                // single occurance
+                // single occurrence
                 if (this._index[tags[i][0]])
                     return true;
             } else {
-                // combined occurance
+                // combined occurrence
                 let multiple = true;
 
                 for (let t = 0; t < tags[i].length; t++) {
@@ -178,9 +172,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#list
-     * @description Returns immutable array of tags.
+     * Returns immutable array of tags.
+     *
      * @returns {string[]} Copy of tags array.
      */
     list() {
@@ -225,10 +218,9 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @field
-     * @name Tags#size
+     * Number of tags in set.
+     *
      * @type {number}
-     * @description Number of tags in set.
      */
     get size() {
         return this._list.length;
