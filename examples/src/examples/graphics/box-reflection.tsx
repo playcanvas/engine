@@ -96,6 +96,7 @@ class ClusteredShadowsOmniExample extends Example {
         roomMaterial.normalMapTiling.set(5, 5);
         roomMaterial.bumpiness = 0.1;
         roomMaterial.shininess = 90;
+        // @ts-ignore
         roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
         roomMaterial.metalness = 0.5;
 
@@ -126,6 +127,7 @@ class ClusteredShadowsOmniExample extends Example {
         sphereMaterial.bumpiness = 0.7;
         sphereMaterial.shininess = 90;
         sphereMaterial.metalness = 0.6;
+        // @ts-ignore
         sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
         sphereMaterial.update();
 
