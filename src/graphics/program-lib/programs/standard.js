@@ -1022,16 +1022,16 @@ const standard = {
         }
 
         if (needsNormal) {
-             // if normalMap is disabled, then so is normalDetailMap
+            // if normalMap is disabled, then so is normalDetailMap
             if (options.normalMap || options.clearCoatNormalMap) {
-                // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently decide which unpackNormal to use.
+                // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
                 if (!options.hasTangents) {
-                    // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
-                    const transformPropName = options.normalMap ? "normalMapTransform" : "clearCoatNormalMapTransform";
-                    const normalMapUv = this._getUvSourceExpression(transformPropName, "normalMapUv", options);
-                    tbn = tbn.replace(/\$UV/g, normalMapUv);
+                    // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
+                    const baseName = options.normalMap ? "normalMap" : "clearCoatNormalMap";
+                    const uv = this._getUvSourceExpression(`${baseName}Transform`, `${baseName}Uv`, options);
+                    tbn = tbn.replace(/\$UV/g, uv);
                 }
                 code += tbn;
             } else if (options.enableGGXSpecular && !options.heightMap) {
