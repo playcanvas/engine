@@ -36,6 +36,7 @@ import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
+import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
@@ -1951,6 +1952,9 @@ class ForwardRenderer {
 
                 const objects = layer.instances;
                 const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+
+                // add debug mesh instances to visible list
+                this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
 
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;

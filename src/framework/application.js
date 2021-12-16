@@ -2003,7 +2003,6 @@ class Application extends EventHandler {
     }
 
     _registerSceneImmediate(scene) {
-        this.on('prerender', scene.immediate.onPreRender, scene.immediate);
         this.on('postrender', scene.immediate.onPostRender, scene.immediate);
     }
 }
