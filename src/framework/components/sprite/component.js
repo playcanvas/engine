@@ -461,14 +461,14 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#addClip
-     * @description Creates and adds a new {@link SpriteAnimationClip} to the component's clips.
+     * Creates and adds a new {@link SpriteAnimationClip} to the component's clips.
+     *
      * @param {object} data - Data for the new animation clip.
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
      * @param {object} [data.loop] - Whether to loop the animation clip.
-     * @param {number|Asset} [data.spriteAsset] - The asset id or the {@link Asset} of the sprite that this clip will play.
+     * @param {number|Asset} [data.spriteAsset] - The asset id or the {@link Asset} of the sprite
+     * that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.
      */
     addClip(data) {
@@ -488,9 +488,8 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#removeClip
-     * @description Removes a clip by name.
+     * Removes a clip by name.
+     *
      * @param {string} name - The name of the animation clip to remove.
      */
     removeClip(name) {
@@ -498,9 +497,8 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#clip
-     * @description Get an animation clip by name.
+     * Get an animation clip by name.
+     *
      * @param {string} name - The name of the clip.
      * @returns {SpriteAnimationClip} The clip.
      */
@@ -509,9 +507,9 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#play
-     * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
+     * Plays a sprite animation clip by name. If the animation clip is already playing then this
+     * will do nothing.
+     *
      * @param {string} name - The name of the clip to play.
      * @returns {SpriteAnimationClip} The clip that started playing.
      */
@@ -536,9 +534,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#pause
-     * @description Pauses the current animation clip.
+     * Pauses the current animation clip.
      */
     pause() {
         if (this._currentClip === this._defaultClip) return;
@@ -549,9 +545,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#resume
-     * @description Resumes the current paused animation clip.
+     * Resumes the current paused animation clip.
      */
     resume() {
         if (this._currentClip === this._defaultClip) return;
@@ -562,9 +556,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * @function
-     * @name SpriteComponent#stop
-     * @description Stops the current animation clip and resets it to the first frame.
+     * Stops the current animation clip and resets it to the first frame.
      */
     stop() {
         if (this._currentClip === this._defaultClip) return;

@@ -66,11 +66,9 @@ class ScreenComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ScreenComponent#syncDrawOrder
-     * @description Set the drawOrder of each child {@link ElementComponent}
-     * so that ElementComponents which are last in the hierarchy are rendered on top.
-     * Draw Order sync is queued and will be updated by the next update loop.
+     * Set the drawOrder of each child {@link ElementComponent} so that ElementComponents which are
+     * last in the hierarchy are rendered on top. Draw Order sync is queued and will be updated by
+     * the next update loop.
      */
     syncDrawOrder() {
         this.system.queueDrawOrderSync(this.entity.getGuid(), this._processDrawOrderSync, this);

@@ -504,10 +504,9 @@ class StandardMaterial extends Material {
     }
 
     /**
-     * @function
-     * @name StandardMaterial#clone
-     * @description Duplicates a Standard material. All properties are duplicated except textures
-     * where only the references are copied.
+     * Duplicates a Standard material. All properties are duplicated except textures where only the
+     * references are copied.
+     *
      * @returns {StandardMaterial} A cloned Standard material.
      */
     clone() {
@@ -720,9 +719,8 @@ class StandardMaterial extends Material {
     }
 
     /**
-     * @function
-     * @name StandardMaterial#destroy
-     * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
+     * Removes this material from the scene and possibly frees up memory from its shaders (if there
+     * are no other materials using it).
      */
     destroy() {
         // unbind (texture) asset references

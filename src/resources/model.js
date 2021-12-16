@@ -152,14 +152,12 @@ class ModelHandler {
     }
 
     /**
-     * @function
-     * @name ModelHandler#addParser
-     * @description Add a parser that converts raw data into a {@link Model}
-     * Default parser is for JSON models.
+     * Add a parser that converts raw data into a {@link Model}. Default parser is for JSON models.
+     *
      * @param {object} parser - See JsonModelParser for example.
-     * @param {addParserCallback} decider - Function that decides on which parser to use.
-     * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link Model}.
-     * The first parser to return true is used.
+     * @param {addParserCallback} decider - Function that decides on which parser to use. Function
+     * should take (url, data) arguments and return true if this parser should be used to parse the
+     * data into a {@link Model}. The first parser to return true is used.
      */
     addParser(parser, decider) {
         this._parsers.push({

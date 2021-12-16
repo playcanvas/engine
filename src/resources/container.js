@@ -13,11 +13,12 @@ import { GlbParser } from './parser/glb-parser.js';
  */
 class ContainerResource {
     /**
-     * @function
-     * @name ContainerResource#instantiateModelEntity
-     * @description Instantiates an entity with a model component.
-     * @param {object} [options] - The initialization data for the model component type {@link ModelComponent}.
-     * @returns {Entity} A single entity with a model component. Model component internally contains a hierarchy based on {@link GraphNode}.
+     * Instantiates an entity with a model component.
+     *
+     * @param {object} [options] - The initialization data for the model component type
+     * {@link ModelComponent}.
+     * @returns {Entity} A single entity with a model component. Model component internally
+     * contains a hierarchy based on {@link GraphNode}.
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -32,11 +33,12 @@ class ContainerResource {
     }
 
     /**
-     * @function
-     * @name ContainerResource#instantiateRenderEntity
-     * @description Instantiates an entity with a render component.
-     * @param {object} [options] - The initialization data for the render component type {@link RenderComponent}.
-     * @returns {Entity} A hierarchy of entities with render components on entities containing renderable geometry.
+     * Instantiates an entity with a render component.
+     *
+     * @param {object} [options] - The initialization data for the render component type
+     * {@link RenderComponent}.
+     * @returns {Entity} A hierarchy of entities with render components on entities containing
+     * renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {

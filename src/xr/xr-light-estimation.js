@@ -135,9 +135,7 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrLightEstimation#end
-     * @description End estimation of illumination data.
+     * End estimation of illumination data.
      */
     end() {
         this._lightProbeRequested = false;

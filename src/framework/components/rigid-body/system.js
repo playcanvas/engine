@@ -332,10 +332,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponentSystem#raycastFirst
-     * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-     * if the ray hits an entity with a collision component, it returns a {@link RaycastResult}, otherwise returns null.
+     * Raycast the world and return the first entity the ray hits. Fire a ray into the world from
+     * start to end, if the ray hits an entity with a collision component, it returns a
+     * {@link RaycastResult}, otherwise returns null.
+     *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
@@ -377,11 +377,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponentSystem#raycastAll
-     * @description Raycast the world and return all entities the ray hits. It returns an array
-     * of {@link RaycastResult}, one for each hit. If no hits are detected, the returned
-     * array will be of length 0.
+     * Raycast the world and return all entities the ray hits. It returns an array of
+     * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
+     * of length 0.
+     *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
@@ -423,13 +422,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_storeCollision
-     * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision.
+     * Stores a collision between the entity and other in the contacts map and returns true if it
+     * is a new collision.
+     *
      * @param {Entity} entity - The entity.
      * @param {Entity} other - The entity that collides with the first entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
+     * @private
      */
     _storeCollision(entity, other) {
         let isNewCollision = false;
@@ -505,11 +504,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
+     * Removes collisions that no longer exist from the collisions list and fires collisionend
+     * events to the related entities.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponentSystem#_cleanOldCollisions
-     * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
-     * related entities.
      */
     _cleanOldCollisions() {
         for (const guid in this.collisions) {
@@ -557,12 +555,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_hasContactEvent
-     * @description Returns true if the entity has a contact event attached and false otherwise.
+     * Returns true if the entity has a contact event attached and false otherwise.
+     *
      * @param {object} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
+     * @private
      */
     _hasContactEvent(entity) {
         const c = entity.collision;
@@ -575,12 +572,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_checkForCollisions
-     * @description Checks for collisions and fires collision events.
+     * Checks for collisions and fires collision events.
+     *
      * @param {number} world - The pointer to the dynamics world that invoked this callback.
      * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
+     * @private
      */
     _checkForCollisions(world, timeStep) {
         const dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);

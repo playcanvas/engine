@@ -168,9 +168,8 @@ class Asset extends EventHandler {
      */
 
     /**
-     * @name Asset#getFileUrl
-     * @function
-     * @description Return the URL required to fetch the file for this asset.
+     * Return the URL required to fetch the file for this asset.
+     *
      * @returns {string} The URL.
      * @example
      * var assets = app.assets.find("My Image", "texture");
@@ -197,13 +196,12 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Asset#getAbsoluteUrl
-     * @description Construct an asset URL from this asset's location and a relative path. If the relativePath is a
-     * blob or Base64 URI, then return that instead.
+     * Construct an asset URL from this asset's location and a relative path. If the relativePath
+     * is a blob or Base64 URI, then return that instead.
+     *
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url.
      * @returns {string} Resulting URL of the asset.
+     * @private
      */
     getAbsoluteUrl(relativePath) {
         if (relativePath.startsWith('blob:') || relativePath.startsWith('data:')) {
@@ -215,12 +213,11 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Asset#getLocalizedAssetId
+     * Returns the asset id of the asset that corresponds to the specified locale.
+     *
      * @param {string} locale - The desired locale e.g. Ar-AR.
-     * @description Returns the asset id of the asset that corresponds to the specified locale.
      * @returns {number} An asset id or null if there is no asset specified for the desired locale.
+     * @private
      */
     getLocalizedAssetId(locale) {
         // tries to find either the desired locale or a fallback locale
@@ -229,13 +226,13 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Asset#addLocalizedAssetId
+     * Adds a replacement asset id for the specified locale. When the locale in
+     * {@link Application#i18n} changes then references to this asset will be replaced with the
+     * specified asset id. (Currently only supported by the {@link ElementComponent}).
+     *
      * @param {string} locale - The locale e.g. Ar-AR.
      * @param {number} assetId - The asset id.
-     * @description Adds a replacement asset id for the specified locale. When the locale in {@link Application#i18n} changes then
-     * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link ElementComponent}).
+     * @private
      */
     addLocalizedAssetId(locale, assetId) {
         this._i18n[locale] = assetId;
@@ -243,11 +240,10 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Asset#removeLocalizedAssetId
+     * Removes a localized asset.
+     *
      * @param {string} locale - The locale e.g. Ar-AR.
-     * @description Removes a localized asset.
+     * @private
      */
     removeLocalizedAssetId(locale) {
         const assetId = this._i18n[locale];
@@ -258,10 +254,11 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Asset#ready
-     * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away.
-     * @param {assetReadyCallback} callback - The function called when the asset is ready. Passed the (asset) arguments.
+     * Take a callback which is called as soon as the asset is loaded. If the asset is already
+     * loaded the callback is called straight away.
+     *
+     * @param {assetReadyCallback} callback - The function called when the asset is ready. Passed
+     * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * var asset = app.assets.find("My Asset");
@@ -291,9 +288,8 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Asset#unload
-     * @description Destroys the associated resource and marks asset as unloaded.
+     * Destroys the associated resource and marks asset as unloaded.
+     *
      * @example
      * var asset = app.assets.find("My Asset");
      * asset.unload();
@@ -447,16 +443,15 @@ class Asset extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Asset#fetchArrayBuffer
-     * @description Helper function to resolve asset file data and return the contents as an
-     * ArrayBuffer. If the asset file contents are present, that is returned. Otherwise the file
-     * data is be downloaded via http.
+     * Helper function to resolve asset file data and return the contents as an ArrayBuffer. If the
+     * asset file contents are present, that is returned. Otherwise the file data is be downloaded
+     * via http.
+     *
      * @param {string} loadUrl - The URL as passed into the handler
      * @param {resourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
+     * @private
      */
     static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
         if (asset?.file?.contents) {
