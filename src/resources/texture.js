@@ -51,6 +51,7 @@ const JSON_TEXTURE_TYPE = {
  * and opening of texture assets.
  */
 class TextureParser {
+    /* eslint-disable jsdoc/require-returns-check */
     /**
      * @function
      * @name TextureParser#load
@@ -62,11 +63,9 @@ class TextureParser {
      * @param {resourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     load(url, callback, asset) {
         throw new Error('not implemented');
     }
-    /* eslint-enable jsdoc/require-returns-check */
 
     /**
      * @function
@@ -78,7 +77,6 @@ class TextureParser {
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     open(url, data, device) {
         throw new Error('not implemented');
     }

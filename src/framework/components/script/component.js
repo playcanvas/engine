@@ -15,8 +15,6 @@ import { ScriptType } from '../../../script/script-type.js';
  * Script Types defined in JavaScript files to be executed with access to the Entity. For more
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
- * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This
- * array is read-only and should not be modified by developer.
  * @augments Component
  * @component
  */
@@ -394,13 +392,14 @@ class ScriptComponent extends Component {
     }
 
     /**
-     * @private
-     * @function
-     * @description Inserts script instance into the scripts array at the specified index. Also inserts the script
-     * into the update list if it has an update method and the post update list if it has a postUpdate method.
+     * Inserts script instance into the scripts array at the specified index. Also inserts the
+     * script into the update list if it has an update method and the post update list if it has a
+     * postUpdate method.
+     *
      * @param {object} scriptInstance - The script instance.
-     * @param {number} index - The index where to insert the script at. If -1 then append it at the end.
+     * @param {number} index - The index where to insert the script at. If -1, append it at the end.
      * @param {number} scriptsLength - The length of the scripts array.
+     * @private
      */
     _insertScriptInstance(scriptInstance, index, scriptsLength) {
         if (index === -1) {
@@ -494,11 +493,9 @@ class ScriptComponent extends Component {
         }
     }
 
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
-     * @function
-     * @name ScriptComponent#has
-     * @description Detect if script is attached to an entity.
+     * Detect if script is attached to an entity.
+     *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If script is attached to an entity.
      * @example
@@ -506,7 +503,6 @@ class ScriptComponent extends Component {
      *     // entity has script
      * }
      */
-    /* eslint-enable jsdoc/no-undefined-types */
     has(nameOrType) {
         if (typeof nameOrType === 'string') {
             return !!this._scriptsIndex[nameOrType];
@@ -520,17 +516,15 @@ class ScriptComponent extends Component {
         return scriptInstance instanceof scriptType; // will return false if scriptInstance undefined
     }
 
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
-     * @function
-     * @name ScriptComponent#get
-     * @description Get a script instance (if attached).
+     * Get a script instance (if attached).
+     *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
+     * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null
+     * is returned.
      * @example
      * var controller = entity.script.get('playerController');
      */
-    /* eslint-enable jsdoc/no-undefined-types */
     get(nameOrType) {
         if (typeof nameOrType === 'string') {
             const data = this._scriptsIndex[nameOrType];
@@ -545,19 +539,21 @@ class ScriptComponent extends Component {
         return scriptInstance instanceof scriptType ? scriptInstance : null;
     }
 
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
-     * @function
-     * @name ScriptComponent#create
-     * @description Create a script instance and attach to an entity script component.
+     * Create a script instance and attach to an entity script component.
+     *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @param {object} [args] - Object with arguments for a script.
-     * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
-     * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
-     * @param {boolean} [args.preloading] - If script instance is created during preload. If true, script and attributes must be initialized manually. Defaults to false.
-     * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to -1, which means append it at the end.
-     * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfully attached to an entity,
-     * or null if it failed because a script with a same name has already been added
+     * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
+     * true.
+     * @param {object} [args.attributes] - Object with values for attributes (if any), where key is
+     * name of an attribute.
+     * @param {boolean} [args.preloading] - If script instance is created during preload. If true,
+     * script and attributes must be initialized manually. Defaults to false.
+     * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
+     * -1, which means append it at the end.
+     * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfully attached
+     * to an entity, or null if it failed because a script with a same name has already been added
      * or if the {@link ScriptType} cannot be found by name in the {@link ScriptRegistry}.
      * @example
      * entity.script.create('playerController', {
@@ -566,7 +562,6 @@ class ScriptComponent extends Component {
      *     }
      * });
      */
-    /* eslint-enable jsdoc/no-undefined-types */
     create(nameOrType, args = {}) {
         const self = this;
 
@@ -647,17 +642,14 @@ class ScriptComponent extends Component {
         return null;
     }
 
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
-     * @function
-     * @name ScriptComponent#destroy
-     * @description Destroy the script instance that is attached to an entity.
+     * Destroy the script instance that is attached to an entity.
+     *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
      * entity.script.destroy('playerController');
      */
-    /* eslint-enable jsdoc/no-undefined-types */
     destroy(nameOrType) {
         let scriptName = nameOrType;
         let scriptType = nameOrType;
@@ -706,16 +698,13 @@ class ScriptComponent extends Component {
         return true;
     }
 
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
-     * @private
-     * @function
-     * @name ScriptComponent#swap
-     * @description Swap the script instance.
+     * Swap the script instance.
+     *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully swapped.
+     * @private
      */
-    /* eslint-enable jsdoc/no-undefined-types */
     swap(nameOrType) {
         let scriptName = nameOrType;
         let scriptType = nameOrType;
@@ -776,15 +765,16 @@ class ScriptComponent extends Component {
     }
 
     /**
-     * @function
+     * When an entity is cloned and it has entity script attributes that point to other entities in
+     * the same subtree that is cloned, then we want the new script attributes to point at the
+     * cloned entities. This method remaps the script attributes for this entity and it assumes
+     * that this entity is the result of the clone operation.
+     *
+     * @param {ScriptComponent} oldScriptComponent - The source script component that belongs to
+     * the entity that was being cloned.
+     * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the
+     * entities that were cloned.
      * @private
-     * @name ScriptComponent#resolveDuplicatedEntityReferenceProperties
-     * @description When an entity is cloned and it has entity script attributes that point
-     * to other entities in the same subtree that is cloned, then we want the new script attributes to point
-     * at the cloned entities. This method remaps the script attributes for this entity and it assumes that this
-     * entity is the result of the clone operation.
-     * @param {ScriptComponent} oldScriptComponent - The source script component that belongs to the entity that was being cloned.
-     * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the entities that were cloned.
      */
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
         const newScriptComponent = this.entity.script;
@@ -878,19 +868,15 @@ class ScriptComponent extends Component {
         }
     }
 
-
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
-     * @function
-     * @name ScriptComponent#move
-     * @description Move script instance to different position to alter update order of scripts within entity.
+     * Move script instance to different position to alter update order of scripts within entity.
+     *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.
      * @example
      * entity.script.move('playerController', 0);
      */
-    /* eslint-enable jsdoc/no-undefined-types */
     move(nameOrType, ind) {
         const len = this._scripts.length;
         if (ind >= len || ind < 0)
@@ -942,6 +928,12 @@ class ScriptComponent extends Component {
         this.fire('set', 'enabled', oldValue, value);
     }
 
+    /**
+     * An array of all script instances attached to an entity. This array is read-only and should
+     * not be modified by developer.
+     *
+     * @type {ScriptType[]}
+     */
     get scripts() {
         return this._scripts;
     }

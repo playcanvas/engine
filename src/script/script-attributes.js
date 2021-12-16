@@ -158,7 +158,6 @@ function rawToValue(app, args, value, old) {
  * created automatically by each {@link ScriptType}.
  */
 class ScriptAttributes {
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * Create a new ScriptAttributes instance.
      *
@@ -168,7 +167,6 @@ class ScriptAttributes {
         this.scriptType = scriptType;
         this.index = {};
     }
-    /* eslint-enable jsdoc/no-undefined-types */
 
     static reservedNames = new Set([
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',

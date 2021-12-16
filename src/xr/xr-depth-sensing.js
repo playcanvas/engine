@@ -349,10 +349,10 @@ class XrDepthSensing extends EventHandler {
      *     gl_FragColor = vec4(depth, depth, depth, 1.0);
      * }
      */
-    /* eslint-enable jsdoc/check-examples */
     get texture() {
         return this._texture;
     }
+    /* eslint-enable jsdoc/check-examples */
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
