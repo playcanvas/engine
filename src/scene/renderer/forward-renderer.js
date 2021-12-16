@@ -36,7 +36,6 @@ import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
-import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
