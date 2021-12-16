@@ -1,6 +1,7 @@
 /**
+ * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
+ *
  * @callback handleEventCallback
- * @description Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  * @param {*} [arg1] - First argument that is passed from caller.
  * @param {*} [arg2] - Second argument that is passed from caller.
  * @param {*} [arg3] - Third argument that is passed from caller.
@@ -93,7 +94,7 @@ class EventHandler {
      * obj.off(); // Removes all events
      * obj.off('test'); // Removes all events called 'test'
      * obj.off('test', handler); // Removes all handler functions, called 'test'
-     * obj.off('test', handler, this); // Removes all hander functions, called 'test' with scope this
+     * obj.off('test', handler, this); // Removes all handler functions, called 'test' with scope this
      */
     off(name, callback, scope) {
         if (name) {
@@ -138,13 +139,10 @@ class EventHandler {
         return this;
     }
 
-    // ESLint rule disabled here as documenting arg1, arg2...argN as [...] rest
-    // arguments is preferable to documenting each one individually.
-    /* eslint-disable valid-jsdoc */
     /**
      * Fire an event, all additional arguments are passed on to the event listener.
      *
-     * @param {object} name - Name of event to fire.
+     * @param {string} name - Name of event to fire.
      * @param {*} [arg1] - First argument that is passed to the event handler.
      * @param {*} [arg2] - Second argument that is passed to the event handler.
      * @param {*} [arg3] - Third argument that is passed to the event handler.
@@ -157,7 +155,6 @@ class EventHandler {
      * @example
      * obj.fire('test', 'This is the message');
      */
-    /* eslint-enable valid-jsdoc */
     fire(name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
         if (!name || !this._callbacks[name])
             return this;

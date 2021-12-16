@@ -127,8 +127,8 @@ class Entity extends GraphNode {
      * - "sound" - see {@link SoundComponent}
      * - "sprite" - see {@link SpriteComponent}
      *
-     * @param {object} [data] - The initialization data for the specific component type. Refer to each
-     * specific component's API reference page for details on valid values for this parameter.
+     * @param {object} [data] - The initialization data for the specific component type. Refer to
+     * each specific component's API reference page for details on valid values for this parameter.
      * @returns {Component} The new Component that was attached to the entity or null if there
      * was an error.
      * @example

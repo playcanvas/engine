@@ -1,5 +1,6 @@
 /**
- * A ordered list-type data structure that can provide item look up by key, but also return return a list.
+ * A ordered list-type data structure that can provide item look up by key, but also return return
+ * a list.
  *
  * @private
  */

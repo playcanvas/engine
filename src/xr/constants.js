@@ -35,7 +35,7 @@ export const XRSPACE_VIEWER = 'viewer';
  * underlying platform. When using this reference space the user is not expected to move beyond
  * their initial position much, if at all, and tracking is optimized for that purpose. For devices
  * with 6DoF tracking, local reference spaces should emphasize keeping the origin stable relative
- * to the user’s environment.
+ * to the user's environment.
  *
  * @type string
  */
@@ -48,7 +48,7 @@ export const XRSPACE_LOCAL = 'local';
  * might be estimated by the underlying platform. When using this reference space, the user is not
  * expected to move beyond their initial position much, if at all, and tracking is optimized for
  * that purpose. For devices with 6DoF tracking, local-floor reference spaces should emphasize
- * keeping the origin stable relative to the user’s environment.
+ * keeping the origin stable relative to the user's environment.
  *
  * @type string
  */
@@ -58,7 +58,7 @@ export const XRSPACE_LOCALFLOOR = 'local-floor';
  * Bounded Floor - represents a tracking space with its native origin at the floor, where the user
  * is expected to move within a pre-established boundary. Tracking in a bounded-floor reference
  * space is optimized for keeping the native origin and bounds geometry stable relative to the
- * user’s environment.
+ * user's environment.
  *
  * @type string
  */
@@ -67,7 +67,7 @@ export const XRSPACE_BOUNDEDFLOOR = 'bounded-floor';
 /**
  * Unbounded - represents a tracking space where the user is expected to move freely around their
  * environment, potentially even long distances from their starting point. Tracking in an unbounded
- * reference space is optimized for stability around the user’s current position, and as such the
+ * reference space is optimized for stability around the user's current position, and as such the
  * native origin may drift over time.
  *
  * @type string
@@ -85,7 +85,7 @@ export const XRTARGETRAY_GAZE = 'gaze';
 
 /**
  * Screen - indicates that the input source was an interaction with the canvas element associated
- * with an inline session’s output context, such as a mouse click or touch event.
+ * with an inline session's output context, such as a mouse click or touch event.
  *
  * @type string
  */
