@@ -912,21 +912,21 @@ Application.prototype.loadSceneSettings = function (url, callback) {
 
 Application.prototype.renderMeshInstance = function (meshInstance, options) {
     Debug.deprecated("pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.");
-    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
-    this._immediate.drawMesh(null, null, null, meshInstance, layer);
+    const layer = options?.layer ? options.layer : this.scene.getDefaultDrawLayer();
+    this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
 Application.prototype.renderMesh = function (mesh, material, matrix, options) {
     Debug.deprecated("pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
-    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
-    this._immediate.drawMesh(material, matrix, mesh, null, layer);
+    const layer = options?.layer ? options.layer : this.scene.getDefaultDrawLayer();
+    this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
 };
 
 Application.prototype._addLines = function (positions, colors, options) {
     const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
 
-    const batch = this._immediate.getBatch(layer, depthTest);
+    const batch = this.scene.immediate.getBatch(layer, depthTest);
     batch.addLines(positions, colors);
 };
 

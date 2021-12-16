@@ -16,7 +16,7 @@ import { ImmediateBatches } from '../immediate/immediate-batches.js';
 const tempPoints = [];
 
 class Immediate {
-    constructor(device, app) {
+    constructor(device) {
         this.device = device;
         this.quadMesh = null;
         this.textureShader = null;
@@ -39,10 +39,6 @@ class Immediate {
 
         // map of meshes instances added to a layer. The key is layer, the value is an array of mesh instances
         this.layerMeshInstances = new Map();
-
-        // connect to rendering
-        app.on('prerender', this.onPreRender, this);
-        app.on('postrender', this.onPostRender, this);
     }
 
     // creates material for line rendering
