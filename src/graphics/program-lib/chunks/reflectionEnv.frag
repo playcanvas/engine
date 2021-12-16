@@ -17,27 +17,35 @@ float shinyMipLevel(vec2 uv) {
     // calculate min of both sets of dF to handle discontinuity at the azim edge
     float maxd = min(max(dot(dx, dx), dot(dy, dy)), max(dot(dx2, dx2), dot(dy2, dy2)));
 
-    return clamp(0.5 * log2(maxd), 0.0, 10.0);
+    return clamp(0.5 * log2(maxd) - 1.0, 0.0, 6.0);
 }
 
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec3 dir = cubeMapProject(tReflDirW) * vec3(-1.0, 1.0, 1.0);
     vec2 uv = toSphericalUv(dir);
 
+    // calculate roughness level
     float level = saturate(1.0 - tGlossiness) * 5.0;
     float ilevel = floor(level);
 
-    vec3 linear0;
+    float weight;
+    vec2 uv0, uv1;
     if (ilevel == 0.0) {
-        // we're accessing the top level reflection - perform manual mipmap
+        // accessing the shiny (top level) reflection - perform manual mipmap lookup
         float level2 = shinyMipLevel(uv * atlasSize);
         float ilevel2 = floor(level2);
-        vec3 linearA = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2)));
-        vec3 linearB = $DECODE(texture2D(texture_envAtlas, mapMip(uv, ilevel2 + 1.0)));
-        linear0 = mix(linearA, linearB, level2 - ilevel2);
+        weight = level2 - ilevel2;
+        uv0 = mapMip(uv, ilevel2);
+        uv1 = mapMip(uv, ilevel2 + 1.0);
     } else {
-        linear0 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel)));
+        // accessing rough reflection - just sample the same part twice
+        uv0 = uv1 = mapRoughnessUv(uv, ilevel + 1.0);
+        weight = 0.0;
     }
+
+    vec3 linearA = $DECODE(texture2D(texture_envAtlas, uv0));
+    vec3 linearB = $DECODE(texture2D(texture_envAtlas, uv1));
+    vec3 linear0 = mix(linearA, linearB, weight);
     vec3 linear1 = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
 
     return processEnvironment(mix(linear0, linear1, level - ilevel));
