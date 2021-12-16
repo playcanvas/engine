@@ -236,8 +236,7 @@ class Immediate {
         return graphNode;
     }
 
-    // called before the layer is getting rendered, this updates debug rendering for the layer
-    // This is called just before the layer is rendered to allow lines to be added from inside
+    // This is called just before the layer is rendered to allow lines for the layer to be added from inside
     // the frame getting rendered
     onPreRenderLayer(layer, visibleList, transparent) {
 
