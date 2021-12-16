@@ -4,7 +4,6 @@ import { set } from '../../core/set-utils.js';
 
 import {
     LAYERID_DEPTH,
-    BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
