@@ -912,13 +912,13 @@ Application.prototype.loadSceneSettings = function (url, callback) {
 
 Application.prototype.renderMeshInstance = function (meshInstance, options) {
     Debug.deprecated("pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.");
-    const layer = options?.layer ? options.layer : this.scene.getDefaultDrawLayer();
+    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
     this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
 Application.prototype.renderMesh = function (mesh, material, matrix, options) {
     Debug.deprecated("pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
-    const layer = options?.layer ? options.layer : this.scene.getDefaultDrawLayer();
+    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
     this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
 };
 

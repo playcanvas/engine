@@ -1716,7 +1716,7 @@ class Application extends EventHandler {
      * ];
      * app.drawLines(points, colors);
      */
-    drawLines(positions, colors, depthTest = true, layer = this.scene.getDefaultDrawLayer()) {
+    drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLines(positions, colors, depthTest, layer);
     }
 
@@ -1750,7 +1750,7 @@ class Application extends EventHandler {
      * ];
      * app.drawLineArrays(points, colors);
      */
-    drawLineArrays(positions, colors, depthTest = true, layer = this.scene.getDefaultDrawLayer()) {
+    drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLineArrays(positions, colors, depthTest, layer);
     }
 
@@ -1770,7 +1770,7 @@ class Application extends EventHandler {
      * var center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
      */
-    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.getDefaultDrawLayer()) {
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
@@ -1790,28 +1790,28 @@ class Application extends EventHandler {
      * var max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.getDefaultDrawLayer()) {
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
     // Draw meshInstance at this frame
-    drawMeshInstance(meshInstance, layer = this.scene.getDefaultDrawLayer()) {
+    drawMeshInstance(meshInstance, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
     }
 
     // Draw mesh at this frame
-    drawMesh(mesh, material, matrix, layer = this.scene.getDefaultDrawLayer()) {
+    drawMesh(mesh, material, matrix, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    drawQuad(matrix, material, layer = this.scene.getDefaultDrawLayer()) {
+    drawQuad(matrix, material, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
     }
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    drawTexture(x, y, width, height, texture, material, layer = this.scene.getDefaultDrawLayer()) {
+    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1829,7 +1829,7 @@ class Application extends EventHandler {
 
     // draws a depth texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    drawDepthTexture(x, y, width, height, layer = this.scene.getDefaultDrawLayer()) {
+    drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new Material();
         material.shader = this.scene.immediate.getDepthTextureShader();
         material.update();

@@ -237,21 +237,21 @@ class Scene extends EventHandler {
     }
 
     // returns the default layer used by the immediate drawing functions
-    getDefaultDrawLayer() {
+    get defaultDrawLayer() {
         return this.layers.getLayerById(LAYERID_IMMEDIATE);
     }
 
-    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this.getDefaultDrawLayer()) {
+    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this.defaultDrawLayer) {
         const batch = this.immediate.getBatch(layer, depthTest);
         batch.addLines([start, end], [color, color]);
     }
 
-    drawLines(positions, colors, depthTest = true, layer = this.getDefaultDrawLayer()) {
+    drawLines(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
         const batch = this.immediate.getBatch(layer, depthTest);
         batch.addLines(positions, colors);
     }
 
-    drawLineArrays(positions, colors, depthTest = true, layer = this.getDefaultDrawLayer()) {
+    drawLineArrays(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
         const batch = this.immediate.getBatch(layer, depthTest);
         batch.addLinesArrays(positions, colors);
     }
