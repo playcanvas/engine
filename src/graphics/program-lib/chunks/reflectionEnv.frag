@@ -28,15 +28,15 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     float level = saturate(1.0 - tGlossiness) * 5.0;
     float ilevel = floor(level);
 
-    float weight;
     vec2 uv0, uv1;
+    float weight;
     if (ilevel == 0.0) {
         // accessing the shiny (top level) reflection - perform manual mipmap lookup
         float level2 = shinyMipLevel(uv * atlasSize);
         float ilevel2 = floor(level2);
-        weight = level2 - ilevel2;
         uv0 = mapMip(uv, ilevel2);
         uv1 = mapMip(uv, ilevel2 + 1.0);
+        weight = level2 - ilevel2;
     } else {
         // accessing rough reflection - just sample the same part twice
         uv0 = uv1 = mapRoughnessUv(uv, ilevel + 1.0);
