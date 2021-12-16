@@ -31,7 +31,6 @@ class ScriptRegistry extends EventHandler {
         this.off();
     }
 
-    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * Add {@link ScriptType} to registry. Note: when {@link createScript} is called, it will add
      * the {@link ScriptType} to the registry automatically. If a script already exists in
@@ -216,7 +215,6 @@ class ScriptRegistry extends EventHandler {
     list() {
         return this._list;
     }
-    /* eslint-enable jsdoc/no-undefined-types */
 }
 
 export { ScriptRegistry };

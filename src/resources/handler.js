@@ -32,6 +32,7 @@ class ResourceHandler {
         throw new Error('not implemented');
     }
 
+    /* eslint-disable jsdoc/require-returns-check */
     /**
      * @function
      * @name ResourceHandler#open
@@ -41,7 +42,6 @@ class ResourceHandler {
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     open(url, data, asset) {
         throw new Error('not implemented');
     }

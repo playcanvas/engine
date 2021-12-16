@@ -19,8 +19,6 @@ const reservedScriptNames = new Set([
     '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
 ]);
 
-/* eslint-disable jsdoc/no-undefined-types */
-
 /**
  * Create and register a new {@link ScriptType}. It returns new class type (constructor function),
  * which is auto-registered to {@link ScriptRegistry} using its name. This is the main interface to
@@ -84,9 +82,7 @@ ScriptAttributes.reservedNames.forEach((value, value2, set) => {
 });
 createScript.reservedAttributes = reservedAttributes;
 
-
 /* eslint-disable jsdoc/check-examples */
-
 /**
  * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
  * a ES6 script class that extends {@link ScriptType} (see example).
@@ -149,8 +145,6 @@ function registerScript(script, name, app) {
 
     ScriptHandler._push(script);
 }
-
 /* eslint-enable jsdoc/check-examples */
-/* eslint-enable jsdoc/no-undefined-types */
 
 export { createScript, registerScript };
