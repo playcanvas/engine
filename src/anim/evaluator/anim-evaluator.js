@@ -119,11 +119,10 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#addClip
-     * @description Add a clip to the evaluator.
+     * Add a clip to the evaluator.
+     *
      * @param {AnimClip} clip - The clip to add to the evaluator.
+     * @private
      */
     addClip(clip) {
         const targets = this._targets;
@@ -189,11 +188,10 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#removeClip
-     * @description Remove a clip from the evaluator.
+     * Remove a clip from the evaluator.
+     *
      * @param {number} index - Index of the clip to remove.
+     * @private
      */
     removeClip(index) {
         const targets = this._targets;
@@ -230,10 +228,9 @@ class AnimEvaluator {
     }
 
     /**
+     * Remove all clips from the evaluator.
+     *
      * @private
-     * @function
-     * @name AnimEvaluator#removeClips
-     * @description Remove all clips from the evaluator.
      */
     removeClips() {
         while (this._clips.length > 0) {
@@ -242,12 +239,11 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#findClip
-     * @description Returns the first clip which matches the given name, or null if no such clip was found.
+     * Returns the first clip which matches the given name, or null if no such clip was found.
+     *
      * @param {string} name - Name of the clip to find.
      * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
+     * @private
      */
     findClip(name) {
         const clips = this._clips;
@@ -275,12 +271,12 @@ class AnimEvaluator {
     }
 
     /**
+     * Evaluator frame update function. All the attached {@link AnimClip}s are evaluated, blended
+     * and the results set on the {@link AnimTarget}.
+     *
+     * @param {number} deltaTime - The amount of time that has passed since the last update, in
+     * seconds.
      * @private
-     * @function
-     * @name AnimEvaluator#update
-     * @description Evaluator frame update function. All the attached {@link AnimClip}s are evaluated,
-     * blended and the results set on the {@link AnimTarget}.
-     * @param {number} deltaTime - The amount of time that has passed since the last update, in seconds.
      */
     update(deltaTime) {
         // copy clips

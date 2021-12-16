@@ -28,11 +28,12 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#addHandler
-     * @description Add a {@link ResourceHandler} for a resource type. Handler should support atleast load() and open().
-     * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
-     * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
+     * Add a {@link ResourceHandler} for a resource type. Handler should support at least `load()`
+     * and `open()`. Handlers can optionally support patch(asset, assets) to handle dependencies on
+     * other assets.
+     *
+     * @param {string} type - The name of the resource type that the handler will be registered
+     * with. Can be:
      *
      * - {@link ASSET_ANIMATION}
      * - {@link ASSET_AUDIO}
@@ -49,7 +50,8 @@ class ResourceLoader {
      * - {@link ASSET_SCRIPT}
      * - {@link ASSET_CONTAINER}
      *
-     * @param {ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
+     * @param {ResourceHandler} handler - An instance of a resource handler supporting at least
+     * `load()` and `open()`.
      * @example
      * var loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
@@ -60,9 +62,8 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#removeHandler
-     * @description Remove a {@link ResourceHandler} for a resource type.
+     * Remove a {@link ResourceHandler} for a resource type.
+     *
      * @param {string} type - The name of the type that the handler will be removed.
      */
     removeHandler(type) {
@@ -70,9 +71,8 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#getHandler
-     * @description Get a {@link ResourceHandler} for a resource type.
+     * Get a {@link ResourceHandler} for a resource type.
+     *
      * @param {string} type - The name of the resource type that the handler is registered with.
      * @returns {ResourceHandler} The registered handler.
      */
@@ -81,15 +81,14 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#load
-     * @description Make a request for a resource from a remote URL. Parse the returned data using the
-     * handler for the specified type. When loaded and parsed, use the callback to return an instance of
+     * Make a request for a resource from a remote URL. Parse the returned data using the handler
+     * for the specified type. When loaded and parsed, use the callback to return an instance of
      * the resource.
+     *
      * @param {string} url - The URL of the resource to load.
      * @param {string} type - The type of resource expected.
-     * @param {resourceLoaderCallback} callback - The callback used when the resource is loaded or an
-     * error occurs. Passed (err, resource) where err is null if there are no errors.
+     * @param {resourceLoaderCallback} callback - The callback used when the resource is loaded or
+     * an error occurs. Passed (err, resource) where err is null if there are no errors.
      * @param {Asset} [asset] - Optional asset that is passed into handler
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
@@ -207,9 +206,9 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
+     * Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and
+     * return a {@link Model}.
+     *
      * @param {string} type - The type of resource.
      * @param {*} data - The raw resource data.
      * @returns {*} The parsed resource data.
@@ -226,10 +225,9 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#patch
-     * @description Perform any operations on a resource, that requires a dependency on its asset data
-     * or any other asset data.
+     * Perform any operations on a resource, that requires a dependency on its asset data or any
+     * other asset data.
+     *
      * @param {Asset} asset - The asset to patch.
      * @param {AssetRegistry} assets - The asset registry.
      */
@@ -246,9 +244,8 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#clearCache
-     * @description Remove resource from cache.
+     * Remove resource from cache.
+     *
      * @param {string} url - The URL of the resource.
      * @param {string} type - The type of resource.
      */
@@ -257,9 +254,8 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#getFromCache
-     * @description Check cache for resource from a URL. If present, return the cached value.
+     * Check cache for resource from a URL. If present, return the cached value.
+     *
      * @param {string} url - The URL of the resource to get from the cache.
      * @param {string} type - The type of the resource.
      * @returns {*} The resource loaded from the cache.
@@ -271,11 +267,11 @@ class ResourceLoader {
     }
 
     /**
+     * Enables retrying of failed requests when loading assets.
+     *
+     * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults
+     * to 5.
      * @private
-     * @function
-     * @name ResourceLoader#enableRetry
-     * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults to 5.
-     * @description Enables retrying of failed requests when loading assets.
      */
     enableRetry(maxRetries = 5) {
         maxRetries = Math.max(0, maxRetries) || 0;
@@ -286,10 +282,9 @@ class ResourceLoader {
     }
 
     /**
+     * Disables retrying of failed requests when loading assets.
+     *
      * @private
-     * @function
-     * @name ResourceLoader#disableRetry
-     * @description Disables retrying of failed requests when loading assets.
      */
     disableRetry() {
         for (const key in this._handlers) {
@@ -298,9 +293,7 @@ class ResourceLoader {
     }
 
     /**
-     * @function
-     * @name ResourceLoader#destroy
-     * @description Destroys the resource loader.
+     * Destroys the resource loader.
      */
     destroy() {
         this._handlers = {};

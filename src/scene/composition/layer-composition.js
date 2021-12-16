@@ -710,9 +710,8 @@ class LayerComposition extends EventHandler {
     // Whole layer API
 
     /**
-     * @function
-     * @name LayerComposition#push
-     * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link Layer#layerList}.
+     * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     push(layer) {
@@ -731,9 +730,9 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#insert
-     * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link Layer#layerList}.
+     * Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the
+     * {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
@@ -754,9 +753,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#remove
-     * @description Removes a layer (both opaque and semi-transparent parts) from {@link Layer#layerList}.
+     * Removes a layer (both opaque and semi-transparent parts) from {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
     remove(layer) {
@@ -786,9 +784,9 @@ class LayerComposition extends EventHandler {
     // Sublayer API
 
     /**
-     * @function
-     * @name LayerComposition#pushOpaque
-     * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link Layer#layerList}.
+     * Adds part of the layer with opaque (non semi-transparent) objects to the end of the
+     * {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     pushOpaque(layer) {
@@ -804,9 +802,9 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#insertOpaque
-     * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link Layer#layerList}.
+     * Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen
+     * index in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
@@ -827,9 +825,9 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#removeOpaque
-     * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link Layer#layerList}.
+     * Removes an opaque part of the layer (non semi-transparent mesh instances) from
+     * {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeOpaque(layer) {
@@ -855,9 +853,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#pushTransparent
-     * @description Adds part of the layer with semi-transparent objects to the end of the {@link Layer#layerList}.
+     * Adds part of the layer with semi-transparent objects to the end of the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     pushTransparent(layer) {
@@ -873,9 +870,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#insertTransparent
-     * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link Layer#layerList}.
+     * Inserts a semi-transparent part of the layer at the chosen index in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
@@ -896,9 +892,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#removeTransparent
-     * @description Removes a transparent part of the layer from {@link Layer#layerList}.
+     * Removes a transparent part of the layer from {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeTransparent(layer) {
@@ -939,9 +934,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getOpaqueIndex
-     * @description Gets index of the opaque part of the supplied layer in the {@link Layer#layerList}.
+     * Gets index of the opaque part of the supplied layer in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer.
      */
@@ -950,9 +944,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getTransparentIndex
-     * @description Gets index of the semi-transparent part of the supplied layer in the {@link Layer#layerList}.
+     * Gets index of the semi-transparent part of the supplied layer in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer.
      */
@@ -961,11 +954,11 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getLayerById
-     * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
+     * Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
+     *
      * @param {number} id - An ID of the layer to find.
-     * @returns {Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
+     * @returns {Layer} The layer corresponding to the specified ID. Returns null if layer is not
+     * found.
      */
     getLayerById(id) {
         for (let i = 0; i < this.layerList.length; i++) {
@@ -975,11 +968,11 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getLayerByName
-     * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
+     * Finds a layer inside this composition by its name. Null is returned, if nothing is found.
+     *
      * @param {string} name - The name of the layer to find.
-     * @returns {Layer} The layer corresponding to the specified name. Returns null if layer is not found.
+     * @returns {Layer} The layer corresponding to the specified name. Returns null if layer is not
+     * found.
      */
     getLayerByName(name) {
         for (let i = 0; i < this.layerList.length; i++) {
@@ -1041,28 +1034,31 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name LayerComposition#sortTransparentLayers
-     * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
+     * Used to determine which array of layers has any transparent sublayer that is on top of all
+     * the transparent sublayers in the other array.
+     *
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.
-     * @returns {number} Returns a negative number if any of the transparent sublayers in layersA is on top of all the transparent sublayers in layersB,
-     * or a positive number if any of the transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0 otherwise.
+     * @returns {number} Returns a negative number if any of the transparent sublayers in layersA
+     * is on top of all the transparent sublayers in layersB, or a positive number if any of the
+     * transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0
+     * otherwise.
+     * @private
      */
     sortTransparentLayers(layersA, layersB) {
         return this._sortLayersDescending(layersA, layersB, this._transparentOrder);
     }
 
     /**
-     * @private
-     * @function
-     * @name LayerComposition#sortOpaqueLayers
-     * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
+     * Used to determine which array of layers has any opaque sublayer that is on top of all the
+     * opaque sublayers in the other array.
+     *
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.
-     * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on top of all the opaque sublayers in layersB,
-     * or a positive number if any of the opaque sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
+     * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on
+     * top of all the opaque sublayers in layersB, or a positive number if any of the opaque
+     * sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
+     * @private
      */
     sortOpaqueLayers(layersA, layersB) {
         return this._sortLayersDescending(layersA, layersB, this._opaqueOrder);

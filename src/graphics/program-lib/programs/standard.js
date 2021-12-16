@@ -121,14 +121,13 @@ const standard = {
     // get the value to replace $UV with in Map Shader functions
 
     /**
-     * @private
-     * @function
-     * @name _getUvSourceExpression
-     * @description Get the code with which to to replace '$UV' in the map shader functions.
+     * Get the code with which to to replace '$UV' in the map shader functions.
+     *
      * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
      * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
      * @param {object} options - The options passed into createShaderDefinition.
      * @returns {string} The code used to replace "$UV" in the shader code.
+     * @private
      */
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
@@ -173,16 +172,15 @@ const standard = {
     },
 
     /**
-     * @private
-     * @function
-     * @name _addMap
-     * @description Add chunk for Map Types (used for all maps except Normal).
+     * Add chunk for Map Types (used for all maps except Normal).
+     *
      * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into to createShaderDefinition.
      * @param {object} chunks - The set of shader chunks to choose from.
      * @param {string} samplerFormat - Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D".
      * @returns {string} The shader code to support this map.
+     * @private
      */
     _addMap: function (propName, chunkName, options, chunks, samplerFormat) {
         const mapPropName = propName + "Map";
@@ -312,15 +310,14 @@ const standard = {
     },
 
     /**
-     * @private
-     * @function
-     * @name _fsAddBaseCode
-     * @description Add "Base" Code section to fragment shader.
+     * Add "Base" Code section to fragment shader.
+     *
      * @param {string} code - Current fragment shader code.
      * @param {GraphicsDevice} device - The graphics device.
      * @param {object} chunks - All available shader chunks.
      * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
+     * @private
      */
     _fsAddBaseCode: function (code, device, chunks, options) {
         code += chunks.basePS;
@@ -338,15 +335,14 @@ const standard = {
     },
 
     /**
-     * @private
-     * @function
-     * @name _fsAddStartCode
-     * @description Add "Start" Code section to fragment shader.
+     * Add "Start" Code section to fragment shader.
+     *
      * @param {string} code -  Current fragment shader code.
      * @param {GraphicsDevice} device - The graphics device.
      * @param {object} chunks - All available shader chunks.
      * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
+     * @private
      */
     _fsAddStartCode: function (code, device, chunks, options) {
         code += chunks.startPS;

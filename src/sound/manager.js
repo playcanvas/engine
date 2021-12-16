@@ -119,15 +119,14 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name SoundManager#playSound
-     * @description Create a new {@link Channel} and begin playback of the sound.
+     * Create a new {@link Channel} and begin playback of the sound.
+     *
      * @param {Sound} sound - The Sound object to play.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel} The channel playing the sound.
+     * @private
      */
     playSound(sound, options = {}) {
         let channel = null;
@@ -139,16 +138,15 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name SoundManager#playSound3d
-     * @description Create a new {@link Channel3d} and begin playback of the sound at the position specified.
+     * Create a new {@link Channel3d} and begin playback of the sound at the position specified.
+     *
      * @param {Sound} sound - The Sound object to play.
      * @param {Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel3d} The 3D channel playing the sound.
+     * @private
      */
     playSound3d(sound, position, options = {}) {
         let channel = null;
