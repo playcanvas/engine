@@ -130,7 +130,7 @@ class AssetRegistry extends EventHandler {
      * @description Fired when an asset is removed from the registry.
      * @param {Asset} asset - The asset that was removed.
      * @example
-     * app.assets.on("remove", function (aseet) {
+     * app.assets.on("remove", function (asset) {
      *     console.log("Asset removed: " + asset.name);
      * });
      */
