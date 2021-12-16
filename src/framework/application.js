@@ -28,7 +28,6 @@ import {
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
-import { Immediate } from '../scene/immediate/immediate.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
@@ -266,7 +265,9 @@ class Application extends EventHandler {
         this._entityIndex = {};
 
         this.scene = new Scene(this.graphicsDevice);
-        this.root = new Entity(this);
+        this._registerSceneImmediate(this.scene);
+
+        this.root = new Entity();
         this.root._enabledInHierarchy = true;
         this._enableList = [];
         this._enableList.size = 0;
@@ -453,9 +454,6 @@ class Application extends EventHandler {
                 document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
             }
         }
-
-        // immediate rendering
-        this._immediate = new Immediate(this.graphicsDevice, this);
 
         // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
@@ -1650,11 +1648,6 @@ class Application extends EventHandler {
         return timestamp;
     }
 
-    // returns the default layer used by the line drawing functions
-    _getDefaultDrawLayer() {
-        return this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
-    }
-
     /**
      * @function
      * @name Application#drawLine
@@ -1682,9 +1675,8 @@ class Application extends EventHandler {
      * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
-    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        const batch = this._immediate.getBatch(layer, depthTest);
-        batch.addLines([start, end], [color, color]);
+    drawLine(start, end, color, depthTest, layer) {
+        this.scene.drawLine(start, end, color, depthTest, layer);
     }
 
     /**
@@ -1724,9 +1716,8 @@ class Application extends EventHandler {
      * ];
      * app.drawLines(points, colors);
      */
-    drawLines(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        const batch = this._immediate.getBatch(layer, depthTest);
-        batch.addLines(positions, colors);
+    drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLines(positions, colors, depthTest, layer);
     }
 
     /**
@@ -1759,9 +1750,8 @@ class Application extends EventHandler {
      * ];
      * app.drawLineArrays(points, colors);
      */
-    drawLineArrays(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        const batch = this._immediate.getBatch(layer, depthTest);
-        batch.addLinesArrays(positions, colors);
+    drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLineArrays(positions, colors, depthTest, layer);
     }
 
     /**
@@ -1780,8 +1770,8 @@ class Application extends EventHandler {
      * var center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
      */
-    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
     /**
@@ -1800,28 +1790,28 @@ class Application extends EventHandler {
      * var max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
     // Draw meshInstance at this frame
-    drawMeshInstance(meshInstance, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawMesh(null, null, null, meshInstance, layer);
+    drawMeshInstance(meshInstance, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
     }
 
     // Draw mesh at this frame
-    drawMesh(mesh, material, matrix, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawMesh(material, matrix, mesh, null, layer);
+    drawMesh(mesh, material, matrix, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    drawQuad(matrix, material, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawMesh(material, matrix, this._immediate.getQuadMesh(), null, layer);
+    drawQuad(matrix, material, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
     }
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    drawTexture(x, y, width, height, texture, material, layer = this._getDefaultDrawLayer()) {
+    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1830,7 +1820,7 @@ class Application extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this._immediate.getTextureShader();
+            material.shader = this.scene.immediate.getTextureShader();
             material.update();
         }
 
@@ -1839,9 +1829,9 @@ class Application extends EventHandler {
 
     // draws a depth texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    drawDepthTexture(x, y, width, height, layer = this._getDefaultDrawLayer()) {
+    drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new Material();
-        material.shader = this._immediate.getDepthTextureShader();
+        material.shader = this.scene.immediate.getDepthTextureShader();
         material.update();
 
         this.drawTexture(x, y, width, height, null, material, layer);
@@ -2010,6 +2000,10 @@ class Application extends EventHandler {
      */
     getEntityFromIndex(guid) {
         return this._entityIndex[guid];
+    }
+
+    _registerSceneImmediate(scene) {
+        this.on('postrender', scene.immediate.onPostRender, scene.immediate);
     }
 }
 

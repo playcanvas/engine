@@ -156,11 +156,13 @@ class Material {
         this._shader = shader;
     }
 
+    // returns boolean depending on material being transparent
+    get transparent() {
+        return this.blend || this.blendSrc !== BLENDMODE_ONE || this.blendDst !== BLENDMODE_ZERO || this.blendEquation !== BLENDEQUATION_ADD;
+    }
+
     get blendType() {
-        if ((!this.blend) &&
-            (this.blendSrc === BLENDMODE_ONE) &&
-            (this.blendDst === BLENDMODE_ZERO) &&
-            (this.blendEquation === BLENDEQUATION_ADD)) {
+        if (!this.transparent) {
             return BLEND_NONE;
         } else if ((this.blend) &&
                    (this.blendSrc === BLENDMODE_SRC_ALPHA) &&

@@ -6,6 +6,8 @@ import { MeshInstance } from '../../scene/mesh-instance.js';
 import { GraphNode } from '../../scene/graph-node.js';
 
 const identityGraphNode = new GraphNode();
+identityGraphNode.worldTransform = Mat4.IDENTITY;
+identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormal = false;
 
 // helper class storing data for a single batch of line rendering using a single material
 class ImmediateBatch {
@@ -71,34 +73,27 @@ class ImmediateBatch {
         }
     }
 
-    onPreRender() {
-        if (this.positions.length > 0) {
+    onPreRender(visibleList, transparent) {
+
+        // prepare mesh if its transparency matches
+        if (this.positions.length > 0 && this.material.transparent === transparent) {
 
             // update mesh vertices
             this.mesh.setPositions(this.positions);
             this.mesh.setColors(this.colors);
             this.mesh.update(PRIMITIVE_LINES, false);
-
             if (!this.meshInstance) {
-                identityGraphNode.worldTransform = Mat4.IDENTITY;
-                identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormal = false;
                 this.meshInstance = new MeshInstance(this.mesh, this.material, identityGraphNode);
-                this.meshInstance.cull = false;
-
-                // mesh instance is permanently added to the layer, and only marked invisible when no lines need
-                // to be rendered to avoid the cost of layer composition update when adding / removing
-                this.layer.addMeshInstances([this.meshInstance], true);
             }
 
-            this.meshInstance.visible = true;
-        }
-    }
+            // clear lines when after they were rendered as their lifetime is one frame
+            this.positions.length = 0;
+            this.colors.length = 0;
 
-    onPostRender() {
-        // clear lines when after they were rendered as their lifetime is one frame
-        this.positions.length = 0;
-        this.colors.length = 0;
-        this.meshInstance.visible = false;
+            // inject mesh instance into visible list to be rendered
+            visibleList.list.push(this.meshInstance);
+            visibleList.length++;
+        }
     }
 }
 

@@ -16,7 +16,7 @@ import { ImmediateBatches } from '../immediate/immediate-batches.js';
 const tempPoints = [];
 
 class Immediate {
-    constructor(device, app) {
+    constructor(device) {
         this.device = device;
         this.quadMesh = null;
         this.textureShader = null;
@@ -24,14 +24,14 @@ class Immediate {
         this.cubeLocalPos = null;
         this.cubeWorldPos = null;
 
-        this.usedGraphNodes = [];
-        this.freeGraphNodes = [];
-
         // map of Layer to ImmediateBatches, storing line batches for a layer
         this.batchesMap = new Map();
 
         // set of all batches that were used in the frame
         this.allBatches = new Set();
+
+        // set of all layers updated during this frame
+        this.updatedLayers = new Set();
 
         // line materials
         this._materialDepth = null;
@@ -39,10 +39,6 @@ class Immediate {
 
         // map of meshes instances added to a layer. The key is layer, the value is an array of mesh instances
         this.layerMeshInstances = new Map();
-
-        // connect to rendering
-        app.on('prerender', this.onPreRender, this);
-        app.on('postrender', this.onPostRender, this);
     }
 
     // creates material for line rendering
@@ -175,7 +171,6 @@ class Immediate {
         if (!meshInstance) {
             const graphNode = this.getGraphNode(matrix);
             meshInstance = new MeshInstance(mesh, material, graphNode);
-            meshInstance.cull = false;
         }
 
         // add the mesh instance to an array per layer, they get added to layers before rendering
@@ -234,57 +229,46 @@ class Immediate {
     }
 
     getGraphNode(matrix) {
-        let graphNode = null;
-        if (this.freeGraphNodes.length > 0) {
-            graphNode = this.freeGraphNodes.pop();
-        } else {
-            graphNode = new GraphNode();
-        }
-        this.usedGraphNodes.push(graphNode);
-
+        const graphNode = new GraphNode();
         graphNode.worldTransform = matrix;
         graphNode._dirtyWorld = graphNode._dirtyNormal = false;
 
         return graphNode;
     }
 
-    // called before the frame is rendered, prepares data for rendering
-    onPreRender() {
+    // This is called just before the layer is rendered to allow lines for the layer to be added from inside
+    // the frame getting rendered
+    onPreRenderLayer(layer, visibleList, transparent) {
 
-        // update line batches
-        this.allBatches.forEach((batches) => {
-            batches.onPreRender();
+        // update line batches for the specified sub-layer
+        this.batchesMap.forEach((batches, batchLayer) => {
+            if (batchLayer === layer) {
+                batches.onPreRender(visibleList, transparent);
+            }
         });
 
-        // add mesh instances to layers for rendering
-        // TODO: the way meshes are rendered (not lines) is by adding mesh instances to the layers each frame,
-        // which forces partial update of layer composition which is slow. If this was released as a proper API to submit meshes
-        // to be rendered for a singe frame only,  mesh instances should probably be injected into the final visible list during
-        // culling to avoid the cost.
-        this.layerMeshInstances.forEach((meshInstances, layer) => {
-            layer.addMeshInstances(meshInstances, true);
-        });
+        // only update meshes once for each layer (they're not per sub-layer at the moment)
+        if (!this.updatedLayers.has(layer)) {
+            this.updatedLayers.add(layer);
+
+            // add mesh instances for specified layer to visible list
+            const meshInstances = this.layerMeshInstances.get(layer);
+            if (meshInstances) {
+                visibleList.list.push(...meshInstances);
+                visibleList.length += meshInstances.length;
+                meshInstances.length = 0;
+            }
+        }
     }
 
     // called after the frame was rendered, clears data
     onPostRender() {
 
         // clean up line batches
-        this.allBatches.forEach((batches) => {
-            batches.onPostRender();
-        });
         this.allBatches.clear();
 
-        // remove mesh instances from layers
-        this.layerMeshInstances.forEach((meshInstances, layer) => {
-            layer.removeMeshInstances(meshInstances, true);
-            meshInstances.length = 0;
-        });
-
-        // reuse graph nodes
-        const temp = this.freeGraphNodes;
-        this.freeGraphNodes = this.usedGraphNodes;
-        this.usedGraphNodes = temp;
+        // all batches need updating next frame
+        this.updatedLayers.clear();
     }
 }
 

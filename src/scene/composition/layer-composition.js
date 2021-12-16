@@ -4,7 +4,6 @@ import { set } from '../../core/set-utils.js';
 
 import {
     LAYERID_DEPTH,
-    BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
@@ -217,10 +216,8 @@ class LayerComposition extends EventHandler {
         // function moves transparent or opaque meshes based on moveTransparent from src to dest array
         function moveByBlendType(dest, src, moveTransparent) {
             for (let s = 0; s < src.length;) {
-                const material = src[s].material;
-                const isTransparent = material && material.blendType !== BLEND_NONE;
 
-                if (isTransparent === moveTransparent) {
+                if (src[s].material.transparent === moveTransparent) {
 
                     // add it to dest
                     dest.push(src[s]);

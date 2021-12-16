@@ -197,7 +197,6 @@ class RenderCubemapExample extends Example {
 
         // update things each frame
         let time = 0;
-        const device = app.graphicsDevice;
         app.on("update", function (dt) {
             time += dt;
 

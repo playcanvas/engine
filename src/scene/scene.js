@@ -9,13 +9,15 @@ import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 import { LightingParams } from './lighting/lighting-params.js';
+import { Immediate } from './immediate/immediate.js';
+
 import { EnvLighting } from '../graphics/env-lighting.js';
 import { getApplication } from '../framework/globals.js';
 
@@ -223,12 +225,35 @@ class Scene extends EventHandler {
 
         // backwards compatibility only
         this._models = [];
+
+        // immediate rendering
+        this.immediate = new Immediate(this.device);
     }
 
     destroy() {
         this._resetSkyboxModel();
         this.root = null;
         this.off();
+    }
+
+    // returns the default layer used by the immediate drawing functions
+    get defaultDrawLayer() {
+        return this.layers.getLayerById(LAYERID_IMMEDIATE);
+    }
+
+    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatch(layer, depthTest);
+        batch.addLines([start, end], [color, color]);
+    }
+
+    drawLines(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatch(layer, depthTest);
+        batch.addLines(positions, colors);
+    }
+
+    drawLineArrays(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatch(layer, depthTest);
+        batch.addLinesArrays(positions, colors);
     }
 
     /**
