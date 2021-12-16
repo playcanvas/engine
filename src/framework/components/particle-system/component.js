@@ -918,9 +918,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ParticleSystemComponent#reset
-     * @description Resets particle state, doesn't affect playing.
+     * Resets particle state, doesn't affect playing.
      */
     reset() {
         if (this.emitter) {
@@ -929,9 +927,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ParticleSystemComponent#stop
-     * @description Disables the emission of new particles, lets existing to finish their simulation.
+     * Disables the emission of new particles, lets existing to finish their simulation.
      */
     stop() {
         if (this.emitter) {
@@ -942,27 +938,21 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ParticleSystemComponent#pause
-     * @description Freezes the simulation.
+     * Freezes the simulation.
      */
     pause() {
         this.data.paused = true;
     }
 
     /**
-     * @function
-     * @name ParticleSystemComponent#unpause
-     * @description Unfreezes the simulation.
+     * Unfreezes the simulation.
      */
     unpause() {
         this.data.paused = false;
     }
 
     /**
-     * @function
-     * @name ParticleSystemComponent#play
-     * @description Enables/unfreezes the simulation.
+     * Enables/unfreezes the simulation.
      */
     play() {
         this.data.paused = false;
@@ -974,9 +964,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * @function
-     * @name ParticleSystemComponent#isPlaying
-     * @description Checks if simulation is in progress.
+     * Checks if simulation is in progress.
+     *
      * @returns {boolean} True if the particle system is currently playing and false otherwise.
      */
     isPlaying() {
@@ -993,10 +982,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
+     * Rebuilds all data used by this particle system.
+     *
      * @private
-     * @function
-     * @name ParticleSystemComponent#rebuild
-     * @description Rebuilds all data used by this particle system.
      */
     rebuild() {
         const enabled = this.enabled;

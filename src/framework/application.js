@@ -199,7 +199,8 @@ class Application extends EventHandler {
      * @param {GamePads} [options.gamepads] - Gamepad handler for input.
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
-     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
+     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
+     * {@link GraphicsDevice} constructor.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
@@ -674,14 +675,13 @@ class Application extends EventHandler {
     static _applications = {};
 
     /**
-     * @static
-     * @function
-     * @name Application.getApplication
-     * @description Get the current application. In the case where there are multiple running
-     * applications, the function can get an application based on a supplied canvas id. This
-     * function is particularly useful when the current Application is not readily available.
-     * For example, in the JavaScript console of the browser's developer tools.
-     * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
+     * Get the current application. In the case where there are multiple running applications, the
+     * function can get an application based on a supplied canvas id. This function is particularly
+     * useful when the current Application is not readily available. For example, in the JavaScript
+     * console of the browser's developer tools.
+     *
+     * @param {string} [id] - If defined, the returned application should use the canvas which has
+     * this id. Otherwise current application will be returned.
      * @returns {Application|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
@@ -698,36 +698,39 @@ class Application extends EventHandler {
     }
 
     /**
-     * @name Application#fillMode
-     * @type {string}
-     * @description The current fill mode of the canvas. Can be:
+     * The current fill mode of the canvas. Can be:
      *
      * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
      * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while
+     * maintaining the aspect ratio.
+     *
+     * @type {string}
      */
     get fillMode() {
         return this._fillMode;
     }
 
     /**
-     * @name Application#resolutionMode
-     * @type {string}
-     * @description The current resolution mode of the canvas, Can be:
+     * The current resolution mode of the canvas, Can be:
      *
-     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to
+     * match canvas client size.
      * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     *
+     * @type {string}
      */
     get resolutionMode() {
         return this._resolutionMode;
     }
 
     /**
-     * @function
-     * @name Application#configure
-     * @description Load the application configuration file and apply application properties and fill the asset registry.
+     * Load the application configuration file and apply application properties and fill the asset
+     * registry.
+     *
      * @param {string} url - The URL of the configuration file to load.
-     * @param {configureAppCallback} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
+     * @param {configureAppCallback} callback - The Function called when the configuration file is
+     * loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
         http.get(url, (err, response) => {
@@ -753,9 +756,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#preload
-     * @description Load all assets in the asset registry that are marked as 'preload'.
+     * Load all assets in the asset registry that are marked as 'preload'.
+     *
      * @param {preloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
@@ -1100,17 +1102,18 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#start
-     * @description Start the application. This function does the following:
+     * Start the application. This function does the following:
+     *
      * 1. Fires an event on the application named 'start'
      * 2. Calls initialize for all components on entities in the hierarchy
      * 3. Fires an event on the application named 'initialize'
      * 4. Calls postInitialize for all components on entities in the hierarchy
      * 5. Fires an event on the application named 'postinitialize'
      * 6. Starts executing the main loop of the application
-     * This function is called internally by PlayCanvas applications made in the Editor
-     * but you will need to call start yourself if you are using the engine stand-alone.
+     *
+     * This function is called internally by PlayCanvas applications made in the Editor but you
+     * will need to call start yourself if you are using the engine stand-alone.
+     *
      * @example
      * app.start();
      */
@@ -1152,14 +1155,12 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#update
-     * @description Update the application. This function will call the update
-     * functions and then the postUpdate functions of all enabled components. It
-     * will then update the current state of all connected input devices.
-     * This function is called internally in the application's main loop and
-     * does not need to be called explicitly.
-     * @param {number} dt - The time delta since the last frame.
+     * Update the application. This function will call the update functions and then the postUpdate
+     * functions of all enabled components. It will then update the current state of all connected
+     * input devices. This function is called internally in the application's main loop and does
+     * not need to be called explicitly.
+     *
+     * @param {number} dt - The time delta in seconds since the last frame.
      */
     update(dt) {
         this.frame++;
@@ -1192,12 +1193,9 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#render
-     * @description Render the application's scene. More specifically, the scene's
-     * {@link LayerComposition} is rendered by the application's {@link ForwardRenderer}.
-     * This function is called internally in the application's main loop and
-     * does not need to be called explicitly.
+     * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
+     * rendered by the application's {@link ForwardRenderer}. This function is called internally in
+     * the application's main loop and does not need to be called explicitly.
      */
     render() {
         // #if _PROFILER
@@ -1311,14 +1309,15 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setCanvasFillMode
-     * @description Controls how the canvas fills the window and resizes when the window changes.
+     * Controls how the canvas fills the window and resizes when the window changes.
+     *
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
      * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
      * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while
+     * maintaining the aspect ratio.
+     *
      * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
      * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
@@ -1328,15 +1327,18 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setCanvasResolution
-     * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
+     * Change the resolution of the canvas, and set the way it behaves when the window is resized.
+     *
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to
+     * match canvas client size.
      * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
-     * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
-     * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
+     *
+     * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided
+     * canvas clientWidth is used.
+     * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided
+     * canvas clientHeight is used.
      */
     setCanvasResolution(mode, width, height) {
         this._resolutionMode = mode;
@@ -1351,9 +1353,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#isHidden
-     * @description Queries the visibility of the window or tab in which the application is running.
+     * Queries the visibility of the window or tab in which the application is running.
+     *
      * @returns {boolean} True if the application is not visible and false otherwise.
      */
     isHidden() {
@@ -1361,10 +1362,9 @@ class Application extends EventHandler {
     }
 
     /**
+     * Called when the visibility state of the current tab/window changes.
+     *
      * @private
-     * @function
-     * @name Application#onVisibilityChange
-     * @description Called when the visibility state of the current tab/window changes.
      */
     onVisibilityChange() {
         if (this.isHidden()) {
@@ -1375,12 +1375,14 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#resizeCanvas
-     * @description Resize the application's canvas element in line with the current fill mode.
-     * In {@link FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
-     * In {@link FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
-     * In {@link FILLMODE_NONE} mode, the canvas will always match the size provided.
+     * Resize the application's canvas element in line with the current fill mode.
+     *
+     * - In {@link FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it
+     * can while maintaining the aspect ratio.
+     * - In {@link FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing
+     * aspect ratio.
+     * - In {@link FILLMODE_NONE} mode, the canvas will always match the size provided.
+     *
      * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @returns {object} A object containing the values calculated to use as width and height.
@@ -1425,11 +1427,9 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#updateCanvasSize
-     * @description Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document page.
-     * It is recommended to call this function when the canvas size changes (e.g on window resize and orientation change
-     * events) so that the canvas resolution is immediately updated.
+     * Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document
+     * page. It is recommended to call this function when the canvas size changes (e.g on window
+     * resize and orientation change events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR
@@ -1446,11 +1446,11 @@ class Application extends EventHandler {
     }
 
     /**
+     * Event handler called when all code libraries have been loaded. Code libraries are passed
+     * into the constructor of the Application and the application won't start running or load
+     * packs until all libraries have been loaded.
+     *
      * @private
-     * @name Application#onLibrariesLoaded
-     * @description Event handler called when all code libraries have been loaded.
-     * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
-     * been loaded.
      */
     onLibrariesLoaded() {
         this._librariesLoaded = true;
@@ -1458,39 +1458,54 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#applySceneSettings
-     * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
+     * Apply scene settings to the current scene. Useful when your scene settings are parsed or
+     * generated from a non-URL source.
+     *
      * @param {object} settings - The scene settings to be applied.
      * @param {object} settings.physics - The physics settings to be applied.
-     * @param {number[]} settings.physics.gravity - The world space vector representing global gravity in the physics simulation. Must be a fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
+     * @param {number[]} settings.physics.gravity - The world space vector representing global
+     * gravity in the physics simulation. Must be a fixed size array with three number elements,
+     * corresponding to each axis [ X, Y, Z ].
      * @param {object} settings.render - The rendering settings to be applied.
-     * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+     * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light.
+     * Must be a fixed size array with three number elements, corresponding to each color channel
+     * [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
      * - {@link FOG_NONE}
      * - {@link FOG_LINEAR}
      * - {@link FOG_EXP}
      * - {@link FOG_EXP2}
-     * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
-     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
-     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
-     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
-     * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
+     *
+     * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a
+     * fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This
+     * property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
+     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog
+     * begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
+     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog
+     * reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
+     * @param {number} settings.render.gamma_correction - The gamma correction to apply when
+     * rendering the scene. Can be:
      *
      * - {@link GAMMA_NONE}
      * - {@link GAMMA_SRGB}
-     * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
-     * frame buffer. Can be:
+     *
+     * @param {number} settings.render.tonemapping - The tonemapping transform to apply when
+     * writing fragments to the frame buffer. Can be:
      *
      * - {@link TONEMAP_LINEAR}
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
-     * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
-     * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
+     *
+     * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
+     * of the scene.
+     * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
+     * used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
-     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
+     * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
@@ -1553,9 +1568,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setAreaLightLuts
-     * @description Sets the area light LUT asset for this app.
+     * Sets the area light LUT asset for this app.
+     *
      * @param {Asset} asset - LUT asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
@@ -1571,9 +1585,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setSkybox
-     * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
+     * Sets the skybox asset to current scene, and subscribes to asset load/change events.
+     *
      * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
      */
     setSkybox(asset) {
@@ -1612,11 +1625,10 @@ class Application extends EventHandler {
     }
 
     /**
+     * Create and assign a {@link VrManager} object to allow this application render in VR.
+     *
      * @private
      * @deprecated
-     * @function
-     * @name Application#enableVr
-     * @description Create and assign a {@link VrManager} object to allow this application render in VR.
      */
     enableVr() {
         if (!this.vr) {
@@ -1625,11 +1637,10 @@ class Application extends EventHandler {
     }
 
     /**
+     * Destroy the {@link VrManager}.
+     *
      * @private
      * @deprecated
-     * @function
-     * @name Application#disableVr
-     * @description Destroy the {@link VrManager}.
      */
     disableVr() {
         if (this.vr) {
@@ -1656,14 +1667,14 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#drawLine
-     * @description Draws a single line. Line start and end coordinates are specified in world-space.
-     * The line will be flat-shaded with the specified color.
+     * Draws a single line. Line start and end coordinates are specified in world-space. The line
+     * will be flat-shaded with the specified color.
+     *
      * @param {Vec3} start - The start world-space coordinate of the line.
      * @param {Vec3} end - The end world-space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the line is depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
+     * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
@@ -1688,16 +1699,18 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#drawLines
-     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
-     * point in the array. Instead, they are individual segments specified by two points. Therefore, the lengths of the
-     * supplied position and color arrays must be the same and also must be a multiple of 2. The colors of the ends of each
-     * line segment will be interpolated along the length of each line.
-     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the array must be a multiple of 2.
-     * @param {Color[]} colors - An array of colors to color the lines. This must be the same length as the position array.
-     * The length of the array must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * Renders an arbitrary number of discrete line segments. The lines are not connected by each
+     * subsequent point in the array. Instead, they are individual segments specified by two
+     * points. Therefore, the lengths of the supplied position and color arrays must be the same
+     * and also must be a multiple of 2. The colors of the ends of each line segment will be
+     * interpolated along the length of each line.
+     *
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
+     * array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
+     * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
@@ -1730,14 +1743,16 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#drawLineArrays
-     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
-     * point in the array. Instead, they are individual segments specified by two points.
-     * @param {number[]} positions - An array of points to draw lines between. Each point is represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]} colors - An array of colors to color the lines. This must be the same length as the position array.
-     * The length of the array must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * Renders an arbitrary number of discrete line segments. The lines are not connected by each
+     * subsequent point in the array. Instead, they are individual segments specified by two
+     * points.
+     *
+     * @param {number[]} positions - An array of points to draw lines between. Each point is
+     * represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
+     * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render 2 discrete line segments
@@ -1765,40 +1780,40 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @private
-     * @name Application#drawWireSphere
-     * @description Draws a wireframe sphere with center, radius and color.
+     * Draws a wireframe sphere with center, radius and color.
+     *
      * @param {Vec3} center - The center of the sphere.
      * @param {number} radius - The radius of the sphere.
      * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {number} [segments] - Number of line segments used to render the circles forming the sphere. Defaults to 20.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {number} [segments] - Number of line segments used to render the circles forming the
+     * sphere. Defaults to 20.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
+     * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
      * var center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     * @private
      */
     drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
         this._immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
     /**
-     * @function
-     * @private
-     * @name Application#drawWireAlignedBox
      * @description Draws a wireframe axis aligned box specified by min and max points and color.
      * @param {Vec3} minPoint - The min corner point of the box.
      * @param {Vec3} maxPoint - The max corner point of the box.
      * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
+     * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire aligned box
      * var min = new pc.Vec3(-1, -1, -1);
      * var max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     * @private
      */
     drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
         this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
@@ -1848,12 +1863,12 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#destroy
-     * @description Destroys application and removes all event listeners at the end of the current engine frame update.
-     * However, if called outside of the engine frame update, calling destroy() will destroy the application immediately.
+     * Destroys application and removes all event listeners at the end of the current engine frame
+     * update. However, if called outside of the engine frame update, calling destroy() will
+     * destroy the application immediately.
+     *
      * @example
-     * this.app.destroy();
+     * app.destroy();
      */
     destroy() {
         if (this._inFrameUpdate) {
@@ -2001,12 +2016,11 @@ class Application extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Application#getEntityFromIndex
-     * @description Get entity from the index by guid.
+     * Get entity from the index by guid.
+     *
      * @param {string} guid - The GUID to search for.
      * @returns {Entity} The Entity with the GUID or null.
+     * @private
      */
     getEntityFromIndex(guid) {
         return this._entityIndex[guid];

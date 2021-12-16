@@ -100,22 +100,20 @@ class VrManager extends EventHandler {
     }
 
     /**
+     * Remove events and clear up manager.
+     *
      * @private
      * @deprecated
-     * @function
-     * @name VrManager#destroy
-     * @description Remove events and clear up manager.
      */
     destroy() {
         this._detach();
     }
 
     /**
+     * Called once per frame to poll all attached displays.
+     *
      * @private
      * @deprecated
-     * @function
-     * @name VrManager#poll
-     * @description Called once per frame to poll all attached displays.
      */
     poll() {
         const l = this.displays.length;
