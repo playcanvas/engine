@@ -37,7 +37,6 @@ import { SoundSlot } from './slot.js';
  * @property {object} slots A dictionary that contains the {@link SoundSlot}s managed by this
  * SoundComponent.
  * @augments Component
- * @component
  */
 class SoundComponent extends Component {
     /**

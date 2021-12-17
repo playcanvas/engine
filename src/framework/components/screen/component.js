@@ -34,7 +34,6 @@ const _transform = new Mat4();
  * {@link SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be
  * scaled according to the scaleBlend value.
  * @augments Component
- * @component
  */
 class ScreenComponent extends Component {
     /**

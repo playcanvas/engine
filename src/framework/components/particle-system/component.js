@@ -253,7 +253,6 @@ let depthLayer;
  * system should belong. Don't push/pop/splice or modify this array, if you want to change it - set
  * a new one instead.
  * @augments Component
- * @component
  */
 class ParticleSystemComponent extends Component {
     /**

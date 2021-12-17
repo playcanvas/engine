@@ -31,7 +31,6 @@ import { Component } from '../component.js';
  * anymore.
  * @property {number} rollOffFactor The factor used in the falloff equation.
  * @augments Component
- * @component
  * @private
  */
 class AudioSourceComponent extends Component {

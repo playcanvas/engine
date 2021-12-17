@@ -8,7 +8,6 @@ import { Component } from '../component.js';
  * correctly.
  *
  * @augments Component
- * @component
  */
 class AudioListenerComponent extends Component {
     /**

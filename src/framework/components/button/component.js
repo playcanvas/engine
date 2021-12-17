@@ -57,7 +57,6 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @property {Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
  * @augments Component
- * @component
  */
 class ButtonComponent extends Component {
     /**

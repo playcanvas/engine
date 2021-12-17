@@ -29,7 +29,6 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @property {Entity} handleEntity The entity to be used as the scrollbar handle. This entity must
  * have a Scrollbar component.
  * @augments Component
- * @component
  */
 class ScrollbarComponent extends Component {
     /**

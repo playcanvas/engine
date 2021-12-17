@@ -11,7 +11,6 @@ import { Component } from '../component.js';
  *
  * @property {Vec3} size The size of the axis-aligned box of this ZoneComponent.
  * @augments Component
- * @component
  * @private
  */
 class ZoneComponent extends Component {
