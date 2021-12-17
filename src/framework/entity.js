@@ -6,6 +6,26 @@ import { GraphNode } from '../scene/graph-node.js';
 import { Application } from './application.js';
 
 /** @typedef {import('./components/component.js').Component} Component */
+/** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
+/** @typedef {import('./components/animation/component.js').AnimationComponent} AnimationComponent */
+/** @typedef {import('./components/audio-listener/component.js').AudioListenerComponent} AudioListenerComponent */
+/** @typedef {import('./components/button/component.js').ButtonComponent} ButtonComponent */
+/** @typedef {import('./components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('./components/collision/component.js').CollisionComponent} CollisionComponent */
+/** @typedef {import('./components/element/component.js').ElementComponent} ElementComponent */
+/** @typedef {import('./components/layout-child/component.js').LayoutChildComponent} LayoutChildComponent */
+/** @typedef {import('./components/layout-group/component.js').LayoutGroupComponent} LayoutGroupComponent */
+/** @typedef {import('./components/light/component.js').LightComponent} LightComponent */
+/** @typedef {import('./components/model/component.js').ModelComponent} ModelComponent */
+/** @typedef {import('./components/particle-system/component.js').ParticleSystemComponent} ParticleSystemComponent */
+/** @typedef {import('./components/render/component.js').RenderComponent} RenderComponent */
+/** @typedef {import('./components/rigid-body/component.js').RigidBodyComponent} RigidBodyComponent */
+/** @typedef {import('./components/screen/component.js').ScreenComponent} ScreenComponent */
+/** @typedef {import('./components/script/component.js').ScriptComponent} ScriptComponent */
+/** @typedef {import('./components/scrollbar/component.js').ScrollbarComponent} ScrollbarComponent */
+/** @typedef {import('./components/scroll-view/component.js').ScrollViewComponent} ScrollViewComponent */
+/** @typedef {import('./components/sound/component.js').SoundComponent} SoundComponent */
+/** @typedef {import('./components/sprite/component.js').SpriteComponent} SpriteComponent */
 
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
@@ -20,29 +40,149 @@ import { Application } from './application.js';
  * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
  * and Components and are attached to the {@link Application}.
  *
- * @property {AnimComponent} [anim] Gets the {@link AnimComponent} attached to this entity. [read only]
- * @property {AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
- * @property {AudioListenerComponent} [audiolistener] Gets the {@link AudioListenerComponent} attached to this entity. [read only]
- * @property {ButtonComponent} [button] Gets the {@link ButtonComponent} attached to this entity. [read only]
- * @property {CameraComponent} [camera] Gets the {@link CameraComponent} attached to this entity. [read only]
- * @property {CollisionComponent} [collision] Gets the {@link CollisionComponent} attached to this entity. [read only]
- * @property {ElementComponent} [element] Gets the {@link ElementComponent} attached to this entity. [read only]
- * @property {LayoutChildComponent} [layoutchild] Gets the {@link LayoutChildComponent} attached to this entity. [read only]
- * @property {LayoutGroupComponent} [layoutgroup] Gets the {@link LayoutGroupComponent} attached to this entity. [read only]
- * @property {LightComponent} [light] Gets the {@link LightComponent} attached to this entity. [read only]
- * @property {ModelComponent} [model] Gets the {@link ModelComponent} attached to this entity. [read only]
- * @property {ParticleSystemComponent} [particlesystem] Gets the {@link ParticleSystemComponent} attached to this entity. [read only]
- * @property {RenderComponent} [render] Gets the {@link RenderComponent} attached to this entity. [read only]
- * @property {RigidBodyComponent} [rigidbody] Gets the {@link RigidBodyComponent} attached to this entity. [read only]
- * @property {ScreenComponent} [screen] Gets the {@link ScreenComponent} attached to this entity. [read only]
- * @property {ScriptComponent} [script] Gets the {@link ScriptComponent} attached to this entity. [read only]
- * @property {ScrollbarComponent} [scrollbar] Gets the {@link ScrollbarComponent} attached to this entity. [read only]
- * @property {ScrollViewComponent} [scrollview] Gets the {@link ScrollViewComponent} attached to this entity. [read only]
- * @property {SoundComponent} [sound] Gets the {@link SoundComponent} attached to this entity. [read only]
- * @property {SpriteComponent} [sprite] Gets the {@link SpriteComponent} attached to this entity. [read only]
  * @augments GraphNode
  */
 class Entity extends GraphNode {
+    /**
+     * Gets the {@link AnimComponent} attached to this entity. [read only]
+     *
+     * @type {AnimComponent}
+     */
+    anim;
+
+    /**
+     * Gets the {@link AnimationComponent} attached to this entity. [read only]
+     *
+     * @type {AnimationComponent}
+     */
+    animation;
+
+    /**
+     * Gets the {@link AudioListenerComponent} attached to this entity. [read only]
+     *
+     * @type {AudioListenerComponent}
+     */
+    audioListener;
+
+    /**
+     * Gets the {@link ButtonComponent} attached to this entity. [read only]
+     *
+     * @type {ButtonComponent}
+     */
+    button;
+
+    /**
+     * Gets the {@link CameraComponent} attached to this entity. [read only]
+     *
+     * @type {CameraComponent}
+     */
+    camera;
+
+    /**
+     * Gets the {@link CollisionComponent} attached to this entity. [read only]
+     *
+     * @type {CollisionComponent}
+     */
+    collision;
+
+    /**
+     * Gets the {@link ElementComponent} attached to this entity. [read only]
+     *
+     * @type {ElementComponent}
+     */
+    element;
+
+    /**
+     * Gets the {@link LayoutChildComponent} attached to this entity. [read only]
+     *
+     * @type {LayoutChildComponent}
+     */
+    layoutchild;
+
+    /**
+     * Gets the {@link LayoutGroupComponent} attached to this entity. [read only]
+     *
+     * @type {LayoutGroupComponent}
+     */
+    layoutgroup;
+
+    /**
+     * Gets the {@link LightComponent} attached to this entity. [read only]
+     *
+     * @type {LightComponent}
+     */
+    light;
+
+    /**
+     * Gets the {@link ModelComponent} attached to this entity. [read only]
+     *
+     * @type {ModelComponent}
+     */
+    model;
+
+    /**
+     * Gets the {@link ParticleSystemComponent} attached to this entity. [read only]
+     *
+     * @type {ParticleSystemComponent}
+     */
+    particlesystem;
+
+    /**
+     * Gets the {@link RenderComponent} attached to this entity. [read only]
+     *
+     * @type {RenderComponent}
+     */
+    render;
+
+    /**
+     * Gets the {@link RigidBodyComponent} attached to this entity. [read only]
+     *
+     * @type {RigidBodyComponent}
+     */
+    rigidbody;
+
+    /**
+     * Gets the {@link ScreenComponent} attached to this entity. [read only]
+     *
+     * @type {ScreenComponent}
+     */
+    screen;
+
+    /**
+     * Gets the {@link ScriptComponent} attached to this entity. [read only]
+     *
+     * @type {ScriptComponent}
+     */
+    script;
+
+    /**
+     * Gets the {@link ScrollbarComponent} attached to this entity. [read only]
+     *
+     * @type {ScrollbarComponent}
+     */
+    scrollbar;
+
+    /**
+     * Gets the {@link ScrollViewComponent} attached to this entity. [read only]
+     *
+     * @type {ScrollViewComponent}
+     */
+    scrollview;
+
+    /**
+     * Gets the {@link SoundComponent} attached to this entity. [read only]
+     *
+     * @type {SoundComponent}
+     */
+    sound;
+
+    /**
+     * Gets the {@link SpriteComponent} attached to this entity. [read only]
+     *
+     * @type {SpriteComponent}
+     */
+    sprite;
+
     /**
      * Create a new Entity.
      *
