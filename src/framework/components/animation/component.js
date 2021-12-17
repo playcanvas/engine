@@ -26,7 +26,6 @@ import { Component } from '../component.js';
  * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
  * @augments Component
- * @component
  */
 class AnimationComponent extends Component {
     /**

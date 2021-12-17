@@ -232,7 +232,6 @@ const matD = new Mat4();
  * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene,
  * but instead limit child elements to only be rendered where this element is rendered.
  * @augments Component
- * @component
  */
 class ElementComponent extends Component {
     /**

@@ -26,7 +26,6 @@ import { Entity } from "../../entity.js";
  * loaded.
  * @property {boolean} playing Plays or pauses all animations in the component.
  * @augments Component
- * @component
  */
 class AnimComponent extends Component {
     /**

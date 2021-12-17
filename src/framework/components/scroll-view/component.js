@@ -55,7 +55,6 @@ const _tempScrollValue = new Vec2();
  * @property {Entity} verticalScrollbarEntity The entity to be used as the vertical scrollbar. This
  * entity must have a Scrollbar component.
  * @augments Component
- * @component
  */
 class ScrollViewComponent extends Component {
     /**

@@ -20,7 +20,6 @@ import { Component } from '../component.js';
  * @property {boolean} excludeFromLayout If set to true, the child will be excluded from all layout
  * calculations.
  * @augments Component
- * @component
  */
 class LayoutChildComponent extends Component {
     /**

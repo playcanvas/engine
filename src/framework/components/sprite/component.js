@@ -65,7 +65,6 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * component will be rendered on top of other components in the same layer. This is not used unless
  * the layer's sort order is set to {@link SORTMODE_MANUAL}.
  * @augments Component
- * @component
  */
 class SpriteComponent extends Component {
     /**

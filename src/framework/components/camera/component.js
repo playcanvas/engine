@@ -152,7 +152,6 @@ const properties = [
  * @property {Function} onPreRender Custom function that is called before the camera renders the scene.
  * @property {Function} onPostRender Custom function that is called after the camera renders the scene.
  * @augments Component
- * @component
  */
 class CameraComponent extends Component {
     /**

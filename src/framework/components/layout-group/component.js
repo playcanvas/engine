@@ -74,7 +74,6 @@ function isEnabledAndHasEnabledElement(entity) {
  * {@link LayoutGroupComponent#heightFitting} mode of {@link FITTING_BOTH} will be coerced to
  * {@link FITTING_STRETCH}.
  * @augments Component
- * @component
  */
 class LayoutGroupComponent extends Component {
     /**

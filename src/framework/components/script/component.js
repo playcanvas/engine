@@ -16,7 +16,6 @@ import { ScriptType } from '../../../script/script-type.js';
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
  * @augments Component
- * @component
  */
 class ScriptComponent extends Component {
     /**

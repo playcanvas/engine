@@ -54,7 +54,6 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
  *
  * @augments Component
- * @component
  */
 class RigidBodyComponent extends Component {
     /**

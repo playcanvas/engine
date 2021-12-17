@@ -65,7 +65,6 @@ import { EntityReference } from '../../utils/entity-reference.js';
  *
  * Defaults to {@link RENDERSTYLE_SOLID}.
  * @augments Component
- * @component
  */
 class RenderComponent extends Component {
     /**

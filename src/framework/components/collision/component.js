@@ -49,7 +49,6 @@ import { Component } from '../component.js';
  * @property {Model} model The model that is added to the scene graph for the mesh collision
  * volume.
  * @augments Component
- * @component
  */
 class CollisionComponent extends Component {
     /**
