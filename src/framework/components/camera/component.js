@@ -8,8 +8,6 @@ import { PostEffectQueue } from './post-effect-queue.js';
 /** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('../../../math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
-/** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
-/** @typedef {import('../../../shape/frustum.js').Frustum} Frustum */
 /** @typedef {import('../../../xr/xr-manager.js').xrErrorCallback} xrErrorCallback */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').CameraComponentSystem} CameraComponentSystem */
@@ -25,12 +23,15 @@ const properties = [
     { name: 'farClip', readonly: false },
     { name: 'flipFaces', readonly: false },
     { name: 'fov', readonly: false },
+    { name: 'frustum', readonly: true },
     { name: 'frustumCulling', readonly: false },
     { name: 'horizontalFov', readonly: false },
     { name: 'nearClip', readonly: false },
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
+    { name: 'projectionMatrix', readonly: true },
     { name: 'scissorRect', readonly: false },
+    { name: 'viewMatrix', readonly: true },
     { name: 'vrDisplay', readonly: false }
 ];
 
@@ -90,6 +91,12 @@ const properties = [
  * Defaults to {@link ASPECT_AUTO}.
  * @property {Color} clearColor The color used to clear the canvas to before the camera starts to
  * render. Defaults to [0.75, 0.75, 0.75, 1].
+ * @property {boolean} clearColorBuffer If true the camera will clear the color buffer to the color
+ * set in clearColor. Defaults to true.
+ * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer. Defaults to
+ * true.
+ * @property {boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
+ * Defaults to true.
  * @property {number} farClip The distance from the camera after which no rendering will take
  * place. Defaults to 1000.
  * @property {number} fov The field of view of the camera in degrees. Usually this is the Y-axis
@@ -101,8 +108,16 @@ const properties = [
  * place. Defaults to 0.1.
  * @property {number} orthoHeight The half-height of the orthographic view window (in the Y-axis).
  * Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+ * @property {number} priority Controls the order in which cameras are rendered. Cameras with
+ * smaller values for priority are rendered first. Defaults to 0.
+ * @property {RenderTarget} renderTarget Render target to which rendering of the cameras is
+ * performed. If not set, it will render simply to the screen.
+ * @property {Vec4} rect Controls where on the screen the camera will be rendered in normalized
+ * screen coordinates. Defaults to [0, 0, 1, 1].
  * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle. The order of the
  * values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
+ * @property {PostEffectQueue} postEffects The post effects queue for this camera. Use this to add
+ * or remove post effects from the camera.
  * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
  * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh
  * instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
@@ -126,31 +141,19 @@ const properties = [
  * both front and back faces will be rendered. Defaults to true.
  * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
  * for reflection rendering. Defaults to false.
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this camera should
+ * belong. Don't push/pop/splice or modify this array, if you want to change it, set a new one
+ * instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI,
+ * LAYERID_IMMEDIATE].
+ * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of
+ * the camera stops being applied to. Defaults to LAYERID_UI, which causes post processing to not
+ * be applied to UI layer and any following layers for the camera. Set to undefined for
+ * post-processing to be applied to all layers of the camera.
+ * @property {Function} onPreRender Custom function that is called before the camera renders the scene.
+ * @property {Function} onPostRender Custom function that is called after the camera renders the scene.
  * @augments Component
  */
 class CameraComponent extends Component {
-    /**
-     * Custom function that is called when postprocessing should execute.
-     *
-     * @type {Function}
-     * @private
-     */
-    onPostprocessing = null;
-
-    /**
-     * Custom function that is called before the camera renders the scene.
-     *
-     * @type {Function}
-     */
-    onPreRender = null;
-
-    /**
-     * Custom function that is called after the camera renders the scene.
-     *
-     * @type {Function}
-     */
-    onPostRender = null;
-
     /**
      * Create a new CameraComponent instance.
      *
@@ -165,12 +168,38 @@ class CameraComponent extends Component {
 
         this._priority = 0;
 
+        // event called when postprocessing should execute
+        this.onPostprocessing = null;
+
+        // events called during the frame before and after the camera renders
+        this.onPreRender = null;
+        this.onPostRender = null;
+
         // layer id at which the postprocessing stops for the camera
         this._disablePostEffectsLayer = LAYERID_UI;
 
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
     }
+
+    /**
+     * @readonly
+     * @name CameraComponent#frustum
+     * @type {Frustum}
+     * @description Queries the camera's frustum shape.
+     */
+    /**
+     * @readonly
+     * @name CameraComponent#projectionMatrix
+     * @type {Mat4}
+     * @description Queries the camera's projection matrix.
+     */
+    /**
+     * @readonly
+     * @name CameraComponent#viewMatrix
+     * @type {Mat4}
+     * @description Queries the camera's view matrix.
+     */
 
     /**
      * Queries the camera component's underlying Camera instance.
@@ -182,56 +211,12 @@ class CameraComponent extends Component {
         return this._camera;
     }
 
-    /**
-     * If true the camera will clear the color buffer to the color set in clearColor. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    get clearColorBuffer() {
-        return this._camera.clearColorBuffer;
+    dirtyLayerCompositionCameras() {
+        // layer composition needs to update order
+        const layerComp = this.system.app.scene.layers;
+        layerComp._dirtyCameras = true;
     }
 
-    set clearColorBuffer(value) {
-        this._camera.clearColorBuffer = value;
-        this.dirtyLayerCompositionCameras();
-    }
-
-    /**
-     * If true the camera will clear the depth buffer. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    get clearDepthBuffer() {
-        return this._camera.clearDepthBuffer;
-    }
-
-    set clearDepthBuffer(value) {
-        this._camera.clearDepthBuffer = value;
-        this.dirtyLayerCompositionCameras();
-    }
-
-    /**
-     * If true the camera will clear the stencil buffer. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    get clearStencilBuffer() {
-        return this._camera.clearStencilBuffer;
-    }
-
-    set clearStencilBuffer(value) {
-        this._camera.clearStencilBuffer = value;
-        this.dirtyLayerCompositionCameras();
-    }
-
-    /**
-     * Layer ID of a layer on which the postprocessing of the camera stops being applied to.
-     * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and any
-     * following layers for the camera. Set to undefined for post-processing to be applied to all
-     * layers of the camera.
-     *
-     * @type {number}
-     */
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
     }
@@ -241,22 +226,10 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
-    /**
-     * Queries the camera's frustum shape.
-     *
-     * @type {Frustum}
-     */
-    get frustum() {
-        return this._camera.frustum;
+    get postEffectsEnabled() {
+        return this._postEffects.enabled;
     }
 
-    /**
-     * An array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't push,
-     * pop, splice or modify this array, if you want to change it, set a new one instead. Defaults
-     * to [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
-     *
-     * @type {number[]}
-     */
     get layers() {
         return this._camera.layers;
     }
@@ -280,25 +253,10 @@ class CameraComponent extends Component {
         }
     }
 
-    /**
-     * The post effects queue for this camera. Use this to add or remove post effects from the camera.
-     *
-     * @type {PostEffectQueue}
-     */
     get postEffects() {
         return this._postEffects;
     }
 
-    get postEffectsEnabled() {
-        return this._postEffects.enabled;
-    }
-
-    /**
-     * Controls the order in which cameras are rendered. Cameras with smaller values for priority
-     * are rendered first. Defaults to 0.
-     *
-     * @type {number}
-     */
     get priority() {
         return this._priority;
     }
@@ -308,21 +266,6 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
-    /**
-     * Queries the camera's projection matrix.
-     *
-     * @type {Mat4}
-     */
-    get projectionMatrix() {
-        return this._camera.projectionMatrix;
-    }
-
-    /**
-     * Controls where on the screen the camera will be rendered in normalized screen coordinates.
-     * Defaults to [0, 0, 1, 1].
-     *
-     * @type {Vec4}
-     */
     get rect() {
         return this._camera.rect;
     }
@@ -332,12 +275,33 @@ class CameraComponent extends Component {
         this.fire('set:rect', this._camera.rect);
     }
 
-    /**
-     * Render target to which rendering of the cameras is performed. If not set, it will render
-     * simply to the screen.
-     *
-     * @type {RenderTarget}
-     */
+    get clearColorBuffer() {
+        return this._camera.clearColorBuffer;
+    }
+
+    set clearColorBuffer(value) {
+        this._camera.clearColorBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearDepthBuffer() {
+        return this._camera.clearDepthBuffer;
+    }
+
+    set clearDepthBuffer(value) {
+        this._camera.clearDepthBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearStencilBuffer() {
+        return this._camera.clearStencilBuffer;
+    }
+
+    set clearStencilBuffer(value) {
+        this._camera.clearStencilBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
     get renderTarget() {
         return this._camera.renderTarget;
     }
@@ -345,21 +309,6 @@ class CameraComponent extends Component {
     set renderTarget(value) {
         this._camera.renderTarget = value;
         this.dirtyLayerCompositionCameras();
-    }
-
-    /**
-     * Queries the camera's view matrix.
-     *
-     * @type {Mat4}
-     */
-    get viewMatrix() {
-        return this._camera.viewMatrix;
-    }
-
-    dirtyLayerCompositionCameras() {
-        // layer composition needs to update order
-        const layerComp = this.system.app.scene.layers;
-        layerComp._dirtyCameras = true;
     }
 
     /**
