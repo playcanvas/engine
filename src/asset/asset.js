@@ -10,6 +10,8 @@ import { AssetFile } from './asset-file.js';
 import { getApplication } from '../framework/globals.js';
 import { http } from '../net/http.js';
 
+/** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
+
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
 
