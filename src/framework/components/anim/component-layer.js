@@ -28,6 +28,149 @@ class AnimComponentLayer {
     }
 
     /**
+     * Returns the name of the layer.
+     *
+     * @type {string}
+     */
+    get name() {
+        return this._name;
+    }
+
+    /**
+     * Whether this layer is currently playing.
+     *
+     * @type {string}
+     */
+    set playing(value) {
+        this._controller.playing = value;
+    }
+
+    get playing() {
+        return this._controller.playing;
+    }
+
+    /**
+     * Returns true if a state graph has been loaded and all states in the graph have been assigned
+     * animation tracks.
+     *
+     * @type {string}
+     */
+    get playable() {
+        return this._controller.playable;
+    }
+
+    /**
+     * Returns the currently active state name.
+     *
+     * @type {string}
+     */
+    get activeState() {
+        return this._controller.activeStateName;
+    }
+
+    /**
+     * Returns the previously active state name.
+     *
+     * @type {string}
+     */
+    get previousState() {
+        return this._controller.previousStateName;
+    }
+
+    /**
+     * Returns the currently active states progress as a value normalized by the states animation
+     * duration. Looped animations will return values greater than 1.
+     *
+     * @type {number}
+     */
+    get activeStateProgress() {
+        return this._controller.activeStateProgress;
+    }
+
+    /**
+     * Returns the currently active states duration.
+     *
+     * @type {number}
+     */
+    get activeStateDuration() {
+        return this._controller.activeStateDuration;
+    }
+
+    /**
+     * The active states time in seconds.
+     *
+     * @type {number}
+     */
+    set activeStateCurrentTime(time) {
+        this._controller.activeStateCurrentTime = time;
+    }
+
+    get activeStateCurrentTime() {
+        return this._controller.activeStateCurrentTime;
+    }
+
+    /**
+     * Returns whether the anim component layer is currently transitioning between states.
+     *
+     * @type {boolean}
+     */
+    get transitioning() {
+        return this._controller.transitioning;
+    }
+
+    /**
+     * If the anim component layer is currently transitioning between states, returns the progress.
+     * Otherwise returns null.
+     *
+     * @type {number}
+     */
+    get transitionProgress() {
+        if (this.transitioning) {
+            return this._controller.transitionProgress;
+        }
+        return null;
+    }
+
+    /**
+     * Lists all available states in this layers state graph.
+     *
+     * @type {string[]}
+     */
+    get states() {
+        return this._controller.states;
+    }
+
+    /**
+     * The blending weight of this layer. Used when calculating the value of properties that are
+     * animated by more than one layer.
+     *
+     * @type {number}
+     */
+    set weight(value) {
+        this._weight = value;
+        this._component.dirtifyTargets();
+    }
+
+    get weight() {
+        return this._weight;
+    }
+
+    set blendType(value) {
+        if (value !== this._blendType) {
+            this._blendType = value;
+            this._component.rebind();
+        }
+    }
+
+    get blendType() {
+        return this._blendType;
+    }
+
+    get mask() {
+        return this._mask;
+    }
+
+    /**
      * Start playing the animation in the current state.
      *
      * @param {string} [name] - If provided, will begin playing from the start of the state with
@@ -84,10 +227,6 @@ class AnimComponentLayer {
             this._component.rebind();
         }
         this._mask = mask;
-    }
-
-    get mask() {
-        return this._mask;
     }
 
     /**
@@ -152,145 +291,6 @@ class AnimComponentLayer {
             time,
             transitionOffset
         }));
-    }
-
-    /**
-     * Returns the name of the layer.
-     *
-     * @type {string}
-     */
-    get name() {
-        return this._name;
-    }
-
-    /**
-     * Whether this layer is currently playing.
-     *
-     * @type {string}
-     */
-    get playing() {
-        return this._controller.playing;
-    }
-
-    set playing(value) {
-        this._controller.playing = value;
-    }
-
-    /**
-     * Returns true if a state graph has been loaded and all states in the graph have been assigned
-     * animation tracks.
-     *
-     * @type {string}
-     */
-    get playable() {
-        return this._controller.playable;
-    }
-
-    /**
-     * Returns the currently active state name.
-     *
-     * @type {string}
-     */
-    get activeState() {
-        return this._controller.activeStateName;
-    }
-
-    /**
-     * Returns the previously active state name.
-     *
-     * @type {string}
-     */
-    get previousState() {
-        return this._controller.previousStateName;
-    }
-
-    /**
-     * Returns the currently active states progress as a value normalized by the states animation
-     * duration. Looped animations will return values greater than 1.
-     *
-     * @type {number}
-     */
-    get activeStateProgress() {
-        return this._controller.activeStateProgress;
-    }
-
-    /**
-     * Returns the currently active states duration.
-     *
-     * @type {number}
-     */
-    get activeStateDuration() {
-        return this._controller.activeStateDuration;
-    }
-
-    /**
-     * The active states time in seconds.
-     *
-     * @type {number}
-     */
-    get activeStateCurrentTime() {
-        return this._controller.activeStateCurrentTime;
-    }
-
-    set activeStateCurrentTime(time) {
-        this._controller.activeStateCurrentTime = time;
-    }
-
-    /**
-     * Returns whether the anim component layer is currently transitioning between states.
-     *
-     * @type {boolean}
-     */
-    get transitioning() {
-        return this._controller.transitioning;
-    }
-
-    /**
-     * If the anim component layer is currently transitioning between states, returns the progress.
-     * Otherwise returns null.
-     *
-     * @type {number}
-     */
-    get transitionProgress() {
-        if (this.transitioning) {
-            return this._controller.transitionProgress;
-        }
-        return null;
-    }
-
-    /**
-     * Lists all available states in this layers state graph.
-     *
-     * @type {string[]}
-     */
-    get states() {
-        return this._controller.states;
-    }
-
-    /**
-     * The blending weight of this layer. Used when calculating the value of properties that are
-     * animated by more than one layer.
-     *
-     * @type {number}
-     */
-    get weight() {
-        return this._weight;
-    }
-
-    set weight(value) {
-        this._weight = value;
-        this._component.dirtifyTargets();
-    }
-
-    get blendType() {
-        return this._blendType;
-    }
-
-    set blendType(value) {
-        if (value !== this._blendType) {
-            this._blendType = value;
-            this._component.rebind();
-        }
     }
 }
 

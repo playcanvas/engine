@@ -41,6 +41,60 @@ class XrTrackedImage extends EventHandler {
     }
 
     /**
+     * Image that is used for tracking.
+     *
+     * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
+     */
+    get image() {
+        return this._image;
+    }
+
+    /**
+     * Width that is provided to assist tracking performance. This property can be updated only
+     * when the AR session is not running.
+     *
+     * @type {number}
+     */
+    set width(value) {
+        this._width = value;
+    }
+
+    get width() {
+        return this._width;
+    }
+
+    /**
+     * True if image is trackable. A too small resolution or invalid images can be untrackable by
+     * the underlying AR system.
+     *
+     * @type {boolean}
+     */
+    get trackable() {
+        return this._trackable;
+    }
+
+    /**
+     * True if image is in tracking state and being tracked in real world by the underlying AR
+     * system.
+     *
+     * @type {boolean}
+     */
+    get tracking() {
+        return this._tracking;
+    }
+
+    /**
+     * True if image was recently tracked but currently is not actively tracked due to inability of
+     * identifying the image by the underlying AR system. Position and rotation will be based on
+     * the previously known transformation assuming the tracked image has not moved.
+     *
+     * @type {boolean}
+     */
+    get emulated() {
+        return this._emulated;
+    }
+
+    /**
      * @event
      * @name XrTrackedImage#tracked
      * @description Fired when image becomes actively tracked.
@@ -106,60 +160,6 @@ class XrTrackedImage extends EventHandler {
     getRotation() {
         if (this._pose) this._rotation.copy(this._pose.transform.orientation);
         return this._rotation;
-    }
-
-    /**
-     * Image that is used for tracking.
-     *
-     * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
-     */
-    get image() {
-        return this._image;
-    }
-
-    /**
-     * Width that is provided to assist tracking performance. This property can be updated only
-     * when the AR session is not running.
-     *
-     * @type {number}
-     */
-    get width() {
-        return this._width;
-    }
-
-    set width(value) {
-        this._width = value;
-    }
-
-    /**
-     * True if image is trackable. A too small resolution or invalid images can be untrackable by
-     * the underlying AR system.
-     *
-     * @type {boolean}
-     */
-    get trackable() {
-        return this._trackable;
-    }
-
-    /**
-     * True if image is in tracking state and being tracked in real world by the underlying AR
-     * system.
-     *
-     * @type {boolean}
-     */
-    get tracking() {
-        return this._tracking;
-    }
-
-    /**
-     * True if image was recently tracked but currently is not actively tracked due to inability of
-     * identifying the image by the underlying AR system. Position and rotation will be based on
-     * the previously known transformation assuming the tracked image has not moved.
-     *
-     * @type {boolean}
-     */
-    get emulated() {
-        return this._emulated;
     }
 }
 

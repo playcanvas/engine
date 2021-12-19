@@ -4,8 +4,6 @@ import { Vec3 } from './vec3.js';
 
 /**
  * A 3x3 matrix.
- *
- * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
 class Mat3 {
     /**
@@ -16,6 +14,12 @@ class Mat3 {
         // to zero by default, so we only need to set the relevant elements to one.
         const data = new Float32Array(9);
         data[0] = data[4] = data[8] = 1;
+
+        /**
+         * Matrix elements in the form of a flat array.
+         *
+         * @type {Float32Array}
+         */
         this.data = data;
     }
 

@@ -66,6 +66,154 @@ class XrInputSource extends EventHandler {
     }
 
     /**
+     * Unique number associated with instance of input source. Same physical devices when
+     * reconnected will not share this ID.
+     *
+     * @type {number}
+     */
+    get id() {
+        return this._id;
+    }
+
+    /**
+     * XRInputSource object that is associated with this input source.
+     *
+     * @type {object}
+     */
+    get inputSource() {
+        return this._xrInputSource;
+    }
+
+    /**
+     * Type of ray Input Device is based on. Can be one of the following:
+     *
+     * - {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and
+     * follow the direction it is facing. This is commonly referred to as a "gaze input" device in
+     * the context of head-mounted displays.
+     * - {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction
+     * with the canvas element associated with an inline session's output context, such as a mouse
+     * click or touch event.
+     * - {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates
+     * from either a handheld device or other hand-tracking mechanism and represents that the user
+     * is using their hands or the held device for pointing.
+     *
+     * @type {string}
+     */
+    get targetRayMode() {
+        return this._xrInputSource.targetRayMode;
+    }
+
+    /**
+     * Describes which hand input source is associated with. Can be one of the following:
+     *
+     * - {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
+     * - {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
+     * - {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right
+     * hand.
+     *
+     * @type {string}
+     */
+    get handedness() {
+        return this._xrInputSource.handedness;
+    }
+
+    /**
+     * List of input profile names indicating both the preferred visual representation and behavior
+     * of the input source.
+     *
+     * @type {string[]}
+     */
+    get profiles() {
+        return this._xrInputSource.profiles;
+    }
+
+    /**
+     * If input source can be held, then it will have node with its world transformation, that can
+     * be used to position and rotate virtual joysticks based on it.
+     *
+     * @type {boolean}
+     */
+    get grip() {
+        return this._grip;
+    }
+
+    /**
+     * If input source is a tracked hand, then it will point to {@link XrHand} otherwise it is
+     * null.
+     *
+     * @type {XrHand|null}
+     */
+    get hand() {
+        return this._hand;
+    }
+
+    /**
+     * If input source has buttons, triggers, thumbstick or touchpad, then this object provides
+     * access to its states.
+     *
+     * @type {Gamepad|null}
+     */
+    get gamepad() {
+        return this._xrInputSource.gamepad || null;
+    }
+
+    /**
+     * True if input source is in active primary action between selectstart and selectend events.
+     *
+     * @type {boolean}
+     */
+    get selecting() {
+        return this._selecting;
+    }
+
+    /**
+     * True if input source is in active squeeze action between squeezestart and squeezeend events.
+     *
+     * @type {boolean}
+     */
+    get squeezing() {
+        return this._squeezing;
+    }
+
+    /**
+     * Set to true to allow input source to interact with Element components. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set elementInput(value) {
+        if (this._elementInput === value)
+            return;
+
+        this._elementInput = value;
+
+        if (!this._elementInput)
+            this._elementEntity = null;
+    }
+
+    get elementInput() {
+        return this._elementInput;
+    }
+
+    /**
+     * If {@link XrInputSource#elementInput} is true, this property will hold entity with Element
+     * component at which this input source is hovering, or null if not hovering over any element.
+     *
+     * @type {Entity|null}
+     */
+    get elementEntity() {
+        return this._elementEntity;
+    }
+
+    /**
+     * List of active {@link XrHitTestSource} instances created by this input source.
+     *
+     * @type {XrHitTestSource[]}
+     */
+    get hitTestSources() {
+        return this._hitTestSources;
+    }
+
+    /**
      * @event
      * @name XrInputSource#remove
      * @description Fired when {@link XrInputSource} is removed.
@@ -370,154 +518,6 @@ class XrInputSource extends EventHandler {
     onHitTestSourceRemove(hitTestSource) {
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
-    }
-
-    /**
-     * Unique number associated with instance of input source. Same physical devices when
-     * reconnected will not share this ID.
-     *
-     * @type {number}
-     */
-    get id() {
-        return this._id;
-    }
-
-    /**
-     * XRInputSource object that is associated with this input source.
-     *
-     * @type {object}
-     */
-    get inputSource() {
-        return this._xrInputSource;
-    }
-
-    /**
-     * Type of ray Input Device is based on. Can be one of the following:
-     *
-     * - {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and
-     * follow the direction it is facing. This is commonly referred to as a "gaze input" device in
-     * the context of head-mounted displays.
-     * - {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction
-     * with the canvas element associated with an inline session's output context, such as a mouse
-     * click or touch event.
-     * - {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates
-     * from either a handheld device or other hand-tracking mechanism and represents that the user
-     * is using their hands or the held device for pointing.
-     *
-     * @type {string}
-     */
-    get targetRayMode() {
-        return this._xrInputSource.targetRayMode;
-    }
-
-    /**
-     * Describes which hand input source is associated with. Can be one of the following:
-     *
-     * - {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
-     * - {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
-     * - {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right
-     * hand.
-     *
-     * @type {string}
-     */
-    get handedness() {
-        return this._xrInputSource.handedness;
-    }
-
-    /**
-     * List of input profile names indicating both the preferred visual representation and behavior
-     * of the input source.
-     *
-     * @type {string[]}
-     */
-    get profiles() {
-        return this._xrInputSource.profiles;
-    }
-
-    /**
-     * If input source can be held, then it will have node with its world transformation, that can
-     * be used to position and rotate virtual joysticks based on it.
-     *
-     * @type {boolean}
-     */
-    get grip() {
-        return this._grip;
-    }
-
-    /**
-     * If input source is a tracked hand, then it will point to {@link XrHand} otherwise it is
-     * null.
-     *
-     * @type {XrHand|null}
-     */
-    get hand() {
-        return this._hand;
-    }
-
-    /**
-     * If input source has buttons, triggers, thumbstick or touchpad, then this object provides
-     * access to its states.
-     *
-     * @type {Gamepad|null}
-     */
-    get gamepad() {
-        return this._xrInputSource.gamepad || null;
-    }
-
-    /**
-     * True if input source is in active primary action between selectstart and selectend events.
-     *
-     * @type {boolean}
-     */
-    get selecting() {
-        return this._selecting;
-    }
-
-    /**
-     * True if input source is in active squeeze action between squeezestart and squeezeend events.
-     *
-     * @type {boolean}
-     */
-    get squeezing() {
-        return this._squeezing;
-    }
-
-    /**
-     * Set to true to allow input source to interact with Element components. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    get elementInput() {
-        return this._elementInput;
-    }
-
-    set elementInput(value) {
-        if (this._elementInput === value)
-            return;
-
-        this._elementInput = value;
-
-        if (!this._elementInput)
-            this._elementEntity = null;
-    }
-
-    /**
-     * If {@link XrInputSource#elementInput} is true, this property will hold entity with Element
-     * component at which this input source is hovering, or null if not hovering over any element.
-     *
-     * @type {Entity|null}
-     */
-    get elementEntity() {
-        return this._elementEntity;
-    }
-
-    /**
-     * List of active {@link XrHitTestSource} instances created by this input source.
-     *
-     * @type {XrHitTestSource[]}
-     */
-    get hitTestSources() {
-        return this._hitTestSources;
     }
 }
 

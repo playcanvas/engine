@@ -43,6 +43,92 @@ class I18n extends EventHandler {
     }
 
     /**
+     * An array of asset ids or assets that contain localization data in the expected format. I18n
+     * will automatically load translations from these assets as the assets are loaded and it will
+     * also automatically unload translations if the assets get removed or unloaded at runtime.
+     *
+     * @type {number[]|Asset[]}
+     */
+     set assets(value) {
+        const index = {};
+
+        // convert array to dict
+        for (let i = 0, len = value.length; i < len; i++) {
+            const id = value[i] instanceof Asset ? value[i].id : value[i];
+            index[id] = true;
+        }
+
+        // remove assets not in value
+        let i = this._assets.length;
+        while (i--) {
+            const id = this._assets[i];
+            if (!index[id]) {
+                this._app.assets.off('add:' + id, this._onAssetAdd, this);
+                const asset = this._app.assets.get(id);
+                if (asset) {
+                    this._onAssetRemove(asset);
+                }
+                this._assets.splice(i, 1);
+            }
+        }
+
+        // add assets in value that do not already exist here
+        for (const id in index) {
+            const idNum = parseInt(id, 10);
+            if (this._assets.indexOf(idNum) !== -1) continue;
+
+            this._assets.push(idNum);
+            const asset = this._app.assets.get(idNum);
+            if (!asset) {
+                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
+            } else {
+                this._onAssetAdd(asset);
+            }
+        }
+    }
+
+    get assets() {
+        return this._assets;
+    }
+
+    /**
+     * The current locale for example "en-US". Changing the locale will raise an event which will
+     * cause localized Text Elements to change language to the new locale.
+     *
+     * @type {string}
+     */
+    set locale(value) {
+        if (this._locale === value) {
+            return;
+        }
+
+        // replace 'in' language with 'id'
+        // for Indonesian because both codes are valid
+        // so that users only need to use the 'id' code
+        let lang = getLang(value);
+        if (lang === 'in') {
+            lang = 'id';
+            value = replaceLang(value, lang);
+            if (this._locale === value) {
+                return;
+            }
+        }
+
+        const old = this._locale;
+        // cache locale, lang and plural function
+        this._locale = value;
+        this._lang = lang;
+        this._pluralFn = getPluralFn(this._lang);
+
+        // raise event
+        this.fire('set:locale', value, old);
+    }
+
+    get locale() {
+        return this._locale;
+    }
+
+    /**
      * Returns the first available locale based on the desired locale specified. First tries to
      * find the desired locale and then tries to find an alternative locale based on the language.
      *
@@ -289,92 +375,6 @@ class I18n extends EventHandler {
         this._assets = null;
         this._parser = null;
         this.off();
-    }
-
-    /**
-     * An array of asset ids or assets that contain localization data in the expected format. I18n
-     * will automatically load translations from these assets as the assets are loaded and it will
-     * also automatically unload translations if the assets get removed or unloaded at runtime.
-     *
-     * @type {number[]|Asset[]}
-     */
-    get assets() {
-        return this._assets;
-    }
-
-    set assets(value) {
-        const index = {};
-
-        // convert array to dict
-        for (let i = 0, len = value.length; i < len; i++) {
-            const id = value[i] instanceof Asset ? value[i].id : value[i];
-            index[id] = true;
-        }
-
-        // remove assets not in value
-        let i = this._assets.length;
-        while (i--) {
-            const id = this._assets[i];
-            if (!index[id]) {
-                this._app.assets.off('add:' + id, this._onAssetAdd, this);
-                const asset = this._app.assets.get(id);
-                if (asset) {
-                    this._onAssetRemove(asset);
-                }
-                this._assets.splice(i, 1);
-            }
-        }
-
-        // add assets in value that do not already exist here
-        for (const id in index) {
-            const idNum = parseInt(id, 10);
-            if (this._assets.indexOf(idNum) !== -1) continue;
-
-            this._assets.push(idNum);
-            const asset = this._app.assets.get(idNum);
-            if (!asset) {
-                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
-            } else {
-                this._onAssetAdd(asset);
-            }
-        }
-    }
-
-    /**
-     * The current locale for example "en-US". Changing the locale will raise an event which will
-     * cause localized Text Elements to change language to the new locale.
-     *
-     * @type {string}
-     */
-    get locale() {
-        return this._locale;
-    }
-
-    set locale(value) {
-        if (this._locale === value) {
-            return;
-        }
-
-        // replace 'in' language with 'id'
-        // for Indonesian because both codes are valid
-        // so that users only need to use the 'id' code
-        let lang = getLang(value);
-        if (lang === 'in') {
-            lang = 'id';
-            value = replaceLang(value, lang);
-            if (this._locale === value) {
-                return;
-            }
-        }
-
-        const old = this._locale;
-        // cache locale, lang and plural function
-        this._locale = value;
-        this._lang = lang;
-        this._pluralFn = getPluralFn(this._lang);
-
-        // raise event
-        this.fire('set:locale', value, old);
     }
 
     // Finds a fallback locale for the specified locale and language.

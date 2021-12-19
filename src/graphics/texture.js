@@ -267,15 +267,15 @@ class Texture {
      *
      * @type {number}
      */
-    get minFilter() {
-        return this._minFilter;
-    }
-
     set minFilter(v) {
         if (this._minFilter !== v) {
             this._minFilter = v;
             this._parameterFlags |= 1;
         }
+    }
+
+    get minFilter() {
+        return this._minFilter;
     }
 
     /**
@@ -286,15 +286,15 @@ class Texture {
      *
      * @type {number}
      */
-    get magFilter() {
-        return this._magFilter;
-    }
-
     set magFilter(v) {
         if (this._magFilter !== v) {
             this._magFilter = v;
             this._parameterFlags |= 2;
         }
+    }
+
+    get magFilter() {
+        return this._magFilter;
     }
 
     /**
@@ -306,15 +306,15 @@ class Texture {
      *
      * @type {number}
      */
-    get addressU() {
-        return this._addressU;
-    }
-
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
             this._parameterFlags |= 4;
         }
+    }
+
+    get addressU() {
+        return this._addressU;
     }
 
     /**
@@ -326,15 +326,15 @@ class Texture {
      *
      * @type {number}
      */
-    get addressV() {
-        return this._addressV;
-    }
-
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
             this._parameterFlags |= 8;
         }
+    }
+
+    get addressV() {
+        return this._addressV;
     }
 
     /**
@@ -346,10 +346,6 @@ class Texture {
      *
      * @type {number}
      */
-    get addressW() {
-        return this._addressW;
-    }
-
     set addressW(addressW) {
         if (!this.device.webgl2) return;
         if (!this._volume) {
@@ -362,6 +358,10 @@ class Texture {
         }
     }
 
+    get addressW() {
+        return this._addressW;
+    }
+
     /**
      * When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or
      * {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for this texture, and you can get
@@ -369,15 +369,15 @@ class Texture {
      *
      * @type {boolean}
      */
-    get compareOnRead() {
-        return this._compareOnRead;
-    }
-
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
             this._parameterFlags |= 32;
         }
+    }
+
+    get compareOnRead() {
+        return this._compareOnRead;
     }
 
     /**
@@ -392,15 +392,15 @@ class Texture {
      *
      * @type {number}
      */
-    get compareFunc() {
-        return this._compareFunc;
-    }
-
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
             this._parameterFlags |= 64;
         }
+    }
+
+    get compareFunc() {
+        return this._compareFunc;
     }
 
     /**
@@ -409,15 +409,15 @@ class Texture {
      *
      * @type {number}
      */
-    get anisotropy() {
-        return this._anisotropy;
-    }
-
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
             this._parameterFlags |= 128;
         }
+    }
+
+    get anisotropy() {
+        return this._anisotropy;
     }
 
     /**
@@ -427,12 +427,12 @@ class Texture {
      * @private
      * @deprecated
      */
-    get autoMipmap() {
-        return this._mipmaps;
-    }
-
     set autoMipmap(v) {
         this._mipmaps = v;
+    }
+
+    get autoMipmap() {
+        return this._mipmaps;
     }
 
     /**
@@ -440,15 +440,15 @@ class Texture {
      *
      * @type {boolean}
      */
-    get mipmaps() {
-        return this._mipmaps;
-    }
-
     set mipmaps(v) {
         if (this._mipmaps !== v) {
             this._mipmaps = v;
             if (v) this._needsMipmapsUpload = true;
         }
+    }
+
+    get mipmaps() {
+        return this._mipmaps;
     }
 
     /**
@@ -542,10 +542,6 @@ class Texture {
      *
      * @type {boolean}
      */
-    get flipY() {
-        return this._flipY;
-    }
-
     set flipY(flipY) {
         if (this._flipY !== flipY) {
             this._flipY = flipY;
@@ -553,8 +549,8 @@ class Texture {
         }
     }
 
-    get premultiplyAlpha() {
-        return this._premultiplyAlpha;
+    get flipY() {
+        return this._flipY;
     }
 
     set premultiplyAlpha(premultiplyAlpha) {
@@ -564,6 +560,10 @@ class Texture {
         }
     }
 
+    get premultiplyAlpha() {
+        return this._premultiplyAlpha;
+    }
+
     /**
      * Returns true if all dimensions of the texture are power of two, and false otherwise.
      *
@@ -571,6 +571,23 @@ class Texture {
      */
     get pot() {
         return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
+    }
+
+    // get the texture's encoding type
+    get encoding() {
+        if (this.type === TEXTURETYPE_RGBM) {
+            return 'rgbm';
+        }
+
+        if (this.type === TEXTURETYPE_RGBE) {
+            return 'rgbe';
+        }
+
+        if (this.format === PIXELFORMAT_RGBA16F || this.format === PIXELFORMAT_RGBA32F) {
+            return 'linear';
+        }
+
+        return 'srgb';
     }
 
     // static functions
@@ -993,23 +1010,6 @@ class Texture {
         }
 
         return buff;
-    }
-
-    // get the texture's encoding type
-    get encoding() {
-        if (this.type === TEXTURETYPE_RGBM) {
-            return 'rgbm';
-        }
-
-        if (this.type === TEXTURETYPE_RGBE) {
-            return 'rgbe';
-        }
-
-        if (this.format === PIXELFORMAT_RGBA16F || this.format === PIXELFORMAT_RGBA32F) {
-            return 'linear';
-        }
-
-        return 'srgb';
     }
 }
 

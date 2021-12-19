@@ -870,10 +870,6 @@ class ImageElement {
         }
     }
 
-    get color() {
-        return this._color;
-    }
-
     set color(value) {
         const r = value.r;
         const g = value.g;
@@ -901,8 +897,8 @@ class ImageElement {
         }
     }
 
-    get opacity() {
-        return this._color.a;
+    get color() {
+        return this._color;
     }
 
     set opacity(value) {
@@ -916,8 +912,8 @@ class ImageElement {
         }
     }
 
-    get rect() {
-        return this._rect;
+    get opacity() {
+        return this._color.a;
     }
 
     set rect(value) {
@@ -959,8 +955,8 @@ class ImageElement {
         }
     }
 
-    get material() {
-        return this._material;
+    get rect() {
+        return this._rect;
     }
 
     set material(value) {
@@ -994,8 +990,8 @@ class ImageElement {
         }
     }
 
-    get materialAsset() {
-        return this._materialAsset;
+    get material() {
+        return this._material;
     }
 
     set materialAsset(value) {
@@ -1032,8 +1028,8 @@ class ImageElement {
         }
     }
 
-    get texture() {
-        return this._texture;
+    get materialAsset() {
+        return this._materialAsset;
     }
 
     set texture(value) {
@@ -1070,8 +1066,8 @@ class ImageElement {
         }
     }
 
-    get textureAsset() {
-        return this._textureAsset;
+    get texture() {
+        return this._texture;
     }
 
     set textureAsset(value) {
@@ -1108,8 +1104,8 @@ class ImageElement {
         }
     }
 
-    get spriteAsset() {
-        return this._spriteAsset;
+    get textureAsset() {
+        return this._textureAsset;
     }
 
     set spriteAsset(value) {
@@ -1148,8 +1144,8 @@ class ImageElement {
         }
     }
 
-    get sprite() {
-        return this._sprite;
+    get spriteAsset() {
+        return this._spriteAsset;
     }
 
     set sprite(value) {
@@ -1195,8 +1191,8 @@ class ImageElement {
         this._updateSprite();
     }
 
-    get spriteFrame() {
-        return this._spriteFrame;
+    get sprite() {
+        return this._sprite;
     }
 
     set spriteFrame(value) {
@@ -1218,8 +1214,8 @@ class ImageElement {
         }
     }
 
-    get mesh() {
-        return this._renderable.mesh;
+    get spriteFrame() {
+        return this._spriteFrame;
     }
 
     set mesh(value) {
@@ -1231,8 +1227,8 @@ class ImageElement {
         }
     }
 
-    get mask() {
-        return this._mask;
+    get mesh() {
+        return this._renderable.mesh;
     }
 
     set mask(value) {
@@ -1242,8 +1238,8 @@ class ImageElement {
         }
     }
 
-    get pixelsPerUnit() {
-        return this._pixelsPerUnit;
+    get mask() {
+        return this._mask;
     }
 
     set pixelsPerUnit(value) {
@@ -1254,6 +1250,10 @@ class ImageElement {
             this._updateSprite();
         }
 
+    }
+
+    get pixelsPerUnit() {
+        return this._pixelsPerUnit;
     }
 
     // private

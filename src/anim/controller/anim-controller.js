@@ -83,12 +83,12 @@ class AnimController {
         return this._animEvaluator;
     }
 
-    get activeState() {
-        return this._findState(this._activeStateName);
-    }
-
     set activeState(stateName) {
         this._activeStateName = stateName;
+    }
+
+    get activeState() {
+        return this._findState(this._activeStateName);
     }
 
     get activeStateName() {
@@ -99,12 +99,12 @@ class AnimController {
         return this.activeState.animations;
     }
 
-    get previousState() {
-        return this._findState(this._previousStateName);
-    }
-
     set previousState(stateName) {
         this._previousStateName = stateName;
+    }
+
+    get previousState() {
+        return this._findState(this._previousStateName);
     }
 
     get previousStateName() {
@@ -121,12 +121,12 @@ class AnimController {
         return playable;
     }
 
-    get playing() {
-        return this._playing;
-    }
-
     set playing(value) {
         this._playing = value;
+    }
+
+    get playing() {
+        return this._playing;
     }
 
     get activeStateProgress() {
@@ -147,10 +147,6 @@ class AnimController {
         return maxDuration;
     }
 
-    get activeStateCurrentTime() {
-        return this._timeInState;
-    }
-
     set activeStateCurrentTime(time) {
         this._timeInStateBefore = time;
         this._timeInState = time;
@@ -160,6 +156,10 @@ class AnimController {
                 clip.time = time;
             }
         }
+    }
+
+    get activeStateCurrentTime() {
+        return this._timeInState;
     }
 
     get transitioning() {

@@ -56,6 +56,10 @@ class SpriteComponentSystem extends ComponentSystem {
         this.on('beforeremove', this.onBeforeRemove, this);
     }
 
+    set defaultMaterial(material) {
+        this._defaultMaterial = material;
+    }
+
     get defaultMaterial() {
         if (!this._defaultMaterial) {
             const texture = new Texture(this.app.graphicsDevice, {
@@ -93,8 +97,8 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._defaultMaterial;
     }
 
-    set defaultMaterial(material) {
-        this._defaultMaterial = material;
+    set default9SlicedMaterialSlicedMode(material) {
+        this._default9SlicedMaterialSlicedMode = material;
     }
 
     get default9SlicedMaterialSlicedMode() {
@@ -108,8 +112,8 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._default9SlicedMaterialSlicedMode;
     }
 
-    set default9SlicedMaterialSlicedMode(material) {
-        this._default9SlicedMaterialSlicedMode = material;
+    set default9SlicedMaterialTiledMode(material) {
+        this._default9SlicedMaterialTiledMode = material;
     }
 
     get default9SlicedMaterialTiledMode() {
@@ -121,10 +125,6 @@ class SpriteComponentSystem extends ComponentSystem {
             this._default9SlicedMaterialTiledMode = material;
         }
         return this._default9SlicedMaterialTiledMode;
-    }
-
-    set default9SlicedMaterialTiledMode(material) {
-        this._default9SlicedMaterialTiledMode = material;
     }
 
     destroy() {

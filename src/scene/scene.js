@@ -25,6 +25,7 @@ import { getApplication } from '../framework/globals.js';
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('./composition/layer-composition.js').LayerComposition} LayerComposition */
+/** @typedef {import('./layer.js').Layer} Layer */
 
 /**
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all
@@ -162,6 +163,10 @@ class Scene extends EventHandler {
 
         this._gravity = new Vec3(0, -9.8, 0);
 
+        /**
+         * @type {LayerComposition}
+         * @private
+         */
         this._layers = null;
 
         this._fog = FOG_NONE;
@@ -169,13 +174,28 @@ class Scene extends EventHandler {
         this._gammaCorrection = GAMMA_NONE;
         this._toneMapping = 0;
 
-        // the skybox cubemap as set by user (gets used when skyboxMip === 0)
+        /**
+         * The skybox cubemap as set by user (gets used when skyboxMip === 0)
+         *
+         * @type {Texture}
+         * @private
+         */
         this._skyboxCubeMap = null;
 
-        // prefiltered lighting data cubemaps
+        /**
+         * Array of 6 prefiltered lighting data cubemaps.
+         *
+         * @type {Texture[]}
+         * @private
+         */
         this._prefilteredCubemaps = [null, null, null, null, null, null];
 
-        // environment lighting atlas
+        /**
+         * Environment lighting atlas
+         *
+         * @type {Texture}
+         * @private
+         */
         this._envAtlas = null;
 
         // internally generated envAtlas owned by the scene
@@ -216,8 +236,13 @@ class Scene extends EventHandler {
             updateShadersTime: 0 // deprecated
         };
 
-        // this flag indicates changes were made to the scene which may require
-        // recompilation of shaders that reference global settings.
+        /**
+         * This flag indicates changes were made to the scene which may require recompilation of
+         * shaders that reference global settings.
+         *
+         * @type {boolean}
+         * @private
+         */
         this.updateShaders = true;
 
         this._shaderVersion = 0;
@@ -230,30 +255,14 @@ class Scene extends EventHandler {
         this.immediate = new Immediate(this.device);
     }
 
-    destroy() {
-        this._resetSkyboxModel();
-        this.root = null;
-        this.off();
-    }
-
-    // returns the default layer used by the immediate drawing functions
+    /**
+     * Returns the default layer used by the immediate drawing functions.
+     *
+     * @returns {Layer}
+     * @private
+     */
     get defaultDrawLayer() {
         return this.layers.getLayerById(LAYERID_IMMEDIATE);
-    }
-
-    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this.defaultDrawLayer) {
-        const batch = this.immediate.getBatch(layer, depthTest);
-        batch.addLines([start, end], [color, color]);
-    }
-
-    drawLines(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
-        const batch = this.immediate.getBatch(layer, depthTest);
-        batch.addLines(positions, colors);
-    }
-
-    drawLineArrays(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
-        const batch = this.immediate.getBatch(layer, depthTest);
-        batch.addLinesArrays(positions, colors);
     }
 
     /**
@@ -262,12 +271,12 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get ambientBakeNumSamples() {
-        return this._ambientBakeNumSamples;
-    }
-
     set ambientBakeNumSamples(value) {
         this._ambientBakeNumSamples = math.clamp(Math.floor(value), 1, 255);
+    }
+
+    get ambientBakeNumSamples() {
+        return this._ambientBakeNumSamples;
     }
 
     /**
@@ -279,16 +288,12 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get ambientBakeSpherePart() {
-        return this._ambientBakeSpherePart;
-    }
-
     set ambientBakeSpherePart(value) {
         this._ambientBakeSpherePart = math.clamp(value, 0.001, 1);
     }
 
-    get clusteredLightingEnabled() {
-        return this._clusteredLightingEnabled;
+    get ambientBakeSpherePart() {
+        return this._ambientBakeSpherePart;
     }
 
     set clusteredLightingEnabled(value) {
@@ -301,8 +306,19 @@ class Scene extends EventHandler {
         this._clusteredLightingEnabled = value;
     }
 
-    // some backwards compatibility
-    // drawCalls will now return list of all active composition mesh instances
+    get clusteredLightingEnabled() {
+        return this._clusteredLightingEnabled;
+    }
+
+    /**
+     * List of all active composition mesh instances. Only for backwards compatibility.
+     *
+     * @type {MeshInstance[]}
+     * @private
+     */
+    set drawCalls(value) {
+    }
+
     get drawCalls() {
         let drawCalls = this.layers._meshInstances;
         if (!drawCalls.length) {
@@ -312,23 +328,20 @@ class Scene extends EventHandler {
         return drawCalls;
     }
 
-    set drawCalls(value) {
-    }
-
     /**
      * The environment lighting atlas.
      *
      * @type {Texture}
      */
-    get envAtlas() {
-        return this._envAtlas;
-    }
-
     set envAtlas(value) {
         if (value !== this._envAtlas) {
             this._envAtlas = value;
             this.updateShaders = true;
         }
+    }
+
+    get envAtlas() {
+        return this._envAtlas;
     }
 
     /**
@@ -343,15 +356,15 @@ class Scene extends EventHandler {
      *
      * @type {string}
      */
-    get fog() {
-        return this._fog;
-    }
-
     set fog(type) {
         if (type !== this._fog) {
             this._fog = type;
             this.updateShaders = true;
         }
+    }
+
+    get fog() {
+        return this._fog;
     }
 
     /**
@@ -364,10 +377,6 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get gammaCorrection() {
-        return this._gammaCorrection;
-    }
-
     set gammaCorrection(value) {
         if (value !== this._gammaCorrection) {
             this._gammaCorrection = value;
@@ -375,19 +384,23 @@ class Scene extends EventHandler {
         }
     }
 
+    get gammaCorrection() {
+        return this._gammaCorrection;
+    }
+
     /**
      * A {@link LayerComposition} that defines rendering order of this scene.
      *
      * @type {LayerComposition}
      */
-    get layers() {
-        return this._layers;
-    }
-
     set layers(layers) {
         const prev = this._layers;
         this._layers = layers;
         this.fire("set:layers", prev, layers);
+    }
+
+    get layers() {
+        return this._layers;
     }
 
     get lighting() {
@@ -401,12 +414,12 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get lightmapFilterRange() {
-        return this._lightmapFilterRange;
-    }
-
     set lightmapFilterRange(value) {
         this._lightmapFilterRange = Math.max(value, 0.001);
+    }
+
+    get lightmapFilterRange() {
+        return this._lightmapFilterRange;
     }
 
     /**
@@ -416,12 +429,12 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get lightmapFilterSmoothness() {
-        return this._lightmapFilterSmoothness;
-    }
-
     set lightmapFilterSmoothness(value) {
         this._lightmapFilterSmoothness = Math.max(value, 0.001);
+    }
+
+    get lightmapFilterSmoothness() {
+        return this._lightmapFilterSmoothness;
     }
 
     /**
@@ -429,10 +442,6 @@ class Scene extends EventHandler {
      *
      * @type {Texture[]}
      */
-    get prefilteredCubemaps() {
-        return this._prefilteredCubemaps;
-    }
-
     set prefilteredCubemaps(value) {
         const cubemaps = this._prefilteredCubemaps;
 
@@ -472,15 +481,15 @@ class Scene extends EventHandler {
         }
     }
 
+    get prefilteredCubemaps() {
+        return this._prefilteredCubemaps;
+    }
+
     /**
      * The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
      *
      * @type {Texture}
      */
-    get skybox() {
-        return this._skyboxCubeMap;
-    }
-
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
             this._skyboxCubeMap = value;
@@ -488,20 +497,24 @@ class Scene extends EventHandler {
         }
     }
 
+    get skybox() {
+        return this._skyboxCubeMap;
+    }
+
     /**
      * Multiplier for skybox intensity. Defaults to 1.
      *
      * @type {number}
      */
-    get skyboxIntensity() {
-        return this._skyboxIntensity;
-    }
-
     set skyboxIntensity(value) {
         if (value !== this._skyboxIntensity) {
             this._skyboxIntensity = value;
             this._resetSkyboxModel();
         }
+    }
+
+    get skyboxIntensity() {
+        return this._skyboxIntensity;
     }
 
     /**
@@ -510,10 +523,6 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get skyboxMip() {
-        return this._skyboxMip;
-    }
-
     set skyboxMip(value) {
         if (value !== this._skyboxMip) {
             this._skyboxMip = value;
@@ -521,20 +530,24 @@ class Scene extends EventHandler {
         }
     }
 
+    get skyboxMip() {
+        return this._skyboxMip;
+    }
+
     /**
      * The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
      *
      * @type {Quat}
      */
-    get skyboxRotation() {
-        return this._skyboxRotation;
-    }
-
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
             this._resetSkyboxModel();
         }
+    }
+
+    get skyboxRotation() {
+        return this._skyboxRotation;
     }
 
     /**
@@ -549,15 +562,36 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    get toneMapping() {
-        return this._toneMapping;
-    }
-
     set toneMapping(value) {
         if (value !== this._toneMapping) {
             this._toneMapping = value;
             this.updateShaders = true;
         }
+    }
+
+    get toneMapping() {
+        return this._toneMapping;
+    }
+
+    destroy() {
+        this._resetSkyboxModel();
+        this.root = null;
+        this.off();
+    }
+
+    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatch(layer, depthTest);
+        batch.addLines([start, end], [color, color]);
+    }
+
+    drawLines(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatch(layer, depthTest);
+        batch.addLines(positions, colors);
+    }
+
+    drawLineArrays(positions, colors, depthTest = true, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatch(layer, depthTest);
+        batch.addLinesArrays(positions, colors);
     }
 
     applySettings(settings) {

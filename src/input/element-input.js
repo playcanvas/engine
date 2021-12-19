@@ -343,6 +343,22 @@ class ElementInput {
         this.attach(domElement);
     }
 
+    set enabled(value) {
+        this._enabled = value;
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set app(value) {
+        this._app = value;
+    }
+
+    get app() {
+        return this._app || getApplication();
+    }
+
     /**
      * Attach mouse and touch events to a DOM element.
      *
@@ -1127,22 +1143,6 @@ class ElementInput {
         const corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
 
         return intersectLineQuad(ray.origin, ray.end, corners);
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(value) {
-        this._enabled = value;
-    }
-
-    get app() {
-        return this._app || getApplication();
-    }
-
-    set app(value) {
-        this._app = value;
     }
 }
 

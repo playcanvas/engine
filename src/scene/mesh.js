@@ -22,6 +22,8 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 import { getApplication } from '../framework/globals.js';
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./morph.js').Morph} Morph */
+/** @typedef {import('./skin.js').Skin} Skin */
 
 let id = 0;
 
@@ -162,11 +164,6 @@ class GeometryVertexStream {
  * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
  * {@link IndexBuffer} and {@link VertexFormat} for details.
  *
- * @property {VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
- * @property {IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this
- * array can be empty. The first index buffer in the array is used by {@link MeshInstance}s with a
- * renderStyle property set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is
- * used if renderStyle is set to {@link RENDERSTYLE_WIREFRAME}.
  * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data
  * in the mesh should be interpreted by the graphics device.
  * @property {number} primitive[].type The type of primitive to render. Can be:
@@ -187,12 +184,6 @@ class GeometryVertexStream {
  * using the currently set index buffer and false otherwise.
  * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer
  * property.
- * @property {BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this
- * mesh.
- * @property {Skin} [skin] The skin data (if any) that drives skinned mesh animations for this
- * mesh.
- * @property {Morph} [morph] The morph data (if any) that drives morph target animations for this
- * mesh.
  */
 class Mesh extends RefCountedObject {
     /**
@@ -205,14 +196,41 @@ class Mesh extends RefCountedObject {
         super();
         this.id = id++;
         this.device = graphicsDevice || getApplication().graphicsDevice;
+
+        /**
+         * The vertex buffer holding the vertex data of the mesh.
+         *
+         * @type {VertexBuffer}
+         */
         this.vertexBuffer = null;
+
+        /**
+         * An array of index buffers. For unindexed meshes, this array can be empty. The first
+         * index buffer in the array is used by {@link MeshInstance}s with a renderStyle property
+         * set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if
+         * renderStyle is set to {@link RENDERSTYLE_WIREFRAME}.
+         *
+         * @type {IndexBuffer[]}
+         */
         this.indexBuffer = [null];
         this.primitive = [{
             type: 0,
             base: 0,
             count: 0
         }];
+
+        /**
+         * The skin data (if any) that drives skinned mesh animations for this mesh.
+         *
+         * @type {Skin|null}
+         */
         this.skin = null;
+
+        /**
+         * The morph data (if any) that drives morph target animations for this mesh.
+         *
+         * @type {Morph|null}
+         */
         this.morph = null;
         this._geometryData = null;
 
@@ -223,12 +241,17 @@ class Mesh extends RefCountedObject {
         this.boneAabb = null;
     }
 
-    get aabb() {
-        return this._aabb;
-    }
-
+    /**
+     * The axis-aligned bounding box for the object space vertices of this mesh.
+     *
+     * @type {BoundingBox}
+     */
     set aabb(aabb) {
         this._aabb = aabb;
+    }
+
+    get aabb() {
+        return this._aabb;
     }
 
     /**
@@ -236,7 +259,6 @@ class Mesh extends RefCountedObject {
      * normally called by {@link Model#destroy} and does not need to be called manually.
      */
     destroy() {
-
         if (this.vertexBuffer) {
             this.vertexBuffer.destroy();
             this.vertexBuffer = null;

@@ -59,12 +59,12 @@ class AnimNode {
         return this._pointLength;
     }
 
-    get weight() {
-        return this._parent ? this._parent.weight * this._weight : this._weight;
-    }
-
     set weight(value) {
         this._weight = value;
+    }
+
+    get weight() {
+        return this._parent ? this._parent.weight * this._weight : this._weight;
     }
 
     get normalizedWeight() {
@@ -81,20 +81,20 @@ class AnimNode {
         return Math.abs(this._speed);
     }
 
-    get weightedSpeed() {
-        return this._weightedSpeed;
-    }
-
     set weightedSpeed(weightedSpeed) {
         this._weightedSpeed = weightedSpeed;
     }
 
-    get animTrack() {
-        return this._animTrack;
+    get weightedSpeed() {
+        return this._weightedSpeed;
     }
 
     set animTrack(value) {
         this._animTrack = value;
+    }
+
+    get animTrack() {
+        return this._animTrack;
     }
 }
 

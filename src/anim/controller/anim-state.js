@@ -94,28 +94,28 @@ class AnimState {
         return this._name;
     }
 
-    get animations() {
-        return this._animationList;
-    }
-
     set animations(value) {
         this._animationList = value;
     }
 
-    get speed() {
-        return this._speed;
+    get animations() {
+        return this._animationList;
     }
 
     set speed(value) {
         this._speed = value;
     }
 
-    get loop() {
-        return this._loop;
+    get speed() {
+        return this._speed;
     }
 
     set loop(value) {
         this._loop = value;
+    }
+
+    get loop() {
+        return this._loop;
     }
 
     get nodeCount() {

@@ -917,14 +917,14 @@ class ScriptComponent extends Component {
         return true;
     }
 
-    get enabled() {
-        return this._enabled;
-    }
-
     set enabled(value) {
         const oldValue = this._enabled;
         this._enabled = value;
         this.fire('set', 'enabled', oldValue, value);
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     /**

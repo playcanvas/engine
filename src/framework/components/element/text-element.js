@@ -1261,18 +1261,14 @@ class TextElement {
         }
     }
 
-    get text() {
-        return this._text;
-    }
-
     set text(value) {
         this._i18nKey = null;
         const str = value != null && value.toString() || "";
         this._setText(str);
     }
 
-    get key() {
-        return this._i18nKey;
+    get text() {
+        return this._text;
     }
 
     set key(value) {
@@ -1290,8 +1286,8 @@ class TextElement {
         }
     }
 
-    get color() {
-        return this._color;
+    get key() {
+        return this._i18nKey;
     }
 
     set color(value) {
@@ -1332,8 +1328,8 @@ class TextElement {
         }
     }
 
-    get opacity() {
-        return this._color.a;
+    get color() {
+        return this._color;
     }
 
     set opacity(value) {
@@ -1353,8 +1349,8 @@ class TextElement {
         }
     }
 
-    get lineHeight() {
-        return this._lineHeight;
+    get opacity() {
+        return this._color.a;
     }
 
     set lineHeight(value) {
@@ -1366,8 +1362,8 @@ class TextElement {
         }
     }
 
-    get wrapLines() {
-        return this._wrapLines;
+    get lineHeight() {
+        return this._lineHeight;
     }
 
     set wrapLines(value) {
@@ -1378,12 +1374,12 @@ class TextElement {
         }
     }
 
-    get lines() {
-        return this._lineContents;
+    get wrapLines() {
+        return this._wrapLines;
     }
 
-    get spacing() {
-        return this._spacing;
+    get lines() {
+        return this._lineContents;
     }
 
     set spacing(value) {
@@ -1394,8 +1390,8 @@ class TextElement {
         }
     }
 
-    get fontSize() {
-        return this._fontSize;
+    get spacing() {
+        return this._spacing;
     }
 
     set fontSize(value) {
@@ -1407,9 +1403,8 @@ class TextElement {
         }
     }
 
-    get fontAsset() {
-        // getting fontAsset returns the currently used localized asset
-        return this._fontAsset.localizedAsset;
+    get fontSize() {
+        return this._fontSize;
     }
 
     set fontAsset(value) {
@@ -1418,8 +1413,9 @@ class TextElement {
         this._fontAsset.defaultAsset = value;
     }
 
-    get font() {
-        return this._font;
+    get fontAsset() {
+        // getting fontAsset returns the currently used localized asset
+        return this._fontAsset.localizedAsset;
     }
 
     set font(value) {
@@ -1504,8 +1500,8 @@ class TextElement {
         this._updateText();
     }
 
-    get alignment() {
-        return this._alignment;
+    get font() {
+        return this._font;
     }
 
     set alignment(value) {
@@ -1519,8 +1515,8 @@ class TextElement {
             this._updateText();
     }
 
-    get autoWidth() {
-        return this._autoWidth;
+    get alignment() {
+        return this._alignment;
     }
 
     set autoWidth(value) {
@@ -1545,8 +1541,8 @@ class TextElement {
         }
     }
 
-    get autoHeight() {
-        return this._autoHeight;
+    get autoWidth() {
+        return this._autoWidth;
     }
 
     set autoHeight(value) {
@@ -1571,8 +1567,8 @@ class TextElement {
         }
     }
 
-    get rtlReorder() {
-        return this._rtlReorder;
+    get autoHeight() {
+        return this._autoHeight;
     }
 
     set rtlReorder(value) {
@@ -1584,8 +1580,8 @@ class TextElement {
         }
     }
 
-    get unicodeConverter() {
-        return this._unicodeConverter;
+    get rtlReorder() {
+        return this._rtlReorder;
     }
 
     set unicodeConverter(value) {
@@ -1593,6 +1589,10 @@ class TextElement {
             this._unicodeConverter = value;
             this._setText(this._text);
         }
+    }
+
+    get unicodeConverter() {
+        return this._unicodeConverter;
     }
 
     // private
@@ -1613,10 +1613,6 @@ class TextElement {
             this._aabbDirty = false;
         }
         return this._aabb;
-    }
-
-    get outlineColor() {
-        return this._outlineColor;
     }
 
     set outlineColor(value) {
@@ -1656,8 +1652,8 @@ class TextElement {
         }
     }
 
-    get outlineThickness() {
-        return this._outlineThickness;
+    get outlineColor() {
+        return this._outlineColor;
     }
 
     set outlineThickness(value) {
@@ -1673,8 +1669,8 @@ class TextElement {
         }
     }
 
-    get shadowColor() {
-        return this._shadowColor;
+    get outlineThickness() {
+        return this._outlineThickness;
     }
 
     set shadowColor(value) {
@@ -1714,8 +1710,8 @@ class TextElement {
         }
     }
 
-    get shadowOffset() {
-        return this._shadowOffset;
+    get shadowColor() {
+        return this._shadowColor;
     }
 
     set shadowOffset(value) {
@@ -1737,8 +1733,8 @@ class TextElement {
         }
     }
 
-    get minFontSize() {
-        return this._minFontSize;
+    get shadowOffset() {
+        return this._shadowOffset;
     }
 
     set minFontSize(value) {
@@ -1750,8 +1746,8 @@ class TextElement {
         }
     }
 
-    get maxFontSize() {
-        return this._maxFontSize;
+    get minFontSize() {
+        return this._minFontSize;
     }
 
     set maxFontSize(value) {
@@ -1763,8 +1759,8 @@ class TextElement {
         }
     }
 
-    get autoFitWidth() {
-        return this._autoFitWidth;
+    get maxFontSize() {
+        return this._maxFontSize;
     }
 
     set autoFitWidth(value) {
@@ -1777,8 +1773,8 @@ class TextElement {
         }
     }
 
-    get autoFitHeight() {
-        return this._autoFitHeight;
+    get autoFitWidth() {
+        return this._autoFitWidth;
     }
 
     set autoFitHeight(value) {
@@ -1791,8 +1787,8 @@ class TextElement {
         }
     }
 
-    get maxLines() {
-        return this._maxLines;
+    get autoFitHeight() {
+        return this._autoFitHeight;
     }
 
     set maxLines(value) {
@@ -1806,8 +1802,8 @@ class TextElement {
         }
     }
 
-    get enableMarkup() {
-        return this._enableMarkup;
+    get maxLines() {
+        return this._maxLines;
     }
 
     set enableMarkup(value) {
@@ -1819,6 +1815,10 @@ class TextElement {
         if (this.font) {
             this._updateText();
         }
+    }
+
+    get enableMarkup() {
+        return this._enableMarkup;
     }
 
     get symbols() {
@@ -1838,10 +1838,6 @@ class TextElement {
         return this._rtl;
     }
 
-    get rangeStart() {
-        return this._rangeStart;
-    }
-
     set rangeStart(rangeStart) {
         rangeStart = Math.max(0, Math.min(rangeStart, this._symbols.length));
 
@@ -1851,8 +1847,8 @@ class TextElement {
         }
     }
 
-    get rangeEnd() {
-        return this._rangeEnd;
+    get rangeStart() {
+        return this._rangeStart;
     }
 
     set rangeEnd(rangeEnd) {
@@ -1862,6 +1858,10 @@ class TextElement {
             this._rangeEnd = rangeEnd;
             this._updateRenderRange();
         }
+    }
+
+    get rangeEnd() {
+        return this._rangeEnd;
     }
 }
 

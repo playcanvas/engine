@@ -3560,10 +3560,6 @@ class GraphicsDevice extends EventHandler {
      *
      * @type {boolean}
      */
-    get fullscreen() {
-        return !!document.fullscreenElement;
-    }
-
     set fullscreen(fullscreen) {
         if (fullscreen) {
             const canvas = this.gl.canvas;
@@ -3573,18 +3569,22 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    get fullscreen() {
+        return !!document.fullscreenElement;
+    }
+
     /**
      * Automatic instancing.
      *
      * @type {boolean}
      * @private
      */
-    get enableAutoInstancing() {
-        return this._enableAutoInstancing;
-    }
-
     set enableAutoInstancing(value) {
         this._enableAutoInstancing = value && this.extInstancing;
+    }
+
+    get enableAutoInstancing() {
+        return this._enableAutoInstancing;
     }
 
     /**
@@ -3592,13 +3592,13 @@ class GraphicsDevice extends EventHandler {
      *
      * @type {number}
      */
-    get maxPixelRatio() {
-        return this._maxPixelRatio;
-    }
-
     set maxPixelRatio(ratio) {
         this._maxPixelRatio = ratio;
         this.resizeCanvas(this._width, this._height);
+    }
+
+    get maxPixelRatio() {
+        return this._maxPixelRatio;
     }
 
     /**

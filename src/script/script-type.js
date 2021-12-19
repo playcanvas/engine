@@ -34,14 +34,6 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * new ScriptType has a `swap` method in its prototype, then it will be executed to perform hot-
  * reload at runtime.
  *
- * @property {Application} app The {@link Application} that the instance of this type belongs to.
- * @property {Entity} entity The {@link Entity} that the instance of this type belongs to.
- * @property {boolean} enabled True if the instance of this type is in running state. False when
- * script is not running, because the Entity or any of its parents are disabled or the
- * {@link ScriptComponent} is disabled or the Script Instance is disabled. When disabled no update
- * methods will be called on each tick. initialize and postInitialize methods will run once when
- * the script instance is in `enabled` state during app tick.
- *
  * @augments EventHandler
  */
 class ScriptType extends EventHandler {
@@ -57,12 +49,69 @@ class ScriptType extends EventHandler {
         this.initScriptType(args);
     }
 
+    /**
+     * True if the instance of this type is in running state. False when script is not running,
+     * because the Entity or any of its parents are disabled or the {@link ScriptComponent} is
+     * disabled or the Script Instance is disabled. When disabled no update methods will be called
+     * on each tick. initialize and postInitialize methods will run once when the script instance
+     * is in `enabled` state during app tick.
+     *
+     * @type {boolean}
+     */
+     set enabled(value) {
+        this._enabled = !!value;
+
+        if (this.enabled === this._enabledOld) return;
+
+        this._enabledOld = this.enabled;
+        this.fire(this.enabled ? 'enable' : 'disable');
+        this.fire('state', this.enabled);
+
+        // initialize script if not initialized yet and script is enabled
+        if (!this._initialized && this.enabled) {
+            this._initialized = true;
+
+            this.__initializeAttributes(true);
+
+            if (this.initialize)
+                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
+        }
+
+        // post initialize script if not post initialized yet and still enabled
+        // (initialize might have disabled the script so check this.enabled again)
+        // Warning: Do not do this if the script component is currently being enabled
+        // because in this case post initialize must be called after all the scripts
+        // in the script component have been initialized first
+        if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+            this._postInitialized = true;
+
+            if (this.postInitialize)
+                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
+        }
+    }
+
+    get enabled() {
+        return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
+    }
+
     initScriptType(args) {
         const script = this.constructor; // get script type, i.e. function (class)
         Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
 
+        /**
+         * The {@link Application} that the instance of this type belongs to.
+         *
+         * @type {Application}
+         */
         this.app = args.app;
+
+        /**
+         * The {@link Entity} that the instance of this type belongs to.
+         *
+         * @type {Entity}
+         */
         this.entity = args.entity;
+
         this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
         this._enabledOld = this.enabled;
         this.__destroyed = false;
@@ -77,12 +126,10 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @private
-     * @readonly
-     * @static
-     * @name ScriptType.__name
+     * Name of a Script Type.
+     *
      * @type {string}
-     * @description Name of a Script Type.
+     * @private
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
 
@@ -95,22 +142,18 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @field
-     * @static
-     * @name ScriptType.scriptName
+     * Name of a Script Type.
+     *
      * @type {string|null}
-     * @description Name of a Script Type.
      */
     static get scriptName() {
         return this.__name;
     }
 
     /**
-     * @field
-     * @static
-     * @name ScriptType.attributes
+     * The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
+     *
      * @type {ScriptAttributes}
-     * @description The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *
@@ -148,11 +191,9 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @static
-     * @function
-     * @name ScriptType.extend
+     * Shorthand function to extend Script Type prototype with list of methods.
+     *
      * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
-     * @description Shorthand function to extend Script Type prototype with list of methods.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *
@@ -302,42 +343,6 @@ class ScriptType extends EventHandler {
      *     });
      * };
      */
-
-    get enabled() {
-        return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
-    }
-
-    set enabled(value) {
-        this._enabled = !!value;
-
-        if (this.enabled === this._enabledOld) return;
-
-        this._enabledOld = this.enabled;
-        this.fire(this.enabled ? 'enable' : 'disable');
-        this.fire('state', this.enabled);
-
-        // initialize script if not initialized yet and script is enabled
-        if (!this._initialized && this.enabled) {
-            this._initialized = true;
-
-            this.__initializeAttributes(true);
-
-            if (this.initialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
-        }
-
-        // post initialize script if not post initialized yet and still enabled
-        // (initialize might have disabled the script so check this.enabled again)
-        // Warning: Do not do this if the script component is currently being enabled
-        // because in this case post initialize must be called after all the scripts
-        // in the script component have been initialized first
-        if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
-            this._postInitialized = true;
-
-            if (this.postInitialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
-        }
-    }
 }
 
 export { ScriptType };

@@ -49,12 +49,12 @@ class AnimTrack {
         return this._curves;
     }
 
-    get events() {
-        return this._animEvents.events;
-    }
-
     set events(animEvents) {
         this._animEvents = animEvents;
+    }
+
+    get events() {
+        return this._animEvents.events;
     }
 
     // evaluate all track curves at the specified time and store results
@@ -73,7 +73,7 @@ class AnimTrack {
             cache[i].update(time, inputs[i]._data);
         }
 
-        // evalute outputs
+        // evaluate outputs
         for (let i = 0; i < curves.length; ++i) {
             const curve = curves[i];
             const output = outputs[curve._output];

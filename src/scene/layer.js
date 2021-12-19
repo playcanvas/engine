@@ -304,17 +304,13 @@ class Layer {
         this._lightCube = null;
     }
 
-    get renderTarget() {
-        return this._renderTarget;
-    }
-
     set renderTarget(rt) {
         this._renderTarget = rt;
         this._dirtyCameras = true;
     }
 
-    get enabled() {
-        return this._enabled;
+    get renderTarget() {
+        return this._renderTarget;
     }
 
     set enabled(val) {
@@ -330,16 +326,16 @@ class Layer {
         }
     }
 
-    get clearColor() {
-        return this._clearColor;
+    get enabled() {
+        return this._enabled;
     }
 
     set clearColor(val) {
         this._clearColor.copy(val);
     }
 
-    get clearColorBuffer() {
-        return this._clearColorBuffer;
+    get clearColor() {
+        return this._clearColor;
     }
 
     set clearColorBuffer(val) {
@@ -347,8 +343,8 @@ class Layer {
         this._dirtyCameras = true;
     }
 
-    get clearDepthBuffer() {
-        return this._clearDepthBuffer;
+    get clearColorBuffer() {
+        return this._clearColorBuffer;
     }
 
     set clearDepthBuffer(val) {
@@ -356,13 +352,17 @@ class Layer {
         this._dirtyCameras = true;
     }
 
-    get clearStencilBuffer() {
-        return this._clearStencilBuffer;
+    get clearDepthBuffer() {
+        return this._clearDepthBuffer;
     }
 
     set clearStencilBuffer(val) {
         this._clearStencilBuffer = val;
         this._dirtyCameras = true;
+    }
+
+    get clearStencilBuffer() {
+        return this._clearStencilBuffer;
     }
 
     /**

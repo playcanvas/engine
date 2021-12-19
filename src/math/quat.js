@@ -8,66 +8,6 @@ import { Vec3 } from './vec3.js';
  */
 class Quat {
     /**
-     * @field
-     * @name Quat#x
-     * @type {number}
-     * @description The x component of the quaternion.
-     * @example
-     * var quat = new pc.Quat();
-     *
-     * // Get x
-     * var x = quat.x;
-     *
-     * // Set x
-     * quat.x = 0;
-     */
-
-    /**
-     * @field
-     * @name Quat#y
-     * @type {number}
-     * @description The y component of the quaternion.
-     * @example
-     * var quat = new pc.Quat();
-     *
-     * // Get y
-     * var y = quat.y;
-     *
-     * // Set y
-     * quat.y = 0;
-     */
-
-    /**
-     * @field
-     * @name Quat#z
-     * @type {number}
-     * @description The z component of the quaternion.
-     * @example
-     * var quat = new pc.Quat();
-     *
-     * // Get z
-     * var z = quat.z;
-     *
-     * // Set z
-     * quat.z = 0;
-     */
-
-    /**
-     * @field
-     * @name Quat#w
-     * @type {number}
-     * @description The w component of the quaternion.
-     * @example
-     * var quat = new pc.Quat();
-     *
-     * // Get w
-     * var w = quat.w;
-     *
-     * // Set w
-     * quat.w = 0;
-     */
-
-    /**
      * Create a new Quat instance.
      *
      * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an
@@ -78,9 +18,29 @@ class Quat {
      */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
+            /**
+             * The x component of the quaternion.
+             *
+             * @type {number}
+             */
             this.x = x[0];
+            /**
+             * The y component of the quaternion.
+             *
+             * @type {number}
+             */
             this.y = x[1];
+            /**
+             * The z component of the quaternion.
+             *
+             * @type {number}
+             */
             this.z = x[2];
+            /**
+             * The w component of the quaternion.
+             *
+             * @type {number}
+             */
             this.w = x[3];
         } else {
             this.x = x;

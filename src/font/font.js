@@ -4,9 +4,6 @@ import { FONT_MSDF } from './constants.js';
 
 /**
  * Represents the resource of a font asset.
- *
- * @property {number} intensity The font intensity.
- * @property {Texture[]} textures The font textures.
  */
 class Font {
     /**
@@ -20,19 +17,23 @@ class Font {
 
         this.em = 1;
 
-        // atlas texture
+        /**
+         * The font textures.
+         *
+         * @type {Texture[]}
+         */
         this.textures = textures;
 
-        // intensity
+        /**
+         * The font intensity.
+         *
+         * @type {number}
+         */
         this.intensity = 0.0;
 
         // json data
         this._data = null;
         this.data = data;
-    }
-
-    get data() {
-        return this._data;
     }
 
     set data(value) {
@@ -60,6 +61,10 @@ class Font {
                 }
             }
         }
+    }
+
+    get data() {
+        return this._data;
     }
 }
 

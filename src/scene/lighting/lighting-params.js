@@ -21,40 +21,36 @@ class LightingParams {
         this._cookieAtlasResolution = 2048;
     }
 
-    get cells() {
-        return this._cells;
-    }
-
     set cells(value) {
         this._cells.copy(value);
     }
 
-    get maxLightsPerCell() {
-        return this._maxLightsPerCell;
+    get cells() {
+        return this._cells;
     }
 
     set maxLightsPerCell(value) {
         this._maxLightsPerCell = math.clamp(value, 1, 255);
     }
 
-    get cookieAtlasResolution() {
-        return this._cookieAtlasResolution;
+    get maxLightsPerCell() {
+        return this._maxLightsPerCell;
     }
 
     set cookieAtlasResolution(value) {
         this._cookieAtlasResolution = math.clamp(value, 32, this._maxTextureSize);
     }
 
-    get shadowAtlasResolution() {
-        return this._shadowAtlasResolution;
+    get cookieAtlasResolution() {
+        return this._cookieAtlasResolution;
     }
 
     set shadowAtlasResolution(value) {
         this._shadowAtlasResolution = math.clamp(value, 32, this._maxTextureSize);
     }
 
-    get shadowType() {
-        return this._shadowType;
+    get shadowAtlasResolution() {
+        return this._shadowAtlasResolution;
     }
 
     set shadowType(value) {
@@ -66,8 +62,8 @@ class LightingParams {
         }
     }
 
-    get cookiesEnabled() {
-        return this._cookiesEnabled;
+    get shadowType() {
+        return this._shadowType;
     }
 
     set cookiesEnabled(value) {
@@ -79,8 +75,8 @@ class LightingParams {
         }
     }
 
-    get areaLightsEnabled() {
-        return this._areaLightsEnabled;
+    get cookiesEnabled() {
+        return this._cookiesEnabled;
     }
 
     set areaLightsEnabled(value) {
@@ -96,8 +92,8 @@ class LightingParams {
         }
     }
 
-    get shadowsEnabled() {
-        return this._shadowsEnabled;
+    get areaLightsEnabled() {
+        return this._areaLightsEnabled;
     }
 
     set shadowsEnabled(value) {
@@ -107,6 +103,10 @@ class LightingParams {
             // lit shaders need to be rebuilt
             this._dirtyLightsFnc();
         }
+    }
+
+    get shadowsEnabled() {
+        return this._shadowsEnabled;
     }
 }
 

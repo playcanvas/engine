@@ -10,11 +10,9 @@ import { Channel3d } from '../audio/channel3d.js';
 import { Listener } from './listener.js';
 
 /**
- * The SoundManager is used to load and play audio. As well as apply system-wide settings like
+ * The SoundManager is used to load and play audio. It also applies system-wide settings like
  * global volume, suspend and resume.
  *
- * @property {number} volume Global volume for the manager. All {@link SoundInstance}s will scale
- * their volume with this volume. Valid between [0, 1].
  * @augments EventHandler
  */
 class SoundManager extends EventHandler {
@@ -22,8 +20,8 @@ class SoundManager extends EventHandler {
      * Create a new SoundManager instance.
      *
      * @param {object} [options] - Options options object.
-     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check
-     * indicates that it if not available.
+     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API, even if check
+     * indicates that it is not available.
      */
     constructor(options) {
         super();
@@ -77,6 +75,37 @@ class SoundManager extends EventHandler {
 
         this._volume = 1;
         this.suspended = false;
+    }
+
+    /**
+     * Global volume for the manager. All {@link SoundInstance}s will scale their volume with this
+     * volume. Valid between [0, 1].
+     *
+     * @type {number}
+     */
+    set volume(volume) {
+        volume = math.clamp(volume, 0, 1);
+        this._volume = volume;
+        this.fire('volumechange', volume);
+    }
+
+    get volume() {
+        return this._volume;
+    }
+
+    get context() {
+        // lazy create the AudioContext if possible
+        if (!this._context) {
+            if (hasAudioContext() || this._forceWebAudioApi) {
+                if (typeof AudioContext !== 'undefined') {
+                    this._context = new AudioContext();
+                } else if (typeof webkitAudioContext !== 'undefined') {
+                    this._context = new webkitAudioContext();
+                }
+            }
+        }
+
+        return this._context;
     }
 
     suspend() {
@@ -176,31 +205,6 @@ class SoundManager extends EventHandler {
         }
 
         return channel;
-    }
-
-    get volume() {
-        return this._volume;
-    }
-
-    set volume(volume) {
-        volume = math.clamp(volume, 0, 1);
-        this._volume = volume;
-        this.fire('volumechange', volume);
-    }
-
-    get context() {
-        // lazy create the AudioContext if possible
-        if (!this._context) {
-            if (hasAudioContext() || this._forceWebAudioApi) {
-                if (typeof AudioContext !== 'undefined') {
-                    this._context = new AudioContext();
-                } else if (typeof webkitAudioContext !== 'undefined') {
-                    this._context = new webkitAudioContext();
-                }
-            }
-        }
-
-        return this._context;
     }
 }
 
