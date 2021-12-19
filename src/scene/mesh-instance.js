@@ -15,7 +15,6 @@ import {
 
 import { GraphNode } from './graph-node.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
-import { SkinInstance } from './skin-instance.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
@@ -23,6 +22,7 @@ import { SkinInstance } from './skin-instance.js';
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 /** @typedef {import('./morph-instance.js').MorphInstance} MorphInstance */
+/** @typedef {import('./skin-instance.js').SkinInstance} SkinInstance */
 
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();

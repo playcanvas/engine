@@ -58,7 +58,7 @@ class ScriptType extends EventHandler {
      *
      * @type {boolean}
      */
-     set enabled(value) {
+    set enabled(value) {
         this._enabled = !!value;
 
         if (this.enabled === this._enabledOld) return;

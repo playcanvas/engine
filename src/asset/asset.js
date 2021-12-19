@@ -60,14 +60,14 @@ class Asset extends EventHandler {
      * "template", text", "texture"]
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
-     * @property {string} [file.url] The URL of the resource file that contains the asset data.
-     * @property {string} [file.filename] The filename of the resource file or null if no filename
+     * @param {string} [file.url] - The URL of the resource file that contains the asset data.
+     * @param {string} [file.filename] - The filename of the resource file or null if no filename
      * was set (e.g from using {@link AssetRegistry#loadFromUrl}).
-     * @property {number} [file.size] The size of the resource file or null if no size was set
+     * @param {number} [file.size] - The size of the resource file or null if no size was set
      * (e.g. from using {@link AssetRegistry#loadFromUrl}).
-     * @property {string} [file.hash] The MD5 hash of the resource file data and the Asset data
+     * @param {string} [file.hash] - The MD5 hash of the resource file data and the Asset data
      * field or null if hash was set (e.g from using {@link AssetRegistry#loadFromUrl}).
-     * @property {ArrayBuffer} [file.contents] Optional file contents. This is faster than wrapping
+     * @param {ArrayBuffer} [file.contents] - Optional file contents. This is faster than wrapping
      * the data in a (base64 encoded) blob. Currently only used by container assets.
      * @param {object} [data] - JSON object with additional data about the asset. (e.g. for texture
      * and model assets) or contains the asset data itself (e.g. in the case of materials).

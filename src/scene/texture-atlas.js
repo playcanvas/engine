@@ -71,6 +71,7 @@ class TextureAtlas extends EventHandler {
         this._frames = value;
         this.fire('set:frames', value);
     }
+
     get frames() {
         return this._frames;
     }

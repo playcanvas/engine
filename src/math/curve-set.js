@@ -58,7 +58,7 @@ class CurveSet {
      *
      * @type {number}
      */
-     get length() {
+    get length() {
         return this.curves.length;
     }
 

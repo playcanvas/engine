@@ -40,7 +40,7 @@ class EventHandler {
          * @type {object}
          * @private
          */
-         this._callbackActive = { };
+        this._callbackActive = { };
     }
 
     /**

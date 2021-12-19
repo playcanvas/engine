@@ -50,7 +50,7 @@ class SpriteAnimationClip extends EventHandler {
      *
      * @type {number}
      */
-     get duration() {
+    get duration() {
         if (this._sprite) {
             const fps = this.fps || Number.MIN_VALUE;
             return this._sprite.frameKeys.length / Math.abs(fps);

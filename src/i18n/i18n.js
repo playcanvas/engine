@@ -49,7 +49,7 @@ class I18n extends EventHandler {
      *
      * @type {number[]|Asset[]}
      */
-     set assets(value) {
+    set assets(value) {
         const index = {};
 
         // convert array to dict

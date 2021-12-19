@@ -75,7 +75,7 @@ class Sprite extends EventHandler {
      *
      * @type {string[]}
      */
-     set frameKeys(value) {
+    set frameKeys(value) {
         this._frameKeys = value;
 
         if (this._atlas && this._frameKeys) {
