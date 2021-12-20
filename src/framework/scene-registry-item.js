@@ -40,7 +40,7 @@ class SceneRegistryItem {
      *
      * @type {boolean}
      */
-     get loading() {
+    get loading() {
         return this._loading;
     }
 }

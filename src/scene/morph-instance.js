@@ -192,9 +192,9 @@ class MorphInstance {
     }
 
     /**
-     * Generate fragment shader to blend number of textures using specified weights.
+     * Generate fragment shader to blend a number of textures using specified weights.
      *
-     * @param {number} count - Number of textures to blend.
+     * @param {number} numTextures - Number of textures to blend.
      * @returns {string} Fragment shader.
      * @private
      */
