@@ -16,11 +16,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link SoundComponent}s.
  *
- * @property {number} volume Sets / gets the volume for the entire Sound system. All sounds will
- * have their volume multiplied by this value. Valid between [0, 1].
- * @property {AudioContext} context Gets the AudioContext currently used by the sound manager.
- * Requires Web Audio API support.
- * @property {SoundManager} manager Gets / sets the sound manager.
  * @augments ComponentSystem
  */
 class SoundComponentSystem extends ComponentSystem {
@@ -40,11 +35,44 @@ class SoundComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
+        /**
+         * Gets / sets the sound manager.
+         *
+         * @type {SoundManager}
+         */
         this.manager = manager;
 
         this.app.systems.on('update', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
+    }
+
+    /**
+     * Sets / gets the volume for the entire Sound system. All sounds will have their volume
+     * multiplied by this value. Valid between [0, 1].
+     *
+     * @type {number}
+     */
+    set volume(volume) {
+        this.manager.volume = volume;
+    }
+
+    get volume() {
+        return this.manager.volume;
+    }
+
+    /**
+     * Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
+     *
+     * @type {AudioContext}
+     */
+    get context() {
+        if (!hasAudioContext()) {
+            Debug.warn('WARNING: Audio context is not supported on this browser');
+            return null;
+        }
+
+        return this.manager.context;
     }
 
     initializeComponentData(component, data, properties) {
@@ -146,23 +174,6 @@ class SoundComponentSystem extends ComponentSystem {
         super.destroy();
 
         this.app.systems.off('update', this.onUpdate, this);
-    }
-
-    get volume() {
-        return this.manager.volume;
-    }
-
-    set volume(volume) {
-        this.manager.volume = volume;
-    }
-
-    get context() {
-        if (!hasAudioContext()) {
-            Debug.warn('WARNING: Audio context is not supported on this browser');
-            return null;
-        }
-
-        return this.manager.context;
     }
 }
 

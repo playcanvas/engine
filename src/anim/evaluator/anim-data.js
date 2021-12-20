@@ -1,8 +1,6 @@
 /**
  * Wraps a set of data used in animation.
  *
- * @property {number} components - The number of components that make up and element.
- * @property {Float32Array|number[]} data - The data.
  * @private
  */
 class AnimData {
@@ -20,10 +18,20 @@ class AnimData {
         this._data = data;
     }
 
+    /**
+     * The number of components that make up an element.
+     *
+     * @type {number}
+     */
     get components() {
         return this._components;
     }
 
+    /**
+     * The data.
+     *
+     * @type {Float32Array|number[]}
+     */
     get data() {
         return this._data;
     }

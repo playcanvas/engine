@@ -21,8 +21,6 @@ import { Component } from '../component.js';
  * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
  * @property {Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
- * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
- * @property {number} duration Get the duration in seconds of the current animation. [read only]
  * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
  * @augments Component
@@ -45,6 +43,56 @@ class AnimationComponent extends Component {
         this.on('set_assets', this.onSetAssets, this);
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
+    }
+
+    /**
+     * Get or Set the current time position (in seconds) of the animation.
+     *
+     * @type {number}
+     */
+    set currentTime(currentTime) {
+        const data = this.data;
+        if (data.skeleton) {
+            const skeleton = data.skeleton;
+            skeleton.currentTime = currentTime;
+            skeleton.addTime(0);
+            skeleton.updateGraph();
+        }
+
+        if (data.animEvaluator) {
+            const animEvaluator = data.animEvaluator;
+            for (let i = 0; i < animEvaluator.clips.length; ++i) {
+                animEvaluator.clips[i].time = currentTime;
+            }
+        }
+    }
+
+    get currentTime() {
+        const data = this.data;
+
+        if (data.skeleton) {
+            return this.data.skeleton._time;
+        }
+
+        if (data.animEvaluator) {
+            // Get the last clip's current time which will be the one
+            // that is currently being blended
+            const clips = data.animEvaluator.clips;
+            if (clips.length > 0) {
+                return clips[clips.length - 1].time;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Get the duration in seconds of the current animation.
+     *
+     * @type {number}
+     */
+    get duration() {
+        return this.data.animations[this.data.currAnim].duration;
     }
 
     /**
@@ -476,46 +524,6 @@ class AnimationComponent extends Component {
         delete data.toSkel;
 
         delete data.animEvaluator;
-    }
-
-    get currentTime() {
-        const data = this.data;
-
-        if (data.skeleton) {
-            return this.data.skeleton._time;
-        }
-
-        if (data.animEvaluator) {
-            // Get the last clip's current time which will be the one
-            // that is currently being blended
-            const clips = data.animEvaluator.clips;
-            if (clips.length > 0) {
-                return clips[clips.length - 1].time;
-            }
-        }
-
-        return 0;
-    }
-
-    set currentTime(currentTime) {
-        const data = this.data;
-        if (data.skeleton) {
-            const skeleton = data.skeleton;
-            skeleton.currentTime = currentTime;
-            skeleton.addTime(0);
-            skeleton.updateGraph();
-        }
-
-        if (data.animEvaluator) {
-            const animEvaluator = data.animEvaluator;
-            for (let i = 0; i < animEvaluator.clips.length; ++i) {
-                animEvaluator.clips[i].time = currentTime;
-            }
-        }
-    }
-
-    get duration() {
-        return this.data.animations[this.data.currAnim].duration;
     }
 }
 

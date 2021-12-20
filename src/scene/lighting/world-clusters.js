@@ -71,6 +71,37 @@ class WorldClusters {
         this.registerUniforms(device);
     }
 
+    set maxCellLightCount(count) {
+
+        // each cell stores 4 lights (xyzw), so round up the count
+        const maxCellLightCount = math.roundUp(count, 4);
+        if (maxCellLightCount !== this._maxCellLightCount) {
+            this._maxCellLightCount = maxCellLightCount;
+            this._pixelsPerCellCount = this._maxCellLightCount / 4;
+            this._cellsDirty = true;
+        }
+    }
+
+    get maxCellLightCount() {
+        return this._maxCellLightCount;
+    }
+
+    set cells(value) {
+
+        // make sure we have whole numbers
+        tempVec3.copy(value).floor();
+
+        if (!this._cells.equals(tempVec3)) {
+            this._cells.copy(tempVec3);
+            this._cellsLimit.copy(tempVec3).sub(Vec3.ONE);
+            this._cellsDirty = true;
+        }
+    }
+
+    get cells() {
+        return this._cells;
+    }
+
     destroy() {
 
         this.lightsBuffer.destroy();
@@ -112,37 +143,6 @@ class WorldClusters {
         // compression limit 0
         this._clusterCompressionLimit0Id = device.scope.resolve("clusterCompressionLimit0");
         this._clusterCompressionLimit0Data = new Float32Array(2);
-    }
-
-    get maxCellLightCount() {
-        return this._maxCellLightCount;
-    }
-
-    set maxCellLightCount(count) {
-
-        // each cell stores 4 lights (xyzw), so round up the count
-        const maxCellLightCount = math.roundUp(count, 4);
-        if (maxCellLightCount !== this._maxCellLightCount) {
-            this._maxCellLightCount = maxCellLightCount;
-            this._pixelsPerCellCount = this._maxCellLightCount / 4;
-            this._cellsDirty = true;
-        }
-    }
-
-    get cells() {
-        return this._cells;
-    }
-
-    set cells(value) {
-
-        // make sure we have whole numbers
-        tempVec3.copy(value).floor();
-
-        if (!this._cells.equals(tempVec3)) {
-            this._cells.copy(tempVec3);
-            this._cellsLimit.copy(tempVec3).sub(Vec3.ONE);
-            this._cellsDirty = true;
-        }
     }
 
     // updates itself based on parameters stored in the scene

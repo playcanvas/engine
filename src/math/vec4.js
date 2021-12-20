@@ -3,70 +3,6 @@
  */
 class Vec4 {
     /**
-     * The first component of the vector.
-     *
-     * @field
-     * @name Vec4#x
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec4(10, 20, 30, 40);
-     *
-     * // Get x
-     * var x = vec.x;
-     *
-     * // Set x
-     * vec.x = 0;
-     */
-
-    /**
-     * The second component of the vector.
-     *
-     * @field
-     * @name Vec4#y
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec4(10, 20, 30, 40);
-     *
-     * // Get y
-     * var y = vec.y;
-     *
-     * // Set y
-     * vec.y = 0;
-     */
-
-    /**
-     * The third component of the vector.
-     *
-     * @field
-     * @name Vec4#z
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec4(10, 20, 30, 40);
-     *
-     * // Get z
-     * var z = vec.z;
-     *
-     * // Set z
-     * vec.z = 0;
-     */
-
-    /**
-     * The fourth component of the vector.
-     *
-     * @field
-     * @name Vec4#w
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec4(10, 20, 30, 40);
-     *
-     * // Get w
-     * var w = vec.w;
-     *
-     * // Set w
-     * vec.w = 0;
-     */
-
-    /**
      * Creates a new Vec4 object.
      *
      * @param {number|number[]} [x] - The x value. If x is an array of length 4, the array will be
@@ -79,9 +15,29 @@ class Vec4 {
      */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
+            /**
+             * The first component of the vector.
+             *
+             * @type {number}
+             */
             this.x = x[0];
+            /**
+             * The second component of the vector.
+             *
+             * @type {number}
+             */
             this.y = x[1];
+            /**
+             * The third component of the vector.
+             *
+             * @type {number}
+             */
             this.z = x[2];
+            /**
+             * The fourth component of the vector.
+             *
+             * @type {number}
+             */
             this.w = x[3];
         } else {
             this.x = x;

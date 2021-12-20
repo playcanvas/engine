@@ -219,12 +219,12 @@ class ElementDragHelper extends EventHandler {
         this._toggleDragListeners('off');
     }
 
-    get enabled() {
-        return this._enabled;
-    }
-
     set enabled(value) {
         this._enabled = value;
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     get isDragging() {

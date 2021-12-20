@@ -17,9 +17,6 @@ import { SoundSlot } from './slot.js';
  * 1.
  * @property {number} pitch The pitch modifier to play the audio with. Must be larger than 0.01.
  * Defaults to 1.
- * @property {boolean} positional If true the audio will play back at the location of the Entity in
- * space, so the audio will be affected by the position of the {@link AudioListenerComponent}.
- * Defaults to true.
  * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the
  * sound as it moves away from the listener. Can be:
  *
@@ -34,8 +31,6 @@ import { SoundSlot } from './slot.js';
  * stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off
  * anymore. Defaults to 10000.
  * @property {number} rollOffFactor The factor used in the falloff equation. Defaults to 1.
- * @property {object} slots A dictionary that contains the {@link SoundSlot}s managed by this
- * SoundComponent.
  * @augments Component
  */
 class SoundComponent extends Component {
@@ -55,15 +50,24 @@ class SoundComponent extends Component {
         this._maxDistance = 10000;
         this._rollOffFactor = 1;
         this._distanceModel = DISTANCE_LINEAR;
+
+        /* eslint-disable jsdoc/check-types */
+        /**
+         * @type {Object.<string, SoundSlot>}
+         * @private
+         */
         this._slots = {};
+        /* eslint-enable jsdoc/check-types */
 
         this._playingBeforeDisable = {};
     }
 
-    get positional() {
-        return this._positional;
-    }
-
+    /**
+     * If true the audio will play back at the location of the Entity in space, so the audio will
+     * be affected by the position of the {@link AudioListenerComponent}. Defaults to true.
+     *
+     * @type {boolean}
+     */
     set positional(newValue) {
         this._positional = newValue;
 
@@ -96,10 +100,16 @@ class SoundComponent extends Component {
         }
     }
 
-    get slots() {
-        return this._slots;
+    get positional() {
+        return this._positional;
     }
 
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * A dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
+     *
+     * @type {Object.<string, SoundSlot>}
+     */
     set slots(newValue) {
         const oldValue = this._slots;
 
@@ -129,6 +139,11 @@ class SoundComponent extends Component {
         if (this.enabled && this.entity.enabled)
             this.onEnable();
     }
+
+    get slots() {
+        return this._slots;
+    }
+    /* eslint-enable jsdoc/check-types */
 
     onEnable() {
         // do not run if running in Editor

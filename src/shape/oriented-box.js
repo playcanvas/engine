@@ -37,6 +37,20 @@ class OrientedBox {
     }
 
     /**
+     * The world transform of the OBB.
+     *
+     * @type {Mat4}
+     */
+    set worldTransform(value) {
+        this._worldTransform.copy(value);
+        this._modelTransform.copy(value).invert();
+    }
+
+    get worldTransform() {
+        return this._worldTransform;
+    }
+
+    /**
      * Test if a ray intersects with the OBB.
      *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
@@ -84,20 +98,6 @@ class OrientedBox {
         }
 
         return false;
-    }
-
-    /**
-     * The world transform of the OBB.
-     *
-     * @type {Mat4}
-     */
-    get worldTransform() {
-        return this._worldTransform;
-    }
-
-    set worldTransform(value) {
-        this._worldTransform.copy(value);
-        this._modelTransform.copy(value).invert();
     }
 }
 

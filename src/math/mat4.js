@@ -14,8 +14,6 @@ const scale = new Vec3();
 
 /**
  * A 4x4 matrix.
- *
- * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
 class Mat4 {
     /**
@@ -26,6 +24,12 @@ class Mat4 {
         // to zero by default, so we only need to set the relevant elements to one.
         const data = new Float32Array(16);
         data[0] = data[5] = data[10] = data[15] = 1;
+
+        /**
+         * Matrix elements in the form of a flat array.
+         *
+         * @type {Float32Array}
+         */
         this.data = data;
     }
 

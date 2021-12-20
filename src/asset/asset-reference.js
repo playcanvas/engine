@@ -5,11 +5,6 @@
  * An object that manages the case where an object holds a reference to an asset and needs to be
  * notified when changes occur in the asset. e.g. notifications include load, add and remove
  * events.
- *
- * @property {number} id Get or set the asset id which this references. One of either id or url
- * must be set to initialize an asset reference.
- * @property {string} url Get or set the asset url which this references. One of either id or url
- * must be called to initialize an asset reference.
  */
 class AssetReference {
     /**
@@ -54,6 +49,48 @@ class AssetReference {
         this._onAssetAdd = callbacks.add;
         this._onAssetRemove = callbacks.remove;
         this._onAssetUnload = callbacks.unload;
+    }
+
+    /**
+     * Get or set the asset id which this references. One of either id or url must be set to
+     * initialize an asset reference.
+     *
+     * @type {number}
+     */
+    set id(value) {
+        if (this.url) throw Error("Can't set id and url");
+
+        this._unbind();
+
+        this._id = value;
+        this.asset = this._registry.get(this._id);
+
+        this._bind();
+    }
+
+    get id() {
+        return this._id;
+    }
+
+    /**
+     * Get or set the asset url which this references. One of either id or url must be called to
+     * initialize an asset reference.
+     *
+     * @type {string}
+     */
+    set url(value) {
+        if (this.id) throw Error("Can't set id and url");
+
+        this._unbind();
+
+        this._url = value;
+        this.asset = this._registry.getByUrl(this._url);
+
+        this._bind();
+    }
+
+    get url() {
+        return this._url;
     }
 
     _bind() {
@@ -101,36 +138,6 @@ class AssetReference {
 
     _onUnload(asset) {
         this._onAssetUnload.call(this._scope, this.propertyName, this.parent, asset);
-    }
-
-    get id() {
-        return this._id;
-    }
-
-    set id(value) {
-        if (this.url) throw Error("Can't set id and url");
-
-        this._unbind();
-
-        this._id = value;
-        this.asset = this._registry.get(this._id);
-
-        this._bind();
-    }
-
-    get url() {
-        return this._url;
-    }
-
-    set url(value) {
-        if (this.id) throw Error("Can't set id and url");
-
-        this._unbind();
-
-        this._url = value;
-        this.asset = this._registry.getByUrl(this._url);
-
-        this._bind();
     }
 }
 

@@ -2,11 +2,6 @@ import { math } from '../math/math.js';
 
 /**
  * Representation of an RGBA color.
- *
- * @property {number} r The red component of the color.
- * @property {number} g The green component of the color.
- * @property {number} b The blue component of the color.
- * @property {number} a The alpha component of the color.
  */
 class Color {
     /**
@@ -21,9 +16,29 @@ class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
         if (length === 3 || length === 4) {
+            /**
+             * The red component of the color.
+             *
+             * @type {number}
+             */
             this.r = r[0];
+            /**
+             * The green component of the color.
+             *
+             * @type {number}
+             */
             this.g = r[1];
+            /**
+             * The blue component of the color.
+             *
+             * @type {number}
+             */
             this.b = r[2];
+            /**
+             * The alpha component of the color.
+             *
+             * @type {number}
+             */
             this.a = r[3] !== undefined ? r[3] : 1;
         } else {
             this.r = r;

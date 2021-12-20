@@ -45,6 +45,14 @@ class SkinInstance {
         }
     }
 
+    set rootBone(rootBone) {
+        this._rootBone = rootBone;
+    }
+
+    get rootBone() {
+        return this._rootBone;
+    }
+
     init(device, numBones) {
 
         if (device.supportsBoneTextures) {
@@ -78,14 +86,6 @@ class SkinInstance {
             this.boneTexture.destroy();
             this.boneTexture = null;
         }
-    }
-
-    get rootBone() {
-        return this._rootBone;
-    }
-
-    set rootBone(rootBone) {
-        this._rootBone = rootBone;
     }
 
     // resolved skin bones to a hierarchy with the rootBone at its root.

@@ -45,6 +45,10 @@ class Skeleton {
      * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
      */
     constructor(graph) {
+        /**
+         * @type {Animation}
+         * @private
+         */
         this._animation = null;
         this._time = 0;
 
@@ -73,13 +77,13 @@ class Skeleton {
      *
      * @type {Animation}
      */
-    get animation() {
-        return this._animation;
-    }
-
     set animation(value) {
         this._animation = value;
         this.currentTime = 0;
+    }
+
+    get animation() {
+        return this._animation;
     }
 
     /**
@@ -88,10 +92,6 @@ class Skeleton {
      *
      * @type {number}
      */
-    get currentTime() {
-        return this._time;
-    }
-
     set currentTime(value) {
         this._time = value;
         const numNodes = this._interpolatedKeys.length;
@@ -103,6 +103,10 @@ class Skeleton {
 
         this.addTime(0);
         this.updateGraph();
+    }
+
+    get currentTime() {
+        return this._time;
     }
 
     /**

@@ -48,12 +48,12 @@ class AnimTransition {
         return this._from;
     }
 
-    get to() {
-        return this._to;
-    }
-
     set to(value) {
         this._to = value;
+    }
+
+    get to() {
+        return this._to;
     }
 
     get time() {

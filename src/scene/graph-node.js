@@ -145,13 +145,6 @@ class GraphNode extends EventHandler {
      *
      * @type {boolean}
      */
-    get enabled() {
-        // make sure to check this._enabled too because if that
-        // was false when a parent was updated the _enabledInHierarchy
-        // flag may not have been updated for optimization purposes
-        return this._enabled && this._enabledInHierarchy;
-    }
-
     set enabled(enabled) {
         if (this._enabled !== enabled) {
             this._enabled = enabled;
@@ -159,6 +152,13 @@ class GraphNode extends EventHandler {
             if (!this._parent || this._parent.enabled)
                 this._notifyHierarchyStateChanged(this, enabled);
         }
+    }
+
+    get enabled() {
+        // make sure to check this._enabled too because if that
+        // was false when a parent was updated the _enabledInHierarchy
+        // flag may not have been updated for optimization purposes
+        return this._enabled && this._enabledInHierarchy;
     }
 
     /**

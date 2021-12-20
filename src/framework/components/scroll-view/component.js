@@ -676,12 +676,12 @@ class ScrollViewComponent extends Component {
         this._destroyDragHelper();
     }
 
-    get scroll() {
-        return this._scroll;
-    }
-
     set scroll(value) {
         this._onSetScroll(value.x, value.y);
+    }
+
+    get scroll() {
+        return this._scroll;
     }
 
     /**

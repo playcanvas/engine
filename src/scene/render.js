@@ -26,9 +26,35 @@ class Render extends EventHandler {
     constructor() {
         super();
 
-        // meshes are reference counted, and this class owns the references and is responsible
-        // for releasing the meshes when they are no longer referenced
+        /**
+         * Meshes are reference counted, and this class owns the references and is responsible for
+         * releasing the meshes when they are no longer referenced.
+         *
+         * @type {Mesh[]}
+         * @private
+         */
         this._meshes = null;
+    }
+
+    /**
+     * The meshes that the render contains.
+     *
+     * @type {Mesh[]}
+     * @private
+     */
+    set meshes(value) {
+        // decrement references on the existing meshes
+        this.decRefMeshes();
+
+        // assign new meshes
+        this._meshes = value;
+        this.incRefMeshes();
+
+        this.fire('set:meshes', value);
+    }
+
+    get meshes() {
+        return this._meshes;
     }
 
     destroy() {
@@ -62,28 +88,6 @@ class Render extends EventHandler {
                 }
             }
         }
-    }
-
-    /**
-     * The meshes that the render contains.
-     *
-     * @type {Mesh[]}
-     * @private
-     */
-    get meshes() {
-        return this._meshes;
-    }
-
-    set meshes(value) {
-
-        // decrement references on the existing meshes
-        this.decRefMeshes();
-
-        // assign new meshes
-        this._meshes = value;
-        this.incRefMeshes();
-
-        this.fire('set:meshes', value);
     }
 }
 

@@ -3,38 +3,6 @@
  */
 class Vec2 {
     /**
-     * The first element of the vector.
-     *
-     * @field
-     * @name Vec2#x
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec2(10, 20);
-     *
-     * // Get x
-     * var x = vec.x;
-     *
-     * // Set x
-     * vec.x = 0;
-     */
-
-    /**
-     * The second element of the vector.
-     *
-     * @field
-     * @name Vec2#y
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec2(10, 20);
-     *
-     * // Get y
-     * var y = vec.y;
-     *
-     * // Set y
-     * vec.y = 0;
-     */
-
-    /**
      * Create a new Vec2 instance.
      *
      * @param {number|number[]} [x] - The x value. If x is an array of length 2, the array will be
@@ -45,7 +13,17 @@ class Vec2 {
      */
     constructor(x = 0, y = 0) {
         if (x.length === 2) {
+            /**
+             * The first component of the vector.
+             *
+             * @type {number}
+             */
             this.x = x[0];
+             /**
+              * The second component of the vector.
+              *
+              * @type {number}
+              */
             this.y = x[1];
         } else {
             this.x = x;

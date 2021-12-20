@@ -31,14 +31,39 @@ class EventHandler {
      * obj.fire('hello', 'world');
      */
     constructor() {
-        this.initEventHandler();
+        /**
+         * @type {object}
+         * @private
+         */
+        this._callbacks = { };
+        /**
+         * @type {object}
+         * @private
+         */
+        this._callbackActive = { };
     }
 
+    /**
+     * Reinitialize the event handler.
+     *
+     * @private
+     */
     initEventHandler() {
         this._callbacks = { };
         this._callbackActive = { };
     }
 
+    /**
+     * Registers a new event handler.
+     *
+     * @param {string} name - Name of the event to bind the callback to.
+     * @param {handleEventCallback} callback - Function that is called when event is fired. Note
+     * the callback is limited to 8 arguments.
+     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
+     * current this.
+     * @param {boolean} [once=false] - If true, the callback will be unbound after being fired once.
+     * @private
+     */
     _addCallback(name, callback, scope, once = false) {
         if (!name || typeof name !== 'string' || !callback)
             return;

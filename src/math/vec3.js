@@ -3,51 +3,6 @@
  */
 class Vec3 {
     /**
-     * The first component of the vector.
-     *
-     * @name Vec3#x
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec3(10, 20, 30);
-     *
-     * // Get x
-     * var x = vec.x;
-     *
-     * // Set x
-     * vec.x = 0;
-     */
-
-    /**
-     * The second component of the vector.
-     *
-     * @name Vec3#y
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec3(10, 20, 30);
-     *
-     * // Get y
-     * var y = vec.y;
-     *
-     * // Set y
-     * vec.y = 0;
-     */
-
-    /**
-     * The third component of the vector.
-     *
-     * @name Vec3#z
-     * @type {number}
-     * @example
-     * var vec = new pc.Vec3(10, 20, 30);
-     *
-     * // Get z
-     * var z = vec.z;
-     *
-     * // Set z
-     * vec.z = 0;
-     */
-
-    /**
      * Creates a new Vec3 object.
      *
      * @param {number|number[]} [x] - The x value. If x is an array of length 3, the array will be
@@ -59,8 +14,23 @@ class Vec3 {
      */
     constructor(x = 0, y = 0, z = 0) {
         if (x.length === 3) {
+            /**
+             * The first component of the vector.
+             *
+             * @type {number}
+             */
             this.x = x[0];
+             /**
+              * The second component of the vector.
+              *
+              * @type {number}
+              */
             this.y = x[1];
+             /**
+              * The third component of the vector.
+              *
+              * @type {number}
+              */
             this.z = x[2];
         } else {
             this.x = x;

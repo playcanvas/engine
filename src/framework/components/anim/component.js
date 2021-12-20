@@ -20,11 +20,6 @@ import { Entity } from "../../entity.js";
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
  *
- * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at
- * normal speed, 0.0 pauses the animation.
- * @property {boolean} activate If true the first animation will begin playing when the scene is
- * loaded.
- * @property {boolean} playing Plays or pauses all animations in the component.
  * @augments Component
  */
 class AnimComponent extends Component {
@@ -51,10 +46,6 @@ class AnimComponent extends Component {
         // a collection of animated property targets
         this._targets = {};
         this._consumedTriggers = new Set();
-    }
-
-    get stateGraphAsset() {
-        return this._stateGraphAsset;
     }
 
     set stateGraphAsset(value) {
@@ -102,6 +93,147 @@ class AnimComponent extends Component {
         this._stateGraphAsset = _id;
     }
 
+    get stateGraphAsset() {
+        return this._stateGraphAsset;
+    }
+
+    set animationAssets(value) {
+        this._animationAssets = value;
+        this.loadAnimationAssets();
+    }
+
+    get animationAssets() {
+        return this._animationAssets;
+    }
+
+    /**
+     * Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
+     * the animation.
+     *
+     * @type {number}
+     */
+    set speed(value) {
+        this._speed = value;
+    }
+
+    get speed() {
+        return this._speed;
+    }
+
+    /**
+     * If true the first animation will begin playing when the scene is loaded.
+     *
+     * @type {boolean}
+     */
+    set activate(value) {
+        this._activate = value;
+    }
+
+    get activate() {
+        return this._activate;
+    }
+
+    /**
+     * Plays or pauses all animations in the component.
+     *
+     * @type {boolean}
+     */
+    set playing(value) {
+        this._playing = value;
+    }
+
+    get playing() {
+        return this._playing;
+    }
+
+    /**
+     * The entity that this anim component should use as the root of the animation hierarchy.
+     *
+     * @type {Entity}
+     */
+    set rootBone(value) {
+        if (typeof value === 'string') {
+            const entity = this.entity.root.findByGuid(value);
+            Debug.assert(entity, `rootBone entity for supplied guid:${value} cannot be found in the scene`);
+            this._rootBone = entity;
+        } else if (value instanceof Entity) {
+            this._rootBone = value;
+        } else {
+            this._rootBone = null;
+        }
+        this.rebind();
+    }
+
+    get rootBone() {
+        return this._rootBone;
+    }
+
+    set stateGraph(value) {
+        this._stateGraph = value;
+    }
+
+    get stateGraph() {
+        return this._stateGraph;
+    }
+
+    set layers(value) {
+        this._layers = value;
+    }
+
+    get layers() {
+        return this._layers;
+    }
+
+    set layerIndices(value) {
+        this._layerIndices = value;
+    }
+
+    get layerIndices() {
+        return this._layerIndices;
+    }
+
+    set parameters(value) {
+        this._parameters = value;
+    }
+
+    get parameters() {
+        return this._parameters;
+    }
+
+    set targets(value) {
+        this._targets = value;
+    }
+
+    get targets() {
+        return this._targets;
+    }
+
+    /**
+     * Returns whether all component layers are currently playable.
+     *
+     * @type {boolean}
+     */
+    get playable() {
+        for (let i = 0; i < this._layers.length; i++) {
+            if (!this._layers[i].playable) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns the base layer of the state graph.
+     *
+     * @type {AnimComponentLayer}
+     */
+    get baseLayer() {
+        if (this._layers.length > 0) {
+            return this._layers[0];
+        }
+        return null;
+    }
+
     _onStateGraphAssetChangeEvent(asset) {
         // both animationAssets and layer masks should be maintained when switching AnimStateGraph assets
         const prevAnimationAssets = this.animationAssets;
@@ -117,127 +249,6 @@ class AnimComponent extends Component {
         // assign the previous layer masks then rebind all anim targets
         this.layers.forEach((layer, i) => layer.assignMask(prevMasks[i]));
         this.rebind();
-    }
-
-    get animationAssets() {
-        return this._animationAssets;
-    }
-
-    set animationAssets(value) {
-        this._animationAssets = value;
-        this.loadAnimationAssets();
-    }
-
-    get speed() {
-        return this._speed;
-    }
-
-    set speed(value) {
-        this._speed = value;
-    }
-
-    get activate() {
-        return this._activate;
-    }
-
-    set activate(value) {
-        this._activate = value;
-    }
-
-    get playing() {
-        return this._playing;
-    }
-
-    set playing(value) {
-        this._playing = value;
-    }
-
-    /**
-     * @name AnimComponent#rootBone
-     * @type {Entity}
-     * @description The entity that this anim component should use as the root of the animation hierarchy.
-     */
-    get rootBone() {
-        return this._rootBone;
-    }
-
-    set rootBone(value) {
-        if (typeof value === 'string') {
-            const entity = this.entity.root.findByGuid(value);
-            Debug.assert(entity, `rootBone entity for supplied guid:${value} cannot be found in the scene`);
-            this._rootBone = entity;
-        } else if (value instanceof Entity) {
-            this._rootBone = value;
-        } else {
-            this._rootBone = null;
-        }
-        this.rebind();
-    }
-
-    get stateGraph() {
-        return this._stateGraph;
-    }
-
-    set stateGraph(value) {
-        this._stateGraph = value;
-    }
-
-    get layers() {
-        return this._layers;
-    }
-
-    set layers(value) {
-        this._layers = value;
-    }
-
-    get layerIndices() {
-        return this._layerIndices;
-    }
-
-    set layerIndices(value) {
-        this._layerIndices = value;
-    }
-
-    get parameters() {
-        return this._parameters;
-    }
-
-    set parameters(value) {
-        this._parameters = value;
-    }
-
-    get targets() {
-        return this._targets;
-    }
-
-    set targets(value) {
-        this._targets = value;
-    }
-
-    /**
-     * @name AnimComponent#playable
-     * @type {boolean}
-     * @description Returns whether all component layers are currently playable.
-     */
-    get playable() {
-        for (let i = 0; i < this._layers.length; i++) {
-            if (!this._layers[i].playable) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @name AnimComponent#baseLayer
-     * @type {AnimComponentLayer}
-     * @description Returns the base layer of the state graph.
-     */
-    get baseLayer() {
-        if (this._layers.length > 0) {
-            return this._layers[0];
-        }
-        return null;
     }
 
     dirtifyTargets() {

@@ -96,10 +96,6 @@ class RigidBodyComponent extends Component {
      *
      * @type {number}
      */
-    get angularDamping() {
-        return this._angularDamping;
-    }
-
     set angularDamping(damping) {
         if (this._angularDamping !== damping) {
             this._angularDamping = damping;
@@ -110,16 +106,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get angularDamping() {
+        return this._angularDamping;
+    }
+
     /**
      * Scaling factor for angular movement of the body in each axis. Only valid for rigid bodies of
      * type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely rotate).
      *
      * @type {Vec3}
      */
-    get angularFactor() {
-        return this._angularFactor;
-    }
-
     set angularFactor(factor) {
         if (!this._angularFactor.equals(factor)) {
             this._angularFactor.copy(factor);
@@ -131,19 +127,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get angularFactor() {
+        return this._angularFactor;
+    }
+
     /**
      * Defines the rotational speed of the body around each world axis.
      *
      * @type {Vec3}
      */
-    get angularVelocity() {
-        if (this._body && this._type === BODYTYPE_DYNAMIC) {
-            const velocity = this._body.getAngularVelocity();
-            this._angularVelocity.set(velocity.x(), velocity.y(), velocity.z());
-        }
-        return this._angularVelocity;
-    }
-
     set angularVelocity(velocity) {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             this._body.activate();
@@ -155,8 +147,12 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get body() {
-        return this._body;
+    get angularVelocity() {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            const velocity = this._body.getAngularVelocity();
+            this._angularVelocity.set(velocity.x(), velocity.y(), velocity.z());
+        }
+        return this._angularVelocity;
     }
 
     set body(body) {
@@ -169,16 +165,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get body() {
+        return this._body;
+    }
+
     /**
      * The friction value used when contacts occur between two bodies. A higher value indicates
      * more friction. Should be set in the range 0 to 1. Defaults to 0.5.
      *
      * @type {number}
      */
-    get friction() {
-        return this._friction;
-    }
-
     set friction(friction) {
         if (this._friction !== friction) {
             this._friction = friction;
@@ -189,16 +185,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get friction() {
+        return this._friction;
+    }
+
     /**
      * The collision group this body belongs to. Combine the group and the mask to prevent bodies
      * colliding with each other. Defaults to 1.
      *
      * @type {number}
      */
-    get group() {
-        return this._group;
-    }
-
     set group(group) {
         if (this._group !== group) {
             this._group = group;
@@ -211,15 +207,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get group() {
+        return this._group;
+    }
+
     /**
      * Controls the rate at which a body loses linear velocity over time. Defaults to 0.
      *
      * @type {number}
      */
-    get linearDamping() {
-        return this._linearDamping;
-    }
-
     set linearDamping(damping) {
         if (this._linearDamping !== damping) {
             this._linearDamping = damping;
@@ -230,16 +226,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get linearDamping() {
+        return this._linearDamping;
+    }
+
     /**
      * Scaling factor for linear movement of the body in each axis. Only valid for rigid bodies of
      * type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely move).
      *
      * @type {Vec3}
      */
-    get linearFactor() {
-        return this._linearFactor;
-    }
-
     set linearFactor(factor) {
         if (!this._linearFactor.equals(factor)) {
             this._linearFactor.copy(factor);
@@ -251,19 +247,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get linearFactor() {
+        return this._linearFactor;
+    }
+
     /**
      * Defines the speed of the body in a given direction.
      *
      * @type {Vec3}
      */
-    get linearVelocity() {
-        if (this._body && this._type === BODYTYPE_DYNAMIC) {
-            const velocity = this._body.getLinearVelocity();
-            this._linearVelocity.set(velocity.x(), velocity.y(), velocity.z());
-        }
-        return this._linearVelocity;
-    }
-
     set linearVelocity(velocity) {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             this._body.activate();
@@ -275,16 +267,20 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get linearVelocity() {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            const velocity = this._body.getLinearVelocity();
+            this._linearVelocity.set(velocity.x(), velocity.y(), velocity.z());
+        }
+        return this._linearVelocity;
+    }
+
     /**
      * The collision mask sets which groups this body collides with. It is a bitfield of 16 bits,
      * the first 8 bits are reserved for engine use. Defaults to 65535.
      *
      * @type {number}
      */
-    get mask() {
-        return this._mask;
-    }
-
     set mask(mask) {
         if (this._mask !== mask) {
             this._mask = mask;
@@ -297,16 +293,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get mask() {
+        return this._mask;
+    }
+
     /**
      * The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC} bodies, other types
      * have infinite mass. Defaults to 1.
      *
      * @type {number}
      */
-    get mass() {
-        return this._mass;
-    }
-
     set mass(mass) {
         if (this._mass !== mass) {
             this._mass = mass;
@@ -330,6 +326,10 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get mass() {
+        return this._mass;
+    }
+
     /**
      * Influences the amount of energy lost when two rigid bodies collide. The calculation
      * multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
@@ -338,10 +338,6 @@ class RigidBodyComponent extends Component {
      *
      * @type {number}
      */
-    get restitution() {
-        return this._restitution;
-    }
-
     set restitution(restitution) {
         if (this._restitution !== restitution) {
             this._restitution = restitution;
@@ -352,15 +348,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get restitution() {
+        return this._restitution;
+    }
+
     /**
      * Sets a torsional friction orthogonal to the contact point. Defaults to 0.
      *
      * @type {number}
      */
-    get rollingFriction() {
-        return this._rollingFriction;
-    }
-
     set rollingFriction(friction) {
         if (this._rollingFriction !== friction) {
             this._rollingFriction = friction;
@@ -369,6 +365,10 @@ class RigidBodyComponent extends Component {
                 this._body.setRollingFriction(friction);
             }
         }
+    }
+
+    get rollingFriction() {
+        return this._rollingFriction;
     }
 
     /**
@@ -383,10 +383,6 @@ class RigidBodyComponent extends Component {
      *
      * @type {string}
      */
-    get type() {
-        return this._type;
-    }
-
     set type(type) {
         if (this._type !== type) {
             this._type = type;
@@ -413,6 +409,10 @@ class RigidBodyComponent extends Component {
             // Create a new body
             this.createBody();
         }
+    }
+
+    get type() {
+        return this._type;
     }
 
     /**

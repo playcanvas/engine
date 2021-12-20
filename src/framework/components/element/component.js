@@ -289,12 +289,7 @@ class ElementComponent extends Component {
      *
      * @type {Vec4}
      */
-    get anchor() {
-        return this._anchor;
-    }
-
     set anchor(value) {
-
         if (value instanceof Vec4) {
             this._anchor.set(value.x, value.y, value.z, value.w);
         } else {
@@ -315,15 +310,15 @@ class ElementComponent extends Component {
         this.fire('set:anchor', this._anchor);
     }
 
+    get anchor() {
+        return this._anchor;
+    }
+
     /**
      * Assign element to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
      *
      * @type {number}
      */
-    get batchGroupId() {
-        return this._batchGroupId;
-    }
-
     set batchGroupId(value) {
         if (this._batchGroupId === value)
             return;
@@ -348,16 +343,16 @@ class ElementComponent extends Component {
         this._batchGroupId = value;
     }
 
+    get batchGroupId() {
+        return this._batchGroupId;
+    }
+
     /**
      * The distance from the bottom edge of the anchor. Can be used in combination with a split
      * anchor to make the component's top edge always be 'top' units away from the top.
      *
      * @type {number}
      */
-    get bottom() {
-        return this._margin.y;
-    }
-
     set bottom(value) {
         this._margin.y = value;
         const p = this.entity.getLocalPosition();
@@ -369,6 +364,10 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition(p);
     }
 
+    get bottom() {
+        return this._margin.y;
+    }
+
     /**
      * The width at which the element will be rendered. In most cases this will be the same as
      * `width`. However, in some cases the engine may calculate a different width for the element,
@@ -378,12 +377,12 @@ class ElementComponent extends Component {
      *
      * @type {number}
      */
-    get calculatedWidth() {
-        return this._calculatedWidth;
-    }
-
     set calculatedWidth(value) {
         this._setCalculatedWidth(value, true);
+    }
+
+    get calculatedWidth() {
+        return this._calculatedWidth;
     }
 
     /**
@@ -395,12 +394,12 @@ class ElementComponent extends Component {
      *
      * @type {number}
      */
-    get calculatedHeight() {
-        return this._calculatedHeight;
-    }
-
     set calculatedHeight(value) {
         this._setCalculatedHeight(value, true);
+    }
+
+    get calculatedHeight() {
+        return this._calculatedHeight;
     }
 
     /**
@@ -435,10 +434,6 @@ class ElementComponent extends Component {
      *
      * @type {number}
      */
-    get drawOrder() {
-        return this._drawOrder;
-    }
-
     set drawOrder(value) {
         let priority = 0;
         if (this.screen) {
@@ -455,6 +450,10 @@ class ElementComponent extends Component {
         this.fire('set:draworder', this._drawOrder);
     }
 
+    get drawOrder() {
+        return this._drawOrder;
+    }
+
     /**
      * The height of the element as set in the editor. Note that in some cases this may not reflect
      * the true height at which the element is rendered, such as when the element is under the
@@ -463,10 +462,6 @@ class ElementComponent extends Component {
      *
      * @type {number}
      */
-    get height() {
-        return this._height;
-    }
-
     set height(value) {
         this._height = value;
 
@@ -477,16 +472,16 @@ class ElementComponent extends Component {
         this.fire('set:height', this._height);
     }
 
+    get height() {
+        return this._height;
+    }
+
     /**
      * An array of layer IDs ({@link Layer#id}) to which this element should belong. Don't push,
      * pop, splice or modify this array, if you want to change it - set a new one instead.
      *
      * @type {number[]}
      */
-    get layers() {
-        return this._layers;
-    }
-
     set layers(value) {
         if (this._addedModels.length) {
             for (let i = 0; i < this._layers.length; i++) {
@@ -513,16 +508,16 @@ class ElementComponent extends Component {
         }
     }
 
+    get layers() {
+        return this._layers;
+    }
+
     /**
      * The distance from the left edge of the anchor. Can be used in combination with a split
      * anchor to make the component's left edge always be 'left' units away from the left.
      *
      * @type {number}
      */
-    get left() {
-        return this._margin.x;
-    }
-
     set left(value) {
         this._margin.x = value;
         const p = this.entity.getLocalPosition();
@@ -534,6 +529,10 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition(p);
     }
 
+    get left() {
+        return this._margin.x;
+    }
+
     /**
      * The distance from the left, bottom, right and top edges of the anchor. For example if we are
      * using a split anchor like [0,0,1,1] and the margin is [0,0,0,0] then the component will be
@@ -541,14 +540,14 @@ class ElementComponent extends Component {
      *
      * @type {Vec4}
      */
-    get margin() {
-        return this._margin;
-    }
-
     set margin(value) {
         this._margin.copy(value);
         this._calculateSize(true, true);
         this.fire('set:margin', this._margin);
+    }
+
+    get margin() {
+        return this._margin;
     }
 
     /**
@@ -567,10 +566,6 @@ class ElementComponent extends Component {
      *
      * @type {Vec2}
      */
-    get pivot() {
-        return this._pivot;
-    }
-
     set pivot(value) {
         const prevX = this._pivot.x;
         const prevY = this._pivot.y;
@@ -604,16 +599,16 @@ class ElementComponent extends Component {
         this.fire('set:pivot', this._pivot);
     }
 
+    get pivot() {
+        return this._pivot;
+    }
+
     /**
      * The distance from the right edge of the anchor. Can be used in combination with a split
      * anchor to make the component's right edge always be 'right' units away from the right.
      *
      * @type {number}
      */
-    get right() {
-        return this._margin.z;
-    }
-
     set right(value) {
         this._margin.z = value;
 
@@ -626,6 +621,10 @@ class ElementComponent extends Component {
         // update position
         p.x = (this._localAnchor.z - this._localAnchor.x) - value - (this._calculatedWidth * (1 - this._pivot.x));
         this.entity.setLocalPosition(p);
+    }
+
+    get right() {
+        return this._margin.z;
     }
 
     /**
@@ -690,10 +689,6 @@ class ElementComponent extends Component {
      *
      * @type {number}
      */
-    get top() {
-        return this._margin.w;
-    }
-
     set top(value) {
         this._margin.w = value;
         const p = this.entity.getLocalPosition();
@@ -703,6 +698,10 @@ class ElementComponent extends Component {
 
         p.y = (this._localAnchor.w - this._localAnchor.y) - value - this._calculatedHeight * (1 - this._pivot.y);
         this.entity.setLocalPosition(p);
+    }
+
+    get top() {
+        return this._margin.w;
     }
 
     /**
@@ -715,10 +714,6 @@ class ElementComponent extends Component {
      *
      * @type {string}
      */
-    get type() {
-        return this._type;
-    }
-
     set type(value) {
         if (value !== this._type) {
             this._type = value;
@@ -740,15 +735,15 @@ class ElementComponent extends Component {
         }
     }
 
+    get type() {
+        return this._type;
+    }
+
     /**
      * If true then the component will receive Mouse or Touch input events.
      *
      * @type {boolean}
      */
-    get useInput() {
-        return this._useInput;
-    }
-
     set useInput(value) {
         if (this._useInput === value)
             return;
@@ -772,6 +767,10 @@ class ElementComponent extends Component {
         this.fire('set:useInput', value);
     }
 
+    get useInput() {
+        return this._useInput;
+    }
+
     /**
      * The width of the element as set in the editor. Note that in some cases this may not reflect
      * the true width at which the element is rendered, such as when the element is under the
@@ -780,10 +779,6 @@ class ElementComponent extends Component {
      *
      * @type {number}
      */
-    get width() {
-        return this._width;
-    }
-
     set width(value) {
         this._width = value;
 
@@ -792,6 +787,10 @@ class ElementComponent extends Component {
         }
 
         this.fire('set:width', this._width);
+    }
+
+    get width() {
+        return this._width;
     }
 
     /**

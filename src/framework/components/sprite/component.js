@@ -34,36 +34,6 @@ const PARAM_ATLAS_RECT = 'atlasRect';
 /**
  * Enables an Entity to render a simple static sprite or sprite animations.
  *
- * @property {string} type The type of the SpriteComponent. Can be:
- *
- * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
- * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
- *
- * @property {number} frame The frame counter of the sprite. Specifies which frame from the current
- * sprite asset to render.
- * @property {number|Asset} spriteAsset The asset id or the {@link Asset} of the sprite to render.
- * Only works for {@link SPRITETYPE_SIMPLE} sprites.
- * @property {Sprite} sprite The current sprite.
- * @property {number} width The width of the sprite when rendering using 9-Slicing. The width and
- * height are only used when the render mode of the sprite asset is Sliced or Tiled.
- * @property {number} height The height of the sprite when rendering using 9-Slicing. The width and
- * height are only used when the render mode of the sprite asset is Sliced or Tiled.
- * @property {Color} color The color tint of the sprite.
- * @property {number} opacity The opacity of the sprite.
- * @property {boolean} flipX Flip the X axis when rendering a sprite.
- * @property {boolean} flipY Flip the Y axis when rendering a sprite.
- * @property {object} clips A dictionary that contains {@link SpriteAnimationClip}s.
- * @property {SpriteAnimationClip} currentClip The current clip being played.
- * @property {number} speed A global speed modifier used when playing sprite animation clips.
- * @property {number} batchGroupId Assign sprite to a specific batch group (see
- * {@link BatchGroup}). Default value is -1 (no group).
- * @property {string} autoPlayClip The name of the clip to play automatically when the component is
- * enabled and the clip exists.
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this sprite should
- * belong.
- * @property {number} drawOrder The draw order of the component. A higher value means that the
- * component will be rendered on top of other components in the same layer. This is not used unless
- * the layer's sort order is set to {@link SORTMODE_MANUAL}.
  * @augments Component
  */
 class SpriteComponent extends Component {
@@ -101,7 +71,7 @@ class SpriteComponent extends Component {
         this._batchGroupId = -1;
         this._batchGroup = null;
 
-        // node / meshinstance
+        // node / mesh instance
         this._node = new GraphNode();
         this._model = new Model();
         this._model.graph = this._node;
@@ -115,7 +85,15 @@ class SpriteComponent extends Component {
         // animated sprites
         this._autoPlayClip = null;
 
+        /* eslint-disable jsdoc/check-types */
+        /**
+         * Dictionary of sprite animation clips.
+         *
+         * @type {Object.<string, SpriteAnimationClip>}
+         * @private
+         */
         this._clips = {};
+        /* eslint-enable jsdoc/check-types */
 
         // create default clip for simple sprite type
         this._defaultClip = new SpriteAnimationClip(this, {
@@ -125,7 +103,408 @@ class SpriteComponent extends Component {
             spriteAsset: null
         });
 
+        /**
+         * The sprite animation clip currently playing.
+         *
+         * @type {SpriteAnimationClip}
+         * @private
+         */
         this._currentClip = this._defaultClip;
+    }
+
+    /**
+     * The type of the SpriteComponent. Can be:
+     *
+     * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
+     * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
+     *
+     * Defaults to {@link SPRITETYPE_SIMPLE}.
+     *
+     * @type {string}
+     */
+    set type(value) {
+        if (this._type === value)
+            return;
+
+        this._type = value;
+        if (this._type === SPRITETYPE_SIMPLE) {
+            this.stop();
+            this._currentClip = this._defaultClip;
+
+            if (this.enabled && this.entity.enabled) {
+                this._currentClip.frame = this.frame;
+
+                if (this._currentClip.sprite) {
+                    this._showModel();
+                } else {
+                    this._hideModel();
+                }
+            }
+
+        } else if (this._type === SPRITETYPE_ANIMATED) {
+            this.stop();
+
+            if (this._autoPlayClip) {
+                this._tryAutoPlay();
+            }
+
+            if (this._currentClip && this._currentClip.isPlaying && this.enabled && this.entity.enabled) {
+                this._showModel();
+            } else {
+                this._hideModel();
+            }
+        }
+    }
+
+    get type() {
+        return this._type;
+    }
+
+    /**
+     * The frame counter of the sprite. Specifies which frame from the current sprite asset to
+     * render.
+     *
+     * @type {number}
+     */
+    set frame(value) {
+        this._currentClip.frame = value;
+    }
+
+    get frame() {
+        return this._currentClip.frame;
+    }
+
+    /**
+     * The asset id or the {@link Asset} of the sprite to render. Only works for
+     * {@link SPRITETYPE_SIMPLE} sprites.
+     *
+     * @type {number|Asset}
+     */
+    set spriteAsset(value) {
+        this._defaultClip.spriteAsset = value;
+    }
+
+    get spriteAsset() {
+        return this._defaultClip._spriteAsset;
+    }
+
+    /**
+     * The current sprite.
+     *
+     * @type {Sprite}
+     */
+    set sprite(value) {
+        this._currentClip.sprite = value;
+    }
+
+    get sprite() {
+        return this._currentClip.sprite;
+    }
+
+    // (private) {pc.Material} material The material used to render a sprite.
+    set material(value) {
+        this._material = value;
+        if (this._meshInstance) {
+            this._meshInstance.material = value;
+        }
+    }
+
+    get material() {
+        return this._material;
+    }
+
+    /**
+     * The color tint of the sprite.
+     *
+     * @type {Color}
+     */
+    set color(value) {
+        this._color.r = value.r;
+        this._color.g = value.g;
+        this._color.b = value.b;
+
+        if (this._meshInstance) {
+            this._colorUniform[0] = this._color.r;
+            this._colorUniform[1] = this._color.g;
+            this._colorUniform[2] = this._color.b;
+            this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
+        }
+    }
+
+    get color() {
+        return this._color;
+    }
+
+    /**
+     * The opacity of the sprite.
+     *
+     * @type {number}
+     */
+    set opacity(value) {
+        this._color.a = value;
+        if (this._meshInstance) {
+            this._meshInstance.setParameter(PARAM_OPACITY, value);
+        }
+    }
+
+    get opacity() {
+        return this._color.a;
+    }
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * A dictionary that contains {@link SpriteAnimationClip}s.
+     *
+     * @type {Object.<string, SpriteAnimationClip>}
+     */
+    set clips(value) {
+        // if value is null remove all clips
+        if (!value) {
+            for (const name in this._clips) {
+                this.removeClip(name);
+            }
+            return;
+        }
+
+        // remove existing clips not in new value
+        // and update clips in both objects
+        for (const name in this._clips) {
+            let found = false;
+            for (const key in value) {
+                if (value[key].name === name) {
+                    found = true;
+                    this._clips[name].fps = value[key].fps;
+                    this._clips[name].loop = value[key].loop;
+
+                    if (value[key].hasOwnProperty('sprite')) {
+                        this._clips[name].sprite = value[key].sprite;
+                    } else if (value[key].hasOwnProperty('spriteAsset')) {
+                        this._clips[name].spriteAsset = value[key].spriteAsset;
+                    }
+
+                    break;
+                }
+            }
+
+            if (!found) {
+                this.removeClip(name);
+            }
+        }
+
+        // add clips that do not exist
+        for (const key in value) {
+            if (this._clips[value[key].name]) continue;
+
+            this.addClip(value[key]);
+        }
+
+        // auto play clip
+        if (this._autoPlayClip) {
+            this._tryAutoPlay();
+        }
+
+        // if the current clip doesn't have a sprite then hide the model
+        if (!this._currentClip || !this._currentClip.sprite) {
+            this._hideModel();
+        }
+    }
+
+    get clips() {
+        return this._clips;
+    }
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * The current clip being played.
+     *
+     * @type {SpriteAnimationClip}
+     */
+    get currentClip() {
+        return this._currentClip;
+    }
+
+    /**
+     * A global speed modifier used when playing sprite animation clips.
+     *
+     * @type {number}
+     */
+    set speed(value) {
+        this._speed = value;
+    }
+
+    get speed() {
+        return this._speed;
+    }
+
+    /**
+     * Flip the X axis when rendering a sprite.
+     *
+     * @type {boolean}
+     */
+    set flipX(value) {
+        if (this._flipX === value) return;
+
+        this._flipX = value;
+        this._updateTransform();
+    }
+
+    get flipX() {
+        return this._flipX;
+    }
+
+    /**
+     * Flip the Y axis when rendering a sprite.
+     *
+     * @type {boolean}
+     */
+    set flipY(value) {
+        if (this._flipY === value) return;
+
+        this._flipY = value;
+        this._updateTransform();
+    }
+
+    get flipY() {
+        return this._flipY;
+    }
+
+    /**
+     * The width of the sprite when rendering using 9-Slicing. The width and height are only used
+     * when the render mode of the sprite asset is Sliced or Tiled.
+     *
+     * @type {number}
+     */
+    set width(value) {
+        if (value === this._width) return;
+
+        this._width = value;
+        this._outerScale.x = this._width;
+
+        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)) {
+            this._updateTransform();
+        }
+    }
+
+    get width() {
+        return this._width;
+    }
+
+    /**
+     * The height of the sprite when rendering using 9-Slicing. The width and height are only used
+     * when the render mode of the sprite asset is Sliced or Tiled.
+     *
+     * @type {number}
+     */
+    set height(value) {
+        if (value === this._height) return;
+
+        this._height = value;
+        this._outerScale.y = this.height;
+
+        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)) {
+            this._updateTransform();
+        }
+    }
+
+    get height() {
+        return this._height;
+    }
+
+    /**
+     * Assign sprite to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     *
+     * @type {number}
+     */
+    set batchGroupId(value) {
+        if (this._batchGroupId === value)
+            return;
+
+        const prev = this._batchGroupId;
+        this._batchGroupId = value;
+
+        if (this.entity.enabled && prev >= 0) {
+            this.system.app.batcher.remove(BatchGroup.SPRITE, prev, this.entity);
+        }
+        if (this.entity.enabled && value >= 0) {
+            this.system.app.batcher.insert(BatchGroup.SPRITE, value, this.entity);
+        } else {
+            // re-add model to scene in case it was removed by batching
+            if (prev >= 0) {
+                if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
+                    this._showModel();
+                }
+            }
+        }
+    }
+
+    get batchGroupId() {
+        return this._batchGroupId;
+    }
+
+    /**
+     * The name of the clip to play automatically when the component is enabled and the clip exists.
+     *
+     * @type {string}
+     */
+    set autoPlayClip(value) {
+        this._autoPlayClip = value instanceof SpriteAnimationClip ? value.name : value;
+        this._tryAutoPlay();
+    }
+
+    get autoPlayClip() {
+        return this._autoPlayClip;
+    }
+
+    /**
+     * The draw order of the component. A higher value means that the component will be rendered on
+     * top of other components in the same layer. This is not used unless the layer's sort order is
+     * set to {@link SORTMODE_MANUAL}.
+     *
+     * @type {number}
+     */
+    set drawOrder(value) {
+        this._drawOrder = value;
+        if (this._meshInstance) {
+            this._meshInstance.drawOrder = value;
+        }
+    }
+
+    get drawOrder() {
+        return this._drawOrder;
+    }
+
+    /**
+     * An array of layer IDs ({@link Layer#id}) to which this sprite should belong.
+     *
+     * @type {number[]}
+     */
+    set layers(value) {
+        if (this._addedModel) {
+            this._hideModel();
+        }
+
+        this._layers = value;
+
+        // early out
+        if (!this._meshInstance) {
+            return;
+        }
+
+        if (this.enabled && this.entity.enabled) {
+            this._showModel();
+        }
+    }
+
+    get layers() {
+        return this._layers;
+    }
+
+    get aabb() {
+        if (this._meshInstance) {
+            return this._meshInstance.aabb;
+        }
+
+        return null;
     }
 
     onEnable() {
@@ -561,303 +940,6 @@ class SpriteComponent extends Component {
         if (this._currentClip === this._defaultClip) return;
 
         this._currentClip.stop();
-    }
-
-    get type() {
-        return this._type;
-    }
-
-    set type(value) {
-        if (this._type === value)
-            return;
-
-        this._type = value;
-        if (this._type === SPRITETYPE_SIMPLE) {
-            this.stop();
-            this._currentClip = this._defaultClip;
-
-            if (this.enabled && this.entity.enabled) {
-                this._currentClip.frame = this.frame;
-
-                if (this._currentClip.sprite) {
-                    this._showModel();
-                } else {
-                    this._hideModel();
-                }
-            }
-
-        } else if (this._type === SPRITETYPE_ANIMATED) {
-            this.stop();
-
-            if (this._autoPlayClip) {
-                this._tryAutoPlay();
-            }
-
-            if (this._currentClip && this._currentClip.isPlaying && this.enabled && this.entity.enabled) {
-                this._showModel();
-            } else {
-                this._hideModel();
-            }
-        }
-    }
-
-    get frame() {
-        return this._currentClip.frame;
-    }
-
-    set frame(value) {
-        this._currentClip.frame = value;
-    }
-
-    get spriteAsset() {
-        return this._defaultClip._spriteAsset;
-    }
-
-    set spriteAsset(value) {
-        this._defaultClip.spriteAsset = value;
-    }
-
-    get sprite() {
-        return this._currentClip.sprite;
-    }
-
-    set sprite(value) {
-        this._currentClip.sprite = value;
-    }
-
-    // (private) {pc.Material} material The material used to render a sprite.
-    get material() {
-        return this._material;
-    }
-
-    set material(value) {
-        this._material = value;
-        if (this._meshInstance) {
-            this._meshInstance.material = value;
-        }
-    }
-
-    get color() {
-        return this._color;
-    }
-
-    set color(value) {
-        this._color.r = value.r;
-        this._color.g = value.g;
-        this._color.b = value.b;
-
-        if (this._meshInstance) {
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
-            this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
-        }
-    }
-
-    get opacity() {
-        return this._color.a;
-    }
-
-    set opacity(value) {
-        this._color.a = value;
-        if (this._meshInstance) {
-            this._meshInstance.setParameter(PARAM_OPACITY, value);
-        }
-    }
-
-    get clips() {
-        return this._clips;
-    }
-
-    set clips(value) {
-        // if value is null remove all clips
-        if (!value) {
-            for (const name in this._clips) {
-                this.removeClip(name);
-            }
-            return;
-        }
-
-        // remove existing clips not in new value
-        // and update clips in both objects
-        for (const name in this._clips) {
-            let found = false;
-            for (const key in value) {
-                if (value[key].name === name) {
-                    found = true;
-                    this._clips[name].fps = value[key].fps;
-                    this._clips[name].loop = value[key].loop;
-
-                    if (value[key].hasOwnProperty('sprite')) {
-                        this._clips[name].sprite = value[key].sprite;
-                    } else if (value[key].hasOwnProperty('spriteAsset')) {
-                        this._clips[name].spriteAsset = value[key].spriteAsset;
-                    }
-
-                    break;
-                }
-            }
-
-            if (!found) {
-                this.removeClip(name);
-            }
-        }
-
-        // add clips that do not exist
-        for (const key in value) {
-            if (this._clips[value[key].name]) continue;
-
-            this.addClip(value[key]);
-        }
-
-        // auto play clip
-        if (this._autoPlayClip) {
-            this._tryAutoPlay();
-        }
-
-        // if the current clip doesn't have a sprite then hide the model
-        if (!this._currentClip || !this._currentClip.sprite) {
-            this._hideModel();
-        }
-    }
-
-    get currentClip() {
-        return this._currentClip;
-    }
-
-    get speed() {
-        return this._speed;
-    }
-
-    set speed(value) {
-        this._speed = value;
-    }
-
-    get flipX() {
-        return this._flipX;
-    }
-
-    set flipX(value) {
-        if (this._flipX === value) return;
-
-        this._flipX = value;
-        this._updateTransform();
-    }
-
-    get flipY() {
-        return this._flipY;
-    }
-
-    set flipY(value) {
-        if (this._flipY === value) return;
-
-        this._flipY = value;
-        this._updateTransform();
-    }
-
-    get width() {
-        return this._width;
-    }
-
-    set width(value) {
-        if (value === this._width) return;
-
-        this._width = value;
-        this._outerScale.x = this._width;
-
-        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)) {
-            this._updateTransform();
-        }
-    }
-
-    get height() {
-        return this._height;
-    }
-
-    set height(value) {
-        if (value === this._height) return;
-
-        this._height = value;
-        this._outerScale.y = this.height;
-
-        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)) {
-            this._updateTransform();
-        }
-    }
-
-    get batchGroupId() {
-        return this._batchGroupId;
-    }
-
-    set batchGroupId(value) {
-        if (this._batchGroupId === value)
-            return;
-
-        const prev = this._batchGroupId;
-        this._batchGroupId = value;
-
-        if (this.entity.enabled && prev >= 0) {
-            this.system.app.batcher.remove(BatchGroup.SPRITE, prev, this.entity);
-        }
-        if (this.entity.enabled && value >= 0) {
-            this.system.app.batcher.insert(BatchGroup.SPRITE, value, this.entity);
-        } else {
-            // re-add model to scene in case it was removed by batching
-            if (prev >= 0) {
-                if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
-                    this._showModel();
-                }
-            }
-        }
-    }
-
-    get autoPlayClip() {
-        return this._autoPlayClip;
-    }
-
-    set autoPlayClip(value) {
-        this._autoPlayClip = value instanceof SpriteAnimationClip ? value.name : value;
-        this._tryAutoPlay();
-    }
-
-    get drawOrder() {
-        return this._drawOrder;
-    }
-
-    set drawOrder(value) {
-        this._drawOrder = value;
-        if (this._meshInstance) {
-            this._meshInstance.drawOrder = value;
-        }
-    }
-
-    get layers() {
-        return this._layers;
-    }
-
-    set layers(value) {
-        if (this._addedModel) {
-            this._hideModel();
-        }
-
-        this._layers = value;
-
-        // early out
-        if (!this._meshInstance) {
-            return;
-        }
-
-        if (this.enabled && this.entity.enabled) {
-            this._showModel();
-        }
-    }
-
-    get aabb() {
-        if (this._meshInstance) {
-            return this._meshInstance.aabb;
-        }
-
-        return null;
     }
 
     // Events Documentation

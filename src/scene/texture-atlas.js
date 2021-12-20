@@ -36,8 +36,44 @@ class TextureAtlas extends EventHandler {
     constructor() {
         super();
 
+        /**
+         * @type {Texture}
+         * @private
+         */
         this._texture = null;
+        /**
+         * @type {object}
+         * @private
+         */
         this._frames = null;
+    }
+
+    /**
+     * The texture used by the atlas.
+     *
+     * @type {Texture}
+     */
+    set texture(value) {
+        this._texture = value;
+        this.fire('set:texture', value);
+    }
+
+    get texture() {
+        return this._texture;
+    }
+
+    /**
+     * Contains frames which define portions of the texture atlas.
+     *
+     * @type {object}
+     */
+    set frames(value) {
+        this._frames = value;
+        this.fire('set:frames', value);
+    }
+
+    get frames() {
+        return this._frames;
     }
 
     /**
@@ -96,34 +132,6 @@ class TextureAtlas extends EventHandler {
         if (this._texture) {
             this._texture.destroy();
         }
-    }
-
-    /**
-     * The texture used by the atlas.
-     *
-     * @type {Texture}
-     */
-    get texture() {
-        return this._texture;
-    }
-
-    set texture(value) {
-        this._texture = value;
-        this.fire('set:texture', value);
-    }
-
-    /**
-     * Contains frames which define portions of the texture atlas.
-     *
-     * @type {object}
-     */
-    get frames() {
-        return this._frames;
-    }
-
-    set frames(value) {
-        this._frames = value;
-        this.fire('set:frames', value);
     }
 }
 

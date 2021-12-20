@@ -40,12 +40,12 @@ class AnimClip {
         }
     }
 
-    get name() {
-        return this._name;
-    }
-
     set name(name) {
         this._name = name;
+    }
+
+    get name() {
+        return this._name;
     }
 
     get track() {
@@ -56,52 +56,52 @@ class AnimClip {
         return this._snapshot;
     }
 
-    get time() {
-        return this._time;
-    }
-
     set time(time) {
         this._time = time;
     }
 
-    get speed() {
-        return this._speed;
+    get time() {
+        return this._time;
     }
 
     set speed(speed) {
         this._speed = speed;
     }
 
-    get loop() {
-        return this._loop;
+    get speed() {
+        return this._speed;
     }
 
     set loop(loop) {
         this._loop = loop;
     }
 
-    get blendWeight() {
-        return this._blendWeight;
+    get loop() {
+        return this._loop;
     }
 
     set blendWeight(blendWeight) {
         this._blendWeight = blendWeight;
     }
 
-    get blendOrder() {
-        return this._blendOrder;
+    get blendWeight() {
+        return this._blendWeight;
     }
 
     set blendOrder(blendOrder) {
         this._blendOrder = blendOrder;
     }
 
-    get eventCursor() {
-        return this._eventCursor;
+    get blendOrder() {
+        return this._blendOrder;
     }
 
     set eventCursor(value) {
         this._eventCursor = value;
+    }
+
+    get eventCursor() {
+        return this._eventCursor;
     }
 
     activeEventsForFrame(frameStartTime, frameEndTime) {

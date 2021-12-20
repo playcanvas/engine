@@ -5,7 +5,6 @@ import { AnimTargetValue } from './anim-target-value.js';
 /**
  * AnimEvaluator blends multiple sets of animation clips together.
  *
- * @property {AnimClip[]} clips - the list of animation clips
  * @private
  */
 class AnimEvaluator {
@@ -21,6 +20,16 @@ class AnimEvaluator {
         this._inputs = [];
         this._outputs = [];
         this._targets = {};
+    }
+
+    /**
+     * The list of animation clips.
+     *
+     * @type {AnimClip[]}
+     * @private
+     */
+    get clips() {
+        return this._clips;
     }
 
     static _dot(a, b) {
@@ -106,16 +115,6 @@ class AnimEvaluator {
                 }
             }
         }
-    }
-
-    /**
-     * @private
-     * @name AnimEvaluator#clips
-     * @type {AnimClip[]}
-     * @description The number of clips.
-     */
-    get clips() {
-        return this._clips;
     }
 
     /**

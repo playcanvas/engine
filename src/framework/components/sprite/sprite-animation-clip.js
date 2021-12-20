@@ -45,6 +45,191 @@ class SpriteAnimationClip extends EventHandler {
         this._time = 0;
     }
 
+    /**
+     * The total duration of the animation in seconds.
+     *
+     * @type {number}
+     */
+    get duration() {
+        if (this._sprite) {
+            const fps = this.fps || Number.MIN_VALUE;
+            return this._sprite.frameKeys.length / Math.abs(fps);
+        }
+        return 0;
+    }
+
+    /**
+     * The index of the frame of the {@link Sprite} currently being rendered.
+     *
+     * @type {number}
+     */
+    set frame(value) {
+        this._setFrame(value);
+
+        // update time to start of frame
+        const fps = this.fps || Number.MIN_VALUE;
+        this._setTime(this._frame / fps);
+    }
+
+    get frame() {
+        return this._frame;
+    }
+
+    /**
+     * Whether the animation is currently paused.
+     *
+     * @type {boolean}
+     */
+    get isPaused() {
+        return this._paused;
+    }
+
+    /**
+     * Whether the animation is currently playing.
+     *
+     * @type {boolean}
+     */
+    get isPlaying() {
+        return this._playing;
+    }
+
+    /**
+     * The current sprite used to play the animation.
+     *
+     * @type {Sprite}
+     */
+    set sprite(value) {
+        if (this._sprite) {
+            this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+            this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
+            this._sprite.off('set:atlas', this._onSpriteMeshesChange, this);
+            if (this._sprite.atlas) {
+                this._sprite.atlas.off('set:texture', this._onSpriteMeshesChange, this);
+            }
+        }
+
+        this._sprite = value;
+
+        if (this._sprite) {
+            this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+            this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChanged, this);
+            this._sprite.on('set:atlas', this._onSpriteMeshesChange, this);
+
+            if (this._sprite.atlas) {
+                this._sprite.atlas.on('set:texture', this._onSpriteMeshesChange, this);
+            }
+        }
+
+        if (this._component.currentClip === this) {
+            let mi;
+
+            // if we are clearing the sprite clear old mesh instance parameters
+            if (!value || !value.atlas) {
+                mi = this._component._meshInstance;
+                if (mi) {
+                    mi.deleteParameter('texture_emissiveMap');
+                    mi.deleteParameter('texture_opacityMap');
+                }
+
+                this._component._hideModel();
+            } else {
+                // otherwise show sprite
+
+                // update texture
+                if (value.atlas.texture) {
+                    mi = this._component._meshInstance;
+                    if (mi) {
+                        mi.setParameter('texture_emissiveMap', value.atlas.texture);
+                        mi.setParameter('texture_opacityMap', value.atlas.texture);
+                    }
+
+                    if (this._component.enabled && this._component.entity.enabled) {
+                        this._component._showModel();
+                    }
+                }
+
+                // if we have a time then force update
+                // frame based on the time (check if fps is not 0 otherwise time will be Infinity)
+
+                /* eslint-disable no-self-assign */
+                if (this.time && this.fps) {
+                    this.time = this.time;
+                } else {
+                    // if we don't have a time
+                    // then force update frame counter
+                    this.frame = this.frame;
+                }
+                /* eslint-enable no-self-assign */
+            }
+        }
+    }
+
+    get sprite() {
+        return this._sprite;
+    }
+
+    /**
+     * The id of the sprite asset used to play the animation.
+     *
+     * @type {number}
+     */
+    set spriteAsset(value) {
+        const assets = this._component.system.app.assets;
+        let id = value;
+
+        if (value instanceof Asset) {
+            id = value.id;
+        }
+
+        if (this._spriteAsset !== id) {
+            if (this._spriteAsset) {
+                // clean old event listeners
+                const prev = assets.get(this._spriteAsset);
+                if (prev) {
+                    this._unbindSpriteAsset(prev);
+                }
+            }
+
+            this._spriteAsset = id;
+
+            // bind sprite asset
+            if (this._spriteAsset) {
+                const asset = assets.get(this._spriteAsset);
+                if (!asset) {
+                    this.sprite = null;
+                    assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
+                } else {
+                    this._bindSpriteAsset(asset);
+                }
+            } else {
+                this.sprite = null;
+            }
+        }
+    }
+
+    get spriteAsset() {
+        return this._spriteAsset;
+    }
+
+    /**
+     * The current time of the animation in seconds.
+     *
+     * @type {number}
+     */
+    set time(value) {
+        this._setTime(value);
+
+        if (this._sprite) {
+            this.frame = Math.min(this._sprite.frameKeys.length - 1, Math.floor(this._time * Math.abs(this.fps)));
+        } else {
+            this.frame = 0;
+        }
+    }
+
+    get time() {
+        return this._time;
+    }
+
     // When sprite asset is added bind it
     _onSpriteAssetAdded(asset) {
         this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
@@ -259,191 +444,6 @@ class SpriteAnimationClip extends EventHandler {
 
         this.fire('stop');
         this._component.fire('stop', this);
-    }
-
-    /**
-     * The total duration of the animation in seconds.
-     *
-     * @type {number}
-     */
-    get duration() {
-        if (this._sprite) {
-            const fps = this.fps || Number.MIN_VALUE;
-            return this._sprite.frameKeys.length / Math.abs(fps);
-        }
-        return 0;
-    }
-
-    /**
-     * The index of the frame of the {@link Sprite} currently being rendered.
-     *
-     * @type {number}
-     */
-    get frame() {
-        return this._frame;
-    }
-
-    set frame(value) {
-        this._setFrame(value);
-
-        // update time to start of frame
-        const fps = this.fps || Number.MIN_VALUE;
-        this._setTime(this._frame / fps);
-    }
-
-    /**
-     * Whether the animation is currently paused.
-     *
-     * @type {boolean}
-     */
-    get isPaused() {
-        return this._paused;
-    }
-
-    /**
-     * Whether the animation is currently playing.
-     *
-     * @type {boolean}
-     */
-    get isPlaying() {
-        return this._playing;
-    }
-
-    /**
-     * The current sprite used to play the animation.
-     *
-     * @type {Sprite}
-     */
-    get sprite() {
-        return this._sprite;
-    }
-
-    set sprite(value) {
-        if (this._sprite) {
-            this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
-            this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
-            this._sprite.off('set:atlas', this._onSpriteMeshesChange, this);
-            if (this._sprite.atlas) {
-                this._sprite.atlas.off('set:texture', this._onSpriteMeshesChange, this);
-            }
-        }
-
-        this._sprite = value;
-
-        if (this._sprite) {
-            this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
-            this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChanged, this);
-            this._sprite.on('set:atlas', this._onSpriteMeshesChange, this);
-
-            if (this._sprite.atlas) {
-                this._sprite.atlas.on('set:texture', this._onSpriteMeshesChange, this);
-            }
-        }
-
-        if (this._component.currentClip === this) {
-            let mi;
-
-            // if we are clearing the sprite clear old mesh instance parameters
-            if (!value || !value.atlas) {
-                mi = this._component._meshInstance;
-                if (mi) {
-                    mi.deleteParameter('texture_emissiveMap');
-                    mi.deleteParameter('texture_opacityMap');
-                }
-
-                this._component._hideModel();
-            } else {
-                // otherwise show sprite
-
-                // update texture
-                if (value.atlas.texture) {
-                    mi = this._component._meshInstance;
-                    if (mi) {
-                        mi.setParameter('texture_emissiveMap', value.atlas.texture);
-                        mi.setParameter('texture_opacityMap', value.atlas.texture);
-                    }
-
-                    if (this._component.enabled && this._component.entity.enabled) {
-                        this._component._showModel();
-                    }
-                }
-
-                // if we have a time then force update
-                // frame based on the time (check if fps is not 0 otherwise time will be Infinity)
-
-                /* eslint-disable no-self-assign */
-                if (this.time && this.fps) {
-                    this.time = this.time;
-                } else {
-                    // if we don't have a time
-                    // then force update frame counter
-                    this.frame = this.frame;
-                }
-                /* eslint-enable no-self-assign */
-            }
-        }
-    }
-
-    /**
-     * The id of the sprite asset used to play the animation.
-     *
-     * @type {number}
-     */
-    get spriteAsset() {
-        return this._spriteAsset;
-    }
-
-    set spriteAsset(value) {
-        const assets = this._component.system.app.assets;
-        let id = value;
-
-        if (value instanceof Asset) {
-            id = value.id;
-        }
-
-        if (this._spriteAsset !== id) {
-            if (this._spriteAsset) {
-                // clean old event listeners
-                const prev = assets.get(this._spriteAsset);
-                if (prev) {
-                    this._unbindSpriteAsset(prev);
-                }
-            }
-
-            this._spriteAsset = id;
-
-            // bind sprite asset
-            if (this._spriteAsset) {
-                const asset = assets.get(this._spriteAsset);
-                if (!asset) {
-                    this.sprite = null;
-                    assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
-                } else {
-                    this._bindSpriteAsset(asset);
-                }
-            } else {
-                this.sprite = null;
-            }
-        }
-    }
-
-    /**
-     * The current time of the animation in seconds.
-     *
-     * @type {number}
-     */
-    get time() {
-        return this._time;
-    }
-
-    set time(value) {
-        this._setTime(value);
-
-        if (this._sprite) {
-            this.frame = Math.min(this._sprite.frameKeys.length - 1, Math.floor(this._time * Math.abs(this.fps)));
-        } else {
-            this.frame = 0;
-        }
     }
 
     // Events Documentation

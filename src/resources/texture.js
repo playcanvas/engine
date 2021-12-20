@@ -184,16 +184,12 @@ class TextureHandler {
         };
     }
 
-    get crossOrigin() {
-        return this.imgParser.crossOrigin;
-    }
-
     set crossOrigin(value) {
         this.imgParser.crossOrigin = value;
     }
 
-    get maxRetries() {
-        return this.imgParser.maxRetries;
+    get crossOrigin() {
+        return this.imgParser.crossOrigin;
     }
 
     set maxRetries(value) {
@@ -203,6 +199,10 @@ class TextureHandler {
                 this.parsers[parser].maxRetries = value;
             }
         }
+    }
+
+    get maxRetries() {
+        return this.imgParser.maxRetries;
     }
 
     _getUrlWithoutParams(url) {

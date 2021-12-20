@@ -54,6 +54,38 @@ class CurveSet {
     }
 
     /**
+     * The number of curves in the curve set.
+     *
+     * @type {number}
+     */
+    get length() {
+        return this.curves.length;
+    }
+
+    /**
+     * The interpolation scheme applied to all curves in the curve set. Can be:
+     *
+     * - {@link CURVE_LINEAR}
+     * - {@link CURVE_SMOOTHSTEP}
+     * - {@link CURVE_SPLINE}
+     * - {@link CURVE_STEP}
+     *
+     * Defaults to {@link CURVE_SMOOTHSTEP}.
+     *
+     * @type {number}
+     */
+    set type(value) {
+        this._type = value;
+        for (let i = 0; i < this.curves.length; i++) {
+            this.curves[i].type = value;
+        }
+    }
+
+    get type() {
+        return this._type;
+    }
+
+    /**
      * Return a specific curve in the curve set.
      *
      * @param {number} index - The index of the curve to return.
@@ -134,38 +166,6 @@ class CurveSet {
             result[i] = Math.min(max, Math.max(min, result[i]));
         }
         return result;
-    }
-
-    /**
-     * The number of curves in the curve set.
-     *
-     * @type {number}
-     */
-    get length() {
-        return this.curves.length;
-    }
-
-    /**
-     * The interpolation scheme applied to all curves in the curve set. Can be:
-     *
-     * - {@link CURVE_LINEAR}
-     * - {@link CURVE_SMOOTHSTEP}
-     * - {@link CURVE_SPLINE}
-     * - {@link CURVE_STEP}
-     *
-     * Defaults to {@link CURVE_SMOOTHSTEP}.
-     *
-     * @type {number}
-     */
-    get type() {
-        return this._type;
-    }
-
-    set type(value) {
-        this._type = value;
-        for (let i = 0; i < this.curves.length; i++) {
-            this.curves[i].type = value;
-        }
     }
 }
 

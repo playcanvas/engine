@@ -148,69 +148,17 @@ class Material {
         this.dirty = true;
     }
 
-    get shader() {
-        return this._shader;
-    }
-
     set shader(shader) {
         this._shader = shader;
+    }
+
+    get shader() {
+        return this._shader;
     }
 
     // returns boolean depending on material being transparent
     get transparent() {
         return this.blend || this.blendSrc !== BLENDMODE_ONE || this.blendDst !== BLENDMODE_ZERO || this.blendEquation !== BLENDEQUATION_ADD;
-    }
-
-    get blendType() {
-        if (!this.transparent) {
-            return BLEND_NONE;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_SRC_ALPHA) &&
-                   (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_NORMAL;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_ADDITIVE;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_SRC_ALPHA) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_ADDITIVEALPHA;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_DST_COLOR) &&
-                   (this.blendDst === BLENDMODE_SRC_COLOR) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_MULTIPLICATIVE2X;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE_MINUS_DST_COLOR) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_SCREEN;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_MIN)) {
-            return BLEND_MIN;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_MAX)) {
-            return BLEND_MAX;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_DST_COLOR) &&
-                   (this.blendDst === BLENDMODE_ZERO) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_MULTIPLICATIVE;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
-            return BLEND_PREMULTIPLIED;
-        }
-        return BLEND_NORMAL;
     }
 
     set blendType(type) {
@@ -285,6 +233,58 @@ class Material {
             }
         }
         this._updateMeshInstanceKeys();
+    }
+
+    get blendType() {
+        if (!this.transparent) {
+            return BLEND_NONE;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_SRC_ALPHA) &&
+                   (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_NORMAL;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_ONE) &&
+                   (this.blendDst === BLENDMODE_ONE) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_ADDITIVE;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_SRC_ALPHA) &&
+                   (this.blendDst === BLENDMODE_ONE) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_ADDITIVEALPHA;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_DST_COLOR) &&
+                   (this.blendDst === BLENDMODE_SRC_COLOR) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_MULTIPLICATIVE2X;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_ONE_MINUS_DST_COLOR) &&
+                   (this.blendDst === BLENDMODE_ONE) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_SCREEN;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_ONE) &&
+                   (this.blendDst === BLENDMODE_ONE) &&
+                   (this.blendEquation === BLENDEQUATION_MIN)) {
+            return BLEND_MIN;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_ONE) &&
+                   (this.blendDst === BLENDMODE_ONE) &&
+                   (this.blendEquation === BLENDEQUATION_MAX)) {
+            return BLEND_MAX;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_DST_COLOR) &&
+                   (this.blendDst === BLENDMODE_ZERO) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_MULTIPLICATIVE;
+        } else if ((this.blend) &&
+                   (this.blendSrc === BLENDMODE_ONE) &&
+                   (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+                   (this.blendEquation === BLENDEQUATION_ADD)) {
+            return BLEND_PREMULTIPLIED;
+        }
+        return BLEND_NORMAL;
     }
 
     _cloneInternal(clone) {
