@@ -67,7 +67,7 @@
     "monaco-editor": "^0.25.2",
     "monaco-editor-webpack-plugin": "^4.0.0",
     "nodemon": "^2.0.15",
-    "playcanvas": "1.51.0",
+    "playcanvas": "file:../",
     "prettier": "2.4.1",
     "prop-types": "^15.7.2",
     "puppeteer": "^10.1.0",
