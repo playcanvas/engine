@@ -58,6 +58,66 @@ class ScriptComponent extends Component {
         this.on('set_enabled', this._onSetEnabled, this);
     }
 
+    set enabled(value) {
+        const oldValue = this._enabled;
+        this._enabled = value;
+        this.fire('set', 'enabled', oldValue, value);
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    /**
+     * An array of all script instances attached to an entity. This array is read-only and should
+     * not be modified by developer.
+     *
+     * @type {ScriptType[]}
+     */
+    set scripts(value) {
+        this._scriptsData = value;
+
+        for (const key in value) {
+            if (!value.hasOwnProperty(key))
+                continue;
+
+            const script = this._scriptsIndex[key];
+            if (script) {
+                // existing script
+
+                // enabled
+                if (typeof value[key].enabled === 'boolean')
+                    script.enabled = !!value[key].enabled;
+
+                // attributes
+                if (typeof value[key].attributes === 'object') {
+                    for (const attr in value[key].attributes) {
+                        if (ScriptAttributes.reservedNames.has(attr))
+                            continue;
+
+                        if (!script.__attributes.hasOwnProperty(attr)) {
+                            // new attribute
+                            const scriptType = this.system.app.scripts.get(key);
+                            if (scriptType)
+                                scriptType.attributes.add(attr, { });
+                        }
+
+                        // update attribute
+                        script[attr] = value[key].attributes[attr];
+                    }
+                }
+            } else {
+                // TODO scripts2
+                // new script
+                console.log(this.order);
+            }
+        }
+    }
+
+    get scripts() {
+        return this._scripts;
+    }
+
     static scriptMethods = {
         initialize: 'initialize',
         postInitialize: 'postInitialize',
@@ -915,66 +975,6 @@ class ScriptComponent extends Component {
         this.fire('move:' + scriptName, scriptInstance, ind, indOld);
 
         return true;
-    }
-
-    set enabled(value) {
-        const oldValue = this._enabled;
-        this._enabled = value;
-        this.fire('set', 'enabled', oldValue, value);
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    /**
-     * An array of all script instances attached to an entity. This array is read-only and should
-     * not be modified by developer.
-     *
-     * @type {ScriptType[]}
-     */
-    get scripts() {
-        return this._scripts;
-    }
-
-    set scripts(value) {
-        this._scriptsData = value;
-
-        for (const key in value) {
-            if (!value.hasOwnProperty(key))
-                continue;
-
-            const script = this._scriptsIndex[key];
-            if (script) {
-                // existing script
-
-                // enabled
-                if (typeof value[key].enabled === 'boolean')
-                    script.enabled = !!value[key].enabled;
-
-                // attributes
-                if (typeof value[key].attributes === 'object') {
-                    for (const attr in value[key].attributes) {
-                        if (ScriptAttributes.reservedNames.has(attr))
-                            continue;
-
-                        if (!script.__attributes.hasOwnProperty(attr)) {
-                            // new attribute
-                            const scriptType = this.system.app.scripts.get(key);
-                            if (scriptType)
-                                scriptType.attributes.add(attr, { });
-                        }
-
-                        // update attribute
-                        script[attr] = value[key].attributes[attr];
-                    }
-                }
-            } else {
-                // TODO scripts2
-                // new script
-                console.log(this.order);
-            }
-        }
     }
 }
 

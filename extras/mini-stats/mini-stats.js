@@ -180,32 +180,28 @@ class MiniStats {
         };
     }
 
-    get activeSizeIndex() {
-        return this._activeSizeIndex;
-    }
-
     set activeSizeIndex(value) {
         this._activeSizeIndex = value;
         this.gspacing = this.sizes[value].spacing;
         this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
     }
 
-    get opacity() {
-        return this.clr[3];
+    get activeSizeIndex() {
+        return this._activeSizeIndex;
     }
 
     set opacity(value) {
         this.clr[3] = value;
     }
 
+    get opacity() {
+        return this.clr[3];
+    }
+
     get overallHeight() {
         const graphs = this.graphs;
         const spacing = this.gspacing;
         return this.height * graphs.length + spacing * (graphs.length - 1);
-    }
-
-    get enabled() {
-        return this._enabled;
     }
 
     set enabled(value) {
@@ -216,6 +212,10 @@ class MiniStats {
                 this.graphs[i].timer.enabled = value;
             }
         }
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     initWordAtlas(device, words, maxWidth, numGraphs) {
