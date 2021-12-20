@@ -3,11 +3,6 @@
  * while we loop through it. The class assumes that it holds objects that need to be sorted based
  * on one of their fields.
  *
- * @property {number} loopIndex The current index used to loop through the array. This gets
- * modified if we add or remove elements from the array while looping. See the example to see how
- * to loop through this array.
- * @property {number} length The number of elements in the array.
- * @property {object[]} items The internal array that holds the actual array elements.
  * @private
  */
 class SortedLoopArray {
@@ -29,10 +24,28 @@ class SortedLoopArray {
      * @private
      */
     constructor(args) {
-        this._sortBy = args.sortBy;
+        /**
+         * The internal array that holds the actual array elements.
+         *
+         * @type {object[]}
+         */
         this.items = [];
+        /**
+         * The number of elements in the array.
+         *
+         * @type {number}
+         */
         this.length = 0;
+        /**
+         * The current index used to loop through the array. This gets modified if we add or remove
+         * elements from the array while looping. See the example to see how to loop through this
+         * array.
+         *
+         * @type {number}
+         */
         this.loopIndex = -1;
+
+        this._sortBy = args.sortBy;
         this._sortHandler = this._doSort.bind(this);
     }
 

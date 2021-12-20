@@ -168,14 +168,6 @@ class ElementInputEvent {
 /**
  * Represents a Mouse event fired on a {@link ElementComponent}.
  *
- * @property {boolean} ctrlKey Whether the ctrl key was pressed.
- * @property {boolean} altKey Whether the alt key was pressed.
- * @property {boolean} shiftKey Whether the shift key was pressed.
- * @property {boolean} metaKey Whether the meta key was pressed.
- * @property {number} button The mouse button.
- * @property {number} dx The amount of horizontal movement of the cursor.
- * @property {number} dy The amount of vertical movement of the cursor.
- * @property {number} wheelDelta The amount of the wheel movement.
  * @augments ElementInputEvent
  */
 class ElementMouseEvent extends ElementInputEvent {
@@ -198,24 +190,65 @@ class ElementMouseEvent extends ElementInputEvent {
         this.x = x;
         this.y = y;
 
+        /**
+         * Whether the ctrl key was pressed.
+         *
+         * @type {boolean}
+         */
         this.ctrlKey = event.ctrlKey || false;
+        /**
+         * Whether the alt key was pressed.
+         *
+         * @type {boolean}
+         */
         this.altKey = event.altKey || false;
+        /**
+         * Whether the shift key was pressed.
+         *
+         * @type {boolean}
+         */
         this.shiftKey = event.shiftKey || false;
+        /**
+         * Whether the meta key was pressed.
+         *
+         * @type {boolean}
+         */
         this.metaKey = event.metaKey || false;
 
+        /**
+         * The mouse button.
+         *
+         * @type {number}
+         */
         this.button = event.button;
 
         if (Mouse.isPointerLocked()) {
+            /**
+             * The amount of horizontal movement of the cursor.
+             *
+             * @type {number}
+             */
             this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+            /**
+             * The amount of vertical movement of the cursor.
+             *
+             * @type {number}
+             */
             this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
         } else {
             this.dx = x - lastX;
             this.dy = y - lastY;
         }
 
+        /**
+         * The amount of the wheel movement.
+         *
+         * @type {number}
+         */
+        this.wheelDelta = 0;
+
         // deltaY is in a different range across different browsers. The only thing
         // that is consistent is the sign of the value so snap to -1/+1.
-        this.wheelDelta = 0;
         if (event.type === 'wheel') {
             if (event.deltaY > 0) {
                 this.wheelDelta = 1;
@@ -229,11 +262,6 @@ class ElementMouseEvent extends ElementInputEvent {
 /**
  * Represents a TouchEvent fired on a {@link ElementComponent}.
  *
- * @property {Touch[]} touches The Touch objects representing all current points of contact with
- * the surface, regardless of target or changed status.
- * @property {Touch[]} changedTouches The Touch objects representing individual points of contact
- * whose states changed between the previous touch event and this one.
- * @property {Touch} touch The touch object that triggered the event.
  * @augments ElementInputEvent
  */
 class ElementTouchEvent extends ElementInputEvent {
@@ -252,10 +280,27 @@ class ElementTouchEvent extends ElementInputEvent {
     constructor(event, element, camera, x, y, touch) {
         super(event, element, camera);
 
+        /**
+         * The Touch objects representing all current points of contact with the surface,
+         * regardless of target or changed status.
+         *
+         * @type {Touch[]}
+         */
         this.touches = event.touches;
+        /**
+         * The Touch objects representing individual points of contact whose states changed between
+         * the previous touch event and this one.
+         *
+         * @type {Touch[]}
+         */
         this.changedTouches = event.changedTouches;
         this.x = x;
         this.y = y;
+        /**
+         * The touch object that triggered the event.
+         *
+         * @type {Touch}
+         */
         this.touch = touch;
     }
 }

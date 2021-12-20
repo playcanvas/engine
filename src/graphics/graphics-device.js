@@ -204,16 +204,16 @@ function testTextureFloatHighPrecision(device) {
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL
- * context used by the graphics device.
- * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be
- * used as frame buffer. [read only].
- * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can
- * be used as frame buffer. [read only].
- * @property {ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
  * @augments EventHandler
  */
 class GraphicsDevice extends EventHandler {
+    /**
+     * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
+     *
+     * @type {HTMLCanvasElement}
+     */
+    canvas;
+
     /**
      * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
      * 'lowp'.
@@ -251,11 +251,32 @@ class GraphicsDevice extends EventHandler {
     maxAnisotropy;
 
     /**
+     * The scope namespace for shader attributes and variables.
+     *
+     * @type {ScopeSpace}
+     */
+    scope;
+
+    /**
      * True if hardware instancing is supported.
      *
      * @type {boolean}
      */
     supportsInstancing;
+
+    /**
+     * True if 32-bit floating-point textures can be used as a frame buffer.
+     *
+     * @type {boolean}
+     */
+    textureFloatRenderable;
+
+    /**
+     * True if 16-bit floating-point textures can be used as a frame buffer.
+     *
+     * @type {boolean}
+     */
+    textureHalfFloatRenderable;
 
     /**
      * Creates a new GraphicsDevice instance.
@@ -795,13 +816,18 @@ class GraphicsDevice extends EventHandler {
     }
     // #endif
 
+    /**
+     * Query the precision supported by ints and floats in vertex and fragment shaders. Note that
+     * getShaderPrecisionFormat is not guaranteed to be present (such as some instances of the
+     * default Android browser). In this case, assume highp is available.
+     *
+     * @returns {string} "highp", "mediump" or "lowp"
+     * @private
+     */
     getPrecision() {
         const gl = this.gl;
         let precision = "highp";
 
-        // Query the precision supported by ints and floats in vertex and fragment shaders.
-        // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
-        // instances of the default Android browser). In this case, assume highp is available.
         if (gl.getShaderPrecisionFormat) {
             const vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
             const vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);

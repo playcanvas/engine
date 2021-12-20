@@ -32,7 +32,6 @@ import { Asset } from './asset.js';
  * Container for all assets that are available to this application. Note that PlayCanvas scripts
  * are provided with an AssetRegistry instance as `app.assets`.
  *
- * @property {string} prefix A URL prefix that will be added to all asset loading requests.
  * @augments EventHandler
  */
 class AssetRegistry extends EventHandler {
@@ -52,6 +51,11 @@ class AssetRegistry extends EventHandler {
         this._tags = new TagsCache('_id'); // index for looking up by tags
         this._urls = {}; // index for looking up assets by url
 
+        /**
+         * A URL prefix that will be added to all asset loading requests.
+         *
+         * @type {string}
+         */
         this.prefix = null;
     }
 

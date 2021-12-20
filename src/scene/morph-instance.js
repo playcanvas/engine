@@ -6,6 +6,9 @@ import { RenderTarget } from '../graphics/render-target.js';
 
 import { Morph } from './morph.js';
 
+/** @typedef {import('../graphics/shader.js').Shader} Shader */
+/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
+
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `
     attribute vec2 vertex_position;
@@ -19,10 +22,6 @@ const textureMorphVertexShader = `
 /**
  * An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages
  * selection of active morph targets.
- *
- * @property {MeshInstance} meshInstance The mesh instance this morph instance controls the
- * morphing of.
- * @property {Morph} morph The morph with its targets, which is being instanced.
  */
 class MorphInstance {
     /**
@@ -31,9 +30,20 @@ class MorphInstance {
      * @param {Morph} morph - The {@link Morph} to instance.
      */
     constructor(morph) {
+        /**
+         * The morph with its targets, which is being instanced.
+         *
+         * @type {Morph}
+         */
         this.morph = morph;
         morph.incRefCount();
         this.device = morph.device;
+
+        /**
+         * The mesh instance this morph instance controls the morphing of.
+         *
+         * @type {MeshInstance}
+         */
         this.meshInstance = null;
 
         // weights
@@ -181,7 +191,13 @@ class MorphInstance {
         this._dirty = true;
     }
 
-    // generates fragment shader to blend number of textures using specified weights
+    /**
+     * Generate fragment shader to blend number of textures using specified weights.
+     *
+     * @param {number} count - Number of textures to blend.
+     * @returns {string} Fragment shader.
+     * @private
+     */
     _getFragmentShader(numTextures) {
 
         let fragmentShader = '';
@@ -208,7 +224,13 @@ class MorphInstance {
         return fragmentShader;
     }
 
-    // creates complete shader for texture based morphing
+    /**
+     * Create complete shader for texture based morphing.
+     *
+     * @param {number} count - Number of textures to blend.
+     * @returns {Shader} Shader.
+     * @private
+     */
     _getShader(count) {
 
         let shader = this.shaderCache[count];
@@ -227,7 +249,7 @@ class MorphInstance {
 
         const device = this.device;
 
-        // blend curently set up textures to render target
+        // blend currently set up textures to render target
         const submitBatch = (usedCount, blending) => {
 
             // factors

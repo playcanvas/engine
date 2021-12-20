@@ -6,13 +6,12 @@ import {
 
 import { Material } from './material.js';
 
+/** @typedef {import('../../graphics/texture.js').Texture} Texture */
+
 /**
  * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map
  * modulated with a color.
  *
- * @property {Color} color The flat color of the material (RGBA, where each component is 0 to 1).
- * @property {Texture|null} colorMap The color map of the material (default is null). If specified,
- * the color map is modulated by the color property.
  * @augments Material
  */
 class BasicMaterial extends Material {
@@ -33,9 +32,20 @@ class BasicMaterial extends Material {
     constructor() {
         super();
 
+        /**
+         * The flat color of the material (RGBA, where each component is 0 to 1).
+         *
+         * @type {Color}
+         */
         this.color = new Color(1, 1, 1, 1);
         this.colorUniform = new Float32Array(4);
 
+        /**
+         * The color map of the material (default is null). If specified, the color map is
+         * modulated by the color property.
+         *
+         * @type {Texture|null}
+         */
         this.colorMap = null;
         this.vertexColors = false;
     }
