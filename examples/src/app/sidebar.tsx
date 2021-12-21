@@ -31,7 +31,7 @@ const SideBar = (props: SideBarProps) => {
     const defaultCategories = props.categories;
     const [filteredCategories, setFilteredCategories] = useState(null);
     const [hash, setHash] = useState(location.hash);
-    const observer = new Observer({ largeThumbnails: false }, {});
+    const observer = new Observer({ largeThumbnails: false });
     useEffect(() => {
         // set up the control panel toggle button
         const sideBar = document.getElementById('sideBar');

@@ -25,7 +25,7 @@ class Example extends Component <ExampleProps, ExampleState> {
 
     constructor(props: ExampleProps) {
         super(props);
-        this.exampleData = new Observer({}, {});
+        this.exampleData = new Observer();
     }
 
     // this init method is used to patch the PlayCanvas application so that is loads in any example assets after it is created
