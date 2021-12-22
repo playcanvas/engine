@@ -49,39 +49,6 @@ const createCubemap = (device, size, format, mipmaps) => {
     });
 };
 
-// generate mipmaps for the given target texture
-// target is either 2d equirect or cubemap with mipmaps = false
-const generateMipmaps = (target) => {
-    const device = target.device;
-
-    Debug.pushGpuMarker(device, "genMipmaps");
-
-    // create mipmapped result
-    const result = new Texture(device, {
-        name: target.name + '-mipmaps',
-        cubemap: target.cubemap,
-        width: target.width,
-        height: target.height,
-        format: target.format,
-        type: target.type,
-        addressU: target.addressU,
-        addressV: target.addressV,
-        fixCubemapSeams: target.fixCubemapSeams,
-        mipmaps: true
-    });
-
-    // copy top level
-    reprojectTexture(target, result, {
-        numSamples: 1
-    });
-
-    target.destroy();
-
-    Debug.popGpuMarker(device);
-
-    return result;
-};
-
 // helper functions to support prefiltering lighting data
 class EnvLighting {
     /**
@@ -122,7 +89,19 @@ class EnvLighting {
 
         Debug.pushGpuMarker(device, "genLightingSource");
 
-        const result = createCubemap(device, 128, lightingSourcePixelFormat(device), false);
+        const format = lightingSourcePixelFormat(device);
+        const result = new Texture(device, {
+            name: `lighting-source`,
+            cubemap: true,
+            width: 128,
+            height: 128,
+            format: format,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            fixCubemapSeams: false,
+            mipmaps: true
+        });
 
         // copy into top level
         reprojectTexture(source, result, {
@@ -132,7 +111,7 @@ class EnvLighting {
         Debug.popGpuMarker(device);
 
         // generate mipmaps
-        return generateMipmaps(result);
+        return result;
     }
 
     /**
