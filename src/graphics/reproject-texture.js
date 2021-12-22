@@ -282,7 +282,7 @@ const packSamplesTex = (device, name, samples) => {
     const numSamples = samples.length;
 
     const w = Math.min(numSamples, 512);
-    const h = Math.max(1, Math.floor(numSamples / w));
+    const h = Math.ceil(numSamples / w);
     const data = new Uint8ClampedArray(w * h * 4);
 
     // normlize float data and pack into rgba8
@@ -478,15 +478,13 @@ function reprojectTexture(source, target, options = {}) {
     const params = [
         0,
         specularPower,
-        1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0),          // source seam scale
-        1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0)           // target seam scale
+        source.fixCubemapSeams ? 1.0 / source.width : 0.0,          // source seam scale
+        target.fixCubemapSeams ? 1.0 / target.width : 0.0           // target seam scale
     ];
 
     const params2 = [
         target.width * target.height * (target.cubemap ? 6 : 1),
-        source.width * source.height * (source.cubemap ? 6 : 1),
-        target.width,
-        source.width
+        source.width * source.height * (source.cubemap ? 6 : 1)
     ];
 
     if (processFunc.startsWith('prefilterSamples')) {
