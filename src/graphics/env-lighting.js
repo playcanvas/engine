@@ -49,39 +49,6 @@ const createCubemap = (device, size, format, mipmaps) => {
     });
 };
 
-// generate mipmaps for the given target texture
-// target is either 2d equirect or cubemap with mipmaps = false
-const generateMipmaps = (target) => {
-    const device = target.device;
-
-    Debug.pushGpuMarker(device, "genMipmaps");
-
-    // create mipmapped result
-    const result = new Texture(device, {
-        name: target.name + '-mipmaps',
-        cubemap: target.cubemap,
-        width: target.width,
-        height: target.height,
-        format: target.format,
-        type: target.type,
-        addressU: target.addressU,
-        addressV: target.addressV,
-        fixCubemapSeams: target.fixCubemapSeams,
-        mipmaps: true
-    });
-
-    // copy top level
-    reprojectTexture(target, result, {
-        numSamples: 1
-    });
-
-    target.destroy();
-
-    Debug.popGpuMarker(device);
-
-    return result;
-};
-
 // helper functions to support prefiltering lighting data
 class EnvLighting {
     /**
