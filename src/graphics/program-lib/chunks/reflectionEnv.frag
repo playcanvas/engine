@@ -39,7 +39,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
         weight = level2 - ilevel2;
     } else {
         // accessing rough reflection - just sample the same part twice
-        uv0 = uv1 = mapRoughnessUv(uv, ilevel + 1.0);
+        uv0 = uv1 = mapRoughnessUv(uv, ilevel);
         weight = 0.0;
     }
 
