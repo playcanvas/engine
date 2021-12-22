@@ -31,7 +31,7 @@ uniform vec4 params;
 // params2:
 // x - target image total pixels
 // y - source cubemap size
-uniform vec4 params2;
+uniform vec2 params2;
 
 float targetFace() { return params.x; }
 float specularPower() { return params.y; }
@@ -40,8 +40,6 @@ float targetCubeSeamScale() { return params.w; }
 
 float targetTotalPixels() { return params2.x; }
 float sourceTotalPixels() { return params2.y; }
-float targetSize() {  return params2.z; }
-float sourceSize() {  return params2.w; }
 
 float PI = 3.141592653589793;
 
@@ -138,7 +136,7 @@ vec4 sampleEquirect(vec3 dir) {
 }
 
 vec4 sampleCubemap(vec3 dir) {
-    return textureCube(sourceCube, modifySeams(dir, sourceCubeSeamScale()));
+    return textureCube(sourceCube, modifySeams(dir, 1.0 - sourceCubeSeamScale()));
 }
 
 vec4 sampleCubemap(vec2 sph) {
@@ -160,9 +158,9 @@ vec4 sampleEquirect(vec3 dir, float mipLevel) {
 
 vec4 sampleCubemap(vec3 dir, float mipLevel) {
 #ifdef SUPPORTS_TEXLOD
-    return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) / sourceSize()), mipLevel);
+    return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
 #else
-    return textureCube(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) / sourceSize()));
+    return textureCube(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()));
 #endif
 }
 
@@ -247,7 +245,7 @@ vec3 getDirectionCubemap() {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return normalize(modifySeams(vec, 1.0 / targetCubeSeamScale()));
+    return normalize(modifySeams(vec, 1.0 / (1.0 - targetCubeSeamScale())));
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad
