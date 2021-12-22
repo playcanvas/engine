@@ -5,11 +5,11 @@ class Vec4 {
     /**
      * Creates a new Vec4 object.
      *
-     * @param {number|number[]} [x] - The x value. If x is an array of length 4, the array will be
-     * used to populate all components.
-     * @param {number} [y] - The y value.
-     * @param {number} [z] - The z value.
-     * @param {number} [w] - The w value.
+     * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
+     * array will be used to populate all components.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 0.
      * @example
      * var v = new pc.Vec4(1, 2, 3, 4);
      */

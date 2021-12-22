@@ -5,9 +5,9 @@ class Vec2 {
     /**
      * Create a new Vec2 instance.
      *
-     * @param {number|number[]} [x] - The x value. If x is an array of length 2, the array will be
-     * used to populate all components.
-     * @param {number} [y] - The y value.
+     * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 2, the
+     * array will be used to populate all components.
+     * @param {number} [y] - The y value. Defaults to 0.
      * @example
      * var v = new pc.Vec2(1, 2);
      */

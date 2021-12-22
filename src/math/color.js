@@ -7,11 +7,11 @@ class Color {
     /**
      * Create a new Color object.
      *
-     * @param {number|number[]} [r] - The value of the red component (0-1). If r is an array of
-     * length 3 or 4, the array will be used to populate all components.
-     * @param {number} [g] - The value of the green component (0-1).
-     * @param {number} [b] - The value of the blue component (0-1).
-     * @param {number} [a] - The value of the alpha component (0-1).
+     * @param {number|number[]} [r] - The value of the red component (0-1). Defaults to 0. If r is
+     * an array of length 3 or 4, the array will be used to populate all components.
+     * @param {number} [g] - The value of the green component (0-1). Defaults to 0.
+     * @param {number} [b] - The value of the blue component (0-1). Defaults to 0.
+     * @param {number} [a] - The value of the alpha component (0-1). Defaults to 1.
      */
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
