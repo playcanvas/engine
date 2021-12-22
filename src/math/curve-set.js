@@ -29,6 +29,11 @@ class CurveSet {
      */
     constructor() {
         this.curves = [];
+
+        /**
+         * @type {number}
+         * @private
+         */
         this._type = CURVE_SMOOTHSTEP;
 
         if (arguments.length > 1) {
