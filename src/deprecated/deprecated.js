@@ -1,6 +1,7 @@
 import { revision, version } from '../core/core.js';
 import { string } from '../core/string.js';
 import { Timer, now } from '../core/time.js';
+import { Debug } from '../core/debug.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
@@ -114,49 +115,48 @@ import { RigidBodyComponentSystem } from '../framework/components/rigid-body/sys
 import { basisInitialize } from '../resources/basis.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Asset } from '../asset/asset.js';
-import { DeprecatedLog } from './deprecated-log.js';
 
 // CORE
 
 export const log = {
     write: function (text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.write is deprecated. Use console.log instead.");
+        Debug.deprecated("pc.log.write is deprecated. Use console.log instead.");
         console.log(text);
     },
 
     open: function () {
-        DeprecatedLog.log("DEPRECATED: pc.log.open is deprecated. Use console.log instead.");
+        Debug.deprecated("pc.log.open is deprecated. Use console.log instead.");
         log.write("Powered by PlayCanvas " + version + " " + revision);
     },
 
     info: function (text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.info is deprecated. Use console.info instead.");
+        Debug.deprecated("pc.log.info is deprecated. Use console.info instead.");
         console.info("INFO:    " + text);
     },
 
     debug: function (text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.debug is deprecated. Use console.debug instead.");
+        Debug.deprecated("pc.log.debug is deprecated. Use console.debug instead.");
         console.debug("DEBUG:   " + text);
     },
 
     error: function (text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.error is deprecated. Use console.error instead.");
+        Debug.deprecated("pc.log.error is deprecated. Use console.error instead.");
         console.error("ERROR:   " + text);
     },
 
     warning: function (text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.warning is deprecated. Use console.warn instead.");
+        Debug.deprecated("pc.log.warning is deprecated. Use console.warn instead.");
         console.warn("WARNING: " + text);
     },
 
     alert: function (text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.alert is deprecated. Use alert instead.");
+        Debug.deprecated("pc.log.alert is deprecated. Use alert instead.");
         log.write("ALERT:   " + text);
         alert(text); // eslint-disable-line no-alert
     },
 
     assert: function (condition, text) {
-        DeprecatedLog.log("DEPRECATED: pc.log.assert is deprecated. Use a conditional plus console.log instead.");
+        Debug.deprecated("pc.log.assert is deprecated. Use a conditional plus console.log instead.");
         if (condition === false) {
             log.write("ASSERT:  " + text);
         }
@@ -164,12 +164,12 @@ export const log = {
 };
 
 string.endsWith = function (s, subs) {
-    DeprecatedLog.log("DEPRECATED: pc.string.endsWith is deprecated. Use String#endsWith instead.");
+    Debug.deprecated("pc.string.endsWith is deprecated. Use String#endsWith instead.");
     return s.endsWith(subs);
 };
 
 string.startsWith = function (s, subs) {
-    DeprecatedLog.log("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
+    Debug.deprecated("pc.string.startsWith is deprecated. Use String#startsWith instead.");
     return s.startsWith(subs);
 };
 
@@ -180,7 +180,7 @@ export const time = {
 
 Object.defineProperty(Color.prototype, "data", {
     get: function () {
-        DeprecatedLog.log('pc.Color#data is not public API and should not be used. Access color components via their individual properties.');
+        Debug.deprecated('pc.Color#data is not public API and should not be used. Access color components via their individual properties.');
         if (!this._data) {
             this._data = new Float32Array(4);
         }
@@ -194,7 +194,7 @@ Object.defineProperty(Color.prototype, "data", {
 
 Object.defineProperty(Color.prototype, "data3", {
     get: function () {
-        DeprecatedLog.log('pc.Color#data3 is not public API and should not be used. Access color components via their individual properties.');
+        Debug.deprecated('pc.Color#data3 is not public API and should not be used. Access color components via their individual properties.');
         if (!this._data3) {
             this._data3 = new Float32Array(3);
         }
@@ -220,7 +220,7 @@ export function inherits(Self, Super) {
 }
 
 export function makeArray(arr) {
-    DeprecatedLog.log('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
+    Debug.deprecated('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
     return Array.prototype.slice.call(arr);
 }
 
@@ -233,7 +233,7 @@ math.bytesToInt = math.bytesToInt32;
 
 Object.defineProperty(Vec2.prototype, "data", {
     get: function () {
-        DeprecatedLog.log('pc.Vec2#data is not public API and should not be used. Access vector components via their individual properties.');
+        Debug.deprecated('pc.Vec2#data is not public API and should not be used. Access vector components via their individual properties.');
         if (!this._data) {
             this._data = new Float32Array(2);
         }
@@ -247,7 +247,7 @@ Vec2.prototype.scale = Vec2.prototype.mulScalar;
 
 Object.defineProperty(Vec3.prototype, "data", {
     get: function () {
-        DeprecatedLog.log('pc.Vec3#data is not public API and should not be used. Access vector components via their individual properties.');
+        Debug.deprecated('pc.Vec3#data is not public API and should not be used. Access vector components via their individual properties.');
         if (!this._data) {
             this._data = new Float32Array(3);
         }
@@ -262,7 +262,7 @@ Vec3.prototype.scale = Vec3.prototype.mulScalar;
 
 Object.defineProperty(Vec4.prototype, "data", {
     get: function () {
-        DeprecatedLog.log('pc.Vec4#data is not public API and should not be used. Access vector components via their individual properties.');
+        Debug.deprecated('pc.Vec4#data is not public API and should not be used. Access vector components via their individual properties.');
         if (!this._data) {
             this._data = new Float32Array(4);
         }
@@ -287,7 +287,7 @@ export const shape = {
 BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
 
 Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
-    DeprecatedLog.log('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
+    Debug.deprecated('pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
 
     const viewProj = new Mat4();
 
@@ -409,25 +409,51 @@ Object.defineProperty(shaderChunks, "transformSkinnedVS", {
     }
 });
 
+const deprecatedChunks = {
+    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
+    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
+    'dpAtlasQuad.frag': null,
+    'genParaboloid.frag': null,
+    'prefilterCubemap.frag': null,
+    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
+};
+
+Object.keys(deprecatedChunks).forEach((chunkName) => {
+    const replacement = deprecatedChunks[chunkName];
+    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : ``;
+    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
+    Object.defineProperty(shaderChunks, chunkName, {
+        get: function () {
+            Debug.error(msg);
+            return null;
+        },
+        set: function () {
+            Debug.error(msg);
+        }
+    });
+});
+
 Object.defineProperties(Texture.prototype, {
     rgbm: {
         get: function () {
-            DeprecatedLog.log("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
+            Debug.deprecated("pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
             return this.type === TEXTURETYPE_RGBM;
         },
         set: function (rgbm) {
-            DeprecatedLog.log("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
+            Debug.deprecated("pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
             this.type = rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
         }
     },
 
     swizzleGGGR: {
         get: function () {
-            DeprecatedLog.log("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
+            Debug.deprecated("pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
             return this.type === TEXTURETYPE_SWIZZLEGGGR;
         },
         set: function (swizzleGGGR) {
-            DeprecatedLog.log("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
+            Debug.deprecated("pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
             this.type = swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
         }
     }
@@ -473,26 +499,45 @@ export const scene = {
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.Scene#defaultMaterial is deprecated.');
+        Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
         return DefaultMaterial.get(getApplication().graphicsDevice);
     }
 });
 
+// scene.skyboxPrefiltered**** are deprecated
+['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
+    Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
+        get: function () {
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
+            return this._prefilteredCubemaps[index];
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
+            this._prefilteredCubemaps[index] = value;
+            this.updateShaders = true;
+        }
+    });
+});
+
 Object.defineProperty(Batch.prototype, 'model', {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');
+        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
         return null;
     }
 });
 
+MeshInstance.prototype.syncAabb = function () {
+    Debug.deprecated('pc.MeshInstance#syncAabb is deprecated.');
+};
+
 Morph.prototype.getTarget = function (index) {
-    DeprecatedLog.log('DEPRECATED: pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
+    Debug.deprecated('pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
 
     return this.targets[index];
 };
 
 GraphNode.prototype._dirtify = function (local) {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#_dirtify is deprecated. Use pc.GraphNode#_dirtifyLocal or _dirtifyWorld respectively instead.');
+    Debug.deprecated('pc.GraphNode#_dirtify is deprecated. Use pc.GraphNode#_dirtifyLocal or _dirtifyWorld respectively instead.');
     if (local)
         this._dirtifyLocal();
     else
@@ -500,31 +545,31 @@ GraphNode.prototype._dirtify = function (local) {
 };
 
 GraphNode.prototype.addLabel = function (label) {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#addLabel is deprecated. Use pc.GraphNode#tags instead.');
+    Debug.deprecated('pc.GraphNode#addLabel is deprecated. Use pc.GraphNode#tags instead.');
 
     this._labels[label] = true;
 };
 
 GraphNode.prototype.getLabels = function () {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#getLabels is deprecated. Use pc.GraphNode#tags instead.');
+    Debug.deprecated('pc.GraphNode#getLabels is deprecated. Use pc.GraphNode#tags instead.');
 
     return Object.keys(this._labels);
 };
 
 GraphNode.prototype.hasLabel = function (label) {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#hasLabel is deprecated. Use pc.GraphNode#tags instead.');
+    Debug.deprecated('pc.GraphNode#hasLabel is deprecated. Use pc.GraphNode#tags instead.');
 
     return !!this._labels[label];
 };
 
 GraphNode.prototype.removeLabel = function (label) {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#removeLabel is deprecated. Use pc.GraphNode#tags instead.');
+    Debug.deprecated('pc.GraphNode#removeLabel is deprecated. Use pc.GraphNode#tags instead.');
 
     delete this._labels[label];
 };
 
 GraphNode.prototype.findByLabel = function (label, results = []) {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#findByLabel is deprecated. Use pc.GraphNode#tags instead.');
+    Debug.deprecated('pc.GraphNode#findByLabel is deprecated. Use pc.GraphNode#tags instead.');
 
     if (this.hasLabel(label)) {
         results.push(this);
@@ -538,58 +583,58 @@ GraphNode.prototype.findByLabel = function (label, results = []) {
 };
 
 GraphNode.prototype.getChildren = function () {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#getChildren is deprecated. Use pc.GraphNode#children instead.');
+    Debug.deprecated('pc.GraphNode#getChildren is deprecated. Use pc.GraphNode#children instead.');
 
     return this.children;
 };
 
 GraphNode.prototype.getName = function () {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#getName is deprecated. Use pc.GraphNode#name instead.');
+    Debug.deprecated('pc.GraphNode#getName is deprecated. Use pc.GraphNode#name instead.');
 
     return this.name;
 };
 
 GraphNode.prototype.getPath = function () {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#getPath is deprecated. Use pc.GraphNode#path instead.');
+    Debug.deprecated('pc.GraphNode#getPath is deprecated. Use pc.GraphNode#path instead.');
 
     return this.path;
 };
 
 GraphNode.prototype.getRoot = function () {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#getRoot is deprecated. Use pc.GraphNode#root instead.');
+    Debug.deprecated('pc.GraphNode#getRoot is deprecated. Use pc.GraphNode#root instead.');
 
     return this.root;
 };
 
 GraphNode.prototype.getParent = function () {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#getParent is deprecated. Use pc.GraphNode#parent instead.');
+    Debug.deprecated('pc.GraphNode#getParent is deprecated. Use pc.GraphNode#parent instead.');
 
     return this.parent;
 };
 
 GraphNode.prototype.setName = function (name) {
-    DeprecatedLog.log('DEPRECATED: pc.GraphNode#setName is deprecated. Use pc.GraphNode#name instead.');
+    Debug.deprecated('pc.GraphNode#setName is deprecated. Use pc.GraphNode#name instead.');
 
     this.name = name;
 };
 
 Material.prototype.getName = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');
+    Debug.deprecated('pc.Material#getName is deprecated. Use pc.Material#name instead.');
     return this.name;
 };
 
 Material.prototype.setName = function (name) {
-    DeprecatedLog.log('DEPRECATED: pc.Material#setName is deprecated. Use pc.Material#name instead.');
+    Debug.deprecated('pc.Material#setName is deprecated. Use pc.Material#name instead.');
     this.name = name;
 };
 
 Material.prototype.getShader = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
+    Debug.deprecated('pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
     return this.shader;
 };
 
 Material.prototype.setShader = function (shader) {
-    DeprecatedLog.log('DEPRECATED: pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
+    Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
     this.shader = shader;
 };
 
@@ -603,62 +648,62 @@ export const anim = {
 };
 
 Animation.prototype.getDuration = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Animation#getDuration is deprecated. Use pc.Animation#duration instead.');
+    Debug.deprecated('pc.Animation#getDuration is deprecated. Use pc.Animation#duration instead.');
     return this.duration;
 };
 
 Animation.prototype.getName = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Animation#getName is deprecated. Use pc.Animation#name instead.');
+    Debug.deprecated('pc.Animation#getName is deprecated. Use pc.Animation#name instead.');
     return this.name;
 };
 
 Animation.prototype.getNodes = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Animation#getNodes is deprecated. Use pc.Animation#nodes instead.');
+    Debug.deprecated('pc.Animation#getNodes is deprecated. Use pc.Animation#nodes instead.');
     return this.nodes;
 };
 
 Animation.prototype.setDuration = function (duration) {
-    DeprecatedLog.log('DEPRECATED: pc.Animation#setDuration is deprecated. Use pc.Animation#duration instead.');
+    Debug.deprecated('pc.Animation#setDuration is deprecated. Use pc.Animation#duration instead.');
     this.duration = duration;
 };
 
 Animation.prototype.setName = function (name) {
-    DeprecatedLog.log('DEPRECATED: pc.Animation#setName is deprecated. Use pc.Animation#name instead.');
+    Debug.deprecated('pc.Animation#setName is deprecated. Use pc.Animation#name instead.');
     this.name = name;
 };
 
 Skeleton.prototype.getAnimation = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#getAnimation is deprecated. Use pc.Skeleton#animation instead.');
+    Debug.deprecated('pc.Skeleton#getAnimation is deprecated. Use pc.Skeleton#animation instead.');
     return this.animation;
 };
 
 Skeleton.prototype.getCurrentTime = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#getCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
+    Debug.deprecated('pc.Skeleton#getCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
     return this.currentTime;
 };
 
 Skeleton.prototype.getLooping = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#getLooping is deprecated. Use pc.Skeleton#looping instead.');
+    Debug.deprecated('pc.Skeleton#getLooping is deprecated. Use pc.Skeleton#looping instead.');
     return this.looping;
 };
 
 Skeleton.prototype.getNumNodes = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#getNumNodes is deprecated. Use pc.Skeleton#numNodes instead.');
+    Debug.deprecated('pc.Skeleton#getNumNodes is deprecated. Use pc.Skeleton#numNodes instead.');
     return this.numNodes;
 };
 
 Skeleton.prototype.setAnimation = function (animation) {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#setAnimation is deprecated. Use pc.Skeleton#animation instead.');
+    Debug.deprecated('pc.Skeleton#setAnimation is deprecated. Use pc.Skeleton#animation instead.');
     this.animation = animation;
 };
 
 Skeleton.prototype.setCurrentTime = function (time) {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#setCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
+    Debug.deprecated('pc.Skeleton#setCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
     this.currentTime = time;
 };
 
 Skeleton.prototype.setLooping = function (looping) {
-    DeprecatedLog.log('DEPRECATED: pc.Skeleton#setLooping is deprecated. Use pc.Skeleton#looping instead.');
+    Debug.deprecated('pc.Skeleton#setLooping is deprecated. Use pc.Skeleton#looping instead.');
     this.looping = looping;
 };
 
@@ -673,17 +718,17 @@ export const audio = {
 };
 
 SoundManager.prototype.getListener = function () {
-    DeprecatedLog.log('DEPRECATED: pc.SoundManager#getListener is deprecated. Use pc.SoundManager#listener instead.');
+    Debug.deprecated('pc.SoundManager#getListener is deprecated. Use pc.SoundManager#listener instead.');
     return this.listener;
 };
 
 SoundManager.prototype.getVolume = function () {
-    DeprecatedLog.log('DEPRECATED: pc.SoundManager#getVolume is deprecated. Use pc.SoundManager#volume instead.');
+    Debug.deprecated('pc.SoundManager#getVolume is deprecated. Use pc.SoundManager#volume instead.');
     return this.volume;
 };
 
 SoundManager.prototype.setVolume = function (volume) {
-    DeprecatedLog.log('DEPRECATED: pc.SoundManager#setVolume is deprecated. Use pc.SoundManager#volume instead.');
+    Debug.deprecated('pc.SoundManager#setVolume is deprecated. Use pc.SoundManager#volume instead.');
     this.volume = volume;
 };
 
@@ -703,7 +748,7 @@ export const asset = {
 };
 
 AssetRegistry.prototype.getAssetById = function (id) {
-    DeprecatedLog.log("DEPRECATED: pc.AssetRegistry#getAssetById is deprecated. Use pc.AssetRegistry#get instead.");
+    Debug.deprecated("pc.AssetRegistry#getAssetById is deprecated. Use pc.AssetRegistry#get instead.");
     return this.get(id);
 };
 
@@ -711,21 +756,21 @@ AssetRegistry.prototype.getAssetById = function (id) {
 
 Object.defineProperty(XrInputSource.prototype, 'ray', {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.XrInputSource#ray is deprecated. Use pc.XrInputSource#getOrigin and pc.XrInputSource#getDirection instead.');
+        Debug.deprecated('pc.XrInputSource#ray is deprecated. Use pc.XrInputSource#getOrigin and pc.XrInputSource#getDirection instead.');
         return this._rayLocal;
     }
 });
 
 Object.defineProperty(XrInputSource.prototype, 'position', {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.XrInputSource#position is deprecated. Use pc.XrInputSource#getLocalPosition instead.');
+        Debug.deprecated('pc.XrInputSource#position is deprecated. Use pc.XrInputSource#getLocalPosition instead.');
         return this._localPosition;
     }
 });
 
 Object.defineProperty(XrInputSource.prototype, 'rotation', {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.XrInputSource#rotation is deprecated. Use pc.XrInputSource#getLocalRotation instead.');
+        Debug.deprecated('pc.XrInputSource#rotation is deprecated. Use pc.XrInputSource#getLocalRotation instead.');
         return this._localRotation;
     }
 });
@@ -788,13 +833,13 @@ export const fw = {
 };
 
 Application.prototype.isFullscreen = function () {
-    DeprecatedLog.log('DEPRECATED: pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
+    Debug.deprecated('pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
 
     return !!document.fullscreenElement;
 };
 
 Application.prototype.enableFullscreen = function (element, success, error) {
-    DeprecatedLog.log('DEPRECATED: pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+    Debug.deprecated('pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
 
     element = element || this.graphicsDevice.canvas;
 
@@ -826,7 +871,7 @@ Application.prototype.enableFullscreen = function (element, success, error) {
 };
 
 Application.prototype.disableFullscreen = function (success) {
-    DeprecatedLog.log('DEPRECATED: pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+    Debug.deprecated('pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
 
     // success callback
     const s = function () {
@@ -842,7 +887,7 @@ Application.prototype.disableFullscreen = function (success) {
 };
 
 Application.prototype.getSceneUrl = function (name) {
-    DeprecatedLog.log("DEPRECATED: pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
+    Debug.deprecated("pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
     const entry = this.scenes.find(name);
     if (entry) {
         return entry.url;
@@ -851,43 +896,43 @@ Application.prototype.getSceneUrl = function (name) {
 };
 
 Application.prototype.loadScene = function (url, callback) {
-    DeprecatedLog.log("DEPRECATED: pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.");
+    Debug.deprecated("pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.");
     this.scenes.loadScene(url, callback);
 };
 
 Application.prototype.loadSceneHierarchy = function (url, callback) {
-    DeprecatedLog.log("DEPRECATED: pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
+    Debug.deprecated("pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
     this.scenes.loadSceneHierarchy(url, callback);
 };
 
 Application.prototype.loadSceneSettings = function (url, callback) {
-    DeprecatedLog.log("DEPRECATED: pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
+    Debug.deprecated("pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
     this.scenes.loadSceneSettings(url, callback);
 };
 
 Application.prototype.renderMeshInstance = function (meshInstance, options) {
-    DeprecatedLog.log("DEPRECATED: pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.");
-    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
-    this._immediate.drawMesh(null, null, null, meshInstance, layer);
+    Debug.deprecated("pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.");
+    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
+    this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
 Application.prototype.renderMesh = function (mesh, material, matrix, options) {
-    DeprecatedLog.log("DEPRECATED: pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
-    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
-    this._immediate.drawMesh(material, matrix, mesh, null, layer);
+    Debug.deprecated("pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
+    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
+    this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
 };
 
 Application.prototype._addLines = function (positions, colors, options) {
     const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
 
-    const batch = this._immediate.getBatch(layer, depthTest);
+    const batch = this.scene.immediate.getBatch(layer, depthTest);
     batch.addLines(positions, colors);
 };
 
 Application.prototype.renderLine = function (start, end, color) {
 
-    DeprecatedLog.log("DEPRECATED: pc.Application.renderLine is deprecated. Use pc.Application.drawLine.");
+    Debug.deprecated("pc.Application.renderLine is deprecated. Use pc.Application.drawLine.");
 
     let endColor = color;
     let options;
@@ -941,7 +986,7 @@ Application.prototype.renderLine = function (start, end, color) {
 
 Application.prototype.renderLines = function (position, color, options) {
 
-    DeprecatedLog.log("DEPRECATED: pc.Application.renderLines is deprecated. Use pc.Application.drawLines.");
+    Debug.deprecated("pc.Application.renderLines is deprecated. Use pc.Application.drawLines.");
 
     if (!options) {
         // default option
@@ -980,65 +1025,65 @@ Application.prototype.renderLines = function (position, color, options) {
 
 Object.defineProperty(CameraComponent.prototype, "node", {
     get: function () {
-        DeprecatedLog.log("DEPRECATED: pc.CameraComponent#node is deprecated. Use pc.CameraComponent#entity instead.");
+        Debug.deprecated("pc.CameraComponent#node is deprecated. Use pc.CameraComponent#entity instead.");
         return this.entity;
     }
 });
 
 Object.defineProperty(LightComponent.prototype, "enable", {
     get: function () {
-        DeprecatedLog.log("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
+        Debug.deprecated("pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
         return this.enabled;
     },
     set: function (value) {
-        DeprecatedLog.log("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
+        Debug.deprecated("pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
         this.enabled = value;
     }
 });
 
 ModelComponent.prototype.setVisible = function (visible) {
-    DeprecatedLog.log("DEPRECATED: pc.ModelComponent#setVisible is deprecated. Use pc.ModelComponent#enabled instead.");
+    Debug.deprecated("pc.ModelComponent#setVisible is deprecated. Use pc.ModelComponent#enabled instead.");
     this.enabled = visible;
 };
 
 Object.defineProperty(ModelComponent.prototype, "aabb", {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        Debug.deprecated('pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
         return null;
     },
     set: function (type) {
-        DeprecatedLog.log('DEPRECATED: pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        Debug.deprecated('pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
     }
 });
 
 Object.defineProperty(RenderComponent.prototype, "aabb", {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        Debug.deprecated('pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
         return null;
     },
     set: function (type) {
-        DeprecatedLog.log('DEPRECATED: pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
+        Debug.deprecated('pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
     }
 });
 
 Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {
-        DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+        Debug.deprecated('pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
         return this.type;
     },
     set: function (type) {
-        DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+        Debug.deprecated('pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
         this.type = type;
     }
 });
 
 RigidBodyComponent.prototype.syncBodyToEntity = function () {
-    DeprecatedLog.log('pc.RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
+    Debug.deprecated('pc.RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
     this._updateDynamic();
 };
 
 RigidBodyComponentSystem.prototype.setGravity = function () {
-    DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
+    Debug.deprecated('pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
 
     if (arguments.length === 1) {
         this.gravity.copy(arguments[0]);
@@ -1049,7 +1094,7 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
 
 
 export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
-    DeprecatedLog.log('DEPRECATED: pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
+    Debug.deprecated('pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
     basisInitialize({
         glueUrl: glueUrl,
         wasmUrl: wasmUrl,
@@ -1058,9 +1103,13 @@ export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
     });
 }
 
+export function prefilterCubemap(options) {
+    Debug.deprecated('pc.prefilterCubemap is deprecated. Use pc.envLighting instead.');
+}
+
 export class AssetListLoader extends EventHandler {
     constructor(assetList, assetRegistry) {
-        DeprecatedLog.log('DEPRECATED: pc.AssetListLoader is deprecated.');
+        Debug.deprecated('pc.AssetListLoader is deprecated.');
 
         super();
 
@@ -1092,7 +1141,7 @@ export class AssetListLoader extends EventHandler {
     }
 
     destroy() {
-        DeprecatedLog.log('DEPRECATED: pc.AssetListLoader is deprecated.');
+        Debug.deprecated('pc.AssetListLoader is deprecated.');
 
         // remove any outstanding listeners
         this._registry.off("load", this._onLoad);
@@ -1116,7 +1165,7 @@ export class AssetListLoader extends EventHandler {
      *
      */
     load(done, scope) {
-        DeprecatedLog.log('DEPRECATED: pc.AssetListLoader is deprecated.');
+        Debug.deprecated('pc.AssetListLoader is deprecated.');
 
         this._count = 0;
         this._failed = [];
@@ -1144,7 +1193,7 @@ export class AssetListLoader extends EventHandler {
      * @param {object} [scope] - Scope to use when calling callback.
      */
     ready(done, scope) {
-        DeprecatedLog.log('DEPRECATED: pc.AssetListLoader is deprecated.');
+        Debug.deprecated('pc.AssetListLoader is deprecated.');
 
         scope = scope || this;
 

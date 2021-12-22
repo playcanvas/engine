@@ -3,12 +3,13 @@ import { Texture } from '../../../graphics/texture.js';
 import { basisTranscode } from '../../basis.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 /**
- * @private
- * @class
- * @name BasisParser
+ * Parser for basis files.
+ *
  * @implements {TextureParser}
- * @classdesc Parser for basis files.
+ * @private
  */
 class BasisParser {
     constructor(registry, device) {

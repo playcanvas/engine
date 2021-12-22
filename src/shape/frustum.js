@@ -1,19 +1,23 @@
 import { Vec3 } from '../math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../scene/constants.js';
 
+/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
+/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
+
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
- * @class
- * @name Frustum
- * @classdesc A frustum is a shape that defines the viewing space of a camera. It can be
- * used to determine visibility of points and bounding spheres. Typically, you would not
- * create a Frustum shape directly, but instead query {@link CameraComponent#frustum}.
- * @description Creates a new frustum shape.
- * @example
- * var frustum = new pc.Frustum();
+ * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
+ * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
+ * directly, but instead query {@link CameraComponent#frustum}.
  */
 class Frustum {
+    /**
+     * Create a new Frustum instance.
+     *
+     * @example
+     * var frustum = new pc.Frustum();
+     */
     constructor() {
         this.planes = [];
         for (let i = 0; i < 6; i++)
@@ -21,9 +25,8 @@ class Frustum {
     }
 
     /**
-     * @function
-     * @name Frustum#setFromMat4
-     * @description Updates the frustum shape based on the supplied 4x4 matrix.
+     * Updates the frustum shape based on the supplied 4x4 matrix.
+     *
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
@@ -120,10 +123,9 @@ class Frustum {
     }
 
     /**
-     * @function
-     * @name Frustum#containsPoint
-     * @description Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
+     * Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
      * considered to be outside the frustum.
+     *
      * @param {Vec3} point - The point to test.
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
@@ -139,15 +141,14 @@ class Frustum {
     }
 
     /**
-     * @function
-     * @name Frustum#containsSphere
-     * @description Tests whether a bounding sphere intersects the frustum. If the sphere is outside the frustum,
-     * zero is returned. If the sphere intersects the frustum, 1 is returned. If the sphere is completely inside
-     * the frustum, 2 is returned. Note that a sphere touching a frustum plane from the outside is considered to
-     * be outside the frustum.
+     * Tests whether a bounding sphere intersects the frustum. If the sphere is outside the
+     * frustum, zero is returned. If the sphere intersects the frustum, 1 is returned. If the
+     * sphere is completely inside the frustum, 2 is returned. Note that a sphere touching a
+     * frustum plane from the outside is considered to be outside the frustum.
+     *
      * @param {BoundingSphere} sphere - The sphere to test.
-     * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if
-     * it is contained by the frustum.
+     * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the
+     * frustum and 2 if it is contained by the frustum.
      */
     containsSphere(sphere) {
         let c = 0;

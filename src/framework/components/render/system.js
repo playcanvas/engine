@@ -8,6 +8,8 @@ import { BoundingBox } from '../../../shape/bounding-box';
 import { Vec3 } from '../../../math/vec3';
 import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = [
     { name: 'rootBone', type: 'entity' },
     'enabled'
@@ -32,14 +34,17 @@ const _properties = [
 ];
 
 /**
- * @class
- * @name RenderComponentSystem
+ * Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder,
+ * cone etc.
+ *
  * @augments ComponentSystem
- * @classdesc Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder, cone etc.
- * @description Create a new RenderComponentSystem.
- * @param {Application} app - The Application.
  */
 class RenderComponentSystem extends ComponentSystem {
+    /**
+     * Create a new RenderComponentSystem.
+     *
+     * @param {Application} app - The Application.
+     */
     constructor(app) {
         super(app);
 

@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { ScriptHandler } from '../resources/script.js';
@@ -18,21 +19,21 @@ const reservedScriptNames = new Set([
     '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
 ]);
 
-/* eslint-disable jsdoc/no-undefined-types */
 /**
- * @static
- * @function
- * @name createScript
- * @description Create and register a new {@link ScriptType}.
- * It returns new class type (constructor function), which is auto-registered to {@link ScriptRegistry} using its name.
- * This is the main interface to create Script Types, to define custom logic using JavaScript, that is used to create interaction for entities.
- * @param {string} name - Unique Name of a Script Type.
- * If a Script Type with the same name has already been registered and the new one has a `swap` method defined in its prototype,
- * then it will perform hot swapping of existing Script Instances on entities using this new Script Type.
- * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
- * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to add a script to.
- * By default it will use `Application.getApplication()` to get current {@link Application}.
+ * Create and register a new {@link ScriptType}. It returns new class type (constructor function),
+ * which is auto-registered to {@link ScriptRegistry} using its name. This is the main interface to
+ * create Script Types, to define custom logic using JavaScript, that is used to create interaction
+ * for entities.
+ *
+ * @param {string} name - Unique Name of a Script Type. If a Script Type with the same name has
+ * already been registered and the new one has a `swap` method defined in its prototype, then it
+ * will perform hot swapping of existing Script Instances on entities using this new Script Type.
+ * Note: There is a reserved list of names that cannot be used, such as list below as well as some
+ * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
+ * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
+ * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * to add a script to. By default it will use `Application.getApplication()` to get current
+ * {@link Application}.
  * @returns {Class<ScriptType>} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * @example
@@ -50,12 +51,9 @@ const reservedScriptNames = new Set([
  *     this.entity.rotate(0, this.speed * dt, 0);
  * };
  */
-/* eslint-enable jsdoc/no-undefined-types */
 function createScript(name, app) {
     if (script.legacy) {
-        // #if _DEBUG
-        console.error("This project is using the legacy script system. You cannot call pc.createScript().");
-        // #endif
+        Debug.error("This project is using the legacy script system. You cannot call pc.createScript().");
         return null;
     }
 
@@ -84,25 +82,25 @@ ScriptAttributes.reservedNames.forEach((value, value2, set) => {
 });
 createScript.reservedAttributes = reservedAttributes;
 
-
-/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/check-examples */
 /**
- * @static
- * @function
- * @name registerScript
- * @description Register a existing class type as a Script Type to {@link ScriptRegistry}.
- * Useful when defining a ES6 script class that extends {@link ScriptType} (see example).
- * @param {Class<ScriptType>} script - The existing class type (constructor function) to be registered as a Script Type.
- * Class must extend {@link ScriptType} (see example). Please note: A class created using {@link createScript} is auto-registered,
- * and should therefore not be pass into {@link registerScript} (which would result in swapping out all related script instances).
- * @param {string} [name] - Optional unique name of the Script Type. By default it will use the same name as the existing class.
- * If a Script Type with the same name has already been registered and the new one has a `swap` method defined in its prototype,
- * then it will perform hot swapping of existing Script Instances on entities using this new Script Type.
- * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
- * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to register the script type to.
- * By default it will use `Application.getApplication()` to get current {@link Application}.
+ * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
+ * a ES6 script class that extends {@link ScriptType} (see example).
+ *
+ * @param {Class<ScriptType>} script - The existing class type (constructor function) to be
+ * registered as a Script Type. Class must extend {@link ScriptType} (see example). Please note: A
+ * class created using {@link createScript} is auto-registered, and should therefore not be pass
+ * into {@link registerScript} (which would result in swapping out all related script instances).
+ * @param {string} [name] - Optional unique name of the Script Type. By default it will use the
+ * same name as the existing class. If a Script Type with the same name has already been registered
+ * and the new one has a `swap` method defined in its prototype, then it will perform hot swapping
+ * of existing Script Instances on entities using this new Script Type. Note: There is a reserved
+ * list of names that cannot be used, such as list below as well as some starting from `_`
+ * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
+ * onPostStateChange, has, on, off, fire, once, hasEvent.
+ * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * to register the script type to. By default it will use `Application.getApplication()` to get
+ * current {@link Application}.
  * @example
  * // define a ES6 script class
  * class PlayerController extends pc.ScriptType {
@@ -122,13 +120,9 @@ createScript.reservedAttributes = reservedAttributes;
  * // declare script attributes (Must be after pc.registerScript())
  * PlayerController.attributes.add('attribute1', {type: 'number'});
  */
-/* eslint-enable jsdoc/check-examples */
-/* eslint-enable jsdoc/no-undefined-types */
 function registerScript(script, name, app) {
     if (script.legacy) {
-        // #if _DEBUG
-        console.error("This project is using the legacy script system. You cannot call pc.registerScript().");
-        // #endif
+        Debug.error("This project is using the legacy script system. You cannot call pc.registerScript().");
         return;
     }
 
@@ -151,5 +145,6 @@ function registerScript(script, name, app) {
 
     ScriptHandler._push(script);
 }
+/* eslint-enable jsdoc/check-examples */
 
 export { createScript, registerScript };

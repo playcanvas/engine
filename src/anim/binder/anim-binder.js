@@ -1,9 +1,10 @@
+/** @typedef {import('../evaluator/anim-target.js').AnimTarget} AnimTarget */
+
 /**
- * @private
- * @class
- * @name AnimBinder
- * @classdesc This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
+ * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.
+ *
+ * @private
  */
 class AnimBinder {
     // join a list of path segments into a path string using the full stop character. If another character is supplied,
@@ -46,18 +47,18 @@ class AnimBinder {
     }
 
     /**
-     * @private
-     * @static
-     * @function
-     * @name AnimBinder#encode
-     * @description Converts a locator array into its string version.
-     * @param {string|Array} entityPath - The entity location in the scene defined as an array or string path.
+     * Converts a locator array into its string version.
+     *
+     * @param {string|Array} entityPath - The entity location in the scene defined as an array or
+     * string path.
      * @param {string} component - The component of the entity the property is located under.
-     * @param {string|Array} propertyPath - The property location in the entity defined as an array or string path.
+     * @param {string|Array} propertyPath - The property location in the entity defined as an array
+     * or string path.
      * @returns {string} The locator encoded as a string.
      * @example
      * // returns 'spotLight/light/color.r'
      * encode(['spotLight'], 'light', ['color', 'r']);
+     * @private
      */
     static encode(entityPath, component, propertyPath) {
         return `${
@@ -68,11 +69,9 @@ class AnimBinder {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimBinder#resolve
-     * @description Resolve the provided target path and return an instance of {@link AnimTarget} which
-     * will handle setting the value, or return null if no such target exists.
+     * Resolve the provided target path and return an instance of {@link AnimTarget} which will
+     * handle setting the value, or return null if no such target exists.
+     *
      * @param {string} path - The animation curve path to resolve.
      * @returns {AnimTarget|null} - Returns the target instance on success and null otherwise.
      */
@@ -81,10 +80,8 @@ class AnimBinder {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimBinder#unresolve
-     * @description Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
+     * Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
+     *
      * @param {string} path - The animation curve path which is no longer driven.
      */
     unresolve(path) {
@@ -92,10 +89,8 @@ class AnimBinder {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimBinder#update
-     * @description Called by {@link AnimEvaluator} once a frame after animation updates are done.
+     * Called by {@link AnimEvaluator} once a frame after animation updates are done.
+     *
      * @param {number} deltaTime - Amount of time that passed in the current update.
      */
     update(deltaTime) {

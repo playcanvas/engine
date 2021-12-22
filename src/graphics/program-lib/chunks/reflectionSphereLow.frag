@@ -5,7 +5,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec3 reflDirV = vNormalV;
 
     vec2 sphereMapUv = reflDirV.xy * 0.5 + 0.5;
-    return $texture2DSAMPLE(texture_sphereMap, sphereMapUv).rgb;
+    return $DECODE(texture2D(texture_sphereMap, sphereMapUv));
 }
 
 void addReflection() {   

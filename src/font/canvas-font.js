@@ -10,26 +10,32 @@ import {
 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
+/** @typedef {import('../application.js').Application} Application */
+
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
 
 /**
- * @private
- * @class
- * @name CanvasFont
+ * Represents the resource of a canvas font asset.
+ *
  * @augments EventHandler
- * @classdesc Represents the resource of a canvas font asset.
- * @param {Application} app - The application.
- * @param {object} options - The font options.
- * @param {string} [options.fontName] - The name of the font, use in the same manner as a CSS font.
- * @param {string} [options.fontWeight] - The weight of the font, e.g. 'normal', 'bold', defaults to "normal".
- * @param {number} [options.fontSize] - The size the font will be rendered into to the texture atlas at, defaults to 32.
- * @param {Color} [options.color] - The color the font will be rendered into the texture atlas as, defaults to white.
- * @param {number} [options.width] - The width of each texture atlas, defaults to 512.
- * @param {number} [options.height] - The height of each texture atlas, defaults to 512.
- * @param {number} [options.padding] - Amount of glyph padding added to each glyph in the atlas.
+ * @private
  */
 class CanvasFont extends EventHandler {
+    /**
+     * Create a new CanvasFont instance.
+     *
+     * @param {Application} app - The application.
+     * @param {object} options - The font options.
+     * @param {string} [options.fontName] - The name of the font, use in the same manner as a CSS font.
+     * @param {string} [options.fontWeight] - The weight of the font, e.g. 'normal', 'bold', defaults to "normal".
+     * @param {number} [options.fontSize] - The size the font will be rendered into to the texture atlas at, defaults to 32.
+     * @param {Color} [options.color] - The color the font will be rendered into the texture atlas as, defaults to white.
+     * @param {number} [options.width] - The width of each texture atlas, defaults to 512.
+     * @param {number} [options.height] - The height of each texture atlas, defaults to 512.
+     * @param {number} [options.padding] - Amount of glyph padding added to each glyph in the atlas.
+     * @private
+     */
     constructor(app, options = {}) {
         super();
 
@@ -73,11 +79,10 @@ class CanvasFont extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name CanvasFont#createTextures
-     * @description Render the necessary textures for all characters in a string to be used for the canvas font.
+     * Render the necessary textures for all characters in a string to be used for the canvas font.
+     *
      * @param {string} text - The list of characters to render into the texture atlas.
+     * @private
      */
     createTextures(text) {
         const _chars = this._normalizeCharsSet(text);
@@ -98,12 +103,11 @@ class CanvasFont extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name CanvasFont#updateTextures
-     * @description Update the list of characters to include in the atlas to include those provided and re-render the texture atlas
-     * to include all the characters that have been supplied so far.
+     * Update the list of characters to include in the atlas to include those provided and
+     * re-render the texture atlas to include all the characters that have been supplied so far.
+     *
      * @param {string} text - The list of characters to add to the texture atlas.
+     * @private
      */
     updateTextures(text) {
         const _chars = this._normalizeCharsSet(text);
@@ -122,10 +126,9 @@ class CanvasFont extends EventHandler {
     }
 
     /**
+     * Tears down all resources used by the font.
+     *
      * @private
-     * @function
-     * @name CanvasFont#destroy
-     * @description Tears down all resources used by the font.
      */
     destroy() {
         // call texture.destroy on any created textures

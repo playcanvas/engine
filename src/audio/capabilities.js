@@ -1,9 +1,8 @@
 /**
- * @private
- * @function
- * @name SoundManager.hasAudioContext
- * @description Reports whether this device supports the Web Audio API.
+ * Reports whether this device supports the Web Audio API.
+ *
  * @returns {boolean} True if Web Audio is supported and false otherwise.
+ * @private
  */
 function hasAudioContext() {
     return !!(typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined');

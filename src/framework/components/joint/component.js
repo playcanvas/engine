@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { math } from '../../../math/math.js';
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
@@ -24,24 +26,23 @@ const properties = [
 ];
 
 /**
- * @private
- * @component
- * @class
- * @name JointComponent
+ * The JointComponent adds a physics joint constraint linking two rigid bodies.
+ *
  * @augments Component
- * @classdesc The JointComponent adds a physics joint constraint linking two rigid bodies.
- * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * @private
  */
 class JointComponent extends Component {
+    /**
+     * Create a new JointComponent instance.
+     *
+     * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @private
+     */
     constructor(system, entity) {
         super(system, entity);
 
-        // #if _DEBUG
-        if (typeof Ammo === 'undefined') {
-            console.error('ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
-        }
-        // #endif
+        Debug.assert(typeof Ammo !== 'undefined', 'ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
 
         this._constraint = null;
 

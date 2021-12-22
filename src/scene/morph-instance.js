@@ -1,9 +1,13 @@
+import { Debug } from '../core/debug.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 
 import { Morph } from './morph.js';
+
+/** @typedef {import('../graphics/shader.js').Shader} Shader */
+/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `
@@ -16,18 +20,30 @@ const textureMorphVertexShader = `
     `;
 
 /**
- * @class
- * @name MorphInstance
- * @classdesc An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages selection of active morph targets.
- * @param {Morph} morph - The {@link Morph} to instance.
- * @property {MeshInstance} meshInstance The mesh instance this morph instance controls the morphing of.
- * @property {Morph} morph The morph with its targets, which is being instanced.
+ * An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages
+ * selection of active morph targets.
  */
 class MorphInstance {
+    /**
+     * Create a new MorphInstance instance.
+     *
+     * @param {Morph} morph - The {@link Morph} to instance.
+     */
     constructor(morph) {
+        /**
+         * The morph with its targets, which is being instanced.
+         *
+         * @type {Morph}
+         */
         this.morph = morph;
         morph.incRefCount();
         this.device = morph.device;
+
+        /**
+         * The mesh instance this morph instance controls the morphing of.
+         *
+         * @type {MeshInstance}
+         */
         this.meshInstance = null;
 
         // weights
@@ -100,9 +116,7 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#destroy
-     * @description Frees video memory allocated by this object.
+     * Frees video memory allocated by this object.
      */
     destroy() {
 
@@ -146,9 +160,9 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#clone
-     * @description Clones a MorphInstance. The returned clone uses the same {@link Morph} and weights are set to defaults.
+     * Clones a MorphInstance. The returned clone uses the same {@link Morph} and weights are set
+     * to defaults.
+     *
      * @returns {MorphInstance} A clone of the specified MorphInstance.
      */
     clone() {
@@ -157,9 +171,8 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#getWeight
-     * @description Gets current weight of the specified morph target.
+     * Gets current weight of the specified morph target.
+     *
      * @param {number} index - An index of morph target.
      * @returns {number} Weight.
      */
@@ -168,9 +181,8 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#setWeight
-     * @description Sets weight of the specified morph target.
+     * Sets weight of the specified morph target.
+     *
      * @param {number} index - An index of morph target.
      * @param {number} weight - Weight.
      */
@@ -179,7 +191,13 @@ class MorphInstance {
         this._dirty = true;
     }
 
-    // generates fragment shader to blend number of textures using specified weights
+    /**
+     * Generate fragment shader to blend a number of textures using specified weights.
+     *
+     * @param {number} numTextures - Number of textures to blend.
+     * @returns {string} Fragment shader.
+     * @private
+     */
     _getFragmentShader(numTextures) {
 
         let fragmentShader = '';
@@ -206,7 +224,13 @@ class MorphInstance {
         return fragmentShader;
     }
 
-    // creates complete shader for texture based morphing
+    /**
+     * Create complete shader for texture based morphing.
+     *
+     * @param {number} count - Number of textures to blend.
+     * @returns {Shader} Shader.
+     * @private
+     */
     _getShader(count) {
 
         let shader = this.shaderCache[count];
@@ -225,7 +249,7 @@ class MorphInstance {
 
         const device = this.device;
 
-        // blend curently set up textures to render target
+        // blend currently set up textures to render target
         const submitBatch = (usedCount, blending) => {
 
             // factors
@@ -279,9 +303,7 @@ class MorphInstance {
 
         const device = this.device;
 
-        // #if _DEBUG
-        device.pushMarker("MorphUpdate");
-        // #endif
+        Debug.pushGpuMarker(device, "MorphUpdate");
 
         // update textures if active targets, or no active targets and textures need to be cleared
         if (this._activeTargets.length > 0 || !this.zeroTextures) {
@@ -294,9 +316,7 @@ class MorphInstance {
             this.zeroTextures = this._activeTargets.length === 0;
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
     }
 
     _updateVertexMorph() {
@@ -328,9 +348,8 @@ class MorphInstance {
     }
 
     /**
-     * @function
-     * @name MorphInstance#update
-     * @description Selects active morph targets and prepares morph for rendering. Called automatically by renderer.
+     * Selects active morph targets and prepares morph for rendering. Called automatically by
+     * renderer.
      */
     update() {
 

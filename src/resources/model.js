@@ -1,4 +1,5 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { http, Http } from '../net/http.js';
 
@@ -7,15 +8,30 @@ import { JsonModelParser } from './parser/json-model.js';
 
 import { DefaultMaterial } from '../scene/materials/default-material.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name ModelHandler
+ * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
+ *
+ * @callback addParserCallback
+ * @param {string} url - The resource url.
+ * @param {object} data - The raw model data.
+ * @returns {boolean} Return true if this parser should be used to parse the data into a
+ * {@link Model}.
+ */
+
+/**
+ * Resource handler used for loading {@link Model} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Model} resources.
- * @param {GraphicsDevice} device - The graphics device that will be rendering.
- * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ModelHandler {
+    /**
+     * Create a new ModelHandler instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device that will be rendering.
+     */
     constructor(device) {
         this._device = device;
         this._parsers = [];
@@ -72,9 +88,7 @@ class ModelHandler {
                 return p.parser.parse(data);
             }
         }
-        // #if _DEBUG
-        console.warn("pc.ModelHandler#open: No model parser found for: " + url);
-        // #endif
+        Debug.warn("pc.ModelHandler#open: No model parser found for: " + url);
         return null;
     }
 
@@ -138,14 +152,12 @@ class ModelHandler {
     }
 
     /**
-     * @function
-     * @name ModelHandler#addParser
-     * @description Add a parser that converts raw data into a {@link Model}
-     * Default parser is for JSON models.
+     * Add a parser that converts raw data into a {@link Model}. Default parser is for JSON models.
+     *
      * @param {object} parser - See JsonModelParser for example.
-     * @param {callbacks.AddParser} decider - Function that decides on which parser to use.
-     * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link Model}.
-     * The first parser to return true is used.
+     * @param {addParserCallback} decider - Function that decides on which parser to use. Function
+     * should take (url, data) arguments and return true if this parser should be used to parse the
+     * data into a {@link Model}. The first parser to return true is used.
      */
     addParser(parser, decider) {
         this._parsers.push({

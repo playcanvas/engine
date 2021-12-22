@@ -1,5 +1,6 @@
 import { Vec2 } from '../math/vec2.js';
 import { Vec3 } from '../math/vec3.js';
+import { Debug } from '../core/debug.js';
 
 import {
     SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
@@ -7,7 +8,8 @@ import {
 } from '../graphics/constants.js';
 
 import { Mesh } from './mesh.js';
-import { DeprecatedLog } from '../deprecated/deprecated-log.js';
+
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const primitiveUv1Padding = 4.0 / 64;
 const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
@@ -16,10 +18,9 @@ const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 const shapePrimitives = [];
 
 /**
- * @function
- * @name calculateNormals
- * @description Generates normal information from the specified positions and
- * triangle indices. See {@link createMesh}.
+ * Generates normal information from the specified positions and triangle indices. See
+ * {@link createMesh}.
+ *
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
@@ -85,10 +86,9 @@ function calculateNormals(positions, indices) {
 }
 
 /**
- * @function
- * @name calculateTangents
- * @description Generates tangent information from the specified positions,
- * normals, texture coordinates and triangle indices. See {@link createMesh}.
+ * Generates tangent information from the specified positions, normals, texture coordinates and
+ * triangle indices. See {@link createMesh}.
+ *
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} normals - An array of 3-dimensional vertex normals.
  * @param {number[]} uvs - An array of 2-dimensional vertex texture coordinates.
@@ -99,7 +99,7 @@ function calculateNormals(positions, indices) {
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
 function calculateTangents(positions, normals, uvs, indices) {
-    // Lengyel’s Method
+    // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
     const triangleCount = indices.length / 3;
     const vertexCount   = positions.length / 3;
@@ -207,16 +207,15 @@ function calculateTangents(positions, normals, uvs, indices) {
 }
 
 /**
- * @function
- * @name createMesh
- * @description Creates a new mesh object from the supplied vertex information and topology.
+ * Creates a new mesh object from the supplied vertex information and topology.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
  * @param {number[]} [opts.tangents] - An array of 3-dimensional vertex tangents.
- * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors where each
- * component is an integer in the range 0 to 255.
+ * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors where each component
+ * is an integer in the range 0 to 255.
  * @param {number[]} [opts.uvs] - An array of 2-dimensional vertex texture coordinates.
  * @param {number[]} [opts.uvs1] - Same as opts.uvs, but for additional UV set
  * @param {number[]} [opts.blendIndices] - An array of 4-dimensional bone indices where each
@@ -260,7 +259,7 @@ function createMesh(device, positions, opts) {
         }
 
         if (opts.blendIndices) {
-            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, TYPE_UINT8);
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, opts.blendIndices.length / 4, TYPE_UINT8);
         }
 
         if (opts.blendWeights) {
@@ -277,22 +276,25 @@ function createMesh(device, positions, opts) {
 }
 
 /**
- * @function
- * @name createTorus
- * @description Creates a procedural torus-shaped mesh.
+ * Creates a procedural torus-shaped mesh.
  *
- * The size, shape and tesselation properties of the torus can be controlled via function parameters.
- * By default, the function will create a torus in the XZ-plane with a tube radius of 0.2, a ring radius
- * of 0.3, 20 segments and 30 sides.
+ * The size, shape and tesselation properties of the torus can be controlled via function
+ * parameters. By default, the function will create a torus in the XZ-plane with a tube radius of
+ * 0.2, a ring radius of 0.3, 20 segments and 30 sides.
  *
- * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the torus's mesh.
+ * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent
+ * information is generated into the vertex buffer of the torus's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus (defaults to 0.2).
- * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
- * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
- * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring (defaults to 30).
+ * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus
+ * (defaults to 0.2).
+ * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
+ * tube (defaults to 0.3).
+ * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the
+ * torus ring (defaults to 20).
+ * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring
+ * (defaults to 30).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new torus-shaped mesh.
  */
@@ -570,16 +572,15 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 }
 
 /**
- * @function
- * @name createCylinder
- * @description Creates a procedural cylinder-shaped mesh.
+ * Creates a procedural cylinder-shaped mesh.
  *
- * The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
- * By default, the function will create a cylinder standing vertically centered on the XZ-plane with a radius
- * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.
+ * The size, shape and tesselation properties of the cylinder can be controlled via function
+ * parameters. By default, the function will create a cylinder standing vertically centered on the
+ * XZ-plane with a radius of 0.5, a height of 1.0, 1 height segment and 20 cap segments.
  *
- * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the cylinder's mesh.
+ * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent
+ * information is generated into the vertex buffer of the cylinder's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder (defaults to 0.5).
@@ -592,7 +593,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 function createCylinder(device, opts) {
     // #if _DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
-        DeprecatedLog.log('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        Debug.deprecated('"baseRadius" in arguments, use "radius" instead');
     }
     // #endif
 
@@ -615,23 +616,25 @@ function createCylinder(device, opts) {
 }
 
 /**
- * @function
- * @name createCapsule
- * @description Creates a procedural capsule-shaped mesh.
+ * Creates a procedural capsule-shaped mesh.
  *
  * The size, shape and tesselation properties of the capsule can be controlled via function
- * parameters. By default, the function will create a capsule standing vertically centered
- * on the XZ-plane with a radius of 0.25, a height of 1.0, 1 height segment and 10 cap
- * segments.
+ * parameters. By default, the function will create a capsule standing vertically centered on the
+ * XZ-plane with a radius of 0.25, a height of 1.0, 1 height segment and 10 cap segments.
  *
- * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the capsule's mesh.
+ * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent
+ * information is generated into the vertex buffer of the capsule's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults to 0.3).
- * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults to 1.0).
- * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the capsule (defaults to 1).
- * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule (defaults to 20).
+ * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults
+ * to 0.3).
+ * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults
+ * to 1.0).
+ * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the
+ * capsule (defaults to 1).
+ * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule
+ * (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
@@ -654,24 +657,24 @@ function createCapsule(device, opts) {
 }
 
 /**
- * @function
- * @name createCone
- * @description Creates a procedural cone-shaped mesh.
+ * Creates a procedural cone-shaped mesh.
  *
  * The size, shape and tesselation properties of the cone can be controlled via function
- * parameters. By default, the function will create a cone standing vertically centered
- * on the XZ-plane with a base radius of 0.5, a height of 1.0, 5 height segments and 20
- * cap segments.
+ * parameters. By default, the function will create a cone standing vertically centered on the
+ * XZ-plane with a base radius of 0.5, a height of 1.0, 5 height segments and 20 cap segments.
  *
- * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent
- * information is generated into the vertex buffer of the cone's mesh.
+ * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
+ * is generated into the vertex buffer of the cone's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
  * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
  * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
- * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone (defaults to 5).
- * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone (defaults to 18).
+ * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone
+ * (defaults to 5).
+ * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone
+ * (defaults to 18).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cone-shaped mesh.
  */
@@ -694,21 +697,22 @@ function createCone(device, opts) {
 }
 
 /**
- * @function
- * @name createSphere
- * @description Creates a procedural sphere-shaped mesh.
+ * Creates a procedural sphere-shaped mesh.
  *
- * The size and tesselation properties of the sphere can be controlled via function
- * parameters. By default, the function will create a sphere centered on the object
- * space origin with a radius of 0.5 and 16 segments in both longitude and latitude.
+ * The size and tesselation properties of the sphere can be controlled via function parameters. By
+ * default, the function will create a sphere centered on the object space origin with a radius of
+ * 0.5 and 16 segments in both longitude and latitude.
  *
  * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the sphere's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
- * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the sphere (defaults to 16).
- * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of the sphere (defaults to 16).
+ * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the
+ * sphere (defaults to 16).
+ * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of
+ * the sphere (defaults to 16).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new sphere-shaped mesh.
  */
@@ -773,22 +777,24 @@ function createSphere(device, opts) {
 }
 
 /**
- * @function
- * @name createPlane
- * @description Creates a procedural plane-shaped mesh.
+ * Creates a procedural plane-shaped mesh.
  *
- * The size and tesselation properties of the plane can be controlled via function
- * parameters. By default, the function will create a plane centered on the object
- * space origin with a width and length of 1.0 and 5 segments in either axis (50
- * triangles). The normal vector of the plane is aligned along the positive Y axis.
+ * The size and tesselation properties of the plane can be controlled via function parameters. By
+ * default, the function will create a plane centered on the object space origin with a width and
+ * length of 1.0 and 5 segments in either axis (50 triangles). The normal vector of the plane is
+ * aligned along the positive Y axis.
  *
  * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the plane's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
- * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane (defaults to 5).
- * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane (defaults to 5).
+ * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes
+ * (defaults to [0.5, 0.5]).
+ * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane
+ * (defaults to 5).
+ * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane
+ * (defaults to 5).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new plane-shaped mesh.
  */
@@ -852,22 +858,25 @@ function createPlane(device, opts) {
 }
 
 /**
- * @function
- * @name createBox
- * @description Creates a procedural box-shaped mesh.
+ * Creates a procedural box-shaped mesh.
  *
- * The size, shape and tesselation properties of the box can be controlled via function parameters. By
- * default, the function will create a box centered on the object space origin with a width, length and
- * height of 1.0 unit and 10 segments in either axis (50 triangles per face).
+ * The size, shape and tesselation properties of the box can be controlled via function parameters.
+ * By default, the function will create a box centered on the object space origin with a width,
+ * length and height of 1.0 unit and 10 segments in either axis (50 triangles per face).
  *
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
  * information is generated into the vertex buffer of the box's mesh.
+ *
  * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
- * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box (defaults to 1).
- * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box (defaults to 1).
- * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box (defaults to 1).
+ * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to
+ * [0.5, 0.5, 0.5]).
+ * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box
+ * (defaults to 1).
+ * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box
+ * (defaults to 1).
+ * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box
+ * (defaults to 1).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new box-shaped mesh.
  */

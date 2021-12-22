@@ -10,6 +10,9 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
     diffuseMap: 'gray',
@@ -25,13 +28,16 @@ const PLACEHOLDER_MAP = {
 };
 
 /**
- * @class
- * @name MaterialHandler
+ * Resource handler used for loading {@link Material} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Material} resources.
- * @param {Application} app - The running {@link Application}.
  */
 class MaterialHandler {
+    /**
+     * Create a new MaterialHandler instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;
@@ -183,16 +189,12 @@ class MaterialHandler {
     }
 
     _assignCubemap(parameterName, materialAsset, textures) {
-        // NB we now set resource directly (like textures)
-        materialAsset.resource[parameterName] = textures[0]; // the primary cubemap texture
-        if (textures.length === 7) {
-            // the prefiltered textures
-            materialAsset.resource.prefilteredCubeMap128 = textures[1];
-            materialAsset.resource.prefilteredCubeMap64 = textures[2];
-            materialAsset.resource.prefilteredCubeMap32 = textures[3];
-            materialAsset.resource.prefilteredCubeMap16 = textures[4];
-            materialAsset.resource.prefilteredCubeMap8 = textures[5];
-            materialAsset.resource.prefilteredCubeMap4 = textures[6];
+        // the primary cubemap texture
+        materialAsset.resource[parameterName] = textures[0];
+
+        // set prefiltered textures
+        if (parameterName === 'cubeMap') {
+            materialAsset.resource.prefilteredCubemaps = textures.slice(1);
         }
     }
 

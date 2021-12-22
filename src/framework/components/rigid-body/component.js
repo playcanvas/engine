@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -10,32 +12,32 @@ import {
 } from './constants.js';
 import { Component } from '../component.js';
 
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').RigidBodyComponentSystem} RigidBodyComponentSystem */
+
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
 let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 
 /**
- * @component
- * @class
- * @name RigidBodyComponent
- * @augments Component
- * @classdesc The rigidbody component, when combined with a {@link CollisionComponent}, allows your
- * entities to be simulated using realistic physics. A rigidbody component will fall under gravity and
- * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid bodies.
+ * The rigidbody component, when combined with a {@link CollisionComponent}, allows your entities
+ * to be simulated using realistic physics. A rigidbody component will fall under gravity and
+ * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid
+ * bodies.
  *
- * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to a
- * {@link Entity}, use {@link Entity#addComponent}:
+ * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to
+ * a {@link Entity}, use {@link Entity#addComponent}:
  *
- * ~~~javascript
+ * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
  * const entity = pc.Entity();
  * entity.addComponent("rigidbody"); // With no options specified, this defaults to a 'static' body
  * entity.addComponent("collision"); // With no options specified, this defaults to a 1x1x1 box shape
- * ~~~
+ * ```
  *
  * To create a dynamic sphere with mass of 10, do:
  *
- * ~~~javascript
+ * ```javascript
  * const entity = pc.Entity();
  * entity.addComponent("rigidbody", {
  *     type: pc.BODYTYPE_DYNAMIC,
@@ -44,51 +46,22 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * entity.addComponent("collision", {
  *     type: "sphere"
  * });
- * ~~~
+ * ```
  *
  * Relevant 'Engine-only' examples:
+ *
  * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
  * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
  *
- * @description Create a new RigidBodyComponent.
- * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
- * @param {Entity} entity - The entity this component is attached to.
- * @property {number} mass The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC}
- * bodies, other types have infinite mass. Defaults to 1.
- * @property {Vec3} linearVelocity Defines the speed of the body in a given direction.
- * @property {Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
- * @property {number} linearDamping Controls the rate at which a body loses linear velocity over time.
- * Defaults to 0.
- * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
- * Defaults to 0.
- * @property {Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
- * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely
- * move).
- * @property {Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
- * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely
- * rotate).
- * @property {number} friction The friction value used when contacts occur between two bodies. A higher
- * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
- * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults
- * to 0.
- * @property {number} restitution Influences the amount of energy lost when two rigid bodies collide. The
- * calculation multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
- * that all energy is lost in the collision while a value of 1 means that no energy is lost. Should be
- * set in the range 0 to 1. Defaults to 0.
- * @property {number} group The collision group this body belongs to. Combine the group and the mask to
- * prevent bodies colliding with each other. Defaults to 1.
- * @property {number} mask The collision mask sets which groups this body collides with. It is a bitfield
- * of 16 bits, the first 8 bits are reserved for engine use. Defaults to 65535.
- * @property {string} type The rigid body type determines how the body is simulated. Can be:
- *
- * - {@link BODYTYPE_STATIC}: infinite mass and cannot move.
- * - {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
- * - {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be moved
- * by setting the position and rotation of component's {@link Entity}).
- *
- * Defaults to {@link BODYTYPE_STATIC}.
+ * @augments Component
  */
 class RigidBodyComponent extends Component {
+    /**
+     * Create a new RigidBodyComponent instance.
+     *
+     * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity this component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
@@ -118,10 +91,11 @@ class RigidBodyComponent extends Component {
         this._type = BODYTYPE_STATIC;
     }
 
-    get angularDamping() {
-        return this._angularDamping;
-    }
-
+    /**
+     * Controls the rate at which a body loses angular velocity over time.
+     *
+     * @type {number}
+     */
     set angularDamping(damping) {
         if (this._angularDamping !== damping) {
             this._angularDamping = damping;
@@ -132,10 +106,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get angularFactor() {
-        return this._angularFactor;
+    get angularDamping() {
+        return this._angularDamping;
     }
 
+    /**
+     * Scaling factor for angular movement of the body in each axis. Only valid for rigid bodies of
+     * type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely rotate).
+     *
+     * @type {Vec3}
+     */
     set angularFactor(factor) {
         if (!this._angularFactor.equals(factor)) {
             this._angularFactor.copy(factor);
@@ -147,14 +127,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get angularVelocity() {
-        if (this._body && this._type === BODYTYPE_DYNAMIC) {
-            const velocity = this._body.getAngularVelocity();
-            this._angularVelocity.set(velocity.x(), velocity.y(), velocity.z());
-        }
-        return this._angularVelocity;
+    get angularFactor() {
+        return this._angularFactor;
     }
 
+    /**
+     * Defines the rotational speed of the body around each world axis.
+     *
+     * @type {Vec3}
+     */
     set angularVelocity(velocity) {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             this._body.activate();
@@ -166,8 +147,12 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get body() {
-        return this._body;
+    get angularVelocity() {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            const velocity = this._body.getAngularVelocity();
+            this._angularVelocity.set(velocity.x(), velocity.y(), velocity.z());
+        }
+        return this._angularVelocity;
     }
 
     set body(body) {
@@ -180,10 +165,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get friction() {
-        return this._friction;
+    get body() {
+        return this._body;
     }
 
+    /**
+     * The friction value used when contacts occur between two bodies. A higher value indicates
+     * more friction. Should be set in the range 0 to 1. Defaults to 0.5.
+     *
+     * @type {number}
+     */
     set friction(friction) {
         if (this._friction !== friction) {
             this._friction = friction;
@@ -194,10 +185,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get group() {
-        return this._group;
+    get friction() {
+        return this._friction;
     }
 
+    /**
+     * The collision group this body belongs to. Combine the group and the mask to prevent bodies
+     * colliding with each other. Defaults to 1.
+     *
+     * @type {number}
+     */
     set group(group) {
         if (this._group !== group) {
             this._group = group;
@@ -210,10 +207,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get linearDamping() {
-        return this._linearDamping;
+    get group() {
+        return this._group;
     }
 
+    /**
+     * Controls the rate at which a body loses linear velocity over time. Defaults to 0.
+     *
+     * @type {number}
+     */
     set linearDamping(damping) {
         if (this._linearDamping !== damping) {
             this._linearDamping = damping;
@@ -224,10 +226,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get linearFactor() {
-        return this._linearFactor;
+    get linearDamping() {
+        return this._linearDamping;
     }
 
+    /**
+     * Scaling factor for linear movement of the body in each axis. Only valid for rigid bodies of
+     * type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely move).
+     *
+     * @type {Vec3}
+     */
     set linearFactor(factor) {
         if (!this._linearFactor.equals(factor)) {
             this._linearFactor.copy(factor);
@@ -239,14 +247,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get linearVelocity() {
-        if (this._body && this._type === BODYTYPE_DYNAMIC) {
-            const velocity = this._body.getLinearVelocity();
-            this._linearVelocity.set(velocity.x(), velocity.y(), velocity.z());
-        }
-        return this._linearVelocity;
+    get linearFactor() {
+        return this._linearFactor;
     }
 
+    /**
+     * Defines the speed of the body in a given direction.
+     *
+     * @type {Vec3}
+     */
     set linearVelocity(velocity) {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             this._body.activate();
@@ -258,10 +267,20 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get mask() {
-        return this._mask;
+    get linearVelocity() {
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+            const velocity = this._body.getLinearVelocity();
+            this._linearVelocity.set(velocity.x(), velocity.y(), velocity.z());
+        }
+        return this._linearVelocity;
     }
 
+    /**
+     * The collision mask sets which groups this body collides with. It is a bitfield of 16 bits,
+     * the first 8 bits are reserved for engine use. Defaults to 65535.
+     *
+     * @type {number}
+     */
     set mask(mask) {
         if (this._mask !== mask) {
             this._mask = mask;
@@ -274,10 +293,16 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get mass() {
-        return this._mass;
+    get mask() {
+        return this._mask;
     }
 
+    /**
+     * The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC} bodies, other types
+     * have infinite mass. Defaults to 1.
+     *
+     * @type {number}
+     */
     set mass(mass) {
         if (this._mass !== mass) {
             this._mass = mass;
@@ -301,10 +326,18 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get restitution() {
-        return this._restitution;
+    get mass() {
+        return this._mass;
     }
 
+    /**
+     * Influences the amount of energy lost when two rigid bodies collide. The calculation
+     * multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
+     * that all energy is lost in the collision while a value of 1 means that no energy is lost.
+     * Should be set in the range 0 to 1. Defaults to 0.
+     *
+     * @type {number}
+     */
     set restitution(restitution) {
         if (this._restitution !== restitution) {
             this._restitution = restitution;
@@ -315,10 +348,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get rollingFriction() {
-        return this._rollingFriction;
+    get restitution() {
+        return this._restitution;
     }
 
+    /**
+     * Sets a torsional friction orthogonal to the contact point. Defaults to 0.
+     *
+     * @type {number}
+     */
     set rollingFriction(friction) {
         if (this._rollingFriction !== friction) {
             this._rollingFriction = friction;
@@ -329,10 +367,22 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    get type() {
-        return this._type;
+    get rollingFriction() {
+        return this._rollingFriction;
     }
 
+    /**
+     * The rigid body type determines how the body is simulated. Can be:
+     *
+     * - {@link BODYTYPE_STATIC}: infinite mass and cannot move.
+     * - {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
+     * - {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be
+     * moved by setting the position and rotation of component's {@link Entity}).
+     *
+     * Defaults to {@link BODYTYPE_STATIC}.
+     *
+     * @type {string}
+     */
     set type(type) {
         if (this._type !== type) {
             this._type = type;
@@ -361,11 +411,15 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    get type() {
+        return this._type;
+    }
+
     /**
+     * If the Entity has a Collision shape attached then create a rigid body using this shape. This
+     * method destroys the existing body.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponent#createBody
-     * @description If the Entity has a Collision shape attached then create a rigid body using this shape. This method destroys the existing body.
      */
     createBody() {
         const entity = this.entity;
@@ -421,9 +475,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#isActive
-     * @description Returns true if the rigid body is currently actively being simulated. I.e. Not 'sleeping'.
+     * Returns true if the rigid body is currently actively being simulated. I.e. Not 'sleeping'.
+     *
      * @returns {boolean} True if the body is active.
      */
     isActive() {
@@ -431,10 +484,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#activate
-     * @description Forcibly activate the rigid body simulation. Only affects rigid bodies of
-     * type {@link BODYTYPE_DYNAMIC}.
+     * Forcibly activate the rigid body simulation. Only affects rigid bodies of type
+     * {@link BODYTYPE_DYNAMIC}.
      */
     activate() {
         if (this._body) {
@@ -507,20 +558,23 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#applyForce
-     * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
-     * body. However, the force can be applied at an offset this point by specifying a world space vector from
-     * the body's origin to the point of application. This function has two valid signatures. You can either
-     * specify the force (and optional relative point) via 3D-vector or numbers.
+     * Apply an force to the body at a point. By default, the force is applied at the origin of the
+     * body. However, the force can be applied at an offset this point by specifying a world space
+     * vector from the body's origin to the point of application. This function has two valid
+     * signatures. You can either specify the force (and optional relative point) via 3D-vector or
+     * numbers.
+     *
      * @param {Vec3|number} x - A 3-dimensional vector representing the force in world-space or
      * the x-component of the force in world-space.
-     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
-     * which to apply the impulse in world-space or the y-component of the force in world-space.
+     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
+     * at which to apply the impulse in world-space or the y-component of the force in world-space.
      * @param {number} [z] - The z-component of the force in world-space.
-     * @param {number} [px] - The x-component of a world-space offset from the body's position where the force is applied.
-     * @param {number} [py] - The y-component of a world-space offset from the body's position where the force is applied.
-     * @param {number} [pz] - The z-component of a world-space offset from the body's position where the force is applied.
+     * @param {number} [px] - The x-component of a world-space offset from the body's position
+     * where the force is applied.
+     * @param {number} [py] - The y-component of a world-space offset from the body's position
+     * where the force is applied.
+     * @param {number} [pz] - The z-component of a world-space offset from the body's position
+     * where the force is applied.
      * @example
      * // Apply an approximation of gravity at the body's center
      * this.entity.rigidbody.applyForce(0, -10, 0);
@@ -592,12 +646,11 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#applyTorque
-     * @description Apply torque (rotational force) to the body. This function has two valid signatures.
-     * You can either specify the torque force with a 3D-vector or with 3 numbers.
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world-space or
-     * the x-component of the torque force in world-space.
+     * Apply torque (rotational force) to the body. This function has two valid signatures. You can
+     * either specify the torque force with a 3D-vector or with 3 numbers.
+     *
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world-space
+     * or the x-component of the torque force in world-space.
      * @param {number} [y] - The y-component of the torque force in world-space.
      * @param {number} [z] - The z-component of the torque force in world-space.
      * @example
@@ -622,9 +675,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #if _DEBUG
-                console.error('ERROR: applyTorque: function takes 1 or 3 arguments');
-                // #endif
+                Debug.error('ERROR: applyTorque: function takes 1 or 3 arguments');
                 return;
         }
         const body = this._body;
@@ -636,20 +687,22 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#applyImpulse
-     * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
-     * This function has two valid signatures. You can either specify the impulse (and optional relative
-     * point) via 3D-vector or numbers.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point. This function
+     * has two valid signatures. You can either specify the impulse (and optional relative point)
+     * via 3D-vector or numbers.
+     *
      * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
      * the x-component of the impulse in world-space.
-     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
-     * which to apply the impulse in the local-space of the entity or the y-component of the impulse to
-     * apply in world-space.
+     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
+     * at which to apply the impulse in the local-space of the entity or the y-component of the
+     * impulse to apply in world-space.
      * @param {number} [z] - The z-component of the impulse to apply in world-space.
-     * @param {number} [px=0] - The x-component of the point at which to apply the impulse in the local-space of the entity.
-     * @param {number} [py=0] - The y-component of the point at which to apply the impulse in the local-space of the entity.
-     * @param {number} [pz=0] - The z-component of the point at which to apply the impulse in the local-space of the entity.
+     * @param {number} [px=0] - The x-component of the point at which to apply the impulse in the
+     * local-space of the entity.
+     * @param {number} [py=0] - The y-component of the point at which to apply the impulse in the
+     * local-space of the entity.
+     * @param {number} [pz=0] - The z-component of the point at which to apply the impulse in the
+     * local-space of the entity.
      * @example
      * // Apply an impulse along the world-space positive y-axis at the entity's position.
      * var impulse = new pc.Vec3(0, 10, 0);
@@ -699,9 +752,7 @@ class RigidBodyComponent extends Component {
                 pz = arguments[5];
                 break;
             default:
-                // #if _DEBUG
-                console.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
-                // #endif
+                Debug.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
                 return;
         }
         const body = this._body;
@@ -718,13 +769,12 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#applyTorqueImpulse
-     * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
-     * This function has two valid signatures. You can either specify the torque force with a 3D-vector
-     * or with 3 numbers.
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in world-space or
-     * the x-component of the torque impulse in world-space.
+     * Apply a torque impulse (rotational force applied instantaneously) to the body. This function
+     * has two valid signatures. You can either specify the torque force with a 3D-vector or with 3
+     * numbers.
+     *
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in
+     * world-space or the x-component of the torque impulse in world-space.
      * @param {number} [y] - The y-component of the torque impulse in world-space.
      * @param {number} [z] - The z-component of the torque impulse in world-space.
      * @example
@@ -749,9 +799,7 @@ class RigidBodyComponent extends Component {
                 z = arguments[2];
                 break;
             default:
-                // #if _DEBUG
-                console.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
-                // #endif
+                Debug.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
                 return;
         }
         const body = this._body;
@@ -763,9 +811,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#isStatic
-     * @description Returns true if the rigid body is of type {@link BODYTYPE_STATIC}.
+     * Returns true if the rigid body is of type {@link BODYTYPE_STATIC}.
+     *
      * @returns {boolean} True if static.
      */
     isStatic() {
@@ -773,9 +820,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#isStaticOrKinematic
-     * @description Returns true if the rigid body is of type {@link BODYTYPE_STATIC} or {@link BODYTYPE_KINEMATIC}.
+     * Returns true if the rigid body is of type {@link BODYTYPE_STATIC} or {@link BODYTYPE_KINEMATIC}.
+     *
      * @returns {boolean} True if static or kinematic.
      */
     isStaticOrKinematic() {
@@ -783,9 +829,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#isKinematic
-     * @description Returns true if the rigid body is of type {@link BODYTYPE_KINEMATIC}.
+     * Returns true if the rigid body is of type {@link BODYTYPE_KINEMATIC}.
+     *
      * @returns {boolean} True if kinematic.
      */
     isKinematic() {
@@ -793,11 +838,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponent#_getEntityTransform
-     * @description Writes an entity transform into an Ammo.btTransform but ignoring scale.
+     * Writes an entity transform into an Ammo.btTransform but ignoring scale.
+     *
      * @param {object} transform - The ammo transform to write the entity transform to.
+     * @private
      */
     _getEntityTransform(transform) {
         const entity = this.entity;
@@ -812,12 +856,11 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * Set the rigid body transform to be the same as the Entity transform. This must be called
+     * after any Entity transformation functions (e.g. {@link Entity#setPosition}) are called in
+     * order to update the rigid body to match the Entity.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponent#syncEntityToBody
-     * @description Set the rigid body transform to be the same as the Entity transform.
-     * This must be called after any Entity transformation functions (e.g. {@link Entity#setPosition}) are called
-     * in order to update the rigid body to match the Entity.
      */
     syncEntityToBody() {
         const body = this._body;
@@ -837,11 +880,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * Sets an entity's transform to match that of the world transformation matrix of a dynamic
+     * rigid body's motion state.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponent#_updateDynamic
-     * @description Sets an entity's transform to match that of the world transformation
-     * matrix of a dynamic rigid body's motion state.
      */
     _updateDynamic() {
         const body = this._body;
@@ -864,11 +906,9 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * Writes the entity's world transformation matrix into the motion state of a kinematic body.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponent#_updateKinematic
-     * @description Writes the entity's world transformation matrix into the motion state
-     * of a kinematic body.
      */
     _updateKinematic() {
         const motionState = this._body.getMotionState();
@@ -879,16 +919,17 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponent#teleport
-     * @description Teleport an entity to a new world-space position, optionally setting orientation. This function
-     * should only be called for rigid bodies that are dynamic. This function has three valid signatures.
-     * The first takes a 3-dimensional vector for the position and an optional 3-dimensional vector for Euler rotation.
-     * The second takes a 3-dimensional vector for the position and an optional quaternion for rotation.
-     * The third takes 3 numbers for the position and an optional 3 numbers for Euler rotation.
-     * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
-     * @param {Vec3|Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
-     * position y-coordinate.
+     * Teleport an entity to a new world-space position, optionally setting orientation. This
+     * function should only be called for rigid bodies that are dynamic. This function has three
+     * valid signatures. The first takes a 3-dimensional vector for the position and an optional
+     * 3-dimensional vector for Euler rotation. The second takes a 3-dimensional vector for the
+     * position and an optional quaternion for rotation. The third takes 3 numbers for the position
+     * and an optional 3 numbers for Euler rotation.
+     *
+     * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position
+     * x-coordinate.
+     * @param {Vec3|Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation
+     * or the new position y-coordinate.
      * @param {number} [z] - The new position z-coordinate.
      * @param {number} [rx] - The new Euler x-angle value.
      * @param {number} [ry] - The new Euler y-angle value.

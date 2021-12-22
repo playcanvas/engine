@@ -8,13 +8,18 @@
 //
 // When filtering:
 // NUM_SAMPLES - number of samples
-// NUM_SAMPLES_SQRT - sqrt of number of samples
+//
+// SUPPORTS_TEXLOD - whether supports texlod is supported
 
 varying vec2 vUv0;
 
 // source
 uniform sampler2D sourceTex;
 uniform samplerCube sourceCube;
+
+// samples
+uniform sampler2D samplesTex;
+uniform vec2 samplesTexInverseSize;
 
 // params:
 // x - target cubemap face 0..6
@@ -23,10 +28,18 @@ uniform samplerCube sourceCube;
 // w - target cubemap size for seam calc (0 to disable)
 uniform vec4 params;
 
+// params2:
+// x - target image total pixels
+// y - source cubemap size
+uniform vec2 params2;
+
 float targetFace() { return params.x; }
 float specularPower() { return params.y; }
 float sourceCubeSeamScale() { return params.z; }
 float targetCubeSeamScale() { return params.w; }
+
+float targetTotalPixels() { return params2.x; }
+float sourceTotalPixels() { return params2.y; }
 
 float PI = 3.141592653589793;
 
@@ -89,33 +102,28 @@ vec4 encodeRGBE(vec3 source) {
 
 //-- supported projections
 
-vec3 modifySeams(vec3 dir, float amount) {
-    if (amount != 1.0) {
-        vec3 adir = abs(dir);
-        float M = max(max(adir.x, adir.y), adir.z);
-        if (adir.x == M) {
-            dir.y *= amount;
-            dir.z *= amount;
-        }
-        else if (adir.y == M) {
-            dir.x *= amount;
-            dir.z *= amount;
-        } else {
-            dir.x *= amount;
-            dir.y *= amount;
-        }
-    }
-    return dir;
+vec3 modifySeams(vec3 dir, float scale) {
+    vec3 adir = abs(dir);
+    float M = max(max(adir.x, adir.y), adir.z);
+    return dir / M * vec3(
+        adir.x == M ? 1.0 : scale,
+        adir.y == M ? 1.0 : scale,
+        adir.z == M ? 1.0 : scale
+    );
 }
 
 vec2 toSpherical(vec3 dir) {
-    return vec2(atan(dir.z, dir.x), asin(dir.y));
+    return vec2(dir.xz == vec2(0.0) ? 0.0 : atan(dir.x, dir.z), asin(dir.y));
 }
 
 vec3 fromSpherical(vec2 uv) {
-    return vec3(cos(uv.y) * cos(uv.x),
+    return vec3(cos(uv.y) * sin(uv.x),
                 sin(uv.y),
-                cos(uv.y) * sin(uv.x));
+                cos(uv.y) * cos(uv.x));
+}
+
+vec3 getDirectionEquirect() {
+    return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
 
 vec4 sampleEquirect(vec2 sph) {
@@ -128,15 +136,36 @@ vec4 sampleEquirect(vec3 dir) {
 }
 
 vec4 sampleCubemap(vec3 dir) {
-    return textureCube(sourceCube, modifySeams(dir, sourceCubeSeamScale()));
+    return textureCube(sourceCube, modifySeams(dir, 1.0 - sourceCubeSeamScale()));
 }
 
 vec4 sampleCubemap(vec2 sph) {
     return sampleCubemap(fromSpherical(sph));
 }
 
-vec3 getDirectionEquirect() {
-    return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
+vec4 sampleEquirect(vec2 sph, float mipLevel) {
+    vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
+#ifdef SUPPORTS_TEXLOD
+    return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+#else
+    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
+#endif
+}
+
+vec4 sampleEquirect(vec3 dir, float mipLevel) {
+    return sampleEquirect(toSpherical(dir), mipLevel);
+}
+
+vec4 sampleCubemap(vec3 dir, float mipLevel) {
+#ifdef SUPPORTS_TEXLOD
+    return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
+#else
+    return textureCube(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()));
+#endif
+}
+
+vec4 sampleCubemap(vec2 sph, float mipLevel) {
+    return sampleCubemap(fromSpherical(sph), mipLevel);
 }
 
 // octahedral code, based on http://jcgt.org/published/0003/02/01
@@ -182,6 +211,19 @@ vec4 sampleOctahedral(vec2 sph) {
     return sampleOctahedral(fromSpherical(sph));
 }
 
+vec4 sampleOctahedral(vec3 dir, float mipLevel) {
+    vec2 uv = octEncode(dir) * 0.5 + 0.5;
+#ifdef SUPPORTS_TEXLOD
+    return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+#else
+    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
+#endif
+}
+
+vec4 sampleOctahedral(vec2 sph, float mipLevel) {
+    return sampleOctahedral(fromSpherical(sph), mipLevel);
+}
+
 /////////////////////////////////////////////////////////////////////
 
 vec3 getDirectionCubemap() {
@@ -203,7 +245,7 @@ vec3 getDirectionCubemap() {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return normalize(modifySeams(vec, 1.0 / targetCubeSeamScale()));
+    return normalize(modifySeams(vec, 1.0 / (1.0 - targetCubeSeamScale())));
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad
@@ -215,22 +257,10 @@ mat3 matrixFromVector(vec3 n) { // frisvad
 }
 
 mat3 matrixFromVectorSlow(vec3 n) {
-    vec3 a = normalize(cross(n, vec3(0, 1, 0)));
-    vec3 b = cross(n, a);
-    return mat3(a, b, n);
-}
-
-float rnd(int i) {
-    float sini = sin(float(i));
-    float cosi = cos(float(i));
-    return fract(sin(dot(vec2(sini, cosi), vec2(12.9898, 78.233) * 2.0)) * 43758.5453);
-}
-
-vec3 hemisphereSamplePhong(vec2 uv, float specPow) {
-    float phi = uv.y * 2.0 * PI;
-    float cosTheta = pow(1.0 - uv.x, 1.0 / (specPow + 1.0));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+    vec3 up = (1.0 - abs(n.y) <= 0.0000001) ? vec3(0.0, 0.0, n.y > 0.0 ? 1.0 : -1.0) : vec3(0.0, 1.0, 0.0);
+    vec3 x = normalize(cross(up, n));
+    vec3 y = cross(n, x);
+    return mat3(x, y, n);
 }
 
 vec4 reproject() {
@@ -242,6 +272,10 @@ vec4 reproject() {
         vec2 sph = toSpherical(TARGET_FUNC());
         vec2 sphu = dFdx(sph);
         vec2 sphv = dFdy(sph);
+
+        // TODO: check this declartion works on old old devices.
+        // might need to be placed globally or be made a #define
+        const float NUM_SAMPLES_SQRT = sqrt(float(NUM_SAMPLES));
 
         vec3 result = vec3(0.0);
         for (float u = 0.0; u < NUM_SAMPLES_SQRT; ++u) {
@@ -255,18 +289,54 @@ vec4 reproject() {
     }
 }
 
-vec4 prefilter() {
-    // get the target direction
-    vec3 vec = TARGET_FUNC();
+vec4 unpackFloat = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
+void unpackSample(int i, out vec3 L, out float mipLevel) {
+    float u = (float(i * 4) + 0.5) * samplesTexInverseSize.x;
+    float v = (floor(u) + 0.5) * samplesTexInverseSize.y;
+
+    vec4 raw;
+    raw.x = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+    raw.y = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+    raw.z = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+    raw.w = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat);
+
+    L.xyz = raw.xyz * 2.0 - 1.0;
+    mipLevel = raw.w * 8.0;
+}
+
+// convolve an environment given pre-generated samples
+vec4 prefilterSamples() {
     // construct vector space given target direction
-    mat3 vecSpace = matrixFromVectorSlow(vec);
+    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+
+    vec3 L;
+    float mipLevel;
 
     vec3 result = vec3(0.0);
-    for (int i=0; i<NUM_SAMPLES; ++i) {
-        vec2 uv = vec2(float(i) / float(NUM_SAMPLES), rnd(i));
-        vec3 dir = vecSpace * hemisphereSamplePhong(uv, specularPower());
-        result += DECODE_FUNC(SOURCE_FUNC(dir));
+    float totalWeight = 0.0;
+    for (int i = 0; i < NUM_SAMPLES; ++i) {
+        unpackSample(i, L, mipLevel);
+        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * L.z;
+        totalWeight += L.z;
+    }
+
+    return ENCODE_FUNC(result / totalWeight);
+}
+
+// unweighted version of prefilterSamples
+vec4 prefilterSamplesUnweighted() {
+    // construct vector space given target direction
+    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+
+    vec3 L;
+    float mipLevel;
+
+    vec3 result = vec3(0.0);
+    float totalWeight = 0.0;
+    for (int i = 0; i < NUM_SAMPLES; ++i) {
+        unpackSample(i, L, mipLevel);
+        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel));
     }
 
     return ENCODE_FUNC(result / float(NUM_SAMPLES));

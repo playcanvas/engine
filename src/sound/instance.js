@@ -4,6 +4,9 @@ import { math } from '../math/math.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 
+/** @typedef {import('./sound.js').Sound} Sound */
+/** @typedef {import('./manager.js').SoundManager} SoundManager */
+
 const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
 const STATE_STOPPED = 2;
@@ -15,37 +18,40 @@ function capTime(time, duration) {
 }
 
 /**
- * @class
- * @name SoundInstance
- * @augments EventHandler
- * @classdesc A SoundInstance plays a {@link Sound}.
- * @param {SoundManager} manager - The sound manager.
- * @param {Sound} sound - The sound to play.
- * @param {object} options - Options for the instance.
- * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
- * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
- * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
- * @param {number} [options.startTime=0] - The time from which the playback will start in seconds. Default is 0 to start at the beginning.
- * @param {number} [options.duration=null] - The total time after the startTime in seconds when playback will stop or restart if loop is true.
- * @param {Function} [options.onPlay=null] - Function called when the instance starts playing.
- * @param {Function} [options.onPause=null] - Function called when the instance is paused.
- * @param {Function} [options.onResume=null] - Function called when the instance is resumed.
- * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
- * @param {Function} [options.onEnd=null] - Function called when the instance ends.
+ * A SoundInstance plays a {@link Sound}.
+ *
  * @property {number} volume The volume modifier to play the sound with. In range 0-1.
  * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01.
- * @property {number} startTime The start time from which the sound will start playing.
- * @property {number} currentTime Gets or sets the current time of the sound that is playing. If the value provided is bigger than the duration of the instance it will wrap from the beginning.
- * @property {number} duration The duration of the sound that the instance will play starting from startTime.
- * @property {boolean} loop If true the instance will restart when it finishes playing.
- * @property {boolean} isPlaying Returns true if the instance is currently playing.
- * @property {boolean} isPaused Returns true if the instance is currently paused.
- * @property {boolean} isStopped Returns true if the instance is currently stopped.
- * @property {boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
- * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>. Source is only available after calling play.
+ * @property {number} currentTime Gets or sets the current time of the sound that is playing. If
+ * the value provided is bigger than the duration of the instance it will wrap from the beginning.
+ * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the
+ * Web Audio API is not supported the type of source is
+ * [Audio](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio). Source is only
+ * available after calling play.
  * @property {Sound} sound The sound resource that the instance will play.
+ * @augments EventHandler
  */
 class SoundInstance extends EventHandler {
+    /**
+     * Create a new SoundInstance instance.
+     *
+     * @param {SoundManager} manager - The sound manager.
+     * @param {Sound} sound - The sound to play.
+     * @param {object} options - Options for the instance.
+     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
+     * end or not.
+     * @param {number} [options.startTime=0] - The time from which the playback will start in
+     * seconds. Default is 0 to start at the beginning.
+     * @param {number} [options.duration=null] - The total time after the startTime in seconds when
+     * playback will stop or restart if loop is true.
+     * @param {Function} [options.onPlay=null] - Function called when the instance starts playing.
+     * @param {Function} [options.onPause=null] - Function called when the instance is paused.
+     * @param {Function} [options.onResume=null] - Function called when the instance is resumed.
+     * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
+     * @param {Function} [options.onEnd=null] - Function called when the instance ends.
+     */
     constructor(manager, sound, options) {
         super();
 
@@ -119,6 +125,104 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * The duration of the sound that the instance will play starting from startTime.
+     *
+     * @type {number}
+     */
+    set duration(value) {
+        this._duration = Math.max(0, Number(value) || 0);
+
+        // restart
+        const isPlaying = this._state === STATE_PLAYING;
+        this.stop();
+        if (isPlaying) {
+            this.play();
+        }
+    }
+
+    get duration() {
+        if (!this._sound) {
+            return 0;
+        }
+        if (this._duration) {
+            return capTime(this._duration, this._sound.duration);
+        }
+        return this._sound.duration;
+    }
+
+    /**
+     * Returns true if the instance is currently paused.
+     *
+     * @type {boolean}
+     */
+    get isPaused() {
+        return this._state === STATE_PAUSED;
+    }
+
+    /**
+     * Returns true if the instance is currently playing.
+     *
+     * @type {boolean}
+     */
+    get isPlaying() {
+        return this._state === STATE_PLAYING;
+    }
+
+    /**
+     * Returns true if the instance is currently stopped.
+     *
+     * @type {boolean}
+     */
+    get isStopped() {
+        return this._state === STATE_STOPPED;
+    }
+
+    /**
+     * Returns true if the instance is currently suspended because the window is not focused.
+     *
+     * @type {boolean}
+     */
+    get isSuspended() {
+        return this._suspended;
+    }
+
+    /**
+     * If true the instance will restart when it finishes playing.
+     *
+     * @type {boolean}
+     */
+    set loop(value) {
+        this._loop = !!value;
+        if (this.source) {
+            this.source.loop = this._loop;
+        }
+    }
+
+    get loop() {
+        return this._loop;
+    }
+
+    /**
+     * The start time from which the sound will start playing.
+     *
+     * @type {number}
+     */
+    set startTime(value) {
+        this._startTime = Math.max(0, Number(value) || 0);
+
+        // restart
+        const isPlaying = this._state === STATE_PLAYING;
+        this.stop();
+        if (isPlaying) {
+            this.play();
+        }
+    }
+
+    get startTime() {
+        return this._startTime;
+    }
+
     _onPlay() {
         this.fire('play');
 
@@ -165,20 +269,18 @@ class SoundInstance extends EventHandler {
     }
 
     /**
+     * Handle the manager's 'volumechange' event.
+     *
      * @private
-     * @function
-     * @name SoundInstance#_onManagerVolumeChange
-     * @description Handle the manager's 'volumechange' event.
      */
     _onManagerVolumeChange() {
         this.volume = this._volume;
     }
 
     /**
+     * Handle the manager's 'suspend' event.
+     *
      * @private
-     * @function
-     * @name SoundInstance#_onManagerSuspend
-     * @description Handle the manager's 'suspend' event.
      */
     _onManagerSuspend() {
         if (this._state === STATE_PLAYING && !this._suspended) {
@@ -188,79 +290,15 @@ class SoundInstance extends EventHandler {
     }
 
     /**
+     * Handle the manager's 'resume' event.
+     *
      * @private
-     * @function
-     * @name SoundInstance#_onManagerResume
-     * @description Handle the manager's 'resume' event.
      */
     _onManagerResume() {
         if (this._suspended) {
             this._suspended = false;
             this.resume();
         }
-    }
-
-    get loop() {
-        return this._loop;
-    }
-
-    set loop(value) {
-        this._loop = !!value;
-        if (this.source) {
-            this.source.loop = this._loop;
-        }
-    }
-
-    get startTime() {
-        return this._startTime;
-    }
-
-    set startTime(value) {
-        this._startTime = Math.max(0, Number(value) || 0);
-
-        // restart
-        const isPlaying = this._state === STATE_PLAYING;
-        this.stop();
-        if (isPlaying) {
-            this.play();
-        }
-    }
-
-    get duration() {
-        if (!this._sound) {
-            return 0;
-        }
-        if (this._duration) {
-            return capTime(this._duration, this._sound.duration);
-        }
-        return this._sound.duration;
-    }
-
-    set duration(value) {
-        this._duration = Math.max(0, Number(value) || 0);
-
-        // restart
-        const isPlaying = this._state === STATE_PLAYING;
-        this.stop();
-        if (isPlaying) {
-            this.play();
-        }
-    }
-
-    get isPlaying() {
-        return this._state === STATE_PLAYING;
-    }
-
-    get isPaused() {
-        return this._state === STATE_PAUSED;
-    }
-
-    get isStopped() {
-        return this._state === STATE_STOPPED;
-    }
-
-    get isSuspended() {
-        return this._suspended;
     }
 }
 

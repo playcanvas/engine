@@ -2,27 +2,32 @@ import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+
 /**
- * @class
- * @name XrPlaneDetection
- * @classdesc Plane Detection provides the ability to detect real world surfaces based on estimations of the underlying AR system.
- * @description Plane Detection provides the ability to detect real world surfaces based on estimations of the underlying AR system.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @property {boolean} supported True if Plane Detection is supported.
- * @property {boolean} available True if Plane Detection is available. This property can be set to true only during a running session.
- * @property {XrPlane[]|null} planes Array of {@link XrPlane} instances that contain individual plane information, or null if plane detection is not available.
- * @example
+ * Plane Detection provides the ability to detect real world surfaces based on estimations of the
+ * underlying AR system.
+ *
+ * ```javascript
  * // start session with plane detection enabled
  * app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
  *     planeDetection: true
  * });
- * @example
+ * ```
+ *
+ * ```javascript
  * app.xr.planeDetection.on('add', function (plane) {
  *     // new plane been added
  * });
+ * ```
  */
 class XrPlaneDetection extends EventHandler {
+    /**
+     * Create a new XrPlaneDetection instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 
@@ -139,14 +144,31 @@ class XrPlaneDetection extends EventHandler {
         }
     }
 
+    /**
+     * True if Plane Detection is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
+    /**
+     * True if Plane Detection is available. This property can be set to true only during a running
+     * session.
+     *
+     * @type {boolean}
+     */
     get available() {
         return this._available;
     }
 
+    /**
+     * Array of {@link XrPlane} instances that contain individual plane information, or null if
+     * plane detection is not available.
+     *
+     * @type {XrPlane[]|null}
+     */
     get planes() {
         return this._planes;
     }

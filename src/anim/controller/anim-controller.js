@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
@@ -9,21 +10,36 @@ import {
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
+/** @typedef {import('../../core/event-handler.js').EventHandler} EventHandler */
+/** @typedef {import('../evaluator/anim-evaluator.js').AnimEvaluator} AnimEvaluator */
+
 /**
+ * The AnimController manages the animations for its entity, based on the provided state graph and
+ * parameters. Its update method determines which state the controller should be in based on the
+ * current time, parameters and available states / transitions. It also ensures the AnimEvaluator
+ * is supplied with the correct animations, based on the currently active state.
+ *
  * @private
- * @class
- * @name AnimController
- * @classdesc The AnimController manages the animations for its entity, based on the provided state graph and parameters. Its update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
- * @description Create a new AnimController.
- * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
- * @param {object[]} states - The list of states used to form the controller state graph.
- * @param {object[]} transitions - The list of transitions used to form the controller state graph.
- * @param {object[]} parameters - The anim components parameters.
- * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
- * @param {EventHandler} eventHandler - The event handler which should be notified with anim events
- * @param {Set} consumedTriggers - Used to set triggers back to their default state after they have been consumed by a transition
  */
 class AnimController {
+    /**
+     * Create a new AnimController.
+     *
+     * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current
+     * playing animation keyframes and update the entities properties based on the current
+     * animation values.
+     * @param {object[]} states - The list of states used to form the controller state graph.
+     * @param {object[]} transitions - The list of transitions used to form the controller state
+     * graph.
+     * @param {object[]} parameters - The anim components parameters.
+     * @param {boolean} activate - Determines whether the anim controller should automatically play
+     * once all {@link AnimNodes} are assigned animations.
+     * @param {EventHandler} eventHandler - The event handler which should be notified with anim
+     * events.
+     * @param {Set} consumedTriggers - Used to set triggers back to their default state after they
+     * have been consumed by a transition.
+     * @private
+     */
     constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
         this._animEvaluator = animEvaluator;
         this._states = {};
@@ -67,12 +83,12 @@ class AnimController {
         return this._animEvaluator;
     }
 
-    get activeState() {
-        return this._findState(this._activeStateName);
-    }
-
     set activeState(stateName) {
         this._activeStateName = stateName;
+    }
+
+    get activeState() {
+        return this._findState(this._activeStateName);
     }
 
     get activeStateName() {
@@ -83,12 +99,12 @@ class AnimController {
         return this.activeState.animations;
     }
 
-    get previousState() {
-        return this._findState(this._previousStateName);
-    }
-
     set previousState(stateName) {
         this._previousStateName = stateName;
+    }
+
+    get previousState() {
+        return this._findState(this._previousStateName);
     }
 
     get previousStateName() {
@@ -105,12 +121,12 @@ class AnimController {
         return playable;
     }
 
-    get playing() {
-        return this._playing;
-    }
-
     set playing(value) {
         this._playing = value;
+    }
+
+    get playing() {
+        return this._playing;
     }
 
     get activeStateProgress() {
@@ -131,10 +147,6 @@ class AnimController {
         return maxDuration;
     }
 
-    get activeStateCurrentTime() {
-        return this._timeInState;
-    }
-
     set activeStateCurrentTime(time) {
         this._timeInStateBefore = time;
         this._timeInState = time;
@@ -144,6 +156,10 @@ class AnimController {
                 clip.time = time;
             }
         }
+    }
+
+    get activeStateCurrentTime() {
+        return this._timeInState;
     }
 
     get transitioning() {
@@ -466,9 +482,7 @@ class AnimController {
         }
         const state = this._findState(nodeName);
         if (!state) {
-            // #if _DEBUG
-            console.error('Attempting to unassign animation tracks from a state that does not exist.');
-            // #endif
+            Debug.error('Attempting to unassign animation tracks from a state that does not exist.');
             return;
         }
 
@@ -521,7 +535,7 @@ class AnimController {
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                const interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+                const interpolatedTime = this._totalTransitionTime === 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);

@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
 
 import { math } from '../../../math/math.js';
@@ -1260,18 +1261,14 @@ class TextElement {
         }
     }
 
-    get text() {
-        return this._text;
-    }
-
     set text(value) {
         this._i18nKey = null;
         const str = value != null && value.toString() || "";
         this._setText(str);
     }
 
-    get key() {
-        return this._i18nKey;
+    get text() {
+        return this._text;
     }
 
     set key(value) {
@@ -1289,8 +1286,8 @@ class TextElement {
         }
     }
 
-    get color() {
-        return this._color;
+    get key() {
+        return this._i18nKey;
     }
 
     set color(value) {
@@ -1304,50 +1301,56 @@ class TextElement {
         }
         // #endif
 
-        if (this._color.r === r && this._color.g === g && this._color.b === b) {
-            return;
+        if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
+
+            if (this._symbolColors) {
+                // color is baked into vertices, update text
+                if (this._font) {
+                    this._updateText();
+                }
+            } else {
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+
+                for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    const mi = this._model.meshInstances[i];
+                    mi.setParameter('material_emissive', this._colorUniform);
+                }
+            }
         }
 
-        this._color.r = r;
-        this._color.g = g;
-        this._color.b = b;
+        if (this._element) {
+            this._element.fire('set:color', this._color);
+        }
+    }
 
-        if (this._symbolColors) {
-            // color is baked into vertices, update text
-            if (this._font) {
-                this._updateText();
-            }
-        } else {
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
+    get color() {
+        return this._color;
+    }
 
-            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                const mi = this._model.meshInstances[i];
-                mi.setParameter('material_emissive', this._colorUniform);
+    set opacity(value) {
+        if (this._color.a !== value) {
+            this._color.a = value;
+
+            if (this._model) {
+                for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    const mi = this._model.meshInstances[i];
+                    mi.setParameter('material_opacity', value);
+                }
             }
+        }
+
+        if (this._element) {
+            this._element.fire('set:opacity', value);
         }
     }
 
     get opacity() {
         return this._color.a;
-    }
-
-    set opacity(value) {
-        if (this._color.a === value) return;
-
-        this._color.a = value;
-
-        if (this._model) {
-            for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                const mi = this._model.meshInstances[i];
-                mi.setParameter('material_opacity', value);
-            }
-        }
-    }
-
-    get lineHeight() {
-        return this._lineHeight;
     }
 
     set lineHeight(value) {
@@ -1359,8 +1362,8 @@ class TextElement {
         }
     }
 
-    get wrapLines() {
-        return this._wrapLines;
+    get lineHeight() {
+        return this._lineHeight;
     }
 
     set wrapLines(value) {
@@ -1371,12 +1374,12 @@ class TextElement {
         }
     }
 
-    get lines() {
-        return this._lineContents;
+    get wrapLines() {
+        return this._wrapLines;
     }
 
-    get spacing() {
-        return this._spacing;
+    get lines() {
+        return this._lineContents;
     }
 
     set spacing(value) {
@@ -1387,8 +1390,8 @@ class TextElement {
         }
     }
 
-    get fontSize() {
-        return this._fontSize;
+    get spacing() {
+        return this._spacing;
     }
 
     set fontSize(value) {
@@ -1400,9 +1403,8 @@ class TextElement {
         }
     }
 
-    get fontAsset() {
-        // getting fontAsset returns the currently used localized asset
-        return this._fontAsset.localizedAsset;
+    get fontSize() {
+        return this._fontSize;
     }
 
     set fontAsset(value) {
@@ -1411,8 +1413,9 @@ class TextElement {
         this._fontAsset.defaultAsset = value;
     }
 
-    get font() {
-        return this._font;
+    get fontAsset() {
+        // getting fontAsset returns the currently used localized asset
+        return this._fontAsset.localizedAsset;
     }
 
     set font(value) {
@@ -1497,8 +1500,8 @@ class TextElement {
         this._updateText();
     }
 
-    get alignment() {
-        return this._alignment;
+    get font() {
+        return this._font;
     }
 
     set alignment(value) {
@@ -1512,8 +1515,8 @@ class TextElement {
             this._updateText();
     }
 
-    get autoWidth() {
-        return this._autoWidth;
+    get alignment() {
+        return this._alignment;
     }
 
     set autoWidth(value) {
@@ -1538,8 +1541,8 @@ class TextElement {
         }
     }
 
-    get autoHeight() {
-        return this._autoHeight;
+    get autoWidth() {
+        return this._autoWidth;
     }
 
     set autoHeight(value) {
@@ -1564,8 +1567,8 @@ class TextElement {
         }
     }
 
-    get rtlReorder() {
-        return this._rtlReorder;
+    get autoHeight() {
+        return this._autoHeight;
     }
 
     set rtlReorder(value) {
@@ -1577,8 +1580,8 @@ class TextElement {
         }
     }
 
-    get unicodeConverter() {
-        return this._unicodeConverter;
+    get rtlReorder() {
+        return this._rtlReorder;
     }
 
     set unicodeConverter(value) {
@@ -1586,6 +1589,10 @@ class TextElement {
             this._unicodeConverter = value;
             this._setText(this._text);
         }
+    }
+
+    get unicodeConverter() {
+        return this._unicodeConverter;
     }
 
     // private
@@ -1606,10 +1613,6 @@ class TextElement {
             this._aabbDirty = false;
         }
         return this._aabb;
-    }
-
-    get outlineColor() {
-        return this._outlineColor;
     }
 
     set outlineColor(value) {
@@ -1649,8 +1652,8 @@ class TextElement {
         }
     }
 
-    get outlineThickness() {
-        return this._outlineThickness;
+    get outlineColor() {
+        return this._outlineColor;
     }
 
     set outlineThickness(value) {
@@ -1666,8 +1669,8 @@ class TextElement {
         }
     }
 
-    get shadowColor() {
-        return this._shadowColor;
+    get outlineThickness() {
+        return this._outlineThickness;
     }
 
     set shadowColor(value) {
@@ -1678,7 +1681,7 @@ class TextElement {
 
         // #if _DEBUG
         if (this._shadowColor === value) {
-            console.warn("Setting element.shadowColor to itself will have no effect");
+            Debug.warn("Setting element.shadowColor to itself will have no effect");
         }
         // #endif
 
@@ -1707,8 +1710,8 @@ class TextElement {
         }
     }
 
-    get shadowOffset() {
-        return this._shadowOffset;
+    get shadowColor() {
+        return this._shadowColor;
     }
 
     set shadowOffset(value) {
@@ -1730,8 +1733,8 @@ class TextElement {
         }
     }
 
-    get minFontSize() {
-        return this._minFontSize;
+    get shadowOffset() {
+        return this._shadowOffset;
     }
 
     set minFontSize(value) {
@@ -1743,8 +1746,8 @@ class TextElement {
         }
     }
 
-    get maxFontSize() {
-        return this._maxFontSize;
+    get minFontSize() {
+        return this._minFontSize;
     }
 
     set maxFontSize(value) {
@@ -1756,8 +1759,8 @@ class TextElement {
         }
     }
 
-    get autoFitWidth() {
-        return this._autoFitWidth;
+    get maxFontSize() {
+        return this._maxFontSize;
     }
 
     set autoFitWidth(value) {
@@ -1770,8 +1773,8 @@ class TextElement {
         }
     }
 
-    get autoFitHeight() {
-        return this._autoFitHeight;
+    get autoFitWidth() {
+        return this._autoFitWidth;
     }
 
     set autoFitHeight(value) {
@@ -1784,8 +1787,8 @@ class TextElement {
         }
     }
 
-    get maxLines() {
-        return this._maxLines;
+    get autoFitHeight() {
+        return this._autoFitHeight;
     }
 
     set maxLines(value) {
@@ -1799,8 +1802,8 @@ class TextElement {
         }
     }
 
-    get enableMarkup() {
-        return this._enableMarkup;
+    get maxLines() {
+        return this._maxLines;
     }
 
     set enableMarkup(value) {
@@ -1812,6 +1815,10 @@ class TextElement {
         if (this.font) {
             this._updateText();
         }
+    }
+
+    get enableMarkup() {
+        return this._enableMarkup;
     }
 
     get symbols() {
@@ -1831,10 +1838,6 @@ class TextElement {
         return this._rtl;
     }
 
-    get rangeStart() {
-        return this._rangeStart;
-    }
-
     set rangeStart(rangeStart) {
         rangeStart = Math.max(0, Math.min(rangeStart, this._symbols.length));
 
@@ -1844,8 +1847,8 @@ class TextElement {
         }
     }
 
-    get rangeEnd() {
-        return this._rangeEnd;
+    get rangeStart() {
+        return this._rangeStart;
     }
 
     set rangeEnd(rangeEnd) {
@@ -1855,6 +1858,10 @@ class TextElement {
             this._rangeEnd = rangeEnd;
             this._updateRenderRange();
         }
+    }
+
+    get rangeEnd() {
+        return this._rangeEnd;
     }
 }
 

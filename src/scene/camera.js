@@ -17,10 +17,9 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 
 /**
+ * A camera.
+ *
  * @private
- * @class
- * @name Camera
- * @classdesc A camera.
  */
 class Camera {
     constructor() {
@@ -63,10 +62,6 @@ class Camera {
         this.frustum = new Frustum();
     }
 
-    get aspectRatio() {
-        return this._aspectRatio;
-    }
-
     set aspectRatio(newValue) {
         if (this._aspectRatio !== newValue) {
             this._aspectRatio = newValue;
@@ -74,8 +69,8 @@ class Camera {
         }
     }
 
-    get aspectRatioMode() {
-        return this._aspectRatioMode;
+    get aspectRatio() {
+        return this._aspectRatio;
     }
 
     set aspectRatioMode(newValue) {
@@ -85,8 +80,8 @@ class Camera {
         }
     }
 
-    get calculateProjection() {
-        return this._calculateProjection;
+    get aspectRatioMode() {
+        return this._aspectRatioMode;
     }
 
     set calculateProjection(newValue) {
@@ -94,80 +89,80 @@ class Camera {
         this._projMatDirty = true;
     }
 
-    get calculateTransform() {
-        return this._calculateTransform;
+    get calculateProjection() {
+        return this._calculateProjection;
     }
 
     set calculateTransform(newValue) {
         this._calculateTransform = newValue;
     }
 
-    get clearColor() {
-        return this._clearColor;
+    get calculateTransform() {
+        return this._calculateTransform;
     }
 
     set clearColor(newValue) {
         this._clearColor.copy(newValue);
     }
 
-    get clearColorBuffer() {
-        return this._clearColorBuffer;
+    get clearColor() {
+        return this._clearColor;
     }
 
     set clearColorBuffer(newValue) {
         this._clearColorBuffer = newValue;
     }
 
-    get clearDepth() {
-        return this._clearDepth;
+    get clearColorBuffer() {
+        return this._clearColorBuffer;
     }
 
     set clearDepth(newValue) {
         this._clearDepth = newValue;
     }
 
-    get clearDepthBuffer() {
-        return this._clearDepthBuffer;
+    get clearDepth() {
+        return this._clearDepth;
     }
 
     set clearDepthBuffer(newValue) {
         this._clearDepthBuffer = newValue;
     }
 
-    get clearStencil() {
-        return this._clearStencil;
+    get clearDepthBuffer() {
+        return this._clearDepthBuffer;
     }
 
     set clearStencil(newValue) {
         this._clearStencil = newValue;
     }
 
-    get clearStencilBuffer() {
-        return this._clearStencilBuffer;
+    get clearStencil() {
+        return this._clearStencil;
     }
 
     set clearStencilBuffer(newValue) {
         this._clearStencilBuffer = newValue;
     }
 
-    get cullingMask() {
-        return this._cullingMask;
+    get clearStencilBuffer() {
+        return this._clearStencilBuffer;
     }
 
     set cullingMask(newValue) {
         this._cullingMask = newValue;
     }
 
-    get cullFaces() {
-        return this._cullFaces;
+    get cullingMask() {
+        return this._cullingMask;
     }
 
     set cullFaces(newValue) {
         this._cullFaces = newValue;
     }
 
-    get farClip() {
-        return this._farClip;
+    get cullFaces() {
+        return this._cullFaces;
     }
 
     set farClip(newValue) {
@@ -177,16 +172,16 @@ class Camera {
         }
     }
 
-    get flipFaces() {
-        return this._flipFaces;
+    get farClip() {
+        return this._farClip;
     }
 
     set flipFaces(newValue) {
         this._flipFaces = newValue;
     }
 
-    get fov() {
-        return this._fov;
+    get flipFaces() {
+        return this._flipFaces;
     }
 
     set fov(newValue) {
@@ -196,16 +191,16 @@ class Camera {
         }
     }
 
-    get frustumCulling() {
-        return this._frustumCulling;
+    get fov() {
+        return this._fov;
     }
 
     set frustumCulling(newValue) {
         this._frustumCulling = newValue;
     }
 
-    get horizontalFov() {
-        return this._horizontalFov;
+    get frustumCulling() {
+        return this._frustumCulling;
     }
 
     set horizontalFov(newValue) {
@@ -215,16 +210,16 @@ class Camera {
         }
     }
 
-    get layers() {
-        return this._layers;
+    get horizontalFov() {
+        return this._horizontalFov;
     }
 
     set layers(newValue) {
         this._layers = newValue.slice(0);
     }
 
-    get nearClip() {
-        return this._nearClip;
+    get layers() {
+        return this._layers;
     }
 
     set nearClip(newValue) {
@@ -234,16 +229,16 @@ class Camera {
         }
     }
 
-    get node() {
-        return this._node;
+    get nearClip() {
+        return this._nearClip;
     }
 
     set node(newValue) {
         this._node = newValue;
     }
 
-    get orthoHeight() {
-        return this._orthoHeight;
+    get node() {
+        return this._node;
     }
 
     set orthoHeight(newValue) {
@@ -253,8 +248,8 @@ class Camera {
         }
     }
 
-    get projection() {
-        return this._projection;
+    get orthoHeight() {
+        return this._orthoHeight;
     }
 
     set projection(newValue) {
@@ -264,33 +259,37 @@ class Camera {
         }
     }
 
+    get projection() {
+        return this._projection;
+    }
+
     get projectionMatrix() {
         this._evaluateProjectionMatrix();
         return this._projMat;
-    }
-
-    get rect() {
-        return this._rect;
     }
 
     set rect(newValue) {
         this._rect.copy(newValue);
     }
 
-    get renderTarget() {
-        return this._renderTarget;
+    get rect() {
+        return this._rect;
     }
 
     set renderTarget(newValue) {
         this._renderTarget = newValue;
     }
 
-    get scissorRect() {
-        return this._scissorRect;
+    get renderTarget() {
+        return this._renderTarget;
     }
 
     set scissorRect(newValue) {
         this._scissorRect.copy(newValue);
+    }
+
+    get scissorRect() {
+        return this._scissorRect;
     }
 
     get viewMatrix() {
@@ -302,10 +301,6 @@ class Camera {
         return this._viewMat;
     }
 
-    get vrDisplay() {
-        return this._vrDisplay;
-    }
-
     set vrDisplay(newValue) {
         this._vrDisplay = newValue;
         if (newValue) {
@@ -313,24 +308,26 @@ class Camera {
         }
     }
 
+    get vrDisplay() {
+        return this._vrDisplay;
+    }
+
     /**
-     * @private
-     * @function
-     * @name Camera#clone
-     * @description Creates a duplicate of the camera.
+     * Creates a duplicate of the camera.
+     *
      * @returns {Camera} A cloned Camera.
+     * @private
      */
     clone() {
         return new Camera().copy(this);
     }
 
     /**
-     * @private
-     * @function
-     * @name Camera#copy
+     * Copies one camera to another.
+     *
      * @param {Camera} other - Camera to copy.
-     * @description Copies one camera to another.
      * @returns {Camera} Self for chaining.
+     * @private
      */
     copy(other) {
         this.aspectRatio = other.aspectRatio;
@@ -369,15 +366,14 @@ class Camera {
     }
 
     /**
-     * @private
-     * @function
-     * @name Camera#worldToScreen
-     * @description Convert a point from 3D world space to 2D canvas pixel space.
+     * Convert a point from 3D world space to 2D canvas pixel space.
+     *
      * @param {Vec3} worldCoord - The world space coordinate to transform.
      * @param {number} cw - The width of PlayCanvas' canvas element.
      * @param {number} ch - The height of PlayCanvas' canvas element.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {Vec3} The screen space coordinate.
+     * @private
      */
     worldToScreen(worldCoord, cw, ch, screenCoord = new Vec3()) {
         this._updateViewProjMat();
@@ -397,10 +393,8 @@ class Camera {
     }
 
     /**
-     * @private
-     * @function
-     * @name Camera#screenToWorld
-     * @description Convert a point from 2D canvas pixel space to 3D world space.
+     * Convert a point from 2D canvas pixel space to 3D world space.
+     *
      * @param {number} x - X coordinate on PlayCanvas' canvas element.
      * @param {number} y - Y coordinate on PlayCanvas' canvas element.
      * @param {number} z - The distance from the camera in world space to create the new point.
@@ -408,6 +402,7 @@ class Camera {
      * @param {number} ch - The height of PlayCanvas' canvas element.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @returns {Vec3} The world space coordinate.
+     * @private
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 

@@ -57,12 +57,12 @@ CubemapRenderer.prototype.initialize = function () {
 
     // angles to render camera for all 6 faces
     var cameraRotations = [
-        new pc.Quat().setFromEulerAngles(0, 90, 180),
-        new pc.Quat().setFromEulerAngles(0, -90, 180),
-        new pc.Quat().setFromEulerAngles(90, 0, 0),
-        new pc.Quat().setFromEulerAngles(-90, 0, 0),
-        new pc.Quat().setFromEulerAngles(0, 180, 180),
-        new pc.Quat().setFromEulerAngles(0, 0, 180)
+        new pc.Quat().setFromEulerAngles(0, 90, 0),
+        new pc.Quat().setFromEulerAngles(0, -90, 0),
+        new pc.Quat().setFromEulerAngles(-90, 0, 180),
+        new pc.Quat().setFromEulerAngles(90, 0, 180),
+        new pc.Quat().setFromEulerAngles(0, 180, 0),
+        new pc.Quat().setFromEulerAngles(0, 0, 0)
     ];
 
     // set up rendering for all 6 faces
@@ -72,7 +72,8 @@ CubemapRenderer.prototype.initialize = function () {
         var renderTarget = new pc.RenderTarget({
             colorBuffer: this.cubeMap,
             depth: this.depth,
-            face: i
+            face: i,
+            flipY: true
         });
 
         // create a child entity with the camera for this face
@@ -105,5 +106,20 @@ CubemapRenderer.prototype.initialize = function () {
 
         // set up its rotation
         e.setRotation(cameraRotations[i]);
+
+        // Before the first camera renders, trigger onCubemapPostRender event on the entity.
+        if (i === 0) {
+            e.camera.onPreRender = () => {
+                this.entity.fire('onCubemapPreRender');
+            };
+        }
+
+        // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
+        // This can be listened to by the user, and the resuling cubemap can be further processed (e.g prefiltered)
+        if (i === 5) {
+            e.camera.onPostRender = () => {
+                this.entity.fire('onCubemapPostRender');
+            };
+        }
     }
 };

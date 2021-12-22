@@ -4,12 +4,13 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @private
- * @class
- * @name AnimClipHandler
+ * Resource handler used for loading {@link AnimClip} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link AnimClip} resources.
+ * @private
  */
 class AnimClipHandler {
     constructor() {
@@ -67,6 +68,9 @@ class AnimClipHandler {
             outputs,
             curves
         );
+    }
+
+    patch(asset, assets) {
     }
 }
 

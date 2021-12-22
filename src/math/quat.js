@@ -1,78 +1,46 @@
 import { math } from './math.js';
 import { Vec3 } from './vec3.js';
 
+/** @typedef {import('./mat4.js').Mat4} Mat4 */
+
 /**
- * @class
- * @name Quat
- * @classdesc A quaternion.
- * @description Create a new Quat object.
- * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
- * @param {number} [y] - The quaternion's y component. Default value 0.
- * @param {number} [z] - The quaternion's z component. Default value 0.
- * @param {number} [w] - The quaternion's w component. Default value 1.
- */
-/**
- * @field
- * @name Quat#x
- * @type {number}
- * @description The x component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get x
- * var x = quat.x;
- *
- * // Set x
- * quat.x = 0;
- */
-/**
- * @field
- * @name Quat#y
- * @type {number}
- * @description The y component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get y
- * var y = quat.y;
- *
- * // Set y
- * quat.y = 0;
- */
-/**
- * @field
- * @name Quat#z
- * @type {number}
- * @description The z component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get z
- * var z = quat.z;
- *
- * // Set z
- * quat.z = 0;
- */
-/**
- * @field
- * @name Quat#w
- * @type {number}
- * @description The w component of the quaternion.
- * @example
- * var quat = new pc.Quat();
- *
- * // Get w
- * var w = quat.w;
- *
- * // Set w
- * quat.w = 0;
+ * A quaternion.
  */
 class Quat {
+    /**
+     * Create a new Quat instance.
+     *
+     * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an
+     * array of length 4, the array will be used to populate all components.
+     * @param {number} [y] - The quaternion's y component. Default value 0.
+     * @param {number} [z] - The quaternion's z component. Default value 0.
+     * @param {number} [w] - The quaternion's w component. Default value 1.
+     */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
+            /**
+             * The x component of the quaternion.
+             *
+             * @type {number}
+             */
             this.x = x[0];
+            /**
+             * The y component of the quaternion.
+             *
+             * @type {number}
+             */
             this.y = x[1];
+            /**
+             * The z component of the quaternion.
+             *
+             * @type {number}
+             */
             this.z = x[2];
+            /**
+             * The w component of the quaternion.
+             *
+             * @type {number}
+             */
             this.w = x[3];
         } else {
             this.x = x;
@@ -83,9 +51,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#clone
-     * @description Returns an identical copy of the specified quaternion.
+     * Returns an identical copy of the specified quaternion.
+     *
      * @returns {Quat} A quaternion containing the result of the cloning.
      * @example
      * var q = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
@@ -106,9 +73,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#copy
-     * @description Copies the contents of a source quaternion to a destination quaternion.
+     * Copies the contents of a source quaternion to a destination quaternion.
+     *
      * @param {Quat} rhs - The quaternion to be copied.
      * @returns {Quat} Self for chaining.
      * @example
@@ -127,9 +93,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#equals
-     * @description Reports whether two quaternions are equal.
+     * Reports whether two quaternions are equal.
+     *
      * @param {Quat} rhs - The quaternion to be compared against.
      * @returns {boolean} True if the quaternions are equal and false otherwise.
      * @example
@@ -142,13 +107,10 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#getAxisAngle
-     * @description Gets the rotation axis and angle for a given
-     *  quaternion. If a quaternion is created with
-     *  setFromAxisAngle, this method will return the same
-     *  values as provided in the original parameter list
-     *  OR functionally equivalent values.
+     * Gets the rotation axis and angle for a given quaternion. If a quaternion is created with
+     * `setFromAxisAngle`, this method will return the same values as provided in the original
+     * parameter list OR functionally equivalent values.
+     *
      * @param {Vec3} axis - The 3-dimensional vector to receive the axis of rotation.
      * @returns {number} Angle, in degrees, of the rotation.
      * @example
@@ -185,9 +147,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#getEulerAngles
-     * @description Converts the supplied quaternion to Euler angles.
+     * Converts the supplied quaternion to Euler angles.
+     *
      * @param {Vec3} [eulers] - The 3-dimensional vector to receive the Euler angles.
      * @returns {Vec3} The 3-dimensional vector holding the Euler angles that
      * correspond to the supplied quaternion.
@@ -220,9 +181,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#invert
-     * @description Generates the inverse of the specified quaternion.
+     * Generates the inverse of the specified quaternion.
+     *
      * @returns {Quat} Self for chaining.
      * @example
      * // Create a quaternion rotated 180 degrees around the y-axis
@@ -236,9 +196,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#length
-     * @description Returns the magnitude of the specified quaternion.
+     * Returns the magnitude of the specified quaternion.
+     *
      * @returns {number} The magnitude of the specified quaternion.
      * @example
      * var q = new pc.Quat(0, 0, 0, 5);
@@ -251,9 +210,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#lengthSq
-     * @description Returns the magnitude squared of the specified quaternion.
+     * Returns the magnitude squared of the specified quaternion.
+     *
      * @returns {number} The magnitude of the specified quaternion.
      * @example
      * var q = new pc.Quat(3, 4, 0);
@@ -266,9 +224,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#mul
-     * @description Returns the result of multiplying the specified quaternions together.
+     * Returns the result of multiplying the specified quaternions together.
+     *
      * @param {Quat} rhs - The quaternion used as the second multiplicand of the operation.
      * @returns {Quat} Self for chaining.
      * @example
@@ -301,9 +258,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#mul2
-     * @description Returns the result of multiplying the specified quaternions together.
+     * Returns the result of multiplying the specified quaternions together.
+     *
      * @param {Quat} lhs - The quaternion used as the first multiplicand of the operation.
      * @param {Quat} rhs - The quaternion used as the second multiplicand of the operation.
      * @returns {Quat} Self for chaining.
@@ -338,9 +294,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#normalize
-     * @description Returns the specified quaternion converted in place to a unit quaternion.
+     * Returns the specified quaternion converted in place to a unit quaternion.
+     *
      * @returns {Quat} The result of the normalization.
      * @example
      * var v = new pc.Quat(0, 0, 0, 5);
@@ -367,9 +322,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#set
-     * @description Sets the specified quaternion to the supplied numerical values.
+     * Sets the specified quaternion to the supplied numerical values.
+     *
      * @param {number} x - The x component of the quaternion.
      * @param {number} y - The y component of the quaternion.
      * @param {number} z - The z component of the quaternion.
@@ -392,9 +346,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#setFromAxisAngle
-     * @description Sets a quaternion from an angular rotation around an axis.
+     * Sets a quaternion from an angular rotation around an axis.
+     *
      * @param {Vec3} axis - World space axis around which to rotate.
      * @param {number} angle - Angle to rotate around the given axis in degrees.
      * @returns {Quat} Self for chaining.
@@ -417,9 +370,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#setFromEulerAngles
-     * @description Sets a quaternion from Euler angles specified in XYZ order.
+     * Sets a quaternion from Euler angles specified in XYZ order.
+     *
      * @param {number} ex - Angle to rotate around X axis in degrees.
      * @param {number} ey - Angle to rotate around Y axis in degrees.
      * @param {number} ez - Angle to rotate around Z axis in degrees.
@@ -450,11 +402,9 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#setFromMat4
-     * @description Converts the specified 4x4 matrix to a quaternion. Note that since
-     * a quaternion is purely a representation for orientation, only the translational part
-     * of the matrix is lost.
+     * Converts the specified 4x4 matrix to a quaternion. Note that since a quaternion is purely a
+     * representation for orientation, only the translational part of the matrix is lost.
+     *
      * @param {Mat4} m - The 4x4 matrix to convert.
      * @returns {Quat} Self for chaining.
      * @example
@@ -565,10 +515,9 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#slerp
-     * @description Performs a spherical interpolation between two quaternions. The result of
-     * the interpolation is written to the quaternion calling the function.
+     * Performs a spherical interpolation between two quaternions. The result of the interpolation
+     * is written to the quaternion calling the function.
+     *
      * @param {Quat} lhs - The quaternion to interpolate from.
      * @param {Quat} rhs - The quaternion to interpolate to.
      * @param {number} alpha - The value controlling the interpolation in relation to the two input
@@ -642,9 +591,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#transformVector
-     * @description Transforms a 3-dimensional vector by the specified quaternion.
+     * Transforms a 3-dimensional vector by the specified quaternion.
+     *
      * @param {Vec3} vec - The 3-dimensional vector to be transformed.
      * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
      * @returns {Vec3} The input vector v transformed by the current instance.
@@ -676,9 +624,8 @@ class Quat {
     }
 
     /**
-     * @function
-     * @name Quat#toString
-     * @description Converts the quaternion to string form.
+     * Converts the quaternion to string form.
+     *
      * @returns {string} The quaternion in string form.
      * @example
      * var v = new pc.Quat(0, 0, 0, 1);
@@ -690,22 +637,18 @@ class Quat {
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Quat.IDENTITY
+     * A constant quaternion set to [0, 0, 0, 1] (the identity).
+     *
      * @type {Quat}
-     * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
+     * @readonly
      */
     static IDENTITY = Object.freeze(new Quat(0, 0, 0, 1));
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Quat.ZERO
+     * A constant quaternion set to [0, 0, 0, 0].
+     *
      * @type {Quat}
-     * @description A constant quaternion set to [0, 0, 0, 0].
+     * @readonly
      */
     static ZERO = Object.freeze(new Quat(0, 0, 0, 0));
 }

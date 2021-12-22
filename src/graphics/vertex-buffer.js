@@ -1,20 +1,26 @@
+import { Debug } from '../core/debug.js';
 import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from './constants.js';
+
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
 
 let id = 0;
 
 /**
- * @class
- * @name VertexBuffer
- * @classdesc A vertex buffer is the mechanism via which the application specifies vertex
- * data to the graphics hardware.
- * @description Creates a new vertex buffer object.
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex buffer.
- * @param {VertexFormat} format - The vertex format of this vertex buffer.
- * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
- * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
- * @param {ArrayBuffer} [initialData] - Initial data.
+ * A vertex buffer is the mechanism via which the application specifies vertex data to the graphics
+ * hardware.
  */
 class VertexBuffer {
+    /**
+     * Create a new VertexBuffer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
+     * buffer.
+     * @param {VertexFormat} format - The vertex format of this vertex buffer.
+     * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
+     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * @param {ArrayBuffer} [initialData] - Initial data.
+     */
     constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
@@ -45,9 +51,7 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#destroy
-     * @description Frees resources associated with this vertex buffer.
+     * Frees resources associated with this vertex buffer.
      */
     destroy() {
         const device = this.device;
@@ -77,9 +81,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#getFormat
-     * @description Returns the data format of the specified vertex buffer.
+     * Returns the data format of the specified vertex buffer.
+     *
      * @returns {VertexFormat} The data format of the specified vertex buffer.
      */
     getFormat() {
@@ -87,12 +90,11 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#getUsage
-     * @description Returns the usage type of the specified vertex buffer. This indicates
-     * whether the buffer can be modified once and used many times {@link BUFFER_STATIC},
-     * modified repeatedly and used many times {@link BUFFER_DYNAMIC} or modified once
-     * and used at most a few times {@link BUFFER_STREAM}.
+     * Returns the usage type of the specified vertex buffer. This indicates whether the buffer can
+     * be modified once and used many times {@link BUFFER_STATIC}, modified repeatedly and used
+     * many times {@link BUFFER_DYNAMIC} or modified once and used at most a few times
+     * {@link BUFFER_STREAM}.
+     *
      * @returns {number} The usage type of the vertex buffer (see BUFFER_*).
      */
     getUsage() {
@@ -100,9 +102,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#getNumVertices
-     * @description Returns the number of vertices stored in the specified vertex buffer.
+     * Returns the number of vertices stored in the specified vertex buffer.
+     *
      * @returns {number} The number of vertices stored in the vertex buffer.
      */
     getNumVertices() {
@@ -110,9 +111,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#lock
-     * @description Returns a mapped memory block representing the content of the vertex buffer.
+     * Returns a mapped memory block representing the content of the vertex buffer.
+     *
      * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
      */
     lock() {
@@ -120,10 +120,8 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#unlock
-     * @description Notifies the graphics engine that the client side copy of the vertex buffer's
-     * memory can be returned to the control of the graphics driver.
+     * Notifies the graphics engine that the client side copy of the vertex buffer's memory can be
+     * returned to the control of the graphics driver.
      */
     unlock() {
         // Upload the new vertex data
@@ -158,15 +156,14 @@ class VertexBuffer {
     }
 
     /**
-     * @function
-     * @name VertexBuffer#setData
-     * @description Copies data into vertex buffer's memory.
+     * Copies data into vertex buffer's memory.
+     *
      * @param {ArrayBuffer} [data] - Source data to copy.
      * @returns {boolean} True if function finished successfully, false otherwise.
      */
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            console.error(`VertexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
+            Debug.error(`VertexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
             return false;
         }
         this.storage = data;

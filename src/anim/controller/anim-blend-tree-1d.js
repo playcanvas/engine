@@ -3,14 +3,32 @@ import { math } from '../../math/math.js';
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
+ * An AnimBlendTree that calculates its weights using a 1D algorithm based on the thesis
+ * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
+ *
  * @private
- * @class
- * @name AnimBlendTree1D
- * @classdesc An AnimBlendTree that calculates its weights using a 1D algorithm
- * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
- * @description Create a new BlendTree1D.
  */
 class AnimBlendTree1D extends AnimBlendTree {
+    /**
+     * Create a new BlendTree1D instance.
+     *
+     * @param {AnimState} state - The AnimState that this AnimBlendTree belongs to.
+     * @param {AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the
+     * AnimNode is stored as part of a {@link AnimBlendTree} hierarchy.
+     * @param {string} name - The name of the BlendTree. Used when assigning a {@link AnimTrack} to
+     * its children.
+     * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this
+     * node when it's part of a {@link AnimBlendTree}.
+     * @param {string[]} parameters - The anim component parameters which are used to calculate the
+     * current weights of the blend trees children.
+     * @param {object[]} children - The child nodes that this blend tree should create. Can either
+     * be of type {@link AnimNode} or {@link BlendTree}.
+     * @param {boolean} syncAnimations - If true, the speed of each blended animation will be
+     * synchronized.
+     * @param {Function} createTree - Used to create child blend trees of varying types.
+     * @param {Function} findParameter - Used at runtime to get the current parameter values.
+     * @private
+     */
     constructor(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter) {
         children.sort((a, b) => a.point - b.point);
         super(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);

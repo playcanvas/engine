@@ -213,7 +213,7 @@ const ExampleIframe = (props: ExampleIframeProps) => {
         return false;
     };
 
-    const observer = new Observer({});
+    const observer = new Observer();
     const controls  = props.controls ? props.controls(observer).props.children : null;
 
     useEffect(() => {

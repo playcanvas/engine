@@ -1,5 +1,6 @@
 import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -9,23 +10,27 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
-import { DeprecatedLog } from '../../../deprecated/deprecated-log.js';
+
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../entity.js').Entity} Entity */
 
 let ammoRayStart, ammoRayEnd;
 
 /**
- * @class
- * @name RaycastResult
- * @classdesc Object holding the result of a successful raycast hit.
- * @description Create a new RaycastResult.
- * @param {Entity} entity - The entity that was hit.
- * @param {Vec3} point - The point at which the ray hit the entity in world space.
- * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+ * Object holding the result of a successful raycast hit.
+ *
  * @property {Entity} entity The entity that was hit.
  * @property {Vec3} point The point at which the ray hit the entity in world space.
  * @property {Vec3} normal The normal vector of the surface where the ray hit in world space.
  */
 class RaycastResult {
+    /**
+     * Create a new RaycastResult instance.
+     *
+     * @param {Entity} entity - The entity that was hit.
+     * @param {Vec3} point - The point at which the ray hit the entity in world space.
+     * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+     */
     constructor(entity, point, normal) {
         this.entity = entity;
         this.point = point;
@@ -34,13 +39,8 @@ class RaycastResult {
 }
 
 /**
- * @class
- * @name SingleContactResult
- * @classdesc Object holding the result of a contact between two rigid bodies.
- * @description Create a new SingleContactResult.
- * @param {Entity} a - The first entity involved in the contact.
- * @param {Entity} b - The second entity involved in the contact.
- * @param {ContactPoint} contactPoint - The contact point between the two entities.
+ * Object holding the result of a contact between two rigid bodies.
+ *
  * @property {Entity} a The first entity involved in the contact.
  * @property {Entity} b The second entity involved in the contact.
  * @property {Vec3} localPointA The point on Entity A where the contact occurred, relative to A.
@@ -50,6 +50,13 @@ class RaycastResult {
  * @property {Vec3} normal The normal vector of the contact on Entity B, in world space.
  */
 class SingleContactResult {
+    /**
+     * Create a new SingleContactResult instance.
+     *
+     * @param {Entity} a - The first entity involved in the contact.
+     * @param {Entity} b - The second entity involved in the contact.
+     * @param {ContactPoint} contactPoint - The contact point between the two entities.
+     */
     constructor(a, b, contactPoint) {
         if (arguments.length === 0) {
             this.a = null;
@@ -74,23 +81,35 @@ class SingleContactResult {
 }
 
 /**
- * @class
- * @name ContactPoint
- * @classdesc Object holding the result of a contact between two Entities.
- * @description Create a new ContactPoint.
- * @param {Vec3} [localPoint] - The point on the entity where the contact occurred, relative to the entity.
- * @param {Vec3} [localPointOther] - The point on the other entity where the contact occurred, relative to the other entity.
- * @param {Vec3} [point] - The point on the entity where the contact occurred, in world space.
- * @param {Vec3} [pointOther] - The point on the other entity where the contact occurred, in world space.
- * @param {Vec3} [normal] - The normal vector of the contact on the other entity, in world space.
- * @property {Vec3} localPoint The point on the entity where the contact occurred, relative to the entity.
- * @property {Vec3} localPointOther The point on the other entity where the contact occurred, relative to the other entity.
+ * Object holding the result of a contact between two Entities.
+ *
+ * @property {Vec3} localPoint The point on the entity where the contact occurred, relative to the
+ * entity.
+ * @property {Vec3} localPointOther The point on the other entity where the contact occurred,
+ * relative to the other entity.
  * @property {Vec3} point The point on the entity where the contact occurred, in world space.
- * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world space.
+ * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world
+ * space.
  * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
- * @property {number} impulse The total accumulated impulse applied by the constraint solver during the last substep. Describes how hard two objects collide.
+ * @property {number} impulse The total accumulated impulse applied by the constraint solver during
+ * the last sub-step. Describes how hard two objects collide.
  */
 class ContactPoint {
+    /**
+     * Create a new ContactPoint instance.
+     *
+     * @param {Vec3} [localPoint] - The point on the entity where the contact occurred, relative to
+     * the entity.
+     * @param {Vec3} [localPointOther] - The point on the other entity where the contact occurred,
+     * relative to the other entity.
+     * @param {Vec3} [point] - The point on the entity where the contact occurred, in world space.
+     * @param {Vec3} [pointOther] - The point on the other entity where the contact occurred, in
+     * world space.
+     * @param {Vec3} [normal] - The normal vector of the contact on the other entity, in world
+     * space.
+     * @param {number} [impulse] - The total accumulated impulse applied by the constraint solver
+     * during the last sub-step. Describes how hard two objects collide. Defaults to 0.
+     */
     constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
         this.localPoint = localPoint;
         this.localPointOther = localPointOther;
@@ -102,16 +121,18 @@ class ContactPoint {
 }
 
 /**
- * @class
- * @name ContactResult
- * @classdesc Object holding the result of a contact between two Entities.
- * @description Create a new ContactResult.
- * @param {Entity} other - The entity that was involved in the contact with this entity.
- * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
+ * Object holding the result of a contact between two Entities.
+ *
  * @property {Entity} other The entity that was involved in the contact with this entity.
  * @property {ContactPoint[]} contacts An array of ContactPoints with the other entity.
  */
 class ContactResult {
+    /**
+     * Create a new ContactResult instance.
+     *
+     * @param {Entity} other - The entity that was involved in the contact with this entity.
+     * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
+     */
     constructor(other, contacts) {
         this.other = other;
         this.contacts = contacts;
@@ -129,19 +150,22 @@ class ContactResult {
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name RigidBodyComponentSystem
- * @augments ComponentSystem
- * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies,
- * it also controls global values for the world such as gravity. Note: The RigidBodyComponentSystem
- * is only valid if 3D Physics is enabled in your application. You can enable this in the application
+ * The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also
+ * controls global values for the world such as gravity. Note: The RigidBodyComponentSystem is only
+ * valid if 3D Physics is enabled in your application. You can enable this in the application
  * settings for your project.
- * @description Create a new RigidBodyComponentSystem.
- * @param {Application} app - The Application.
- * @property {Vec3} gravity The world space vector representing global gravity in the physics simulation.
- * Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
+ *
+ * @property {Vec3} gravity The world space vector representing global gravity in the physics
+ * simulation. Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on
+ * Earth.
+ * @augments ComponentSystem
  */
 class RigidBodyComponentSystem extends ComponentSystem {
+    /**
+     * Create a new RigidBodyComponentSystem.
+     *
+     * @param {Application} app - The Application.
+     */
     constructor(app) {
         super(app);
 
@@ -187,9 +211,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
-                // #if _DEBUG
-                console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
-                // #endif
+                Debug.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
             }
 
             // Lazily create temp vars
@@ -310,10 +332,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponentSystem#raycastFirst
-     * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-     * if the ray hits an entity with a collision component, it returns a {@link RaycastResult}, otherwise returns null.
+     * Raycast the world and return the first entity the ray hits. Fire a ray into the world from
+     * start to end, if the ray hits an entity with a collision component, it returns a
+     * {@link RaycastResult}, otherwise returns null.
+     *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
@@ -341,7 +363,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    DeprecatedLog.log('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
+                    Debug.deprecated('pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
 
                     const callback = arguments[2];
                     callback(result);
@@ -355,21 +377,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponentSystem#raycastAll
-     * @description Raycast the world and return all entities the ray hits. It returns an array
-     * of {@link RaycastResult}, one for each hit. If no hits are detected, the returned
-     * array will be of length 0.
+     * Raycast the world and return all entities the ray hits. It returns an array of
+     * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
+     * of length 0.
+     *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
-        // #if _DEBUG
-        if (!Ammo.AllHitsRayResultCallback) {
-            console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
-        }
-        // #endif
+        Debug.assert(Ammo.AllHitsRayResultCallback, "pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
 
         const results = [];
 
@@ -405,13 +422,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_storeCollision
-     * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision.
+     * Stores a collision between the entity and other in the contacts map and returns true if it
+     * is a new collision.
+     *
      * @param {Entity} entity - The entity.
      * @param {Entity} other - The entity that collides with the first entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
+     * @private
      */
     _storeCollision(entity, other) {
         let isNewCollision = false;
@@ -487,11 +504,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
+     * Removes collisions that no longer exist from the collisions list and fires collisionend
+     * events to the related entities.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponentSystem#_cleanOldCollisions
-     * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
-     * related entities.
      */
     _cleanOldCollisions() {
         for (const guid in this.collisions) {
@@ -539,12 +555,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_hasContactEvent
-     * @description Returns true if the entity has a contact event attached and false otherwise.
+     * Returns true if the entity has a contact event attached and false otherwise.
+     *
      * @param {object} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
+     * @private
      */
     _hasContactEvent(entity) {
         const c = entity.collision;
@@ -557,12 +572,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_checkForCollisions
-     * @description Checks for collisions and fires collision events.
+     * Checks for collisions and fires collision events.
+     *
      * @param {number} world - The pointer to the dynamics world that invoked this callback.
      * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
+     * @private
      */
     _checkForCollisions(world, timeStep) {
         const dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);

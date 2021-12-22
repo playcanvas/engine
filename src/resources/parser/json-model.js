@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { Mat4 } from '../../math/mat4.js';
 import { Vec3 } from '../../math/vec3.js';
 
@@ -60,9 +62,7 @@ class JsonModelParser {
         }
 
         if (modelData.version <= 1) {
-            // #if _DEBUG
-            console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
-            // #endif
+            Debug.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
             return null;
         }
 

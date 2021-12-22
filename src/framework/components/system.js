@@ -6,14 +6,20 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
+/** @typedef {import('../application.js').Application} Application */
+
 /**
- * @class
- * @name ComponentSystem
+ * Component Systems contain the logic and functionality to update all Components of a particular
+ * type.
+ *
  * @augments EventHandler
- * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
- * @param {Application} app - The application managing this system.
  */
 class ComponentSystem extends EventHandler {
+    /**
+     * Create a new ComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     */
     constructor(app) {
         super();
 
@@ -26,10 +32,8 @@ class ComponentSystem extends EventHandler {
 
     // Instance methods
     /**
-     * @private
-     * @function
-     * @name ComponentSystem#addComponent
-     * @description Create new {@link Component} and component data instances and attach them to the entity.
+     * Create new {@link Component} and component data instances and attach them to the entity.
+     *
      * @param {Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
      * @returns {Component} Returns a Component of type defined by the component system.
@@ -37,6 +41,7 @@ class ComponentSystem extends EventHandler {
      * var entity = new pc.Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
      * // entity.model is now set to a pc.ModelComponent
+     * @private
      */
     addComponent(entity, data = {}) {
         const component = new this.ComponentType(this, entity);
@@ -58,33 +63,35 @@ class ComponentSystem extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystem#removeComponent
-     * @description Remove the {@link Component} from the entity and delete the associated component data.
+     * Remove the {@link Component} from the entity and delete the associated component data.
+     *
      * @param {Entity} entity - The entity to remove the component from.
      * @example
      * app.systems.model.removeComponent(entity);
      * // entity.model === undefined
+     * @private
      */
     removeComponent(entity) {
         const record = this.store[entity.getGuid()];
         const component = entity.c[this.id];
+
         this.fire('beforeremove', entity, component);
+
         delete this.store[entity.getGuid()];
-        delete entity[this.id];
+
+        entity[this.id] = undefined;
         delete entity.c[this.id];
+
         this.fire('remove', entity, record.data);
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystem#cloneComponent
-     * @description Create a clone of component. This creates a copy of all component data variables.
+     * Create a clone of component. This creates a copy of all component data variables.
+     *
      * @param {Entity} entity - The entity to clone the component from.
      * @param {Entity} clone - The entity to clone the component into.
      * @returns {Component} The newly cloned component.
+     * @private
      */
     cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data
@@ -93,14 +100,15 @@ class ComponentSystem extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystem#initializeComponentData
-     * @description Called during {@link ComponentSystem#addComponent} to initialize the component data in the store.
-     * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely.
+     * Called during {@link ComponentSystem#addComponent} to initialize the component data in the
+     * store. This can be overridden by derived Component Systems and either called by the derived
+     * System or replaced entirely.
+     *
      * @param {Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.
-     * @param {string[]|object[]} properties - The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
+     * @param {string[]|object[]} properties - The array of property descriptors for the component.
+     * A descriptor can be either a plain property name, or an object specifying the name and type.
+     * @private
      */
     initializeComponentData(component, data = {}, properties) {
         // initialize
@@ -140,12 +148,11 @@ class ComponentSystem extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystem#getPropertiesOfType
-     * @description Searches the component schema for properties that match the specified type.
+     * Searches the component schema for properties that match the specified type.
+     *
      * @param {string} type - The type to search for.
      * @returns {string[]|object[]} An array of property descriptors matching the specified type.
+     * @private
      */
     getPropertiesOfType(type) {
         const matchingProperties = [];

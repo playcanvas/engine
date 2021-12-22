@@ -1,3 +1,4 @@
+import { Debug } from "../core/debug.js";
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8 } from "./constants.js";
 import { RenderTarget } from "./render-target.js";
 import { Texture } from "./texture.js";
@@ -64,11 +65,7 @@ class GrabPass {
 
         // print error if we cannot grab framebuffer at this point
         if (!device.grabPassAvailable) {
-
-            // #if _DEBUG
-            console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
-            // #endif
-
+            Debug.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
             return false;
         }
 
@@ -80,9 +77,7 @@ class GrabPass {
         const width = device.width;
         const height = device.height;
 
-        // #if _DEBUG
-        device.pushMarker("grabPass");
-        // #endif
+        Debug.pushGpuMarker(device, "grabPass");
 
         if (device.webgl2 && !device._tempMacChromeBlitFramebufferWorkaround && width === texture._width && height === texture._height) {
             if (resolveRenderTarget) {
@@ -126,9 +121,7 @@ class GrabPass {
             }
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        Debug.popGpuMarker(device);
 
         return true;
     }

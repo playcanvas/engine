@@ -2,20 +2,29 @@ import { math } from '../math/math.js';
 
 import { hasAudioContext } from './capabilities.js';
 
+/** @typedef {import('../sound/sound.js').Sound} Sound */
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+
 /**
- * @private
- * @class
- * @name Channel
- * @classdesc A channel is created when the {@link SoundManager} begins playback of a {@link Sound}. Usually created internally by
- * {@link SoundManager#playSound} or {@link SoundManager#playSound3d}. Developers usually won't have to create Channels manually.
- * @param {SoundManager} manager - The SoundManager instance.
- * @param {Sound} sound - The sound to playback.
- * @param {object} [options] - Optional options object.
- * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
- * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
- * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
+ * A channel is created when the {@link SoundManager} begins playback of a {@link Sound}. Usually
+ * created internally by {@link SoundManager#playSound} or {@link SoundManager#playSound3d}.
+ * Developers usually won't have to create Channels manually.
+ *
+ * @protected
  */
 class Channel {
+    /**
+     * Create a new Channel instance.
+     *
+     * @param {SoundManager} manager - The SoundManager instance.
+     * @param {Sound} sound - The sound to playback.
+     * @param {object} [options] - Optional options object.
+     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
+     * end or not.
+     * @protected
+     */
     constructor(manager, sound, options = {}) {
         this.volume = (options.volume === undefined) ? 1 : options.volume;
         this.loop = (options.loop === undefined) ? false : options.loop;

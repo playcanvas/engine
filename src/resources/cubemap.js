@@ -6,16 +6,24 @@ import {
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+
 /**
- * @class
- * @name CubemapHandler
+ * Resource handler used for loading cubemap {@link Texture} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading cubemap {@link Texture} resources.
- * @param {GraphicsDevice} device - The graphics device.
- * @param {AssetRegistry} assets - The asset registry.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class CubemapHandler {
+    /**
+     * Create a new CubemapHandler instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {AssetRegistry} assets - The asset registry.
+     * @param {ResourceLoader} loader - The resource loader.
+     */
     constructor(device, assets, loader) {
         this._device = device;
         this._registry = assets;
@@ -105,29 +113,20 @@ class CubemapHandler {
             if (assets[0]) {
                 tex = assets[0].resource;
                 for (i = 0; i < 6; ++i) {
-                    const prelitLevels = [tex._levels[i]];
-
-                    // construct full prem chain on highest prefilter cubemap on ios
-                    if (i === 0 && this._device.useTexCubeLod) {
-                        for (mip = 1; mip < tex._levels.length; ++mip) {
-                            prelitLevels[mip] = tex._levels[mip];
-                        }
-                    }
-
-                    const prelit = new Texture(this._device, {
+                    resources[i + 1] = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
                         type: getType() || tex.type,
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,
-                        levels: prelitLevels,
+                        levels: [tex._levels[i]],
                         fixCubemapSeams: true,
                         addressU: ADDRESS_CLAMP_TO_EDGE,
-                        addressV: ADDRESS_CLAMP_TO_EDGE
+                        addressV: ADDRESS_CLAMP_TO_EDGE,
+                        // generate cubemaps on the top level only
+                        mipmaps: i === 0
                     });
-
-                    resources[i + 1] = prelit;
                 }
             }
         } else {

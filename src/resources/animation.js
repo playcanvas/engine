@@ -9,11 +9,12 @@ import { Animation, Key, Node } from '../animation/animation.js';
 
 import { GlbParser } from '../resources/parser/glb-parser.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name AnimationHandler
+ * Resource handler used for loading {@link Animation} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Animation} resources.
  */
 class AnimationHandler {
     constructor() {
@@ -62,6 +63,9 @@ class AnimationHandler {
             return null;
         }
         return this["_parseAnimationV" + data.animation.version](data);
+    }
+
+    patch(asset, assets) {
     }
 
     _parseAnimationV3(data) {

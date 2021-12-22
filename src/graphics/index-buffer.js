@@ -1,47 +1,48 @@
+import { Debug } from '../core/debug.js';
 import {
     BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32
 } from './constants.js';
 
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
 /**
- * @class
- * @name IndexBuffer
- * @classdesc An index buffer stores index values into a {@link VertexBuffer}.
- * Indexed graphical primitives can normally utilize less memory that unindexed
- * primitives (if vertices are shared).
+ * An index buffer stores index values into a {@link VertexBuffer}. Indexed graphical primitives
+ * can normally utilize less memory that unindexed primitives (if vertices are shared).
  *
  * Typically, index buffers are set on {@link Mesh} objects.
- * @description Creates a new index buffer.
- * @example
- * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
- * // static, hinting that the buffer will never be modified.
- * var indices = new UInt16Array([0, 1, 2]);
- * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
- *                                      pc.INDEXFORMAT_UINT16,
- *                                      3,
- *                                      pc.BUFFER_STATIC,
- *                                      indices);
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to
- * manage this index buffer.
- * @param {number} format - The type of each index to be stored in the index
- * buffer. Can be:
- *
- * - {@link INDEXFORMAT_UINT8}
- * - {@link INDEXFORMAT_UINT16}
- * - {@link INDEXFORMAT_UINT32}
- * @param {number} numIndices - The number of indices to be stored in the index
- * buffer.
- * @param {number} [usage] - The usage type of the vertex buffer. Can be:
- *
- * - {@link BUFFER_DYNAMIC}
- * - {@link BUFFER_STATIC}
- * - {@link BUFFER_STREAM}
- *
- * Defaults to {@link BUFFER_STATIC}.
- * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
- * index buffer will be initialized to zeros.
  */
 class IndexBuffer {
+    /**
+     * Create a new IndexBuffer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index
+     * buffer.
+     * @param {number} format - The type of each index to be stored in the index buffer. Can be:
+     *
+     * - {@link INDEXFORMAT_UINT8}
+     * - {@link INDEXFORMAT_UINT16}
+     * - {@link INDEXFORMAT_UINT32}
+     * @param {number} numIndices - The number of indices to be stored in the index buffer.
+     * @param {number} [usage] - The usage type of the vertex buffer. Can be:
+     *
+     * - {@link BUFFER_DYNAMIC}
+     * - {@link BUFFER_STATIC}
+     * - {@link BUFFER_STREAM}
+     *
+     * Defaults to {@link BUFFER_STATIC}.
+     * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
+     * will be initialized to zeros.
+     * @example
+     * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
+     * // static, hinting that the buffer will never be modified.
+     * var indices = new UInt16Array([0, 1, 2]);
+     * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
+     *                                      pc.INDEXFORMAT_UINT16,
+     *                                      3,
+     *                                      pc.BUFFER_STATIC,
+     *                                      indices);
+     */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
@@ -79,9 +80,7 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#destroy
-     * @description Frees resources associated with this index buffer.
+     * Frees resources associated with this index buffer.
      */
     destroy() {
         const device = this.device;
@@ -108,9 +107,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#getFormat
-     * @description Returns the data format of the specified index buffer.
+     * Returns the data format of the specified index buffer.
+     *
      * @returns {number} The data format of the specified index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}
@@ -122,9 +120,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#getNumIndices
-     * @description Returns the number of indices stored in the specified index buffer.
+     * Returns the number of indices stored in the specified index buffer.
+     *
      * @returns {number} The number of indices stored in the specified index buffer.
      */
     getNumIndices() {
@@ -132,9 +129,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#lock
-     * @description Gives access to the block of memory that stores the buffer's indices.
+     * Gives access to the block of memory that stores the buffer's indices.
+     *
      * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
      */
     lock() {
@@ -142,11 +138,9 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#unlock
-     * @description Signals that the block of memory returned by a call to the lock function is
-     * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
-     * currently active device.
+     * Signals that the block of memory returned by a call to the lock function is ready to be
+     * given to the graphics hardware. Only unlocked index buffers can be set on the currently
+     * active device.
      */
     unlock() {
         // Upload the new index data
@@ -182,9 +176,7 @@ class IndexBuffer {
 
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            // #if _DEBUG
-            console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
-            // #endif
+            Debug.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
             return false;
         }
 

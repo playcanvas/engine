@@ -4,6 +4,8 @@ import { Asset } from '../asset/asset.js';
 
 import { I18nParser } from './i18n-parser.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+
 import {
     DEFAULT_LOCALE,
     DEFAULT_LOCALE_FALLBACKS
@@ -17,19 +19,18 @@ import {
 } from './utils.js';
 
 /**
- * @class
- * @name I18n
+ * Handles localization. Responsible for loading localization assets and returning translations for
+ * a certain key. Can also handle plural forms. To override its default behavior define a different
+ * implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
+ *
  * @augments EventHandler
- * @classdesc Handles localization. Responsible for loading localization assets
- * and returning translations for a certain key. Can also handle plural forms. To override
- * its default behavior define a different implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
- * @param {Application} app - The application.
- * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
- * change language to the new locale.
- * @property {number[]|Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
- * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
  */
 class I18n extends EventHandler {
+    /**
+     * Create a new I18n instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super();
 
@@ -42,33 +43,118 @@ class I18n extends EventHandler {
     }
 
     /**
-     * @private
-     * @static
-     * @function
-     * @name I18n.findAvailableLocale
-     * @description Returns the first available locale based on the desired locale specified. First
-     * tries to find the desired locale and then tries to find an alternative locale based on the language.
+     * An array of asset ids or assets that contain localization data in the expected format. I18n
+     * will automatically load translations from these assets as the assets are loaded and it will
+     * also automatically unload translations if the assets get removed or unloaded at runtime.
+     *
+     * @type {number[]|Asset[]}
+     */
+    set assets(value) {
+        const index = {};
+
+        // convert array to dict
+        for (let i = 0, len = value.length; i < len; i++) {
+            const id = value[i] instanceof Asset ? value[i].id : value[i];
+            index[id] = true;
+        }
+
+        // remove assets not in value
+        let i = this._assets.length;
+        while (i--) {
+            const id = this._assets[i];
+            if (!index[id]) {
+                this._app.assets.off('add:' + id, this._onAssetAdd, this);
+                const asset = this._app.assets.get(id);
+                if (asset) {
+                    this._onAssetRemove(asset);
+                }
+                this._assets.splice(i, 1);
+            }
+        }
+
+        // add assets in value that do not already exist here
+        for (const id in index) {
+            const idNum = parseInt(id, 10);
+            if (this._assets.indexOf(idNum) !== -1) continue;
+
+            this._assets.push(idNum);
+            const asset = this._app.assets.get(idNum);
+            if (!asset) {
+                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
+            } else {
+                this._onAssetAdd(asset);
+            }
+        }
+    }
+
+    get assets() {
+        return this._assets;
+    }
+
+    /**
+     * The current locale for example "en-US". Changing the locale will raise an event which will
+     * cause localized Text Elements to change language to the new locale.
+     *
+     * @type {string}
+     */
+    set locale(value) {
+        if (this._locale === value) {
+            return;
+        }
+
+        // replace 'in' language with 'id'
+        // for Indonesian because both codes are valid
+        // so that users only need to use the 'id' code
+        let lang = getLang(value);
+        if (lang === 'in') {
+            lang = 'id';
+            value = replaceLang(value, lang);
+            if (this._locale === value) {
+                return;
+            }
+        }
+
+        const old = this._locale;
+        // cache locale, lang and plural function
+        this._locale = value;
+        this._lang = lang;
+        this._pluralFn = getPluralFn(this._lang);
+
+        // raise event
+        this.fire('set:locale', value, old);
+    }
+
+    get locale() {
+        return this._locale;
+    }
+
+    /**
+     * Returns the first available locale based on the desired locale specified. First tries to
+     * find the desired locale and then tries to find an alternative locale based on the language.
+     *
      * @param {string} desiredLocale - The desired locale e.g. en-US.
      * @param {object} availableLocales - A dictionary where each key is an available locale.
-     * @returns {string} The locale found or if no locale is available returns the default en-US locale.
+     * @returns {string} The locale found or if no locale is available returns the default en-US
+     * locale.
      * @example
      * // With a defined dictionary of locales
      * var availableLocales = { en: 'en-US', fr: 'fr-FR' };
      * var locale = pc.I18n.getText('en-US', availableLocales);
      * // returns 'en'
+     * @private
      */
     static findAvailableLocale(desiredLocale, availableLocales) {
         return findAvailableLocale(desiredLocale, availableLocales);
     }
 
     /**
-     * @function
-     * @name I18n#findAvailableLocale
-     * @description Returns the first available locale based on the desired locale specified. First
-     * tries to find the desired locale in the loaded translations and then tries to find an alternative
+     * Returns the first available locale based on the desired locale specified. First tries to
+     * find the desired locale in the loaded translations and then tries to find an alternative
      * locale based on the language.
+     *
      * @param {string} desiredLocale - The desired locale e.g. en-US.
-     * @returns {string} The locale found or if no locale is available returns the default en-US locale.
+     * @returns {string} The locale found or if no locale is available returns the default en-US
+     * locale.
      * @example
      * var locale = this.app.i18n.getText('en-US');
      */
@@ -82,14 +168,14 @@ class I18n extends EventHandler {
     }
 
     /**
-     * @function
-     * @name I18n#getText
-     * @description Returns the translation for the specified key and locale. If the locale is not specified
-     * it will use the current locale.
+     * Returns the translation for the specified key and locale. If the locale is not specified it
+     * will use the current locale.
+     *
      * @param {string} key - The localization key.
      * @param {string} [locale] - The desired locale.
-     * @returns {string} The translated text. If no translations are found at all for the locale then it will return
-     * the en-US translation. If no translation exists for that key then it will return the localization key.
+     * @returns {string} The translated text. If no translations are found at all for the locale
+     * then it will return the en-US translation. If no translation exists for that key then it will
+     * return the localization key.
      * @example
      * var localized = this.app.i18n.getText('localization-key');
      * var localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
@@ -132,15 +218,16 @@ class I18n extends EventHandler {
     }
 
     /**
-     * @function
-     * @name I18n#getPluralText
-     * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
-     * it will use the current locale.
+     * Returns the pluralized translation for the specified key, number n and locale. If the locale
+     * is not specified it will use the current locale.
+     *
      * @param {string} key - The localization key.
-     * @param {number} n - The number used to determine which plural form to use. E.g. For the phrase "5 Apples" n equals 5.
+     * @param {number} n - The number used to determine which plural form to use. E.g. For the
+     * phrase "5 Apples" n equals 5.
      * @param {string} [locale] - The desired locale.
-     * @returns {string} The translated text. If no translations are found at all for the locale then it will return
-     * the en-US translation. If no translation exists for that key then it will return the localization key.
+     * @returns {string} The translated text. If no translations are found at all for the locale
+     * then it will return the en-US translation. If no translation exists for that key then it
+     * will return the localization key.
      * @example
      * // manually replace {number} in the resulting translation with our number
      * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
@@ -183,10 +270,11 @@ class I18n extends EventHandler {
     }
 
     /**
-     * @function
-     * @name I18n#addData
-     * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
-     * @param {object} data - The localization data. See example for the expected format of the data.
+     * Adds localization data. If the locale and key for a translation already exists it will be
+     * overwritten.
+     *
+     * @param {object} data - The localization data. See example for the expected format of the
+     * data.
      * @example
      * this.app.i18n.addData({
      *     header: {
@@ -242,10 +330,10 @@ class I18n extends EventHandler {
     }
 
     /**
-     * @function
-     * @name I18n#removeData
-     * @description Removes localization data.
-     * @param {object} data - The localization data. The data is expected to be in the same format as {@link I18n#addData}.
+     * Removes localization data.
+     *
+     * @param {object} data - The localization data. The data is expected to be in the same format
+     * as {@link I18n#addData}.
      */
     removeData(data) {
         let parsed;
@@ -279,9 +367,7 @@ class I18n extends EventHandler {
     }
 
     /**
-     * @function
-     * @name I18n#destroy
-     * @description Frees up memory.
+     * Frees up memory.
      */
     destroy() {
         this._translations = null;
@@ -289,79 +375,6 @@ class I18n extends EventHandler {
         this._assets = null;
         this._parser = null;
         this.off();
-    }
-
-    get locale() {
-        return this._locale;
-    }
-
-    set locale(value) {
-        if (this._locale === value) {
-            return;
-        }
-
-        // replace 'in' language with 'id'
-        // for Indonesian because both codes are valid
-        // so that users only need to use the 'id' code
-        let lang = getLang(value);
-        if (lang === 'in') {
-            lang = 'id';
-            value = replaceLang(value, lang);
-            if (this._locale === value) {
-                return;
-            }
-        }
-
-        const old = this._locale;
-        // cache locale, lang and plural function
-        this._locale = value;
-        this._lang = lang;
-        this._pluralFn = getPluralFn(this._lang);
-
-        // raise event
-        this.fire('set:locale', value, old);
-    }
-
-    get assets() {
-        return this._assets;
-    }
-
-    set assets(value) {
-        const index = {};
-
-        // convert array to dict
-        for (let i = 0, len = value.length; i < len; i++) {
-            const id = value[i] instanceof Asset ? value[i].id : value[i];
-            index[id] = true;
-        }
-
-        // remove assets not in value
-        let i = this._assets.length;
-        while (i--) {
-            const id = this._assets[i];
-            if (!index[id]) {
-                this._app.assets.off('add:' + id, this._onAssetAdd, this);
-                const asset = this._app.assets.get(id);
-                if (asset) {
-                    this._onAssetRemove(asset);
-                }
-                this._assets.splice(i, 1);
-            }
-        }
-
-        // add assets in value that do not already exist here
-        for (const id in index) {
-            const idNum = parseInt(id, 10);
-            if (this._assets.indexOf(idNum) !== -1) continue;
-
-            this._assets.push(idNum);
-            const asset = this._app.assets.get(idNum);
-            if (!asset) {
-                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
-            } else {
-                this._onAssetAdd(asset);
-            }
-        }
     }
 
     // Finds a fallback locale for the specified locale and language.

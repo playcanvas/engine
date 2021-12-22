@@ -3,26 +3,74 @@ import { Vec3 } from '../../../math/vec3.js';
 import { Component } from '../component.js';
 
 /**
- * @private
- * @component
- * @class
- * @name ZoneComponent
+ * The ZoneComponent allows you to define an area in world space of certain size. This can be used
+ * in various ways, such as affecting audio reverb when {@link AudioListenerComponent} is within
+ * zone. Or create culling system with portals between zones to hide whole indoor sections for
+ * performance reasons. And many other possible options. Zones are building blocks and meant to be
+ * used in many different ways.
+ *
  * @augments Component
- * @classdesc The ZoneComponent allows you to define an area in world space of certain size.
- * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
- * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
- * And many other possible options. Zones are building blocks and meant to be used in many different ways.
- * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Vec3} size - The Size of Box of a Zone.
+ * @private
  */
-
 class ZoneComponent extends Component {
+    /**
+     * Create a new ZoneComponent instance.
+     *
+     * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @private
+     */
     constructor(system, entity) {
         super(system, entity);
 
         this._oldState = true;
         this._size = new Vec3();
         this.on('set_enabled', this._onSetEnabled, this);
+    }
+
+    /**
+     * The size of the axis-aligned box of this ZoneComponent.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    set size(data) {
+        if (data instanceof Vec3) {
+            this._size.copy(data);
+        } else if (data instanceof Array && data.length >= 3) {
+            this.size.set(data[0], data[1], data[2]);
+        }
+    }
+
+    get size() {
+        return this._size;
+    }
+
+    onEnable() {
+        this._checkState();
+    }
+
+    onDisable() {
+        this._checkState();
+    }
+
+    _onSetEnabled(prop, old, value) {
+        this._checkState();
+    }
+
+    _checkState() {
+        const state = this.enabled && this.entity.enabled;
+        if (state === this._oldState)
+            return;
+
+        this._oldState = state;
+
+        this.fire('enable');
+        this.fire('state', this.enabled);
+    }
+
+    _onBeforeRemove() {
+        this.fire('remove');
     }
 
     /**
@@ -72,45 +120,6 @@ class ZoneComponent extends Component {
      *     // zone has been removed from an entity
      * });
      */
-
-    onEnable() {
-        this._checkState();
-    }
-
-    onDisable() {
-        this._checkState();
-    }
-
-    _onSetEnabled(prop, old, value) {
-        this._checkState();
-    }
-
-    _checkState() {
-        const state = this.enabled && this.entity.enabled;
-        if (state === this._oldState)
-            return;
-
-        this._oldState = state;
-
-        this.fire('enable');
-        this.fire('state', this.enabled);
-    }
-
-    _onBeforeRemove() {
-        this.fire('remove');
-    }
-
-    set size(data) {
-        if (data instanceof Vec3) {
-            this._size.copy(data);
-        } else if (data instanceof Array && data.length >= 3) {
-            this.size.set(data[0], data[1], data[2]);
-        }
-    }
-
-    get size() {
-        return this._size;
-    }
 }
 
 export { ZoneComponent };

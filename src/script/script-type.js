@@ -1,20 +1,21 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { ScriptComponent } from '../framework/components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/entity.js').Entity} Entity */
+
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
- * @class
- * @name ScriptType
- * @augments EventHandler
- * @classdesc Represents the type of a script. It is returned by {@link createScript}.
- * Also referred to as Script Type.
+ * Represents the type of a script. It is returned by {@link createScript}. Also referred to as
+ * Script Type.
  *
- * The type is to be extended using its JavaScript prototype. There is a list of methods
- * that will be executed by the engine on instances of this type, such as:
+ * The type is to be extended using its JavaScript prototype. There is a list of methods that will
+ * be executed by the engine on instances of this type, such as:
  *
  * - `initialize`
  * - `postInitialize`
@@ -22,46 +23,95 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * - `postUpdate`
  * - `swap`
  *
- * `initialize` and `postInitialize` - are called (if defined) when a script is about to run
- * for the first time - `postInitialize` will run after all `initialize` methods are executed
- * in the same tick or enabling chain of actions.
+ * `initialize` and `postInitialize` - are called (if defined) when a script is about to run for
+ * the first time - `postInitialize` will run after all `initialize` methods are executed in the
+ * same tick or enabling chain of actions.
  *
- * `update` and `postUpdate` - are called (if defined) for enabled (running state) scripts
- * on each tick.
+ * `update` and `postUpdate` - are called (if defined) for enabled (running state) scripts on each
+ * tick.
  *
- * `swap` - is called when a ScriptType that already exists in the registry gets redefined.
- * If the new ScriptType has a `swap` method in its prototype, then it will be executed to
- * perform hot-reload at runtime.
- * @property {Application} app The {@link Application} that the instance of this type
- * belongs to.
- * @property {Entity} entity The {@link Entity} that the instance of this type belongs to.
- * @property {boolean} enabled True if the instance of this type is in running state. False
- * when script is not running, because the Entity or any of its parents are disabled or the
- * Script Component is disabled or the Script Instance is disabled. When disabled no update
- * methods will be called on each tick. initialize and postInitialize methods will run once
- * when the script instance is in `enabled` state during app tick.
- * @param {object} args - The input arguments object
- * @param {Application} args.app - The {@link Application} that is running the script
- * @param {Entity} args.entity - The {@link Entity} that the script is attached to
+ * `swap` - is called when a ScriptType that already exists in the registry gets redefined. If the
+ * new ScriptType has a `swap` method in its prototype, then it will be executed to perform hot-
+ * reload at runtime.
  *
+ * @augments EventHandler
  */
 class ScriptType extends EventHandler {
+    /**
+     * Create a new ScriptType instance.
+     *
+     * @param {object} args - The input arguments object.
+     * @param {Application} args.app - The {@link Application} that is running the script.
+     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
+     */
     constructor(args) {
         super();
         this.initScriptType(args);
     }
 
+    /**
+     * True if the instance of this type is in running state. False when script is not running,
+     * because the Entity or any of its parents are disabled or the {@link ScriptComponent} is
+     * disabled or the Script Instance is disabled. When disabled no update methods will be called
+     * on each tick. initialize and postInitialize methods will run once when the script instance
+     * is in `enabled` state during app tick.
+     *
+     * @type {boolean}
+     */
+    set enabled(value) {
+        this._enabled = !!value;
+
+        if (this.enabled === this._enabledOld) return;
+
+        this._enabledOld = this.enabled;
+        this.fire(this.enabled ? 'enable' : 'disable');
+        this.fire('state', this.enabled);
+
+        // initialize script if not initialized yet and script is enabled
+        if (!this._initialized && this.enabled) {
+            this._initialized = true;
+
+            this.__initializeAttributes(true);
+
+            if (this.initialize)
+                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
+        }
+
+        // post initialize script if not post initialized yet and still enabled
+        // (initialize might have disabled the script so check this.enabled again)
+        // Warning: Do not do this if the script component is currently being enabled
+        // because in this case post initialize must be called after all the scripts
+        // in the script component have been initialized first
+        if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+            this._postInitialized = true;
+
+            if (this.postInitialize)
+                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
+        }
+    }
+
+    get enabled() {
+        return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
+    }
+
     initScriptType(args) {
         const script = this.constructor; // get script type, i.e. function (class)
+        Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
 
-        // #if _DEBUG
-        if (!args || !args.app || !args.entity) {
-            console.warn('script \'' + script.__name + '\' has missing arguments in constructor');
-        }
-        // #endif
-
+        /**
+         * The {@link Application} that the instance of this type belongs to.
+         *
+         * @type {Application}
+         */
         this.app = args.app;
+
+        /**
+         * The {@link Entity} that the instance of this type belongs to.
+         *
+         * @type {Entity}
+         */
         this.entity = args.entity;
+
         this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
         this._enabledOld = this.enabled;
         this.__destroyed = false;
@@ -76,12 +126,10 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @private
-     * @readonly
-     * @static
-     * @name ScriptType.__name
+     * Name of a Script Type.
+     *
      * @type {string}
-     * @description Name of a Script Type.
+     * @private
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
 
@@ -94,24 +142,18 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name ScriptType.scriptName
+     * Name of a Script Type.
+     *
      * @type {string|null}
-     * @description Name of a Script Type.
      */
     static get scriptName() {
         return this.__name;
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name ScriptType.attributes
+     * The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
+     *
      * @type {ScriptAttributes}
-     * @description The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *
@@ -149,12 +191,9 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @readonly
-     * @static
-     * @function
-     * @name ScriptType.extend
+     * Shorthand function to extend Script Type prototype with list of methods.
+     *
      * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
-     * @description Shorthand function to extend Script Type prototype with list of methods.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *
@@ -304,42 +343,6 @@ class ScriptType extends EventHandler {
      *     });
      * };
      */
-
-    get enabled() {
-        return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
-    }
-
-    set enabled(value) {
-        this._enabled = !!value;
-
-        if (this.enabled === this._enabledOld) return;
-
-        this._enabledOld = this.enabled;
-        this.fire(this.enabled ? 'enable' : 'disable');
-        this.fire('state', this.enabled);
-
-        // initialize script if not initialized yet and script is enabled
-        if (!this._initialized && this.enabled) {
-            this._initialized = true;
-
-            this.__initializeAttributes(true);
-
-            if (this.initialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
-        }
-
-        // post initialize script if not post initialized yet and still enabled
-        // (initialize might have disabled the script so check this.enabled again)
-        // Warning: Do not do this if the script component is currently being enabled
-        // because in this case post initialize must be called after all the scripts
-        // in the script component have been initialized first
-        if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
-            this._postInitialized = true;
-
-            if (this.postInitialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
-        }
-    }
 }
 
 export { ScriptType };

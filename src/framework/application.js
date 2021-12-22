@@ -6,6 +6,7 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
+import { Debug } from '../core/debug.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
@@ -23,11 +24,10 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL
+    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
-import { Immediate } from '../scene/immediate/immediate.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
@@ -37,6 +37,7 @@ import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -120,6 +121,12 @@ import {
     setApplication
 } from './globals.js';
 
+/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+
 // Mini-object used to measure progress of loading sets
 class Progress {
     constructor(length) {
@@ -137,14 +144,26 @@ class Progress {
 }
 
 /**
- * @class
- * @name Application
- * @augments EventHandler
- * @classdesc An Application represents and manages your PlayCanvas application.
- * If you are developing using the PlayCanvas Editor, the Application is created
- * for you. You can access your Application instance in your scripts. Below is a
- * skeleton script which shows how you can access the application 'app' property inside
- * the initialize and update functions:
+ * Callback used by {@link Application#configure} when configuration file is loaded and parsed (or
+ * an error occurs).
+ *
+ * @callback configureAppCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ */
+
+/**
+ * Callback used by {@link Application#preload} when all assets (marked as 'preload') are loaded.
+ *
+ * @callback preloadAppCallback
+ */
+
+let app = null;
+
+/**
+ * An Application represents and manages your PlayCanvas application. If you are developing using
+ * the PlayCanvas Editor, the Application is created for you. You can access your Application
+ * instance in your scripts. Below is a skeleton script which shows how you can access the
+ * application 'app' property inside the initialize and update functions:
  *
  * ```javascript
  * // Editor example: accessing the pc.Application from a script
@@ -161,242 +180,34 @@ class Progress {
  * };
  * ```
  *
- * If you are using the Engine without the Editor, you have to create the application
- * instance manually.
- * @description Create a new Application.
- * @param {Element} canvas - The canvas element.
- * @param {object} options
- * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
- * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
- * @param {Mouse} [options.mouse] - Mouse handler for input.
- * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
- * @param {GamePads} [options.gamepads] - Gamepad handler for input.
- * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
- * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
- * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
- * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
- * @example
- * // Engine-only example: create the application manually
- * var app = new pc.Application(canvas, options);
+ * If you are using the Engine without the Editor, you have to create the application instance
+ * manually.
  *
- * // Start the application's main loop
- * app.start();
+ * @augments EventHandler
  */
-
-// PROPERTIES
-
-/**
- * @name Application#scene
- * @type {Scene}
- * @description The scene managed by the application.
- * @example
- * // Set the tone mapping property of the application's scene
- * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
- */
-
-/**
- * @name Application#timeScale
- * @type {number}
- * @description Scales the global time delta. Defaults to 1.
- * @example
- * // Set the app to run at half speed
- * this.app.timeScale = 0.5;
- */
-
-/**
- * @name Application#maxDeltaTime
- * @type {number}
- * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
- * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
- * to 0.1 (seconds).
- * @example
- * // Don't clamp inter-frame times of 200ms or less
- * this.app.maxDeltaTime = 0.2;
- */
-
-/**
- * @name Application#scenes
- * @type {SceneRegistry}
- * @description The scene registry managed by the application.
- * @example
- * // Search the scene registry for a item with the name 'racetrack1'
- * var sceneItem = this.app.scenes.find('racetrack1');
- *
- * // Load the scene using the item's url
- * this.app.scenes.loadScene(sceneItem.url);
- */
-
-/**
- * @name Application#assets
- * @type {AssetRegistry}
- * @description The asset registry managed by the application.
- * @example
- * // Search the asset registry for all assets with the tag 'vehicle'
- * var vehicleAssets = this.app.assets.findByTag('vehicle');
- */
-
-/**
- * @name Application#graphicsDevice
- * @type {GraphicsDevice}
- * @description The graphics device used by the application.
- */
-
-/**
- * @name Application#systems
- * @type {ComponentSystemRegistry}
- * @description The application's component system registry. The Application
- * constructor adds the following component systems to its component system registry:
- *
- * - anim ({@link AnimComponentSystem})
- * - animation ({@link AnimationComponentSystem})
- * - audiolistener ({@link AudioListenerComponentSystem})
- * - button ({@link ButtonComponentSystem})
- * - camera ({@link CameraComponentSystem})
- * - collision ({@link CollisionComponentSystem})
- * - element ({@link ElementComponentSystem})
- * - layoutchild ({@link LayoutChildComponentSystem})
- * - layoutgroup ({@link LayoutGroupComponentSystem})
- * - light ({@link LightComponentSystem})
- * - model ({@link ModelComponentSystem})
- * - particlesystem ({@link ParticleSystemComponentSystem})
- * - rigidbody ({@link RigidBodyComponentSystem})
- * - render ({@link RenderComponentSystem})
- * - screen ({@link ScreenComponentSystem})
- * - script ({@link ScriptComponentSystem})
- * - scrollbar ({@link ScrollbarComponentSystem})
- * - scrollview ({@link ScrollViewComponentSystem})
- * - sound ({@link SoundComponentSystem})
- * - sprite ({@link SpriteComponentSystem})
- * @example
- * // Set global gravity to zero
- * this.app.systems.rigidbody.gravity.set(0, 0, 0);
- * @example
- * // Set the global sound volume to 50%
- * this.app.systems.sound.volume = 0.5;
- */
-
-/**
- * @name Application#xr
- * @type {XrManager}
- * @description The XR Manager that provides ability to start VR/AR sessions.
- * @example
- * // check if VR is available
- * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
- *     // VR is available
- * }
- */
-
-
-/**
- * @name Application#lightmapper
- * @type {Lightmapper}
- * @description The run-time lightmapper.
- */
-
-/**
- * @name Application#loader
- * @type {ResourceLoader}
- * @description The resource loader.
- */
-
-/**
- * @name Application#root
- * @type {Entity}
- * @description The root entity of the application.
- * @example
- * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
- * var camera = this.app.root.findByName('Camera');
- */
-
-/**
- * @name Application#keyboard
- * @type {Keyboard}
- * @description The keyboard device.
- */
-
-/**
- * @name Application#mouse
- * @type {Mouse}
- * @description The mouse device.
- */
-
-/**
- * @name Application#touch
- * @type {TouchDevice}
- * @description Used to get touch events input.
- */
-
-/**
- * @name Application#gamepads
- * @type {GamePads}
- * @description Used to access GamePad input.
- */
-
-/**
- * @name Application#elementInput
- * @type {ElementInput}
- * @description Used to handle input for {@link ElementComponent}s.
- */
-
-/**
- * @name Application#scripts
- * @type {ScriptRegistry}
- * @description The application's script registry.
- */
-
-/**
- * @name Application#batcher
- * @type {BatchManager}
- * @description The application's batch manager. The batch manager is used to
- * merge mesh instances in the scene, which reduces the overall number of draw
- * calls, thereby boosting performance.
- */
-
-/**
- * @name Application#autoRender
- * @type {boolean}
- * @description When true, the application's render function is called every frame.
- * Setting autoRender to false is useful to applications where the rendered image
- * may often be unchanged over time. This can heavily reduce the application's
- * load on the CPU and GPU. Defaults to true.
- * @example
- * // Disable rendering every frame and only render on a keydown event
- * this.app.autoRender = false;
- * this.app.keyboard.on('keydown', function (event) {
- *     this.app.renderNextFrame = true;
- * }, this);
- */
-
-/**
- * @name Application#renderNextFrame
- * @type {boolean}
- * @description Set to true to render the scene on the next iteration of the main loop.
- * This only has an effect if {@link Application#autoRender} is set to false. The
- * value of renderNextFrame is set back to false again as soon as the scene has been
- * rendered.
- * @example
- * // Render the scene only while space key is pressed
- * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
- *     this.app.renderNextFrame = true;
- * }
- */
-
- /**
-  * @name Application#i18n
-  * @type {I18n}
-  * @description Handles localization.
-  */
-
-/**
- * @private
- * @static
- * @name app
- * @type {Application|undefined}
- * @description Gets the current application, if any.
- */
-let app = null;
-
 class Application extends EventHandler {
+    /**
+     * Create a new Application instance.
+     *
+     * @param {Element} canvas - The canvas element.
+     * @param {object} [options] - The options object to configure the Application.
+     * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
+     * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
+     * @param {Mouse} [options.mouse] - Mouse handler for input.
+     * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
+     * @param {GamePads} [options.gamepads] - Gamepad handler for input.
+     * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
+     * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
+     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
+     * {@link GraphicsDevice} constructor.
+     * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
+     * @example
+     * // Engine-only example: create the application manually
+     * var app = new pc.Application(canvas, options);
+     *
+     * // Start the application's main loop
+     * app.start();
+     */
     constructor(canvas, options = {}) {
         super();
 
@@ -444,6 +255,7 @@ class Application extends EventHandler {
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
         this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
+        this._initDefaultMaterial();
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
         this.loader = new ResourceLoader(this);
@@ -453,8 +265,10 @@ class Application extends EventHandler {
         // for this app by guid
         this._entityIndex = {};
 
-        this.scene = new Scene();
-        this.root = new Entity(this);
+        this.scene = new Scene(this.graphicsDevice);
+        this._registerSceneImmediate(this.scene);
+
+        this.root = new Entity();
         this.root._enabledInHierarchy = true;
         this._enableList = [];
         this._enableList.size = 0;
@@ -642,25 +456,230 @@ class Application extends EventHandler {
             }
         }
 
-        // immediate rendering
-        this._immediate = new Immediate(this.graphicsDevice, this);
-
         // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
+    /**
+     * @name Application#scene
+     * @type {Scene}
+     * @description The scene managed by the application.
+     * @example
+     * // Set the tone mapping property of the application's scene
+     * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+     */
+
+    /**
+     * @name Application#timeScale
+     * @type {number}
+     * @description Scales the global time delta. Defaults to 1.
+     * @example
+     * // Set the app to run at half speed
+     * this.app.timeScale = 0.5;
+     */
+
+    /**
+     * @name Application#maxDeltaTime
+     * @type {number}
+     * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+     * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
+     * to 0.1 (seconds).
+     * @example
+     * // Don't clamp inter-frame times of 200ms or less
+     * this.app.maxDeltaTime = 0.2;
+     */
+
+    /**
+     * @name Application#scenes
+     * @type {SceneRegistry}
+     * @description The scene registry managed by the application.
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * var sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+
+    /**
+     * @name Application#assets
+     * @type {AssetRegistry}
+     * @description The asset registry managed by the application.
+     * @example
+     * // Search the asset registry for all assets with the tag 'vehicle'
+     * var vehicleAssets = this.app.assets.findByTag('vehicle');
+     */
+
+    /**
+     * @name Application#graphicsDevice
+     * @type {GraphicsDevice}
+     * @description The graphics device used by the application.
+     */
+
+    /**
+     * @name Application#systems
+     * @type {ComponentSystemRegistry}
+     * @description The application's component system registry. The Application
+     * constructor adds the following component systems to its component system registry:
+     *
+     * - anim ({@link AnimComponentSystem})
+     * - animation ({@link AnimationComponentSystem})
+     * - audiolistener ({@link AudioListenerComponentSystem})
+     * - button ({@link ButtonComponentSystem})
+     * - camera ({@link CameraComponentSystem})
+     * - collision ({@link CollisionComponentSystem})
+     * - element ({@link ElementComponentSystem})
+     * - layoutchild ({@link LayoutChildComponentSystem})
+     * - layoutgroup ({@link LayoutGroupComponentSystem})
+     * - light ({@link LightComponentSystem})
+     * - model ({@link ModelComponentSystem})
+     * - particlesystem ({@link ParticleSystemComponentSystem})
+     * - rigidbody ({@link RigidBodyComponentSystem})
+     * - render ({@link RenderComponentSystem})
+     * - screen ({@link ScreenComponentSystem})
+     * - script ({@link ScriptComponentSystem})
+     * - scrollbar ({@link ScrollbarComponentSystem})
+     * - scrollview ({@link ScrollViewComponentSystem})
+     * - sound ({@link SoundComponentSystem})
+     * - sprite ({@link SpriteComponentSystem})
+     * @example
+     * // Set global gravity to zero
+     * this.app.systems.rigidbody.gravity.set(0, 0, 0);
+     * @example
+     * // Set the global sound volume to 50%
+     * this.app.systems.sound.volume = 0.5;
+     */
+
+    /**
+     * @name Application#xr
+     * @type {XrManager}
+     * @description The XR Manager that provides ability to start VR/AR sessions.
+     * @example
+     * // check if VR is available
+     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     *     // VR is available
+     * }
+     */
+
+    /**
+     * @name Application#lightmapper
+     * @type {Lightmapper}
+     * @description The run-time lightmapper.
+     */
+
+    /**
+     * @name Application#loader
+     * @type {ResourceLoader}
+     * @description The resource loader.
+     */
+
+    /**
+     * @name Application#root
+     * @type {Entity}
+     * @description The root entity of the application.
+     * @example
+     * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
+     * var camera = this.app.root.findByName('Camera');
+     */
+
+    /**
+     * @name Application#keyboard
+     * @type {Keyboard}
+     * @description The keyboard device.
+     */
+
+    /**
+     * @name Application#mouse
+     * @type {Mouse}
+     * @description The mouse device.
+     */
+
+    /**
+     * @name Application#touch
+     * @type {TouchDevice}
+     * @description Used to get touch events input.
+     */
+
+    /**
+     * @name Application#gamepads
+     * @type {GamePads}
+     * @description Used to access GamePad input.
+     */
+
+    /**
+     * @name Application#elementInput
+     * @type {ElementInput}
+     * @description Used to handle input for {@link ElementComponent}s.
+     */
+
+    /**
+     * @name Application#scripts
+     * @type {ScriptRegistry}
+     * @description The application's script registry.
+     */
+
+    /**
+     * @name Application#batcher
+     * @type {BatchManager}
+     * @description The application's batch manager. The batch manager is used to
+     * merge mesh instances in the scene, which reduces the overall number of draw
+     * calls, thereby boosting performance.
+     */
+
+    /**
+     * @name Application#autoRender
+     * @type {boolean}
+     * @description When true, the application's render function is called every frame.
+     * Setting autoRender to false is useful to applications where the rendered image
+     * may often be unchanged over time. This can heavily reduce the application's
+     * load on the CPU and GPU. Defaults to true.
+     * @example
+     * // Disable rendering every frame and only render on a keydown event
+     * this.app.autoRender = false;
+     * this.app.keyboard.on('keydown', function (event) {
+     *     this.app.renderNextFrame = true;
+     * }, this);
+     */
+
+    /**
+     * @name Application#renderNextFrame
+     * @type {boolean}
+     * @description Set to true to render the scene on the next iteration of the main loop.
+     * This only has an effect if {@link Application#autoRender} is set to false. The
+     * value of renderNextFrame is set back to false again as soon as the scene has been
+     * rendered.
+     * @example
+     * // Render the scene only while space key is pressed
+     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     *     this.app.renderNextFrame = true;
+     * }
+     */
+
+    /**
+     * @name Application#i18n
+     * @type {I18n}
+     * @description Handles localization.
+     */
+
+    /**
+     * @private
+     * @static
+     * @name app
+     * @type {Application|undefined}
+     * @description Gets the current application, if any.
+     */
+
     static _applications = {};
 
     /**
-     * @static
-     * @function
-     * @name Application.getApplication
-     * @description Get the current application. In the case where there are multiple running
-     * applications, the function can get an application based on a supplied canvas id. This
-     * function is particularly useful when the current Application is not readily available.
-     * For example, in the JavaScript console of the browser's developer tools.
-     * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
+     * Get the current application. In the case where there are multiple running applications, the
+     * function can get an application based on a supplied canvas id. This function is particularly
+     * useful when the current Application is not readily available. For example, in the JavaScript
+     * console of the browser's developer tools.
+     *
+     * @param {string} [id] - If defined, the returned application should use the canvas which has
+     * this id. Otherwise current application will be returned.
      * @returns {Application|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
@@ -669,39 +688,47 @@ class Application extends EventHandler {
         return id ? Application._applications[id] : getApplication();
     }
 
+    _initDefaultMaterial() {
+        const material = new StandardMaterial();
+        material.name = "Default Material";
+        material.shadingModel = SPECULAR_BLINN;
+        DefaultMaterial.add(this.graphicsDevice, material);
+    }
+
     /**
-     * @readonly
-     * @name Application#fillMode
-     * @type {string}
-     * @description The current fill mode of the canvas. Can be:
+     * The current fill mode of the canvas. Can be:
      *
      * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
      * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while
+     * maintaining the aspect ratio.
+     *
+     * @type {string}
      */
     get fillMode() {
         return this._fillMode;
     }
 
     /**
-     * @readonly
-     * @name Application#resolutionMode
-     * @type {string}
-     * @description The current resolution mode of the canvas, Can be:
+     * The current resolution mode of the canvas, Can be:
      *
-     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to
+     * match canvas client size.
      * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     *
+     * @type {string}
      */
     get resolutionMode() {
         return this._resolutionMode;
     }
 
     /**
-     * @function
-     * @name Application#configure
-     * @description Load the application configuration file and apply application properties and fill the asset registry.
+     * Load the application configuration file and apply application properties and fill the asset
+     * registry.
+     *
      * @param {string} url - The URL of the configuration file to load.
-     * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
+     * @param {configureAppCallback} callback - The Function called when the configuration file is
+     * loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
         http.get(url, (err, response) => {
@@ -727,10 +754,9 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#preload
-     * @description Load all assets in the asset registry that are marked as 'preload'.
-     * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
+     * Load all assets in the asset registry that are marked as 'preload'.
+     *
+     * @param {preloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         this.fire("preload:start");
@@ -1074,17 +1100,18 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#start
-     * @description Start the application. This function does the following:
+     * Start the application. This function does the following:
+     *
      * 1. Fires an event on the application named 'start'
      * 2. Calls initialize for all components on entities in the hierarchy
      * 3. Fires an event on the application named 'initialize'
      * 4. Calls postInitialize for all components on entities in the hierarchy
      * 5. Fires an event on the application named 'postinitialize'
      * 6. Starts executing the main loop of the application
-     * This function is called internally by PlayCanvas applications made in the Editor
-     * but you will need to call start yourself if you are using the engine stand-alone.
+     *
+     * This function is called internally by PlayCanvas applications made in the Editor but you
+     * will need to call start yourself if you are using the engine stand-alone.
+     *
      * @example
      * app.start();
      */
@@ -1126,14 +1153,12 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#update
-     * @description Update the application. This function will call the update
-     * functions and then the postUpdate functions of all enabled components. It
-     * will then update the current state of all connected input devices.
-     * This function is called internally in the application's main loop and
-     * does not need to be called explicitly.
-     * @param {number} dt - The time delta since the last frame.
+     * Update the application. This function will call the update functions and then the postUpdate
+     * functions of all enabled components. It will then update the current state of all connected
+     * input devices. This function is called internally in the application's main loop and does
+     * not need to be called explicitly.
+     *
+     * @param {number} dt - The time delta in seconds since the last frame.
      */
     update(dt) {
         this.frame++;
@@ -1166,12 +1191,9 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#render
-     * @description Render the application's scene. More specifically, the scene's
-     * {@link LayerComposition} is rendered by the application's {@link ForwardRenderer}.
-     * This function is called internally in the application's main loop and
-     * does not need to be called explicitly.
+     * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
+     * rendered by the application's {@link ForwardRenderer}. This function is called internally in
+     * the application's main loop and does not need to be called explicitly.
      */
     render() {
         // #if _PROFILER
@@ -1285,14 +1307,15 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setCanvasFillMode
-     * @description Controls how the canvas fills the window and resizes when the window changes.
+     * Controls how the canvas fills the window and resizes when the window changes.
+     *
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
      * - {@link FILLMODE_NONE}: the canvas will always match the size provided.
      * - {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * - {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while
+     * maintaining the aspect ratio.
+     *
      * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
      * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
@@ -1302,15 +1325,18 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setCanvasResolution
-     * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
+     * Change the resolution of the canvas, and set the way it behaves when the window is resized.
+     *
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * - {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to
+     * match canvas client size.
      * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
-     * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
-     * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
+     *
+     * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided
+     * canvas clientWidth is used.
+     * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided
+     * canvas clientHeight is used.
      */
     setCanvasResolution(mode, width, height) {
         this._resolutionMode = mode;
@@ -1325,9 +1351,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#isHidden
-     * @description Queries the visibility of the window or tab in which the application is running.
+     * Queries the visibility of the window or tab in which the application is running.
+     *
      * @returns {boolean} True if the application is not visible and false otherwise.
      */
     isHidden() {
@@ -1335,10 +1360,9 @@ class Application extends EventHandler {
     }
 
     /**
+     * Called when the visibility state of the current tab/window changes.
+     *
      * @private
-     * @function
-     * @name Application#onVisibilityChange
-     * @description Called when the visibility state of the current tab/window changes.
      */
     onVisibilityChange() {
         if (this.isHidden()) {
@@ -1349,12 +1373,14 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#resizeCanvas
-     * @description Resize the application's canvas element in line with the current fill mode.
-     * In {@link FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
-     * In {@link FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
-     * In {@link FILLMODE_NONE} mode, the canvas will always match the size provided.
+     * Resize the application's canvas element in line with the current fill mode.
+     *
+     * - In {@link FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it
+     * can while maintaining the aspect ratio.
+     * - In {@link FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing
+     * aspect ratio.
+     * - In {@link FILLMODE_NONE} mode, the canvas will always match the size provided.
+     *
      * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @returns {object} A object containing the values calculated to use as width and height.
@@ -1399,11 +1425,9 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#updateCanvasSize
-     * @description Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document page.
-     * It is recommended to call this function when the canvas size changes (e.g on window resize and orientation change
-     * events) so that the canvas resolution is immediately updated.
+     * Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document
+     * page. It is recommended to call this function when the canvas size changes (e.g on window
+     * resize and orientation change events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR
@@ -1420,11 +1444,11 @@ class Application extends EventHandler {
     }
 
     /**
+     * Event handler called when all code libraries have been loaded. Code libraries are passed
+     * into the constructor of the Application and the application won't start running or load
+     * packs until all libraries have been loaded.
+     *
      * @private
-     * @name Application#onLibrariesLoaded
-     * @description Event handler called when all code libraries have been loaded.
-     * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
-     * been loaded.
      */
     onLibrariesLoaded() {
         this._librariesLoaded = true;
@@ -1432,39 +1456,54 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#applySceneSettings
-     * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
+     * Apply scene settings to the current scene. Useful when your scene settings are parsed or
+     * generated from a non-URL source.
+     *
      * @param {object} settings - The scene settings to be applied.
      * @param {object} settings.physics - The physics settings to be applied.
-     * @param {number[]} settings.physics.gravity - The world space vector representing global gravity in the physics simulation. Must be a fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
+     * @param {number[]} settings.physics.gravity - The world space vector representing global
+     * gravity in the physics simulation. Must be a fixed size array with three number elements,
+     * corresponding to each axis [ X, Y, Z ].
      * @param {object} settings.render - The rendering settings to be applied.
-     * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+     * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light.
+     * Must be a fixed size array with three number elements, corresponding to each color channel
+     * [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
      * - {@link FOG_NONE}
      * - {@link FOG_LINEAR}
      * - {@link FOG_EXP}
      * - {@link FOG_EXP2}
-     * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
-     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
-     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
-     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
-     * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
+     *
+     * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a
+     * fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This
+     * property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
+     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog
+     * begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
+     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog
+     * reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
+     * @param {number} settings.render.gamma_correction - The gamma correction to apply when
+     * rendering the scene. Can be:
      *
      * - {@link GAMMA_NONE}
      * - {@link GAMMA_SRGB}
-     * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
-     * frame buffer. Can be:
+     *
+     * @param {number} settings.render.tonemapping - The tonemapping transform to apply when
+     * writing fragments to the frame buffer. Can be:
      *
      * - {@link TONEMAP_LINEAR}
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
-     * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
-     * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
+     *
+     * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
+     * of the scene.
+     * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
+     * used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
-     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
+     * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
@@ -1527,9 +1566,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Application#setAreaLightLuts
-     * @description Sets the area light LUT asset for this app.
+     * Sets the area light LUT asset for this app.
+     *
      * @param {Asset} asset - LUT asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
@@ -1540,16 +1578,13 @@ class Application extends EventHandler {
             });
             this.assets.load(asset);
         } else {
-            // #if _DEBUG
-            console.warn("setAreaLightLuts: asset is not valid");
-            // #endif
+            Debug.warn("setAreaLightLuts: asset is not valid");
         }
     }
 
     /**
-     * @function
-     * @name Application#setSkybox
-     * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
+     * Sets the skybox asset to current scene, and subscribes to asset load/change events.
+     *
      * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
      */
     setSkybox(asset) {
@@ -1588,11 +1623,10 @@ class Application extends EventHandler {
     }
 
     /**
+     * Create and assign a {@link VrManager} object to allow this application render in VR.
+     *
      * @private
      * @deprecated
-     * @function
-     * @name Application#enableVr
-     * @description Create and assign a {@link VrManager} object to allow this application render in VR.
      */
     enableVr() {
         if (!this.vr) {
@@ -1601,11 +1635,10 @@ class Application extends EventHandler {
     }
 
     /**
+     * Destroy the {@link VrManager}.
+     *
      * @private
      * @deprecated
-     * @function
-     * @name Application#disableVr
-     * @description Destroy the {@link VrManager}.
      */
     disableVr() {
         if (this.vr) {
@@ -1626,20 +1659,15 @@ class Application extends EventHandler {
         return timestamp;
     }
 
-    // returns the default layer used by the line drawing functions
-    _getDefaultDrawLayer() {
-        return this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
-    }
-
     /**
-     * @function
-     * @name Application#drawLine
-     * @description Draws a single line. Line start and end coordinates are specified in world-space.
-     * The line will be flat-shaded with the specified color.
+     * Draws a single line. Line start and end coordinates are specified in world-space. The line
+     * will be flat-shaded with the specified color.
+     *
      * @param {Vec3} start - The start world-space coordinate of the line.
      * @param {Vec3} end - The end world-space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the line is depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
+     * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
@@ -1658,22 +1686,23 @@ class Application extends EventHandler {
      * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
-    drawLine(start, end, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        const batch = this._immediate.getBatch(layer, depthTest);
-        batch.addLines([start, end], [color, color]);
+    drawLine(start, end, color, depthTest, layer) {
+        this.scene.drawLine(start, end, color, depthTest, layer);
     }
 
     /**
-     * @function
-     * @name Application#drawLines
-     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
-     * point in the array. Instead, they are individual segments specified by two points. Therefore, the lengths of the
-     * supplied position and color arrays must be the same and also must be a multiple of 2. The colors of the ends of each
-     * line segment will be interpolated along the length of each line.
-     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the array must be a multiple of 2.
-     * @param {Color[]} colors - An array of colors to color the lines. This must be the same length as the position array.
-     * The length of the array must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * Renders an arbitrary number of discrete line segments. The lines are not connected by each
+     * subsequent point in the array. Instead, they are individual segments specified by two
+     * points. Therefore, the lengths of the supplied position and color arrays must be the same
+     * and also must be a multiple of 2. The colors of the ends of each line segment will be
+     * interpolated along the length of each line.
+     *
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
+     * array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
+     * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
@@ -1700,20 +1729,21 @@ class Application extends EventHandler {
      * ];
      * app.drawLines(points, colors);
      */
-    drawLines(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        const batch = this._immediate.getBatch(layer, depthTest);
-        batch.addLines(positions, colors);
+    drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLines(positions, colors, depthTest, layer);
     }
 
     /**
-     * @function
-     * @name Application#drawLineArrays
-     * @description Renders an arbitrary number of discrete line segments. The lines are not connected by each subsequent
-     * point in the array. Instead, they are individual segments specified by two points.
-     * @param {number[]} positions - An array of points to draw lines between. Each point is represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]} colors - An array of colors to color the lines. This must be the same length as the position array.
-     * The length of the array must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested againts the depth buffer. Defaults to true.
+     * Renders an arbitrary number of discrete line segments. The lines are not connected by each
+     * subsequent point in the array. Instead, they are individual segments specified by two
+     * points.
+     *
+     * @param {number[]} positions - An array of points to draw lines between. Each point is
+     * represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
+     * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render 2 discrete line segments
@@ -1735,69 +1765,68 @@ class Application extends EventHandler {
      * ];
      * app.drawLineArrays(points, colors);
      */
-    drawLineArrays(positions, colors, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        const batch = this._immediate.getBatch(layer, depthTest);
-        batch.addLinesArrays(positions, colors);
+    drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLineArrays(positions, colors, depthTest, layer);
     }
 
     /**
-     * @function
-     * @private
-     * @name Application#drawWireSphere
-     * @description Draws a wireframe sphere with center, radius and color.
+     * Draws a wireframe sphere with center, radius and color.
+     *
      * @param {Vec3} center - The center of the sphere.
      * @param {number} radius - The radius of the sphere.
      * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {number} [segments] - Number of line segments used to render the circles forming the sphere. Defaults to 20.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {number} [segments] - Number of line segments used to render the circles forming the
+     * sphere. Defaults to 20.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
+     * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
      * var center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     * @private
      */
-    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
     /**
-     * @function
-     * @private
-     * @name Application#drawWireAlignedBox
      * @description Draws a wireframe axis aligned box specified by min and max points and color.
      * @param {Vec3} minPoint - The min corner point of the box.
      * @param {Vec3} maxPoint - The max corner point of the box.
      * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested againts the depth buffer. Defaults to true.
+     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
+     * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire aligned box
      * var min = new pc.Vec3(-1, -1, -1);
      * var max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     * @private
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
     // Draw meshInstance at this frame
-    drawMeshInstance(meshInstance, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawMesh(null, null, null, meshInstance, layer);
+    drawMeshInstance(meshInstance, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
     }
 
     // Draw mesh at this frame
-    drawMesh(mesh, material, matrix, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawMesh(material, matrix, mesh, null, layer);
+    drawMesh(mesh, material, matrix, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    drawQuad(matrix, material, layer = this._getDefaultDrawLayer()) {
-        this._immediate.drawMesh(material, matrix, this._immediate.getQuadMesh(), null, layer);
+    drawQuad(matrix, material, layer = this.scene.defaultDrawLayer) {
+        this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
     }
 
     // draws a texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    drawTexture(x, y, width, height, texture, material, layer = this._getDefaultDrawLayer()) {
+    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1806,7 +1835,7 @@ class Application extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this._immediate.getTextureShader();
+            material.shader = this.scene.immediate.getTextureShader();
             material.update();
         }
 
@@ -1815,21 +1844,21 @@ class Application extends EventHandler {
 
     // draws a depth texture on [x,y] position on screen, with size [width, height].
     // Coordinates / sizes are in projected space (-1 .. 1)
-    drawDepthTexture(x, y, width, height, layer = this._getDefaultDrawLayer()) {
+    drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new Material();
-        material.shader = this._immediate.getDepthTextureShader();
+        material.shader = this.scene.immediate.getDepthTextureShader();
         material.update();
 
         this.drawTexture(x, y, width, height, null, material, layer);
     }
 
     /**
-     * @function
-     * @name Application#destroy
-     * @description Destroys application and removes all event listeners at the end of the current engine frame update.
-     * However, if called outside of the engine frame update, calling destroy() will destroy the application immediately.
+     * Destroys application and removes all event listeners at the end of the current engine frame
+     * update. However, if called outside of the engine frame update, calling destroy() will
+     * destroy the application immediately.
+     *
      * @example
-     * this.app.destroy();
+     * app.destroy();
      */
     destroy() {
         if (this._inFrameUpdate) {
@@ -1977,15 +2006,18 @@ class Application extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name Application#getEntityFromIndex
-     * @description Get entity from the index by guid.
+     * Get entity from the index by guid.
+     *
      * @param {string} guid - The GUID to search for.
      * @returns {Entity} The Entity with the GUID or null.
+     * @private
      */
     getEntityFromIndex(guid) {
         return this._entityIndex[guid];
+    }
+
+    _registerSceneImmediate(scene) {
+        this.on('postrender', scene.immediate.onPostRender, scene.immediate);
     }
 }
 

@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -13,6 +15,8 @@ import { ComponentSystem } from '../system.js';
 import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
+
+/** @typedef {import('../../application.js').Application} Application */
 
 const mat4 = new Mat4();
 const vec3 = new Vec3();
@@ -561,14 +565,16 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 }
 
 /**
- * @class
- * @name CollisionComponentSystem
+ * Manages creation of {@link CollisionComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link CollisionComponent}s.
- * @description Creates a new CollisionComponentSystem.
- * @param {Application} app - The running {@link Application}.
  */
 class CollisionComponentSystem extends ComponentSystem {
+    /**
+     * Creates a new CollisionComponentSystem instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         super(app);
 
@@ -674,9 +680,7 @@ class CollisionComponentSystem extends ComponentSystem {
                     impl = new CollisionCompoundSystemImpl(this);
                     break;
                 default:
-                    // #if _DEBUG
-                    console.error("_createImplementation: Invalid collision system type: " + type);
-                    // #endif
+                    Debug.error(`_createImplementation: Invalid collision system type: ${type}`);
             }
             this.implementations[type] = impl;
         }

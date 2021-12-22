@@ -9,13 +9,13 @@ class ScrollViewExample extends Example {
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
 
-        // Create the application and start the update loop
+        // Create the application with input and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
@@ -124,7 +124,7 @@ class ScrollViewExample extends Example {
             anchor: new pc.Vec4(0, 1, 0, 1),
             autoHeight: true,
             autoWidth: false,
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 32,
             lineHeight: 36,
             pivot: new pc.Vec2(0, 1),
@@ -133,7 +133,7 @@ class ScrollViewExample extends Example {
                     "by using a trackpad. Notice the elastic bounce if you drag the content beyond the " +
                     "limits of the scroll view.",
             type: pc.ELEMENTTYPE_TEXT,
-            width: 400,
+            width: 600,
             wrapLines: true
         });
 
@@ -147,7 +147,7 @@ class ScrollViewExample extends Example {
             pivot: new pc.Vec2(0, 1),
             type: pc.ELEMENTTYPE_GROUP,
             useInput: true,
-            width: 400
+            width: 600
         });
 
         // Scroll view viewport
@@ -184,7 +184,7 @@ class ScrollViewExample extends Example {
             pivot: new pc.Vec2(0.5, 0.5),
             type: pc.ELEMENTTYPE_GROUP,
             useInput: false,
-            width: 200
+            width: 400
         });
 
         scrollview.addComponent('scrollview', {

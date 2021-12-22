@@ -6,15 +6,21 @@ import { Bundle } from '../bundles/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @private
- * @class
- * @name BundleHandler
+ * Loads Bundle Assets.
+ *
  * @implements {ResourceHandler}
- * @param {AssetRegistry} assets - The asset registry.
- * @classdesc Loads Bundle Assets.
+ * @private
  */
 class BundleHandler {
+    /**
+     * Create a new BundleHandler instance.
+     *
+     * @param {AssetRegistry} assets - The asset registry.
+     */
     constructor(assets) {
         this._assets = assets;
         this._worker = null;

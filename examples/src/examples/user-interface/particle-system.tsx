@@ -3,9 +3,9 @@ import * as pc from 'playcanvas/build/playcanvas.js';
 import Example from '../../app/example';
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ButtonParticleExample extends Example {
+class UserInterfaceParticleSystemExample extends Example {
     static CATEGORY = 'User Interface';
-    static NAME = 'Button Particle';
+    static NAME = 'Particle System';
 
     load() {
         return <>
@@ -16,7 +16,7 @@ class ButtonParticleExample extends Example {
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset, spark: pc.Asset }): void {
 
-        // Create the application and start the update loop
+        // Create the application with input and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
@@ -24,10 +24,18 @@ class ButtonParticleExample extends Example {
         });
         app.start();
 
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
         // Create a camera
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
         });
         app.root.addChild(camera);
 
@@ -41,12 +49,9 @@ class ButtonParticleExample extends Example {
         });
         app.root.addChild(screen);
 
-        // Create a simple button
-        const button = new pc.Entity();
-        button.addComponent("button", {
-            imageEntity: button
-        });
-        button.addComponent("element", {
+        // Create a simple panel
+        const panel = new pc.Entity();
+        panel.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(0.4, 0.4, 0.4),
             height: 40,
@@ -55,13 +60,14 @@ class ButtonParticleExample extends Example {
             width: 175,
             useInput: true
         });
-        screen.addChild(button);
+        screen.addChild(panel);
 
-        // Create a label for the button
+        // Create a label for the panel
         const label = new pc.Entity();
         label.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(1, 1, 0),
+            fontAsset: assets.font.id,
             fontSize: 36,
             height: 64,
             pivot: [0.5, 0.5],
@@ -70,15 +76,13 @@ class ButtonParticleExample extends Example {
             width: 128,
             wrapLines: true
         });
-        button.addChild(label);
-        label.element.fontAsset = assets.font.id;
-
+        panel.addChild(label);
 
         // Create entity for particle system
         const particles = new pc.Entity();
 
-        // insert sparks as a child of the button, but before Label - that is the order for rendering
-        button.insertChild(particles, 0);
+        // insert sparks as a child of the panel, but before Label - that is the order for rendering
+        panel.insertChild(particles, 0);
 
         // particles will render in UI layer
         const UILayer = app.scene.layers.getLayerByName("UI");
@@ -137,10 +141,10 @@ class ButtonParticleExample extends Example {
             time += dt * 0.3;
 
             // move buttons along the circular path
-            button.setLocalPosition(300 * Math.sin(time), 300 * Math.cos(time), 0);
+            panel.setLocalPosition(300 * Math.sin(time), 300 * Math.cos(time), 0);
         });
 
     }
 }
 
-export default ButtonParticleExample;
+export default UserInterfaceParticleSystemExample;
