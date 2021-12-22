@@ -122,7 +122,19 @@ class EnvLighting {
 
         Debug.pushGpuMarker(device, "genLightingSource");
 
-        const result = createCubemap(device, 128, lightingSourcePixelFormat(device), false);
+        const format = lightingSourcePixelFormat(device);
+        const result = new Texture(device, {
+            name: `lighting-source`,
+            cubemap: true,
+            width: 128,
+            height: 128,
+            format: format,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            fixCubemapSeams: false,
+            mipmaps: true
+        });
 
         // copy into top level
         reprojectTexture(source, result, {
@@ -132,7 +144,7 @@ class EnvLighting {
         Debug.popGpuMarker(device);
 
         // generate mipmaps
-        return generateMipmaps(result);
+        return result;
     }
 
     /**
