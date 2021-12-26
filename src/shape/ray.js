@@ -3,9 +3,6 @@ import { Vec3 } from '../math/vec3.js';
 
 /**
  * An infinite ray.
- *
- * @property {Vec3} origin The starting point of the ray.
- * @property {Vec3} direction The direction of the ray.
  */
 class Ray {
     /**
@@ -22,11 +19,20 @@ class Ray {
      * var ray = new pc.Ray(this.entity.getPosition(), this.entity.forward);
      */
     constructor(origin = new Vec3(), direction = new Vec3(0, 0, -1)) {
-
         Debug.assert(!Object.isFrozen(origin), `The constructor of 'Ray' does not accept a constant (frozen) object as a 'origin' parameter`);
         Debug.assert(!Object.isFrozen(direction), `The constructor of 'Ray' does not accept a constant (frozen) object as a 'direction' parameter`);
 
+        /**
+         * The starting point of the ray.
+         *
+         * @type {Vec3}
+         */
         this.origin = origin;
+        /**
+         * The direction of the ray.
+         *
+         * @type {Vec3}
+         */
         this.direction = direction;
     }
 
