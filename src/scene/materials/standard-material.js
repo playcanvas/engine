@@ -357,7 +357,7 @@ let _params = new Set();
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
  * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in
  * scene settings).
- * @property {boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for
+ * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.

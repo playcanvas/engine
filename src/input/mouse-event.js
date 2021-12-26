@@ -39,14 +39,14 @@ class MouseEvent {
 
         if (coords) {
             /**
-             * The x co-ordinate of the mouse pointer relative to the element {@link Mouse} is
+             * The x coordinate of the mouse pointer relative to the element {@link Mouse} is
              * attached to.
              *
              * @type {number}
              */
             this.x = coords.x;
             /**
-             * The y co-ordinate of the mouse pointer relative to the element {@link Mouse} is
+             * The y coordinate of the mouse pointer relative to the element {@link Mouse} is
              * attached to.
              *
              * @type {number}
@@ -79,13 +79,13 @@ class MouseEvent {
         // Get the movement delta in this event
         if (isMousePointerLocked()) {
             /**
-             * The change in x co-ordinate since the last mouse event.
+             * The change in x coordinate since the last mouse event.
              *
              * @type {number}
              */
             this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             /**
-             * The change in y co-ordinate since the last mouse event.
+             * The change in y coordinate since the last mouse event.
              *
              * @type {number}
              */
