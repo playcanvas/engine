@@ -3,10 +3,6 @@
 /**
  * The KeyboardEvent is passed into all event callbacks from the {@link Keyboard}. It corresponds
  * to a key press or release.
- *
- * @property {number} key The keyCode of the key that has changed. See the KEY_* constants.
- * @property {Element} element The element that fired the keyboard event.
- * @property {globalThis.KeyboardEvent} event The original browser event which was fired.
  */
 class KeyboardEvent {
     /**
@@ -25,8 +21,23 @@ class KeyboardEvent {
      */
     constructor(keyboard, event) {
         if (event) {
+            /**
+             * The keyCode of the key that has changed. See the KEY_* constants.
+             *
+             * @type {number}
+             */
             this.key = event.keyCode;
+            /**
+             * The element that fired the keyboard event.
+             *
+             * @type {Element}
+             */
             this.element = event.target;
+            /**
+             * The original browser event which was fired.
+             *
+             * @type {globalThis.KeyboardEvent}
+             */
             this.event = event;
         } else {
             this.key = null;
