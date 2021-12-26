@@ -147,14 +147,19 @@ class MeshInstance {
         this._noDepthDrawGl1 = false;
 
         /**
-         * Controls whether the mesh instance can be culled by with frustum culling
+         * Controls whether the mesh instance can be culled by frustum culling
          * ({@link CameraComponent#frustumCulling}).
          *
          * @type {boolean}
          */
         this.cull = true;
 
-        // true if the meshInstance is pickable by Picker (by rendering ID to render target)
+        /**
+         * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
+         *
+         * @type {boolean}
+         * @private
+         */
         this.pick = true;
 
         this._updateAabb = true;

@@ -52,18 +52,18 @@ class MorphTarget {
     }
 
     /**
-     * @name MorphTarget#name
+     * The name of the morph target.
+     *
      * @type {string}
-     * @description The name of the morph target.
      */
     get name() {
         return this._name;
     }
 
     /**
-     * @name MorphTarget#defaultWeight
+     * The default weight of the morph target.
+     *
      * @type {number}
-     * @description The default weight of the morph target.
      */
     get defaultWeight() {
         return this._defaultWeight;

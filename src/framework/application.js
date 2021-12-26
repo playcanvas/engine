@@ -225,12 +225,59 @@ class Application extends EventHandler {
         this._inFrameUpdate = false;
 
         this._time = 0;
+
+        /**
+         * Scales the global time delta. Defaults to 1.
+         *
+         * @type {number}
+         * @example
+         * // Set the app to run at half speed
+         * this.app.timeScale = 0.5;
+         */
         this.timeScale = 1;
+
+        /**
+         * Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+         * deactivation can generate huge values for dt, which can adversely affect game state.
+         * Defaults to 0.1 (seconds).
+         *
+         * @type {number}
+         * @example
+         * // Don't clamp inter-frame times of 200ms or less
+         * this.app.maxDeltaTime = 0.2;
+         */
         this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
 
         this.frame = 0; // the total number of frames the application has updated since start() was called
 
+        /**
+         * When true, the application's render function is called every frame. Setting autoRender
+         * to false is useful to applications where the rendered image may often be unchanged over
+         * time. This can heavily reduce the application's load on the CPU and GPU. Defaults to
+         * true.
+         *
+         * @type {boolean}
+         * @example
+         * // Disable rendering every frame and only render on a keydown event
+         * this.app.autoRender = false;
+         * this.app.keyboard.on('keydown', function (event) {
+         *     this.app.renderNextFrame = true;
+         * }, this);
+         */
         this.autoRender = true;
+
+        /**
+         * Set to true to render the scene on the next iteration of the main loop. This only has an
+         * effect if {@link Application#autoRender} is set to false. The value of renderNextFrame
+         * is set back to false again as soon as the scene has been rendered.
+         *
+         * @type {boolean}
+         * @example
+         * // Render the scene only while space key is pressed
+         * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+         *     this.app.renderNextFrame = true;
+         * }
+         */
         this.renderNextFrame = false;
 
         // enable if you want entity type script attributes
@@ -254,10 +301,21 @@ class Application extends EventHandler {
 
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
+        /**
+         * The graphics device used by the application.
+         *
+         * @type {GraphicsDevice}
+         */
         this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this._initDefaultMaterial();
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
+
+        /**
+         * The resource loader.
+         *
+         * @type {ResourceLoader}
+         */
         this.loader = new ResourceLoader(this);
         LightsBuffer.init(this.graphicsDevice);
 
@@ -265,13 +323,38 @@ class Application extends EventHandler {
         // for this app by guid
         this._entityIndex = {};
 
+        /**
+         * The scene managed by the application.
+         *
+         * @type {Scene}
+         * @example
+         * // Set the tone mapping property of the application's scene
+         * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+         */
         this.scene = new Scene(this.graphicsDevice);
         this._registerSceneImmediate(this.scene);
 
+        /**
+         * The root entity of the application.
+         *
+         * @type {Entity}
+         * @example
+         * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
+         * var camera = this.app.root.findByName('Camera');
+         */
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
         this._enableList = [];
         this._enableList.size = 0;
+
+        /**
+         * The asset registry managed by the application.
+         *
+         * @type {AssetRegistry}
+         * @example
+         * // Search the asset registry for all assets with the tag 'vehicle'
+         * var vehicleAssets = this.app.assets.findByTag('vehicle');
+         */
         this.assets = new AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.bundles = new BundleRegistry(this.assets);
@@ -280,10 +363,32 @@ class Application extends EventHandler {
         // rely on it for untarring.
         this.enableBundles = (typeof TextDecoder !== 'undefined');
         this.scriptsOrder = options.scriptsOrder || [];
+
+        /**
+         * The application's script registry.
+         *
+         * @type {ScriptRegistry}
+         */
         this.scripts = new ScriptRegistry(this);
 
+        /**
+         * Handles localization.
+         *
+         * @type {I18n}
+         */
         this.i18n = new I18n(this);
 
+        /**
+         * The scene registry managed by the application.
+         *
+         * @type {SceneRegistry}
+         * @example
+         * // Search the scene registry for a item with the name 'racetrack1'
+         * var sceneItem = this.app.scenes.find('racetrack1');
+         *
+         * // Load the scene using the item's url
+         * this.app.scenes.loadScene(sceneItem.url);
+         */
         this.scenes = new SceneRegistry(this);
 
         const self = this;
@@ -351,22 +456,81 @@ class Application extends EventHandler {
         // placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(this.graphicsDevice);
 
+        /**
+         * The forward renderer.
+         *
+         * @type {ForwardRenderer}
+         * @private
+         */
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
+
+        /**
+         * The run-time lightmapper.
+         *
+         * @type {Lightmapper}
+         */
         this.lightmapper = new Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
+
+        /**
+         * The application's batch manager. The batch manager is used to merge mesh instances in
+         * the scene, which reduces the overall number of draw calls, thereby boosting performance.
+         *
+         * @type {BatchManager}
+         */
         this.batcher = new BatchManager(this.graphicsDevice, this.root, this.scene);
         this.once('prerender', this._firstBatch, this);
 
+        /**
+         * The keyboard device.
+         *
+         * @type {Keyboard}
+         */
         this.keyboard = options.keyboard || null;
+
+        /**
+         * The mouse device.
+         *
+         * @type {Mouse}
+         */
         this.mouse = options.mouse || null;
+
+        /**
+         * Used to get touch events input.
+         *
+         * @type {TouchDevice}
+         */
         this.touch = options.touch || null;
+
+        /**
+         * Used to access GamePad input.
+         *
+         * @type {GamePads}
+         */
         this.gamepads = options.gamepads || null;
+
+        /**
+         * Used to handle input for {@link ElementComponent}s.
+         *
+         * @type {ElementInput}
+         */
         this.elementInput = options.elementInput || null;
         if (this.elementInput)
             this.elementInput.app = this;
 
         this.vr = null;
+
+        /**
+         * The XR Manager that provides ability to start VR/AR sessions.
+         *
+         * @type {XrManager}
+         * @example
+         * // check if VR is available
+         * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+         *     // VR is available
+         * }
+         */
         this.xr = new XrManager(this);
 
         if (this.elementInput)
@@ -407,6 +571,39 @@ class Application extends EventHandler {
         this.loader.addHandler("template", new TemplateHandler(this));
         this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.assets));
 
+        /**
+         * The application's component system registry. The Application constructor adds the
+         * following component systems to its component system registry:
+         *
+         * - anim ({@link AnimComponentSystem})
+         * - animation ({@link AnimationComponentSystem})
+         * - audiolistener ({@link AudioListenerComponentSystem})
+         * - button ({@link ButtonComponentSystem})
+         * - camera ({@link CameraComponentSystem})
+         * - collision ({@link CollisionComponentSystem})
+         * - element ({@link ElementComponentSystem})
+         * - layoutchild ({@link LayoutChildComponentSystem})
+         * - layoutgroup ({@link LayoutGroupComponentSystem})
+         * - light ({@link LightComponentSystem})
+         * - model ({@link ModelComponentSystem})
+         * - particlesystem ({@link ParticleSystemComponentSystem})
+         * - rigidbody ({@link RigidBodyComponentSystem})
+         * - render ({@link RenderComponentSystem})
+         * - screen ({@link ScreenComponentSystem})
+         * - script ({@link ScriptComponentSystem})
+         * - scrollbar ({@link ScrollbarComponentSystem})
+         * - scrollview ({@link ScrollViewComponentSystem})
+         * - sound ({@link SoundComponentSystem})
+         * - sprite ({@link SpriteComponentSystem})
+         *
+         * @type {ComponentSystemRegistry}
+         * @example
+         * // Set global gravity to zero
+         * this.app.systems.rigidbody.gravity.set(0, 0, 0);
+         * @example
+         * // Set the global sound volume to 50%
+         * this.app.systems.sound.volume = 0.5;
+         */
         this.systems = new ComponentSystemRegistry();
         this.systems.add(new RigidBodyComponentSystem(this));
         this.systems.add(new CollisionComponentSystem(this));
@@ -438,8 +635,8 @@ class Application extends EventHandler {
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
-        // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
-        // in this._hiddenAttr.
+        // Depending on browser add the correct visibilitychange event and store the name of the
+        // hidden attribute in this._hiddenAttr.
         if (typeof document !== 'undefined') {
             if (document.hidden !== undefined) {
                 this._hiddenAttr = 'hidden';
@@ -460,207 +657,6 @@ class Application extends EventHandler {
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
-
-    /**
-     * @name Application#scene
-     * @type {Scene}
-     * @description The scene managed by the application.
-     * @example
-     * // Set the tone mapping property of the application's scene
-     * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
-     */
-
-    /**
-     * @name Application#timeScale
-     * @type {number}
-     * @description Scales the global time delta. Defaults to 1.
-     * @example
-     * // Set the app to run at half speed
-     * this.app.timeScale = 0.5;
-     */
-
-    /**
-     * @name Application#maxDeltaTime
-     * @type {number}
-     * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
-     * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
-     * to 0.1 (seconds).
-     * @example
-     * // Don't clamp inter-frame times of 200ms or less
-     * this.app.maxDeltaTime = 0.2;
-     */
-
-    /**
-     * @name Application#scenes
-     * @type {SceneRegistry}
-     * @description The scene registry managed by the application.
-     * @example
-     * // Search the scene registry for a item with the name 'racetrack1'
-     * var sceneItem = this.app.scenes.find('racetrack1');
-     *
-     * // Load the scene using the item's url
-     * this.app.scenes.loadScene(sceneItem.url);
-     */
-
-    /**
-     * @name Application#assets
-     * @type {AssetRegistry}
-     * @description The asset registry managed by the application.
-     * @example
-     * // Search the asset registry for all assets with the tag 'vehicle'
-     * var vehicleAssets = this.app.assets.findByTag('vehicle');
-     */
-
-    /**
-     * @name Application#graphicsDevice
-     * @type {GraphicsDevice}
-     * @description The graphics device used by the application.
-     */
-
-    /**
-     * @name Application#systems
-     * @type {ComponentSystemRegistry}
-     * @description The application's component system registry. The Application
-     * constructor adds the following component systems to its component system registry:
-     *
-     * - anim ({@link AnimComponentSystem})
-     * - animation ({@link AnimationComponentSystem})
-     * - audiolistener ({@link AudioListenerComponentSystem})
-     * - button ({@link ButtonComponentSystem})
-     * - camera ({@link CameraComponentSystem})
-     * - collision ({@link CollisionComponentSystem})
-     * - element ({@link ElementComponentSystem})
-     * - layoutchild ({@link LayoutChildComponentSystem})
-     * - layoutgroup ({@link LayoutGroupComponentSystem})
-     * - light ({@link LightComponentSystem})
-     * - model ({@link ModelComponentSystem})
-     * - particlesystem ({@link ParticleSystemComponentSystem})
-     * - rigidbody ({@link RigidBodyComponentSystem})
-     * - render ({@link RenderComponentSystem})
-     * - screen ({@link ScreenComponentSystem})
-     * - script ({@link ScriptComponentSystem})
-     * - scrollbar ({@link ScrollbarComponentSystem})
-     * - scrollview ({@link ScrollViewComponentSystem})
-     * - sound ({@link SoundComponentSystem})
-     * - sprite ({@link SpriteComponentSystem})
-     * @example
-     * // Set global gravity to zero
-     * this.app.systems.rigidbody.gravity.set(0, 0, 0);
-     * @example
-     * // Set the global sound volume to 50%
-     * this.app.systems.sound.volume = 0.5;
-     */
-
-    /**
-     * @name Application#xr
-     * @type {XrManager}
-     * @description The XR Manager that provides ability to start VR/AR sessions.
-     * @example
-     * // check if VR is available
-     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-     *     // VR is available
-     * }
-     */
-
-    /**
-     * @name Application#lightmapper
-     * @type {Lightmapper}
-     * @description The run-time lightmapper.
-     */
-
-    /**
-     * @name Application#loader
-     * @type {ResourceLoader}
-     * @description The resource loader.
-     */
-
-    /**
-     * @name Application#root
-     * @type {Entity}
-     * @description The root entity of the application.
-     * @example
-     * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
-     * var camera = this.app.root.findByName('Camera');
-     */
-
-    /**
-     * @name Application#keyboard
-     * @type {Keyboard}
-     * @description The keyboard device.
-     */
-
-    /**
-     * @name Application#mouse
-     * @type {Mouse}
-     * @description The mouse device.
-     */
-
-    /**
-     * @name Application#touch
-     * @type {TouchDevice}
-     * @description Used to get touch events input.
-     */
-
-    /**
-     * @name Application#gamepads
-     * @type {GamePads}
-     * @description Used to access GamePad input.
-     */
-
-    /**
-     * @name Application#elementInput
-     * @type {ElementInput}
-     * @description Used to handle input for {@link ElementComponent}s.
-     */
-
-    /**
-     * @name Application#scripts
-     * @type {ScriptRegistry}
-     * @description The application's script registry.
-     */
-
-    /**
-     * @name Application#batcher
-     * @type {BatchManager}
-     * @description The application's batch manager. The batch manager is used to
-     * merge mesh instances in the scene, which reduces the overall number of draw
-     * calls, thereby boosting performance.
-     */
-
-    /**
-     * @name Application#autoRender
-     * @type {boolean}
-     * @description When true, the application's render function is called every frame.
-     * Setting autoRender to false is useful to applications where the rendered image
-     * may often be unchanged over time. This can heavily reduce the application's
-     * load on the CPU and GPU. Defaults to true.
-     * @example
-     * // Disable rendering every frame and only render on a keydown event
-     * this.app.autoRender = false;
-     * this.app.keyboard.on('keydown', function (event) {
-     *     this.app.renderNextFrame = true;
-     * }, this);
-     */
-
-    /**
-     * @name Application#renderNextFrame
-     * @type {boolean}
-     * @description Set to true to render the scene on the next iteration of the main loop.
-     * This only has an effect if {@link Application#autoRender} is set to false. The
-     * value of renderNextFrame is set back to false again as soon as the scene has been
-     * rendered.
-     * @example
-     * // Render the scene only while space key is pressed
-     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
-     *     this.app.renderNextFrame = true;
-     * }
-     */
-
-    /**
-     * @name Application#i18n
-     * @type {I18n}
-     * @description Handles localization.
-     */
 
     /**
      * @private
@@ -1137,6 +1133,12 @@ class Application extends EventHandler {
         this.tick();
     }
 
+    /**
+     * Update all input devices managed by the application.
+     * 
+     * @param {number} dt - The time in seconds since the last update.
+     * @private
+     */
     inputUpdate(dt) {
         if (this.controller) {
             this.controller.update(dt);
@@ -1791,7 +1793,8 @@ class Application extends EventHandler {
     }
 
     /**
-     * @description Draws a wireframe axis aligned box specified by min and max points and color.
+     * Draws a wireframe axis aligned box specified by min and max points and color.
+     *
      * @param {Vec3} minPoint - The min corner point of the box.
      * @param {Vec3} maxPoint - The max corner point of the box.
      * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.

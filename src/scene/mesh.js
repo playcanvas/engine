@@ -146,20 +146,21 @@ class GeometryVertexStream {
  * mesh.update();
  * ```
  *
- * This example demonstrated that vertex attributes such as position and normals, and also indices
+ * This example demonstrates that vertex attributes such as position and normals, and also indices
  * can be provided using Arrays ([]) and also Typed Arrays (Float32Array and similar). Note that
  * typed arrays have higher performance, and are generally recommended for per-frame operations or
  * larger meshes, but their construction using new operator is costly operation. If you only need
- * to operate on small number of vertices or indices, consider using the Arrays instead to avoid
- * Type Array allocation overhead.
+ * to operate on a small number of vertices or indices, consider using Arrays to avoid the overhead
+ * associated with allocating Typed Arrays.
  *
  * Follow these links for more complex examples showing the functionality.
+ *
  * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
  * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
  * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
  * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
- * ### Update Vertex and Index buffers.
+ * ### Update Vertex and Index buffers
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
  * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
  * {@link IndexBuffer} and {@link VertexFormat} for details.
