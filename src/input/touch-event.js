@@ -4,7 +4,7 @@
  * Similar to {@link getTargetCoords} for the MouseEvents. This function takes a browser Touch
  * object and returns the co-ordinates of the touch relative to the target element.
  *
- * @param {Touch} touch - The browser Touch object.
+ * @param {globalThis.Touch} touch - The browser Touch object.
  * @returns {object} The co-ordinates of the touch relative to the touch.target element. In the
  * format {x, y}.
  */
@@ -31,31 +31,48 @@ function getTouchTargetCoords(touch) {
 
 /**
  * A instance of a single point touch on a {@link TouchDevice}.
- *
- * @property {number} id The identifier of the touch.
- * @property {number} x The x coordinate relative to the element that the TouchDevice is attached
- * to.
- * @property {number} y The y coordinate relative to the element that the TouchDevice is attached
- * to.
- * @property {Element} target The target element of the touch event.
- * @property {Touch} touch The original browser Touch object.
  */
 class Touch {
     /**
      * Create a new Touch object from the browser Touch.
      *
-     * @param {Touch} touch - The browser Touch object.
+     * @param {globalThis.Touch} touch - The browser Touch object.
      */
     constructor(touch) {
         const coords = getTouchTargetCoords(touch);
 
+        /**
+         * The identifier of the touch.
+         *
+         * @type {number}
+         */
         this.id = touch.identifier;
 
+        /**
+         * The x coordinate relative to the element that the TouchDevice is attached to.
+         *
+         * @type {number}
+         */
         this.x = coords.x;
+        /**
+         * The y coordinate relative to the element that the TouchDevice is attached to.
+         *
+         * @type {number}
+         */
         this.y = coords.y;
 
+        /**
+         * The target element of the touch event.
+         *
+         * @type {Element}
+         */
         this.target = touch.target;
 
+        /**
+         * The original browser Touch object.
+         *
+         * @type {globalThis.Touch}
+         */
         this.touch = touch;
     }
 }
@@ -63,24 +80,39 @@ class Touch {
 /**
  * A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the
  * standard browser event and provides lists of {@link Touch} objects.
- *
- * @property {Element} element The target Element that the event was fired from.
- * @property {Touch[]} touches A list of all touches currently in contact with the device.
- * @property {Touch[]} changedTouches A list of touches that have changed since the last event.
- * @property {TouchEvent} event - The original browser TouchEvent.
  */
 class TouchEvent {
     /**
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
      * @param {TouchDevice} device - The source device of the touch events.
-     * @param {TouchEvent} event - The original browser TouchEvent.
+     * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */
     constructor(device, event) {
+        /**
+         * The target Element that the event was fired from.
+         *
+         * @type {Element}
+         */
         this.element = event.target;
+        /**
+         * The original browser TouchEvent.
+         *
+         * @type {globalThis.TouchEvent}
+         */
         this.event = event;
 
+        /**
+         * A list of all touches currently in contact with the device.
+         *
+         * @type {Touch[]}
+         */
         this.touches = [];
+        /**
+         * A list of touches that have changed since the last event.
+         *
+         * @type {Touch[]}
+         */
         this.changedTouches = [];
 
         if (event) {

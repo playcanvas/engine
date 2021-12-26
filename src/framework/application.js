@@ -1135,7 +1135,7 @@ class Application extends EventHandler {
 
     /**
      * Update all input devices managed by the application.
-     * 
+     *
      * @param {number} dt - The time in seconds since the last update.
      * @private
      */
