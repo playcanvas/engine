@@ -374,7 +374,10 @@ class Http {
                                 } else {
                                     postdata += "&";
                                 }
-                                postdata += escape(key) + "=" + escape(options.postdata[key]);
+
+                                const encodedKey = encodeURIComponent(key);
+                                const encodedValue = encodeURIComponent(options.postdata[key]);
+                                postdata += `${encodedKey}=${encodedValue}`;
                             }
                         }
                         break;
