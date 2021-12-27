@@ -301,7 +301,7 @@ class ParticleSystemComponent extends Component {
         return this._drawOrder;
     }
 
-    addModelToLayers() {
+    addMeshInstanceToLayers() {
         if (!this.emitter) return;
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -311,7 +311,7 @@ class ParticleSystemComponent extends Component {
         }
     }
 
-    removeModelFromLayers(model) {
+    removeMeshInstanceFromLayers() {
         if (!this.emitter) return;
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -336,7 +336,7 @@ class ParticleSystemComponent extends Component {
     }
 
     onLayersChanged(oldComp, newComp) {
-        this.addModelToLayers();
+        this.addMeshInstanceToLayers();
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
@@ -846,7 +846,7 @@ class ParticleSystemComponent extends Component {
         }
 
         if (this.emitter.colorMap) {
-            this.addModelToLayers();
+            this.addMeshInstanceToLayers();
         }
 
         this.system.app.scene.on("set:layers", this.onLayersChanged, this);
@@ -868,7 +868,7 @@ class ParticleSystemComponent extends Component {
         }
 
         if (this.emitter) {
-            this.removeModelFromLayers();
+            this.removeMeshInstanceFromLayers();
             if (this.data.depthSoftening) this._releaseDepth();
 
             // clear camera as it isn't updated while disabled and we don't want to hold
