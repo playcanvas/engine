@@ -213,7 +213,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                 const data = component.data;
 
                 if (data.enabled && entity.enabled) {
-                    const emitter = data.model.emitter;
+                    const emitter = entity.particlesystem.emitter;
                     if (!emitter.meshInstance.visible) continue;
 
                     // Bake ambient and directional lighting into one ambient cube
