@@ -77,8 +77,6 @@ class ParticleSystemComponentData {
 
         this.blendType = BLEND_NORMAL;
 
-        this.model = null;
-
         this.enabled = true;
 
         this.paused = false;
