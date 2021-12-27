@@ -1,6 +1,5 @@
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { Model } from '../../../scene/model.js';
 import { ParticleEmitter } from '../../../scene/particle-system/particle-emitter.js';
 
 import { Asset } from '../../../asset/asset.js';
