@@ -20,6 +20,7 @@
   "main": "build/playcanvas.js",
   "module": "build/playcanvas.mjs",
   "types": "types/index.d.ts",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
@@ -75,6 +76,7 @@
     "@rollup/plugin-replace": "^3.0.0",
     "@rollup/plugin-strip": "^2.1.0",
     "@rollup/pluginutils": "^4.1.2",
+    "c8": "^7.10.0",
     "chai": "4.3.4",
     "eslint": "^8.5.0",
     "http-server": "^14.0.0",
@@ -106,7 +108,8 @@
     "docs": "jsdoc -c conf-api.json",
     "lint": "eslint --ext .js extras scripts src rollup.config.js",
     "serve": "http-server build -a localhost -p 51000",
-    "test": "karma start tests/karma.conf.js -- --single-run --release",
+    "coverage": "c8 npm run test:node",
+    "test:node": "mocha --recursive",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
