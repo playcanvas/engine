@@ -4,6 +4,24 @@ import { expect } from 'chai';
 
 describe('math', function () {
 
+    describe('#DEG_TO_RAD', function () {
+
+        it('converts degrees to radians', function () {
+            var deg = 180;
+            expect(deg * math.DEG_TO_RAD).to.equal(Math.PI);
+        });
+
+    });
+
+    describe('#RAD_TO_DEG', function () {
+
+        it('converts radians to degrees', function () {
+            var rad = Math.PI;
+            expect(rad * math.RAD_TO_DEG).to.equal(180);
+        });
+
+    });
+
     describe('#between', function () {
 
         it('returns true if value is between min and max inclusive', function () {
@@ -86,24 +104,6 @@ describe('math', function () {
             expect(b[1]).to.equal(0x22);
             expect(b[2]).to.equal(0x33);
             expect(b[3]).to.equal(0x44);
-        });
-
-    });
-
-    describe('#DEG_TO_RAD', function () {
-
-        it('converts degrees to radians', function () {
-            var deg = 180;
-            expect(deg * math.DEG_TO_RAD).to.equal(Math.PI);
-        });
-
-    });
-
-    describe('#RAD_TO_DEG', function () {
-
-        it('converts radians to degrees', function () {
-            var rad = Math.PI;
-            expect(rad * math.RAD_TO_DEG).to.equal(180);
         });
 
     });
