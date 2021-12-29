@@ -32,9 +32,7 @@
     "extends": "@playcanvas/eslint-config",
     "globals": {
       "Ammo": "readonly",
-      "describe": "readonly",
       "earcut": "readonly",
-      "it": "readonly",
       "opentype": "readonly",
       "pc": "readonly",
       "TWEEN": "readonly",
