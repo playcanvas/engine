@@ -32,7 +32,9 @@
     "extends": "@playcanvas/eslint-config",
     "globals": {
       "Ammo": "readonly",
+      "describe": "readonly",
       "earcut": "readonly",
+      "it": "readonly",
       "opentype": "readonly",
       "pc": "readonly",
       "TWEEN": "readonly",
@@ -106,13 +108,13 @@
     "watch:debug": "rollup -c -w --environment target:debug",
     "watch:profiler": "rollup -c -w --environment target:profiler",
     "docs": "jsdoc -c conf-api.json",
-    "lint": "eslint --ext .js extras scripts src rollup.config.js",
+    "lint": "eslint --ext .js,.mjs extras scripts src test rollup.config.js",
     "serve": "http-server build -a localhost -p 51000",
-    "coverage": "c8 npm run test:node",
     "test": "karma start tests/karma.conf.js -- --single-run --release",
-    "test:node": "mocha --recursive",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
+    "test:node": "mocha --recursive",
+    "coverage": "c8 npm run test:node",
     "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
     "tsd": "tsc && node tsd.js"
   }

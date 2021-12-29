@@ -248,7 +248,7 @@ describe('Vec3', function () {
             expect(v.length()).to.equal(0);
         });
 
-        it ('calculates the length of a vector', function () {
+        it('calculates the length of a vector', function () {
             const v = new Vec3(0, 3, 4);
             expect(v.length()).to.equal(5);
         });

@@ -104,7 +104,7 @@ describe("GraphNode", function () {
     });
 
     describe('#findByName', function () {
-        
+
         it('finds a node by name', function () {
             const node = new GraphNode();
             const child = new GraphNode();
@@ -289,7 +289,7 @@ describe("GraphNode", function () {
     });
 
     describe('#reparent', function () {
-        
+
         it('reparents a child node', function () {
             const node = new GraphNode();
             const child = new GraphNode();
@@ -307,7 +307,7 @@ describe("GraphNode", function () {
     });
 
     describe('#translate', function () {
-        
+
         it('translates hierarchical nodes with number arguments', function () {
             const root = new GraphNode();
             const child = new GraphNode();
@@ -354,4 +354,4 @@ describe("GraphNode", function () {
 
     });
 
-});    
+});

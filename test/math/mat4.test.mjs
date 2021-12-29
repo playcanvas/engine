@@ -36,9 +36,9 @@ describe("Mat4", function () {
 
         it('adds one matrix to another in place', function () {
             const m1 = new Mat4();
-            m1.set([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
-            m2.set([ 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ]);
+            m2.set([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]);
             m1.add(m2);
             expect(m1.data[0]).to.equal(16);
             expect(m1.data[1]).to.equal(18);
@@ -64,9 +64,9 @@ describe("Mat4", function () {
 
         it('adds two matrices together and writes result to a third matrix', function () {
             const m1 = new Mat4();
-            m1.set([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
-            m2.set([ 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ]);
+            m2.set([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]);
             const m3 = new Mat4();
             m3.add2(m1, m2);
             expect(m3.data[0]).to.equal(16);
@@ -93,7 +93,7 @@ describe("Mat4", function () {
 
         it('clones a matrix', function () {
             const m1 = new Mat4();
-            m1.set([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = m1.clone();
             expect(m2.data[0]).to.equal(0);
             expect(m2.data[1]).to.equal(1);
@@ -119,7 +119,7 @@ describe("Mat4", function () {
 
         it('copies a matrix', function () {
             const m1 = new Mat4();
-            m1.set([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
             m2.copy(m1);
             expect(m2.data[0]).to.equal(0);
@@ -146,9 +146,9 @@ describe("Mat4", function () {
 
         it('checks for equality', function () {
             const m1 = new Mat4();
-            m1.set([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
-            m2.set([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            m2.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m3 = new Mat4();
             expect(m1.equals(m1)).to.be.true;
             expect(m1.equals(m2)).to.be.true;
@@ -346,7 +346,7 @@ describe("Mat4", function () {
     });
 
     describe('#set', function () {
-        
+
         it('sets a matrix', function () {
             const m = new Mat4();
             m.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
@@ -390,9 +390,9 @@ describe("Mat4", function () {
                 expect(m.data[14]).to.equal(0);
                 expect(m.data[15]).to.equal(1);
             });
-    
+
         });
-    
+
     });
 
     describe('#setOrtho', function () {
@@ -438,7 +438,7 @@ describe("Mat4", function () {
             expect(m.data[14]).to.equal(0);
             expect(m.data[15]).to.equal(1);
         });
-    
+
     });
 
     describe('#setPerspective', function () {
@@ -508,5 +508,5 @@ describe("Mat4", function () {
         });
 
     });
-        
+
 });
