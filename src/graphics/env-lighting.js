@@ -5,7 +5,7 @@ import { reprojectTexture } from './reproject-texture.js';
 import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
     TEXTUREPROJECTION_EQUIRECT,
     ADDRESS_CLAMP_TO_EDGE,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from './constants';
+    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from './constants.js';
 
 const fixCubemapSeams = true;
 
