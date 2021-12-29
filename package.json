@@ -109,6 +109,7 @@
     "lint": "eslint --ext .js extras scripts src rollup.config.js",
     "serve": "http-server build -a localhost -p 51000",
     "coverage": "c8 npm run test:node",
+    "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:node": "mocha --recursive",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
