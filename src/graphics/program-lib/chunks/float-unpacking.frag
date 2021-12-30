@@ -23,7 +23,7 @@ float bytes2floatRange4(vec4 data, float min, float max) {
     return mix(min, max, bytes2float4(data));
 }
 
-float mantisaExponent2Float(vec4 pack)
+float mantissaExponent2Float(vec4 pack)
 {
     float value = bytes2floatRange3(pack.xyz, -1.0, 1.0);
     float exponent = floor(pack.w * 255.0 - 127.0);
