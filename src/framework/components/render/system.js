@@ -1,12 +1,14 @@
+import { Vec3 } from '../../../math/vec3.js';
+
+import { BoundingBox } from '../../../shape/bounding-box.js';
+
+import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
-
-import { BoundingBox } from '../../../shape/bounding-box';
-import { Vec3 } from '../../../math/vec3';
-import { DefaultMaterial } from '../../../scene/materials/default-material.js';
 
 /** @typedef {import('../../application.js').Application} Application */
 

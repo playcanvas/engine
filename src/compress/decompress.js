@@ -1,4 +1,4 @@
-import { CompressUtils } from './compress-utils';
+import { CompressUtils } from './compress-utils.js';
 
 /**
  * Reconstruct original object field names in a compressed scene.
