@@ -249,10 +249,10 @@ class AnimController {
                     if (!(parameter.value <= condition.value)) return false;
                     break;
                 case ANIM_EQUAL_TO:
-                    if (parameter.value !== condition.value) return false;
+                    if (!(parameter.value === condition.value)) return false;
                     break;
                 case ANIM_NOT_EQUAL_TO:
-                    if (parameter.value === condition.value) return false;
+                    if (!(parameter.value !== condition.value)) return false;
                     break;
             }
         }
