@@ -91,7 +91,8 @@
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-terser": "7.0.2",
     "sinon": "^12.0.1",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "webgl-mock": "^0.1.7"
   },
   "scripts": {
     "build": "rollup -c",
