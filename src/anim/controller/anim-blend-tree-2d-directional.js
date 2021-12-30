@@ -1,5 +1,5 @@
 import { Vec2 } from '../../math/vec2.js';
-import { math } from '../../math/math';
+import { math } from '../../math/math.js';
 
 import { AnimBlendTree } from './anim-blend-tree.js';
 
