@@ -237,16 +237,16 @@ class AnimController {
             const parameter = this.findParameter(condition.parameterName);
             switch (condition.predicate) {
                 case ANIM_GREATER_THAN:
-                    if (parameter.value <= condition.value) return false;
+                    if (!(parameter.value > condition.value)) return false;
                     break;
                 case ANIM_LESS_THAN:
-                    if (parameter.value >= condition.value) return false;
+                    if (!(parameter.value < condition.value)) return false;
                     break;
                 case ANIM_GREATER_THAN_EQUAL_TO:
-                    if (parameter.value < condition.value) return false;
+                    if (!(parameter.value >= condition.value)) return false;
                     break;
                 case ANIM_LESS_THAN_EQUAL_TO:
-                    if (parameter.value > condition.value) return false;
+                    if (!(parameter.value <= condition.value)) return false;
                     break;
                 case ANIM_EQUAL_TO:
                     if (parameter.value !== condition.value) return false;
