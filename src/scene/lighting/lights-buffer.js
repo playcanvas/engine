@@ -329,7 +329,7 @@ class LightsBuffer {
         for (let m = 0; m < 12; m++)    // these are in -2..2 range
             FloatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
         for (let m = 12; m < 16; m++) {  // these are full float range
-            FloatPacking.float2MantisaExponent(matData[m], data8, index + 4 * m, 4);
+            FloatPacking.float2MantissaExponent(matData[m], data8, index + 4 * m, 4);
         }
     }
 
@@ -359,7 +359,7 @@ class LightsBuffer {
     addLightAreaSizes(data8, index, light) {
         const areaSizes = this.getLightAreaSizes(light);
         for (let i = 0; i < 6; i++) {  // these are full float range
-            FloatPacking.float2MantisaExponent(areaSizes[i], data8, index + 4 * i, 4);
+            FloatPacking.float2MantissaExponent(areaSizes[i], data8, index + 4 * i, 4);
         }
     }
 

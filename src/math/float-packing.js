@@ -92,8 +92,8 @@ class FloatPacking {
         FloatPacking.float2Bytes(value, array, offset, numBytes);
     }
 
-    // packs a float into specified number of bytes, using 1 byte for exponent and the remaining bytes for the mantisa.
-    static float2MantisaExponent(value, array, offset, numBytes) {
+    // packs a float into specified number of bytes, using 1 byte for exponent and the remaining bytes for the mantissa.
+    static float2MantissaExponent(value, array, offset, numBytes) {
 
         // exponent is increased by one, so that 2^exponent is larger than the value
         const exponent = Math.floor(Math.log2(Math.abs(value))) + 1;
