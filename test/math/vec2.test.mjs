@@ -141,7 +141,7 @@ describe('Vec2', function () {
             const v1 = new Vec2(10, 0);
             const distance = v1.distance(v1);
             expect(distance).to.equal(0);
-        })
+        });
 
     });
 

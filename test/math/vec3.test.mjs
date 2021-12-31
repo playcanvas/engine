@@ -175,7 +175,7 @@ describe('Vec3', function () {
             const v1 = new Vec3(10, 0, 0);
             const distance = v1.distance(v1);
             expect(distance).to.equal(0);
-        })
+        });
 
     });
 

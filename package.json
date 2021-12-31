@@ -116,5 +116,8 @@
     "coverage": "c8 npm run test:node",
     "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
     "tsd": "tsc && node tsd.js"
+  },
+  "dependencies": {
+    "@playcanvas/canvas-mock": "file:../canvas-mock"
   }
 }
