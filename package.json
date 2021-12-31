@@ -20,7 +20,6 @@
   "main": "build/playcanvas.js",
   "module": "build/playcanvas.mjs",
   "types": "types/index.d.ts",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
@@ -112,6 +111,7 @@
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:node": "mocha --recursive",
+    "test:node:watch": "mocha --recursive --min --watch",
     "coverage": "c8 npm run test:node",
     "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
     "tsd": "tsc && node tsd.js"
