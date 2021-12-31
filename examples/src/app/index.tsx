@@ -112,7 +112,7 @@ const MainLayout = () => {
                                     <ExampleIframe useTypescript={useTypescript} controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} engine={e.constructor.ENGINE} files={p.files} />
                                 </Route>,
                                 <Route key={`/debug${p.path}`} path={[`/debug${p.path}`]}>
-                                    <ExampleIframe useTypescript={useTypescript} controls={controls} assets={assetsLoader ? assetsLoader().props.children : null}  engine={e.constructor.ENGINE} files={p.files} debugExample={e}/>
+                                    <ExampleIframe useTypescript={useTypescript} controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} engine={e.constructor.ENGINE} files={p.files} debugExample={e}/>
                                 </Route>
                             ];
                         })

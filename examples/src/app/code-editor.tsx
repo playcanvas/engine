@@ -53,7 +53,7 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     const onValidate = (markers: Array<any>) => {
         // filter out markers which are warnings
-        if (markers.filter((m) => m.severity > 1).length === 0) {
+        if (markers.filter(m => m.severity > 1).length === 0) {
             props.setFiles(files);
             props.setLintErrors(false);
         } else {
