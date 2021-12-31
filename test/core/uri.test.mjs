@@ -74,7 +74,7 @@ describe('URI', function () {
             expect(s).to.equal(r);
         });
 
-        it('handles an edit to the query', function() {
+        it('handles an edit to the query', function () {
             const s = 'http://example.com';
             const uri = new URI(s);
             uri.query = 'q=abc';
@@ -85,7 +85,7 @@ describe('URI', function () {
             expect(uri.toString()).to.equal(s);
         });
 
-    });            
+    });
 
     describe('#getQuery', function () {
 
@@ -120,7 +120,7 @@ describe('URI', function () {
             };
 
             uri.setQuery(q);
-            expect('key=value').to.equal(uri.query)
+            expect('key=value').to.equal(uri.query);
         });
 
 
@@ -132,7 +132,7 @@ describe('URI', function () {
             };
 
             uri.setQuery(q);
-            expect('key=value&with%20space=%22').to.equal(uri.query)
+            expect('key=value&with%20space=%22').to.equal(uri.query);
         });
     });
 
@@ -158,7 +158,7 @@ describe('createURI', function () {
         expect('http://example.com/abc').to.equal(uri);
 
         uri = createURI({
-            hostpath: 'http://example.com/abc',
+            hostpath: 'http://example.com/abc'
         });
         expect('http://example.com/abc').to.equal(uri);
 
@@ -171,35 +171,35 @@ describe('createURI', function () {
     });
 
     it('throws exceptions', function () {
-        expect(function() {
+        expect(function () {
             createURI({
                 scheme: 'http',
                 host: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 authority: 'http',
                 host: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 scheme: 'http',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 authority: 'http',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 scheme: 'http',
                 authority: 'e.com',
@@ -207,7 +207,7 @@ describe('createURI', function () {
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 scheme: 'abc',
                 authority: 'http',
@@ -215,14 +215,14 @@ describe('createURI', function () {
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 host: 'http://test.com',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function() {
+        expect(function () {
             createURI({
                 path: '/abc',
                 hostpath: 'http://test.com/abc'

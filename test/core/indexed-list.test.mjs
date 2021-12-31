@@ -51,7 +51,7 @@ describe('IndexedList', function () {
             expect(list.get(key4)).to.equal(null);
             expect(list.get(key5)).to.equal(null);
 
-            const all = list.list()
+            const all = list.list();
 
             expect(all.length).to.equal(0);
         });
@@ -90,13 +90,13 @@ describe('IndexedList', function () {
 
         it('returns false if the key does not exist', function () {
             const list = new IndexedList();
-            
+
             const key1 = 'key1';
             const key2 = 'key2';
             const key3 = 'key3';
             const key4 = 'key4';
             const key5 = 'key5';
-            
+
             const value1 = 'value1';
             const value2 = 'value2';
             const value3 = 'value3';
@@ -186,7 +186,7 @@ describe('IndexedList', function () {
             list.push(key4, value4);
             list.push(key5, value5);
 
-            const all = list.list()
+            const all = list.list();
 
             expect(all[0]).to.equal(value1);
             expect(all[1]).to.equal(value2);

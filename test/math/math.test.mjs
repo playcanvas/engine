@@ -242,7 +242,7 @@ describe('math', function () {
     });
 
     describe('#smootherstep', function () {
-                
+
         it('returns 0 when x equals min', function () {
             expect(math.smootherstep(0, 10, 0)).to.equal(0);
         });
@@ -258,7 +258,7 @@ describe('math', function () {
     });
 
     describe('#smoothstep', function () {
-            
+
         it('returns 0 when x equals a', function () {
             expect(math.smoothstep(0, 10, 0)).to.equal(0);
         });

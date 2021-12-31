@@ -1,4 +1,3 @@
-
 import { string } from '../../src/core/string.js';
 
 import { expect } from 'chai';

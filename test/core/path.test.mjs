@@ -29,7 +29,7 @@ describe('path', function () {
 
     describe('#getDirectory', function () {
 
-        it('handles various paths', function() {
+        it('handles various paths', function () {
             expect(path.getDirectory('folder/file.txt')).to.equal('folder');
             expect(path.getDirectory('folder/another')).to.equal('folder');
             expect(path.getDirectory('folder/another/')).to.equal('folder/another');
@@ -140,7 +140,7 @@ describe('path', function () {
     });
 
     describe('#split', function () {
-        
+
         it('splits a path into path and filename', function () {
             expect(path.split('path/to/file.txt')).to.deep.equal(['path/to', 'file.txt']);
         });

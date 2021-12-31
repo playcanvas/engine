@@ -31,14 +31,14 @@ describe('SortedLoopArray', function () {
             expect(arr.items.length).to.equal(1);
             expect(arr.items[0]).to.equal(item);
         });
-        
+
         it('increases length', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.length).to.equal(0);
             arr.append({ priority: 1 });
             expect(arr.length).to.equal(1);
         });
-    
+
         it('does not modify loopIndex', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
@@ -50,15 +50,15 @@ describe('SortedLoopArray', function () {
             const c = {
                 priority: 3
             };
-    
+
             arr.insert(a);
             arr.insert(b);
-    
+
             arr.loopIndex = 1;
             arr.append(c);
             expect(arr.loopIndex).to.equal(1);
         });
-    
+
         it('always adds item to the end', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
@@ -70,7 +70,7 @@ describe('SortedLoopArray', function () {
             const c = {
                 priority: 0
             };
-    
+
             arr.insert(a);
             arr.insert(b);
             arr.append(c);
@@ -79,7 +79,7 @@ describe('SortedLoopArray', function () {
             expect(arr.items[1]).to.equal(b);
             expect(arr.items[2]).to.equal(c);
         });
-    
+
     });
 
     describe('#insert()', function () {
