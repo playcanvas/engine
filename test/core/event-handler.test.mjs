@@ -32,7 +32,7 @@ describe('EventHandler', function () {
             expect(called).to.be.true;
         });
 
-        it('calls handler with arguments on fire', function () {
+        it('calls handler with up to 8 arguments on fire', function () {
             const e = new EventHandler();
             let called = false;
             e.on('test', (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => {
