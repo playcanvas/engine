@@ -106,13 +106,13 @@ class VRMovementExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -160,7 +160,7 @@ class VRMovementExample extends Example {
                     inputSource = controllers[i].inputSource;
 
                     // should have gamepad
-                    if (! inputSource.gamepad)
+                    if (!inputSource.gamepad)
                         continue;
 
                     // left controller - for movement

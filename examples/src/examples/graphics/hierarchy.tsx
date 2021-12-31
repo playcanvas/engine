@@ -18,7 +18,7 @@ class HierarchyExample extends Example {
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
         });
-;
+
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 

@@ -36,10 +36,10 @@ class LightsBakedAOExample extends Example {
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterEnabled' }} value={data.get('data.settings.lightmapFilterEnabled')}/>
                 </LabelGroup>
                 <LabelGroup text='range'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterRange' }}  value={data.get('data.settings.lightmapFilterRange')} min = {1} max = {20} precision = {0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterRange' }} value={data.get('data.settings.lightmapFilterRange')} min = {1} max = {20} precision = {0}/>
                 </LabelGroup>
                 <LabelGroup text='smoothness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterSmoothness' }}  value={data.get('data.settings.lightmapFilterSmoothness')} min = {0.1} max = {2} precision = {1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterSmoothness' }} value={data.get('data.settings.lightmapFilterSmoothness')} min = {0.1} max = {2} precision = {1}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Ambient light'>
@@ -53,13 +53,13 @@ class LightsBakedAOExample extends Example {
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.hemisphere' }} value={data.get('data.ambient.hemisphere')}/>
                 </LabelGroup>
                 <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeNumSamples' }}  value={data.get('data.ambient.ambientBakeNumSamples')} max={64} precision={0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeNumSamples' }} value={data.get('data.ambient.ambientBakeNumSamples')} max={64} precision={0}/>
                 </LabelGroup>
                 <LabelGroup text='contrast'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }}  value={data.get('data.ambient.ambientBakeOcclusionContrast')} min = {-1} max={1} precision={1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }} value={data.get('data.ambient.ambientBakeOcclusionContrast')} min = {-1} max={1} precision={1}/>
                 </LabelGroup>
                 <LabelGroup text='brightness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }}  value={data.get('data.ambient.ambientBakeOcclusionBrightness')} min = {-1} max={1} precision={1}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }} value={data.get('data.ambient.ambientBakeOcclusionBrightness')} min = {-1} max={1} precision={1}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Directional light'>
@@ -70,10 +70,10 @@ class LightsBakedAOExample extends Example {
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bake' }} value={data.get('data.directional.bake')}/>
                 </LabelGroup>
                 <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeNumSamples' }}  value={data.get('data.directional.bakeNumSamples')} max={64} precision={0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeNumSamples' }} value={data.get('data.directional.bakeNumSamples')} max={64} precision={0}/>
                 </LabelGroup>
                 <LabelGroup text='area'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeArea' }}  value={data.get('data.directional.bakeArea')} max={40} precision={0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeArea' }} value={data.get('data.directional.bakeArea')} max={40} precision={0}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Other lights'>

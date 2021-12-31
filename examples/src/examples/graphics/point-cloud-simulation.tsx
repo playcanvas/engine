@@ -164,8 +164,13 @@ class PointCloudSimulationExample extends Example {
                     next.copy(old);
 
                 // write out changed positions
-                positions[i * 3] = next.x;         positions[i * 3 + 1] = next.y;             positions[i * 3 + 2] = next.z;
-                oldPositions[i * 3] = pos.x;       oldPositions[i * 3 + 1] = pos.y;           oldPositions[i * 3 + 2] = pos.z;
+                positions[i * 3] = next.x;
+                positions[i * 3 + 1] = next.y;
+                positions[i * 3 + 2] = next.z;
+
+                oldPositions[i * 3] = pos.x;
+                oldPositions[i * 3 + 1] = pos.y;
+                oldPositions[i * 3 + 2] = pos.z;
             }
 
             // once a second change how many points are visible
