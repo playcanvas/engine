@@ -40,6 +40,14 @@ describe('Vec3', function () {
             expect(v1.z).to.equal(9);
         });
 
+        it('adds a vector to itself in place', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.add(v1);
+            expect(v1.x).to.equal(2);
+            expect(v1.y).to.equal(4);
+            expect(v1.z).to.equal(6);
+        });
+
     });
 
     describe('#add2', function () {
@@ -52,6 +60,14 @@ describe('Vec3', function () {
             expect(v3.x).to.equal(5);
             expect(v3.y).to.equal(7);
             expect(v3.z).to.equal(9);
+        });
+
+        it('adds a vector to itself and writes result to itself', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.add2(v1, v1);
+            expect(v1.x).to.equal(2);
+            expect(v1.y).to.equal(4);
+            expect(v1.z).to.equal(6);
         });
 
     });
@@ -117,13 +133,31 @@ describe('Vec3', function () {
     describe('#cross', function () {
 
         it('calculates cross product of two vectors', function () {
-            const v1 = new Vec3(1, 2, 3);
-            const v2 = new Vec3(4, 5, 6);
+            const v1 = new Vec3(1, 0, 0);
+            const v2 = new Vec3(0, 1, 0);
             const v3 = new Vec3();
             v3.cross(v1, v2);
-            expect(v3.x).to.equal(-3);
-            expect(v3.y).to.equal(6);
-            expect(v3.z).to.equal(-3);
+            expect(v3.x).to.equal(0);
+            expect(v3.y).to.equal(0);
+            expect(v3.z).to.equal(1);
+        });
+
+        it('handles first vector also as the result', function () {
+            const v1 = new Vec3(1, 0, 0);
+            const v2 = new Vec3(0, 1, 0);
+            v1.cross(v1, v2);
+            expect(v1.x).to.equal(0);
+            expect(v1.y).to.equal(0);
+            expect(v1.z).to.equal(1);
+        });
+
+        it('handles second vector also as the result', function () {
+            const v1 = new Vec3(1, 0, 0);
+            const v2 = new Vec3(0, 1, 0);
+            v2.cross(v1, v2);
+            expect(v2.x).to.equal(0);
+            expect(v2.y).to.equal(0);
+            expect(v2.z).to.equal(1);
         });
 
     });
@@ -136,6 +170,12 @@ describe('Vec3', function () {
             const distance = v1.distance(v2);
             expect(distance).to.equal(10);
         });
+
+        it('returns zero for the distance between the same vector', function () {
+            const v1 = new Vec3(10, 0, 0);
+            const distance = v1.distance(v1);
+            expect(distance).to.equal(0);
+        })
 
     });
 
@@ -150,6 +190,14 @@ describe('Vec3', function () {
             expect(v1.z).to.equal(0.5);
         });
 
+        it('divides a vector by itself in place', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.div(v1);
+            expect(v1.x).to.equal(1);
+            expect(v1.y).to.equal(1);
+            expect(v1.z).to.equal(1);
+        });
+
     });
 
     describe('#div2', function () {
@@ -162,6 +210,14 @@ describe('Vec3', function () {
             expect(v3.x).to.equal(0.25);
             expect(v3.y).to.equal(0.4);
             expect(v3.z).to.equal(0.5);
+        });
+
+        it('divides a vector by itself and writes the result to itself', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.div2(v1, v1);
+            expect(v1.x).to.equal(1);
+            expect(v1.y).to.equal(1);
+            expect(v1.z).to.equal(1);
         });
 
     });
@@ -231,7 +287,7 @@ describe('Vec3', function () {
             expect(v.z).to.equal(3);
         });
 
-        it('calculates the floor of a vector', function () {
+        it('rounds down floating point numbers', function () {
             const v = new Vec3(1.1, 2.2, 3.3);
             v.floor();
             expect(v.x).to.equal(1);
@@ -358,6 +414,14 @@ describe('Vec3', function () {
             expect(v1.z).to.equal(18);
         });
 
+        it('multiplies a vector by itself in place', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.mul(v1);
+            expect(v1.x).to.equal(1);
+            expect(v1.y).to.equal(4);
+            expect(v1.z).to.equal(9);
+        });
+
     });
 
     describe('#mul2', function () {
@@ -370,6 +434,14 @@ describe('Vec3', function () {
             expect(v3.x).to.equal(4);
             expect(v3.y).to.equal(10);
             expect(v3.z).to.equal(18);
+        });
+
+        it('multiplies a vector by itself and writes the result to itself', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.mul2(v1, v1);
+            expect(v1.x).to.equal(1);
+            expect(v1.y).to.equal(4);
+            expect(v1.z).to.equal(9);
         });
 
     });
@@ -460,6 +532,14 @@ describe('Vec3', function () {
             expect(v1.z).to.equal(-3);
         });
 
+        it('subtracts a vector from itself in place', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.sub(v1);
+            expect(v1.x).to.equal(0);
+            expect(v1.y).to.equal(0);
+            expect(v1.z).to.equal(0);
+        });
+
     });
 
     describe('#sub2', function () {
@@ -472,6 +552,14 @@ describe('Vec3', function () {
             expect(v3.x).to.equal(-3);
             expect(v3.y).to.equal(-3);
             expect(v3.z).to.equal(-3);
+        });
+
+        it('subtracts a vector from itself and writes the result to itself', function () {
+            const v1 = new Vec3(1, 2, 3);
+            v1.sub2(v1, v1);
+            expect(v1.x).to.equal(0);
+            expect(v1.y).to.equal(0);
+            expect(v1.z).to.equal(0);
         });
 
     });
