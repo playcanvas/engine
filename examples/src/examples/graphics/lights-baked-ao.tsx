@@ -225,7 +225,7 @@ class LightsBakedAOExample extends Example {
                     // enable / disable cubemap
                     app.scene.setSkybox(value ? assets.cubemap.resources : null);
                 } else if (pathArray[2] === 'hemisphere') {
-                    // switch between smaller upper hemosphere and full sphere
+                    // switch between smaller upper hemisphere and full sphere
                     app.scene.ambientBakeSpherePart = value ? 0.4 : 1;
                 } else {
                     // all other values are set directly on the scene

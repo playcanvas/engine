@@ -128,7 +128,7 @@ class EventsExample extends Example {
         });
 
         app.on('update', (dt) => {
-            // on update, iterate over any currently highlighted boxes and reduce their emmisive property
+            // on update, iterate over any currently highlighted boxes and reduce their emissive property
             highlightedBoxes.forEach((box: pc.Entity) => {
                 // @ts-ignore engine-tsd
                 const emissive = box.model.material.emissive;
@@ -140,7 +140,7 @@ class EventsExample extends Example {
                 highlightedBoxes.shift();
             }
 
-            // set the camera to folow the model
+            // set the camera to follow the model
             const modelPosition = modelEntity.getPosition().clone();
             modelPosition.y = 0.5;
             cameraEntity.lookAt(modelPosition);

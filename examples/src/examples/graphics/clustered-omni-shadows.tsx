@@ -78,7 +78,7 @@ class ClusteredShadowsOmniExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // adjust default clustered lighting parameters to handle many lights:
         // @ts-ignore
         const lighting = app.scene.lighting;
 

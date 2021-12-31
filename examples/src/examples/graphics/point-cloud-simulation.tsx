@@ -142,7 +142,7 @@ class PointCloudSimulationExample extends Example {
             previousTime = time;
             time += dt;
 
-            // update particle positions using simple verlet integration, and keep them inside a sphere boundary
+            // update particle positions using simple Verlet integration, and keep them inside a sphere boundary
             let dist;
             const pos = new pc.Vec3();
             const old = new pc.Vec3();
@@ -158,7 +158,7 @@ class PointCloudSimulationExample extends Example {
                 delta.sub2(pos, old);
                 next.add2(pos, delta);
 
-                // boundary collision to keep them inside a sphere. If outside, simply move them in oposite direction
+                // boundary collision to keep them inside a sphere. If outside, simply move them in opposite direction
                 dist = next.length();
                 if (dist > 15)
                     next.copy(old);

@@ -163,7 +163,7 @@ class MiniStatsExample extends Example {
             // execute some tasks multiple times per frame
             for (let i = 0; i < step; i++) {
 
-                // allocating resouces
+                // allocating resources
                 if (adding) {
 
                     // add entity (they used shared geometry internally, and we create individual material for each)
@@ -194,7 +194,7 @@ class MiniStatsExample extends Example {
                     });
                     textures.push(texture);
 
-                    // ensure texture is uploaded    (actual VRAM is allocated)
+                    // ensure texture is uploaded (actual VRAM is allocated)
                     texture.lock();
                     texture.unlock();
                     // @ts-ignore engine-tsd
@@ -204,7 +204,7 @@ class MiniStatsExample extends Example {
 
                     if (entities.length > 0) {
 
-                        // desotry entities
+                        // destroy entities
                         entity = entities[entities.length - 1];
                         // @ts-ignore engine-tsd
                         entity.destroy();

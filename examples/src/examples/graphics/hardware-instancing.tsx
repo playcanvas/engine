@@ -89,7 +89,7 @@ class HardwareInstancingExample extends Example {
             // create static vertex buffer containing the matrices
             const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
 
-            // initialise instancing using the vertex buffer on meshInstance of the created box
+            // initialize instancing using the vertex buffer on meshInstance of the created box
             const boxMeshInst = box.render.meshInstances[0];
             boxMeshInst.setInstancing(vertexBuffer);
         }

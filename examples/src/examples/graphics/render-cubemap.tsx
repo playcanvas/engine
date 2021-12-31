@@ -47,7 +47,7 @@ class RenderCubemapExample extends Example {
             // @ts-ignore engine-tsd
             const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
-            // Add a render compoonent with the mesh
+            // Add a render component with the mesh
             entity.addComponent('render', {
                 type: 'asset',
                 layers: layer,
