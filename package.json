@@ -91,8 +91,7 @@
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-terser": "7.0.2",
     "sinon": "^12.0.1",
-    "typescript": "^4.5.4",
-    "webgl-mock": "^0.1.7"
+    "typescript": "^4.5.4"
   },
   "scripts": {
     "build": "rollup -c",
@@ -116,8 +115,5 @@
     "coverage": "c8 npm run test:node",
     "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
     "tsd": "tsc && node tsd.js"
-  },
-  "dependencies": {
-    "@playcanvas/canvas-mock": "file:../canvas-mock"
   }
 }
