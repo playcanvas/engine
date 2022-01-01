@@ -117,7 +117,7 @@ class StandardMaterialValidator {
                     // this counts as a valid input
                     // null texture reference is also valid
                 } else {
-                    if (!(typeof data[key] === 'string' || data[key === null])) {
+                    if (!(typeof data[key] === 'string' || data[key] === null)) {
                         if (!(data[key] instanceof Texture)) {
                             this.setInvalid(key, data);
                         }
