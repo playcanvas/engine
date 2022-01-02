@@ -231,34 +231,32 @@ class AnimController {
     }
 
     _transitionHasConditionsMet(transition) {
-        let conditionsMet = true;
-        for (let i = 0; i < transition.conditions.length; i++) {
-            const condition = transition.conditions[i];
+        const conditions = transition.conditions;
+        for (let i = 0; i < conditions.length; i++) {
+            const condition = conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             switch (condition.predicate) {
                 case ANIM_GREATER_THAN:
-                    conditionsMet = conditionsMet && parameter.value > condition.value;
+                    if (!(parameter.value > condition.value)) return false;
                     break;
                 case ANIM_LESS_THAN:
-                    conditionsMet = conditionsMet && parameter.value < condition.value;
+                    if (!(parameter.value < condition.value)) return false;
                     break;
                 case ANIM_GREATER_THAN_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value >= condition.value;
+                    if (!(parameter.value >= condition.value)) return false;
                     break;
                 case ANIM_LESS_THAN_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value <= condition.value;
+                    if (!(parameter.value <= condition.value)) return false;
                     break;
                 case ANIM_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value === condition.value;
+                    if (!(parameter.value === condition.value)) return false;
                     break;
                 case ANIM_NOT_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value !== condition.value;
+                    if (!(parameter.value !== condition.value)) return false;
                     break;
             }
-            if (!conditionsMet)
-                return conditionsMet;
         }
-        return conditionsMet;
+        return true;
     }
 
     _findTransition(from, to) {
