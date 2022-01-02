@@ -52,7 +52,7 @@ jobs:
     - name: Build Typescript definitions
       run: npm run test:tsd
 
-  unit-test:
+  unit-test-karma:
     name: Unit Test (Karma)
     runs-on: ubuntu-latest
     steps:
@@ -71,7 +71,7 @@ jobs:
     - name: Run unit tests
       run: xvfb-run --auto-servernum npm run test
 
-  unit-test:
+  unit-test-node:
     name: Unit Test (Node)
     runs-on: ubuntu-latest
     steps:
