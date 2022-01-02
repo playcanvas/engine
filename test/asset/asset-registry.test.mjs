@@ -64,7 +64,7 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads shader assets', function (done) {
+        it.skip('loads shader assets', function (done) {
             app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', function (err, asset) {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
