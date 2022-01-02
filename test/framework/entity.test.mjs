@@ -41,6 +41,32 @@ describe('Entity', function () {
         app.destroy();
     });
 
+    const components = {
+        anim: AnimComponent,
+        animation: AnimationComponent,
+        audiolistener: AudioListenerComponent,
+        audiosource: AudioSourceComponent,
+        button: ButtonComponent,
+        camera: CameraComponent,
+        collision: CollisionComponent,
+        element: ElementComponent,
+        joint: JointComponent,
+        layoutchild: LayoutChildComponent,
+        layoutgroup: LayoutGroupComponent,
+        light: LightComponent,
+        model: ModelComponent,
+        particlesystem: ParticleSystemComponent,
+        render: RenderComponent,
+        rigidbody: RigidBodyComponent,
+        screen: ScreenComponent,
+        scrollview: ScrollViewComponent,
+        scrollbar: ScrollbarComponent,
+        script: ScriptComponent,
+        sound: SoundComponent,
+        sprite: SpriteComponent,
+        zone: ZoneComponent
+    };
+
     describe('#constructor', function () {
 
         it('supports zero arguments', function () {
@@ -65,32 +91,6 @@ describe('Entity', function () {
 
     describe('#addComponent', function () {
 
-        const components = {
-            anim: AnimComponent,
-            animation: AnimationComponent,
-            audiolistener: AudioListenerComponent,
-            audiosource: AudioSourceComponent,
-            button: ButtonComponent,
-            camera: CameraComponent,
-            collision: CollisionComponent,
-            element: ElementComponent,
-            joint: JointComponent,
-            layoutchild: LayoutChildComponent,
-            layoutgroup: LayoutGroupComponent,
-            light: LightComponent,
-            model: ModelComponent,
-            particlesystem: ParticleSystemComponent,
-            render: RenderComponent,
-            rigidbody: RigidBodyComponent,
-            screen: ScreenComponent,
-            scrollview: ScrollViewComponent,
-            scrollbar: ScrollbarComponent,
-            script: ScriptComponent,
-            sound: SoundComponent,
-            sprite: SpriteComponent,
-            zone: ZoneComponent
-        };
-
         Object.keys(components).forEach((name) => {
             it(`adds a ${name} component`, function () {
                 // Create an entity and verify that it does not already have the component
@@ -100,6 +100,7 @@ describe('Entity', function () {
                 // Add the component
                 let component = entity.addComponent(name);
                 expect(component).to.be.an.instanceof(components[name]);
+                expect(component).to.equal(entity[name]);
                 expect(entity[name]).to.be.an.instanceof(components[name]);
 
                 // Try to add the component again
@@ -116,6 +117,51 @@ describe('Entity', function () {
 
     });
 
+    describe('#clone', function () {
+
+        it('clones an entity', function () {
+            const entity = new Entity('Test');
+            Object.keys(components).forEach((name) => {
+                entity.addComponent(name);
+            });
+
+            const clone = entity.clone();
+            expect(clone).to.be.an.instanceof(Entity);
+            expect(clone.getGuid()).to.not.equal(entity.getGuid());
+            expect(clone.name).to.equal('Test');
+            Object.keys(components).forEach((name) => {
+                expect(clone[name]).to.be.an.instanceof(components[name]);
+            });
+        });
+
+        it('clones an entity hierarchy', function () {
+            const root = new Entity('Test');
+            const child = new Entity('Child');
+            root.addChild(child);
+            Object.keys(components).forEach((name) => {
+                root.addComponent(name);
+                child.addComponent(name);
+            });
+
+            const clone = root.clone();
+            expect(clone).to.be.an.instanceof(Entity);
+            expect(clone.getGuid()).to.not.equal(root.getGuid());
+            expect(clone.name).to.equal('Test');
+            Object.keys(components).forEach((name) => {
+                expect(clone[name]).to.be.an.instanceof(components[name]);
+            });
+            expect(clone.children.length).to.equal(root.children.length);
+
+            const cloneChild = clone.findByName('Child');
+            expect(cloneChild.getGuid()).to.not.equal(child.getGuid());
+            Object.keys(components).forEach((name) => {
+                expect(cloneChild[name]).to.be.an.instanceof(components[name]);
+            });
+
+            root.destroy();
+        });
+    });
+
     describe('#destroy', function () {
 
         it('destroys the entity', function () {
@@ -128,6 +174,164 @@ describe('Entity', function () {
             entity.destroy();
 
             expect(destroyed).to.be.true;
+        });
+
+    });
+
+    describe('#findByGuid', function () {
+
+        it('returns same entity', function () {
+            const e = new Entity();
+            expect(e.findByGuid(e.getGuid())).to.equal(e);
+        });
+
+        it('returns direct child entity', function () {
+            const e = new Entity();
+            const c = new Entity();
+            e.addChild(c);
+            expect(e.findByGuid(c.getGuid())).to.equal(c);
+        });
+
+        it('returns child of child entity', function () {
+            const e = new Entity();
+            const c = new Entity();
+            const c2 = new Entity();
+            e.addChild(c);
+            c.addChild(c2);
+            expect(e.findByGuid(c2.getGuid())).to.equal(c2);
+        });
+
+        it('does not return parent', function () {
+            const e = new Entity();
+            const c = new Entity();
+            e.addChild(c);
+            expect(c.findByGuid(e.getGuid())).to.equal(null);
+        });
+
+        it('does not return destroyed entity', function () {
+            const e = new Entity();
+            const c = new Entity();
+            e.addChild(c);
+            c.destroy();
+            expect(e.findByGuid(c.getGuid())).to.equal(null);
+        });
+
+        it('does not return entity that was removed from hierarchy', function () {
+            const e = new Entity();
+            const c = new Entity();
+            e.addChild(c);
+            e.removeChild(c);
+            expect(e.findByGuid(c.getGuid())).to.equal(null);
+        });
+
+        it('does not return entity that does not exist', function () {
+            expect(app.root.findByGuid('missing')).to.equal(null);
+        });
+
+    });
+
+    describe('#findComponent', function () {
+
+        it('finds component on single entity', function () {
+            const e = new Entity();
+            e.addComponent('anim');
+            const component = e.findComponent('anim');
+            expect(component).to.be.an.instanceof(AnimComponent);
+        });
+
+        it('returns null when component is not found', function () {
+            const e = new Entity();
+            e.addComponent('anim');
+            const component = e.findComponent('render');
+            expect(component).to.be.null;
+        });
+
+        it('finds component on child entity', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('anim');
+            const component = root.findComponent('anim');
+            expect(component).to.be.an.instanceof(AnimComponent);
+        });
+
+        it('finds component on grandchild entity', function () {
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            grandchild.addComponent('anim');
+            const component = root.findComponent('anim');
+            expect(component).to.be.an.instanceof(AnimComponent);
+        });
+
+        it('does not find component on parent entity', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('anim');
+            const component = child.findComponent('anim');
+            expect(component).to.be.null;
+        });
+
+    });
+
+    describe('#findComponents', function () {
+
+        it('finds components on single entity', function () {
+            const e = new Entity();
+            e.addComponent('anim');
+            const components = e.findComponents('anim');
+            expect(components).to.be.an('array');
+            expect(components.length).to.equal(1);
+            expect(components[0]).to.be.an.instanceof(AnimComponent);
+        });
+
+        it('returns empty array when no components are found', function () {
+            const e = new Entity();
+            e.addComponent('anim');
+            const components = e.findComponents('render');
+            expect(components).to.be.an('array');
+            expect(components.length).to.equal(0);
+        });
+
+        it('finds components on child entity', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('anim');
+            const components = root.findComponents('anim');
+            expect(components).to.be.an('array');
+            expect(components.length).to.equal(1);
+            expect(components[0]).to.be.an.instanceof(AnimComponent);
+        });
+
+        it('finds components on 3 entity hierarchy', function () {
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.addComponent('anim');
+            child.addComponent('anim');
+            grandchild.addComponent('anim');
+            const components = root.findComponents('anim');
+            expect(components).to.be.an('array');
+            expect(components.length).to.equal(3);
+            expect(components[0]).to.be.an.instanceof(AnimComponent);
+            expect(components[1]).to.be.an.instanceof(AnimComponent);
+            expect(components[2]).to.be.an.instanceof(AnimComponent);
+        });
+
+        it('does not find components on parent entity', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('anim');
+            const components = child.findComponents('anim');
+            expect(components).to.be.an('array');
+            expect(components.length).to.equal(0);
         });
 
     });
