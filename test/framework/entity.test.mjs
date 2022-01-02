@@ -91,7 +91,7 @@ describe('Entity', function () {
 
     describe('#addComponent', function () {
 
-        Object.keys(components).forEach((name) => {
+        for (const name in components) {
             it(`adds a ${name} component`, function () {
                 // Create an entity and verify that it does not already have the component
                 const entity = new Entity();
@@ -113,7 +113,7 @@ describe('Entity', function () {
                 expect(entity[name]).to.be.undefined;
                 entity.destroy();
             });
-        });
+        }
 
     });
 
@@ -121,42 +121,42 @@ describe('Entity', function () {
 
         it('clones an entity', function () {
             const entity = new Entity('Test');
-            Object.keys(components).forEach((name) => {
+            for (const name in components) {
                 entity.addComponent(name);
-            });
+            }
 
             const clone = entity.clone();
             expect(clone).to.be.an.instanceof(Entity);
             expect(clone.getGuid()).to.not.equal(entity.getGuid());
             expect(clone.name).to.equal('Test');
-            Object.keys(components).forEach((name) => {
+            for (const name in components) {
                 expect(clone[name]).to.be.an.instanceof(components[name]);
-            });
+            }
         });
 
         it('clones an entity hierarchy', function () {
             const root = new Entity('Test');
             const child = new Entity('Child');
             root.addChild(child);
-            Object.keys(components).forEach((name) => {
+            for (const name in components) {
                 root.addComponent(name);
                 child.addComponent(name);
-            });
+            }
 
             const clone = root.clone();
             expect(clone).to.be.an.instanceof(Entity);
             expect(clone.getGuid()).to.not.equal(root.getGuid());
             expect(clone.name).to.equal('Test');
-            Object.keys(components).forEach((name) => {
+            for (const name in components) {
                 expect(clone[name]).to.be.an.instanceof(components[name]);
-            });
+            }
             expect(clone.children.length).to.equal(root.children.length);
 
             const cloneChild = clone.findByName('Child');
             expect(cloneChild.getGuid()).to.not.equal(child.getGuid());
-            Object.keys(components).forEach((name) => {
+            for (const name in components) {
                 expect(cloneChild[name]).to.be.an.instanceof(components[name]);
-            });
+            }
 
             root.destroy();
         });
