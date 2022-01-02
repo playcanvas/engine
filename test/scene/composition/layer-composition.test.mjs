@@ -206,7 +206,7 @@ describe('LayerComposition', function () {
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
         });
-    
+
         it('returns correct value after remove()', function () {
             var layerFront = new Layer({ id: 2 });
             var layerMiddle = new Layer({ id: 3 });
@@ -217,12 +217,12 @@ describe('LayerComposition', function () {
             this.composition.remove(layerMiddle);
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
-    
+
             // re-add middle layer on top of the front layer
             this.composition.push(layerMiddle);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
         });
-    
+
         it('returns correct value after pushTransparent()', function () {
             var layerFront = new Layer({ id: 2 });
             var layerBack = new Layer({ id: 3 });
@@ -231,7 +231,7 @@ describe('LayerComposition', function () {
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
         });
-    
+
         it('returns correct value after insertTransparent()', function () {
             var layerFront = new Layer({ id: 2 });
             var layerBack = new Layer({ id: 3 });
@@ -240,7 +240,7 @@ describe('LayerComposition', function () {
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
         });
-    
+
         it('returns correct value after removeTransparent()', function () {
             var layerFront = new Layer({ id: 2 });
             var layerMiddle = new Layer({ id: 3 });
@@ -251,7 +251,7 @@ describe('LayerComposition', function () {
             this.composition.removeTransparent(layerMiddle);
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
-    
+
             // re-add middle layer on top of the front layer
             this.composition.pushTransparent(layerMiddle);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);

@@ -69,6 +69,7 @@
     "@babel/core": "^7.16.5",
     "@babel/eslint-parser": "^7.16.5",
     "@babel/preset-env": "^7.16.5",
+    "@playcanvas/canvas-mock": "^1.0.0",
     "@playcanvas/eslint-config": "^1.0.15",
     "@playcanvas/jsdoc-template": "^1.0.20",
     "@rollup/plugin-babel": "5.3.0",
@@ -78,7 +79,6 @@
     "c8": "^7.10.0",
     "chai": "4.3.4",
     "eslint": "^8.5.0",
-    "http-server": "^14.0.0",
     "jsdoc": "^3.6.7",
     "jsdoc-tsimport-plugin": "^1.0.5",
     "karma": "^6.3.9",
@@ -89,8 +89,10 @@
     "rollup": "^2.61.1",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-terser": "7.0.2",
+    "serve": "^13.0.2",
     "sinon": "^12.0.1",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "xmlhttprequest": "1.8.0"
   },
   "scripts": {
     "build": "rollup -c",
@@ -110,7 +112,7 @@
     "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
-    "test:node": "mocha --recursive",
+    "test:node": "mocha --recursive --require test/fixtures.mjs",
     "test:node:watch": "mocha --recursive --min --watch",
     "coverage": "c8 npm run test:node",
     "test:tsd": "npm run tsd && tsc --pretty false types/index.d.ts",
