@@ -75,11 +75,11 @@ describe('I18n', function () {
             app.i18n.assets = [2, 3];
             expect(app.i18n.assets).to.deep.equal([2, 3]);
         });
-    
+
     });
 
     describe('#findAvailableLocale', function () {
-        
+
         it('should find locale if translations have been provided for it', function () {
             addText('no-IT', 'key', 'norwegian');
             expect(app.i18n.findAvailableLocale('no-IT')).to.equal('no-IT');
@@ -389,21 +389,21 @@ describe('I18n', function () {
             app.i18n.locale = 'zh-HK';
             expect(app.i18n.getPluralText('key')).to.equal('hk');
         });
-    
+
         it('zh-HK should fall back to zh-TW', function () {
             addText('zh-CN', 'key', ['cn']);
             addText('zh-TW', 'key', ['hk']);
             app.i18n.locale = 'zh-HK';
             expect(app.i18n.getPluralText('key')).to.equal('hk');
         });
-    
+
         it('zh-TW should fall back to zh-HK', function () {
             addText('zh-CN', 'key', ['cn']);
             addText('zh-HK', 'key', ['tw']);
             app.i18n.locale = 'zh-TW';
             expect(app.i18n.getPluralText('key')).to.equal('tw');
         });
-    
+
         it('zh-SG should fall back to zh-CN', function () {
             addText('zh-HK', 'key', ['hk']);
             addText('zh-CN', 'key', ['cn']);
@@ -411,7 +411,7 @@ describe('I18n', function () {
             app.i18n.locale = 'zh-SG';
             expect(app.i18n.getPluralText('key')).to.equal('cn');
         });
-    
+
     });
 
     describe('#getText', function () {
@@ -499,21 +499,21 @@ describe('I18n', function () {
             app.i18n.locale = 'zh-HK';
             expect(app.i18n.getText('key')).to.equal('hk');
         });
-    
+
         it('zh-HK should fall back to zh-TW', function () {
             addText('zh-CN', 'key', 'cn');
             addText('zh-TW', 'key', 'hk');
             app.i18n.locale = 'zh-HK';
             expect(app.i18n.getText('key')).to.equal('hk');
         });
-    
+
         it('zh-TW should fall back to zh-HK', function () {
             addText('zh-CN', 'key', 'cn');
             addText('zh-HK', 'key', 'tw');
             app.i18n.locale = 'zh-TW';
             expect(app.i18n.getText('key')).to.equal('tw');
         });
-    
+
         it('zh-SG should fall back to zh-CN', function () {
             addText('zh-HK', 'key', 'hk');
             addText('zh-CN', 'key', 'cn');
@@ -521,7 +521,7 @@ describe('I18n', function () {
             app.i18n.locale = 'zh-SG';
             expect(app.i18n.getText('key')).to.equal('cn');
         });
-    
+
     });
 
     describe('#locale', function () {
@@ -579,11 +579,10 @@ describe('I18n', function () {
 
     });
 
-/*
-    it('assets not in asset registry get loaded after they are added to the registry', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('assets not in asset registry get loaded after they are added to the registry', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
         app.i18n.assets = [asset];
@@ -595,13 +594,12 @@ describe('I18n', function () {
 
         app.assets.add(asset);
         app.assets.load(asset);
-
     });
 
-    it('assets in asset registry get loaded when passed to i18n', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('assets in asset registry get loaded when passed to i18n', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
         app.assets.add(asset);
@@ -616,10 +614,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('assets already loaded are parsed when passed to i18n', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('assets already loaded are parsed when passed to i18n', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         app.i18n.on('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
@@ -635,10 +633,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are unloaded when the asset is unloaded', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('translations are unloaded when the asset is unloaded', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -656,10 +654,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are unloaded when the asset is removed', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('translations are unloaded when the asset is removed', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -677,10 +675,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are re-loaded when the asset is removed and then added again', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('translations are re-loaded when the asset is removed and then added again', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -702,10 +700,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are re-loaded when the contents of the asset change', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-            callback(null, createTranslation('en-US', 'key', 'translation'));
-        });
+    it.skip('translations are re-loaded when the contents of the asset change', function (done) {
+        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        //    callback(null, createTranslation('en-US', 'key', 'translation'));
+        // });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -729,5 +727,5 @@ describe('I18n', function () {
         app.assets.add(asset);
         app.assets.load(asset);
     });
-*/
+
 });
