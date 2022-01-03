@@ -50,7 +50,24 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Build Typescript definitions
-      run: npm run test:tsd
+      run: npm run tsd
+    - name: Compile Typescript definitions
+      run: npm run tsd:compile
+
+  unit-test-node:
+    name: Unit Test (Node)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup Node.js 16.x
+      uses: actions/setup-node@v2.5.0
+      with:
+        node-version: 16.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Run unit tests
+      run: npm run test
 
   unit-test-karma:
     name: Unit Test (Karma)
@@ -69,19 +86,4 @@ jobs:
     - name: Install X virtual framebuffer
       run: sudo apt-get install xvfb
     - name: Run unit tests
-      run: xvfb-run --auto-servernum npm run test
-
-  unit-test-node:
-    name: Unit Test (Node)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Setup Node.js 16.x
-      uses: actions/setup-node@v2.5.0
-      with:
-        node-version: 16.x
-    - name: Install dependencies
-      run: npm ci
-    - name: Run unit tests
-      run: npm run test:node
+      run: xvfb-run --auto-servernum npm run test:karma
