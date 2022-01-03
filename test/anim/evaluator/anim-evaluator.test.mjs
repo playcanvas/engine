@@ -8,7 +8,7 @@ import { Application } from '../../../src/framework/application.js';
 import { DefaultAnimBinder } from '../../../src/anim/binder/default-anim-binder.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock/src/html-canvas-element.mjs';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 

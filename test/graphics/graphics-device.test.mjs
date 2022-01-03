@@ -1,6 +1,6 @@
 import { GraphicsDevice } from '../../src/graphics/graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock/src/html-canvas-element.mjs';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 

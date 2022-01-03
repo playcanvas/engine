@@ -1,7 +1,7 @@
 import { Application } from '../../src/framework/application.js';
 import { Asset } from '../../src/asset/asset.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock/src/html-canvas-element.mjs';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 

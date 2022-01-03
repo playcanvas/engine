@@ -13,7 +13,7 @@ import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { ScriptRegistry } from '../../src/script/script-registry.js';
 import { XrManager } from '../../src/xr/xr-manager.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock/src/html-canvas-element.mjs';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 

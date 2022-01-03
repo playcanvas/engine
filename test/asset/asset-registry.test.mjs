@@ -3,7 +3,7 @@ import { Asset } from '../../src/asset/asset.js';
 import { AssetRegistry } from '../../src/asset/asset-registry.js';
 import { ResourceLoader } from '../../src/resources/loader.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock/src/html-canvas-element.mjs';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
