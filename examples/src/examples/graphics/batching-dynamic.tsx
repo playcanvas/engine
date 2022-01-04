@@ -37,7 +37,7 @@ class BatchingDynamicExample extends Example {
         // create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
         const batchGroup = app.batcher.addGroup("Meshes", true, 100);
 
-        // create constious primitive instances using one of the two materials
+        // create various primitive instances using one of the two materials
         const numInstances = 500;
         const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
         const entities: any = [];

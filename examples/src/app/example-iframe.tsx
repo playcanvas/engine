@@ -103,10 +103,10 @@ const ExampleIframe = (props: ExampleIframeProps) => {
 
             props.debugExample.init(assets);
 
-            // typescript compiles to strict mode js so we can't access the functions arguments property. We'll get them from it's string instead.
+            // typescript compiles to strict mode js so we can't access the functions arguments property. We'll get them from its string instead.
             const exampleFuncString = props.debugExample.example.toString();
             const exampleFuncArguments = exampleFuncString.substring(0, exampleFuncString.indexOf(')')).replace('function (', '').split(', ');
-            // @ts-ignore call the example function with it's required arguments
+            // @ts-ignore call the example function with its required arguments
             props.debugExample.example(...exampleFuncArguments.map((a: string) => args[a]));
             return;
         }

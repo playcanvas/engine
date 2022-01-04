@@ -20,9 +20,9 @@ class PortalExample extends Example {
 
         app.start();
 
-        ///////////////////////////////
-        // Scipt to rotate the scene //
-        ///////////////////////////////
+        ////////////////////////////////
+        // Script to rotate the scene //
+        ////////////////////////////////
         const Rotator = pc.createScript('rotator');
 
         let t = 0;

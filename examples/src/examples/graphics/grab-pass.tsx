@@ -36,7 +36,7 @@ uniform sampler2D uOffsetMap;
 // roughness map
 uniform sampler2D uRoughnessMap;
 
-// engine built-in costant storing render target size in .xy and inverse size in .zw
+// engine built-in constant storing render target size in .xy and inverse size in .zw
 uniform vec4 uScreenSize;
 
 varying vec2 texCoord;

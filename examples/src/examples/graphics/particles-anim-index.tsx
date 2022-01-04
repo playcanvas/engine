@@ -97,41 +97,39 @@ class ParticlesAnimIndexExample extends Example {
             scaleGraph: scaleCurve
         };
 
-        particleEntity1.addComponent("particlesystem",
-            Object.assign(particleSystemConfiguration, {
-                // states that each animation in the sprite sheet has 4 frames
-                animNumFrames: 4,
-                // set the animation index of the first particle system to 0
-                animIndex: 0
-            })
-        );
+        let options;
 
-        particleEntity2.addComponent("particlesystem",
-            Object.assign(particleSystemConfiguration, {
-                // states that each animation in the sprite sheet has 4 frames
-                animNumFrames: 4,
-                // set the animation index of the second particle system to 1
-                animIndex: 1
-            })
-        );
+        options = Object.assign(particleSystemConfiguration, {
+            // states that each animation in the sprite sheet has 4 frames
+            animNumFrames: 4,
+            // set the animation index of the first particle system to 0
+            animIndex: 0
+        });
+        particleEntity1.addComponent("particlesystem", options);
 
-        particleEntity3.addComponent("particlesystem",
-            Object.assign(particleSystemConfiguration, {
-                // states that each animation in the sprite sheet has 4 frames
-                animNumFrames: 4,
-                // set the animation index of the third particle system to 2
-                animIndex: 2
-            })
-        );
+        options = Object.assign(particleSystemConfiguration, {
+            // states that each animation in the sprite sheet has 4 frames
+            animNumFrames: 4,
+            // set the animation index of the second particle system to 1
+            animIndex: 1
+        });
+        particleEntity2.addComponent("particlesystem", options);
 
-        particleEntity4.addComponent("particlesystem",
-                Object.assign(particleSystemConfiguration, {
-                // states that each animation in the sprite sheet has 4 frames
-                    animNumFrames: 4,
-                // set the animation index of the fourth particle system to 3
-                    animIndex: 3
-                })
-        );
+        options = Object.assign(particleSystemConfiguration, {
+            // states that each animation in the sprite sheet has 4 frames
+            animNumFrames: 4,
+            // set the animation index of the third particle system to 2
+            animIndex: 2
+        });
+        particleEntity3.addComponent("particlesystem", options);
+
+        options = Object.assign(particleSystemConfiguration, {
+            // states that each animation in the sprite sheet has 4 frames
+            animNumFrames: 4,
+            // set the animation index of the fourth particle system to 3
+            animIndex: 3
+        });
+        particleEntity4.addComponent("particlesystem", options);
 
         // add the full particle texture to the panel
         panel.addComponent('element', {

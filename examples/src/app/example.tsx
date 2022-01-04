@@ -5,7 +5,7 @@ import { Observer } from '@playcanvas/observer';
 // @ts-ignore: library file import
 import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
-import Spinner  from '@playcanvas/pcui/Spinner/component';
+import Spinner from '@playcanvas/pcui/Spinner/component';
 import { File } from './helpers/types';
 
 interface ExampleProps {

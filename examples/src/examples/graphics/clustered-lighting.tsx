@@ -29,7 +29,7 @@ class ClusteredLightingExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // adjust default clustered lighting parameters to handle many lights:
         const lighting = app.scene.lighting;
 
         // 1) subdivide space with lights into this many cells:
@@ -191,7 +191,7 @@ class ClusteredLightingExample extends Example {
                 spotlight.rotateLocal(90, 0, 0);
             });
 
-            // rotate direcional light
+            // rotate directional light
             if (dirLight) {
                 dirLight.setLocalEulerAngles(25, -30 * time, 0);
             }

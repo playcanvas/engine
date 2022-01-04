@@ -98,7 +98,7 @@ class LoadersGlExample extends Example {
             material.blendType = pc.BLENDMODE_ONE_MINUS_DST_ALPHA;
             material.cull = pc.CULLFACE_NONE;
 
-            // Add an entity with a render compoonent to render the mesh
+            // Add an entity with a render component to render the mesh
             const entity = new pc.Entity();
             entity.addComponent('render', {
                 material: material,
