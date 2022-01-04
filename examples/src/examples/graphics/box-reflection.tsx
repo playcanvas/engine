@@ -15,7 +15,7 @@ import SelectInput from '@playcanvas/pcui/SelectInput/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class ClusteredShadowsOmniExample extends Example {
+class BoxReflectionExample extends Example {
     static CATEGORY = 'Graphics';
     static NAME = 'Box Reflection';
 
@@ -336,4 +336,4 @@ class ClusteredShadowsOmniExample extends Example {
     }
 }
 
-export default ClusteredShadowsOmniExample;
+export default BoxReflectionExample;
