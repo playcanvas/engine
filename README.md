@@ -151,7 +151,7 @@ To build the source map to allow for easier engine debugging, you can add `-- -m
 
     npm run build -- -m
 
-This will output to `build/output/playcanvas.js.map`
+This will output to `build/playcanvas.js.map`
 
 Note: The preprocessor is ignored when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
 
@@ -159,10 +159,10 @@ Note: The preprocessor is ignored when generating the source map as it breaks th
 
 PlayCanvas uses of Karma for unit testing. There are two ways of running the tests:
 
-| Command                | Description                                                                           |
-|------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | Runs unit tests on a built `playcanvas.js`                                            |
-| `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
+| Command                 | Description                                                      |
+|-------------------------|------------------------------------------------------------------|
+| `npm run test`          | Runs unit tests in Node                                          |
+| `npm run test:coverage` | Runs unit tests in Node and also generate a code coverage report |
 
 ## PlayCanvas Editor
 

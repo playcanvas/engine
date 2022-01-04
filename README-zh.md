@@ -152,7 +152,7 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
     npm run build -- -m
 
-此条指令将会将结果输出到 `build/output/playcanvas.js.map`
+此条指令将会将结果输出到 `build/playcanvas.js.map`
 
 提示：在生成 source map 过程中，系统会忽略预处理器以防止其对过程产生影响。这意味着在生成 source map 的过程中，所有 debug 和 profiling 代码将会被包含在引擎构建中。
 
@@ -160,10 +160,10 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
 PlayCanvas 使用 Karma 进行单元测试。您可以使用如下两种方式进行测试：
 
-| Command              | Description                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `npm run test`       | Runs unit tests on a built `playcanvas.js`                                           |
-| `npm run test:watch` | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html |
+| Command                 | Description                                                      |
+|-------------------------|------------------------------------------------------------------|
+| `npm run test`          | Runs unit tests in Node                                          |
+| `npm run test:coverage` | Runs unit tests in Node and also generate a code coverage report |
 
 ## PlayCanvas 平台
 
