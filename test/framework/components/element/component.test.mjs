@@ -122,7 +122,7 @@ describe("ElementComponent", function () {
 
     });
 
-    it('screen component unbound on reparent', function () {
+    it('unbinds screen component on reparent', function () {
         const screen = new Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);
@@ -139,7 +139,7 @@ describe("ElementComponent", function () {
         expect(screen.screen._elements).to.not.include(e.element);
     });
 
-    it('screen component unbound on destroy', function () {
+    it('unbinds screen component on destroy', function () {
         const screen = new Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);
