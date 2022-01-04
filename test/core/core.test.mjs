@@ -4,7 +4,7 @@ import { expect } from 'chai';
 
 describe('core', function () {
 
-    describe('type', function () {
+    describe('#type', function () {
 
         it('returns the correct types', function () {
             const types = [
@@ -37,7 +37,7 @@ describe('core', function () {
 
     });
 
-    describe('extend', function () {
+    describe('#extend', function () {
 
         it('combines two objects', function () {
             const o1 = {
@@ -118,7 +118,7 @@ describe('core', function () {
 
     });
 
-    describe('isDefined', function () {
+    describe('#isDefined', function () {
 
         it('checks variables are defined', function () {
             let a;
