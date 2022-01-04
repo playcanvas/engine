@@ -1,5 +1,6 @@
 import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
+import { AnimClip } from '../evaluator/anim-clip.js';
 
 /**
  * Used to store and update the value of an animation target. This combines the values of multiple
@@ -33,15 +34,27 @@ class AnimTargetValue {
 
     getWeight(index) {
         if (this.dirty) this.updateWeights();
-        if (this.totalWeight === 0 || !this.mask[index]) {
-            return 0;
+        if (!this.mask[index]) return 0;
+        if (this._layerNormalizedWeight(index)) {
+            if (this.totalWeight === 0) {
+                return 0;
+            }
+            return this.weights[index] / this.totalWeight;
         }
-        return this.weights[index] / this.totalWeight;
+        return this.weights[index];
+    }
+
+    _layerblendType(index) {
+        return this._component.layers[index].blendType;
+    }
+
+    _layerNormalizedWeight(index) {
+        return this._component.layers[index].normalizedWeight;
     }
 
     setMask(index, value) {
         this.mask[index] = value;
-        if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
+        if (this._layerblendType(index) === ANIM_LAYER_OVERWRITE) {
             this.mask = this.mask.fill(0, 0, index);
         }
         this.dirty = true;

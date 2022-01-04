@@ -345,6 +345,7 @@ class AnimEvaluator {
                         animTarget.counter = 0;
                     }
 
+                    animTarget.path = path;
                     // Add this layer's value onto the target value
                     animTarget.updateValue(binder.layerIndex, target.value);
 
