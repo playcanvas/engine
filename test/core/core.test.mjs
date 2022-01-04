@@ -2,7 +2,7 @@ import { extend, isDefined, type } from '../../src/core/core.js';
 
 import { expect } from 'chai';
 
-describe.only('core', function () {
+describe('core', function () {
 
     describe('type', function () {
 
