@@ -87,7 +87,6 @@ class VoxFrame {
         if (!this._flattened) {
             const data = this.data;
             const min = this.bound.min;
-            const max = this.bound.max;
             const extent = this.bound.extent;
             const flattenedData = new Uint8Array(extent[0] * extent[1] * extent[2]);
 
