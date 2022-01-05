@@ -1339,7 +1339,7 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         // Set RT's device
-        target._device = this;
+        target.device = this;
         const gl = this.gl;
 
         // ##### Create main FBO #####

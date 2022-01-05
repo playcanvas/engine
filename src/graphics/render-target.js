@@ -311,6 +311,17 @@ class RenderTarget {
     get height() {
         return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;
     }
+
+    set device(device) {
+        this._device = device;
+
+        // validate properties
+        this._samples = Math.min(this._samples, device.maxSamples);
+    }
+
+    get device() {
+        return this._device;
+    }
 }
 
 export { RenderTarget };
