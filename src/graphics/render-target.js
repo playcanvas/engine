@@ -88,9 +88,6 @@ class RenderTarget {
             this._colorBuffer._isRenderTarget = true;
         }
 
-        // device, gets assigned when the framebuffer is created during the rendering
-        this._device = null;
-
         this._glFrameBuffer = null;
         this._glDepthBuffer = null;
 
@@ -117,7 +114,11 @@ class RenderTarget {
             this._stencil = (options.stencil !== undefined) ? options.stencil : false;
         }
 
-        this._samples = (options.samples !== undefined) ? options.samples : 1;
+        // device, from one of the buffers
+        this._device = this._colorBuffer?.device || this._depthBuffer?.device;
+        Debug.assert(this._device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
+
+        this._samples = (options.samples !== undefined) ? Math.min(options.samples, this._device.maxSamples) : 1;
         this.autoResolve = (options.autoResolve !== undefined) ? options.autoResolve : true;
         this._glResolveFrameBuffer = null;
         this._glMsaaColorBuffer = null;
@@ -310,17 +311,6 @@ class RenderTarget {
      */
     get height() {
         return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;
-    }
-
-    set device(device) {
-        this._device = device;
-
-        // validate properties
-        this._samples = Math.min(this._samples, device.maxSamples);
-    }
-
-    get device() {
-        return this._device;
     }
 }
 
