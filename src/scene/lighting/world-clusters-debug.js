@@ -59,7 +59,7 @@ class WorldClustersDebug {
 
             // update colors only when needed
             const numVerts = gridPositions.length / 3;
-            if (numVerts != gridColors.length / 4) {
+            if (numVerts !== gridColors.length / 4) {
                 gridColors.length = 0;
                 for (let i = 0; i < numVerts; i++) {
                     gridColors.push(c1.r, c1.g, c1.b, c1.a);
