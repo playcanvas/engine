@@ -213,7 +213,8 @@ class AreaLightsExample extends Example {
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: ground,
-                distanceMax: 24
+                distanceMax: 60,
+                frameOnStart: false
             }
         });
         camera.script.create("orbitCameraInputMouse");

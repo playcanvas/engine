@@ -36,9 +36,6 @@ class WorldClusters {
         // number of times a warning was reported
         this.reportCount = 0;
 
-        // bounds of all lights
-        this._bounds = new BoundingBox();
-
         // bounds of all light volumes (volume covered by the clusters)
         this.boundsMin = new Vec3();
         this.boundsMax = new Vec3();
