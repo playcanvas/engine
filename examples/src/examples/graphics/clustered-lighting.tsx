@@ -171,7 +171,7 @@ class ClusteredLightingExample extends Example {
         camera.setLocalPosition(140, 140, 140);
         camera.lookAt(new pc.Vec3(0, 40, 0));
 
-        // add orbit camera script with a mouse and a touch support
+        // add orbit camera script with mouse and touch support
         camera.addComponent("script");
         camera.script.create("orbitCamera", {
             attributes: {
