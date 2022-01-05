@@ -221,6 +221,25 @@ describe('CurveSet', function () {
 
     describe('#value()', function () {
 
+        it('returns the optional array parameter', function () {
+            const curveSet = new CurveSet([
+                [
+                    0, 0,
+                    0.5, 1,
+                    1, 0
+                ],
+                [
+                    0, 1,
+                    0.5, 0,
+                    1, 1
+                ]
+            ]);
+
+            const input = [];
+            const output = curveSet.value(0, input);
+            expect(input).to.equal(output);
+        });
+
         it('fills a supplied array with interpolated values based on the specified time (linear)', function () {
             const curveSet = new CurveSet([
                 [
