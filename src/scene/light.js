@@ -664,7 +664,7 @@ class Light {
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);
 
-            box.setFromTransformedAabb(box, node.getWorldTransform());
+            box.setFromTransformedAabb(box, node.getWorldTransform(), true);
 
         } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());

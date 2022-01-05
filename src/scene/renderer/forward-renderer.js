@@ -36,6 +36,7 @@ import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
+import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
@@ -1331,9 +1332,10 @@ class ForwardRenderer {
 
                 if (newMaterial) {
 
-                    if (!drawCall._shader[pass].failed && !device.setShader(drawCall._shader[pass])) {
+                    const shader = drawCall._shader[pass];
+                    if (!shader.failed && !device.setShader(shader)) {
                         Debug.error(`Error in material "${material.name}" with flags ${objDefs}`);
-                        drawCall._shader[pass].failed = true;
+                        shader.failed = true;
                     }
 
                     // Uniforms I: material
@@ -1866,6 +1868,7 @@ class ForwardRenderer {
 
         // Rendering
         let sortTime, drawTime;
+        let clustersDebugRendered = false;
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
@@ -1964,6 +1967,12 @@ class ForwardRenderer {
                 // upload clustered lights uniforms
                 if (clusteredLightingEnabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate(this.lightTextureAtlas);
+
+                    // debug rendering of clusters
+                    if (!clustersDebugRendered && this.scene.lighting.debugLayer === layer.id) {
+                        clustersDebugRendered = true;
+                        WorldClustersDebug.render(renderAction.lightClusters, this.scene);
+                    }
                 }
 
                 // enable flip faces if either the camera has _flipFaces enabled or the render target
