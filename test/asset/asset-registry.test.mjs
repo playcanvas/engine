@@ -36,7 +36,7 @@ describe('AssetRegistry', function () {
         it('adds an asset', function () {
             const asset = new Asset("Test Asset", 'text', {
                 url: 'fake/url/file.txt'
-            });    
+            });
             app.assets.add(asset);
 
             const assets = app.assets.list();
@@ -121,7 +121,7 @@ describe('AssetRegistry', function () {
             expect(app.assets.getByUrl(asset2.file.url)).to.equal(asset2);
             expect(app.assets.getByUrl(asset3.file.url)).to.equal(asset3);
         });
-    
+
     });
 
     describe('#list', function () {
@@ -141,7 +141,7 @@ describe('AssetRegistry', function () {
             app.assets.add(asset2);
             app.assets.add(asset3);
 
-            const assets = app.assets.list()
+            const assets = app.assets.list();
 
             expect(assets[0]).to.equal(asset1);
             expect(assets[1]).to.equal(asset2);
@@ -151,7 +151,7 @@ describe('AssetRegistry', function () {
     });
 
     describe('#loadFromUrl', function () {
-    
+
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
         it.skip('loads container assets', function (done) {
@@ -216,7 +216,7 @@ describe('AssetRegistry', function () {
     });
 
     describe('#remove', function () {
-        
+
         it('removes by id', function () {
             const asset1 = new Asset("Asset 1", "text", {
                 url: "fake/one/file.txt"
@@ -234,7 +234,7 @@ describe('AssetRegistry', function () {
 
             app.assets.remove(asset2);
 
-            const assets = app.assets.list()
+            const assets = app.assets.list();
 
             expect(app.assets.get(asset1.id)).to.equal(asset1);
             expect(app.assets.get(asset2.id)).to.equal(undefined);
@@ -247,7 +247,7 @@ describe('AssetRegistry', function () {
             expect(assets[0].id).to.equal(asset1.id);
             expect(assets[1].id).to.equal(asset3.id);
         });
-        
+
     });
 
 });
