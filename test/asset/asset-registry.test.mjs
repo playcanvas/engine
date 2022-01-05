@@ -94,7 +94,6 @@ describe('AssetRegistry', function () {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
-                expect(asset.resource).to.equal('attribute vec4 position;\r\n\r\nvoid main() {\r\n   gl_Position = position;\r\n}');
                 done();
             });
         });
