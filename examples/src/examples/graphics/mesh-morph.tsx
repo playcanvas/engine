@@ -132,7 +132,7 @@ class MeshMorphExample extends Example {
             time += dt;
 
             for (let m = 0; m < morphInstances.length; m++) {
-            // modify weights of all 3 morph targets along some sin curve with different frequency
+                // modify weights of all 3 morph targets along some sin curve with different frequency
                 morphInstances[m].setWeight(0, Math.abs(Math.sin(time + m)));
                 morphInstances[m].setWeight(1, Math.abs(Math.sin(time * 0.3 + m)));
                 morphInstances[m].setWeight(2, Math.abs(Math.sin(time * 0.7 + m)));

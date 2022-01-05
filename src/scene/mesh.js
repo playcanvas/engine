@@ -227,12 +227,7 @@ class Mesh extends RefCountedObject {
          */
         this.skin = null;
 
-        /**
-         * The morph data (if any) that drives morph target animations for this mesh.
-         *
-         * @type {Morph|null}
-         */
-        this.morph = null;
+        this._morph = null;
         this._geometryData = null;
 
         // AABB for object space mesh vertices
@@ -240,6 +235,30 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+    }
+
+    /**
+     * The morph data (if any) that drives morph target animations for this mesh.
+     *
+     * @type {Morph|null}
+     */
+    set morph(morph) {
+
+        if (morph !== this._morph) {
+            if (this._morph) {
+                this._morph.decRefCount();
+            }
+
+            this._morph = morph;
+
+            if (morph) {
+                morph.incRefCount();
+            }
+        }
+    }
+
+    get morph() {
+        return this._morph;
     }
 
     /**
@@ -260,6 +279,19 @@ class Mesh extends RefCountedObject {
      * normally called by {@link Model#destroy} and does not need to be called manually.
      */
     destroy() {
+
+        const morph = this.morph;
+        if (morph) {
+
+            // this decreases ref count on the morph
+            this.morph = null;
+
+            // destroy morph
+            if (morph.getRefCount() < 1) {
+                morph.destroy();
+            }
+        }
+
         if (this.vertexBuffer) {
             this.vertexBuffer.destroy();
             this.vertexBuffer = null;
