@@ -1,6 +1,7 @@
 import { Application } from '../../src/framework/application.js';
 import { Asset } from '../../src/asset/asset.js';
 import { AssetRegistry } from '../../src/asset/asset-registry.js';
+import { GlbContainerResource } from '../../src/resources/parser/glb-container-resource.js';
 import { ResourceLoader } from '../../src/resources/loader.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
@@ -34,10 +35,25 @@ describe('AssetRegistry', function () {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
-        it.skip('loads container assets', function (done) {
+        it('loads binary assets', function (done) {
+            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', function (err, asset) {
+                expect(err).to.be.null;
+                expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.instanceof(ArrayBuffer);
+                expect(asset.resource.byteLength).to.equal(8);
+                const bytes = new Uint8Array(asset.resource);
+                for (let i = 0; i < 8; i++) {
+                    expect(bytes[i]).to.equal(i);
+                }
+                done();
+            });
+        });
+
+        it('loads container assets', function (done) {
             app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', function (err, asset) {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.instanceof(GlbContainerResource);
                 done();
             });
         });
@@ -48,6 +64,15 @@ describe('AssetRegistry', function () {
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
                 expect(asset.resource).to.equal('body { color: red }');
+                done();
+            });
+        });
+
+        it.skip('loads html assets', function (done) {
+            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', function (err, asset) {
+                expect(err).to.be.null;
+                expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.a('string');
                 done();
             });
         });
@@ -64,18 +89,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads shader assets', function (done) {
+        it('loads shader assets', function (done) {
             app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', function (err, asset) {
-                expect(err).to.be.null;
-                expect(asset).to.be.instanceof(Asset);
-                expect(asset.resource).to.be.a('string');
-                expect(asset.resource).to.equal('attribute vec4 position;\r\n\r\nvoid main() {\r\n   gl_Position = position;\r\n}');
-                done();
-            });
-        });
-
-        it.skip('loads html assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', function (err, asset) {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
