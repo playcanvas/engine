@@ -232,7 +232,7 @@ class ClusteredSpotShadowsExample extends Example {
         app.root.addChild(camera);
         camera.setLocalPosition(300 * Math.sin(0), 150, 300 * Math.cos(0));
 
-        // add orbit camera script with a mouse and a touch support
+        // add orbit camera script with mouse and touch support
         camera.addComponent("script");
         camera.script.create("orbitCamera", {
             attributes: {
