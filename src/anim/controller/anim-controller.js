@@ -264,7 +264,7 @@ class AnimController {
 
         // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
-            transitions.concat(this._findTransitionsBetweenStates(from, to));
+            transitions = transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
             // If no transition is active, look for transitions from the active & any states.
             if (!this._isTransitioning) {
