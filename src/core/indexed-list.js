@@ -44,7 +44,7 @@ class IndexedList {
      * Return the item indexed by a key.
      *
      * @param {string} key - The key of the item to retrieve.
-     * @returns {object} The item stored at key.
+     * @returns {object|null} The item stored at key. Returns null if key is not in the index.
      * @private
      */
     get(key) {

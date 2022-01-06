@@ -957,8 +957,8 @@ class LayerComposition extends EventHandler {
      * Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
      *
      * @param {number} id - An ID of the layer to find.
-     * @returns {Layer} The layer corresponding to the specified ID. Returns null if layer is not
-     * found.
+     * @returns {Layer|null} The layer corresponding to the specified ID. Returns null if layer is
+     * not found.
      */
     getLayerById(id) {
         for (let i = 0; i < this.layerList.length; i++) {
@@ -971,8 +971,8 @@ class LayerComposition extends EventHandler {
      * Finds a layer inside this composition by its name. Null is returned, if nothing is found.
      *
      * @param {string} name - The name of the layer to find.
-     * @returns {Layer} The layer corresponding to the specified name. Returns null if layer is not
-     * found.
+     * @returns {Layer|null} The layer corresponding to the specified name. Returns null if layer
+     * is not found.
      */
     getLayerByName(name) {
         for (let i = 0; i < this.layerList.length; i++) {

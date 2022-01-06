@@ -611,7 +611,7 @@ class ScriptComponent extends Component {
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
      * -1, which means append it at the end.
-     * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfully attached
+     * @returns {ScriptType|null} Returns an instance of a {@link ScriptType} if successfully attached
      * to an entity, or null if it failed because a script with a same name has already been added
      * or if the {@link ScriptType} cannot be found by name in the {@link ScriptRegistry}.
      * @example

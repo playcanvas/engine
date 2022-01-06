@@ -34,8 +34,9 @@ const reservedScriptNames = new Set([
  * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
  * {@link Application}.
- * @returns {Class<ScriptType>} A class type (constructor function) that inherits {@link ScriptType},
+ * @returns {Class<ScriptType>|null} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
+ * Returns null if there was an error.
  * @example
  * var Turning = pc.createScript('turn');
  *

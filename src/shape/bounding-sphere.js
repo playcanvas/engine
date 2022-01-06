@@ -58,7 +58,7 @@ class BoundingSphere {
 
         // exit if ray's origin outside of sphere (c > 0) and ray pointing away from s (b > 0)
         if (c > 0 && b > 0)
-            return null;
+            return false;
 
         const discr = b * b - c;
         // a negative discriminant corresponds to ray missing sphere
