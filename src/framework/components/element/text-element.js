@@ -642,7 +642,6 @@ class TextElement {
 
         let fontMinY = 0;
         let fontMaxY = 0;
-        let scale = 1;
 
         let char, data, quad, nextchar;
 
@@ -712,7 +711,7 @@ class TextElement {
             numCharsThisLine = 0;
             numBreaksThisLine = 0;
 
-            scale = this._fontSize / MAGIC;
+            const scale = this._fontSize / MAGIC;
 
             // scale max font extents
             fontMinY = this._fontMinY * scale;
