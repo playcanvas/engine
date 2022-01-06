@@ -80,7 +80,6 @@ Object.assign(ObjModelParser.prototype, {
                 } else if (parts.length === 5) {
                     // quads
                     var order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;
-                    p = 1;
                     for (var o = 0; o < order.length; o++) {
                         p = order[o];
                         r = this._parseIndices(parts[p]);
