@@ -196,7 +196,7 @@ class BatchManager {
      * otherwise.
      *
      * @param {string} name - Name.
-     * @returns {BatchGroup} Group object.
+     * @returns {BatchGroup|null} The batch group matching the name or null if not found.
      */
     getGroupByName(name) {
         const groups = this._batchGroups;

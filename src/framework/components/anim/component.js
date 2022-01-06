@@ -225,7 +225,7 @@ class AnimComponent extends Component {
     /**
      * Returns the base layer of the state graph.
      *
-     * @type {AnimComponentLayer}
+     * @type {AnimComponentLayer|null}
      */
     get baseLayer() {
         if (this._layers.length > 0) {

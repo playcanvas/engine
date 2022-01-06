@@ -608,7 +608,6 @@ if (hasAudioContext()) {
          * @function
          * @description Creates the source for the instance.
          */
-
         _createSource: function () {
             if (!this._sound) {
                 return null;

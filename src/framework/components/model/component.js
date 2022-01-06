@@ -95,7 +95,7 @@ class ModelComponent extends Component {
      * An array of meshInstances contained in the component's model. If model is not set or loaded
      * for component it will return null.
      *
-     * @type {MeshInstance[]}
+     * @type {MeshInstance[]|null}
      */
     set meshInstances(value) {
         if (!this._model)

@@ -211,7 +211,7 @@ class SoundComponent extends Component {
      * its audio asset is loaded.
      * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be
      * played by this slot.
-     * @returns {SoundSlot} The new slot.
+     * @returns {SoundSlot|null} The new slot or null if the slot already exists.
      * @example
      * // get an asset by id
      * var asset = app.assets.get(10);
@@ -275,7 +275,9 @@ class SoundComponent extends Component {
      * created and played.
      *
      * @param {string} name - The name of the {@link SoundSlot} to play.
-     * @returns {SoundInstance} The sound instance that will be played.
+     * @returns {SoundInstance|null} The sound instance that will be played. Returns null if the
+     * component or its parent entity is disabled or if the SoundComponent has no slot with the
+     * specified name.
      * @example
      * // get asset by id
      * var asset = app.assets.get(10);
