@@ -1,3 +1,4 @@
+// Scratch buffer for bytesToInt32
 const buffer = new ArrayBuffer(4);
 const view = new DataView(buffer);
 
