@@ -361,7 +361,6 @@ let _params = new Set();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {object} chunks Object containing custom shader chunks that will replace default ones.
  * @property {updateShaderCallback} onUpdateShader A custom function that will be called after all
  * shader generator properties are collected and before shader code is generated. This function
  * will receive an object with shader generator settings (based on current material and scene
@@ -449,6 +448,7 @@ class StandardMaterial extends Material {
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
+    /* eslint-disable jsdoc/check-types */
     /**
      * Create a new StandardMaterial instance.
      *
@@ -490,18 +490,34 @@ class StandardMaterial extends Material {
 
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
-        this.reset();
-    }
-
-    reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
             this[`_${name}`] = _props[name].value();
         });
 
+        /**
+         * @type {Object.<string, string>}
+         * @private
+         */
         this._chunks = { };
         this._uniformCache = { };
     }
+
+    /**
+     * Object containing custom shader chunks that will replace default ones.
+     *
+     * @type {Object.<string, string>}
+     */
+    set chunks(value) {
+        this._dirtyShader = true;
+        this._chunks = value;
+    }
+
+    get chunks() {
+        this._dirtyShader = true;
+        return this._chunks;
+    }
+    /* eslint-enable jsdoc/check-types */
 
     /**
      * Duplicates a Standard material. All properties are duplicated except textures where only the
@@ -967,19 +983,6 @@ function _defineAlias(newName, oldName) {
     });
 }
 
-function _defineChunks() {
-    Object.defineProperty(StandardMaterial.prototype, "chunks", {
-        get: function () {
-            this._dirtyShader = true;
-            return this._chunks;
-        },
-        set: function (value) {
-            this._dirtyShader = true;
-            this._chunks = value;
-        }
-    });
-}
-
 function _defineFlag(name, defaultValue) {
     defineProp({
         name: name,
@@ -1047,8 +1050,6 @@ function _defineMaterialProps() {
 
         return uniform;
     });
-
-    _defineChunks();
 
     _defineFlag("ambientTint", false);
     _defineFlag("diffuseTint", false);
