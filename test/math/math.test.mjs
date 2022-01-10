@@ -59,10 +59,24 @@ describe('math', function () {
 
     describe('#bytesToInt32', function () {
 
-        it('converts a 4-element byte array to an integer', function () {
-            var b = [0xaa, 0xbb, 0xcc, 0xdd];
-            var i = math.bytesToInt32(b);
-            expect(i).to.equal(0xaabbccdd);
+        it('packs 4 unsigned bytes into a 32-bit unsigned int', function () {
+            const uint32 = math.bytesToInt32(0xaa, 0xbb, 0xcc, 0xdd);
+            expect(uint32).to.equal(0xaabbccdd);
+        });
+
+        it('packs an array of 4 unsigned bytes into a 32-bit unsigned int', function () {
+            var uint32 = math.bytesToInt32([0xaa, 0xbb, 0xcc, 0xdd]);
+            expect(uint32).to.equal(0xaabbccdd);
+        });
+
+        it('returns 0 when all supplied bytes are 0', function () {
+            const uint32 = math.bytesToInt32(0, 0, 0, 0);
+            expect(uint32).to.equal(0);
+        });
+
+        it('returns 2 ^ 32 - 1 when all supplied bytes are 255', function () {
+            const uint32 = math.bytesToInt32(255, 255, 255, 255);
+            expect(uint32).to.equal(Math.pow(2, 32) - 1);
         });
 
     });
