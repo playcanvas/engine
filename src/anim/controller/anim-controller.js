@@ -520,7 +520,7 @@ class AnimController {
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                const interpolatedTime = this._totalTransitionTime === 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
+                const interpolatedTime = this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);
