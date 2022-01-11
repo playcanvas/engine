@@ -970,17 +970,6 @@ function _defineObject(name, getUniformFunc) {
     defineUniform(name, getUniformFunc);
 }
 
-function _defineAlias(newName, oldName) {
-    Object.defineProperty(StandardMaterial.prototype, oldName, {
-        get: function () {
-            return this[newName];
-        },
-        set: function (value) {
-            this[newName] = value;
-        }
-    });
-}
-
 function _defineFlag(name, defaultValue) {
     defineProp({
         name: name,
@@ -1096,18 +1085,6 @@ function _defineMaterialProps() {
     _defineObject("cubeMap");
     _defineObject("sphereMap");
     _defineObject("envAtlas");
-
-    _defineAlias("diffuseTint", "diffuseMapTint");
-    _defineAlias("specularTint", "specularMapTint");
-    _defineAlias("emissiveTint", "emissiveMapTint");
-    _defineAlias("aoVertexColor", "aoMapVertexColor");
-    _defineAlias("diffuseVertexColor", "diffuseMapVertexColor");
-    _defineAlias("specularVertexColor", "specularMapVertexColor");
-    _defineAlias("emissiveVertexColor", "emissiveMapVertexColor");
-    _defineAlias("metalnessVertexColor", "metalnessMapVertexColor");
-    _defineAlias("glossVertexColor", "glossMapVertexColor");
-    _defineAlias("opacityVertexColor", "opacityMapVertexColor");
-    _defineAlias("lightVertexColor", "lightMapVertexColor");
 
     // prefiltered cubemap getter
     const getterFunc = function () {

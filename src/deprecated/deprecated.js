@@ -638,6 +638,31 @@ Material.prototype.setShader = function (shader) {
     this.shader = shader;
 };
 
+function _defineAlias(newName, oldName) {
+    Object.defineProperty(StandardMaterial.prototype, oldName, {
+        get: function () {
+            Debug.deprecated(`pc.StandardMaterial#${oldName} is deprecated. Use pc.StandardMaterial#${newName} instead.`);
+            return this[newName];
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.StandardMaterial#${oldName} is deprecated. Use pc.StandardMaterial#${newName} instead.`);
+            this[newName] = value;
+        }
+    });
+}
+
+_defineAlias("diffuseTint", "diffuseMapTint");
+_defineAlias("specularTint", "specularMapTint");
+_defineAlias("emissiveTint", "emissiveMapTint");
+_defineAlias("aoVertexColor", "aoMapVertexColor");
+_defineAlias("diffuseVertexColor", "diffuseMapVertexColor");
+_defineAlias("specularVertexColor", "specularMapVertexColor");
+_defineAlias("emissiveVertexColor", "emissiveMapVertexColor");
+_defineAlias("metalnessVertexColor", "metalnessMapVertexColor");
+_defineAlias("glossVertexColor", "glossMapVertexColor");
+_defineAlias("opacityVertexColor", "opacityMapVertexColor");
+_defineAlias("lightVertexColor", "lightMapVertexColor");
+
 // ANIMATION
 
 export const anim = {
