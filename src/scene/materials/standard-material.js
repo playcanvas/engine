@@ -483,7 +483,6 @@ class StandardMaterial extends Material {
 
         // storage for texture and cubemap asset references
         this._assetReferences = {};
-        this._validator = null;
 
         this._activeParams = new Set();
         this._activeLightingParams = new Set();
@@ -744,7 +743,6 @@ class StandardMaterial extends Material {
             this._assetReferences[asset]._unbind();
         }
         this._assetReferences = null;
-        this._validator = null;
 
         super.destroy();
     }
