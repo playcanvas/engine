@@ -115,7 +115,7 @@ const math = {
 
         // Why ((r << 24)>>>0)?
         // << operator uses signed 32 bit numbers, so 128<<24 is negative.
-        // >>> used unsigned so >>>32 converts back to an unsigned.
+        // >>> used unsigned so >>>0 converts back to an unsigned.
         // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
         return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
     },
