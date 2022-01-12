@@ -103,9 +103,8 @@ class ContainerHandler {
     }
 
     _getParser(url) {
-        const ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
+        const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
         return this.parsers[ext] || this.glbParser;
-
     }
 
     load(url, callback, asset) {
