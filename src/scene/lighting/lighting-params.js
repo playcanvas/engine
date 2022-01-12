@@ -22,7 +22,7 @@ class LightingParams {
 
         // atlas split strategy
         // undefined: per frame split atlas into equally sized squares for each shadowmap needed
-        // array: first number specifies tol subdivision of the atlas, following numbers split next level (2 levels only)
+        // array: first number specifies top subdivision of the atlas, following numbers split next level (2 levels only)
         this.atlasSplit = undefined;
 
         // Layer ID of a layer for which the debug clustering is rendered
