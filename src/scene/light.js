@@ -506,7 +506,7 @@ class Light {
 
     // prepares light for the frame rendering
     beginFrame() {
-        this.visibleThisFrame = this._type === LIGHTTYPE_DIRECTIONAL;
+        this.visibleThisFrame = this._type === LIGHTTYPE_DIRECTIONAL && this._enabled;
         this.maxScreenSize = 0;
         this.atlasViewportAllocated = false;
         this.atlasSlotUpdated = false;
