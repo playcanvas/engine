@@ -33,6 +33,8 @@ const directionalCascades = [
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
 ];
 
+let id = 0;
+
 // Class storing shadow rendering related private information
 class LightRenderData {
     constructor(device, camera, face, light) {
@@ -92,6 +94,7 @@ class LightRenderData {
 class Light {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        this.id = id++;
 
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
@@ -167,6 +170,10 @@ class Light {
 
         // viewport of the cookie texture / shadow in the atlas
         this._atlasViewport = null;
+        this.atlasViewportAllocated = false;    // if true, atlas slot is allocated for the current frame
+        this.atlasVersion = 0;      // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
+        this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
+        this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
 
         this._scene = null;
         this._node = null;
@@ -176,6 +183,15 @@ class Light {
 
         // true if the light is visible by any camera within a frame
         this.visibleThisFrame = false;
+
+        // maximum size of the light bouding sphere on the screen by any camera within a frame
+        // (used to estimate shadow resolution), range [0..1]
+        this.maxScreenSize = 0;
+    }
+
+    destroy() {
+        this._destroyShadowMap();
+        this._renderData = null;
     }
 
     set numCascades(value) {
@@ -488,9 +504,12 @@ class Light {
         return this._cookieOffset;
     }
 
-    destroy() {
-        this._destroyShadowMap();
-        this._renderData = null;
+    // prepares light for the frame rendering
+    beginFrame() {
+        this.visibleThisFrame = this._type === LIGHTTYPE_DIRECTIONAL;
+        this.maxScreenSize = 0;
+        this.atlasViewportAllocated = false;
+        this.atlasSlotUpdated = false;
     }
 
     // destroys shadow map related resources, called when shadow properties change and resources
