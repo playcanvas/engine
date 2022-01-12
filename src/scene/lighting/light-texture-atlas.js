@@ -88,6 +88,10 @@ class LightTextureAtlas {
 
     allocateShadowAtlas(resolution) {
         if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution) {
+
+            // content of atlas is lost, force re-render of static shadows
+            this.version++;
+
             this.destroyShadowAtlas();
             this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
 
@@ -103,6 +107,10 @@ class LightTextureAtlas {
 
     allocateCookieAtlas(resolution) {
         if (!this.cookieAtlas || this.cookieAtlas.width !== resolution) {
+
+            // content of atlas is lost, force re-render of static cookies
+            this.version++;
+
             this.destroyCookieAtlas();
             this.cookieAtlas = CookieRenderer.createTexture(this.device, resolution);
 
