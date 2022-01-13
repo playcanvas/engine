@@ -173,6 +173,14 @@ body {
     margin-left: 47px;
 }
 
+#sideBar:not(.small-thumbnails) .small-thumbnail {
+    display: none;
+}
+
+#sideBar.small-thumbnails .large-thumbnail {
+    display: none;
+}
+
 #sideBar .nav-item-text a {
     text-decoration: none;
     color: rgb(177, 184, 186) !important;

@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class VRHandsExample extends Example {
+
+class VRHandsExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Hands';
 

@@ -1,17 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import SliderInput from '@playcanvas/pcui/SliderInput/component';
 // @ts-ignore: library file import
 import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
 // @ts-ignore: library file import
 import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class BlendTrees1DExample extends Example {
+class BlendTrees1DExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
 

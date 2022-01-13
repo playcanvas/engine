@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -18,7 +18,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class LayerMasksExample extends Example {
+class LayerMasksExample {
     static CATEGORY = 'Animation';
     static NAME = 'Layer Masks';
 

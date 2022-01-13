@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 // Attributes per vertex: position, normal and texture coordinates
@@ -59,7 +59,7 @@ void main(void)
 }
 `;
 
-class ShaderToonExample extends Example {
+class ShaderToonExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Toon';
 

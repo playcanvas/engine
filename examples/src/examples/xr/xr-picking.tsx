@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class XRPickingExample extends Example {
+
+class XRPickingExample {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 

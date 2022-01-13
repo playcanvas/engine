@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class RaycastExample extends Example {
+class RaycastExample {
     static CATEGORY = 'Physics';
     static NAME = 'Raycast';
 

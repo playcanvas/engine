@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class CompoundCollisionExample extends Example {
+
+class CompoundCollisionExample {
     static CATEGORY = 'Physics';
     static NAME = 'Compound Collision';
 

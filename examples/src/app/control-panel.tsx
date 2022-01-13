@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // @ts-ignore: library file import
-import { playcanvasTypeDefs } from './helpers/raw-file-loading';
+import playcanvasTypeDefs from './helpers/playcanvas-type-defs';
 import MonacoEditor from "@monaco-editor/react";
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';

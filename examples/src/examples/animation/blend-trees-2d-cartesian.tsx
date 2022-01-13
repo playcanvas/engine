@@ -1,11 +1,11 @@
 import React, { useEffect, createRef } from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class BlendTrees2DCartesianExample extends Example {
+class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
 

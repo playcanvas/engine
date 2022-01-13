@@ -1,10 +1,8 @@
 // @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.dbg.js';
-// @ts-ignore: library file import
-import * as pcx from 'playcanvas/build/playcanvas-extras.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class MiniStatsExample extends Example {
+
+class MiniStatsExample {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
     static ENGINE = 'DEBUG';

@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshaderFeedback = `
 // vertex shader used to move particles during transform-feedback simulation step
@@ -91,7 +91,7 @@ void main(void)
 }
 `;
 
-class TransformFeedbackExample extends Example {
+class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Transform Feedback';
 

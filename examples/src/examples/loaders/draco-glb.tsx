@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class DracoGLBExample extends Example {
+
+class DracoGLBExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
 

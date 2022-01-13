@@ -1,9 +1,8 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader, ScriptLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class TweenExample extends Example {
+class TweenExample {
     static CATEGORY = 'Animation';
     static NAME = 'Tween';
 
