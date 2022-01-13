@@ -1074,7 +1074,7 @@ class ForwardRenderer {
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
-            if (isClustered) {
+            if (isClustered && light._type !== LIGHTTYPE_DIRECTIONAL) {
 
                 // skip clustered shadows with no assigned atlas slot
                 if (!light.atlasViewportAllocated) {
