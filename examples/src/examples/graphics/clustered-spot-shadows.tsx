@@ -139,7 +139,7 @@ class ClusteredSpotShadowsExample extends Example {
         lighting.cookieAtlasResolution = 1500;
 
         const splitOptions = [
-            undefined,          // automatic - split atlas each frame to give all required lights an equal size
+            null,               // automatic - split atlas each frame to give all required lights an equal size
             [2, 1, 1, 2, 1],    // 7 shadows: split atlas to 2x2 (first number), and split created quarters to 1x1, 1x1, 2x2, 1x1
             [3, 2],             // 12 shadows: split atlas to 3x3 (first number), and split one of the created parts to 2x2
             [4]                 // 16 shadows: split atlas to 4x4
