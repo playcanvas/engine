@@ -7,7 +7,7 @@ describe('math', function () {
     describe('#DEG_TO_RAD', function () {
 
         it('converts degrees to radians', function () {
-            var deg = 180;
+            const deg = 180;
             expect(deg * math.DEG_TO_RAD).to.equal(Math.PI);
         });
 
@@ -16,7 +16,7 @@ describe('math', function () {
     describe('#RAD_TO_DEG', function () {
 
         it('converts radians to degrees', function () {
-            var rad = Math.PI;
+            const rad = Math.PI;
             expect(rad * math.RAD_TO_DEG).to.equal(180);
         });
 
@@ -49,20 +49,48 @@ describe('math', function () {
 
     describe('#bytesToInt24', function () {
 
-        it('converts a 3-element byte array to an integer', function () {
-            var b = [0xaa, 0xbb, 0xcc];
-            var i = math.bytesToInt24(b);
-            expect(i).to.equal(0xaabbcc);
+        it('packs 3 unsigned bytes into a 24-bit unsigned int', function () {
+            const uint24 = math.bytesToInt24(0xaa, 0xbb, 0xcc);
+            expect(uint24).to.equal(0xaabbcc);
+        });
+
+        it('packs an array of 3 unsigned bytes into a 24-bit unsigned int', function () {
+            const uint24 = math.bytesToInt24([0xaa, 0xbb, 0xcc]);
+            expect(uint24).to.equal(0xaabbcc);
+        });
+
+        it('returns 0 when all supplied bytes are 0', function () {
+            const uint24 = math.bytesToInt24(0, 0, 0);
+            expect(uint24).to.equal(0);
+        });
+
+        it('returns 2 ^ 24 - 1 when all supplied bytes are 255', function () {
+            const uint24 = math.bytesToInt24(255, 255, 255);
+            expect(uint24).to.equal(Math.pow(2, 24) - 1);
         });
 
     });
 
     describe('#bytesToInt32', function () {
 
-        it('converts a 4-element byte array to an integer', function () {
-            var b = [0xaa, 0xbb, 0xcc, 0xdd];
-            var i = math.bytesToInt32(b);
-            expect(i).to.equal(0xaabbccdd);
+        it('packs 4 unsigned bytes into a 32-bit unsigned int', function () {
+            const uint32 = math.bytesToInt32(0xaa, 0xbb, 0xcc, 0xdd);
+            expect(uint32).to.equal(0xaabbccdd);
+        });
+
+        it('packs an array of 4 unsigned bytes into a 32-bit unsigned int', function () {
+            const uint32 = math.bytesToInt32([0xaa, 0xbb, 0xcc, 0xdd]);
+            expect(uint32).to.equal(0xaabbccdd);
+        });
+
+        it('returns 0 when all supplied bytes are 0', function () {
+            const uint32 = math.bytesToInt32(0, 0, 0, 0);
+            expect(uint32).to.equal(0);
+        });
+
+        it('returns 2 ^ 32 - 1 when all supplied bytes are 255', function () {
+            const uint32 = math.bytesToInt32(255, 255, 255, 255);
+            expect(uint32).to.equal(Math.pow(2, 32) - 1);
         });
 
     });
@@ -86,8 +114,8 @@ describe('math', function () {
     describe('#intToBytes24', function () {
 
         it('converts an integer to a 3-element byte array', function () {
-            var i = 0x112233;
-            var b = math.intToBytes24(i);
+            const i = 0x112233;
+            const b = math.intToBytes24(i);
             expect(b[0]).to.equal(0x11);
             expect(b[1]).to.equal(0x22);
             expect(b[2]).to.equal(0x33);
@@ -98,8 +126,8 @@ describe('math', function () {
     describe('#intToBytes32', function () {
 
         it('converts an integer to a 4-element byte array', function () {
-            var i = 0x11223344;
-            var b = math.intToBytes32(i);
+            const i = 0x11223344;
+            const b = math.intToBytes32(i);
             expect(b[0]).to.equal(0x11);
             expect(b[1]).to.equal(0x22);
             expect(b[2]).to.equal(0x33);
@@ -206,7 +234,7 @@ describe('math', function () {
     describe('#random', function () {
 
         it('returns a random number between 0 and 1', function () {
-            var r = math.random(100, 101);
+            const r = math.random(100, 101);
             expect(r).to.be.at.least(100);
             expect(r).to.be.at.most(101);
         });

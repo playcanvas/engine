@@ -361,7 +361,6 @@ let _params = new Set();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {object} chunks Object containing custom shader chunks that will replace default ones.
  * @property {updateShaderCallback} onUpdateShader A custom function that will be called after all
  * shader generator properties are collected and before shader code is generated. This function
  * will receive an object with shader generator settings (based on current material and scene
@@ -449,6 +448,7 @@ class StandardMaterial extends Material {
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
+    /* eslint-disable jsdoc/check-types */
     /**
      * Create a new StandardMaterial instance.
      *
@@ -483,25 +483,40 @@ class StandardMaterial extends Material {
 
         // storage for texture and cubemap asset references
         this._assetReferences = {};
-        this._validator = null;
 
         this._activeParams = new Set();
         this._activeLightingParams = new Set();
 
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
-        this.reset();
-    }
-
-    reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
             this[`_${name}`] = _props[name].value();
         });
 
+        /**
+         * @type {Object.<string, string>}
+         * @private
+         */
         this._chunks = { };
         this._uniformCache = { };
     }
+
+    /**
+     * Object containing custom shader chunks that will replace default ones.
+     *
+     * @type {Object.<string, string>}
+     */
+    set chunks(value) {
+        this._dirtyShader = true;
+        this._chunks = value;
+    }
+
+    get chunks() {
+        this._dirtyShader = true;
+        return this._chunks;
+    }
+    /* eslint-enable jsdoc/check-types */
 
     /**
      * Duplicates a Standard material. All properties are duplicated except textures where only the
@@ -728,7 +743,6 @@ class StandardMaterial extends Material {
             this._assetReferences[asset]._unbind();
         }
         this._assetReferences = null;
-        this._validator = null;
 
         super.destroy();
     }
@@ -956,30 +970,6 @@ function _defineObject(name, getUniformFunc) {
     defineUniform(name, getUniformFunc);
 }
 
-function _defineAlias(newName, oldName) {
-    Object.defineProperty(StandardMaterial.prototype, oldName, {
-        get: function () {
-            return this[newName];
-        },
-        set: function (value) {
-            this[newName] = value;
-        }
-    });
-}
-
-function _defineChunks() {
-    Object.defineProperty(StandardMaterial.prototype, "chunks", {
-        get: function () {
-            this._dirtyShader = true;
-            return this._chunks;
-        },
-        set: function (value) {
-            this._dirtyShader = true;
-            this._chunks = value;
-        }
-    });
-}
-
 function _defineFlag(name, defaultValue) {
     defineProp({
         name: name,
@@ -1048,8 +1038,6 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineChunks();
-
     _defineFlag("ambientTint", false);
     _defineFlag("diffuseTint", false);
     _defineFlag("specularTint", false);
@@ -1097,18 +1085,6 @@ function _defineMaterialProps() {
     _defineObject("cubeMap");
     _defineObject("sphereMap");
     _defineObject("envAtlas");
-
-    _defineAlias("diffuseTint", "diffuseMapTint");
-    _defineAlias("specularTint", "specularMapTint");
-    _defineAlias("emissiveTint", "emissiveMapTint");
-    _defineAlias("aoVertexColor", "aoMapVertexColor");
-    _defineAlias("diffuseVertexColor", "diffuseMapVertexColor");
-    _defineAlias("specularVertexColor", "specularMapVertexColor");
-    _defineAlias("emissiveVertexColor", "emissiveMapVertexColor");
-    _defineAlias("metalnessVertexColor", "metalnessMapVertexColor");
-    _defineAlias("glossVertexColor", "glossMapVertexColor");
-    _defineAlias("opacityVertexColor", "opacityMapVertexColor");
-    _defineAlias("lightVertexColor", "lightMapVertexColor");
 
     // prefiltered cubemap getter
     const getterFunc = function () {

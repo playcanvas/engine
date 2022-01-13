@@ -19,6 +19,9 @@ class LightingParams {
 
         this._cookiesEnabled = false;
         this._cookieAtlasResolution = 2048;
+
+        // Layer ID of a layer for which the debug clustering is rendered
+        this.debugLayer = undefined;
     }
 
     set cells(value) {

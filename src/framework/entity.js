@@ -289,7 +289,7 @@ class Entity extends GraphNode {
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to
      * each specific component's API reference page for details on valid values for this parameter.
-     * @returns {Component} The new Component that was attached to the entity or null if there
+     * @returns {Component|null} The new Component that was attached to the entity or null if there
      * was an error.
      * @example
      * var entity = new pc.Entity();
@@ -468,10 +468,10 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Find a descendant of this Entity with the GUID.
+     * Find a descendant of this entity with the GUID.
      *
      * @param {string} guid - The GUID to search for.
-     * @returns {Entity} The Entity with the GUID or null.
+     * @returns {Entity|null} The entity with the matching GUID or null if no entity is found.
      */
     findByGuid(guid) {
         if (this._guid === guid) return this;

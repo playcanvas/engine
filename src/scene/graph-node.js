@@ -367,7 +367,8 @@ class GraphNode extends EventHandler {
      * checked for equality against the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
-     * @returns {GraphNode} A graph node that match the search criteria.
+     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * node is found.
      * @example
      * // Find the first node that is called `head` and has a model component
      * var head = player.findOne(function (node) {
@@ -462,7 +463,8 @@ class GraphNode extends EventHandler {
      * Get the first node found in the graph with the name. The search is depth first.
      *
      * @param {string} name - The name of the graph.
-     * @returns {GraphNode} The first node to be found matching the supplied name.
+     * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
+     * null if no node is found.
      */
     findByName(name) {
         if (this.name === name) return this;
@@ -480,7 +482,8 @@ class GraphNode extends EventHandler {
      *
      * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or
      * array of {@link GraphNode} names.
-     * @returns {GraphNode} The first node to be found matching the supplied path.
+     * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
+     * null if no node is found.
      * @example
      * var path = this.entity.findByPath('child/another_child');
      */

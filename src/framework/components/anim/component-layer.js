@@ -122,7 +122,7 @@ class AnimComponentLayer {
      * If the anim component layer is currently transitioning between states, returns the progress.
      * Otherwise returns null.
      *
-     * @type {number}
+     * @type {number|null}
      */
     get transitionProgress() {
         if (this.transitioning) {

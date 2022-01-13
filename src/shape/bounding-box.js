@@ -288,21 +288,49 @@ class BoundingBox {
      *
      * @param {BoundingBox} aabb - Box to transform and enclose.
      * @param {Mat4} m - Transformation matrix to apply to source AABB.
+     * @param {boolean} ignoreScale - If true is specified, a scale from the matrix is ignored. Defaults to false.
      */
-    setFromTransformedAabb(aabb, m) {
+    setFromTransformedAabb(aabb, m, ignoreScale = false) {
         const ac = aabb.center;
         const ar = aabb.halfExtents;
 
         const d = m.data;
-        const mx0 = d[0];
-        const mx1 = d[4];
-        const mx2 = d[8];
-        const my0 = d[1];
-        const my1 = d[5];
-        const my2 = d[9];
-        const mz0 = d[2];
-        const mz1 = d[6];
-        const mz2 = d[10];
+        let mx0 = d[0];
+        let mx1 = d[4];
+        let mx2 = d[8];
+        let my0 = d[1];
+        let my1 = d[5];
+        let my2 = d[9];
+        let mz0 = d[2];
+        let mz1 = d[6];
+        let mz2 = d[10];
+
+        // renormalize axis if scale is to be ignored
+        if (ignoreScale) {
+            let lengthSq = mx0 * mx0 + mx1 * mx1 + mx2 * mx2;
+            if (lengthSq > 0) {
+                const invLength = 1 / Math.sqrt(lengthSq);
+                mx0 *= invLength;
+                mx1 *= invLength;
+                mx2 *= invLength;
+            }
+
+            lengthSq = my0 * my0 + my1 * my1 + my2 * my2;
+            if (lengthSq > 0) {
+                const invLength = 1 / Math.sqrt(lengthSq);
+                my0 *= invLength;
+                my1 *= invLength;
+                my2 *= invLength;
+            }
+
+            lengthSq = mz0 * mz0 + mz1 * mz1 + mz2 * mz2;
+            if (lengthSq > 0) {
+                const invLength = 1 / Math.sqrt(lengthSq);
+                mz0 *= invLength;
+                mz1 *= invLength;
+                mz2 *= invLength;
+            }
+        }
 
         this.center.set(
             d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,

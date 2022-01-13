@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { KeyboardEvent } from './keyboard-event.js';
@@ -5,6 +6,13 @@ import { KeyboardEvent } from './keyboard-event.js';
 // internal global keyboard events
 const _keyboardEvent = new KeyboardEvent();
 
+/**
+ * Convert a browser keyboard event to a PlayCanvas keyboard event.
+ *
+ * @param {globalThis.KeyboardEvent} event - A browser keyboard event.
+ * @returns {KeyboardEvent} A PlayCanvas keyboard event.
+ * @private
+ */
 function makeKeyboardEvent(event) {
     _keyboardEvent.key = event.keyCode;
     _keyboardEvent.element = event.target;
@@ -131,6 +139,7 @@ class Keyboard extends EventHandler {
             // remove previous attached element
             this.detach();
         }
+
         this._element = element;
         this._element.addEventListener("keydown", this._keyDownHandler, false);
         this._element.addEventListener("keypress", this._keyPressHandler, false);
@@ -143,10 +152,16 @@ class Keyboard extends EventHandler {
      * Detach the keyboard event handlers from the element it is attached to.
      */
     detach() {
+        if (!this._element) {
+            Debug.warn('Unable to detach keyboard. It is not attached to an element.');
+            return;
+        }
+
         this._element.removeEventListener("keydown", this._keyDownHandler);
         this._element.removeEventListener("keypress", this._keyPressHandler);
         this._element.removeEventListener("keyup", this._keyUpHandler);
         this._element = null;
+
         document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.removeEventListener('blur', this._windowBlurHandler, false);
     }
@@ -176,6 +191,12 @@ class Keyboard extends EventHandler {
         return 'U+' + hex;
     }
 
+    /**
+     * Process the browser keydown event.
+     *
+     * @param {globalThis.KeyboardEvent} event - The browser keyboard event.
+     * @private
+     */
     _handleKeyDown(event) {
         const code = event.keyCode || event.charCode;
 
@@ -185,9 +206,6 @@ class Keyboard extends EventHandler {
         const id = this.toKeyIdentifier(code);
 
         this._keymap[id] = true;
-
-        // Patch on the keyIdentifier property in non-webkit browsers
-        // event.keyIdentifier = event.keyIdentifier || id;
 
         this.fire("keydown", makeKeyboardEvent(event));
 
@@ -199,6 +217,12 @@ class Keyboard extends EventHandler {
         }
     }
 
+    /**
+     * Process the browser keyup event.
+     *
+     * @param {globalThis.KeyboardEvent} event - The browser keyboard event.
+     * @private
+     */
     _handleKeyUp(event) {
         const code = event.keyCode || event.charCode;
 
@@ -208,9 +232,6 @@ class Keyboard extends EventHandler {
         const id = this.toKeyIdentifier(code);
 
         delete this._keymap[id];
-
-        // Patch on the keyIdentifier property in non-webkit browsers
-        // event.keyIdentifier = event.keyIdentifier || id;
 
         this.fire("keyup", makeKeyboardEvent(event));
 
@@ -222,6 +243,12 @@ class Keyboard extends EventHandler {
         }
     }
 
+    /**
+     * Process the browser keypress event.
+     *
+     * @param {globalThis.KeyboardEvent} event - The browser keyboard event.
+     * @private
+     */
     _handleKeyPress(event) {
         this.fire("keypress", makeKeyboardEvent(event));
 
@@ -233,12 +260,22 @@ class Keyboard extends EventHandler {
         }
     }
 
+    /**
+     * Handle the browser visibilitychange event.
+     *
+     * @private
+     */
     _handleVisibilityChange() {
         if (document.visibilityState === 'hidden') {
             this._handleWindowBlur();
         }
     }
 
+    /**
+     * Handle the browser blur event.
+     *
+     * @private
+     */
     _handleWindowBlur() {
         this._keymap = {};
         this._lastmap = {};

@@ -25,9 +25,11 @@ import Label from '@playcanvas/pcui/Label/component';
 class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Spot Shadows';
+    static ENGINE = 'DEBUG';
 
     load() {
         return <>
+            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
             <AssetLoader name="channels" type="texture" url="static/assets/textures/channels.png" />
             <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
             <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
@@ -58,6 +60,9 @@ class ClusteredSpotShadowsExample {
                 </LabelGroup>
                 <Button text='Add Light' onClick={() => data.emit('add')}/>
                 <Button text='Remove Light' onClick={() => data.emit('remove')}/>
+                <LabelGroup text='Debug'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.debug' }} value={data.get('settings.debug')}/>
+                </LabelGroup>
             </Panel>
         </>;
     }
@@ -73,7 +78,8 @@ class ClusteredSpotShadowsExample {
             shadowType: pc.SHADOW_PCF3,      // shadow filter type
             shadowsEnabled: true,
             cookiesEnabled: true,
-            numLights: 0
+            numLights: 0,
+            debug: false
         });
 
         // setup skydome as ambient light
@@ -91,7 +97,7 @@ class ClusteredSpotShadowsExample {
 
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        lighting.cells = new pc.Vec3(20, 2, 20);
+        lighting.cells = new pc.Vec3(12, 4, 12);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
@@ -150,7 +156,7 @@ class ClusteredSpotShadowsExample {
             return primitive;
         }
 
-        createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(500, 0, 500));
+        const ground = createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(500, 0, 500));
 
         const numTowers = 8;
         for (let i = 0; i < numTowers; i++) {
@@ -220,16 +226,38 @@ class ClusteredSpotShadowsExample {
         const camera = new pc.Entity();
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.2),
-            farClip: 1000,
-            nearClip: 0.1
+            farClip: 2000,
+            nearClip: 1
         });
         app.root.addChild(camera);
+        camera.setLocalPosition(300 * Math.sin(0), 150, 300 * Math.cos(0));
+
+        // add orbit camera script with mouse and touch support
+        camera.addComponent("script");
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+                focusEntity: ground,
+                distanceMax: 1200,
+                frameOnStart: false
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
 
         // handle HUD changes - update properties on the scene
         data.on('*:set', (path: string, value: any) => {
             const pathArray = path.split('.');
-            // @ts-ignore
-            lighting[pathArray[1]] = value;
+
+            if (pathArray[1] === 'debug') {
+
+                // debug rendering of lighting clusters on world layer
+                lighting.debugLayer = value ? app.scene.layers.getLayerByName("World").id : undefined;
+
+            } else {
+                // @ts-ignore
+                lighting[pathArray[1]] = value;
+            }
         });
 
         function updateLightCount() {
@@ -271,10 +299,6 @@ class ClusteredSpotShadowsExample {
 
                 spotlight.rotateLocal(90, 0, 0);
             });
-
-            // orbit the camera
-            camera.setLocalPosition(300 * Math.sin(time * 0.4), 150, 300 * Math.cos(time * 0.4));
-            camera.lookAt(new pc.Vec3(0, 0, 0));
 
             // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
             // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);

@@ -88,7 +88,7 @@ class ClusteredOmniShadowsExample {
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        lighting.maxLightsPerCell = 16;
+        lighting.maxLightsPerCell = 12;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
@@ -210,7 +210,7 @@ class ClusteredOmniShadowsExample {
         const camera = new pc.Entity();
         camera.addComponent("camera", {
             fov: 80,
-            clearColor: new pc.Color(0.9, 0.9, 0.9),
+            clearColor: new pc.Color(0.1, 0.1, 0.1),
             farClip: 1500
         });
 
@@ -223,7 +223,8 @@ class ClusteredOmniShadowsExample {
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: app.root,
-                distanceMax: 400
+                distanceMax: 1200,
+                frameOnStart: false
             }
         });
         camera.script.create("orbitCameraInputMouse");

@@ -63,8 +63,9 @@ class SoundComponentSystem extends ComponentSystem {
 
     /**
      * Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
+     * Returns null if the device does not support the Web Audio API.
      *
-     * @type {AudioContext}
+     * @type {AudioContext|null}
      */
     get context() {
         if (!hasAudioContext()) {

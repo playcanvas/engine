@@ -92,7 +92,7 @@
     "serve": "^13.0.2",
     "sinon": "^12.0.1",
     "typescript": "^4.5.4",
-    "xmlhttprequest": "1.8.0"
+    "xhr2": "^0.2.1"
   },
   "scripts": {
     "build": "rollup -c",

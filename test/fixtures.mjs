@@ -1,6 +1,6 @@
 import handler from 'serve-handler';
 import http from 'http';
-import { XMLHttpRequest } from 'xmlhttprequest';
+import XMLHttpRequest from 'xhr2';
 
 let server;
 

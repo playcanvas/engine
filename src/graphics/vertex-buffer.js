@@ -18,7 +18,7 @@ class VertexBuffer {
      * buffer.
      * @param {VertexFormat} format - The vertex format of this vertex buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
-     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
      * @param {ArrayBuffer} [initialData] - Initial data.
      */
     constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {

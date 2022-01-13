@@ -11,6 +11,7 @@ class ClusteredLightingExample {
 
     load() {
         return <>
+            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
             <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
         </>;
     }
@@ -154,7 +155,7 @@ class ClusteredLightingExample {
             color: pc.Color.WHITE,
             intensity: 0.2,
             range: 300,
-            shadowDistance: 300,
+            shadowDistance: 600,
             castShadows: true,
             shadowBias: 0.2,
             normalOffsetBias: 0.05
@@ -164,12 +165,25 @@ class ClusteredLightingExample {
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.2, 0.2),
+            clearColor: new pc.Color(0.05, 0.05, 0.05),
             farClip: 500,
             nearClip: 0.1
         });
-        camera.setLocalPosition(120, 120, 120);
+        camera.setLocalPosition(140, 140, 140);
         camera.lookAt(new pc.Vec3(0, 40, 0));
+
+        // add orbit camera script with mouse and touch support
+        camera.addComponent("script");
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+                focusEntity: app.root,
+                distanceMax: 400,
+                frameOnStart: false
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
 
         // Set an update function on the app's update event

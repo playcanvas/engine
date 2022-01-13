@@ -362,7 +362,7 @@ class Asset extends EventHandler {
     /**
      * Return the URL required to fetch the file for this asset.
      *
-     * @returns {string} The URL.
+     * @returns {string|null} The URL. Returns null if the asset has no associated file.
      * @example
      * var assets = app.assets.find("My Image", "texture");
      * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";

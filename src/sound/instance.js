@@ -607,8 +607,9 @@ if (hasAudioContext()) {
          * @private
          * @function
          * @description Creates the source for the instance.
+         * @returns {AudioBufferSourceNode|null} Returns the created source or null if the sound
+         * instance has no {@link Sound} associated with it.
          */
-
         _createSource: function () {
             if (!this._sound) {
                 return null;
