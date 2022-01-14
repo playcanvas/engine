@@ -338,6 +338,12 @@ class LightTextureAtlas {
             }
 
             // assign slots to lights
+            // The slot to light assignment logic:
+            // - internally the atlas slots are sorted in the descending order (done when atlas split changes)
+            // - every frame all visible lights are sorted by their screen space size (this handles all cameras where lights
+            //   are visible using max value)
+            // - all lights in this order get a slot size from the slot list in the same order. Care is taken to not reassign
+            //   slot if the size of it is the same and only index changes - this is done using two pass assignment
             const assignCount = Math.min(lights.length, slots.length);
 
             // first pass - preserve allocated slots for lights requiring slot of the same size
