@@ -184,7 +184,7 @@ class Light {
         // true if the light is visible by any camera within a frame
         this.visibleThisFrame = false;
 
-        // maximum size of the light bouding sphere on the screen by any camera within a frame
+        // maximum size of the light bounding sphere on the screen by any camera within a frame
         // (used to estimate shadow resolution), range [0..1]
         this.maxScreenSize = 0;
     }
