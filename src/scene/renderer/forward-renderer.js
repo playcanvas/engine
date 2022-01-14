@@ -26,7 +26,7 @@ import {
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
+    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -873,25 +873,32 @@ class ForwardRenderer {
     }
 
     cullLights(camera, lights) {
+
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
-            // if enabled light is not already marked as visible
-            if (!light.visibleThisFrame && light.enabled) {
+            if (light.enabled) {
 
-                if (light._type === LIGHTTYPE_DIRECTIONAL) {
-                    light.visibleThisFrame = true;
-                } else {
+                // directional lights are marked visible at the start of the frame
+                if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
+
+                        // maximum screen area taken by the light
+                        const screenSize = camera.getScreenSize(tempSphere);
+                        light.maxScreenSize = Math.max(light.maxScreenSize, screenSize);
                     } else {
                         // if shadow casting light does not have shadow map allocated, mark it visible to allocate shadow map
                         // Note: This won't be needed when clustered shadows are used, but at the moment even culled out lights
                         // are used for rendering, and need shadow map to be allocated
                         // TODO: delete this code when clusteredLightingEnabled is being removed and is on by default.
-                        if (light.castShadows && !light.shadowMap) {
-                            light.visibleThisFrame = true;
+                        if (!clusteredLightingEnabled) {
+                            if (light.castShadows && !light.shadowMap) {
+                                light.visibleThisFrame = true;
+                            }
                         }
                     }
                 }
@@ -1056,6 +1063,7 @@ class ForwardRenderer {
 
     renderShadows(lights, camera) {
 
+        const isClustered = this.scene.clusteredLightingEnabled;
         const device = this.device;
         device.grabPassAvailable = false;
 
@@ -1064,7 +1072,22 @@ class ForwardRenderer {
         // #endif
 
         for (let i = 0; i < lights.length; i++) {
-            this._shadowRenderer.render(lights[i], camera);
+            const light = lights[i];
+
+            if (isClustered && light._type !== LIGHTTYPE_DIRECTIONAL) {
+
+                // skip clustered shadows with no assigned atlas slot
+                if (!light.atlasViewportAllocated) {
+                    continue;
+                }
+
+                // if atlas slot is reassigned, make sure shadow is updated
+                if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                    light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                }
+            }
+
+            this._shadowRenderer.render(light, camera);
         }
 
         device.grabPassAvailable = true;
@@ -1078,7 +1101,17 @@ class ForwardRenderer {
 
         const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
         for (let i = 0; i < lights.length; i++) {
-            this._cookieRenderer.render(lights[i], cookieRenderTarget);
+            const light = lights[i];
+
+            // skip clustered cookies with no assigned atlas slot
+            if (!light.atlasViewportAllocated)
+                continue;
+
+            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
+            if (!light.atlasSlotUpdated)
+                continue;
+
+            this._cookieRenderer.render(light, cookieRenderTarget);
         }
     }
 
@@ -1561,7 +1594,7 @@ class ForwardRenderer {
         const lights = comp._lights;
         const lightCount = lights.length;
         for (let i = 0; i < lightCount; i++) {
-            lights[i].visibleThisFrame = lights[i]._type === LIGHTTYPE_DIRECTIONAL;
+            lights[i].beginFrame();
         }
     }
 

@@ -20,6 +20,11 @@ class LightingParams {
         this._cookiesEnabled = false;
         this._cookieAtlasResolution = 2048;
 
+        // atlas split strategy
+        // null: per frame split atlas into equally sized squares for each shadowmap needed
+        // array: first number specifies top subdivision of the atlas, following numbers split next level (2 levels only)
+        this.atlasSplit = null;
+
         // Layer ID of a layer for which the debug clustering is rendered
         this.debugLayer = undefined;
     }

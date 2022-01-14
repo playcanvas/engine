@@ -78,6 +78,7 @@ class CookieRenderer {
     static createTexture(device, resolution) {
 
         const texture = new Texture(device, {
+            name: "CookieAtlas",
             width: resolution,
             height: resolution,
             format: PIXELFORMAT_R8_G8_B8_A8,
@@ -88,7 +89,6 @@ class CookieRenderer {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-        texture.name = "CookieAtlas";
 
         return texture;
     }

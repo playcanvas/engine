@@ -195,7 +195,7 @@ class WorldClusters {
             this._clusterTextureSizeData[2] = 1.0 / height;
 
             this.releaseClusterTexture();
-            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8);
+            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8, "ClusterTexture");
         }
     }
 

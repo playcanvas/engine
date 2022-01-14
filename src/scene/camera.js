@@ -2,6 +2,7 @@ import { Color } from '../math/color.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
+import { math } from '../math/math.js';
 
 import { Frustum } from '../shape/frustum.js';
 
@@ -464,6 +465,38 @@ class Camera {
     getProjectionMatrixSkybox() {
         this._evaluateProjectionMatrix();
         return this._projMatSkybox;
+    }
+
+    // returns estimated size of the sphere on the screen in range of [0..1]
+    // 0 - infinitely small, 1 - full screen or larger
+    getScreenSize(sphere) {
+
+        if (this._projection === PROJECTION_PERSPECTIVE) {
+
+            // camera to sphere distance
+            const distance = this._node.getPosition().distance(sphere.center);
+
+            // if we're inside the sphere
+            if (distance < sphere.radius) {
+                return 1;
+            }
+
+            // The view-angle of the bounding sphere rendered on screen
+            const viewAngle = Math.asin(sphere.radius / distance);
+
+            // This assumes the near clipping plane is at a distance of 1
+            const sphereViewHeight = Math.tan(viewAngle);
+
+            // The size of (half) the screen if the near clipping plane is at a distance of 1
+            const screenViewHeight = Math.tan((this._fov / 2) * math.DEG_TO_RAD);
+
+            // The ratio of the geometry's screen size compared to the actual size of the screen
+            return Math.min(sphereViewHeight / screenViewHeight, 1);
+
+        }
+
+        // ortho
+        return math.clamp(sphere.radius / this._orthoHeight, 0, 1);
     }
 }
 
