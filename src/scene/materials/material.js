@@ -337,7 +337,7 @@ class Material {
     /**
      * Clone a material.
      *
-     * @returns {Material} The cloned material.
+     * @returns {Material} A newly cloned material.
      */
     clone() {
         const clone = new this.constructor();
