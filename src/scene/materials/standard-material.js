@@ -331,8 +331,8 @@ let _params = new Set();
  * specular.
  *
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
- * @property {number} occludeDirect Tells if AO should darken directional lighting.
- *
+ * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
+ * false.
  * @property {boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with
  * specular.
  * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
@@ -519,28 +519,26 @@ class StandardMaterial extends Material {
     /* eslint-enable jsdoc/check-types */
 
     /**
-     * Duplicates a Standard material. All properties are duplicated except textures where only the
-     * references are copied.
+     * Copy a `StandardMaterial`.
      *
-     * @returns {StandardMaterial} A cloned Standard material.
+     * @param {StandardMaterial} source - The material to copy from.
+     * @returns {StandardMaterial} The destination material.
      */
-    clone() {
-        const clone = new StandardMaterial();
-
-        this._cloneInternal(clone);
+    copy(source) {
+        super.copy(source);
 
         // set properties
         Object.keys(_props).forEach((k) => {
-            clone[k] = this[k];
+            this[k] = source[k];
         });
 
         // clone chunks
-        for (const p in this._chunks) {
-            if (this._chunks.hasOwnProperty(p))
-                clone._chunks[p] = this._chunks[p];
+        for (const p in source._chunks) {
+            if (source._chunks.hasOwnProperty(p))
+                this._chunks[p] = source._chunks[p];
         }
 
-        return clone;
+        return this;
     }
 
     _setParameter(name, value) {
