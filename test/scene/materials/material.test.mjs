@@ -20,10 +20,10 @@ describe('Material', function () {
         expect(material.greenWrite).to.equal(true);
         expect(material.name).to.equal('Untitled');
         expect(material.redWrite).to.equal(true);
-        expect(material.shader).to.equal(null);
+        expect(material.shader).to.be.null;
         expect(material.slopeDepthBias).to.equal(0);
-        expect(material.stencilBack).to.equal(null);
-        expect(material.stencilFront).to.equal(null);
+        expect(material.stencilBack).to.be.null;
+        expect(material.stencilFront).to.be.null;
     }
 
     describe('#constructor()', function () {

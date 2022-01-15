@@ -19,7 +19,7 @@ describe('StandardMaterial', function () {
         expect(material.ambientTint).to.equal(false);
         expect(material.anisotropy).to.equal(0);
 
-        expect(material.aoMap).to.equal(null);
+        expect(material.aoMap).to.be.null;
         expect(material.aoMapChannel).to.equal('g');
         expect(material.aoMapOffset).to.be.an.instanceof(Vec2);
         expect(material.aoMapOffset.x).to.equal(0);
@@ -37,7 +37,7 @@ describe('StandardMaterial', function () {
 
         expect(material.clearCoat).to.equal(0);
         expect(material.clearCoatBumpiness).to.equal(1);
-        expect(material.clearCoatGlossMap).to.equal(null);
+        expect(material.clearCoatGlossMap).to.be.null;
         expect(material.clearCoatGlossMapChannel).to.equal('g');
         expect(material.clearCoatGlossMapOffset).to.be.an.instanceof(Vec2);
         expect(material.clearCoatGlossMapOffset.x).to.equal(0);
@@ -50,7 +50,7 @@ describe('StandardMaterial', function () {
         expect(material.clearCoatGlossVertexColor).to.equal(false);
         expect(material.clearCoatGlossVertexColorChannel).to.equal('g');
         expect(material.clearCoatGlossiness).to.equal(1);
-        expect(material.clearCoatMap).to.equal(null);
+        expect(material.clearCoatMap).to.be.null;
         expect(material.clearCoatMapChannel).to.equal('g');
         expect(material.clearCoatMapOffset).to.be.an.instanceof(Vec2);
         expect(material.clearCoatMapOffset.x).to.equal(0);
@@ -60,7 +60,7 @@ describe('StandardMaterial', function () {
         expect(material.clearCoatMapTiling.x).to.equal(1);
         expect(material.clearCoatMapTiling.y).to.equal(1);
         expect(material.clearCoatMapUv).to.equal(0);
-        expect(material.clearCoatNormalMap).to.equal(null);
+        expect(material.clearCoatNormalMap).to.be.null;
         expect(material.clearCoatNormalMapOffset).to.be.an.instanceof(Vec2);
         expect(material.clearCoatNormalMapOffset.x).to.equal(0);
         expect(material.clearCoatNormalMapOffset.y).to.equal(0);
@@ -74,15 +74,15 @@ describe('StandardMaterial', function () {
 
         expect(material.conserveEnergy).to.equal(true);
 
-        expect(material.cubeMap).to.equal(null);
+        expect(material.cubeMap).to.be.null;
         expect(material.cubeMapProjection).to.equal(CUBEPROJ_NONE);
-        expect(material.cubeMapProjectionBox).to.equal(null);
+        expect(material.cubeMapProjectionBox).to.be.null;
 
         expect(material.diffuse).to.be.an.instanceof(Color);
         expect(material.diffuse.r).to.equal(1);
         expect(material.diffuse.g).to.equal(1);
         expect(material.diffuse.b).to.equal(1);
-        expect(material.diffuseDetailMap).to.equal(null);
+        expect(material.diffuseDetailMap).to.be.null;
         expect(material.diffuseDetailMapChannel).to.equal('rgb');
         expect(material.diffuseDetailMapOffset).to.be.an.instanceof(Vec2);
         expect(material.diffuseDetailMapOffset.x).to.equal(0);
@@ -93,7 +93,7 @@ describe('StandardMaterial', function () {
         expect(material.diffuseDetailMapTiling.y).to.equal(1);
         expect(material.diffuseDetailMapUv).to.equal(0);
         expect(material.diffuseDetailMode).to.equal(DETAILMODE_MUL);
-        expect(material.diffuseMap).to.equal(null);
+        expect(material.diffuseMap).to.be.null;
         expect(material.diffuseMapChannel).to.equal('rgb');
         expect(material.diffuseMapOffset).to.be.an.instanceof(Vec2);
         expect(material.diffuseMapOffset.x).to.equal(0);
@@ -112,7 +112,7 @@ describe('StandardMaterial', function () {
         expect(material.emissive.g).to.equal(0);
         expect(material.emissive.b).to.equal(0);
         expect(material.emissiveIntensity).to.equal(1);
-        expect(material.emissiveMap).to.equal(null);
+        expect(material.emissiveMap).to.be.null;
         expect(material.emissiveMapChannel).to.equal('rgb');
         expect(material.emissiveMapOffset).to.be.an.instanceof(Vec2);
         expect(material.emissiveMapOffset.x).to.equal(0);
@@ -129,7 +129,7 @@ describe('StandardMaterial', function () {
         expect(material.enableGGXSpecular).to.equal(false);
         expect(material.fresnelModel).to.equal(FRESNEL_SCHLICK);
 
-        expect(material.glossMap).to.equal(null);
+        expect(material.glossMap).to.be.null;
         expect(material.glossMapChannel).to.equal('g');
         expect(material.glossMapOffset).to.be.an.instanceof(Vec2);
         expect(material.glossMapOffset.x).to.equal(0);
@@ -142,7 +142,7 @@ describe('StandardMaterial', function () {
         expect(material.glossVertexColor).to.equal(false);
         expect(material.glossVertexColorChannel).to.equal('g');
 
-        expect(material.heightMap).to.equal(null);
+        expect(material.heightMap).to.be.null;
         expect(material.heightMapChannel).to.equal('g');
         expect(material.heightMapFactor).to.equal(1);
         expect(material.heightMapOffset).to.be.an.instanceof(Vec2);
@@ -154,7 +154,7 @@ describe('StandardMaterial', function () {
         expect(material.heightMapTiling.y).to.equal(1);
         expect(material.heightMapUv).to.equal(0);
 
-        expect(material.lightMap).to.equal(null);
+        expect(material.lightMap).to.be.null;
         expect(material.lightMapChannel).to.equal('rgb');
         expect(material.lightMapOffset).to.be.an.instanceof(Vec2);
         expect(material.lightMapOffset.x).to.equal(0);
@@ -168,7 +168,7 @@ describe('StandardMaterial', function () {
         expect(material.lightVertexColorChannel).to.equal('rgb');
 
         expect(material.metalness).to.equal(1);
-        expect(material.metalnessMap).to.equal(null);
+        expect(material.metalnessMap).to.be.null;
         expect(material.metalnessMapChannel).to.equal('g');
         expect(material.metalnessMapOffset).to.be.an.instanceof(Vec2);
         expect(material.metalnessMapOffset.x).to.equal(0);
@@ -181,7 +181,7 @@ describe('StandardMaterial', function () {
         expect(material.metalnessVertexColor).to.equal(false);
         expect(material.metalnessVertexColorChannel).to.equal('g');
 
-        expect(material.normalDetailMap).to.equal(null);
+        expect(material.normalDetailMap).to.be.null;
         expect(material.normalDetailMapBumpiness).to.equal(1);
         expect(material.normalDetailMapOffset).to.be.an.instanceof(Vec2);
         expect(material.normalDetailMapOffset.x).to.equal(0);
@@ -191,7 +191,7 @@ describe('StandardMaterial', function () {
         expect(material.normalDetailMapTiling.x).to.equal(1);
         expect(material.normalDetailMapTiling.y).to.equal(1);
         expect(material.normalDetailMapUv).to.equal(0);
-        expect(material.normalMap).to.equal(null);
+        expect(material.normalMap).to.be.null;
         expect(material.normalMapOffset).to.be.an.instanceof(Vec2);
         expect(material.normalMapOffset.x).to.equal(0);
         expect(material.normalMapOffset.y).to.equal(0);
@@ -209,7 +209,7 @@ describe('StandardMaterial', function () {
 
         expect(material.opacity).to.equal(1);
         expect(material.opacityFadesSpecular).to.equal(true);
-        expect(material.opacityMap).to.equal(null);
+        expect(material.opacityMap).to.be.null;
         expect(material.opacityMapChannel).to.equal('a');
         expect(material.opacityMapOffset).to.be.an.instanceof(Vec2);
         expect(material.opacityMapOffset.x).to.equal(0);
@@ -235,7 +235,7 @@ describe('StandardMaterial', function () {
         expect(material.specular.g).to.equal(0);
         expect(material.specular.b).to.equal(0);
         expect(material.specularAntialias).to.equal(false);
-        expect(material.specularMap).to.equal(null);
+        expect(material.specularMap).to.be.null;
         expect(material.specularMapChannel).to.equal('rgb');
         expect(material.specularMapOffset).to.be.an.instanceof(Vec2);
         expect(material.specularMapOffset.x).to.equal(0);
@@ -249,7 +249,7 @@ describe('StandardMaterial', function () {
         expect(material.specularVertexColor).to.equal(false);
         expect(material.specularVertexColorChannel).to.equal('rgb');
 
-        expect(material.sphereMap).to.equal(null);
+        expect(material.sphereMap).to.be.null;
         expect(material.twoSidedLighting).to.equal(false);
 
         expect(material.useFog).to.equal(true);

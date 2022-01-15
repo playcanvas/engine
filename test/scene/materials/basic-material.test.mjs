@@ -14,7 +14,7 @@ describe('BasicMaterial', function () {
         expect(material.color.g).to.equal(1);
         expect(material.color.b).to.equal(1);
         expect(material.color.a).to.equal(1);
-        expect(material.colorMap).to.equal(null);
+        expect(material.colorMap).to.be.null;
         expect(material.vertexColors).to.equal(false);
     }
 
