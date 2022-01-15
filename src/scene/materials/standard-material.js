@@ -522,7 +522,7 @@ class StandardMaterial extends Material {
      * Copy a `StandardMaterial`.
      *
      * @param {StandardMaterial} source - The material to copy from.
-     * @returns {StandardMaterial} This material.
+     * @returns {StandardMaterial} The destination material.
      */
     copy(source) {
         super.copy(source);

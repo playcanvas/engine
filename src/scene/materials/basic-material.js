@@ -54,7 +54,7 @@ class BasicMaterial extends Material {
      * Copy a `BasicMaterial`.
      *
      * @param {BasicMaterial} source - The material to copy from.
-     * @returns {BasicMaterial} This material.
+     * @returns {BasicMaterial} The destination material.
      */
     copy(source) {
         super.copy(source);
