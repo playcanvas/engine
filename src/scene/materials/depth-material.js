@@ -7,17 +7,13 @@ import { Material } from './material.js';
  */
 class DepthMaterial extends Material {
     /**
-     * Duplicates a Depth material.
+     * Clone a `DepthMaterial`.
      *
-     * @returns {DepthMaterial} A cloned Depth material.
-     * @private
+     * @returns {DepthMaterial} The cloned material.
      */
     clone() {
         const clone = new DepthMaterial();
-
-        Material.prototype._cloneInternal.call(this, clone);
-
-        return clone;
+        return clone.copy(this);
     }
 
     updateShader(device) {
