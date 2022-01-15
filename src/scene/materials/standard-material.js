@@ -519,17 +519,6 @@ class StandardMaterial extends Material {
     /* eslint-enable jsdoc/check-types */
 
     /**
-     * Clone a `StandardMaterial`. All properties are duplicated except textures where only the
-     * references are copied.
-     *
-     * @returns {StandardMaterial} The cloned material.
-     */
-    clone() {
-        const clone = new StandardMaterial();
-        return clone.copy(this);
-    }
-
-    /**
      * Copy a `StandardMaterial`.
      *
      * @param {StandardMaterial} source - The material to copy from.

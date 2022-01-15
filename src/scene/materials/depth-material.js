@@ -6,16 +6,6 @@ import { Material } from './material.js';
  * @private
  */
 class DepthMaterial extends Material {
-    /**
-     * Clone a `DepthMaterial`.
-     *
-     * @returns {DepthMaterial} The cloned material.
-     */
-    clone() {
-        const clone = new DepthMaterial();
-        return clone.copy(this);
-    }
-
     updateShader(device) {
         const options = {
             skin: !!this.meshInstances[0].skinInstance

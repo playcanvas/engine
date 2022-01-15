@@ -51,17 +51,6 @@ class BasicMaterial extends Material {
     }
 
     /**
-     * Clone a `BasicMaterial`. All properties are duplicated except textures where only the
-     * references are copied.
-     *
-     * @returns {BasicMaterial} The cloned material.
-     */
-    clone() {
-        const clone = new BasicMaterial();
-        return clone.copy(this);
-    }
-
-    /**
      * Copy a `BasicMaterial`.
      *
      * @param {BasicMaterial} source - The material to copy from.
