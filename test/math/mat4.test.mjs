@@ -836,9 +836,9 @@ describe("Mat4", function () {
         });
 
         it('transforms a point by a 90 degree rotation around the z axis', function () {
-            var p = new Vec3(1, 0, 0);
-            var m = new Mat4();
-            var r = new Vec3();
+            const p = new Vec3(1, 0, 0);
+            const m = new Mat4();
+            const r = new Vec3();
 
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformPoint(p, r);
@@ -849,8 +849,8 @@ describe("Mat4", function () {
         });
 
         it('transforms a point by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
-            var p = new Vec3(1, 0, 0);
-            var m = new Mat4();
+            const p = new Vec3(1, 0, 0);
+            const m = new Mat4();
 
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformPoint(p, p);
@@ -890,9 +890,9 @@ describe("Mat4", function () {
         });
 
         it('transforms a vector by a 90 degree rotation around the z axis', function () {
-            var v = new Vec4(1, 0, 0, 0);
-            var m = new Mat4();
-            var r = new Vec4();
+            const v = new Vec4(1, 0, 0, 0);
+            const m = new Mat4();
+            const r = new Vec4();
 
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformVec4(v, r);
@@ -904,8 +904,8 @@ describe("Mat4", function () {
         });
 
         it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
-            var v = new Vec4(1, 0, 0, 0);
-            var m = new Mat4();
+            const v = new Vec4(1, 0, 0, 0);
+            const m = new Mat4();
 
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformVec4(v, v);
@@ -936,9 +936,9 @@ describe("Mat4", function () {
         });
 
         it('transforms a vector by a 90 degree rotation around the z axis', function () {
-            var v = new Vec3(1, 0, 0);
-            var m = new Mat4();
-            var r = new Vec3();
+            const v = new Vec3(1, 0, 0);
+            const m = new Mat4();
+            const r = new Vec3();
 
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformVector(v, r);
@@ -949,8 +949,8 @@ describe("Mat4", function () {
         });
 
         it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
-            var v = new Vec3(1, 0, 0);
-            var m = new Mat4();
+            const v = new Vec3(1, 0, 0);
+            const m = new Mat4();
 
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformVector(v, v);
