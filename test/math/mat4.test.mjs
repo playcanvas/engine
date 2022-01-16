@@ -252,63 +252,69 @@ describe("Mat4", function () {
 
     describe('#getX()', function () {
 
-        it('gets x axis from an identity matrix', function () {
+        it('gets x axis from a matrix', function () {
             const m = new Mat4();
+            m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = m.getX();
-            expect(axis.x).to.equal(1);
-            expect(axis.y).to.equal(0);
-            expect(axis.z).to.equal(0);
+            expect(axis.x).to.equal(0);
+            expect(axis.y).to.equal(1);
+            expect(axis.z).to.equal(2);
         });
 
-        it('gets x axis from an identity matrix (no allocation)', function () {
+        it('gets x axis from a matrix (no allocation)', function () {
             const m = new Mat4();
+            m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = new Vec3();
             m.getX(axis);
-            expect(axis.x).to.equal(1);
-            expect(axis.y).to.equal(0);
-            expect(axis.z).to.equal(0);
+            expect(axis.x).to.equal(0);
+            expect(axis.y).to.equal(1);
+            expect(axis.z).to.equal(2);
         });
 
     });
 
     describe('#getY()', function () {
 
-        it('gets y axis from an identity matrix', function () {
+        it('gets y axis from a matrix', function () {
             const m = new Mat4();
+            m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = m.getY();
-            expect(axis.x).to.equal(0);
-            expect(axis.y).to.equal(1);
-            expect(axis.z).to.equal(0);
+            expect(axis.x).to.equal(4);
+            expect(axis.y).to.equal(5);
+            expect(axis.z).to.equal(6);
         });
 
-        it('gets y axis from an identity matrix (no allocation)', function () {
+        it('gets y axis from a matrix (no allocation)', function () {
             const m = new Mat4();
+            m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = new Vec3();
             m.getY(axis);
-            expect(axis.x).to.equal(0);
-            expect(axis.y).to.equal(1);
-            expect(axis.z).to.equal(0);
+            expect(axis.x).to.equal(4);
+            expect(axis.y).to.equal(5);
+            expect(axis.z).to.equal(6);
         });
 
     });
 
     describe('#getZ()', function () {
 
-        it('gets z axis from an identity matrix', function () {
+        it('gets z axis from a matrix', function () {
             const m = new Mat4();
+            m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = m.getZ();
-            expect(axis.x).to.equal(0);
-            expect(axis.y).to.equal(0);
-            expect(axis.z).to.equal(1);
+            expect(axis.x).to.equal(8);
+            expect(axis.y).to.equal(9);
+            expect(axis.z).to.equal(10);
         });
 
-        it('gets z axis from an identity matrix (no allocation)', function () {
+        it('gets z axis from a matrix (no allocation)', function () {
             const m = new Mat4();
+            m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = new Vec3();
             m.getZ(axis);
-            expect(axis.x).to.equal(0);
-            expect(axis.y).to.equal(0);
-            expect(axis.z).to.equal(1);
+            expect(axis.x).to.equal(8);
+            expect(axis.y).to.equal(9);
+            expect(axis.z).to.equal(10);
         });
 
     });
