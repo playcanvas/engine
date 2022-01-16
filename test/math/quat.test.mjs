@@ -4,7 +4,7 @@ import { Vec3 } from '../../src/math/vec3.js';
 
 import { expect } from 'chai';
 
-describe.only('Quat', function () {
+describe('Quat', function () {
 
     describe('#constructor()', function () {
 
@@ -91,7 +91,7 @@ describe.only('Quat', function () {
     });
 
     describe('#getAxisAngle()', function () {
-        
+
         it('returns the x axis and 0 angle for an identity quaternion', function () {
             const q = new Quat();
             const axis = new Vec3();
@@ -107,7 +107,7 @@ describe.only('Quat', function () {
             q.setFromAxisAngle(Vec3.UP, Math.PI / 2);
             const axis = new Vec3();
             const angle = q.getAxisAngle(axis);
-            expect(angle).to.be.closeTo(Math.PI / 2. , 0.00001);
+            expect(angle).to.be.closeTo(Math.PI / 2, 0.00001);
             expect(axis.x).to.be.closeTo(0, 0.00001);
             expect(axis.y).to.be.closeTo(1, 0.00001);
             expect(axis.z).to.be.closeTo(0, 0.00001);
@@ -413,7 +413,7 @@ describe.only('Quat', function () {
             q.normalize();
             expect(q.length()).to.be.closeTo(1, 0.00001);
         });
-            
+
         it('returns this', function () {
             const q = new Quat();
             expect(q.normalize()).to.equal(q);
@@ -440,7 +440,7 @@ describe.only('Quat', function () {
     });
 
     describe('#setFromAxisAngle()', function () {
-        
+
         it('sets the identity quaternion when passing a zero angle', function () {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, 0);
@@ -487,11 +487,11 @@ describe.only('Quat', function () {
                 const q1 = new Quat();
                 const q2 = new Quat();
                 const m = new Mat4();
-    
+
                 q1.setFromEulerAngles(x, y, z);
                 m.setFromEulerAngles(x, y, z);
                 q2.setFromMat4(m);
-    
+
                 expect(q1.x).to.be.closeTo(q2.x, 0.0001);
                 expect(q1.y).to.be.closeTo(q2.y, 0.0001);
                 expect(q1.z).to.be.closeTo(q2.z, 0.0001);
