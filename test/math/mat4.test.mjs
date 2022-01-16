@@ -21,7 +21,7 @@ describe("Mat4", function () {
 
         it('creates an identity matrix', function () {
             const m = new Mat4();
-            const identity = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+            const identity = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
             expect(m.data).to.deep.equal(identity);
         });
 
@@ -604,7 +604,7 @@ describe("Mat4", function () {
             const m = new Mat4();
             expect(m.setFromEulerAngles(0, 0, 0)).to.equal(m);
         });
-            
+
     });
 
     describe('#setIdentity()', function () {
@@ -613,7 +613,7 @@ describe("Mat4", function () {
             const m = new Mat4();
             m.setIdentity();
 
-            const identity = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+            const identity = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
             expect(m.data).to.deep.equal(identity);
         });
 
@@ -839,22 +839,22 @@ describe("Mat4", function () {
             var p = new Vec3(1, 0, 0);
             var m = new Mat4();
             var r = new Vec3();
-    
+
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformPoint(p, r);
-    
+
             expect(r.x).to.be.closeTo(0, 0.00001);
             expect(r.y).to.be.closeTo(1, 0.00001);
             expect(r.z).to.be.closeTo(0, 0.00001);
         });
-    
+
         it('transforms a point by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
             var p = new Vec3(1, 0, 0);
             var m = new Mat4();
-    
+
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformPoint(p, p);
-    
+
             expect(p.x).to.be.closeTo(0, 0.00001);
             expect(p.y).to.be.closeTo(1, 0.00001);
             expect(p.z).to.be.closeTo(0, 0.00001);
@@ -869,7 +869,7 @@ describe("Mat4", function () {
             expect(r.y).to.equal(22);
             expect(r.z).to.equal(33);
         });
-    
+
     });
 
     describe('#transformVec4()', function () {
@@ -906,7 +906,7 @@ describe("Mat4", function () {
         it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
             var v = new Vec4(1, 0, 0, 0);
             var m = new Mat4();
-            
+
             m.setFromAxisAngle(Vec3.BACK, 90);
             m.transformVec4(v, v);
 
