@@ -1,11 +1,11 @@
-## Unit Tests
+# Unit Tests
 
 PlayCanvas uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/) for unit testing. All tests run in Node and load the engine's source modules directly. This means that building the engine is not a requirement for running the tests. Node is missing some features required by the engine so a couple of mocks are used:
 
-* [`canvas-mock`](https://github.com/playcanvas/canvas-mock) - implements `HTMLCanvasElement` (and `WebGL`).
+* [`canvas-mock`](https://github.com/playcanvas/canvas-mock) - implements `HTMLCanvasElement` (and `WebGL 1.0`).
 * [`xhr2`](https://github.com/pwnall/node-xhr2) - implements `XMLHttpRequest`.
 
-### Running the Unit Tests
+## Running the Unit Tests
 
 To run the tests, simply do:
 
@@ -13,7 +13,7 @@ To run the tests, simply do:
 npm run test
 ```
 
-### Code Coverage
+## Code Coverage
 
 PlayCanvas uses [C8](https://github.com/bcoe/c8) to analyze and report unit test code coverage. To print a code coverage report, do:
 
@@ -21,7 +21,7 @@ PlayCanvas uses [C8](https://github.com/bcoe/c8) to analyze and report unit test
 npm run test:coverage
 ```
 
-### Writing Tests
+## Writing Tests
 
 The PlayCanvas Engine is made up of ES Modules. Each module should have a corresponding unit test module. For example:
 
@@ -82,10 +82,10 @@ Some tips:
 * Alphabetize the API described in the test module (as it appears in the [API reference manual](https://developer.playcanvas.com/api/)).
 * [Avoid using arrow functions](https://mochajs.org/#arrow-functions) for `describe` and `it` calls.
 * Try to make the call to `it` read as a proper sentence:
-  * Good: `it('returns null on failure', ...`)
-  * Bad: `it('null is returned', ...`)
+  * Good: `it('returns null on failure', ...`
+  * Bad: `it('null is returned', ...`
 
-### Debugging Tests
+## Debugging Tests
 
 Debugging tests is easy, convenient and fun! VS Code is the recommended IDE for debugging the tests. All you need to do is:
 
@@ -94,6 +94,6 @@ Debugging tests is easy, convenient and fun! VS Code is the recommended IDE for 
 3. Navigate to the test you want to debug and set a breakpoint.
 4. At the bottom of the Explorer panel, you'll find a sub-panel called NPM SCRIPTS. Locate script `test` and click the Debug button.
 
-### Help Us Reach 100% Coverage
+## Help Us Reach 100% Coverage
 
 Any contributions to the unit tests are very welcome! If you can see ways to improve them, feel free to open an issue to announce what you would like to do and then submit a PR.
