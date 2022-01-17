@@ -449,7 +449,7 @@ const standard = {
             lighting = true;
         }
 
-        if (options.clusteredLightingEnabled && options.useLighting) {
+        if (options.clusteredLightingEnabled) {
             lighting = true;
         }
 
@@ -1292,6 +1292,9 @@ const standard = {
             usesCookie = true;
 
             code += chunks.floatUnpackingPS;
+
+            if (options.lightMaskDynamic)
+                code += "\n#define CLUSTER_MESH_DYNAMIC_LIGHTS";
 
             if (options.clusteredLightingCookiesEnabled)
                 code += "\n#define CLUSTER_COOKIES";

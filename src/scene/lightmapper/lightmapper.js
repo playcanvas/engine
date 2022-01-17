@@ -22,6 +22,9 @@ import { Texture } from '../../graphics/texture.js';
 
 import { MeshInstance } from '../mesh-instance.js';
 
+import { LightingParams } from '../lighting/lighting-params.js';
+import { WorldClusters } from '../lighting/world-clusters.js';
+
 /** @typedef {import('../../asset/asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
 /** @typedef {import('../renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
@@ -35,7 +38,7 @@ import {
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
-    MASK_LIGHTMAP, MASK_BAKED,
+    MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { Camera } from '../camera.js';
@@ -155,6 +158,22 @@ class Lightmapper {
             camera.node = new GraphNode();
             this.camera = camera;
         }
+
+        // create light cluster structure
+        if (this.scene.clusteredLightingEnabled) {
+
+            const lightingParams = new LightingParams(device.supportsAreaLights, device.maxTextureSize, () => {});
+            this.lightingParams = lightingParams;
+
+            lightingParams.cells = new Vec3(3, 3, 3);
+            lightingParams.maxLightsPerCell = 4;
+
+            // TODO: this is resolution for clustered lights only (omni and spot), we might need to expose some control over this
+            lightingParams.shadowAtlasResolution = 1024;
+
+            this.worldClusters = new WorldClusters(device);
+            this.worldClusters.name = "ClusterLightmapper";
+        }
     }
 
     finishBake(bakeNodes) {
@@ -185,6 +204,12 @@ class Lightmapper {
 
         // this shader is only valid for specific brightness and contrast values, dispose it
         this.ambientAOMaterial = null;
+
+        // delete light cluster
+        if (this.worldClusters) {
+            this.worldClusters.destroy();
+            this.worldClusters = null;
+        }
     }
 
     createMaterialForPass(device, scene, pass, addAmbient) {
@@ -447,7 +472,8 @@ class Lightmapper {
                         meshInstance._shaderDefs |= shaderDefs;
                     }
 
-                    meshInstance.mask = MASK_BAKED;
+                    // only lights that affect lightmapped objects are used on this mesh now that is baked
+                    meshInstance.mask = MASK_AFFECT_LIGHTMAPPED;
 
                     // textures
                     for (let pass = 0; pass < passCount; pass++) {
@@ -617,7 +643,7 @@ class Lightmapper {
             allLights.push(bakeLight);
 
             // bake light
-            if (light.enabled && (light.mask & MASK_LIGHTMAP) !== 0) {
+            if (light.enabled && (light.mask & MASK_BAKE) !== 0) {
 
                 // if baked, it can't be used as static
                 light.isStatic = false;
@@ -810,6 +836,7 @@ class Lightmapper {
         lightArray[LIGHTTYPE_SPOT].length = 0;
 
         lightArray[light.type][0] = light;
+        light.visibleThisFrame = true;
     }
 
     renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
@@ -818,7 +845,7 @@ class Lightmapper {
         if (!shadowMapRendered && light.castShadows) {
 
             // allocate shadow map from the cache to avoid per light allocation
-            if (!light.shadowMap) {
+            if (!light.shadowMap && !this.scene.clusteredLightingEnabled) {
                 light.shadowMap = this.shadowMapCache.get(this.device, light);
             }
 
@@ -880,6 +907,7 @@ class Lightmapper {
 
         const scene = this.scene;
         const device = this.device;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         this.createMaterials(device, scene, passCount);
         this.setupScene();
@@ -922,7 +950,7 @@ class Lightmapper {
                 m = rcv[j];
 
                 m.setLightmapped(false);
-                m.mask = MASK_LIGHTMAP; // only affected by LM lights
+                m.mask = MASK_BAKE; // only affected by LM lights
 
                 // patch material
                 m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
@@ -978,6 +1006,13 @@ class Lightmapper {
                     }
 
                     this.setupLightArray(lightArray, bakeLight.light);
+
+                    if (clusteredLightingEnabled) {
+                        this.renderer.lightTextureAtlas.update(lightArray[LIGHTTYPE_SPOT], lightArray[LIGHTTYPE_OMNI], this.lightingParams);
+
+                        const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
+                        this.worldClusters.update(clusterLights, this.scene.gammaCorrection, this.lightingParams);
+                    }
 
                     // render light shadow map needs to be rendered
                     shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
@@ -1037,6 +1072,11 @@ class Lightmapper {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                         }
 
+                        // prepare clustered lighting
+                        if (clusteredLightingEnabled) {
+                            this.worldClusters.activate(this.renderer.lightTextureAtlas);
+                        }
+
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
@@ -1085,7 +1125,9 @@ class Lightmapper {
 
         // empty cache to minimize persistent memory use .. if some cached textures are needed,
         // they will be allocated again as needed
-        this.shadowMapCache.clear();
+        if (!clusteredLightingEnabled) {
+            this.shadowMapCache.clear();
+        }
     }
 }
 

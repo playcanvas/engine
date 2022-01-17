@@ -23,7 +23,7 @@ import {
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     LIGHTSHAPE_PUNCTUAL,
-    MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
+    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT, SHADOWUPDATE_THISFRAME
@@ -1702,10 +1702,10 @@ class ForwardRenderer {
             for (let i = 0; i < stats.lights; i++) {
                 const l = comp._lights[i];
                 if (l.enabled) {
-                    if ((l.mask & MASK_DYNAMIC) || (l.mask & MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                    if ((l.mask & MASK_AFFECT_DYNAMIC) || (l.mask & MASK_AFFECT_LIGHTMAPPED)) { // if affects dynamic or baked objects in real-time
                         stats.dynamicLights++;
                     }
-                    if (l.mask & MASK_LIGHTMAP) { // if baked into lightmaps
+                    if (l.mask & MASK_BAKE) { // if baked into lightmaps
                         stats.bakedLights++;
                     }
                 }
