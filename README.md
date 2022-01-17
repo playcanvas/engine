@@ -156,15 +156,6 @@ This will output to `build/playcanvas.js.map`
 
 Note: The preprocessor is ignored when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
 
-## How to run tests
-
-PlayCanvas uses of Karma for unit testing. There are two ways of running the tests:
-
-| Command                 | Description                                                      |
-|-------------------------|------------------------------------------------------------------|
-| `npm run test`          | Runs unit tests in Node                                          |
-| `npm run test:coverage` | Runs unit tests in Node and also generate a code coverage report |
-
 ## PlayCanvas Editor
 
 The PlayCanvas Engine is an open source engine which you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):
