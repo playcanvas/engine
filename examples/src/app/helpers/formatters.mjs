@@ -70,7 +70,7 @@ const getExampleClassFromTextFile = (Babel, text) => {
     return text;
 };
 
-module.exports = {
+export default {
     getTypeScriptFunctionFromText: getTypeScriptFunctionFromText,
     getInnerFunctionText: getInnerFunctionText,
     getExampleClassFromTextFile: getExampleClassFromTextFile

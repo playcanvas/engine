@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class ARHitTestExample {
+class ArHitTestExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Hit Test';
 
@@ -146,4 +146,4 @@ class ARHitTestExample {
     }
 }
 
-export default ARHitTestExample;
+export default ArHitTestExample;

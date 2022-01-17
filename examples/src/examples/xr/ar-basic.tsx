@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class ARBasicExample {
+class ArBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Basic';
 
@@ -122,4 +122,4 @@ class ARBasicExample {
     }
 }
 
-export default ARBasicExample;
+export default ArBasicExample;

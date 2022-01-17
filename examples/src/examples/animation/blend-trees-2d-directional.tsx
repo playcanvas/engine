@@ -1,4 +1,4 @@
-import React, { useEffect, createRef } from 'react';
+import React, { useEffect } from 'react';
 import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
 
@@ -20,14 +20,13 @@ class BlendTrees2DDirectionalExample {
         </>;
     }
 
-    controls(data: Observer) {
-        const canvasRef = createRef();
+    controls() {
         useEffect(() => {
-            if (!(window as any).pc.app) return;
-            if (!(window as any).controlPanel) return;
-            const canvas: any = canvasRef.current;
             // @ts-ignore engine-tsd
-            const modelEntity: pc.Entity = (window as any).pc.app.root.findByName('model');
+            if (!document.getElementById('exampleIframe').contentWindow.pc) return;
+            const canvas : any = document.getElementById('2d-blend-control');
+            // @ts-ignore engine-tsd
+            const modelEntity: pc.Entity = document.getElementById('exampleIframe').contentWindow.pc.app.root.findByName('model');
             const width = (window as any).controlPanel.offsetWidth;
             const height = width;
             const halfWidth = Math.floor(width / 2);
@@ -90,7 +89,7 @@ class BlendTrees2DDirectionalExample {
             canvas.addEventListener('mousedown', mouseEvent);
         });
         return <>
-            <canvas id='2d-blend-control' ref={canvasRef as React.RefObject<HTMLCanvasElement>} />
+            <canvas id='2d-blend-control' />
         </>;
     }
 

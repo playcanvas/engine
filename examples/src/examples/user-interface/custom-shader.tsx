@@ -66,7 +66,7 @@ void main(void)
 }
 `;
 
-class UserInterfaceCustomShaderExample {
+class CustomShaderExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Custom Shader';
 
@@ -155,4 +155,4 @@ class UserInterfaceCustomShaderExample {
     }
 }
 
-export default UserInterfaceCustomShaderExample;
+export default CustomShaderExample;

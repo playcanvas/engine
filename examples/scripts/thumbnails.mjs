@@ -1,15 +1,20 @@
-const fs = require('fs');
-const puppeteer = require('puppeteer');
-const sharp = require('sharp');
+import fs from 'fs';
+import puppeteer from 'puppeteer';
+import sharp from 'sharp';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const MAIN_DIR = `${__dirname}/../`;
 const exampleList = [];
 
 let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
-categories = categories.filter(c => c !== 'index.js');
+categories = categories.filter(c => c !== 'index.mjs');
 categories.forEach(function (category) {
     let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
-    examples = examples.filter(e => e !== 'index.js');
+    examples = examples.filter(e => e !== 'index.mjs');
     examples.forEach((e) => {
         exampleList.push({
             category,

@@ -3,6 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
 import typescript from 'rollup-plugin-typescript';
 import copy from 'rollup-plugin-copy';
+import { terser } from 'rollup-plugin-terser';
 
 export default {
     input: 'src/app/index.tsx',
@@ -25,6 +26,7 @@ export default {
         typescript(),
         replace({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-        })
+        }),
+        // terser()
     ]
 };

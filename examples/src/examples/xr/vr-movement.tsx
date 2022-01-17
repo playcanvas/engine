@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class VRMovementExample {
+class VrMovementExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Movement';
 
@@ -249,4 +249,4 @@ class VRMovementExample {
     }
 }
 
-export default VRMovementExample;
+export default VrMovementExample;

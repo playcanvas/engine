@@ -84,6 +84,8 @@
                 }
                 if (count <= 0) {
                     exampleFunction(app, canvas, manifest, data);
+                    var event = new CustomEvent("exampleLoad");
+                    window.top.dispatchEvent(event);
                 }
             }
 
@@ -94,7 +96,7 @@
             assets.forEach(function (resource) {
                 if (!resource.type) {
                     fetch(resource.url)
-                        .then(function(response) { response.text() })
+                        .then(function(response) { return response.text() })
                         .then(function(data) {
                             var module = {
                                 exports: {}

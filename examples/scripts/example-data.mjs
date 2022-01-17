@@ -1,10 +1,15 @@
-const fs = require("fs");
-const BabelParser = require('@babel/parser');
-const Prettier = require('prettier/standalone');
-const Babel = require('@babel/standalone');
-const formatters = require('../src/app/helpers/formatters.js');
+import fs from 'fs';
+import BabelParser from '@babel/parser';
+import Prettier from 'prettier/standalone';
+import Babel from '@babel/standalone';
+import formatters from '../src/app/helpers/formatters.mjs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
+
 
 const exampleData = {};
 
@@ -13,11 +18,11 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
 }
 
 fs.readdirSync(`${MAIN_DIR}/src/examples/`).forEach(function (category) {
-    if (category.includes('index.js')) return;
+    if (category.includes('index.mjs')) return;
     exampleData[category] = {};
     const examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
     examples.forEach((exampleName) => {
-        if (exampleName.includes('index.js')) return;
+        if (exampleName.includes('index.mjs')) return;
         const example = exampleName.replace('.tsx', '');
         exampleData[category][example] = {};
         const exampleFileText = fs.readFileSync(

@@ -8,7 +8,7 @@ import Container from '@playcanvas/pcui/Container/component';
 import Button from '@playcanvas/pcui/Button/component';
 import playcanvasTypeDefs from './helpers/playcanvas-type-defs';
 import { File } from './helpers/types';
-import formatters from './helpers/formatters';
+import formatters from './helpers/formatters.mjs';
 
 const FILE_TYPE_LANGUAGES: any = {
     'json': 'json',

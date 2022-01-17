@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class OBJExample {
+class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
@@ -71,4 +71,4 @@ class OBJExample {
     }
 }
 
-export default OBJExample;
+export default ObjExample;

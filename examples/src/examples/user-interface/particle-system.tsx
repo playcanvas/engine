@@ -3,7 +3,7 @@ import * as pc from '../../../../';
 
 import { AssetLoader } from '../../app/helpers/loader';
 
-class UserInterfaceParticleSystemExample {
+class ParticleSystemExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Particle System';
 
@@ -147,4 +147,4 @@ class UserInterfaceParticleSystemExample {
     }
 }
 
-export default UserInterfaceParticleSystemExample;
+export default ParticleSystemExample;

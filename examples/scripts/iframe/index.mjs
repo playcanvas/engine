@@ -1,8 +1,14 @@
+import fs from 'fs';
+import Babel from '@babel/standalone';
+import Handlebars from 'handlebars';
+import formatters from '../../src/app/helpers/formatters.mjs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const MAIN_DIR = `${__dirname}/../../`;
-const fs = require("fs");
-const Babel = require("@babel/standalone");
-const Handlebars = require("handlebars");
-const formatters = require("./../../src/app/helpers/formatters.js");
 
 const EXAMPLE_CONSTS = [
     "vshader",
@@ -53,10 +59,10 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
 }
 const categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
 categories.forEach(function (category) {
-    if (category.includes('index.js')) return;
+    if (category.includes('index.mjs')) return;
     const examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
     examples.forEach((example) => {
-        if (example.includes('index.js')) return;
+        if (example.includes('index.mjs')) return;
         buildExample(category, example);
     });
 });

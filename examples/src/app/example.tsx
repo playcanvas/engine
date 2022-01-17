@@ -6,10 +6,56 @@ import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import Spinner from '@playcanvas/pcui/Spinner/component';
 import { File } from './helpers/types';
-import examples from './helpers/example-data';
+import examples from './helpers/example-data.mjs';
 // @ts-ignore: library file import
 import { withRouter } from 'react-router-dom';
 import ControlPanel from './control-panel';
+
+const Controls = (props: any) => {
+    const controlsFunction = (examples as any).paths[props.path].example.prototype.controls;
+    const controls = controlsFunction ? (examples as any).paths[props.path].example.prototype.controls(props.exampleData).props.children : null;
+    if (!controls) return null;
+    return <ControlPanel controls={controls} files={props.files} />;
+};
+interface ControlLoaderProps {
+    path: string,
+    exampleData: any,
+    files: any
+}
+
+interface ControlLoaderState {
+    exampleLoaded: boolean
+}
+
+class ControlLoader extends Component <ControlLoaderProps, ControlLoaderState> {
+    timeout: any;
+
+    constructor(props: ControlLoaderProps) {
+        super(props);
+        this.state = {
+            exampleLoaded: false
+        };
+        window.addEventListener('exampleLoad', () => {
+            this.setState({
+                exampleLoaded: true
+            });
+        });
+    }
+
+    componentDidUpdate(prevProps: Readonly<ControlLoaderProps>): void {
+        if (prevProps.path !== this.props.path) {
+            this.setState({
+                exampleLoaded: false
+            });
+        }
+    }
+
+    render() {
+        return <>
+            { this.state.exampleLoaded && <Controls {...this.props} /> }
+        </>;
+    }
+}
 
 interface ExampleProps {
     files: Array<File>,
@@ -39,11 +85,13 @@ class Example extends Component <ExampleProps, ExampleState> {
         this.props.setFiles(this.defaultFiles);
     }
 
-    componentDidUpdate(prevProps: Readonly<ExampleProps>) {
-        if (this.props.match.params.category !== prevProps.match.params.category || this.props.match.params.example !== prevProps.match.params.example) {
-            window.localStorage.removeItem(this.path);
-            this.props.setFiles(this.defaultFiles);
-        }
+    shouldComponentUpdate(nextProps: Readonly<ExampleProps>): boolean {
+        return this.props.match.params.category !== nextProps.match.params.category || this.props.match.params.example !== nextProps.match.params.example;
+    }
+
+    componentDidUpdate() {
+        window.localStorage.removeItem(this.path);
+        this.props.setFiles(this.defaultFiles);
     }
 
     get defaultFiles() {
@@ -54,19 +102,12 @@ class Example extends Component <ExampleProps, ExampleState> {
         return `/${this.props.match.params.category}/${this.props.match.params.example}`;
     }
 
-    get controls() {
-        if (examples.paths[this.path].example.prototype.controls) {
-            return examples.paths[this.path].example.prototype.controls(this.exampleData).props.children;
-        }
-        return null;
-    }
-
     render() {
         const iframePath = `/iframe${this.path}`;
         return <Container id="canvas-container">
             <Spinner size={50}/>
             <iframe id="exampleIframe" key={iframePath} src={iframePath}></iframe>
-            { this.controls && <ControlPanel controls={this.controls} files={this.props.files} /> }
+            <ControlLoader exampleData={this.exampleData} path={this.path} files={this.props.files} />
         </Container>;
     }
 }

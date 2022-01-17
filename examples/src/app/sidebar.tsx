@@ -17,7 +17,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 import { Link } from "react-router-dom";
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
-import examples from './helpers/example-data';
+import examples from './helpers/example-data.mjs';
 
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');

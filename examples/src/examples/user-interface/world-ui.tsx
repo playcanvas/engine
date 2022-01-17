@@ -3,7 +3,7 @@ import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
 
 
-class WorldScreenExample {
+class WorldUiExample {
     static CATEGORY = 'User Interface';
     static NAME = 'World UI';
 
@@ -141,4 +141,4 @@ class WorldScreenExample {
     }
 }
 
-export default WorldScreenExample;
+export default WorldUiExample;

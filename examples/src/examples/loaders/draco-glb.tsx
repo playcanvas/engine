@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class DracoGLBExample {
+class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
 
@@ -59,4 +59,4 @@ class DracoGLBExample {
     }
 }
 
-export default DracoGLBExample;
+export default DracoGlbExample;

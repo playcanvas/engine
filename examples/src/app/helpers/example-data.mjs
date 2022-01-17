@@ -1,5 +1,5 @@
 import exampleData from '../../../dist/example-data';
-import * as exampleClasses from '../../examples';
+import * as exampleClasses from '../../examples/index.mjs';
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);

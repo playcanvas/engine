@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class GLBExample {
+class GlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
 
@@ -59,4 +59,4 @@ class GLBExample {
     }
 }
 
-export default GLBExample;
+export default GlbExample;

@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class XRPickingExample {
+class XrPickingExample {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 
@@ -169,4 +169,4 @@ class XRPickingExample {
     }
 }
 
-export default XRPickingExample;
+export default XrPickingExample;

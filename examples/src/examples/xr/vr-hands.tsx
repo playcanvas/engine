@@ -1,7 +1,7 @@
 import * as pc from '../../../../';
 
 
-class VRHandsExample {
+class VrHandsExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Hands';
 
@@ -215,4 +215,4 @@ class VRHandsExample {
     }
 }
 
-export default VRHandsExample;
+export default VrHandsExample;

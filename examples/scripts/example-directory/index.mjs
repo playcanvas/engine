@@ -1,5 +1,10 @@
-const fs = require('fs');
-const Handlebars = require("handlebars");
+import fs from 'fs';
+import Handlebars from 'handlebars';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const MAIN_DIR = `${__dirname}/../../`;
 
@@ -12,7 +17,7 @@ function loadHtmlTemplate(data) {
 const categoriesList = [];
 
 let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
-categories = categories.filter(c => c !== 'index.js');
+categories = categories.filter(c => c !== 'index.mjs');
 categories.forEach(function (category) {
     var dir = `${MAIN_DIR}/dist/${category}`;
     if (!fs.existsSync(dir)) {
@@ -20,7 +25,7 @@ categories.forEach(function (category) {
     }
 
     let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
-    examples = examples.filter(e => e !== 'index.js');
+    examples = examples.filter(e => e !== 'index.mjs');
     examples = examples.map(example => example.replace('.tsx', ''));
     categoriesList.push({
         name: category,

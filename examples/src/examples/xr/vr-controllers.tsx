@@ -3,7 +3,7 @@ import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
 
 
-class VRTemplateExample {
+class VrTemplateExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Controllers';
 
@@ -167,4 +167,4 @@ class VRTemplateExample {
     }
 }
 
-export default VRTemplateExample;
+export default VrTemplateExample;
