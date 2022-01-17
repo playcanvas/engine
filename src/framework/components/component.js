@@ -86,12 +86,11 @@ class Component extends EventHandler {
     }
 
     /**
-     * @private
-     * @name Component#data
+     * Access the component data directly. Usually you should access the data properties via the
+     * individual properties as modifying this data directly will not fire 'set' events.
+     *
      * @type {ComponentData}
-     * @description Access the component data directly.
-     * Usually you should access the data properties via the individual properties as
-     * modifying this data directly will not fire 'set' events.
+     * @private
      */
     get data() {
         const record = this.system.store[this.entity.getGuid()];
