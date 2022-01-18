@@ -484,7 +484,7 @@ class Lightmapper {
                         meshInstance._shaderDefs |= shaderDefs;
                     }
 
-                    // only lights that affect lightmapped objects are used on this mesh now that is baked
+                    // only lights that affect lightmapped objects are used on this mesh now that it is baked
                     meshInstance.mask = MASK_AFFECT_LIGHTMAPPED;
 
                     // textures
