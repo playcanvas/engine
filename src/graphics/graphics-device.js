@@ -2265,6 +2265,7 @@ class GraphicsDevice extends EventHandler {
 
             // single VB keeps its VAO
             const vertexBuffer = this.vertexBuffers[0];
+            Debug.assert(vertexBuffer.device === this, "The VertexBuffer was not created using current GraphicsDevice");
             if (!vertexBuffer._vao) {
                 vertexBuffer._vao = this.createVertexArray(this.vertexBuffers);
             }
@@ -2416,6 +2417,8 @@ class GraphicsDevice extends EventHandler {
 
         if (primitive.indexed) {
             const indexBuffer = this.indexBuffer;
+            Debug.assert(indexBuffer.device === this, "The IndexBuffer was not created using current GraphicsDevice");
+
             const format = indexBuffer.glFormat;
             const offset = primitive.base * indexBuffer.bytesPerIndex;
 
