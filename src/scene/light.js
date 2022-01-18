@@ -8,7 +8,7 @@ import { Vec4 } from '../math/vec4.js';
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_LIGHTMAP, MASK_DYNAMIC,
+    MASK_BAKE, MASK_AFFECT_DYNAMIC,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
@@ -102,7 +102,7 @@ class Light {
         this._intensity = 1;
         this._castShadows = false;
         this._enabled = false;
-        this.mask = MASK_DYNAMIC;
+        this.mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -317,7 +317,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this.mask !== MASK_LIGHTMAP && this.mask !== 0;
+        return this._castShadows && this.mask !== MASK_BAKE && this.mask !== 0;
     }
 
     set shadowResolution(value) {

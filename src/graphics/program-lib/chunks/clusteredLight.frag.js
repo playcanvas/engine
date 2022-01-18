@@ -86,6 +86,9 @@ struct ClusterLightData {
 
     // channel mask - one of the channels has 1, the others are 0
     vec4 cookieChannelMask;
+
+    // light mask
+    float mask;
 };
 
 // Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
@@ -107,6 +110,15 @@ mat4 lightProjectionMatrix;
 #define isClusteredLightArea(light) ( light.shape > 0.1 )
 #define isClusteredLightRect(light) ( light.shape < 0.3 )
 #define isClusteredLightDisk(light) ( light.shape < 0.6 )
+
+// macro to test light mask (mesh accepts dynamic vs lightmapped lights)
+#ifdef CLUSTER_MESH_DYNAMIC_LIGHTS
+    // accept lights marked as dynamic or both dynamic and lightmapped
+    #define acceptLightMask(light) ( light.mask < 0.75)
+#else
+    // accept lights marked as lightmapped or both dynamic and lightmapped
+    #define acceptLightMask(light) ( light.mask > 0.25)
+#endif
 
 vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     return vec4(
@@ -151,6 +163,9 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 
     // cookie
     clusterLightData.cookie = colorB.z;
+
+    // lightmaks
+    clusterLightData.mask = colorB.w;
 
     #ifdef CLUSTER_TEXTURE_FLOAT
 
@@ -522,8 +537,9 @@ void evaluateClusterLight(float lightIndex) {
     ClusterLightData clusterLightData;
     decodeClusterLightCore(clusterLightData, lightIndex);
 
-    // evaluate light
-    evaluateLight(clusterLightData);
+    // evaluate light if it uses accepted light mask
+    if (acceptLightMask(clusterLightData))
+        evaluateLight(clusterLightData);
 }
 
 void addClusteredLights() {

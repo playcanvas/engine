@@ -1,7 +1,7 @@
 import { Vec3 } from '../../math/vec3.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../graphics/constants.js';
 import { FloatPacking } from '../../math/float-packing.js';
-import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT } from '../constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
 
@@ -19,7 +19,7 @@ const TextureIndex8 = {
     // always 8bit texture data, regardless of float texture support
     FLAGS: 0,                   // lightType, lightShape, fallofMode, castShadows
     COLOR_A: 1,                 // color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
-    COLOR_B: 2,                 // color.b, color.b, useCookie, -
+    COLOR_B: 2,                 // color.b, color.b, useCookie, lightMask
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
     SHADOW_BIAS: 4,             // bias, bias, normalBias, normalBias
     COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
@@ -293,7 +293,13 @@ class LightsBuffer {
         // cookie
         data8[index + 6] = isCookie ? 255 : 0;
 
-        // here we still have unused 1 byte
+        // lightMask
+        // 0: MASK_AFFECT_DYNAMIC
+        // 127: MASK_AFFECT_DYNAMIC && MASK_AFFECT_LIGHTMAPPED
+        // 255: MASK_AFFECT_LIGHTMAPPED
+        const isDynamic = !!(light.mask & MASK_AFFECT_DYNAMIC);
+        const isLightmapped = !!(light.mask & MASK_AFFECT_LIGHTMAPPED);
+        data8[index + 7] = (isDynamic && isLightmapped) ? 127 : (isLightmapped ? 255 : 0);
     }
 
     addLightDataSpotAngles(data8, index, light) {

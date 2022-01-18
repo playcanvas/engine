@@ -617,9 +617,10 @@ export const SHADOWUPDATE_REALTIME = 2;
 export const SORTKEY_FORWARD = 0;
 export const SORTKEY_DEPTH = 1;
 
-export const MASK_DYNAMIC = 1;
-export const MASK_BAKED = 2;
-export const MASK_LIGHTMAP = 4;
+// flags used on the mask property of the Light, and also on mask property of the MeshInstance
+export const MASK_AFFECT_DYNAMIC = 1;
+export const MASK_AFFECT_LIGHTMAPPED = 2;
+export const MASK_BAKE = 4;
 
 /**
  * Render shaded materials with gamma correction and tonemapping.
