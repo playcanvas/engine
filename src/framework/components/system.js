@@ -24,12 +24,11 @@ class ComponentSystem extends EventHandler {
 
         this.app = app;
 
-        // The store where all pc.ComponentData objects are kept
+        // The store where all ComponentData objects are kept
         this.store = {};
         this.schema = [];
     }
 
-    // Instance methods
     /**
      * Create new {@link Component} and component data instances and attach them to the entity.
      *
