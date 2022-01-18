@@ -162,14 +162,26 @@ class Lightmapper {
         // create light cluster structure
         if (this.scene.clusteredLightingEnabled) {
 
+            // create light params, and base most parameters on the lighting params of the scene
             const lightingParams = new LightingParams(device.supportsAreaLights, device.maxTextureSize, () => {});
             this.lightingParams = lightingParams;
 
+            const srcParams = this.scene.lighting;
+            lightingParams.shadowsEnabled = srcParams.shadowsEnabled;
+            lightingParams.shadowAtlasResolution = srcParams.shadowAtlasResolution;
+
+            lightingParams.cookiesEnabled = srcParams.cookiesEnabled;
+            lightingParams.cookieAtlasResolution = srcParams.cookieAtlasResolution;
+
+            lightingParams.areaLightsEnabled = srcParams.areaLightsEnabled;
+
+            // some custom lightmapping params - we bake single light a time
             lightingParams.cells = new Vec3(3, 3, 3);
             lightingParams.maxLightsPerCell = 4;
 
-            // TODO: this is resolution for clustered lights only (omni and spot), we might need to expose some control over this
-            lightingParams.shadowAtlasResolution = 1024;
+
+
+            console.log("HEY");
 
             this.worldClusters = new WorldClusters(device);
             this.worldClusters.name = "ClusterLightmapper";
