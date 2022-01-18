@@ -1,4 +1,3 @@
-import { events } from '../../core/events.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 import { Color } from '../../math/color.js';
