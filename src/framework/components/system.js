@@ -1,4 +1,3 @@
-import { events } from '../../core/events.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 import { Color } from '../../math/color.js';
@@ -25,12 +24,11 @@ class ComponentSystem extends EventHandler {
 
         this.app = app;
 
-        // The store where all pc.ComponentData objects are kept
+        // The store where all ComponentData objects are kept
         this.store = {};
         this.schema = [];
     }
 
-    // Instance methods
     /**
      * Create new {@link Component} and component data instances and attach them to the entity.
      *
@@ -213,8 +211,5 @@ function convertValue(value, type) {
             throw new Error('Could not convert unhandled type: ' + type);
     }
 }
-
-// Add event support
-events.attach(ComponentSystem);
 
 export { ComponentSystem };
