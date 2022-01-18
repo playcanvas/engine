@@ -18,8 +18,8 @@ const categoriesList = [];
 
 let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
 categories = categories.filter(c => c !== 'index.mjs');
-categories.forEach(function (category) {
-    var dir = `${MAIN_DIR}/dist/${category}`;
+categories.forEach((category) => {
+    const dir = `${MAIN_DIR}/dist/${category}`;
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
@@ -37,7 +37,7 @@ categories.forEach(function (category) {
             exampleTitle: `${example.split('-').join(' ')}`,
             largeThumbnailName: `${category}_${example}_large`
         });
-        var dir = `${MAIN_DIR}/dist/${category}/${example}`;
+        const dir = `${MAIN_DIR}/dist/${category}/${example}`;
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir);
         }

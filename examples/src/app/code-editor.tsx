@@ -55,8 +55,7 @@ const CodeEditor = (props: CodeEditorProps) => {
         } else {
             exampleFunction = files[0].text;
         }
-        formatters.getInnerFunctionText(exampleFunction);
-        window.localStorage.setItem(window.location.hash.replace('#', ''), exampleFunction);
+        window.localStorage.setItem(window.location.hash.replace('#', ''), formatters.getInnerFunctionText(exampleFunction));
     };
 
     const onValidate = (markers: Array<any>) => {

@@ -41,6 +41,7 @@ const getInnerFunctionText = (text) => {
     const indexOfAppCallEnd = indexOfAppCallStart + text.substring(indexOfAppCallStart, text.length - 1).indexOf(';');
     const appCall = text.substring(indexOfAppCallStart, indexOfAppCallEnd + 1);
     text = text.replace(appCall, '');
+    return text;
 };
 
 const getExampleClassFromTextFile = (Babel, text) => {

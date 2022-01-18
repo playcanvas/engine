@@ -52,9 +52,15 @@
                 }
             });
 
-            const miniStats = new pcx.MiniStats(app);
+            var miniStats = new pcx.MiniStats(app);
 
-            app.on('update', () => {
+            var queryString = window.location.search;
+            var urlParams = new URLSearchParams(queryString);
+            if (urlParams.get('miniStats') === 'false') {
+                miniStats.enabled = false;
+            }
+
+            app.on('update', function () {
                 if (window.top._showMiniStats !== undefined) miniStats.enabled = window.top._showMiniStats;
             });
 
@@ -139,11 +145,11 @@
         canvas.setAttribute('height', window.innerHeight + 'px');
         var resizeTimeout = null;
         if (ResizeObserver) {
-            new ResizeObserver(() => {
+            new ResizeObserver(function() {
                 if (resizeTimeout) {
                     window.clearTimeout(resizeTimeout);
                 }
-                resizeTimeout = setTimeout(() => {
+                resizeTimeout = setTimeout(function () {
                     pc.app.resizeCanvas(canvasContainerElement.offsetWidth, canvasContainerElement.offsetHeight);
                     canvas.width = canvasContainerElement.clientWidth;
                 });
@@ -161,11 +167,11 @@
 
         var e = new Example();
 
-        let exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
+        var exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
         if (!exampleFunction) {
             exampleFunction = e.example
         } else {
-            exampleFunction = new Function('app', 'canvas', 'manifest', 'data', exampleFunction);
+            exampleFunction = new Function('app', 'canvas', 'assets', 'data', exampleFunction);
         }
         loadExample.bind(this)(exampleFunction, e.load, e.controls);
     </script>

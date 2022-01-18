@@ -1,4 +1,4 @@
-import exampleData from '../../../dist/example-data';
+import exampleData from '../../../dist/example-data.js';
 import * as exampleClasses from '../../examples/index.mjs';
 
 function capitalizeFirstLetter(string) {
