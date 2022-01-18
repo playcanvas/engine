@@ -179,10 +179,6 @@ class Lightmapper {
             lightingParams.cells = new Vec3(3, 3, 3);
             lightingParams.maxLightsPerCell = 4;
 
-
-
-            console.log("HEY");
-
             this.worldClusters = new WorldClusters(device);
             this.worldClusters.name = "ClusterLightmapper";
         }
