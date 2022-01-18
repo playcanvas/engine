@@ -506,7 +506,7 @@ class SoundSlot extends EventHandler {
         let assetDuration = 0;
         if (this._hasAsset()) {
             const asset = this._assets.get(this._asset);
-            assetDuration = asset.resource ? asset.resource.duration : 0;
+            assetDuration = asset?.resource ? asset.resource.duration : 0;
         }
 
         // != intentional
