@@ -214,7 +214,4 @@ function convertValue(value, type) {
     }
 }
 
-// Add event support
-events.attach(ComponentSystem);
-
 export { ComponentSystem };
