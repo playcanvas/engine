@@ -489,6 +489,10 @@ class StandardMaterial extends Material {
 
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
+        this.reset();
+    }
+
+    reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
             this[`_${name}`] = _props[name].value();
