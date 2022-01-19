@@ -1017,13 +1017,15 @@ class Lightmapper {
 
                     if (clusteredLightingEnabled) {
                         this.renderer.lightTextureAtlas.update(lightArray[LIGHTTYPE_SPOT], lightArray[LIGHTTYPE_OMNI], this.lightingParams);
-
-                        const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
-                        this.worldClusters.update(clusterLights, this.scene.gammaCorrection, this.lightingParams);
                     }
 
                     // render light shadow map needs to be rendered
                     shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
+
+                    if (clusteredLightingEnabled) {
+                        const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
+                        this.worldClusters.update(clusterLights, this.scene.gammaCorrection, this.lightingParams);
+                    }
 
                     // Store original materials
                     this.backupMaterials(rcv);
