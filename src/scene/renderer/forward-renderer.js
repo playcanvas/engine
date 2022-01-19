@@ -1633,7 +1633,8 @@ class ForwardRenderer {
             }
 
             // Generate static lighting for meshes in this layer if needed
-            if (layer._needsStaticPrepare && layer._staticLightHash) {
+            // Note: Static lighting is not used when clustered lighting is enabled
+            if (layer._needsStaticPrepare && layer._staticLightHash && !this.scene.clusteredLightingEnabled) {
                 // TODO: reuse with the same staticLightHash
                 if (layer._staticPrepareDone) {
                     StaticMeshes.revert(layer.opaqueMeshInstances);
@@ -1856,7 +1857,7 @@ class ForwardRenderer {
         // #endif
 
         // Update static layer data, if something's changed
-        const updated = comp._update(clusteredLightingEnabled);
+        const updated = comp._update(device, clusteredLightingEnabled);
         const lightsChanged = (updated & COMPUPDATED_LIGHTS) !== 0;
 
         // #if _PROFILER

@@ -12,8 +12,6 @@ import { RenderAction } from './render-action.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
-import { getApplication } from '../../framework/globals.js';
-
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../layer.js').Layer} Layer */
 
@@ -42,20 +40,12 @@ class LayerComposition extends EventHandler {
     /**
      * Create a new layer composition.
      *
-     * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this layer
-     * composition. If it is not provided, a device is obtained from the {@link Application}.
      * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to
      * "Untitled" if not specified.
      */
-    constructor(graphicsDevice, name = "Untitled") {
+    constructor(name = "Untitled") {
         super();
 
-        if (typeof graphicsDevice === 'string') {
-            // handle previous constructor parameters: (name)
-            graphicsDevice = null;
-            name = graphicsDevice;
-        }
-        this.device = graphicsDevice || getApplication()?.graphicsDevice;
         this.name = name;
 
         // enable logging
@@ -119,11 +109,11 @@ class LayerComposition extends EventHandler {
     }
 
     // returns an empty light cluster object to be used when no lights are used
-    get emptyWorldClusters() {
+    getEmptyWorldClusters(device) {
         if (!this._emptyWorldClusters) {
 
             // create cluster structure with no lights
-            this._emptyWorldClusters = new WorldClusters(this.device);
+            this._emptyWorldClusters = new WorldClusters(device);
             this._emptyWorldClusters.name = "ClusterEmpty";
 
             // update it once to avoid doing it each frame
@@ -148,7 +138,7 @@ class LayerComposition extends EventHandler {
         }
     }
 
-    _update(clusteredLightingEnabled = false) {
+    _update(device, clusteredLightingEnabled = false) {
         const len = this.layerList.length;
         let result = 0;
 
@@ -217,7 +207,7 @@ class LayerComposition extends EventHandler {
         function moveByBlendType(dest, src, moveTransparent) {
             for (let s = 0; s < src.length;) {
 
-                if (src[s].material.transparent === moveTransparent) {
+                if (src[s].material?.transparent === moveTransparent) {
 
                     // add it to dest
                     dest.push(src[s]);
@@ -377,7 +367,7 @@ class LayerComposition extends EventHandler {
 
             // prepare clustered lighting for render actions
             if (clusteredLightingEnabled) {
-                this.allocateLightClusters();
+                this.allocateLightClusters(device);
             }
         }
 
@@ -502,7 +492,7 @@ class LayerComposition extends EventHandler {
     }
 
     // assign light clusters to render actions that need it
-    allocateLightClusters() {
+    allocateLightClusters(device) {
 
         // reuse previously allocated clusters
         tempClusterArray.push(...this._worldClusters);
@@ -535,7 +525,7 @@ class LayerComposition extends EventHandler {
 
                         // create new cluster
                         if (!clusters) {
-                            clusters = new WorldClusters(this.device);
+                            clusters = new WorldClusters(device);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;
@@ -548,7 +538,7 @@ class LayerComposition extends EventHandler {
 
             // no clustered lights, use the cluster with no lights
             if (!ra.lightClusters) {
-                ra.lightClusters = this.emptyWorldClusters;
+                ra.lightClusters = this.getEmptyWorldClusters(device);
             }
         }
 
