@@ -10,7 +10,7 @@ import { Component } from '../component.js';
  * used in many different ways.
  *
  * @augments Component
- * @private
+ * @ignore
  */
 class ZoneComponent extends Component {
     /**
@@ -18,7 +18,6 @@ class ZoneComponent extends Component {
      *
      * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
-     * @private
      */
     constructor(system, entity) {
         super(system, entity);
@@ -32,7 +31,6 @@ class ZoneComponent extends Component {
      * The size of the axis-aligned box of this ZoneComponent.
      *
      * @type {Vec3}
-     * @private
      */
     set size(data) {
         if (data instanceof Vec3) {
@@ -74,7 +72,7 @@ class ZoneComponent extends Component {
     }
 
     /**
-     * @private
+     * @ignore
      * @event
      * @name ZoneComponent#enable
      * @description Fired when Component becomes enabled
@@ -86,7 +84,7 @@ class ZoneComponent extends Component {
      */
 
     /**
-     * @private
+     * @ignore
      * @event
      * @name ZoneComponent#disable
      * @description Fired when Component becomes disabled
@@ -98,7 +96,7 @@ class ZoneComponent extends Component {
      */
 
     /**
-     * @private
+     * @ignore
      * @event
      * @name ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
@@ -111,7 +109,7 @@ class ZoneComponent extends Component {
      */
 
     /**
-     * @private
+     * @ignore
      * @event
      * @name ZoneComponent#remove
      * @description Fired when a zone is removed from an entity.

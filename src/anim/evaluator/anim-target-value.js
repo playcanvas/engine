@@ -5,7 +5,7 @@ import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
  * Used to store and update the value of an animation target. This combines the values of multiple
  * layer targets into a single value.
  *
- * @private
+ * @ignore
  */
 class AnimTargetValue {
     static TYPE_QUAT = 'quaternion';
@@ -17,7 +17,6 @@ class AnimTargetValue {
      *
      * @param {AnimComponent} component - The anim component this target value is associated with.
      * @param {string} type - The type of value stored, either quat or vec3.
-     * @private
      */
     constructor(component, type) {
         this._component = component;

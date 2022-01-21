@@ -558,7 +558,7 @@ class Vec2 {
      * @param {Vec2} lhs - The first vector operand for the calculation.
      * @param {Vec2} rhs - The second vector operand for the calculation.
      * @returns {number} The calculated angle in radians.
-     * @private
+     * @ignore
      */
     static angleRad(lhs, rhs) {
         return Math.atan2(lhs.x * rhs.y - lhs.y * rhs.x, lhs.x * rhs.x + lhs.y * rhs.y);

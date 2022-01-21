@@ -16,7 +16,7 @@ const KHRConstants = {
  * Texture parser for ktx2 files.
  *
  * @implements {TextureParser}
- * @private
+ * @ignore
  */
 class Ktx2Parser {
     constructor(registry, device) {

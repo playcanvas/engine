@@ -691,7 +691,7 @@ class GraphNode extends EventHandler {
      * @returns {Vec3} The world space scale of the graph node.
      * @example
      * var scale = this.entity.getScale();
-     * @private
+     * @ignore
      */
     getScale() {
         if (!this._scale) {
@@ -1213,7 +1213,7 @@ class GraphNode extends EventHandler {
     /**
      * Updates the world transformation matrices at this node and all of its descendants.
      *
-     * @private
+     * @ignore
      */
     syncHierarchy() {
         if (!this._enabled)

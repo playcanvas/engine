@@ -31,7 +31,7 @@ import { Component } from '../component.js';
  * anymore.
  * @property {number} rollOffFactor The factor used in the falloff equation.
  * @augments Component
- * @private
+ * @ignore
  */
 class AudioSourceComponent extends Component {
     /**
@@ -40,7 +40,6 @@ class AudioSourceComponent extends Component {
      * @param {AudioSourceComponentSystem} system - The ComponentSystem that created
      * this component.
      * @param {Entity} entity - The entity that the Component is attached to.
-     * @private
      */
     constructor(system, entity) {
         super(system, entity);
@@ -60,7 +59,6 @@ class AudioSourceComponent extends Component {
      * Begin playback of an audio asset in the component attached to an entity.
      *
      * @param {string} name - The name of the Asset to play.
-     * @private
      */
     play(name) {
         if (!this.enabled || !this.entity.enabled) {
@@ -91,8 +89,6 @@ class AudioSourceComponent extends Component {
     /**
      * Pause playback of the audio that is playing on the Entity. Playback can be resumed by
      * calling {@link AudioSourceComponent#unpause}.
-     *
-     * @private
      */
     pause() {
         if (this.channel) {
@@ -102,8 +98,6 @@ class AudioSourceComponent extends Component {
 
     /**
      * Resume playback of the audio if paused. Playback is resumed at the time it was paused.
-     *
-     * @private
      */
     unpause() {
         if (this.channel && this.channel.paused) {
@@ -113,8 +107,6 @@ class AudioSourceComponent extends Component {
 
     /**
      * Stop playback on an Entity. Playback can not be resumed after being stopped.
-     *
-     * @private
      */
     stop() {
         if (this.channel) {

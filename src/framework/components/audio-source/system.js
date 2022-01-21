@@ -32,7 +32,7 @@ const _schema = [
  * {@link SoundComponentSystem}.
  *
  * @augments ComponentSystem
- * @private
+ * @ignore
  */
 class AudioSourceComponentSystem extends ComponentSystem {
     /**
@@ -40,7 +40,6 @@ class AudioSourceComponentSystem extends ComponentSystem {
      *
      * @param {Application} app - The application managing this system.
      * @param {SoundManager} manager - A sound manager instance.
-     * @private
      */
     constructor(app, manager) {
         super(app);
@@ -118,7 +117,6 @@ class AudioSourceComponentSystem extends ComponentSystem {
      * multiplied by this value.
      *
      * @param {number} volume - The value to set the volume to. Valid from 0 to 1.
-     * @private
      */
     setVolume(volume) {
         this.manager.setVolume(volume);

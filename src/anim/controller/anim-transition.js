@@ -8,7 +8,7 @@ import {
  * as their source (from) state. If so and the AnimTransitions parameter based conditions are met,
  * the controller will transition to the destination state.
  *
- * @private
+ * @ignore
  */
 class AnimTransition {
     /**
@@ -31,7 +31,6 @@ class AnimTransition {
      * @param {string} interruptionSource - Defines whether another transition can interrupt this
      * one and which of the current or previous states transitions can do so. One of
      * pc.ANIM_INTERRUPTION_*. Defaults to pc.ANIM_INTERRUPTION_NONE.
-     * @private
      */
     constructor({ from, to, time = 0, priority = 0, conditions = [], exitTime = null, transitionOffset = null, interruptionSource = ANIM_INTERRUPTION_NONE }) {
         this._from = from;

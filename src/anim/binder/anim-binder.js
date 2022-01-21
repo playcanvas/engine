@@ -4,7 +4,7 @@
  * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.
  *
- * @private
+ * @ignore
  */
 class AnimBinder {
     // join a list of path segments into a path string using the full stop character. If another character is supplied,
@@ -58,7 +58,6 @@ class AnimBinder {
      * @example
      * // returns 'spotLight/light/color.r'
      * encode(['spotLight'], 'light', ['color', 'r']);
-     * @private
      */
     static encode(entityPath, component, propertyPath) {
         return `${

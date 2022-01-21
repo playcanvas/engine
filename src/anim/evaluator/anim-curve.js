@@ -2,7 +2,7 @@
  * Animation curve links an input data set to an output data set and defines the interpolation
  * method to use.
  *
- * @private
+ * @ignore
  */
 class AnimCurve {
     /**
@@ -17,7 +17,6 @@ class AnimCurve {
      * - {@link INTERPOLATION_STEP}
      * - {@link INTERPOLATION_LINEAR}
      * - {@link INTERPOLATION_CUBIC}
-     * @private
      */
     constructor(paths, input, output, interpolation) {
         this._paths = paths;

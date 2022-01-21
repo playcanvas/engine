@@ -13,8 +13,8 @@ import { VrDisplay } from './vr-display.js';
  * `displays` list.
  * @property {boolean} isSupported Reports whether this device supports the WebVR API.
  * @augments EventHandler
- * @private
  * @deprecated
+ * @ignore
  */
 class VrManager extends EventHandler {
     /**
@@ -54,7 +54,7 @@ class VrManager extends EventHandler {
     }
 
     /**
-     * @private
+     * @ignore
      * @deprecated
      * @event
      * @name VrManager#displayconnect
@@ -67,7 +67,7 @@ class VrManager extends EventHandler {
      */
 
     /**
-     * @private
+     * @ignore
      * @deprecated
      * @event
      * @name VrManager#displaydisconnect
@@ -80,12 +80,10 @@ class VrManager extends EventHandler {
      */
 
     /**
-     * @private
-     * @deprecated
-     * @static
-     * @name VrManager.isSupported
+     * Reports whether this device supports the WebVR API.
+     *
      * @type {boolean}
-     * @description Reports whether this device supports the WebVR API.
+     * @deprecated
      */
     static isSupported = (typeof navigator !== 'undefined') ? !!navigator.getVRDisplays : false;
 
@@ -102,7 +100,6 @@ class VrManager extends EventHandler {
     /**
      * Remove events and clear up manager.
      *
-     * @private
      * @deprecated
      */
     destroy() {
@@ -112,7 +109,6 @@ class VrManager extends EventHandler {
     /**
      * Called once per frame to poll all attached displays.
      *
-     * @private
      * @deprecated
      */
     poll() {

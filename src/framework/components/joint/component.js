@@ -29,7 +29,7 @@ const properties = [
  * The JointComponent adds a physics joint constraint linking two rigid bodies.
  *
  * @augments Component
- * @private
+ * @ignore
  */
 class JointComponent extends Component {
     /**
@@ -37,7 +37,6 @@ class JointComponent extends Component {
      *
      * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
-     * @private
      */
     constructor(system, entity) {
         super(system, entity);

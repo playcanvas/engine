@@ -27,7 +27,7 @@ const _typeLookup = function () {
  *
  * @param {object} obj - The object to get the type of.
  * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
- * @private
+ * @ignore
  */
 function type(obj) {
     if (obj === null) {
@@ -66,7 +66,7 @@ function type(obj) {
  * // logs "a"
  * A.b();
  * // logs "b"
- * @private
+ * @ignore
  */
 function extend(target, ex) {
     for (const prop in ex) {
@@ -89,7 +89,7 @@ function extend(target, ex) {
  *
  * @param {object} o - The Object to test.
  * @returns {boolean} True if the Object is not undefined.
- * @private
+ * @ignore
  */
 function isDefined(o) {
     let a;

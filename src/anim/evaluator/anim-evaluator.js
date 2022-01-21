@@ -5,14 +5,13 @@ import { AnimTargetValue } from './anim-target-value.js';
 /**
  * AnimEvaluator blends multiple sets of animation clips together.
  *
- * @private
+ * @ignore
  */
 class AnimEvaluator {
     /**
      * Create a new animation evaluator.
      *
      * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
-     * @private
      */
     constructor(binder) {
         this._binder = binder;
@@ -26,7 +25,6 @@ class AnimEvaluator {
      * The list of animation clips.
      *
      * @type {AnimClip[]}
-     * @private
      */
     get clips() {
         return this._clips;
@@ -121,7 +119,6 @@ class AnimEvaluator {
      * Add a clip to the evaluator.
      *
      * @param {AnimClip} clip - The clip to add to the evaluator.
-     * @private
      */
     addClip(clip) {
         const targets = this._targets;
@@ -190,7 +187,6 @@ class AnimEvaluator {
      * Remove a clip from the evaluator.
      *
      * @param {number} index - Index of the clip to remove.
-     * @private
      */
     removeClip(index) {
         const targets = this._targets;
@@ -228,8 +224,6 @@ class AnimEvaluator {
 
     /**
      * Remove all clips from the evaluator.
-     *
-     * @private
      */
     removeClips() {
         while (this._clips.length > 0) {
@@ -242,7 +236,6 @@ class AnimEvaluator {
      *
      * @param {string} name - Name of the clip to find.
      * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
-     * @private
      */
     findClip(name) {
         const clips = this._clips;
@@ -275,7 +268,6 @@ class AnimEvaluator {
      *
      * @param {number} deltaTime - The amount of time that has passed since the last update, in
      * seconds.
-     * @private
      */
     update(deltaTime) {
         // copy clips

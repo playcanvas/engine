@@ -18,7 +18,7 @@ import { Asset } from '../../../asset/asset.js';
  * Texture parser for hdr files.
  *
  * @implements {TextureParser}
- * @private
+ * @ignore
  */
 class HdrParser {
     constructor(registry) {

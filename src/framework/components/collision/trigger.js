@@ -6,7 +6,7 @@ import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BOD
  * Creates a trigger object used to create internal physics objects that interact with rigid bodies
  * and trigger collision events with no collision response.
  *
- * @private
+ * @ignore
  */
 class Trigger {
     /**
@@ -15,7 +15,6 @@ class Trigger {
      * @param {Application} app - The running {@link Application}.
      * @param {Component} component - The component for which the trigger will be created.
      * @param {ComponentData} data - The data for the component.
-     * @private
      */
     constructor(app, component, data) {
         this.entity = component.entity;

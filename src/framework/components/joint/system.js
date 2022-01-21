@@ -10,14 +10,13 @@ const _schema = ['enabled'];
  * Creates and manages physics joint components.
  *
  * @augments ComponentSystem
- * @private
+ * @ignore
  */
 class JointComponentSystem extends ComponentSystem {
     /**
      * Create a new JointComponentSystem instance.
      *
      * @param {Application} app - The application.
-     * @private
      */
     constructor(app) {
         super(app);

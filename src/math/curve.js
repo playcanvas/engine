@@ -162,7 +162,7 @@ class Curve {
      *
      * @param {number} precision - The number of samples to return.
      * @returns {Float32Array} The set of quantized values.
-     * @private
+     * @ignore
      */
     quantize(precision) {
         precision = Math.max(precision, 2);
@@ -187,7 +187,7 @@ class Curve {
      * @param {number} min - The minimum output value.
      * @param {number} max - The maximum output value.
      * @returns {Float32Array} The set of quantized values.
-     * @private
+     * @ignore
      */
     quantizeClamped(precision, min, max) {
         const result = this.quantize(precision);

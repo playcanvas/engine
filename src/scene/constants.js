@@ -177,7 +177,6 @@ export const LIGHTTYPE_DIRECTIONAL = 0;
  * Omni-directional (local) light source.
  *
  * @type {number}
- * @private
  */
 export const LIGHTTYPE_OMNI = 1;
 
@@ -185,6 +184,7 @@ export const LIGHTTYPE_OMNI = 1;
  * Point (local) light source.
  *
  * @type {number}
+ * @ignore
  */
 export const LIGHTTYPE_POINT = LIGHTTYPE_OMNI;
 
@@ -291,7 +291,7 @@ export const SHADOW_COUNT = 6;
  * map of engine SHADOW__*** to a string representation
  *
  * @type {object}
- * @private
+ * @ignore
  */
 export const shadowTypeToString = {};
 shadowTypeToString[SHADOW_PCF3] = "PCF3";
@@ -763,7 +763,7 @@ export const SORTMODE_FRONT2BACK = 4;
  * Provide custom functions for sorting drawcalls and calculating distance.
  *
  * @type {number}
- * @private
+ * @ignore
  */
 export const SORTMODE_CUSTOM = 5;
 
