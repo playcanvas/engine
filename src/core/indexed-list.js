@@ -5,12 +5,18 @@
  */
 class IndexedList {
     /**
-     * Create a new IndexedList instance.
+     * @type {object[]}
+     * @private
      */
-    constructor() {
-        this._list = [];
-        this._index = {};
-    }
+    _list = [];
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, number>}
+     * @private
+     */
+    _index = {};
+    /* eslint-enable jsdoc/check-types */
 
     /**
      * Add a new item into the list with a index key.
