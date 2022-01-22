@@ -133,7 +133,7 @@ class MorphInstance {
             morph.decRefCount();
 
             // destroy morph
-            if (morph.getRefCount() < 1) {
+            if (morph.refCount < 1) {
                 morph.destroy();
             }
         }

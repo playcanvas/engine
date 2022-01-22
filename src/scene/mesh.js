@@ -287,7 +287,7 @@ class Mesh extends RefCountedObject {
             this.morph = null;
 
             // destroy morph
-            if (morph.getRefCount() < 1) {
+            if (morph.refCount < 1) {
                 morph.destroy();
             }
         }

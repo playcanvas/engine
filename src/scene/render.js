@@ -68,7 +68,7 @@ class Render extends EventHandler {
                 const mesh = this._meshes[i];
                 if (mesh) {
                     mesh.decRefCount();
-                    if (mesh.getRefCount() < 1) {
+                    if (mesh.refCount < 1) {
                         mesh.destroy();
                         this._meshes[i] = null;
                     }
