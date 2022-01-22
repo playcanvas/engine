@@ -1,5 +1,7 @@
 import { Vec3 } from '../math/vec3.js';
 
+/** @typedef {import('./ray.js').Ray} Ray */
+
 const tmpVecA = new Vec3();
 
 /**

@@ -8,6 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { AudioSourceComponent } from './component.js';
 import { AudioSourceComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
 /** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
 
 const _schema = [

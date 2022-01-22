@@ -335,7 +335,7 @@ class VrDisplay extends EventHandler {
     /**
      * Return the current frame data that is updated during polling.
      *
-     * @returns {VRFrameData} The frame data object.
+     * @returns {*} The frame data object.
      * @deprecated
      */
     getFrameData() {

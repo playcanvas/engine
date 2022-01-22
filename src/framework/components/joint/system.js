@@ -4,6 +4,8 @@ import { ComponentSystem } from '../system.js';
 import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**

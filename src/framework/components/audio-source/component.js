@@ -4,6 +4,9 @@ import { Channel3d } from '../../../audio/channel3d.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('./system.js').AudioSourceComponentSystem} AudioSourceComponentSystem */
+/** @typedef {import('../../entity.js').Entity} Entity */
+
 /**
  * The AudioSource Component controls playback of an audio sample. This class will be deprecated
  * in favor of {@link SoundComponent}.

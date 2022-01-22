@@ -1,5 +1,7 @@
 import { AnimCache } from './anim-cache.js';
 
+/** @typedef {import('./anim-track.js').AnimTrack} AnimTrack */
+
 /**
  * AnimSnapshot stores the state of an animation track at a particular time.
  *

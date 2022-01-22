@@ -9,6 +9,9 @@ import { Component } from '../component.js';
 
 import { MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED } from './constants.js';
 
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').JointComponentSystem} JointComponentSystem */
+
 const properties = [
     'angularDampingX', 'angularDampingY', 'angularDampingZ',
     'angularEquilibriumX', 'angularEquilibriumY', 'angularEquilibriumZ',
