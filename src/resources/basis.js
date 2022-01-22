@@ -320,7 +320,7 @@ let deviceDetails = null;
  * @param {boolean} [options.isKTX2] - Indicates the image is KTX2 format. Otherwise
  * basis format is assumed.
  * @returns {boolean} True if the basis worker was initialized and false otherwise.
- * @private
+ * @ignore
  */
 function basisTranscode(device, url, data, callback, options) {
     basisInitialize();

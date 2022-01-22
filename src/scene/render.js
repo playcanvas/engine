@@ -16,7 +16,7 @@ import { EventHandler } from '../core/event-handler.js';
  * resource of a Render Asset.
  *
  * @augments EventHandler
- * @private
+ * @ignore
  */
 class Render extends EventHandler {
     /**
@@ -40,7 +40,6 @@ class Render extends EventHandler {
      * The meshes that the render contains.
      *
      * @type {Mesh[]}
-     * @private
      */
     set meshes(value) {
         // decrement references on the existing meshes

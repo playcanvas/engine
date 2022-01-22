@@ -20,7 +20,7 @@ const _invViewProjMat = new Mat4();
 /**
  * A camera.
  *
- * @private
+ * @ignore
  */
 class Camera {
     constructor() {
@@ -317,7 +317,6 @@ class Camera {
      * Creates a duplicate of the camera.
      *
      * @returns {Camera} A cloned Camera.
-     * @private
      */
     clone() {
         return new Camera().copy(this);
@@ -328,7 +327,6 @@ class Camera {
      *
      * @param {Camera} other - Camera to copy.
      * @returns {Camera} Self for chaining.
-     * @private
      */
     copy(other) {
         this.aspectRatio = other.aspectRatio;
@@ -374,7 +372,6 @@ class Camera {
      * @param {number} ch - The height of PlayCanvas' canvas element.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {Vec3} The screen space coordinate.
-     * @private
      */
     worldToScreen(worldCoord, cw, ch, screenCoord = new Vec3()) {
         this._updateViewProjMat();
@@ -403,7 +400,6 @@ class Camera {
      * @param {number} ch - The height of PlayCanvas' canvas element.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @returns {Vec3} The world space coordinate.
-     * @private
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 

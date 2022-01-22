@@ -89,7 +89,7 @@ class LightRenderData {
 /**
  * A light.
  *
- * @private
+ * @ignore
  */
 class Light {
     constructor(graphicsDevice) {
@@ -553,7 +553,6 @@ class Light {
      * Duplicates a light node but does not 'deep copy' the hierarchy.
      *
      * @returns {Light} A cloned Light.
-     * @private
      */
     clone() {
         const clone = new Light(this.device);

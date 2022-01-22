@@ -1,16 +1,17 @@
 import { getApplication } from './globals.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+
 /**
  * Records performance-related statistics related to the application.
  *
- * @private
+ * @ignore
  */
 class ApplicationStats {
     /**
      * Create a new ApplicationStats instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @private
      */
     constructor(device) {
         this.frame = {

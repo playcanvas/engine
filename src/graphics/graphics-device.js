@@ -822,7 +822,7 @@ class GraphicsDevice extends EventHandler {
      * default Android browser). In this case, assume highp is available.
      *
      * @returns {string} "highp", "mediump" or "lowp"
-     * @private
+     * @ignore
      */
     getPrecision() {
         const gl = this.gl;
@@ -1201,7 +1201,7 @@ class GraphicsDevice extends EventHandler {
      * Retrieves the program library assigned to the specified graphics device.
      *
      * @returns {ProgramLibrary} The program library assigned to the device.
-     * @private
+     * @ignore
      */
     getProgramLibrary() {
         return this.programLib;
@@ -1214,7 +1214,7 @@ class GraphicsDevice extends EventHandler {
      * library with a new one.
      *
      * @param {ProgramLibrary} programLib - The program library to assign to the device.
-     * @private
+     * @ignore
      */
     setProgramLibrary(programLib) {
         this.programLib = programLib;
@@ -1325,7 +1325,7 @@ class GraphicsDevice extends EventHandler {
      * Initialize render target before it can be used.
      *
      * @param {RenderTarget} target - The render target to be initialized.
-     * @private
+     * @ignore
      */
     initRenderTarget(target) {
         if (target._glFrameBuffer) return;
@@ -1457,7 +1457,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
      * `shaderChunks`).
-     * @private
+     * @ignore
      */
     getCopyShader() {
         if (!this._copyShader) {
@@ -2690,7 +2690,7 @@ class GraphicsDevice extends EventHandler {
      * Enables or disables alpha to coverage (WebGL2 only).
      *
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
-     * @private
+     * @ignore
      */
     setAlphaToCoverage(state) {
         if (!this.webgl2) return;
@@ -2709,7 +2709,7 @@ class GraphicsDevice extends EventHandler {
      * varyings.
      *
      * @param {VertexBuffer} tf - The output vertex buffer.
-     * @private
+     * @ignore
      */
     setTransformFeedbackBuffer(tf) {
         if (this.transformFeedbackBuffer === tf)
@@ -2735,7 +2735,7 @@ class GraphicsDevice extends EventHandler {
      * process the data without drawing.
      *
      * @param {boolean} on - True to enable rasterization and false to disable it.
-     * @private
+     * @ignore
      */
     setRaster(on) {
         if (this.raster === on) return;
@@ -3475,7 +3475,7 @@ class GraphicsDevice extends EventHandler {
      * number is required, it can be tuned via {@link GraphicsDevice#setBoneLimit}.
      *
      * @returns {number} The maximum number of bones that can be supported by the host hardware.
-     * @private
+     * @ignore
      */
     getBoneLimit() {
         return this.boneLimit;
@@ -3487,7 +3487,7 @@ class GraphicsDevice extends EventHandler {
      * overridden.
      *
      * @param {number} maxBones - The maximum number of bones supported by the host hardware.
-     * @private
+     * @ignore
      */
     setBoneLimit(maxBones) {
         this.boneLimit = maxBones;
@@ -3501,7 +3501,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
-     * @private
+     * @ignore
      */
     resizeCanvas(width, height) {
         this._width = width;
@@ -3529,7 +3529,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Frees memory from all shaders ever allocated with this device.
      *
-     * @private
+     * @ignore
      */
     clearShaderCache() {
         const gl = this.gl;
@@ -3548,7 +3548,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Frees memory from all vertex array objects ever allocated with this device.
      *
-     * @private
+     * @ignore
      */
     clearVertexArrayObjectCache() {
 
@@ -3604,7 +3604,7 @@ class GraphicsDevice extends EventHandler {
      * Automatic instancing.
      *
      * @type {boolean}
-     * @private
+     * @ignore
      */
     set enableAutoInstancing(value) {
         this._enableAutoInstancing = value && this.extInstancing;

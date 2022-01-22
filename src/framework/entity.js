@@ -379,7 +379,7 @@ class Entity extends GraphNode {
      * Get the GUID value for this Entity.
      *
      * @returns {string} The GUID of the Entity.
-     * @private
+     * @ignore
      */
     getGuid() {
         // if the guid hasn't been set yet then set it now before returning it
@@ -395,7 +395,7 @@ class Entity extends GraphNode {
      * the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
      *
      * @param {string} guid - The GUID to assign to the Entity.
-     * @private
+     * @ignore
      */
     setGuid(guid) {
         // remove current guid from entityIndex

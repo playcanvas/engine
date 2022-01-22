@@ -13,9 +13,9 @@ import { StandardMaterialValidator } from '../../../scene/materials/standard-mat
 import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameters.js';
 
 /**
- * @private
- * @name JsonStandardMaterialParser
- * @description Convert incoming JSON data into a {@link StandardMaterial}.
+ * Convert incoming JSON data into a {@link StandardMaterial}.
+ *
+ * @ignore
  */
 class JsonStandardMaterialParser {
     constructor() {
@@ -37,7 +37,6 @@ class JsonStandardMaterialParser {
      *
      * @param {StandardMaterial} material - The material to be initialized.
      * @param {object} data - The data block that is used to initialize.
-     * @private
      */
     initialize(material, data) {
         // usual flow is that data is validated in resource loader

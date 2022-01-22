@@ -271,7 +271,7 @@ class ResourceLoader {
      *
      * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults
      * to 5.
-     * @private
+     * @ignore
      */
     enableRetry(maxRetries = 5) {
         maxRetries = Math.max(0, maxRetries) || 0;
@@ -284,7 +284,7 @@ class ResourceLoader {
     /**
      * Disables retrying of failed requests when loading assets.
      *
-     * @private
+     * @ignore
      */
     disableRetry() {
         for (const key in this._handlers) {

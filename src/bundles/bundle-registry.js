@@ -1,16 +1,16 @@
+/** @typedef {import('../asset/asset.js').Asset} Asset */
 /** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
 
 /**
  * Keeps track of which assets are in bundles and loads files from bundles.
  *
- * @private
+ * @ignore
  */
 class BundleRegistry {
     /**
      * Create a new BundleRegistry instance.
      *
      * @param {AssetRegistry} assets - The asset registry.
-     * @private
      */
     constructor(assets) {
         this._assets = assets;
@@ -257,7 +257,6 @@ class BundleRegistry {
      *
      * @param {Asset} asset - The asset.
      * @returns {Asset[]} An array of bundle assets or null if the asset is not in any bundle.
-     * @private
      */
     listBundlesForAsset(asset) {
         return this._assetsInBundles[asset.id] || null;
@@ -267,7 +266,6 @@ class BundleRegistry {
      * Lists all of the available bundles. This includes bundles that are not loaded.
      *
      * @returns {Asset[]} An array of bundle assets.
-     * @private
      */
     list() {
         const result = [];
@@ -283,7 +281,6 @@ class BundleRegistry {
      *
      * @param {string} url - The url.
      * @returns {boolean} True or false.
-     * @private
      */
     hasUrl(url) {
         return !!this._urlsInBundles[url];
@@ -295,7 +292,6 @@ class BundleRegistry {
      *
      * @param {string} url - The url.
      * @returns {boolean} True or false.
-     * @private
      */
     canLoadUrl(url) {
         return !!this._findLoadedOrLoadingBundleForUrl(url);
@@ -314,7 +310,6 @@ class BundleRegistry {
      * this.app.bundles.loadFile(url, function (err, blobUrl) {
      *     // do something with the blob URL
      * });
-     * @private
      */
     loadUrl(url, callback) {
         const bundle = this._findLoadedOrLoadingBundleForUrl(url);
@@ -342,8 +337,6 @@ class BundleRegistry {
     /**
      * Destroys the registry, and releases its resources. Does not unload bundle assets as these
      * should be unloaded by the {@link AssetRegistry}.
-     *
-     * @private
      */
     destroy() {
         this._assets.off('add', this._onAssetAdded, this);

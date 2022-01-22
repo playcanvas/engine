@@ -13,7 +13,7 @@ import { Untar, UntarWorker } from './untar.js';
  * Loads Bundle Assets.
  *
  * @implements {ResourceHandler}
- * @private
+ * @ignore
  */
 class BundleHandler {
     /**

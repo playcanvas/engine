@@ -3,7 +3,7 @@ import { Material } from './material.js';
 /**
  * A Depth material is for rendering linear depth values to a render target.
  *
- * @private
+ * @ignore
  */
 class DepthMaterial extends Material {
     updateShader(device) {

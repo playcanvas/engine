@@ -11,7 +11,7 @@ const _keyboardEvent = new KeyboardEvent();
  *
  * @param {globalThis.KeyboardEvent} event - A browser keyboard event.
  * @returns {KeyboardEvent} A PlayCanvas keyboard event.
- * @private
+ * @ignore
  */
 function makeKeyboardEvent(event) {
     _keyboardEvent.key = event.keyCode;
@@ -25,7 +25,7 @@ function makeKeyboardEvent(event) {
  *
  * @param {string|number} s - Either a character code or the key character.
  * @returns {number} The character code.
- * @private
+ * @ignore
  */
 function toKeyCode(s) {
     if (typeof s === "string") {
@@ -284,7 +284,7 @@ class Keyboard extends EventHandler {
     /**
      * Called once per frame to update internal state.
      *
-     * @private
+     * @ignore
      */
     update() {
         // clear all keys

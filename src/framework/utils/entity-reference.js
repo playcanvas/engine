@@ -112,7 +112,7 @@ import { EventHandler } from '../../core/event-handler.js';
  *
  * @property {Entity} entity A reference to the entity, if present.
  * @augments EventHandler
- * @private
+ * @ignore
  */
 class EntityReference extends EventHandler {
     /**

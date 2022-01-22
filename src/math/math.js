@@ -260,7 +260,7 @@ const math = {
      * @param {number} b - The second upper or lower threshold to check between.
      * @param {boolean} inclusive - If true, a num param which is equal to a or b will return true.
      * @returns {boolean} true if between or false otherwise.
-     * @private
+     * @ignore
      */
     between: function (num, a, b, inclusive) {
         const min = Math.min(a, b);
