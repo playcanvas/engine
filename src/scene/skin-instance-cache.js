@@ -25,7 +25,7 @@ class SkinInstanceCache {
         SkinInstanceCache._skinInstanceCache.forEach(function (array, rootBone) {
             console.log(`${rootBone.name}: Array(${array.length})`);
             for (let i = 0; i < array.length; i++) {
-                console.log(`  ${i}: RefCount ${array[i].getRefCount()}`);
+                console.log(`  ${i}: RefCount ${array[i].refCount}`);
             }
         });
     }
@@ -112,7 +112,7 @@ class SkinInstanceCache {
                         cachedObj.decRefCount();
 
                         // last reference, needs to be destroyed
-                        if (cachedObj.getRefCount() === 0) {
+                        if (cachedObj.refCount === 0) {
                             cachedObjArray.splice(cachedObjIndex, 1);
 
                             // if the array is empty

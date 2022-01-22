@@ -538,7 +538,7 @@ class MeshInstance {
             this.mesh = null;
 
             // destroy mesh
-            if (mesh.getRefCount() < 1) {
+            if (mesh.refCount < 1) {
                 mesh.destroy();
             }
         }
