@@ -19,8 +19,7 @@ describe('GraphNode', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
-            expect(root.children).to.be.an('array');
-            expect(root.children).to.have.lengthOf(1);
+            expect(root.children).to.be.an('array').with.lengthOf(1);
             expect(root.children[0]).to.be.an.instanceof(GraphNode);
         });
 
@@ -135,8 +134,7 @@ describe('GraphNode', function () {
 
         it('supports zero arguments', function () {
             const node = new GraphNode();
-            expect(node.children).to.be.an.instanceof(Array);
-            expect(node.children.length).to.equal(0);
+            expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(node.enabled).to.equal(false);
             expect(node.forward).to.be.an.instanceof(Vec3);
             expect(node.graphDepth).to.equal(0);
@@ -149,8 +147,7 @@ describe('GraphNode', function () {
 
         it('supports one argument', function () {
             const node = new GraphNode('root');
-            expect(node.children).to.be.an.instanceof(Array);
-            expect(node.children.length).to.equal(0);
+            expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(node.enabled).to.equal(false);
             expect(node.forward).to.be.an.instanceof(Vec3);
             expect(node.graphDepth).to.equal(0);
@@ -168,8 +165,7 @@ describe('GraphNode', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
-            expect(root.children).to.be.an.instanceof(Array);
-            expect(root.children.length).to.equal(1);
+            expect(root.children).to.be.an('array').with.lengthOf(1);
             expect(root.children[0]).to.equal(child);
             expect(child.parent).to.equal(root);
         });
@@ -185,18 +181,15 @@ describe('GraphNode', function () {
 
             let res;
             res = root.find('name', 'Untitled');
-            expect(res).to.be.an.instanceof(Array);
-            expect(res.length).to.equal(1);
+            expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(root);
 
             res = root.find('name', 'Child');
-            expect(res).to.be.an.instanceof(Array);
-            expect(res.length).to.equal(1);
+            expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(child);
 
             res = root.find('name', 'Not Found');
-            expect(res).to.be.an.instanceof(Array);
-            expect(res.length).to.equal(0);
+            expect(res).to.be.an('array').with.lengthOf(0);
         });
 
         it('finds a node by filter function', function () {
@@ -208,22 +201,19 @@ describe('GraphNode', function () {
             res = root.find(function (node) {
                 return node.name === 'Untitled';
             });
-            expect(res).to.be.an.instanceof(Array);
-            expect(res.length).to.equal(1);
+            expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(root);
 
             res = root.find(function (node) {
                 return node.name === 'Child';
             });
-            expect(res).to.be.an.instanceof(Array);
-            expect(res.length).to.equal(1);
+            expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(child);
 
             res = root.find(function (node) {
                 return node.name === 'Not Found';
             });
-            expect(res).to.be.an.instanceof(Array);
-            expect(res.length).to.equal(0);
+            expect(res).to.be.an('array').with.lengthOf(0);
         });
 
     });
@@ -414,8 +404,7 @@ describe('GraphNode', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             root.insertChild(child, 0);
-            expect(root.children).to.be.an.instanceof(Array);
-            expect(root.children.length).to.equal(1);
+            expect(root.children).to.be.an('array').with.lengthOf(1);
             expect(root.children[0]).to.equal(child);
             expect(child.parent).to.equal(root);
         });
@@ -426,8 +415,7 @@ describe('GraphNode', function () {
             const child2 = new GraphNode();
             root.insertChild(child1, 0);
             root.insertChild(child2, 0);
-            expect(root.children).to.be.an.instanceof(Array);
-            expect(root.children.length).to.equal(2);
+            expect(root.children).to.be.an('array').with.lengthOf(2);
             expect(root.children[0]).to.equal(child2);
             expect(root.children[1]).to.equal(child1);
             expect(child1.parent).to.equal(root);
@@ -440,8 +428,7 @@ describe('GraphNode', function () {
             const child2 = new GraphNode();
             root.insertChild(child1, 0);
             root.insertChild(child2, 1);
-            expect(root.children).to.be.an.instanceof(Array);
-            expect(root.children.length).to.equal(2);
+            expect(root.children).to.be.an('array').with.lengthOf(2);
             expect(root.children[0]).to.equal(child1);
             expect(root.children[1]).to.equal(child2);
             expect(child1.parent).to.equal(root);
@@ -519,8 +506,7 @@ describe('GraphNode', function () {
             const child = new GraphNode();
             node.addChild(child);
             node.removeChild(child);
-            expect(node.children).to.be.an.instanceof(Array);
-            expect(node.children.length).to.equal(0);
+            expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(child.parent).to.equal(null);
         });
 
@@ -534,10 +520,8 @@ describe('GraphNode', function () {
             node.addChild(child);
             const newParent = new GraphNode();
             child.reparent(newParent);
-            expect(node.children).to.be.an.instanceof(Array);
-            expect(node.children.length).to.equal(0);
-            expect(newParent.children).to.be.an.instanceof(Array);
-            expect(newParent.children.length).to.equal(1);
+            expect(node.children).to.be.an('array').with.lengthOf(0);
+            expect(newParent.children).to.be.an('array').with.lengthOf(1);
             expect(newParent.children[0]).to.equal(child);
             expect(child.parent).to.equal(newParent);
         });
