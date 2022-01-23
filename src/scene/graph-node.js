@@ -615,7 +615,11 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
      * null if no node is found.
      * @example
-     * var path = this.entity.findByPath('child/another_child');
+     * // String form
+     * var grandchild = this.entity.findByPath('child/grandchild');
+     * @example
+     * // Array form
+     * var grandchild = this.entity.findByPath(['child', 'grandchild']);
      */
     findByPath(path) {
         // accept either string path with '/' separators or array of parts.
