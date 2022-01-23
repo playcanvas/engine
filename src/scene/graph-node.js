@@ -574,17 +574,17 @@ class GraphNode extends EventHandler {
         const query = arguments;
         const results = [];
 
-        const queryNode = (node) => {
-            if (node.tags.has(...query)) {
+        const queryNode = (node, checkNode) => {
+            if (checkNode && node.tags.has(...query)) {
                 results.push(node);
             }
 
             for (let i = 0; i < node._children.length; i++) {
-                queryNode(node._children[i]);
+                queryNode(node._children[i], true);
             }
         };
 
-        queryNode(this);
+        queryNode(this, false);
 
         return results;
     }

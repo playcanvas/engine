@@ -1,5 +1,6 @@
 import { GraphNode } from '../../src/scene/graph-node.js';
 import { Mat4 } from '../../src/math/mat4.js';
+import { Quat } from '../../src/math/quat.js';
 import { Tags } from '../../src/core/tags.js';
 import { Vec3 } from '../../src/math/vec3.js';
 
@@ -95,7 +96,7 @@ describe('GraphNode', function () {
 
     });
 
-    describe("#path", function () {
+    describe('#path', function () {
 
         it('returns empty string for root node', function () {
             const root = new GraphNode('root');
@@ -281,6 +282,13 @@ describe('GraphNode', function () {
 
     describe('#findByTag()', function () {
 
+        it('does not search the root node', function () {
+            const root = new GraphNode('root');
+            root.tags.add('tag');
+            const result = root.findByTag('tag');
+            expect(result).to.be.an('array').with.lengthOf(0);
+        });
+
         it('returns an array of nodes that have the query tag', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
@@ -301,9 +309,8 @@ describe('GraphNode', function () {
             child.tags.add('tag2');
             grandchild.tags.add('tag3');
             const result = root.findByTag('tag1', 'tag3');
-            expect(result).to.be.an('array').with.lengthOf(2);
-            expect(result[0]).to.equal(root);
-            expect(result[1]).to.equal(grandchild);
+            expect(result).to.be.an('array').with.lengthOf(1);
+            expect(result[0]).to.equal(grandchild);
         });
 
         it('returns an array of nodes that have all of the supplied tags', function () {
@@ -365,13 +372,23 @@ describe('GraphNode', function () {
 
     describe('#getLocalScale()', function () {
 
-        it('returns the local scale', function () {
+        it('returns the default local scale of a node', function () {
             const node = new GraphNode();
             const scale = node.getLocalScale();
             expect(scale).to.be.an.instanceof(Vec3);
             expect(scale.x).to.equal(1);
             expect(scale.y).to.equal(1);
             expect(scale.z).to.equal(1);
+        });
+
+        it('returns the local scale last set on a node', function () {
+            const node = new GraphNode();
+            node.setLocalScale(2, 3, 4);
+            const scale = node.getLocalScale();
+            expect(scale).to.be.an.instanceof(Vec3);
+            expect(scale.x).to.equal(2);
+            expect(scale.y).to.equal(3);
+            expect(scale.z).to.equal(4);
         });
 
     });
@@ -385,6 +402,15 @@ describe('GraphNode', function () {
             expect(transform.equals(Mat4.IDENTITY)).to.be.true;
         });
 
+        it('returns the local transform matrix of a transformed node', function () {
+            const node = new GraphNode();
+            node.setLocalPosition(1, 2, 3);
+            node.setLocalScale(4, 5, 6);
+            const transform = node.getLocalTransform();
+            const expected = new Float32Array([4, 0, 0, 0, 0, 5, 0, 0, 0, 0, 6, 0, 1, 2, 3, 1]);
+            expect(transform.data).to.deep.equal(expected);
+        });
+
     });
 
     describe('#getWorldTransform()', function () {
@@ -394,6 +420,39 @@ describe('GraphNode', function () {
             const transform = node.getWorldTransform();
             expect(transform).to.be.an.instanceof(Mat4);
             expect(transform.equals(Mat4.IDENTITY)).to.be.true;
+        });
+
+        it('returns the world transform matrix of a transformed node', function () {
+            const node = new GraphNode();
+            node.setLocalPosition(1, 2, 3);
+            node.setLocalScale(4, 5, 6);
+            const transform = node.getWorldTransform();
+            const expected = new Float32Array([4, 0, 0, 0, 0, 5, 0, 0, 0, 0, 6, 0, 1, 2, 3, 1]);
+            expect(transform.data).to.deep.equal(expected);
+        });
+
+        it('returns the world transform matrix of a transformed child node', function () {
+            const root = new GraphNode();
+            const child = new GraphNode();
+            root.addChild(child);
+            root.setLocalPosition(1, 2, 3);
+            root.setLocalEulerAngles(4, 5, 6);
+            root.setLocalScale(7, 8, 9);
+            child.setLocalPosition(1, 2, 3);
+            child.setLocalEulerAngles(4, 5, 6);
+            child.setLocalScale(7, 8, 9);
+            const transform = child.getWorldTransform();
+
+            const t = new Vec3(1, 2, 3);
+            const r = new Quat().setFromEulerAngles(4, 5, 6);
+            const s = new Vec3(7, 8, 9);
+            const m1 = new Mat4();
+            m1.setTRS(t, r, s);
+            const m2 = new Mat4();
+            m2.copy(m1);
+            m1.mul(m2);
+
+            expect(transform.data).to.deep.equal(m1.data);
         });
 
     });
@@ -528,6 +587,57 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#rotate()', function () {
+
+        it('leaves rotation unchanged for a zero rotation (number inputs)', function () {
+            const node = new GraphNode();
+            const anglesPre = node.getEulerAngles().clone();
+            node.rotate(0, 0, 0);
+            const anglesPost = node.getEulerAngles();
+            expect(anglesPre.equals(anglesPost)).to.be.true;
+        });
+
+        it('leaves rotation unchanged for a zero rotation (vector input)', function () {
+            const node = new GraphNode();
+            const anglesPre = node.getEulerAngles().clone();
+            node.rotate(Vec3.ZERO);
+            const anglesPost = node.getEulerAngles();
+            expect(anglesPre.equals(anglesPost)).to.be.true;
+        });
+
+        it('accumulates rotations in a node', function () {
+            const node = new GraphNode();
+            node.rotate(1, 0, 0);
+            node.rotate(2, 0, 0);
+            node.rotate(3, 0, 0);
+
+            const angles = node.getEulerAngles();
+            expect(angles.x).to.be.closeTo(6, 0.00001);
+            expect(angles.y).to.be.closeTo(0, 0.00001);
+            expect(angles.z).to.be.closeTo(0, 0.00001);
+        });
+
+        it('accumulates rotations in a hierarchy', function () {
+            const root = new GraphNode();
+            const child = new GraphNode();
+            root.addChild(child);
+
+            root.rotate(10, 0, 0);
+            child.rotate(20, 0, 0);
+
+            const rootAngles = root.getEulerAngles();
+            expect(rootAngles.x).to.be.closeTo(10, 0.00001);
+            expect(rootAngles.y).to.be.closeTo(0, 0.00001);
+            expect(rootAngles.z).to.be.closeTo(0, 0.00001);
+
+            const childAngles = child.getEulerAngles();
+            expect(childAngles.x).to.be.closeTo(30, 0.00001);
+            expect(childAngles.y).to.be.closeTo(0, 0.00001);
+            expect(childAngles.z).to.be.closeTo(0, 0.00001);
+        });
+
+    });
+
     describe('#rotateLocal()', function () {
 
         it('leaves rotation unchanged for a zero rotation (number inputs)', function () {
@@ -544,6 +654,18 @@ describe('GraphNode', function () {
             node.rotateLocal(Vec3.ZERO);
             const anglesPost = node.getEulerAngles();
             expect(anglesPre.equals(anglesPost)).to.be.true;
+        });
+
+        it('accumulates rotations in a node', function () {
+            const node = new GraphNode();
+            node.rotateLocal(1, 0, 0);
+            node.rotateLocal(2, 0, 0);
+            node.rotateLocal(3, 0, 0);
+
+            const angles = node.getEulerAngles();
+            expect(angles.x).to.be.closeTo(6, 0.00001);
+            expect(angles.y).to.be.closeTo(0, 0.00001);
+            expect(angles.z).to.be.closeTo(0, 0.00001);
         });
 
         it('accumulates rotations in a hierarchy', function () {
@@ -575,7 +697,7 @@ describe('GraphNode', function () {
             root.addChild(child);
 
             root.translate(1, 2, 3);
-            child.translate(1, 2, 3);
+            child.translate(4, 5, 6);
 
             let pos;
             pos = root.getPosition();
@@ -586,9 +708,9 @@ describe('GraphNode', function () {
 
             pos = child.getPosition();
             expect(pos).to.be.an.instanceof(Vec3);
-            expect(pos.x).to.equal(2);
-            expect(pos.y).to.equal(4);
-            expect(pos.z).to.equal(6);
+            expect(pos.x).to.equal(5);
+            expect(pos.y).to.equal(7);
+            expect(pos.z).to.equal(9);
         });
 
         it('translates hierarchical nodes with a vector argument', function () {
@@ -597,7 +719,7 @@ describe('GraphNode', function () {
             root.addChild(child);
 
             root.translate(new Vec3(1, 2, 3));
-            child.translate(new Vec3(1, 2, 3));
+            child.translate(new Vec3(4, 5, 6));
 
             let pos;
             pos = root.getPosition();
@@ -608,9 +730,34 @@ describe('GraphNode', function () {
 
             pos = child.getPosition();
             expect(pos).to.be.an.instanceof(Vec3);
-            expect(pos.x).to.equal(2);
-            expect(pos.y).to.equal(4);
-            expect(pos.z).to.equal(6);
+            expect(pos.x).to.equal(5);
+            expect(pos.y).to.equal(7);
+            expect(pos.z).to.equal(9);
+        });
+
+    });
+
+    describe('#translateLocal()', function () {
+
+        it('GraphNode: translateLocal in hierarchy', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            root.addChild(child);
+            root.setPosition(10, 20, 30);
+
+            child.rotateLocal(0, 180, 0);
+            child.translateLocal(10, 20, 30);
+
+            let pos;
+            pos = child.getPosition();
+            expect(pos.x).to.be.closeTo(0, 0.00001);
+            expect(pos.y).to.be.closeTo(40, 0.00001);
+            expect(pos.z).to.be.closeTo(0, 0.00001);
+
+            pos = child.getLocalPosition();
+            expect(pos.x).to.be.closeTo(-10, 0.00001);
+            expect(pos.y).to.be.closeTo(20, 0.00001);
+            expect(pos.z).to.be.closeTo(-30, 0.00001);
         });
 
     });
