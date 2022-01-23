@@ -353,6 +353,26 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#forEach()', function () {
+
+        it('iterates over all nodes', function () {
+            const root = new GraphNode();
+            const child1 = new GraphNode();
+            const child2 = new GraphNode();
+            root.addChild(child1);
+            root.addChild(child2);
+            const visited = [];
+            root.forEach((node) => {
+                visited.push(node);
+            });
+            expect(visited).to.be.an('array').with.lengthOf(3);
+            expect(visited[0]).to.equal(root);
+            expect(visited[1]).to.equal(child1);
+            expect(visited[2]).to.equal(child2);
+        });
+
+    });
+
     describe('#getLocalScale()', function () {
 
         it('returns the local scale', function () {
@@ -432,34 +452,62 @@ describe('GraphNode', function () {
 
     describe('#isAncestorOf()', function () {
 
-        it('returns true if the node is an ancestor of the given node', function () {
+        it('returns true if a parent node is an ancestor of a child node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
             expect(root.isAncestorOf(child)).to.be.true;
         });
 
-        it('returns false if the node is not an ancestor of the given node', function () {
+        it('returns true if a grandparent node is an ancestor of a grandchild node', function () {
+            const root = new GraphNode();
+            const child = new GraphNode();
+            const grandchild = new GraphNode();
+            root.addChild(child);
+            child.addChild(grandchild);
+            expect(root.isAncestorOf(grandchild)).to.be.true;
+        });
+
+        it('returns false if a node is not an ancestor of another node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             expect(root.isAncestorOf(child)).to.be.false;
+        });
+
+        it('asserts that nodes are not ancestors of themselves', function () {
+            const node = new GraphNode();
+            expect(node.isAncestorOf(node)).to.be.false;
         });
 
     });
 
     describe('#isDescendantOf()', function () {
 
-        it('returns true if the node is a descendant of the given node', function () {
+        it('returns true if a child node is a descendant of a parent node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
             expect(child.isDescendantOf(root)).to.be.true;
         });
 
-        it('returns false if the node is not a descendant of the given node', function () {
+        it('returns true if a grandchild node is an descendant of a grandparent node', function () {
+            const root = new GraphNode();
+            const child = new GraphNode();
+            const grandchild = new GraphNode();
+            root.addChild(child);
+            child.addChild(grandchild);
+            expect(grandchild.isDescendantOf(root)).to.be.true;
+        });
+
+        it('returns false if a node is not a descendant of another node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             expect(child.isDescendantOf(root)).to.be.false;
+        });
+
+        it('asserts that nodes are not descendants of themselves', function () {
+            const node = new GraphNode();
+            expect(node.isDescendantOf(node)).to.be.false;
         });
 
     });
