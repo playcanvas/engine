@@ -262,13 +262,22 @@ describe('GraphNode', function () {
             expect(root.findByPath('child')).to.equal(child);
         });
 
-        it('finds a grandchild by path', function () {
+        it('finds a grandchild by path (string argument)', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
             root.addChild(child);
             child.addChild(grandchild);
             expect(root.findByPath('child/grandchild')).to.equal(grandchild);
+        });
+
+        it('finds a grandchild by path (array argument)', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            const grandchild = new GraphNode('grandchild');
+            root.addChild(child);
+            child.addChild(grandchild);
+            expect(root.findByPath(['child', 'grandchild'])).to.equal(grandchild);
         });
 
         it('returns null if no node is found', function () {

@@ -610,7 +610,7 @@ class GraphNode extends EventHandler {
      * Get the first node found in the graph by its full path in the graph. The full path has this
      * form 'parent/child/sub-child'. The search is depth first.
      *
-     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or
+     * @param {string|string[]} path - The full path of the {@link GraphNode} as either a string or
      * array of {@link GraphNode} names.
      * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
      * null if no node is found.
