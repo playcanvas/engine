@@ -330,19 +330,6 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#getEulerAngles()', function () {
-
-        it('returns the euler angles', function () {
-            const node = new GraphNode();
-            const angles = node.getEulerAngles();
-            expect(angles).to.be.an.instanceof(Vec3);
-            expect(angles.x).to.equal(0);
-            expect(angles.y).to.equal(0);
-            expect(angles.z).to.equal(0);
-        });
-
-    });
-
     describe('#forEach()', function () {
 
         it('iterates over all nodes', function () {
@@ -359,6 +346,19 @@ describe('GraphNode', function () {
             expect(visited[0]).to.equal(root);
             expect(visited[1]).to.equal(child1);
             expect(visited[2]).to.equal(child2);
+        });
+
+    });
+
+    describe('#getEulerAngles()', function () {
+
+        it('returns the euler angles', function () {
+            const node = new GraphNode();
+            const angles = node.getEulerAngles();
+            expect(angles).to.be.an.instanceof(Vec3);
+            expect(angles.x).to.equal(0);
+            expect(angles.y).to.equal(0);
+            expect(angles.z).to.equal(0);
         });
 
     });
