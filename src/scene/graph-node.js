@@ -1202,7 +1202,7 @@ class GraphNode extends EventHandler {
 
     // #if _DEBUG
     /**
-     * @param {GraphNode} node 
+     * @param {GraphNode} node - The node being inserted.
      * @private
      */
     _debugInsertChild(node) {
