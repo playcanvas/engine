@@ -280,6 +280,28 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#findByTag()', function () {
+
+        it('finds a node by tag', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            root.addChild(child);
+            child.tags.add('tag');
+            const result = root.findByTag('tag');
+            expect(result).to.be.an('array').with.lengthOf(1);
+            expect(result[0]).to.equal(child);
+        });
+
+        it('returns null if no node is found', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            root.addChild(child);
+            const result = root.findByTag('not-found');
+            expect(result).to.be.an('array').with.lengthOf(0);
+        });
+
+    });
+
     describe('#getEulerAngles()', function () {
 
         it('returns the euler angles', function () {
