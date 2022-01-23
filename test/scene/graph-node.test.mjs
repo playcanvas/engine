@@ -282,7 +282,7 @@ describe('GraphNode', function () {
 
     describe('#findByTag()', function () {
 
-        it('finds a node by tag', function () {
+        it('returns an array of nodes that have the query tag', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -292,7 +292,36 @@ describe('GraphNode', function () {
             expect(result[0]).to.equal(child);
         });
 
-        it('returns null if no node is found', function () {
+        it('returns an array of nodes that have at least one of the query tags', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            const grandchild = new GraphNode('grandchild');
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.tags.add('tag1');
+            child.tags.add('tag2');
+            grandchild.tags.add('tag3');
+            const result = root.findByTag('tag1', 'tag3');
+            expect(result).to.be.an('array').with.lengthOf(2);
+            expect(result[0]).to.equal(root);
+            expect(result[1]).to.equal(grandchild);
+        });
+
+        it('returns an array of nodes that have all of the supplied tags', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            const grandchild = new GraphNode('grandchild');
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.tags.add('tag1');
+            child.tags.add('tag2');
+            grandchild.tags.add(['tag1', 'tag2']);
+            const result = root.findByTag(['tag2', 'tag1']);
+            expect(result).to.be.an('array').with.lengthOf(1);
+            expect(result[0]).to.equal(grandchild);
+        });
+
+        it('returns an empty array if the search fails', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
