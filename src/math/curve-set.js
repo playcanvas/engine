@@ -138,6 +138,13 @@ class CurveSet {
         return result;
     }
 
+    /**
+     * Sample the curveset at regular intervals over the range [0..1].
+     *
+     * @param {number} precision - The number of samples to return.
+     * @returns {Float32Array} The set of quantized values.
+     * @ignore
+     */
     quantize(precision) {
         precision = Math.max(precision, 2);
 
@@ -156,8 +163,8 @@ class CurveSet {
     }
 
     /**
-     * This function will sample the curveset at regular intervals over the range [0..1] and clamp
-     * the result to min and max.
+     * Sample the curveset at regular intervals over the range [0..1] and clamp the result to min
+     * and max.
      *
      * @param {number} precision - The number of samples to return.
      * @param {number} min - The minimum output value.
