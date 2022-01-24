@@ -107,7 +107,7 @@ class FloatPacking {
         if (value < min || value > max) {
             if (checkRange) {
                 checkRange--;
-                console.warn("float2BytesRange - value to pack is out of specified range.");
+                console.warn('float2BytesRange - value to pack is out of specified range.');
             }
         }
         // #endif
