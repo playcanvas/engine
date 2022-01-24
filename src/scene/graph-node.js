@@ -1278,11 +1278,7 @@ class GraphNode extends EventHandler {
      * @private
      */
     _updateGraphDepth() {
-        if (this._parent) {
-            this._graphDepth = this._parent._graphDepth + 1;
-        } else {
-            this._graphDepth = 0;
-        }
+        this._graphDepth = this._parent ? this._parent._graphDepth + 1 : 0;
 
         for (let i = 0, len = this._children.length; i < len; i++) {
             this._children[i]._updateGraphDepth();
@@ -1298,25 +1294,20 @@ class GraphNode extends EventHandler {
      * this.entity.removeChild(child);
      */
     removeChild(child) {
-        const children = this._children;
-        const length = children.length;
-        for (let i = 0; i < length; ++i) {
-            if (children[i] === child) {
-                // Remove from child list
-                children.splice(i, 1);
+        const index = this._children.indexOf(child);
+        if (index === -1) return;
 
-                // Clear parent
-                child._parent = null;
+        // Remove from child list
+        this._children.splice(index, 1);
 
-                // alert children that they has been removed
-                child._fireOnHierarchy('remove', 'removehierarchy', this);
+        // Clear parent
+        child._parent = null;
 
-                // alert the parent that it has had a child removed
-                if (this.fire) this.fire('childremove', child);
+        // alert children that they has been removed
+        child._fireOnHierarchy('remove', 'removehierarchy', this);
 
-                return;
-            }
-        }
+        // alert the parent that it has had a child removed
+        this.fire('childremove', child);
     }
 
     _sync() {
