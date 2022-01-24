@@ -13,7 +13,7 @@ class CurveEvaluator {
      * Create a new CurveEvaluator instance.
      *
      * @param {Curve} curve - The curve to evaluate.
-     * @param {number} time - The initial time to evaluate the curve at. Defualts to 0.
+     * @param {number} time - The initial time to evaluate the curve at. Defaults to 0.
      */
     constructor(curve, time = 0) {
         this._curve = curve;
