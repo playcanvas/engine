@@ -5,6 +5,9 @@ import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from './const
 import { hasAudioContext } from './capabilities.js';
 import { Channel } from './channel.js';
 
+/** @typedef {import('../sound/sound.js').Sound} Sound */
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;
 
