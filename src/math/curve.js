@@ -120,7 +120,7 @@ class Curve {
      * @returns {number} The interpolated value.
      */
     value(time) {
-        // we for the evaluation because keys may have changed since the last evaluate
+        // we force reset the evaluation because keys may have changed since the last evaluate
         // (we can't know)
         return this._eval.evaluate(time, true);
     }
