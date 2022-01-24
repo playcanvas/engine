@@ -1,6 +1,8 @@
 import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
 import { math } from './math.js';
 
+/** @typedef {import('./curve.js').Curve} Curve */
+
 /**
  * A class for evaluating a curve at a specific time.
  *
