@@ -33,13 +33,9 @@
         });
 
         function loadExample(exampleFunction, loadFunction, controlsFunction) {
-            var data;
-            if (window.top.observerData) {
-                data = window.top.observerData;
-                data._data = {};
-            } else {
-                data = new observer.Observer({});
-            }
+            var data = new observer.Observer({});
+            window.top.observerData = data;
+            window.top.pc = pc;
 
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(document.body),

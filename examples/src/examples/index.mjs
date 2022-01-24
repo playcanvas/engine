@@ -7,7 +7,7 @@ import * as Misc from './misc/index.mjs';
 import * as Physics from './physics/index.mjs';
 import * as Sound from './sound/index.mjs';
 import * as UserInterface from './user-interface/index.mjs';
-import * as XR from './xr/index.mjs';
+import * as Xr from './xr/index.mjs';
 
 export {
     Animation,
@@ -19,5 +19,5 @@ export {
     Misc,
     Sound,
     UserInterface,
-    XR
+    Xr
 };

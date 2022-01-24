@@ -10,17 +10,18 @@ const paths = {};
 
 Object.keys(exampleData).forEach((categorySlug) => {
     const category = categorySlug.split('-').map(a => capitalizeFirstLetter(a)).join('');
+    console.log(category, exampleClasses);
     const exampleClassesForCategory = exampleClasses[category];
     if (!exampleClassesForCategory) {
         return;
     }
     categories[categorySlug] = {
-        examples: {},
-        name: category
+        examples: {}
     };
-    Object.keys(exampleData[categorySlug]).forEach((exampleSlug) => {
+    Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
         const name = exampleSlug.split('-').map(a => capitalizeFirstLetter(a)).join('').replace('1d', '1D').replace('2d', '2D');
         const ExampleClass = exampleClassesForCategory[`${name}Example`];
+        if (i === 0) categories[categorySlug].name = ExampleClass.CATEGORY;
         if (ExampleClass.HIDDEN) return;
         const example = new ExampleClass();
         categories[categorySlug].examples[exampleSlug] = example;

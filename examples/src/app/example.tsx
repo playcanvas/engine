@@ -13,13 +13,12 @@ import ControlPanel from './control-panel';
 
 const Controls = (props: any) => {
     const controlsFunction = (examples as any).paths[props.path].example.prototype.controls;
-    const controls = controlsFunction ? (examples as any).paths[props.path].example.prototype.controls(props.exampleData).props.children : null;
+    const controls = controlsFunction ? (examples as any).paths[props.path].example.prototype.controls((window as any).observerData).props.children : null;
     if (!controls) return null;
     return <ControlPanel controls={controls} files={props.files} />;
 };
 interface ControlLoaderProps {
     path: string,
-    exampleData: any,
     files: any
 }
 
@@ -71,14 +70,7 @@ interface ExampleState {
 }
 
 class Example extends Component <ExampleProps, ExampleState> {
-    exampleData: Observer;
     editorValue: string;
-
-    constructor(props: ExampleProps) {
-        super(props);
-        this.exampleData = new Observer();
-        (window as any).observerData = this.exampleData;
-    }
 
     componentDidMount() {
         window.localStorage.removeItem(this.path);
@@ -107,7 +99,7 @@ class Example extends Component <ExampleProps, ExampleState> {
         return <Container id="canvas-container">
             <Spinner size={50}/>
             <iframe id="exampleIframe" key={iframePath} src={iframePath}></iframe>
-            <ControlLoader exampleData={this.exampleData} path={this.path} files={this.props.files} />
+            <ControlLoader path={this.path} files={this.props.files} />
         </Container>;
     }
 }
