@@ -1,4 +1,3 @@
-import { Debug } from '../../../core/debug.js';
 import { now } from '../../../core/time.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
