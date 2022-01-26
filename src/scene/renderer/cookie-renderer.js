@@ -5,10 +5,10 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '
 import { Texture } from '../../graphics/texture.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import { LIGHTTYPE_OMNI } from '../constants.js';
 import { LightCamera } from './light-camera.js';
-import { Debug } from '../../core/debug.js';
 
 const textureBlitVertexShader = `
     attribute vec2 vertex_position;
@@ -113,7 +113,7 @@ class CookieRenderer {
 
         if (light.enabled && light.cookie && light.visibleThisFrame) {
 
-            Debug.pushGpuMarker(this.device, `COOKIE ${light._node.name}`);
+            DebugGraphics.pushGpuMarker(this.device, `COOKIE ${light._node.name}`);
 
             const faceCount = light.numShadowFaces;
             const shader = faceCount > 1 ? this.shaderCube : this.shader2d;
@@ -149,7 +149,7 @@ class CookieRenderer {
                 drawQuadWithShader(device, renderTarget, shader, _viewport);
             }
 
-            Debug.popGpuMarker(this.device);
+            DebugGraphics.popGpuMarker(this.device);
         }
     }
 }

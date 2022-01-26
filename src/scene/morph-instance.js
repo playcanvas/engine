@@ -1,8 +1,8 @@
-import { Debug } from '../core/debug.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
+import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 import { Morph } from './morph.js';
 
@@ -303,7 +303,7 @@ class MorphInstance {
 
         const device = this.device;
 
-        Debug.pushGpuMarker(device, "MorphUpdate");
+        DebugGraphics.pushGpuMarker(device, "MorphUpdate");
 
         // update textures if active targets, or no active targets and textures need to be cleared
         if (this._activeTargets.length > 0 || !this.zeroTextures) {
@@ -316,7 +316,7 @@ class MorphInstance {
             this.zeroTextures = this._activeTargets.length === 0;
         }
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
     }
 
     _updateVertexMorph() {

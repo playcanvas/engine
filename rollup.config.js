@@ -128,8 +128,16 @@ const moduleOptions = {
 };
 
 const stripOptions = {
-    functions: ['Debug.assert', 'Debug.deprecated', 'Debug.warn', 'Debug.error', 'Debug.log', 'Debug.pushGpuMarker', 'Debug.popGpuMarker',
-        'WorldClustersDebug.render']
+    functions: [
+        'Debug.assert',
+        'Debug.deprecated',
+        'Debug.warn',
+        'Debug.error',
+        'Debug.log',
+        'DebugGraphics.pushGpuMarker',
+        'DebugGraphics.popGpuMarker',
+        'WorldClustersDebug.render'
+    ]
 };
 
 const target_release_es5 = {
