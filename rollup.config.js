@@ -201,7 +201,7 @@ if (process.env.treemap) {
         gzipSize: true
     });
     target_release_es5min.plugins.push(visualizerPlugin);
-};
+}
 
 const target_release_es6 = {
     input: 'src/index.js',
