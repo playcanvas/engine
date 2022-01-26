@@ -112,7 +112,7 @@ class FirstPersonExample extends Example {
             characterController.script.create("touchInput");
             characterController.setLocalPosition(0, 1, 10);
 
-            // Add the character controll and camera to the hierarchy
+            // Add the character controller and camera to the hierarchy
             app.root.addChild(characterController);
             characterController.addChild(camera);
 

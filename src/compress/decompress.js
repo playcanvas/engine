@@ -1,15 +1,18 @@
-import { CompressUtils } from './compress-utils';
+import { CompressUtils } from './compress-utils.js';
 
 /**
- * @private
- * @class
- * @name Decompress
- * @classdesc Reconstruct original object field names in a compressed scene.
- * @param {object} node - The current node of the object being decompressed,
- * initially the 'entities' field of a scene.
- * @param {object} data - Compression metadata.
+ * Reconstruct original object field names in a compressed scene.
+ *
+ * @ignore
  */
 class Decompress {
+    /**
+     * Create a new Decompress instance.
+     *
+     * @param {object} node - The current node of the object being decompressed, initially the
+     * 'entities' field of a scene.
+     * @param {object} data - Compression metadata.
+     */
     constructor(node, data) {
         this._node = node;
 

@@ -8,18 +8,26 @@ import {
 } from './constants.js';
 
 /**
- * @private
- * @class
- * @name AnimState
- * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with its conditions met that has that AnimState as its source state.
- * @description Create a new AnimState.
- * @param {AnimController} controller - The controller this AnimState is associated with.
- * @param {string} name - The name of the state. Used to find this state when the controller transitions between states and links animations.
- * @param {number} speed - The speed animations in the state should play at. Individual {@link AnimNodes} can override this value.
- * @param {boolean} loop - Determines whether animations in this state should loop.
- * @param {object|null} blendTree - If supplied, the AnimState will recursively build a {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
+ * Defines a single state that the controller can be in. Each state contains either a single
+ * AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity
+ * while the state is active. An AnimState will stay active and play as long as there is no
+ * AnimTransition with its conditions met that has that AnimState as its source state.
+ *
+ * @ignore
  */
 class AnimState {
+    /**
+     * Create a new AnimState instance.
+     *
+     * @param {AnimController} controller - The controller this AnimState is associated with.
+     * @param {string} name - The name of the state. Used to find this state when the controller
+     * transitions between states and links animations.
+     * @param {number} speed - The speed animations in the state should play at. Individual
+     * {@link AnimNodes} can override this value.
+     * @param {boolean} loop - Determines whether animations in this state should loop.
+     * @param {object|null} blendTree - If supplied, the AnimState will recursively build a
+     * {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
+     */
     constructor(controller, name, speed, loop, blendTree) {
         this._controller = controller;
         this._name = name;
@@ -85,28 +93,28 @@ class AnimState {
         return this._name;
     }
 
-    get animations() {
-        return this._animationList;
-    }
-
     set animations(value) {
         this._animationList = value;
     }
 
-    get speed() {
-        return this._speed;
+    get animations() {
+        return this._animationList;
     }
 
     set speed(value) {
         this._speed = value;
     }
 
-    get loop() {
-        return this._loop;
+    get speed() {
+        return this._speed;
     }
 
     set loop(value) {
         this._loop = value;
+    }
+
+    get loop() {
+        return this._loop;
     }
 
     get nodeCount() {

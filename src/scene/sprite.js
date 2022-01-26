@@ -5,6 +5,10 @@ import { Vec2 } from '../math/vec2.js';
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { createMesh } from './procedural.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./mesh.js').Mesh} Mesh */
+/** @typedef {import('./texture-atlas.js').TextureAtlas} TextureAtlas */
+
 // normals are the same for every mesh
 const spriteNormals = [
     0, 0, 1,
@@ -20,38 +24,31 @@ const spriteIndices = [
 ];
 
 /**
- * @class
- * @name Sprite
+ * A Sprite contains references to one or more frames of a {@link TextureAtlas}. It can be used by
+ * the {@link SpriteComponent} or the {@link ElementComponent} to render a single frame or a sprite
+ * animation.
+ *
  * @augments EventHandler
- * @classdesc A Sprite contains references to one or more frames of a {@link TextureAtlas}.
- * It can be used by the {@link SpriteComponent} or the {@link ElementComponent} to render a
- * single frame or a sprite animation.
- * @param {GraphicsDevice} device - The graphics device of the application.
- * @param {object} [options] - Options for creating the Sprite.
- * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas unit.
- * Defaults to 1.
- * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
- *
- * - {@link SPRITE_RENDERMODE_SIMPLE}
- * - {@link SPRITE_RENDERMODE_SLICED}
- * - {@link SPRITE_RENDERMODE_TILED}
- *
- * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
- * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
- * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
- * using. Defaults to null.
- * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
- * @property {TextureAtlas} atlas The texture atlas.
- * @property {number} renderMode The rendering mode of the sprite. Can be:
- *
- * - {@link SPRITE_RENDERMODE_SIMPLE}
- * - {@link SPRITE_RENDERMODE_SLICED}
- * - {@link SPRITE_RENDERMODE_TILED}
- *
- * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
- * @property {Mesh[]} meshes An array that contains a mesh for each frame.
  */
 class Sprite extends EventHandler {
+    /**
+     * Create a new Sprite instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device of the application.
+     * @param {object} [options] - Options for creating the Sprite.
+     * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas
+     * unit. Defaults to 1.
+     * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
+     *
+     * - {@link SPRITE_RENDERMODE_SIMPLE}
+     * - {@link SPRITE_RENDERMODE_SLICED}
+     * - {@link SPRITE_RENDERMODE_TILED}
+     *
+     * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
+     * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
+     * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this
+     * sprite is using. Defaults to null.
+     */
     constructor(device, options) {
         super();
 
@@ -71,6 +68,130 @@ class Sprite extends EventHandler {
         if (this._atlas && this._frameKeys) {
             this._createMeshes();
         }
+    }
+
+    /**
+     * The keys of the frames in the sprite atlas that this sprite is using.
+     *
+     * @type {string[]}
+     */
+    set frameKeys(value) {
+        this._frameKeys = value;
+
+        if (this._atlas && this._frameKeys) {
+            if (this._updatingProperties) {
+                this._meshesDirty = true;
+            } else {
+                this._createMeshes();
+            }
+        }
+
+        this.fire('set:frameKeys', value);
+    }
+
+    get frameKeys() {
+        return this._frameKeys;
+    }
+
+    /**
+     * The texture atlas.
+     *
+     * @type {TextureAtlas}
+     */
+    set atlas(value) {
+        if (value === this._atlas) return;
+
+        if (this._atlas) {
+            this._atlas.off('set:frames', this._onSetFrames, this);
+            this._atlas.off('set:frame', this._onFrameChanged, this);
+            this._atlas.off('remove:frame', this._onFrameRemoved, this);
+        }
+
+        this._atlas = value;
+        if (this._atlas && this._frameKeys) {
+            this._atlas.on('set:frames', this._onSetFrames, this);
+            this._atlas.on('set:frame', this._onFrameChanged, this);
+            this._atlas.on('remove:frame', this._onFrameRemoved, this);
+
+            if (this._updatingProperties) {
+                this._meshesDirty = true;
+            } else {
+                this._createMeshes();
+            }
+        }
+
+        this.fire('set:atlas', value);
+    }
+
+    get atlas() {
+        return this._atlas;
+    }
+
+    /**
+     * The number of pixels that map to one PlayCanvas unit.
+     *
+     * @type {number}
+     */
+    set pixelsPerUnit(value) {
+        if (this._pixelsPerUnit === value) return;
+
+        this._pixelsPerUnit = value;
+        this.fire('set:pixelsPerUnit', value);
+
+        // simple mode uses pixelsPerUnit to create the mesh so re-create those meshes
+        if (this._atlas && this._frameKeys && this.renderMode === SPRITE_RENDERMODE_SIMPLE) {
+            if (this._updatingProperties) {
+                this._meshesDirty = true;
+            } else {
+                this._createMeshes();
+            }
+        }
+    }
+
+    get pixelsPerUnit() {
+        return this._pixelsPerUnit;
+    }
+
+    /**
+     * The rendering mode of the sprite. Can be:
+     *
+     * - {@link SPRITE_RENDERMODE_SIMPLE}
+     * - {@link SPRITE_RENDERMODE_SLICED}
+     * - {@link SPRITE_RENDERMODE_TILED}
+     *
+     * @type {number}
+     */
+    set renderMode(value) {
+        if (this._renderMode === value)
+            return;
+
+        const prev = this._renderMode;
+        this._renderMode = value;
+        this.fire('set:renderMode', value);
+
+        // re-create the meshes if we're going from simple to 9-sliced or vice versa
+        if (prev === SPRITE_RENDERMODE_SIMPLE || value === SPRITE_RENDERMODE_SIMPLE) {
+            if (this._atlas && this._frameKeys) {
+                if (this._updatingProperties) {
+                    this._meshesDirty = true;
+                } else {
+                    this._createMeshes();
+                }
+            }
+        }
+    }
+
+    get renderMode() {
+        return this._renderMode;
+    }
+
+    /**
+     * An array that contains a mesh for each frame.
+     *
+     * @type {Mesh[]}
+     */
+    get meshes() {
+        return this._meshes;
     }
 
     _createMeshes() {
@@ -243,112 +364,14 @@ class Sprite extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Sprite#destroy
-     * @description Free up the meshes created by the sprite.
+     * Free up the meshes created by the sprite.
      */
     destroy() {
-
         for (const mesh of this._meshes) {
             if (mesh)
                 mesh.destroy();
         }
         this._meshes.length = 0;
-    }
-
-    get frameKeys() {
-        return this._frameKeys;
-    }
-
-    set frameKeys(value) {
-        this._frameKeys = value;
-
-        if (this._atlas && this._frameKeys) {
-            if (this._updatingProperties) {
-                this._meshesDirty = true;
-            } else {
-                this._createMeshes();
-            }
-        }
-
-        this.fire('set:frameKeys', value);
-    }
-
-    get atlas() {
-        return this._atlas;
-    }
-
-    set atlas(value) {
-        if (value === this._atlas) return;
-
-        if (this._atlas) {
-            this._atlas.off('set:frames', this._onSetFrames, this);
-            this._atlas.off('set:frame', this._onFrameChanged, this);
-            this._atlas.off('remove:frame', this._onFrameRemoved, this);
-        }
-
-        this._atlas = value;
-        if (this._atlas && this._frameKeys) {
-            this._atlas.on('set:frames', this._onSetFrames, this);
-            this._atlas.on('set:frame', this._onFrameChanged, this);
-            this._atlas.on('remove:frame', this._onFrameRemoved, this);
-
-            if (this._updatingProperties) {
-                this._meshesDirty = true;
-            } else {
-                this._createMeshes();
-            }
-        }
-
-        this.fire('set:atlas', value);
-    }
-
-    get pixelsPerUnit() {
-        return this._pixelsPerUnit;
-    }
-
-    set pixelsPerUnit(value) {
-        if (this._pixelsPerUnit === value) return;
-
-        this._pixelsPerUnit = value;
-        this.fire('set:pixelsPerUnit', value);
-
-        // simple mode uses pixelsPerUnit to create the mesh so re-create those meshes
-        if (this._atlas && this._frameKeys && this.renderMode === SPRITE_RENDERMODE_SIMPLE) {
-            if (this._updatingProperties) {
-                this._meshesDirty = true;
-            } else {
-                this._createMeshes();
-            }
-        }
-    }
-
-    get renderMode() {
-        return this._renderMode;
-    }
-
-    set renderMode(value) {
-        if (this._renderMode === value)
-            return;
-
-        const prev = this._renderMode;
-        this._renderMode = value;
-        this.fire('set:renderMode', value);
-
-        // re-create the meshes if we're going from simple to 9-sliced or vice versa
-        if (prev === SPRITE_RENDERMODE_SIMPLE || value === SPRITE_RENDERMODE_SIMPLE) {
-            if (this._atlas && this._frameKeys) {
-                if (this._updatingProperties) {
-                    this._meshesDirty = true;
-                } else {
-                    this._createMeshes();
-                }
-            }
-        }
-    }
-
-    get meshes() {
-        return this._meshes;
     }
 }
 

@@ -48,7 +48,7 @@ class MeshMorphExample extends Example {
                 // distance of the point to the specified plane
                 dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz);
 
-                // modify distance to displacement amoint - displace nearby points more than distant points
+                // modify distance to displacement amount - displace nearby points more than distant points
                 displacement = pc.math.clamp(dist, 0, limit);
                 displacement = pc.math.smoothstep(0, limit, dist);
                 displacement = 1 - displacement;
@@ -111,7 +111,7 @@ class MeshMorphExample extends Example {
             entity.setLocalPosition(x, y, z);
             app.root.addChild(entity);
 
-            // Add a render compoonent with meshInstance
+            // Add a render component with meshInstance
             entity.addComponent('render', {
                 material: material,
                 meshInstances: [meshInstance]
@@ -132,7 +132,7 @@ class MeshMorphExample extends Example {
             time += dt;
 
             for (let m = 0; m < morphInstances.length; m++) {
-            // modify weights of all 3 morph targets along some sin curve with different frequency
+                // modify weights of all 3 morph targets along some sin curve with different frequency
                 morphInstances[m].setWeight(0, Math.abs(Math.sin(time + m)));
                 morphInstances[m].setWeight(1, Math.abs(Math.sin(time * 0.3 + m)));
                 morphInstances[m].setWeight(2, Math.abs(Math.sin(time * 0.7 + m)));

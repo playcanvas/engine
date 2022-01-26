@@ -2,20 +2,26 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { VrDisplay } from './vr-display.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+
 /**
- * @private
- * @deprecated
- * @class
- * @name VrManager
- * @augments EventHandler
- * @classdesc Manage and update {@link VrDisplay}s that are attached to this device.
- * @description Manage and update {@link VrDisplay}s that are attached to this device.
- * @param {Application} app - The main application.
- * @property {VrDisplay[]} displays The list of {@link VrDisplay}s that are attached to this device.
- * @property {VrDisplay} display The default {@link VrDisplay} to be used. Usually the first in the `displays` list.
+ * Manage and update {@link VrDisplay}s that are attached to this device.
+ *
+ * @property {VrDisplay[]} displays The list of {@link VrDisplay}s that are attached to this
+ * device.
+ * @property {VrDisplay} display The default {@link VrDisplay} to be used. Usually the first in the
+ * `displays` list.
  * @property {boolean} isSupported Reports whether this device supports the WebVR API.
+ * @augments EventHandler
+ * @deprecated
+ * @ignore
  */
 class VrManager extends EventHandler {
+    /**
+     * Create a new VrManager instance.
+     *
+     * @param {Application} app - The main application.
+     */
     constructor(app) {
         super();
 
@@ -48,7 +54,7 @@ class VrManager extends EventHandler {
     }
 
     /**
-     * @private
+     * @ignore
      * @deprecated
      * @event
      * @name VrManager#displayconnect
@@ -61,7 +67,7 @@ class VrManager extends EventHandler {
      */
 
     /**
-     * @private
+     * @ignore
      * @deprecated
      * @event
      * @name VrManager#displaydisconnect
@@ -74,12 +80,10 @@ class VrManager extends EventHandler {
      */
 
     /**
-     * @private
-     * @deprecated
-     * @static
-     * @name VrManager.isSupported
+     * Reports whether this device supports the WebVR API.
+     *
      * @type {boolean}
-     * @description Reports whether this device supports the WebVR API.
+     * @deprecated
      */
     static isSupported = (typeof navigator !== 'undefined') ? !!navigator.getVRDisplays : false;
 
@@ -94,22 +98,18 @@ class VrManager extends EventHandler {
     }
 
     /**
-     * @private
+     * Remove events and clear up manager.
+     *
      * @deprecated
-     * @function
-     * @name VrManager#destroy
-     * @description Remove events and clear up manager.
      */
     destroy() {
         this._detach();
     }
 
     /**
-     * @private
+     * Called once per frame to poll all attached displays.
+     *
      * @deprecated
-     * @function
-     * @name VrManager#poll
-     * @description Called once per frame to poll all attached displays.
      */
     poll() {
         const l = this.displays.length;

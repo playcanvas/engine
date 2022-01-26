@@ -180,7 +180,7 @@ class FallingShapesExample extends Example {
 
             // ***********    Update Function   *******************
 
-            // initialize constiables for our update function
+            // initialize variables for our update function
             let timer = 0;
             let count = 40;
 

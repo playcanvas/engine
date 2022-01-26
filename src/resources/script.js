@@ -1,15 +1,21 @@
 import { script } from '../framework/script.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name ScriptHandler
+ * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
+ * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
+ * files, such as third-party libraries.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler for loading JavaScript files dynamically
- * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link createScript},
- * or regular JavaScript files, such as third-party libraries.
- * @param {Application} app - The running {@link Application}.
  */
 class ScriptHandler {
+    /**
+     * Create a new ScriptHandler instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         this._app = app;
         this._scripts = { };

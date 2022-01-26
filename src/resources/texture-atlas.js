@@ -13,6 +13,9 @@ import {
 
 import { TextureAtlas } from '../scene/texture-atlas.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+
 const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
     "clamp": ADDRESS_CLAMP_TO_EDGE,
@@ -31,13 +34,16 @@ const JSON_FILTER_MODE = {
 const regexFrame = /^data\.frames\.(\d+)$/;
 
 /**
- * @class
- * @name TextureAtlasHandler
+ * Resource handler used for loading {@link TextureAtlas} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link TextureAtlas} resources.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class TextureAtlasHandler {
+    /**
+     * Create a new TextureAtlasHandler instance.
+     *
+     * @param {ResourceLoader} loader - The resource loader.
+     */
     constructor(loader) {
         this._loader = loader;
         this.maxRetries = 0;

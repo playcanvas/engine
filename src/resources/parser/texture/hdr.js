@@ -12,12 +12,13 @@ import {
 
 import { Asset } from '../../../asset/asset.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 /**
- * @private
- * @class
- * @name HdrParser
+ * Texture parser for hdr files.
+ *
  * @implements {TextureParser}
- * @classdesc Texture parser for hdr files.
+ * @ignore
  */
 class HdrParser {
     constructor(registry) {

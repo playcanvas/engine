@@ -8,6 +8,9 @@ import { ComponentSystem } from '../system.js';
 import { AudioSourceComponent } from './component.js';
 import { AudioSourceComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
+
 const _schema = [
     'enabled',
     'assets',
@@ -26,15 +29,19 @@ const _schema = [
 ];
 
 /**
- * @private
- * @class
- * @name AudioSourceComponentSystem
+ * Controls playback of an audio sample. This class will be deprecated in favor of
+ * {@link SoundComponentSystem}.
+ *
  * @augments ComponentSystem
- * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link SoundComponentSystem}.
- * @param {Application} app - The application managing this system.
- * @param {SoundManager} manager - A sound manager instance.
+ * @ignore
  */
 class AudioSourceComponentSystem extends ComponentSystem {
+    /**
+     * Create a new AudioSourceComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     * @param {SoundManager} manager - A sound manager instance.
+     */
     constructor(app, manager) {
         super(app);
 
@@ -107,11 +114,9 @@ class AudioSourceComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponentSystem#setVolume
-     * @description Set the volume for the entire AudioSource system. All sources will
-     * have their volume multiplied by this value.
+     * Set the volume for the entire AudioSource system. All sources will have their volume
+     * multiplied by this value.
+     *
      * @param {number} volume - The value to set the volume to. Valid from 0 to 1.
      */
     setVolume(volume) {

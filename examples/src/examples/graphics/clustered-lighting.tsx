@@ -10,6 +10,7 @@ class ClusteredLightingExample extends Example {
 
     load() {
         return <>
+            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
             <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
         </>;
     }
@@ -27,16 +28,21 @@ class ClusteredLightingExample extends Example {
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // adjust default clustered lighting parameters to handle many lights:
+        const lighting = app.scene.lighting;
+
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(12, 16, 12);
+        lighting.cells = new pc.Vec3(12, 16, 12);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 48;
+        lighting.maxLightsPerCell = 48;
+
+        // @ts-ignore engine-tsd
+        lighting.shadowsEnabled = false;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -148,7 +154,7 @@ class ClusteredLightingExample extends Example {
             color: pc.Color.WHITE,
             intensity: 0.2,
             range: 300,
-            shadowDistance: 300,
+            shadowDistance: 600,
             castShadows: true,
             shadowBias: 0.2,
             normalOffsetBias: 0.05
@@ -158,12 +164,25 @@ class ClusteredLightingExample extends Example {
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.2, 0.2),
+            clearColor: new pc.Color(0.05, 0.05, 0.05),
             farClip: 500,
             nearClip: 0.1
         });
-        camera.setLocalPosition(120, 120, 120);
+        camera.setLocalPosition(140, 140, 140);
         camera.lookAt(new pc.Vec3(0, 40, 0));
+
+        // add orbit camera script with mouse and touch support
+        camera.addComponent("script");
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+                focusEntity: app.root,
+                distanceMax: 400,
+                frameOnStart: false
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
 
         // Set an update function on the app's update event
@@ -186,7 +205,7 @@ class ClusteredLightingExample extends Example {
                 spotlight.rotateLocal(90, 0, 0);
             });
 
-            // rotate direcional light
+            // rotate directional light
             if (dirLight) {
                 dirLight.setLocalEulerAngles(25, -30 * time, 0);
             }

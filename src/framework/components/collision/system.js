@@ -16,6 +16,8 @@ import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const mat4 = new Mat4();
 const vec3 = new Vec3();
 const quat = new Quat();
@@ -563,14 +565,16 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 }
 
 /**
- * @class
- * @name CollisionComponentSystem
+ * Manages creation of {@link CollisionComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link CollisionComponent}s.
- * @description Creates a new CollisionComponentSystem.
- * @param {Application} app - The running {@link Application}.
  */
 class CollisionComponentSystem extends ComponentSystem {
+    /**
+     * Creates a new CollisionComponentSystem instance.
+     *
+     * @param {Application} app - The running {@link Application}.
+     */
     constructor(app) {
         super(app);
 

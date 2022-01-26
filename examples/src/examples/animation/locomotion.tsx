@@ -94,8 +94,9 @@ class LocomotionExample extends Example {
                 castShadows: true
             });
 
-            // assign the renderEntity as the child of character entity. All transforms of the renderEntity and it's children are driven by the anim component.
-            // The charaterEntity transform will be controlled by the Locomotion script.
+            // assign the renderEntity as the child of character entity. All transforms of the
+            // renderEntity and its children are driven by the anim component.
+            // The characterEntity transform will be controlled by the Locomotion script.
             characterEntity.addChild(renderEntity);
 
             // add an anim component to the entity
@@ -274,7 +275,7 @@ class LocomotionExample extends Example {
                 }
             });
 
-            // create a Locomotion script and inilialise some variables
+            // create a Locomotion script and initialize some variables
             const Locomotion = pc.createScript('Locomotion');
 
             let characterDirection;
@@ -304,7 +305,7 @@ class LocomotionExample extends Example {
                 }
             };
 
-            // defines how many units the character should move per second given it's current animation state
+            // defines how many units the character should move per second given its current animation state
             function speedForState(state: any) {
                 switch (state) {
                     case 'Walk':

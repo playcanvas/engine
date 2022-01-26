@@ -1,8 +1,7 @@
 /**
- * @private
- * @class
- * @name AssetFile
- * @classdesc Wraps a source of asset data.
+ * Wraps a source of asset data.
+ *
+ * @ignore
  */
 class AssetFile {
     constructor(url, filename, hash, size, opt, contents) {

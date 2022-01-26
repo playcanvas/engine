@@ -70,7 +70,7 @@ class BlendTrees2DDirectionalExample extends Example {
                 });
                 ctx.fillStyle = '#F60';
                 ctx.beginPath();
-                ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * - 1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
+                ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * -1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.fillStyle = '#283538';
                 ctx.stroke();

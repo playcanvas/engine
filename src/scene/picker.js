@@ -15,6 +15,11 @@ import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
 import { Debug } from '../core/debug.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('./scene.js').Scene} Scene */
+
 const tempSet = new Set();
 
 const clearDepthOptions = {
@@ -23,18 +28,21 @@ const clearDepthOptions = {
 };
 
 /**
- * @class
- * @name Picker
- * @classdesc Picker object used to select mesh instances from screen coordinates.
- * @description Create a new instance of a Picker object.
- * @param {Application} app - The application managing this picker instance.
- * @param {number} width - The width of the pick buffer in pixels.
- * @param {number} height - The height of the pick buffer in pixels.
+ * Picker object used to select mesh instances from screen coordinates.
+ *
  * @property {number} width Width of the pick buffer in pixels (read-only).
  * @property {number} height Height of the pick buffer in pixels (read-only).
- * @property {RenderTarget} renderTarget The render target used by the picker internally (read-only).
+ * @property {RenderTarget} renderTarget The render target used by the picker internally
+ * (read-only).
  */
 class Picker {
+    /**
+     * Create a new Picker instance.
+     *
+     * @param {Application} app - The application managing this picker instance.
+     * @param {number} width - The width of the pick buffer in pixels.
+     * @param {number} height - The height of the pick buffer in pixels.
+     */
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = getApplication();
@@ -72,10 +80,9 @@ class Picker {
     }
 
     /**
-     * @function
-     * @name Picker#getSelection
-     * @description Return the list of mesh instances selected by the specified rectangle in the
-     * previously prepared pick buffer.The rectangle using top-left coordinate system.
+     * Return the list of mesh instances selected by the specified rectangle in the previously
+     * prepared pick buffer.The rectangle using top-left coordinate system.
+     *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle.
@@ -213,12 +220,11 @@ class Picker {
     }
 
     /**
-     * @function
-     * @name Picker#prepare
-     * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can be
-     * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, {@link Picker#prepare} does not need to be called again.
+     * Primes the pick buffer with a rendering of the specified models from the point of view of
+     * the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can
+     * be called multiple times on the same picker object. Therefore, if the models or camera do
+     * not change in any way, {@link Picker#prepare} does not need to be called again.
+     *
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
      * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
@@ -319,13 +325,12 @@ class Picker {
     }
 
     /**
-     * @function
-     * @name Picker#resize
-     * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
-     * to match the resolution of the corresponding frame buffer use for general rendering of the
-     * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers will
-     * yield greater performance, so there is a trade off.
+     * Sets the resolution of the pick buffer. The pick buffer resolution does not need to match
+     * the resolution of the corresponding frame buffer use for general rendering of the 3D scene.
+     * However, the lower the resolution of the pick buffer, the less accurate the selection
+     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers
+     * will yield greater performance, so there is a trade off.
+     *
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */

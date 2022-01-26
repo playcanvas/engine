@@ -73,7 +73,7 @@ class GlbContainerResource {
     instantiateRenderEntity(options) {
 
         const defaultMaterial = this._defaultMaterial;
-        const skinedMeshInstances = [];
+        const skinnedMeshInstances = [];
 
         const createMeshInstance = function (root, entity, mesh, materials, skins, gltfNode) {
 
@@ -88,7 +88,7 @@ class GlbContainerResource {
 
             // store data to create skin instance after the hierarchy is created
             if (gltfNode.hasOwnProperty('skin')) {
-                skinedMeshInstances.push({
+                skinnedMeshInstances.push({
                     meshInstance: meshInstance,
                     rootBone: root,
                     entity: entity
@@ -160,7 +160,7 @@ class GlbContainerResource {
                 }, options));
             }
 
-            // recursivelly clone children
+            // recursively clone children
             const children = node.children;
             for (let i = 0; i < children.length; i++) {
                 const childClone = cloneHierarchy(root, children[i], glb);
@@ -177,11 +177,11 @@ class GlbContainerResource {
         }
 
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
-        skinedMeshInstances.forEach((data) => {
-            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
+        skinnedMeshInstances.forEach((data) => {
+            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
         });
 
-        // return the scene hierarachy created from scene clones
+        // return the scene hierarchy created from scene clones
         return GlbContainerResource.createSceneHierarchy(sceneClones, "Entity");
     }
 

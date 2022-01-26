@@ -2,18 +2,22 @@ import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+
 /**
- * @class
- * @name XrImageTracking
- * @classdesc Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
- * @description Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @property {boolean} supported True if Image Tracking is supported.
- * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for the AR session or there was an error processing the provided images.
- * @property {XrTrackedImage[]} images List of {@link XrTrackedImage} that contain tracking information.
+ * Image Tracking provides the ability to track real world images by provided image samples and
+ * their estimated sizes.
+ *
+ * @augments EventHandler
  */
 class XrImageTracking extends EventHandler {
+    /**
+     * Image Tracking provides the ability to track real world images by provided image samples and
+     * their estimate sizes.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 
@@ -37,12 +41,15 @@ class XrImageTracking extends EventHandler {
      */
 
     /**
-     * @function
-     * @name XrImageTracking#add
-     * @description Add an image for image tracking. A width can also be provided to help the underlying system estimate the appropriate transformation. Modifying the tracked images list is only possible before an AR session is started.
+     * Add an image for image tracking. A width can also be provided to help the underlying system
+     * estimate the appropriate transformation. Modifying the tracked images list is only possible
+     * before an AR session is started.
+     *
      * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image that is matching real world image as close as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
-     * @param {number} width - Width (in meters) of image in the real world. Providing this value as close to the real value will improve tracking quality.
-     * @returns {XrTrackedImage} Tracked image object that will contain tracking information.
+     * @param {number} width - Width (in meters) of image in the real world. Providing this value
+     * as close to the real value will improve tracking quality.
+     * @returns {XrTrackedImage|null} Tracked image object that will contain tracking information.
+     * Returns null if image tracking is not supported or if the XR manager is not active.
      * @example
      * // image with width of 20cm (0.2m)
      * app.xr.imageTracking.add(bookCoverImg, 0.2);
@@ -56,10 +63,10 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrImageTracking#remove
-     * @description Remove an image from image tracking.
-     * @param {XrTrackedImage} trackedImage - Tracked image to be removed. Modifying the tracked images list is only possible before an AR session is started.
+     * Remove an image from image tracking.
+     *
+     * @param {XrTrackedImage} trackedImage - Tracked image to be removed. Modifying the tracked
+     * images list is only possible before an AR session is started.
      */
     remove(trackedImage) {
         if (this._manager.active) return;
@@ -139,14 +146,30 @@ class XrImageTracking extends EventHandler {
         }
     }
 
+    /**
+     * True if Image Tracking is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
+    /**
+     * True if Image Tracking is available. This property will be false if no images were provided
+     * for the AR session or there was an error processing the provided images.
+     *
+     * @type {boolean}
+     */
     get available() {
         return this._available;
     }
 
+    /**
+     * List of {@link XrTrackedImage} that contain tracking information.
+     *
+     * @type {XrTrackedImage[]}
+     */
     get images() {
         return this._images;
     }

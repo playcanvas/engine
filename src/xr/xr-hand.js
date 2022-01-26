@@ -8,6 +8,8 @@ import { XrJoint } from './xr-joint.js';
 
 import { Vec3 } from '../math/vec3.js';
 
+/** @typedef {import('./xr-input-source.js').XrInputSource} XrInputSource */
+
 let fingerJointIds = [];
 
 const vecA = new Vec3();
@@ -25,19 +27,17 @@ if (platform.browser && window.XRHand) {
 }
 
 /**
- * @class
- * @name XrHand
- * @classdesc Represents a hand with fingers and joints.
- * @description Represents a hand with fingers and joints.
- * @hideconstructor
- * @param {XrInputSource} inputSource - Input Source that hand is related to.
- * @property {XrFinger[]} fingers List of fingers of a hand.
- * @property {XrJoint[]} joints List of joints of hand.
- * @property {XrJoint[]} tips List of joints that are tips of a fingers.
- * @property {XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system.
- * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost.
+ * Represents a hand with fingers and joints.
+ *
+ * @augments EventHandler
  */
 class XrHand extends EventHandler {
+    /**
+     * Represents a hand with fingers and joints.
+     *
+     * @param {XrInputSource} inputSource - Input Source that hand is related to.
+     * @hideconstructor
+     */
     constructor(inputSource) {
         super();
 
@@ -196,9 +196,8 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrHand#getJointById
-     * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/.
+     * Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/.
+     *
      * @param {string} id - Id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/.
      * @returns {XrJoint|null} Joint or null if not available.
      */
@@ -206,22 +205,47 @@ class XrHand extends EventHandler {
         return this._jointsById[id] || null;
     }
 
+    /**
+     * List of fingers of a hand.
+     *
+     * @type {XrFinger[]}
+     */
     get fingers() {
         return this._fingers;
     }
 
+    /**
+     * List of joints of hand.
+     *
+     * @type {XrJoint[]}
+     */
     get joints() {
         return this._joints;
     }
 
+    /**
+     * List of joints that are fingertips.
+     *
+     * @type {XrJoint[]}
+     */
     get tips() {
         return this._tips;
     }
 
+    /**
+     * Wrist of a hand, or null if it is not available by WebXR underlying system.
+     *
+     * @type {XrJoint|null}
+     */
     get wrist() {
         return this._wrist;
     }
 
+    /**
+     * True if tracking is available, otherwise tracking might be lost.
+     *
+     * @type {boolean}
+     */
     get tracking() {
         return this._tracking;
     }

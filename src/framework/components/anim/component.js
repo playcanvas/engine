@@ -15,20 +15,21 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
 import { Entity } from "../../entity.js";
 
+/** @typedef {import('./system.js').AnimComponentSystem} AnimComponentSystem */
+
 /**
- * @component
- * @class
- * @name AnimComponent
+ * The Anim Component allows an Entity to playback animations on models and entity properties.
+ *
  * @augments Component
- * @classdesc The Anim Component allows an Entity to playback animations on models and entity properties.
- * @description Create a new AnimComponent.
- * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
- * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
- * @property {boolean} playing Plays or pauses all animations in the component.
  */
 class AnimComponent extends Component {
+    /**
+     * Create a new AnimComponent instance.
+     *
+     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this
+     * Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
@@ -45,10 +46,6 @@ class AnimComponent extends Component {
         // a collection of animated property targets
         this._targets = {};
         this._consumedTriggers = new Set();
-    }
-
-    get stateGraphAsset() {
-        return this._stateGraphAsset;
     }
 
     set stateGraphAsset(value) {
@@ -96,25 +93,8 @@ class AnimComponent extends Component {
         this._stateGraphAsset = _id;
     }
 
-    _onStateGraphAssetChangeEvent(asset) {
-        // both animationAssets and layer masks should be maintained when switching AnimStateGraph assets
-        const prevAnimationAssets = this.animationAssets;
-        const prevMasks = this.layers.map(layer => layer.mask);
-        // clear the previous state graph
-        this.removeStateGraph();
-        // load the new state graph
-        this._stateGraph = new AnimStateGraph(asset._data);
-        this.loadStateGraph(this._stateGraph);
-        // assign the previous animation assets
-        this.animationAssets = prevAnimationAssets;
-        this.loadAnimationAssets();
-        // assign the previous layer masks then rebind all anim targets
-        this.layers.forEach((layer, i) => layer.assignMask(prevMasks[i]));
-        this.rebind();
-    }
-
-    get animationAssets() {
-        return this._animationAssets;
+    get stateGraphAsset() {
+        return this._stateGraphAsset;
     }
 
     set animationAssets(value) {
@@ -122,39 +102,56 @@ class AnimComponent extends Component {
         this.loadAnimationAssets();
     }
 
+    get animationAssets() {
+        return this._animationAssets;
+    }
+
+    /**
+     * Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
+     * the animation.
+     *
+     * @type {number}
+     */
+    set speed(value) {
+        this._speed = value;
+    }
+
     get speed() {
         return this._speed;
     }
 
-    set speed(value) {
-        this._speed = value;
+    /**
+     * If true the first animation will begin playing when the scene is loaded.
+     *
+     * @type {boolean}
+     */
+    set activate(value) {
+        this._activate = value;
     }
 
     get activate() {
         return this._activate;
     }
 
-    set activate(value) {
-        this._activate = value;
+
+    /**
+     * Plays or pauses all animations in the component.
+     *
+     * @type {boolean}
+     */
+    set playing(value) {
+        this._playing = value;
     }
 
     get playing() {
         return this._playing;
     }
 
-    set playing(value) {
-        this._playing = value;
-    }
-
     /**
-     * @name AnimComponent#rootBone
+     * The entity that this anim component should use as the root of the animation hierarchy.
+     *
      * @type {Entity}
-     * @description The entity that this anim component should use as the root of the animation hierarchy.
      */
-    get rootBone() {
-        return this._rootBone;
-    }
-
     set rootBone(value) {
         if (typeof value === 'string') {
             const entity = this.entity.root.findByGuid(value);
@@ -168,51 +165,55 @@ class AnimComponent extends Component {
         this.rebind();
     }
 
-    get stateGraph() {
-        return this._stateGraph;
+    get rootBone() {
+        return this._rootBone;
     }
 
     set stateGraph(value) {
         this._stateGraph = value;
     }
 
+    get stateGraph() {
+        return this._stateGraph;
+    }
+
+    /**
+     * Returns the animation layers available in this anim component.
+     *
+     * @type {AnimComponentLayer[]}
+     */
     get layers() {
         return this._layers;
     }
 
-    set layers(value) {
-        this._layers = value;
+    set layerIndices(value) {
+        this._layerIndices = value;
     }
 
-    get layerIndicies() {
-        return this._layerIndicies;
-    }
-
-    set layerIndicies(value) {
-        this._layerIndicies = value;
-    }
-
-    get parameters() {
-        return this._parameters;
+    get layerIndices() {
+        return this._layerIndices;
     }
 
     set parameters(value) {
         this._parameters = value;
     }
 
-    get targets() {
-        return this._targets;
+    get parameters() {
+        return this._parameters;
     }
 
     set targets(value) {
         this._targets = value;
     }
 
+    get targets() {
+        return this._targets;
+    }
+
     /**
-     * @name AnimComponent#playable
+     * Returns whether all component layers are currently playable.
+     *
      * @type {boolean}
-     * @readonly
-     * @description Returns whether all component layers are currently playable.
      */
     get playable() {
         for (let i = 0; i < this._layers.length; i++) {
@@ -224,16 +225,34 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @name AnimComponent#baseLayer
-     * @type {AnimComponentLayer}
-     * @readonly
-     * @description Returns the base layer of the state graph.
+     * Returns the base layer of the state graph.
+     *
+     * @type {AnimComponentLayer|null}
      */
     get baseLayer() {
         if (this._layers.length > 0) {
             return this._layers[0];
         }
         return null;
+    }
+
+    _onStateGraphAssetChangeEvent(asset) {
+        // both animationAssets and layer masks should be maintained when switching AnimStateGraph assets
+        const prevAnimationAssets = this.animationAssets;
+        const prevMasks = this.layers.map(layer => layer.mask);
+        // clear the previous state graph
+        this.removeStateGraph();
+        // load the new state graph
+        this._stateGraph = new AnimStateGraph(asset._data);
+        this.loadStateGraph(this._stateGraph);
+        // assign the previous animation assets
+        this.animationAssets = prevAnimationAssets;
+        this.loadAnimationAssets();
+        // assign the previous layer masks then rebind all anim targets
+        this.layers.forEach((layer, i) => {
+            layer.mask = prevMasks[i];
+        });
+        this.rebind();
     }
 
     dirtifyTargets() {
@@ -268,13 +287,14 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#addLayer
-     * @description Adds a new anim component layer to the anim component.
+     * Adds a new anim component layer to the anim component.
+     *
      * @param {string} name - The name of the layer to create.
      * @param {number} [weight] - The blending weight of the layer. Defaults to 1.
-     * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in this layer. If omitted the full model is used. Defaults to null.
-     * @param {string} [blendType] - Defines how properties animated by this layer blend with animations of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
+     * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in
+     * this layer. If omitted the full model is used. Defaults to null.
+     * @param {string} [blendType] - Defines how properties animated by this layer blend with
+     * animations of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
      * @returns {AnimComponentLayer} The created anim component layer.
      */
     addLayer(name, weight, mask, blendType) {
@@ -291,10 +311,10 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#loadStateGraph
-     * @description Initializes component animation controllers using the provided state graph.
-     * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
+     * Initializes component animation controllers using the provided state graph.
+     *
+     * @param {object} stateGraph - The state graph asset to load into the component. Contains the
+     * states, transitions and parameters used to define a complete animation controller.
      * @example
      * entity.anim.loadStateGraph({
      *     "layers": [
@@ -401,9 +421,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#removeStateGraph
-     * @description Removes all layers from the anim component.
+     * Removes all layers from the anim component.
      */
     removeStateGraph() {
         this._stateGraph = null;
@@ -425,9 +443,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#reset
-     * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing.
+     * Reset all of the components layers and parameters to their initial states. If a layer was
+     * playing before it will continue playing.
      */
     reset() {
         this._parameters = Object.assign({}, this._stateGraph.parameters);
@@ -439,9 +456,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#rebind
-     * @description Rebind all of the components layers.
+     * Rebind all of the components layers.
      */
     rebind() {
         // clear all targets from previous binding
@@ -453,9 +468,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#findAnimationLayer
-     * @description Finds a {@link AnimComponentLayer} in this component.
+     * Finds a {@link AnimComponentLayer} in this component.
+     *
      * @param {string} name - The name of the anim component layer to find.
      * @returns {AnimComponentLayer} Layer.
      */
@@ -502,15 +516,24 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#assignAnimation
-     * @description Associates an animation with a state or blend tree node in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
-     * If no state graph is loaded, a default state graph will be created with a single state based on the provided nodePath parameter.
-     * @param {string} nodePath - Either the state name or the path to a blend tree node that this animation should be associated with. Each section of a blend tree path is split using a period (`.`) therefore state names should not include this character (e.g "MyStateName" or "MyStateName.BlendTreeNode").
-     * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used. If no state graph has been previously loaded this parameter is ignored.
-     * @param {number} [speed] - Update the speed of the state you are assigning an animation to. Defaults to 1.
-     * @param {boolean} [loop] - Update the loop property of the state you are assigning an animation to. Defaults to true.
+     * Associates an animation with a state or blend tree node in the loaded state graph. If all
+     * states are linked and the {@link AnimComponent#activate} value was set to true then the
+     * component will begin playing. If no state graph is loaded, a default state graph will be
+     * created with a single state based on the provided nodePath parameter.
+     *
+     * @param {string} nodePath - Either the state name or the path to a blend tree node that this
+     * animation should be associated with. Each section of a blend tree path is split using a
+     * period (`.`) therefore state names should not include this character (e.g "MyStateName" or
+     * "MyStateName.BlendTreeNode").
+     * @param {object} animTrack - The animation track that will be assigned to this state and
+     * played whenever this state is active.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the
+     * default layer is used. If no state graph has been previously loaded this parameter is
+     * ignored.
+     * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
+     * Defaults to 1.
+     * @param {boolean} [loop] - Update the loop property of the state you are assigning an
+     * animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
         if (!this._stateGraph && nodePath.indexOf('.') === -1) {
@@ -552,11 +575,11 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#removeNodeAnimations
-     * @description Removes animations from a node in the loaded state graph.
+     * Removes animations from a node in the loaded state graph.
+     *
      * @param {string} nodeName - The name of the node that should have its animation tracks removed.
-     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the default layer is used.
+     * @param {string} [layerName] - The name of the anim component layer to update. If omitted the
+     * default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
@@ -585,9 +608,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#getFloat
-     * @description Returns a float parameter value by name.
+     * Returns a float parameter value by name.
+     *
      * @param {string} name - The name of the float to return the value of.
      * @returns {number} A float.
      */
@@ -596,9 +618,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#setFloat
-     * @description Sets the value of a float parameter that was defined in the animation components state graph.
+     * Sets the value of a float parameter that was defined in the animation components state graph.
+     *
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The new float value to set this parameter to.
      */
@@ -607,9 +628,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#getInteger
-     * @description Returns an integer parameter value by name.
+     * Returns an integer parameter value by name.
+     *
      * @param {string} name - The name of the integer to return the value of.
      * @returns {number} An integer.
      */
@@ -618,9 +638,9 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#setInteger
-     * @description Sets the value of an integer parameter that was defined in the animation components state graph.
+     * Sets the value of an integer parameter that was defined in the animation components state
+     * graph.
+     *
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The new integer value to set this parameter to.
      */
@@ -633,9 +653,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#getBoolean
-     * @description Returns a boolean parameter value by name.
+     * Returns a boolean parameter value by name.
+     *
      * @param {string} name - The name of the boolean to return the value of.
      * @returns {boolean} A boolean.
      */
@@ -644,9 +663,9 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#setBoolean
-     * @description Sets the value of a boolean parameter that was defined in the animation components state graph.
+     * Sets the value of a boolean parameter that was defined in the animation components state
+     * graph.
+     *
      * @param {string} name - The name of the parameter to set.
      * @param {boolean} value - The new boolean value to set this parameter to.
      */
@@ -655,9 +674,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#getTrigger
-     * @description Returns a trigger parameter value by name.
+     * Returns a trigger parameter value by name.
+     *
      * @param {string} name - The name of the trigger to return the value of.
      * @returns {boolean} A boolean.
      */
@@ -666,11 +684,12 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#setTrigger
-     * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
+     * Sets the value of a trigger parameter that was defined in the animation components state
+     * graph to true.
+     *
      * @param {string} name - The name of the parameter to set.
-     * @param {boolean} [singleFrame] - If true, this trigger will be set back to false at the end of the animation update. Defaults to false.
+     * @param {boolean} [singleFrame] - If true, this trigger will be set back to false at the end
+     * of the animation update. Defaults to false.
      */
     setTrigger(name, singleFrame = false) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, true);
@@ -680,9 +699,9 @@ class AnimComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimComponent#resetTrigger
-     * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
+     * Resets the value of a trigger parameter that was defined in the animation components state
+     * graph to false.
+     *
      * @param {string} name - The name of the parameter to set.
      */
     resetTrigger(name) {

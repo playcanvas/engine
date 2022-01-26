@@ -1,6 +1,7 @@
 {
     "plugins": [
-        "plugins/markdown"
+        "plugins/markdown",
+        "./node_modules/jsdoc-tsimport-plugin/index.js"
     ],
     "recurseDepth": 10,
     "source": {

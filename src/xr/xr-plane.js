@@ -2,20 +2,22 @@ import { EventHandler } from '../core/event-handler.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 
+/** @typedef {import('./xr-plane-detection.js').XrPlaneDetection} XrPlaneDetection */
+
 let ids = 0;
 
 /**
- * @class
- * @name XrPlane
- * @classdesc Detected Plane instance that provides position, rotation and polygon points. Plane is a subject to change during its lifetime.
- * @description Detected Plane instance that provides position, rotation and polygon points. Plane is a subject to change during its lifetime.
- * @hideconstructor
- * @param {XrPlaneDetection} planeDetection - Plane detection system.
- * @param {object} xrPlane - XRPlane that is instantiated by WebXR system.
- * @property {number} id Unique identifier of a plane.
- * @property {string|null} orientation Plane's specific orientation (horizontal or vertical) or null if orientation is anything else.
+ * Detected Plane instance that provides position, rotation and polygon points. Plane is a subject
+ * to change during its lifetime.
  */
 class XrPlane extends EventHandler {
+    /**
+     * Create a new XrPlane instance.
+     *
+     * @param {XrPlaneDetection} planeDetection - Plane detection system.
+     * @param {object} xrPlane - XRPlane that is instantiated by WebXR system.
+     * @hideconstructor
+     */
     constructor(planeDetection, xrPlane) {
         super();
 
@@ -73,9 +75,8 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrPlane#getPosition
-     * @description Get the world space position of a plane.
+     * Get the world space position of a plane.
+     *
      * @returns {Vec3} The world space position of a plane.
      */
     getPosition() {
@@ -83,27 +84,37 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrPlane#getRotation
-     * @description Get the world space rotation of a plane.
+     * Get the world space rotation of a plane.
+     *
      * @returns {Quat} The world space rotation of a plane.
      */
     getRotation() {
         return this._rotation;
     }
 
+    /**
+     * Unique identifier of a plane.
+     *
+     * @type {number}
+     */
     get id() {
         return this.id;
     }
 
+    /**
+     * Plane's specific orientation (horizontal or vertical) or null if orientation is anything else.
+     *
+     * @type {string|null}
+     */
     get orientation() {
         return this._orientation;
     }
 
     /**
-     * @name XrPlane#points
+     * Array of DOMPointReadOnly objects. DOMPointReadOnly is an object with `x y z` properties
+     * that defines a local point of a plane's polygon.
+     *
      * @type {object[]}
-     * @description Array of DOMPointReadOnly objects. DOMPointReadOnly is an object with `x y z` properties that defines a local point of a plane's polygon.
      * @example
      * // prepare reusable objects
      * var vecA = new pc.Vec3();

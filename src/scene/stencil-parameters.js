@@ -1,20 +1,28 @@
 import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/constants.js';
 
 /**
- * @class
- * @name StencilParameters
- * @classdesc Holds stencil test settings.
- * @description Create a new StencilParameters instance.
- * @param {object} options - Options object to configure the stencil parameters.
+ * Holds stencil test settings.
+ *
  * @property {number} func Sets stencil test function. See {@link GraphicsDevice#setStencilFunc}.
- * @property {number} ref Sets stencil test reference value. See {@link GraphicsDevice#setStencilFunc}.
- * @property {number} fail Sets operation to perform if stencil test is failed. See {@link GraphicsDevice#setStencilOperation}.
- * @property {number} zfail Sets operation to perform if depth test is failed. See {@link GraphicsDevice#setStencilOperation}.
- * @property {number} zpass Sets operation to perform if both stencil and depth test are passed. See {@link GraphicsDevice#setStencilOperation}.
- * @property {number} readMask Sets stencil test reading mask. See {@link GraphicsDevice#setStencilFunc}.
- * @property {number} writeMask Sets stencil test writing mask. See {@link GraphicsDevice#setStencilOperation}.
+ * @property {number} ref Sets stencil test reference value. See
+ * {@link GraphicsDevice#setStencilFunc}.
+ * @property {number} fail Sets operation to perform if stencil test is failed. See
+ * {@link GraphicsDevice#setStencilOperation}.
+ * @property {number} zfail Sets operation to perform if depth test is failed. See
+ * {@link GraphicsDevice#setStencilOperation}.
+ * @property {number} zpass Sets operation to perform if both stencil and depth test are passed.
+ * See {@link GraphicsDevice#setStencilOperation}.
+ * @property {number} readMask Sets stencil test reading mask. See
+ * {@link GraphicsDevice#setStencilFunc}.
+ * @property {number} writeMask Sets stencil test writing mask. See
+ * {@link GraphicsDevice#setStencilOperation}.
  */
 class StencilParameters {
+    /**
+     * Create a new StencilParameters instance.
+     *
+     * @param {object} options - Options object to configure the stencil parameters.
+     */
     constructor(options) {
         this.func = options.func === undefined ? FUNC_ALWAYS : options.func;
         this.ref = options.ref || 0;

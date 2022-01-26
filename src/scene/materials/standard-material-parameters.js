@@ -179,12 +179,7 @@ const standardMaterialParameterTypes = {
     useSkybox: 'boolean',
     useGammaTonemap: 'boolean',
 
-    prefilteredCubeMap128: 'texture',
-    prefilteredCubeMap64: 'texture',
-    prefilteredCubeMap32: 'texture',
-    prefilteredCubeMap16: 'texture',
-    prefilteredCubeMap8: 'texture',
-    prefilteredCubeMap4: 'texture'
+    envAtlas: 'texture'
 
     // twoSidedLighting
     // nineSlicedMode

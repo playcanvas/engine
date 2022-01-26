@@ -1,15 +1,20 @@
 import { VersionedObject } from './versioned-object.js';
 
 /**
- * @class
- * @name ScopeId
- * @classdesc The scope for a variable.
- * @param {string} name - The variable name.
- * @property {string} name The variable name.
+ * The scope for a variable.
  */
 class ScopeId {
+    /**
+     * Create a new ScopeId instance.
+     *
+     * @param {string} name - The variable name.
+     */
     constructor(name) {
-        // Set the name
+        /**
+         * The variable name.
+         *
+         * @type {string}
+         */
         this.name = name;
 
         // Set the default value
@@ -20,9 +25,8 @@ class ScopeId {
     }
 
     /**
-     * @function
-     * @name ScopeId#setValue
-     * @description Set variable value.
+     * Set variable value.
+     *
      * @param {*} value - The value.
      */
     setValue(value) {
@@ -34,9 +38,8 @@ class ScopeId {
     }
 
     /**
-     * @function
-     * @name ScopeId#getValue
-     * @description Get variable value.
+     * Get variable value.
+     *
      * @returns {*} The value.
      */
     getValue() {

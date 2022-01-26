@@ -4,12 +4,10 @@ import { math } from '../../math/math.js';
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
- * @private
- * @class
- * @name AnimBlendTreeCartesian2D
- * @classdesc An AnimBlendTree that calculates its weights using a 2D Cartesian algorithm
- * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6 Section 3.
- * @description Create a new BlendTree1D.
+ * An AnimBlendTree that calculates its weights using a 2D Cartesian algorithm based on the thesis
+ * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6 Section 3.
+ *
+ * @ignore
  */
 class AnimBlendTreeCartesian2D extends AnimBlendTree {
     static _p = new Vec2();

@@ -1,26 +1,23 @@
 /**
- * @private
- * @constant
+ * A stepped interpolation scheme.
+ *
  * @type {number}
- * @name INTERPOLATION_STEP
- * @description A stepped interpolation scheme.
+ * @ignore
  */
 export const INTERPOLATION_STEP = 0;
 
 /**
- * @private
- * @constant
+ * A linear interpolation scheme.
+ *
  * @type {number}
- * @name INTERPOLATION_LINEAR
- * @description A linear interpolation scheme.
+ * @ignore
  */
 export const INTERPOLATION_LINEAR = 1;
 
 /**
- * @private
- * @constant
+ * A cubic spline interpolation scheme.
+ *
  * @type {number}
- * @name INTERPOLATION_CUBIC
- * @description A cubic spline interpolation scheme.
+ * @ignore
  */
 export const INTERPOLATION_CUBIC = 2;

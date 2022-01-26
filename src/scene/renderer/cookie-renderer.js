@@ -5,6 +5,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '
 import { Texture } from '../../graphics/texture.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import { LIGHTTYPE_OMNI } from '../constants.js';
 import { LightCamera } from './light-camera.js';
@@ -77,6 +78,7 @@ class CookieRenderer {
     static createTexture(device, resolution) {
 
         const texture = new Texture(device, {
+            name: "CookieAtlas",
             width: resolution,
             height: resolution,
             format: PIXELFORMAT_R8_G8_B8_A8,
@@ -87,7 +89,6 @@ class CookieRenderer {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-        texture.name = "CookieAtlas";
 
         return texture;
     }
@@ -112,9 +113,7 @@ class CookieRenderer {
 
         if (light.enabled && light.cookie && light.visibleThisFrame) {
 
-            // #if _DEBUG
-            this.device.pushMarker("COOKIE " + light._node.name);
-            // #endif
+            DebugGraphics.pushGpuMarker(this.device, `COOKIE ${light._node.name}`);
 
             const faceCount = light.numShadowFaces;
             const shader = faceCount > 1 ? this.shaderCube : this.shader2d;
@@ -150,9 +149,7 @@ class CookieRenderer {
                 drawQuadWithShader(device, renderTarget, shader, _viewport);
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            // #endif
+            DebugGraphics.popGpuMarker(this.device);
         }
     }
 }

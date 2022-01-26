@@ -1,18 +1,23 @@
 import { AnimEvents } from './anim-events.js';
 
+/** @typedef {import('./anim-curve.js').AnimCurve} AnimCurve */
+/** @typedef {import('./anim-data.js').AnimData} AnimData */
+
 /**
- * @class
- * @name AnimTrack
- * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
- * @description Create a new animation track.
- * @param {string} name - The track name.
- * @param {number} duration - The duration of the track in seconds.
- * @param {AnimData[]} inputs - List of curve key data.
- * @param {AnimData[]} outputs - List of curve value data.
- * @param {AnimCurve[]} curves - The list of curves.
- * @param {AnimEvents} animEvents - A sequence of animation events.
+ * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
+ *
  */
 class AnimTrack {
+    /**
+     * Create a new AnimTrack instance.
+     *
+     * @param {string} name - The track name.
+     * @param {number} duration - The duration of the track in seconds.
+     * @param {AnimData[]} inputs - List of curve key data.
+     * @param {AnimData[]} outputs - List of curve value data.
+     * @param {AnimCurve[]} curves - The list of curves.
+     * @param {AnimEvents} animEvents - A sequence of animation events.
+     */
     constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
         this._duration = duration;
@@ -23,50 +28,45 @@ class AnimTrack {
     }
 
     /**
-     * @readonly
-     * @name AnimTrack#name
+     * Returns the name of the AnimTrack.
+     *
      * @type {string}
-     * @description Returns the name of the AnimTrack.
      */
     get name() {
         return this._name;
     }
 
     /**
-     * @readonly
-     * @name AnimTrack#duration
+     * Returns the duration of the AnimTrack.
+     *
      * @type {string}
-     * @description Returns the duration of the AnimTrack.
      */
     get duration() {
         return this._duration;
     }
 
     /**
-     * @readonly
-     * @name AnimTrack#inputs
+     * Returns the list of curve key data contained in the AnimTrack.
+     *
      * @type {AnimData[]}
-     * @description Returns the list of curve key data contained in the AnimTrack.
      */
     get inputs() {
         return this._inputs;
     }
 
     /**
-     * @readonly
-     * @name AnimTrack#outputs
+     * Returns the list of curve values contained in the AnimTrack.
+     *
      * @type {AnimData[]}
-     * @description Returns the list of curve values contained in the AnimTrack.
      */
     get outputs() {
         return this._outputs;
     }
 
     /**
-     * @readonly
-     * @name AnimTrack#curves
+     * Returns the list of curves contained in the AnimTrack.
+     *
      * @type {AnimCurve[]}
-     * @description Returns the list of curves contained in the AnimTrack.
      */
     get curves() {
         return this._curves;
@@ -74,16 +74,16 @@ class AnimTrack {
 
 
     /**
-     * @name AnimTrack#events
+     * Returns the animation events that will fire during the playback of this anim track.
+     *
      * @type {AnimEvents}
-     * @description Returns the animation events that will fire during the playback of this anim track.
      */
-    get events() {
-        return this._animEvents.events;
-    }
-
     set events(animEvents) {
         this._animEvents = animEvents;
+    }
+
+    get events() {
+        return this._animEvents.events;
     }
 
     // evaluate all track curves at the specified time and store results
@@ -102,7 +102,7 @@ class AnimTrack {
             cache[i].update(time, inputs[i]._data);
         }
 
-        // evalute outputs
+        // evaluate outputs
         for (let i = 0; i < curves.length; ++i) {
             const curve = curves[i];
             const output = outputs[curve._output];
