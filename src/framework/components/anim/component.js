@@ -181,12 +181,7 @@ class AnimComponent extends Component {
      * Returns the animation layers available in this anim component.
      *
      * @type {AnimComponentLayer[]}
-     * @readonly
      */
-    set layers(value) {
-        this._layers = value;
-    }
-
     get layers() {
         return this._layers;
     }
