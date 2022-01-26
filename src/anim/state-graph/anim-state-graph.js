@@ -5,7 +5,6 @@
  * @example
  * const animStateGraph = asset.resource;
  * entity.anim.loadStateGraph(animStateGraph);
- * graph.
  */
 class AnimStateGraph {
     constructor(data) {
