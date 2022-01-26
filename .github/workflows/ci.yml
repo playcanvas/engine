@@ -67,7 +67,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Run unit tests
-      run: npm run test
+      run: npm test
 
   unit-test-karma:
     name: Unit Test (Karma)

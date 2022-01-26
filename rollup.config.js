@@ -5,6 +5,7 @@ import { createFilter } from '@rollup/pluginutils';
 import jscc from 'rollup-plugin-jscc';
 import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const execSync = require('child_process').execSync;
 let revision;
@@ -193,6 +194,14 @@ const target_release_es5min = {
         terser()
     ]
 };
+
+if (process.env.treemap) {
+    const visualizerPlugin = visualizer({
+        brotliSize: true,
+        gzipSize: true
+    });
+    target_release_es5min.plugins.push(visualizerPlugin);
+}
 
 const target_release_es6 = {
     input: 'src/index.js',
