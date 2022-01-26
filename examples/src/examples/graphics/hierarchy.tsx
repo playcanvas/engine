@@ -18,7 +18,6 @@ class HierarchyExample extends Example {
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
         });
-;
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -103,7 +102,7 @@ class HierarchyExample extends Example {
         app.on("update", function (dt) {
             time += dt;
 
-            // rotation quaterion changing with time
+            // rotation quaternion changing with time
             const rot = new pc.Quat();
             rot.setFromEulerAngles(time * 5, time * 13, time * 6);
 

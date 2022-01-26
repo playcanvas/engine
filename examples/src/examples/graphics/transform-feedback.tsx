@@ -116,7 +116,7 @@ class TransformFeedbackExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // create small 2D texture representing movement direcion (wind)
+        // create small 2D texture representing movement direction (wind)
         const textureResolution = 10;
         const textureData = new Uint8ClampedArray(textureResolution * textureResolution * 4);
 

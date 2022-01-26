@@ -4,6 +4,10 @@ import { http } from '../net/http.js';
 
 import { Sprite } from '../scene/sprite.js';
 
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
     const spriteAsset = this;
@@ -19,14 +23,17 @@ function onTextureAtlasAdded(atlasAsset) {
 }
 
 /**
- * @class
- * @name SpriteHandler
+ * Resource handler used for loading {@link Sprite} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Sprite} resources.
- * @param {AssetRegistry} assets - The asset registry.
- * @param {GraphicsDevice} device - The graphics device.
  */
 class SpriteHandler {
+    /**
+     * Create a new SpriteHandler instance.
+     *
+     * @param {AssetRegistry} assets - The asset registry.
+     * @param {GraphicsDevice} device - The graphics device.
+     */
     constructor(assets, device) {
         this._assets = assets;
         this._device = device;

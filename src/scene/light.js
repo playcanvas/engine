@@ -8,7 +8,7 @@ import { Vec4 } from '../math/vec4.js';
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_LIGHTMAP, MASK_DYNAMIC,
+    MASK_BAKE, MASK_AFFECT_DYNAMIC,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
@@ -32,6 +32,8 @@ const directionalCascades = [
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5)],
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
 ];
+
+let id = 0;
 
 // Class storing shadow rendering related private information
 class LightRenderData {
@@ -85,14 +87,14 @@ class LightRenderData {
 }
 
 /**
- * @private
- * @class
- * @name Light
- * @classdesc A light.
+ * A light.
+ *
+ * @ignore
  */
 class Light {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        this.id = id++;
 
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
@@ -100,7 +102,7 @@ class Light {
         this._intensity = 1;
         this._castShadows = false;
         this._enabled = false;
-        this.mask = MASK_DYNAMIC;
+        this.mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -168,6 +170,10 @@ class Light {
 
         // viewport of the cookie texture / shadow in the atlas
         this._atlasViewport = null;
+        this.atlasViewportAllocated = false;    // if true, atlas slot is allocated for the current frame
+        this.atlasVersion = 0;      // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
+        this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
+        this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
 
         this._scene = null;
         this._node = null;
@@ -177,11 +183,333 @@ class Light {
 
         // true if the light is visible by any camera within a frame
         this.visibleThisFrame = false;
+
+        // maximum size of the light bounding sphere on the screen by any camera within a frame
+        // (used to estimate shadow resolution), range [0..1]
+        this.maxScreenSize = 0;
     }
 
     destroy() {
         this._destroyShadowMap();
         this._renderData = null;
+    }
+
+    set numCascades(value) {
+        if (!this.cascades || this.numCascades != value) {
+            this.cascades = directionalCascades[value - 1];
+            this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
+            this._shadowCascadeDistances = new Float32Array(4);     // always 4
+            this._destroyShadowMap();
+            this.updateKey();
+        }
+    }
+
+    get numCascades() {
+        return this.cascades.length;
+    }
+
+    set shadowMap(shadowMap) {
+        if (this._shadowMap !== shadowMap) {
+            this._destroyShadowMap();
+            this._shadowMap = shadowMap;
+        }
+    }
+
+    get shadowMap() {
+        return this._shadowMap;
+    }
+
+    // returns number of render targets to render the shadow map
+    get numShadowFaces() {
+        const type = this._type;
+        if (type === LIGHTTYPE_DIRECTIONAL) {
+            return this.numCascades;
+        } else if (type === LIGHTTYPE_OMNI) {
+            return 6;
+        }
+
+        return 1;
+    }
+
+    set type(value) {
+        if (this._type === value)
+            return;
+
+        this._type = value;
+        this._destroyShadowMap();
+        this.updateKey();
+
+        const stype = this._shadowType;
+        this._shadowType = null;
+        this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
+    }
+
+    get type() {
+        return this._type;
+    }
+
+    set shape(value) {
+        if (this._shape === value)
+            return;
+
+        this._shape = value;
+        this._destroyShadowMap();
+        this.updateKey();
+
+        const stype = this._shadowType;
+        this._shadowType = null;
+        this.shadowType = stype; // refresh shadow type; switching shape and back may change it
+    }
+
+    get shape() {
+        return this._shape;
+    }
+
+    set shadowType(value) {
+        if (this._shadowType === value)
+            return;
+
+        const device = this.device;
+
+        if (this._type === LIGHTTYPE_OMNI)
+            value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
+
+        if (value === SHADOW_PCF5 && !device.webgl2) {
+            value = SHADOW_PCF3; // fallback from HW PCF to old PCF
+        }
+
+        if (value === SHADOW_VSM32 && !device.textureFloatRenderable) // fallback from vsm32 to vsm16
+            value = SHADOW_VSM16;
+
+        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) // fallback from vsm16 to vsm8
+            value = SHADOW_VSM8;
+
+        this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
+        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3;
+
+        this._shadowType = value;
+        this._destroyShadowMap();
+        this.updateKey();
+    }
+
+    get shadowType() {
+        return this._shadowType;
+    }
+
+    set enabled(value) {
+        if (this._enabled !== value) {
+            this._enabled = value;
+            this.layersDirty();
+        }
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set castShadows(value) {
+        if (this._castShadows !== value) {
+            this._castShadows = value;
+            this._destroyShadowMap();
+            this.layersDirty();
+            this.updateKey();
+        }
+    }
+
+    get castShadows() {
+        return this._castShadows && this.mask !== MASK_BAKE && this.mask !== 0;
+    }
+
+    set shadowResolution(value) {
+        if (this._shadowResolution !== value) {
+            if (this._type === LIGHTTYPE_OMNI) {
+                value = Math.min(value, this.device.maxCubeMapSize);
+            } else {
+                value = Math.min(value, this.device.maxTextureSize);
+            }
+            this._shadowResolution = value;
+            this._destroyShadowMap();
+        }
+    }
+
+    get shadowResolution() {
+        return this._shadowResolution;
+    }
+
+    set vsmBlurSize(value) {
+        if (this._vsmBlurSize === value)
+            return;
+
+        if (value % 2 === 0) value++; // don't allow even size
+        this._vsmBlurSize = value;
+    }
+
+    get vsmBlurSize() {
+        return this._vsmBlurSize;
+    }
+
+    set normalOffsetBias(value) {
+        if (this._normalOffsetBias === value)
+            return;
+
+        if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
+            this.updateKey();
+        }
+        this._normalOffsetBias = value;
+    }
+
+    get normalOffsetBias() {
+        return this._normalOffsetBias;
+    }
+
+    set falloffMode(value) {
+        if (this._falloffMode === value)
+            return;
+
+        this._falloffMode = value;
+        this.updateKey();
+    }
+
+    get falloffMode() {
+        return this._falloffMode;
+    }
+
+    set innerConeAngle(value) {
+        if (this._innerConeAngle === value)
+            return;
+
+        this._innerConeAngle = value;
+        this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+    }
+
+    get innerConeAngle() {
+        return this._innerConeAngle;
+    }
+
+    set outerConeAngle(value) {
+        if (this._outerConeAngle === value)
+            return;
+
+        this._outerConeAngle = value;
+        this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
+    }
+
+    get outerConeAngle() {
+        return this._outerConeAngle;
+    }
+
+    set intensity(value) {
+        if (this._intensity !== value) {
+            this._intensity = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get intensity() {
+        return this._intensity;
+    }
+
+    get cookieMatrix() {
+        if (!this._cookieMatrix) {
+            this._cookieMatrix = new Mat4();
+        }
+        return this._cookieMatrix;
+    }
+
+    get atlasViewport() {
+        if (!this._atlasViewport) {
+            this._atlasViewport = new Vec4(0, 0, 1, 1);
+        }
+        return this._atlasViewport;
+    }
+
+    set cookie(value) {
+        if (this._cookie === value)
+            return;
+
+        this._cookie = value;
+        this.updateKey();
+    }
+
+    get cookie() {
+        return this._cookie;
+    }
+
+    set cookieFalloff(value) {
+        if (this._cookieFalloff === value)
+            return;
+
+        this._cookieFalloff = value;
+        this.updateKey();
+    }
+
+    get cookieFalloff() {
+        return this._cookieFalloff;
+    }
+
+    set cookieChannel(value) {
+        if (this._cookieChannel === value)
+            return;
+
+        if (value.length < 3) {
+            const chr = value.charAt(value.length - 1);
+            const addLen = 3 - value.length;
+            for (let i = 0; i < addLen; i++)
+                value += chr;
+        }
+        this._cookieChannel = value;
+        this.updateKey();
+    }
+
+    get cookieChannel() {
+        return this._cookieChannel;
+    }
+
+    set cookieTransform(value) {
+        if (this._cookieTransform === value)
+            return;
+
+        this._cookieTransform = value;
+        this._cookieTransformSet = !!value;
+        if (value && !this._cookieOffset) {
+            this.cookieOffset = new Vec2(); // using transform forces using offset code
+            this._cookieOffsetSet = false;
+        }
+        this.updateKey();
+    }
+
+    get cookieTransform() {
+        return this._cookieTransform;
+    }
+
+    set cookieOffset(value) {
+        if (this._cookieOffset === value)
+            return;
+
+        const xformNew = !!(this._cookieTransformSet || value);
+        if (xformNew && !value && this._cookieOffset) {
+            this._cookieOffset.set(0, 0);
+        } else {
+            this._cookieOffset = value;
+        }
+        this._cookieOffsetSet = !!value;
+        if (value && !this._cookieTransform) {
+            this.cookieTransform = new Vec4(1, 1, 0, 0); // using offset forces using matrix code
+            this._cookieTransformSet = false;
+        }
+        this.updateKey();
+    }
+
+    get cookieOffset() {
+        return this._cookieOffset;
+    }
+
+    // prepares light for the frame rendering
+    beginFrame() {
+        this.visibleThisFrame = this._type === LIGHTTYPE_DIRECTIONAL && this._enabled;
+        this.maxScreenSize = 0;
+        this.atlasViewportAllocated = false;
+        this.atlasSlotUpdated = false;
     }
 
     // destroys shadow map related resources, called when shadow properties change and resources
@@ -222,10 +550,8 @@ class Light {
     }
 
     /**
-     * @private
-     * @function
-     * @name Light#clone
-     * @description Duplicates a light node but does not 'deep copy' the hierarchy.
+     * Duplicates a light node but does not 'deep copy' the hierarchy.
+     *
      * @returns {Light} A cloned Light.
      */
     clone() {
@@ -314,43 +640,6 @@ class Light {
         return tmpBiases;
     }
 
-    get numCascades() {
-        return this.cascades.length;
-    }
-
-    set numCascades(value) {
-        if (!this.cascades || this.numCascades != value) {
-            this.cascades = directionalCascades[value - 1];
-            this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
-            this._shadowCascadeDistances = new Float32Array(4);     // always 4
-            this._destroyShadowMap();
-            this.updateKey();
-        }
-    }
-
-    get shadowMap() {
-        return this._shadowMap;
-    }
-
-    set shadowMap(shadowMap) {
-        if (this._shadowMap !== shadowMap) {
-            this._destroyShadowMap();
-            this._shadowMap = shadowMap;
-        }
-    }
-
-    // returns number of render targets to render the shadow map
-    get numShadowFaces() {
-        const type = this._type;
-        if (type === LIGHTTYPE_DIRECTIONAL) {
-            return this.numCascades;
-        } else if (type === LIGHTTYPE_OMNI) {
-            return 6;
-        }
-
-        return 1;
-    }
-
     getColor() {
         return this._color;
     }
@@ -393,7 +682,7 @@ class Light {
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);
 
-            box.setFromTransformedAabb(box, node.getWorldTransform());
+            box.setFromTransformedAabb(box, node.getWorldTransform(), true);
 
         } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());
@@ -490,279 +779,6 @@ class Light {
         }
 
         this.key = key;
-    }
-
-    get type() {
-        return this._type;
-    }
-
-    set type(value) {
-        if (this._type === value)
-            return;
-
-        this._type = value;
-        this._destroyShadowMap();
-        this.updateKey();
-
-        const stype = this._shadowType;
-        this._shadowType = null;
-        this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
-    }
-
-    get shape() {
-        return this._shape;
-    }
-
-    set shape(value) {
-        if (this._shape === value)
-            return;
-
-        this._shape = value;
-        this._destroyShadowMap();
-        this.updateKey();
-
-        const stype = this._shadowType;
-        this._shadowType = null;
-        this.shadowType = stype; // refresh shadow type; switching shape and back may change it
-    }
-
-    get shadowType() {
-        return this._shadowType;
-    }
-
-    set shadowType(value) {
-        if (this._shadowType === value)
-            return;
-
-        const device = this.device;
-
-        if (this._type === LIGHTTYPE_OMNI)
-            value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
-
-        if (value === SHADOW_PCF5 && !device.webgl2) {
-            value = SHADOW_PCF3; // fallback from HW PCF to old PCF
-        }
-
-        if (value === SHADOW_VSM32 && !device.textureFloatRenderable) // fallback from vsm32 to vsm16
-            value = SHADOW_VSM16;
-
-        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) // fallback from vsm16 to vsm8
-            value = SHADOW_VSM8;
-
-        this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3;
-
-        this._shadowType = value;
-        this._destroyShadowMap();
-        this.updateKey();
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(value) {
-        if (this._enabled !== value) {
-            this._enabled = value;
-            this.layersDirty();
-        }
-    }
-
-    get castShadows() {
-        return this._castShadows && this.mask !== MASK_LIGHTMAP && this.mask !== 0;
-    }
-
-    set castShadows(value) {
-        if (this._castShadows !== value) {
-            this._castShadows = value;
-            this._destroyShadowMap();
-            this.layersDirty();
-            this.updateKey();
-        }
-    }
-
-    get shadowResolution() {
-        return this._shadowResolution;
-    }
-
-    set shadowResolution(value) {
-        if (this._shadowResolution !== value) {
-            if (this._type === LIGHTTYPE_OMNI) {
-                value = Math.min(value, this.device.maxCubeMapSize);
-            } else {
-                value = Math.min(value, this.device.maxTextureSize);
-            }
-            this._shadowResolution = value;
-            this._destroyShadowMap();
-        }
-    }
-
-    get vsmBlurSize() {
-        return this._vsmBlurSize;
-    }
-
-    set vsmBlurSize(value) {
-        if (this._vsmBlurSize === value)
-            return;
-
-        if (value % 2 === 0) value++; // don't allow even size
-        this._vsmBlurSize = value;
-    }
-
-    get normalOffsetBias() {
-        return this._normalOffsetBias;
-    }
-
-    set normalOffsetBias(value) {
-        if (this._normalOffsetBias === value)
-            return;
-
-        if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
-            this.updateKey();
-        }
-        this._normalOffsetBias = value;
-    }
-
-    get falloffMode() {
-        return this._falloffMode;
-    }
-
-    set falloffMode(value) {
-        if (this._falloffMode === value)
-            return;
-
-        this._falloffMode = value;
-        this.updateKey();
-    }
-
-    get innerConeAngle() {
-        return this._innerConeAngle;
-    }
-
-    set innerConeAngle(value) {
-        if (this._innerConeAngle === value)
-            return;
-
-        this._innerConeAngle = value;
-        this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
-    }
-
-    get outerConeAngle() {
-        return this._outerConeAngle;
-    }
-
-    set outerConeAngle(value) {
-        if (this._outerConeAngle === value)
-            return;
-
-        this._outerConeAngle = value;
-        this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
-    }
-
-    get intensity() {
-        return this._intensity;
-    }
-
-    set intensity(value) {
-        if (this._intensity !== value) {
-            this._intensity = value;
-            this._updateFinalColor();
-        }
-    }
-
-    get cookieMatrix() {
-        if (!this._cookieMatrix) {
-            this._cookieMatrix = new Mat4();
-        }
-        return this._cookieMatrix;
-    }
-
-    get atlasViewport() {
-        if (!this._atlasViewport) {
-            this._atlasViewport = new Vec4(0, 0, 1, 1);
-        }
-        return this._atlasViewport;
-    }
-
-    get cookie() {
-        return this._cookie;
-    }
-
-    set cookie(value) {
-        if (this._cookie === value)
-            return;
-
-        this._cookie = value;
-        this.updateKey();
-    }
-
-    get cookieFalloff() {
-        return this._cookieFalloff;
-    }
-
-    set cookieFalloff(value) {
-        if (this._cookieFalloff === value)
-            return;
-
-        this._cookieFalloff = value;
-        this.updateKey();
-    }
-
-    get cookieChannel() {
-        return this._cookieChannel;
-    }
-
-    set cookieChannel(value) {
-        if (this._cookieChannel === value)
-            return;
-
-        if (value.length < 3) {
-            const chr = value.charAt(value.length - 1);
-            const addLen = 3 - value.length;
-            for (let i = 0; i < addLen; i++)
-                value += chr;
-        }
-        this._cookieChannel = value;
-        this.updateKey();
-    }
-
-    get cookieTransform() {
-        return this._cookieTransform;
-    }
-
-    set cookieTransform(value) {
-        if (this._cookieTransform === value)
-            return;
-
-        this._cookieTransform = value;
-        this._cookieTransformSet = !!value;
-        if (value && !this._cookieOffset) {
-            this.cookieOffset = new Vec2(); // using transform forces using offset code
-            this._cookieOffsetSet = false;
-        }
-        this.updateKey();
-    }
-
-    get cookieOffset() {
-        return this._cookieOffset;
-    }
-
-    set cookieOffset(value) {
-        if (this._cookieOffset === value)
-            return;
-
-        const xformNew = !!(this._cookieTransformSet || value);
-        if (xformNew && !value && this._cookieOffset) {
-            this._cookieOffset.set(0, 0);
-        } else {
-            this._cookieOffset = value;
-        }
-        this._cookieOffsetSet = !!value;
-        if (value && !this._cookieTransform) {
-            this.cookieTransform = new Vec4(1, 1, 0, 0); // using offset forces using matrix code
-            this._cookieTransformSet = false;
-        }
-        this.updateKey();
     }
 }
 

@@ -1,7 +1,6 @@
 /**
- * @class
- * @name AnimStateGraph
- * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
+ * Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state
+ * graph.
  */
 class AnimStateGraph {
     constructor(data) {

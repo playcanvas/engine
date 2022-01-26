@@ -1,8 +1,6 @@
 /**
- * @private
- * @function
- * @name createURI
- * @description Create a URI object from constituent parts.
+ * Create a URI object from constituent parts.
+ *
  * @param {object} options - Parts of the URI to build.
  * @param {string} [options.scheme] - The URI scheme (e.g. http).
  * @param {string} [options.authority] - The URI authority (e.g. `www.example.com`).
@@ -12,6 +10,7 @@
  * @param {string} [options.query] - The query section, after the ?(e.g. `http://example.com?**key=value&another=123**`).
  * @param {string} [options.fragment] - The fragment section, after the # (e.g. `http://example.com#**fragment/data**`).
  * @returns {string} A URI string.
+ * @ignore
  */
 function createURI(options) {
     let s = "";
@@ -59,35 +58,55 @@ function createURI(options) {
 // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
 const re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
+/**
+ * A URI object.
+ *
+ * @ignore
+ */
 class URI {
     /**
-     * @private
-     * @class
-     * @name URI
-     * @description Create a new URI object.
-     * @classdesc A URI object.
+     * Create a new URI instance.
+     *
      * @param {string} uri - URI string.
-     * @property {string} scheme The scheme. (e.g. http).
-     * @property {string} authority The authority. (e.g. `www.example.com`).
-     * @property {string} path The path. (e.g. /users/example).
-     * @property {string} query The query, the section after a ?. (e.g. search=value).
-     * @property {string} fragment The fragment, the section after a #.
      */
     constructor(uri) {
         const result = uri.match(re);
 
+        /**
+         * The scheme. (e.g. http).
+         *
+         * @type {string}
+         */
         this.scheme = result[2];
+        /**
+         * The authority. (e.g. `www.example.com`).
+         *
+         * @type {string}
+         */
         this.authority = result[4];
+        /**
+         * The path. (e.g. /users/example).
+         *
+         * @type {string}
+         */
         this.path = result[5];
+        /**
+         * The query, the section after a ?. (e.g. search=value).
+         *
+         * @type {string}
+         */
         this.query = result[7];
+        /**
+         * The fragment, the section after a #.
+         *
+         * @type {string}
+         */
         this.fragment = result[9];
     }
 
     /**
-     * @private
-     * @function
-     * @name URI#toString
-     * @description Convert URI back to string.
+     * Convert URI back to string.
+     *
      * @returns {string} The URI as a string.
      */
     toString() {
@@ -115,10 +134,8 @@ class URI {
     }
 
     /**
-     * @private
-     * @function
-     * @name URI#getQuery
-     * @description Returns the query parameters as an Object.
+     * Returns the query parameters as an Object.
+     *
      * @returns {object} The URI's query parameters converted to an Object.
      * @example
      * var s = "http://example.com?a=1&b=2&c=3";
@@ -143,10 +160,8 @@ class URI {
     }
 
     /**
-     * @private
-     * @function
-     * @name URI#setQuery
-     * @description Set the query section of the URI from a Object.
+     * Set the query section of the URI from a Object.
+     *
      * @param {object} params - Key-Value pairs to encode into the query string.
      * @example
      * var s = "http://example.com";

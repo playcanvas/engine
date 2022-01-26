@@ -9,18 +9,23 @@ import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./morph-target.js').MorphTarget} MorphTarget */
+
 // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
 const _floatRounding = 0.2;
 
 /**
- * @class
- * @name Morph
- * @classdesc Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
- * @param {MorphTarget[]} targets - A list of morph targets.
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
- * from the {@link Application}.
+ * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
  */
 class Morph extends RefCountedObject {
+    /**
+     * Create a new Morph instance.
+     *
+     * @param {MorphTarget[]} targets - A list of morph targets.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph
+     * target. If it is not provided, a device is obtained from the {@link Application}.
+     */
     constructor(targets, graphicsDevice) {
         super();
 
@@ -204,9 +209,7 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Morph#destroy
-     * @description Frees video memory allocated by this object.
+     * Frees video memory allocated by this object.
      */
     destroy() {
         if (this.vertexBufferIds) {
@@ -221,10 +224,9 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * @readonly
-     * @name Morph#targets
+     * The array of morph targets.
+     *
      * @type {MorphTarget[]}
-     * @description The array of morph targets.
      */
     get targets() {
         return this._targets;

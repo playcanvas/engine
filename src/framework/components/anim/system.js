@@ -4,19 +4,23 @@ import { ComponentSystem } from '../system.js';
 import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = [
     'enabled'
 ];
 
 /**
- * @class
- * @name AnimComponentSystem
+ * The AnimComponentSystem manages creating and deleting AnimComponents.
+ *
  * @augments ComponentSystem
- * @classdesc The AnimComponentSystem manages creating and deleting AnimComponents.
- * @description Create an AnimComponentSystem.
- * @param {Application} app - The application managing this system.
  */
 class AnimComponentSystem extends ComponentSystem {
+    /**
+     * Create an AnimComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     */
     constructor(app) {
         super(app);
 
@@ -32,7 +36,6 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
         const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {

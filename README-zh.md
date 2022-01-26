@@ -9,6 +9,7 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
+[![Language grade: JavaScript][code-quality-badge]][code-quality-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
@@ -152,18 +153,9 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
     npm run build -- -m
 
-此条指令将会将结果输出到 `build/output/playcanvas.js.map`
+此条指令将会将结果输出到 `build/playcanvas.js.map`
 
 提示：在生成 source map 过程中，系统会忽略预处理器以防止其对过程产生影响。这意味着在生成 source map 的过程中，所有 debug 和 profiling 代码将会被包含在引擎构建中。
-
-## 如何测试
-
-PlayCanvas 使用 Karma 进行单元测试。您可以使用如下两种方式进行测试：
-
-| Command              | Description                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `npm run test`       | Runs unit tests on a built `playcanvas.js`                                           |
-| `npm run test:watch` | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html |
 
 ## PlayCanvas 平台
 
@@ -179,6 +171,8 @@ The PlayCanvas Engine is released under the [MIT](https://opensource.org/license
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
+[code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
+[code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
 [resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine

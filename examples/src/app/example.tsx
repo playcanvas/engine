@@ -5,7 +5,7 @@ import { Observer } from '@playcanvas/observer';
 // @ts-ignore: library file import
 import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
-import Spinner  from '@playcanvas/pcui/Spinner/component';
+import Spinner from '@playcanvas/pcui/Spinner/component';
 import { File } from './helpers/types';
 
 interface ExampleProps {
@@ -25,7 +25,7 @@ class Example extends Component <ExampleProps, ExampleState> {
 
     constructor(props: ExampleProps) {
         super(props);
-        this.exampleData = new Observer({});
+        this.exampleData = new Observer();
     }
 
     // this init method is used to patch the PlayCanvas application so that is loads in any example assets after it is created

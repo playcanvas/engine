@@ -87,7 +87,7 @@ function createCalculator(orientation) {
         applyAlignmentAndPadding(lines, sizes, positions);
         applySizesAndPositions(lines, sizes, positions);
 
-        return createLayoutInfo(lines, sizes, positions);
+        return createLayoutInfo(lines);
     }
 
     function shouldIncludeInLayout(element) {
@@ -276,14 +276,12 @@ function createCalculator(orientation) {
             case FITTING_BOTH:
                 if (currentSize < availableSize) {
                     return FITTING_ACTION.APPLY_STRETCHING;
-                } else if (currentSize >= availableSize) {
-                    return FITTING_ACTION.APPLY_SHRINKING;
                 }
 
-                return FITTING_ACTION.NONE;
+                return FITTING_ACTION.APPLY_SHRINKING;
 
             default:
-                throw new Error('Unrecognized fitting mode: ' + fittingMode);
+                throw new Error(`Unrecognized fitting mode: ${fittingMode}`);
         }
     }
 
@@ -646,10 +644,9 @@ CALCULATE_FNS[ORIENTATION_HORIZONTAL] = createCalculator(ORIENTATION_HORIZONTAL)
 CALCULATE_FNS[ORIENTATION_VERTICAL] = createCalculator(ORIENTATION_VERTICAL);
 
 /**
- * @private
- * @class
- * @name LayoutCalculator
- * @classdesc Used to manage layout calculations for {@link LayoutGroupComponent}s.
+ * Used to manage layout calculations for {@link LayoutGroupComponent}s.
+ *
+ * @ignore
  */
 class LayoutCalculator {
     calculateLayout(elements, options) {

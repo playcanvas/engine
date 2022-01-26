@@ -4,12 +4,14 @@
  * @description Root namespace for the PlayCanvas Engine.
  */
 
-/**
- * @private
- * @function
- * @name _typeLookup
- * @description Create look up table for types.
- */
+const version = "__CURRENT_SDK_VERSION__";
+const revision = "__REVISION__";
+const config = { };
+const common = { };
+const apps = { }; // Storage for the applications using the PlayCanvas Engine
+const data = { }; // Storage for exported entity data
+
+// Create look up table for types.
 const _typeLookup = function () {
     const result = { };
     const names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
@@ -20,20 +22,12 @@ const _typeLookup = function () {
     return result;
 }();
 
-const version = "__CURRENT_SDK_VERSION__";
-const revision = "__REVISION__";
-const config = { };
-const common = { };
-const apps = { }; // Storage for the applications using the PlayCanvas Engine
-const data = { }; // Storage for exported entity data
-
 /**
- * @private
- * @function
- * @name type
- * @description Extended typeof() function, returns the type of the object.
+ * Extended typeof() function, returns the type of the object.
+ *
  * @param {object} obj - The object to get the type of.
  * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
+ * @ignore
  */
 function type(obj) {
     if (obj === null) {
@@ -50,10 +44,8 @@ function type(obj) {
 }
 
 /**
- * @private
- * @function
- * @name extend
- * @description Merge the contents of two objects into a single object.
+ * Merge the contents of two objects into a single object.
+ *
  * @param {object} target - The target object of the merge.
  * @param {object} ex - The object that is merged with target.
  * @returns {object} The target object.
@@ -74,6 +66,7 @@ function type(obj) {
  * // logs "a"
  * A.b();
  * // logs "b"
+ * @ignore
  */
 function extend(target, ex) {
     for (const prop in ex) {
@@ -92,12 +85,11 @@ function extend(target, ex) {
 }
 
 /**
- * @private
- * @function
- * @name isDefined
- * @description Return true if the Object is not undefined.
+ * Return true if the Object is not undefined.
+ *
  * @param {object} o - The Object to test.
  * @returns {boolean} True if the Object is not undefined.
+ * @ignore
  */
 function isDefined(o) {
     let a;

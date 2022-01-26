@@ -117,7 +117,7 @@ class ComponentPropertiesExample extends Example {
                         1.0, 0.0, 0.0, 1.0
                     ]
                 },
-                //  keyframe outputs for a quaterion rotation
+                //  keyframe outputs for a quaternion rotation
                 {
                     "components": 4,
                     "data": [
@@ -126,7 +126,7 @@ class ComponentPropertiesExample extends Example {
                         4.0, 0.0, 0.0, 0.0
                     ]
                 },
-                //  keyframe outputs for a quaterion rotation
+                //  keyframe outputs for a quaternion rotation
                 {
                     "components": 4,
                     "data": [

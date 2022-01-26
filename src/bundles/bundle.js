@@ -1,11 +1,15 @@
 /**
- * @private
- * @class
- * @name Bundle
- * @param {object[]} files - An array of objects that have a name field and contain a getBlobUrl() function.
- * @classdesc Represents the resource of a Bundle Asset, which contains an index that maps URLs to blob URLs.
+ * Represents the resource of a Bundle Asset, which contains an index that maps URLs to blob URLs.
+ *
+ * @ignore
  */
 class Bundle {
+    /**
+     * Create a new Bundle instance.
+     *
+     * @param {object[]} files - An array of objects that have a name field and contain a
+     * getBlobUrl() function.
+     */
     constructor(files) {
         this._blobUrls = {};
 
@@ -17,11 +21,10 @@ class Bundle {
     }
 
     /**
-     * @private
-     * @function
-     * @name Bundle#hasBlobUrl
-     * @description Returns true if the specified URL exists in the loaded bundle.
-     * @param {string} url - The original file URL. Make sure you have called decodeURIComponent on the URL first.
+     * Returns true if the specified URL exists in the loaded bundle.
+     *
+     * @param {string} url - The original file URL. Make sure you have called decodeURIComponent on
+     * the URL first.
      * @returns {boolean} True of false.
      */
     hasBlobUrl(url) {
@@ -29,11 +32,10 @@ class Bundle {
     }
 
     /**
-     * @private
-     * @function
-     * @name Bundle#getBlobUrl
-     * @description Returns a blob URL for the specified URL.
-     * @param {string} url - The original file URL. Make sure you have called decodeURIComponent on the URL first.
+     * Returns a blob URL for the specified URL.
+     *
+     * @param {string} url - The original file URL. Make sure you have called decodeURIComponent on
+     * the URL first.
      * @returns {string} A blob URL.
      */
     getBlobUrl(url) {
@@ -41,10 +43,7 @@ class Bundle {
     }
 
     /**
-     * @private
-     * @function
-     * @name Bundle#destroy
-     * @description Destroys the bundle and frees up blob URLs.
+     * Destroys the bundle and frees up blob URLs.
      */
     destroy() {
         for (const key in this._blobUrls) {

@@ -33,7 +33,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
+                code: code.replace(/ {2}/g, '\t'),
                 map: { mappings: '' }
             };
         }
@@ -42,37 +42,47 @@ function spacesToTabs() {
 
 function shaderChunks(removeComments) {
     const filter = createFilter([
-        '**/*.vert',
-        '**/*.frag'
+        '**/*.vert.js',
+        '**/*.frag.js'
     ], []);
 
     return {
         transform(code, id) {
             if (!filter(id)) return;
 
-            // Remove carriage returns
-            code = code.replace(/\r/g, '');
+            code = code.replace(/\/\* glsl \*\/\`((.|\r|\n)*)\`/, (match, glsl) => {
 
-            // 4 spaces to tabs
-            code = code.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+                // Remove carriage returns
+                glsl = glsl.replace(/\r/g, '');
 
-            if (removeComments) {
-                // Remove comments
-                code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+                // 4 spaces to tabs
+                glsl = glsl.replace(/ {4}/g, '\t');
 
-                // Trim all whitespace from line endings
-                code = code.split('\n').map(line => line.trimEnd()).join('\n');
+                if (removeComments) {
+                    // Remove comments
+                    glsl = glsl.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
-                // Restore final new line
-                code += '\n';
+                    // Trim all whitespace from line endings
+                    glsl = glsl.split('\n').map(line => line.trimEnd()).join('\n');
 
-                // Comment removal can leave an empty line so condense 2 or more to 1
-                code = code.replace(/\n{2,}/g, '\n');
-            }
+                    // Restore final new line
+                    glsl += '\n';
+
+                    // Comment removal can leave an empty line so condense 2 or more to 1
+                    glsl = glsl.replace(/\n{2,}/g, '\n');
+                }
+
+                // Remove new line character at the start of the string
+                if (glsl.length > 1 && glsl[0] === '\n') {
+                    glsl = glsl.substr(1);
+                }
+
+                return JSON.stringify(glsl);
+            });
 
             return {
-                code: `export default ${JSON.stringify(code)};`,
-                map: { mappings: '' }
+                code: code,
+                map: null
             };
         }
     };
@@ -118,7 +128,16 @@ const moduleOptions = {
 };
 
 const stripOptions = {
-    functions: ['Debug.assert', 'Debug.deprecated', 'Debug.warn', 'Debug.error', 'Debug.log']
+    functions: [
+        'Debug.assert',
+        'Debug.deprecated',
+        'Debug.warn',
+        'Debug.error',
+        'Debug.log',
+        'DebugGraphics.pushGpuMarker',
+        'DebugGraphics.popGpuMarker',
+        'WorldClustersDebug.render'
+    ]
 };
 
 const target_release_es5 = {
@@ -272,7 +291,7 @@ function scriptTarget(name, input, output) {
         },
         plugins: [
             babel(es5Options),
-            spacesToTabs
+            spacesToTabs()
         ]
     };
 }

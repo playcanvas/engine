@@ -8,14 +8,15 @@ import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    MASK_AFFECT_DYNAMIC,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
-    TONEMAP_LINEAR
+    TONEMAP_LINEAR,
+    SPECULAR_PHONG
 } from '../constants.js';
 
 import { Quat } from '../../math/quat.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -29,22 +30,29 @@ const arraysEqual = (a, b) => {
     return true;
 };
 
+const notWhite = (color) => {
+    return color.r !== 1 || color.g !== 1 || color.b !== 1;
+};
+
+const notBlack = (color) => {
+    return color.r !== 0 || color.g !== 0 || color.b !== 0;
+};
+
 class StandardMaterialOptionsBuilder {
     constructor() {
         this._mapXForms = null;
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
-        this._updateSharedOptions(options, stdMat, objDefs, pass);
+    updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
-        this._updateSharedOptions(options, stdMat, objDefs, pass);
-        options.useTexCubeLod = device.useTexCubeLod;
-        this._updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128);
+    updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
+        this._updateEnvOptions(options, device, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
             if (options.gamma) options.gamma = GAMMA_SRGBHDR;
@@ -55,7 +63,7 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
-    _updateSharedOptions(options, stdMat, objDefs, pass) {
+    _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.pass = pass;
         options.alphaTest = stdMat.alphaTest > 0;
         options.forceFragmentPrecision = stdMat.forceFragmentPrecision || "";
@@ -71,6 +79,15 @@ class StandardMaterialOptionsBuilder {
         options.useMorphTextureBased = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
 
         options.nineSlicedMode = stdMat.nineSlicedMode || 0;
+
+        // clustered lighting features (in shared options as shadow pass needs this too)
+        if (scene.clusteredLightingEnabled) {
+            options.clusteredLightingEnabled = true;
+            options.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
+            options.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
+            options.clusteredLightingShadowType = scene.lighting.shadowType;
+            options.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+        }
     }
 
     _updateUVOptions(options, stdMat, objDefs, minimalOptions) {
@@ -97,42 +114,33 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat) {
-        const diffuseTint = ((stdMat.diffuse.r !== 1 || stdMat.diffuse.g !== 1 || stdMat.diffuse.b !== 1) &&
-            (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor))) ? 3 : 0;
+        const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor)) &&
+                            notWhite(stdMat.diffuse);
 
-        let specularTint = false;
-        let useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap) || (!!stdMat.dpAtlas);
-        useSpecular = useSpecular || (stdMat.useMetalness ? true : !(stdMat.specular.r === 0 && stdMat.specular.g === 0 && stdMat.specular.b === 0));
-        useSpecular = useSpecular || stdMat.enableGGXSpecular;
-        useSpecular = useSpecular || (stdMat.clearCoat > 0);
+        const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
+                            notBlack(stdMat.specular) ||
+                            stdMat.enableGGXSpecular ||
+                            (stdMat.clearCoat > 0));
 
-        if (useSpecular) {
-            if ((stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) && !stdMat.useMetalness) {
-                specularTint = stdMat.specular.r !== 1 || stdMat.specular.g !== 1 || stdMat.specular.b !== 1;
-            }
-        }
+        const specularTint = useSpecular && !stdMat.useMetalness &&
+                             (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
+                             notWhite(stdMat.specular);
 
-        let emissiveTint = stdMat.emissiveMap ? 0 : 3;
-        if (!emissiveTint) {
-            emissiveTint = (stdMat.emissive.r !== 1 || stdMat.emissive.g !== 1 || stdMat.emissive.b !== 1 || stdMat.emissiveIntensity !== 1) && stdMat.emissiveTint;
-            emissiveTint = emissiveTint ? 3 : (stdMat.emissiveIntensity !== 1 ? 1 : 0);
-        }
+        const emissiveTintColor = !stdMat.emissiveMap || (notWhite(stdMat.emissive) && stdMat.emissiveTint);
+        const emissiveTintIntensity = (stdMat.emissiveIntensity !== 1);
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
         options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== BLEND_NONE) ? 1 : 0;
         options.blendMapsWithColors = true;
         options.ambientTint = stdMat.ambientTint;
-        options.diffuseTint = diffuseTint;
-        options.specularTint = specularTint ? 3 : 0;
+        options.diffuseTint = diffuseTint ? 2 : 0;
+        options.specularTint = specularTint ? 2 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;
-        options.emissiveTint = emissiveTint;
+        options.emissiveTint = (emissiveTintColor ? 2 : 0) + (emissiveTintIntensity ? 1 : 0);
         options.alphaToCoverage = stdMat.alphaToCoverage;
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
-        options.sphereMap = !!stdMat.sphereMap;
-        options.cubeMap = !!stdMat.cubeMap;
-        options.dpAtlas = !!stdMat.dpAtlas;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.emissiveMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
@@ -167,49 +175,50 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
     }
 
-    _updateEnvOptions(options, device, stdMat, scene, prefilteredCubeMap128) {
-        const rgbmAmbient = (prefilteredCubeMap128 && prefilteredCubeMap128.type === TEXTURETYPE_RGBM) ||
-            (stdMat.cubeMap && stdMat.cubeMap.type === TEXTURETYPE_RGBM) ||
-            (stdMat.dpAtlas && stdMat.dpAtlas.type === TEXTURETYPE_RGBM);
-
-        const hdrAmbient = (prefilteredCubeMap128 && (prefilteredCubeMap128.type === TEXTURETYPE_RGBM || prefilteredCubeMap128.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.cubeMap && (stdMat.cubeMap.type === TEXTURETYPE_RGBM || stdMat.cubeMap.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.dpAtlas && (stdMat.dpAtlas.type === TEXTURETYPE_RGBM || stdMat.dpAtlas.format === PIXELFORMAT_RGBA32F));
-
-        const rgbmReflection = (prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas && prefilteredCubeMap128.type === TEXTURETYPE_RGBM) ||
-            (stdMat.cubeMap && stdMat.cubeMap.type === TEXTURETYPE_RGBM) ||
-            (stdMat.sphereMap && stdMat.sphereMap.type === TEXTURETYPE_RGBM) ||
-            (stdMat.dpAtlas && stdMat.dpAtlas.type === TEXTURETYPE_RGBM);
-
-        const hdrReflection = ((prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas) ? prefilteredCubeMap128.type === TEXTURETYPE_RGBM || prefilteredCubeMap128.format === PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.cubeMap && (stdMat.cubeMap.type === TEXTURETYPE_RGBM || stdMat.cubeMap.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.sphereMap && (stdMat.sphereMap.type === TEXTURETYPE_RGBM || stdMat.sphereMap.format === PIXELFORMAT_RGBA32F)) ||
-            (stdMat.dpAtlas && (stdMat.dpAtlas.type === TEXTURETYPE_RGBM || stdMat.dpAtlas.format === PIXELFORMAT_RGBA32F));
-
-        let globalSky128;
-        if (stdMat.useSkybox && scene._skyboxPrefiltered)
-            globalSky128 = scene._skyboxPrefiltered[0];
-
+    _updateEnvOptions(options, device, stdMat, scene) {
         options.fog = stdMat.useFog ? scene.fog : "none";
         options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
-        options.rgbmAmbient = rgbmAmbient;
-        options.hdrAmbient = hdrAmbient;
-        options.rgbmReflection = rgbmReflection;
-        options.hdrReflection = hdrReflection;
-        options.useRgbm = rgbmReflection || rgbmAmbient || (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
-        options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
-        options.prefilteredCubemap = !!prefilteredCubeMap128;
-        options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);
+        options.useRgbm = (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
+        options.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
+        options.skyboxIntensity = (scene.skyboxIntensity !== 1);
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.useCubeMapRotation = (!stdMat.cubeMap && !stdMat.prefilteredCubeMap128 && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
+        options.useCubeMapRotation = (!stdMat.cubeMap && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
 
-        // clustered lighting features
-        if (LayerComposition.clusteredLightingEnabled && scene.layers) {
-            options.clusteredLightingCookiesEnabled = scene.layers.clusteredLightingCookiesEnabled;
-            options.clusteredLightingShadowsEnabled = scene.layers.clusteredLightingShadowsEnabled;
-            options.clusteredLightingAreaLightsEnabled = scene.layers.clusteredLightingAreaLightsEnabled;
+        const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
+
+        // source of environment reflections is as follows:
+        if (stdMat.envAtlas && !isPhong) {
+            options.reflectionSource = 'envAtlas';
+            options.reflectionEncoding = stdMat.envAtlas.encoding;
+        } else if (stdMat.cubeMap) {
+            options.reflectionSource = 'cubeMap';
+            options.reflectionEncoding = stdMat.cubeMap.encoding;
+        } else if (stdMat.sphereMap) {
+            options.reflectionSource = 'sphereMap';
+            options.reflectionEncoding = stdMat.sphereMap.encoding;
+        } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
+            options.reflectionSource = 'envAtlas';
+            options.reflectionEncoding = scene.envAtlas.encoding;
+        } else {
+            options.reflectionSource = null;
+            options.reflectionEncoding = null;
+        }
+
+        // source of environment ambient is as follows:
+        if (stdMat.ambientSH && !isPhong) {
+            options.ambientSource = 'ambientSH';
+            options.ambientEncoding = null;
+        } else {
+            const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
+            if (envAtlas && !isPhong) {
+                options.ambientSource = 'envAtlas';
+                options.ambientEncoding = envAtlas.encoding;
+            } else {
+                options.ambientSource = 'constant';
+                options.ambientEncoding = null;
+            }
         }
     }
 
@@ -245,7 +254,11 @@ class StandardMaterialOptionsBuilder {
 
         if (stdMat.useLighting) {
             const lightsFiltered = [];
-            const mask = objDefs ? (objDefs >> 16) : 1;
+            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+
+            // mask to select lights (dynamic vs lightmapped) when using clustered lighting
+            options.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
+
             if (sortedLights) {
                 this._collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
                 this._collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);

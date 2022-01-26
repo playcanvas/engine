@@ -97,7 +97,7 @@ class AreaLightsExample extends Example {
             brightShape.addComponent("render", {
                 type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: brightMaterial,
-                castShadows: (type === "directional") ? false : true
+                castShadows: type !== "directional"
             });
             brightShape.setLocalScale(((type === "directional") ? scale * range : scale), (shape === pc.LIGHTSHAPE_DISK) ? 0.001 : ((type === "directional") ? scale * range : scale), ((type === "directional") ? scale * range : scale));
             lightParent.addChild(brightShape);

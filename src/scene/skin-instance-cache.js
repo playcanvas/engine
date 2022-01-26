@@ -25,7 +25,7 @@ class SkinInstanceCache {
         SkinInstanceCache._skinInstanceCache.forEach(function (array, rootBone) {
             console.log(`${rootBone.name}: Array(${array.length})`);
             for (let i = 0; i < array.length; i++) {
-                console.log(`  ${i}: RefCount ${array[i].getRefCount()}`);
+                console.log(`  ${i}: RefCount ${array[i].refCount}`);
             }
         });
     }
@@ -33,7 +33,7 @@ class SkinInstanceCache {
 
     // returns cached or creates a skin instance for the skin and a rootBone, to be used by render component
     // on the specified entity
-    static createCachedSkinedInstance(skin, rootBone, entity) {
+    static createCachedSkinInstance(skin, rootBone, entity) {
 
         // try and get skin instance from the cache
         let skinInst = SkinInstanceCache.getCachedSkinInstance(skin, rootBone);
@@ -112,7 +112,7 @@ class SkinInstanceCache {
                         cachedObj.decRefCount();
 
                         // last reference, needs to be destroyed
-                        if (cachedObj.getRefCount() === 0) {
+                        if (cachedObj.refCount === 0) {
                             cachedObjArray.splice(cachedObjIndex, 1);
 
                             // if the array is empty

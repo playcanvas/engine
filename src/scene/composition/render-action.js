@@ -33,6 +33,9 @@ class RenderAction {
         // true if this is first render action using this camera
         this.firstCameraUse = false;
 
+        // true if this is the last render action using this camera
+        this.lastCameraUse = false;
+
         // directional lights that needs to update their shadows for this render action, stored as a set
         this.directionalLightsSet = new Set();
 
