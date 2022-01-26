@@ -5,16 +5,25 @@ const oneDiv255 = 1 / 255;
 const floatView = new Float32Array(1);
 const int32View = new Int32Array(floatView.buffer);
 
-// utility static class providing functionality to pack float values to various storage representations
+/**
+ * Utility static class providing functionality to pack float values to various storage
+ * representations.
+ *
+ * @ignore
+ */
 class FloatPacking {
-    // packs a float to 16bit half float representation used by GPU
-    static float2Half(val) {
-
+    /**
+     * Packs a float to a 16-bit half-float representation used by the GPU.
+     *
+     * @param {number} value - The float value to pack.
+     * @returns {number} The packed value.
+     */
+    static float2Half(value) {
         // based on https://esdiscuss.org/topic/float16array
         // This method is faster than the OpenEXR implementation (very often
         // used, eg. in Ogre), with the additional benefit of rounding, inspired
         // by James Tursa?s half-precision code.
-        floatView[0] = val;
+        floatView[0] = value;
         const x = int32View[0];
 
         let bits = (x >> 16) & 0x8000; // Get the sign
@@ -52,10 +61,17 @@ class FloatPacking {
         return bits;
     }
 
-    // packs a float value in [0..1) range to specified number of bytes and stores them in an array with start offset
-    // based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
-    // Note: calls to Math.round are only needed on iOS, precision is somehow really bad without it,
-    // looks like an issue with their implementation of Uint8ClampedArray
+    /**
+     * Packs a float value in [0..1) range to specified number of bytes and stores them in an array
+     * with start offset. Based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
+     * Note: calls to Math.round are only needed on iOS. Precision is somehow really bad without
+     * it. Looks like an issue with their implementation of Uint8ClampedArray.
+     *
+     * @param {number} value - The float value to pack.
+     * @param {Uint8ClampedArray} array - The array to store the packed value in.
+     * @param {number} offset - The start offset in the array to store the packed value at.
+     * @param {number} numBytes - The number of bytes to pack the value to.
+     */
     static float2Bytes(value, array, offset, numBytes) {
         const enc1 = (255.0 * value) % 1;
         array[offset + 0] = Math.round(((value % 1) - oneDiv255 * enc1) * 255);
@@ -75,15 +91,23 @@ class FloatPacking {
         }
     }
 
-    // packs a float into specified number of bytes. Min and max range for the float is specified,
-    // allowing the float to be normalized to 0..1 range.
+    /**
+     * Packs a float into specified number of bytes. Min and max range for the float is specified,
+     * allowing the float to be normalized to 0..1 range.
+     *
+     * @param {number} value - The float value to pack.
+     * @param {Uint8ClampedArray} array - The array to store the packed value in.
+     * @param {number} offset - The start offset in the array to store the packed value at.
+     * @param {number} min - Range minimum.
+     * @param {number} max - Range maximum.
+     * @param {number} numBytes - The number of bytes to pack the value to.
+     */
     static float2BytesRange(value, array, offset, min, max, numBytes) {
-
         // #if _DEBUG
         if (value < min || value > max) {
             if (checkRange) {
                 checkRange--;
-                console.warn("packFloatToBytesRange - value to pack is out of specified range.");
+                console.warn('float2BytesRange - value to pack is out of specified range.');
             }
         }
         // #endif
@@ -92,9 +116,16 @@ class FloatPacking {
         FloatPacking.float2Bytes(value, array, offset, numBytes);
     }
 
-    // packs a float into specified number of bytes, using 1 byte for exponent and the remaining bytes for the mantissa.
+    /**
+     * Packs a float into specified number of bytes, using 1 byte for exponent and the remaining
+     * bytes for the mantissa.
+     *
+     * @param {number} value - The float value to pack.
+     * @param {Uint8ClampedArray} array - The array to store the packed value in.
+     * @param {number} offset - The start offset in the array to store the packed value at.
+     * @param {number} numBytes - The number of bytes to pack the value to.
+     */
     static float2MantissaExponent(value, array, offset, numBytes) {
-
         // exponent is increased by one, so that 2^exponent is larger than the value
         const exponent = Math.floor(Math.log2(Math.abs(value))) + 1;
         value /= Math.pow(2, exponent);

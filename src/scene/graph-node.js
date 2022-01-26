@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
 
@@ -43,62 +44,173 @@ const up = new Vec3();
 /**
  * A hierarchical scene node.
  *
- * @property {string} name The non-unique name of a graph node.
- * @property {Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link GraphNode#findByTag} function.
  * @augments EventHandler
  */
 class GraphNode extends EventHandler {
     /**
      * Create a new GraphNode instance.
      *
-     * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
+     * @param {string} [name] - The non-unique name of a graph node. Defaults to 'Untitled'.
      */
-    constructor(name) {
+    constructor(name = 'Untitled') {
         super();
 
-        this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
+        /**
+         * The non-unique name of a graph node. Defaults to 'Untitled'.
+         *
+         * @type {string}
+         */
+        this.name = name;
+        /**
+         * Interface for tagging graph nodes. Tag based searches can be performed using the
+         * {@link GraphNode#findByTag} function.
+         *
+         * @type {Tags}
+         */
         this.tags = new Tags(this);
 
+        /** @private */
         this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)
-        this.localPosition = new Vec3(0, 0, 0);
-        this.localRotation = new Quat(0, 0, 0, 1);
+        /**
+         * @type {Vec3}
+         * @private
+         */
+        this.localPosition = new Vec3();
+        /**
+         * @type {Quat}
+         * @private
+         */
+        this.localRotation = new Quat();
+        /**
+         * @type {Vec3}
+         * @private
+         */
         this.localScale = new Vec3(1, 1, 1);
-        this.localEulerAngles = new Vec3(0, 0, 0); // Only calculated on request
+        /**
+         * @type {Vec3}
+         * @private
+         */
+        this.localEulerAngles = new Vec3(); // Only calculated on request
 
         // World-space properties of transform
-        this.position = new Vec3(0, 0, 0);
-        this.rotation = new Quat(0, 0, 0, 1);
-        this.eulerAngles = new Vec3(0, 0, 0);
+        /**
+         * @type {Vec3}
+         * @private
+         */
+        this.position = new Vec3();
+        /**
+         * @type {Quat}
+         * @private
+         */
+        this.rotation = new Quat();
+        /**
+         * @type {Vec3}
+         * @private
+         */
+        this.eulerAngles = new Vec3();
+        /**
+         * @type {Vec3|null}
+         * @private
+         */
         this._scale = null;
 
+        /**
+         * @type {Mat4}
+         * @private
+         */
         this.localTransform = new Mat4();
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._dirtyLocal = false;
+        /**
+         * @type {number}
+         * @private
+         */
         this._aabbVer = 0;
 
-        // _frozen flag marks the node to ignore hierarchy sync entirely (including children nodes)
-        // engine code automatically freezes and unfreezes objects whenever required
-        // segregating dynamic and stationary nodes into subhierarchies allows to reduce sync time significantly
+        /**
+         * Marks the node to ignore hierarchy sync entirely (including children nodes). The engine
+         * code automatically freezes and unfreezes objects whenever required. Segregating dynamic
+         * and stationary nodes into subhierarchies allows to reduce sync time significantly.
+         *
+         * @type {boolean}
+         * @private
+         */
         this._frozen = false;
 
+        /**
+         * @type {Mat4}
+         * @private
+         */
         this.worldTransform = new Mat4();
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._dirtyWorld = false;
 
+        /**
+         * @type {Mat3}
+         * @private
+         */
         this.normalMatrix = new Mat3();
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._dirtyNormal = true;
 
+        /**
+         * @type {Vec3|null}
+         * @private
+         */
         this._right = null;
+        /**
+         * @type {Vec3|null}
+         * @private
+         */
         this._up = null;
+        /**
+         * @type {Vec3|null}
+         * @private
+         */
         this._forward = null;
 
+        /**
+         * @type {GraphNode|null}
+         * @private
+         */
         this._parent = null;
+        /**
+         * @type {GraphNode[]}
+         * @private
+         */
         this._children = [];
+        /**
+         * @type {number}
+         * @private
+         */
         this._graphDepth = 0;
 
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._enabled = true;
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._enabledInHierarchy = false;
 
+        /**
+         * @type {boolean}
+         * @ignore
+         */
         this.scaleCompensation = false;
     }
 
@@ -164,7 +276,7 @@ class GraphNode extends EventHandler {
     /**
      * A read-only property to get a parent graph node.
      *
-     * @type {GraphNode}
+     * @type {GraphNode|null}
      */
     get parent() {
         return this._parent;
@@ -222,6 +334,11 @@ class GraphNode extends EventHandler {
         return this._graphDepth;
     }
 
+    /**
+     * @param {GraphNode} node - Graph node to update.
+     * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
+     * @private
+     */
     _notifyHierarchyStateChanged(node, enabled) {
         node._onHierarchyStateChanged(enabled);
 
@@ -245,6 +362,10 @@ class GraphNode extends EventHandler {
             this._unfreezeParentToRoot();
     }
 
+    /**
+     * @param {GraphNode} clone - The cloned graph node to copy into.
+     * @private
+     */
     _cloneInternal(clone) {
         clone.name = this.name;
 
@@ -280,13 +401,25 @@ class GraphNode extends EventHandler {
         clone._enabledInHierarchy = false;
     }
 
+    /**
+     * Clone a graph node.
+     *
+     * @returns {GraphNode} A clone of the specified graph node.
+     * @ignore
+     */
     clone() {
         const clone = new GraphNode();
         this._cloneInternal(clone);
         return clone;
     }
 
-    // copies properties from source to this
+    /**
+     * Copy a graph node.
+     *
+     * @param {GraphNode} source - The graph node to copy.
+     * @returns {GraphNode} The destination graph node.
+     * @ignore
+     */
     copy(source) {
         source._cloneInternal(this);
         return this;
@@ -423,7 +556,7 @@ class GraphNode extends EventHandler {
      * query that consists of an array of tags can be used to match graph nodes that have each tag
      * of array.
      *
-     * @param {string|string[]} query - Name of a tag or array of tags.
+     * @param {...*} query - Name of a tag or array of tags.
      * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
      * // Return all graph nodes that tagged by `animal`
@@ -439,24 +572,22 @@ class GraphNode extends EventHandler {
      * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag() {
-        const tags = this.tags._processArguments(arguments);
-        return this._findByTag(tags);
-    }
+        const query = arguments;
+        const results = [];
 
-    _findByTag(tags) {
-        let result = [];
+        const queryNode = (node, checkNode) => {
+            if (checkNode && node.tags.has(...query)) {
+                results.push(node);
+            }
 
-        const len = this._children.length;
-        for (let i = 0; i < len; i++) {
-            if (this._children[i].tags._has(tags))
-                result.push(this._children[i]);
+            for (let i = 0; i < node._children.length; i++) {
+                queryNode(node._children[i], true);
+            }
+        };
 
-            const descendants = this._children[i]._findByTag(tags);
-            if (descendants.length)
-                result = result.concat(descendants);
-        }
+        queryNode(this, false);
 
-        return result;
+        return results;
     }
 
     /**
@@ -480,12 +611,16 @@ class GraphNode extends EventHandler {
      * Get the first node found in the graph by its full path in the graph. The full path has this
      * form 'parent/child/sub-child'. The search is depth first.
      *
-     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or
+     * @param {string|string[]} path - The full path of the {@link GraphNode} as either a string or
      * array of {@link GraphNode} names.
      * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
      * null if no node is found.
      * @example
-     * var path = this.entity.findByPath('child/another_child');
+     * // String form
+     * var grandchild = this.entity.findByPath('child/grandchild');
+     * @example
+     * // Array form
+     * var grandchild = this.entity.findByPath(['child', 'grandchild']);
      */
     findByPath(path) {
         // accept either string path with '/' separators or array of parts.
@@ -853,6 +988,7 @@ class GraphNode extends EventHandler {
             this._dirtifyLocal();
     }
 
+    /** @private */
     _dirtifyLocal() {
         if (!this._dirtyLocal) {
             this._dirtyLocal = true;
@@ -861,6 +997,7 @@ class GraphNode extends EventHandler {
         }
     }
 
+    /** @private */
     _unfreezeParentToRoot() {
         let p = this._parent;
         while (p) {
@@ -869,12 +1006,14 @@ class GraphNode extends EventHandler {
         }
     }
 
+    /** @private */
     _dirtifyWorld() {
         if (!this._dirtyWorld)
             this._unfreezeParentToRoot();
         this._dirtifyWorldInternal();
     }
 
+    /** @private */
     _dirtifyWorldInternal() {
         if (!this._dirtyWorld) {
             this._frozen = false;
@@ -1015,6 +1154,15 @@ class GraphNode extends EventHandler {
         this._onInsertChild(node);
     }
 
+    /**
+     * Add a child to this node, maintaining the child's transform in world space.
+     *
+     * @param {GraphNode} node - The child to add.
+     * @example
+     * var e = new pc.Entity(app);
+     * this.entity.addChildAndSaveTransform(e);
+     * @ignore
+     */
     addChildAndSaveTransform(node) {
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1058,6 +1206,10 @@ class GraphNode extends EventHandler {
     }
 
     // #if _DEBUG
+    /**
+     * @param {GraphNode} node - The node being inserted.
+     * @private
+     */
     _debugInsertChild(node) {
         if (this === node)
             throw new Error("GraphNode cannot be a child of itself");
@@ -1067,9 +1219,15 @@ class GraphNode extends EventHandler {
     }
     // #endif
 
-    // fires an event on all children of the node
-    // the event name is fired on the first (root) node only
-    // the event nameHierarchy is fired for all children
+    /**
+     * Fires an event on all children of the node. The event `name` is fired on the first (root)
+     * node only. The event `nameHierarchy` is fired for all children.
+     *
+     * @param {string} name - The name of the event to fire on the root.
+     * @param {string} nameHierarchy - The name of the event to fire for all descendants.
+     * @param {GraphNode} parent - The parent of the node being added/removed from the hierarchy.
+     * @private
+     */
     _fireOnHierarchy(name, nameHierarchy, parent) {
         this.fire(name, parent);
         for (let i = 0; i < this._children.length; i++) {
@@ -1077,6 +1235,12 @@ class GraphNode extends EventHandler {
         }
     }
 
+    /**
+     * Called when a node is inserted into a node's child list.
+     *
+     * @param {GraphNode} node - The node that was inserted.
+     * @private
+     */
     _onInsertChild(node) {
         node._parent = this;
 
@@ -1109,12 +1273,13 @@ class GraphNode extends EventHandler {
         if (this.fire) this.fire('childinsert', node);
     }
 
+    /**
+     * Recurse the hierarchy and update the graph depth at each node.
+     *
+     * @private
+     */
     _updateGraphDepth() {
-        if (this._parent) {
-            this._graphDepth = this._parent._graphDepth + 1;
-        } else {
-            this._graphDepth = 0;
-        }
+        this._graphDepth = this._parent ? this._parent._graphDepth + 1 : 0;
 
         for (let i = 0, len = this._children.length; i < len; i++) {
             this._children[i]._updateGraphDepth();
@@ -1130,25 +1295,23 @@ class GraphNode extends EventHandler {
      * this.entity.removeChild(child);
      */
     removeChild(child) {
+        const index = this._children.indexOf(child);
+        if (index === -1) {
+            Debug.warn(`GraphNode#removeChild: '${child.name}' is not a child of '${this.name}'`);
+            return;
+        }
 
         // Remove from child list
-        const length = this._children.length;
-        for (let i = 0; i < length; ++i) {
-            if (this._children[i] === child) {
-                this._children.splice(i, 1);
+        this._children.splice(index, 1);
 
-                // Clear parent
-                child._parent = null;
+        // Clear parent
+        child._parent = null;
 
-                // alert children that they has been removed
-                child._fireOnHierarchy('remove', 'removehierarchy', this);
+        // alert children that they has been removed
+        child._fireOnHierarchy('remove', 'removehierarchy', this);
 
-                // alert the parent that it has had a child removed
-                if (this.fire) this.fire('childremove', child);
-
-                return;
-            }
-        }
+        // alert the parent that it has had a child removed
+        this.fire('childremove', child);
     }
 
     _sync() {
