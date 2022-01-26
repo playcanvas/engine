@@ -167,6 +167,10 @@ class AnimComponentLayer {
     }
 
     /**
+<<<<<<< HEAD
+=======
+     *
+>>>>>>> dev
      * A mask of bones which should be animated or ignored by this layer.
      *
      * @type {object}
