@@ -1,5 +1,5 @@
 /**
- * Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state. Can be loaded into an anim component using the {@link AnimComponent#loadStateGraph} method
+ * Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph. Can be loaded into an anim component using the {@link AnimComponent#loadStateGraph} method
  *
  * @hideconstructor
  * @example
