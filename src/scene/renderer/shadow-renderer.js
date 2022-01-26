@@ -559,7 +559,12 @@ class ShadowRenderer {
 
             // VSM blur
             if (light._isVsm && light._vsmBlurSize > 1) {
-                this.applyVsmBlur(light, camera);
+
+                // all non-clustered and directional lights support vsm
+                const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+                if (!isClustered || type === LIGHTTYPE_DIRECTIONAL) {
+                    this.applyVsmBlur(light, camera);
+                }
             }
 
             this.restoreRenderState(device);
