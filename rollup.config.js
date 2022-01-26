@@ -33,7 +33,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
+                code: code.replace(/ {2}/g, '\t'),
                 map: { mappings: '' }
             };
         }
@@ -56,7 +56,7 @@ function shaderChunks(removeComments) {
                 glsl = glsl.replace(/\r/g, '');
 
                 // 4 spaces to tabs
-                glsl = glsl.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+                glsl = glsl.replace(/ {4}/g, '\t');
 
                 if (removeComments) {
                     // Remove comments
@@ -291,7 +291,7 @@ function scriptTarget(name, input, output) {
         },
         plugins: [
             babel(es5Options),
-            spacesToTabs
+            spacesToTabs()
         ]
     };
 }
