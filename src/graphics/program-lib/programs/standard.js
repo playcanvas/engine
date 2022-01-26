@@ -80,8 +80,12 @@ const standard = {
         }
 
         if (options.lights) {
+            const isClustered = options.clusteredLightingEnabled;
             for (let i = 0; i < options.lights.length; i++) {
-                key += options.lights[i].key;
+                const light = options.lights[i];
+                if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                    key += light.key;
+                }
             }
         }
 
