@@ -182,10 +182,9 @@ class StandardMaterialOptionsBuilder {
         options.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
         options.skyboxIntensity = (scene.skyboxIntensity !== 1);
 
-        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.useCubeMapRotation = (!stdMat.cubeMap && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
-
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
+
+        let usingSceneEnv = false;
 
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && !isPhong) {
@@ -200,6 +199,7 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = scene.envAtlas.encoding;
+            usingSceneEnv = true;
         } else {
             options.reflectionSource = null;
             options.reflectionEncoding = null;
@@ -219,6 +219,9 @@ class StandardMaterialOptionsBuilder {
                 options.ambientEncoding = null;
             }
         }
+
+        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
+        options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
