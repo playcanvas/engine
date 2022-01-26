@@ -166,6 +166,28 @@ class AnimComponentLayer {
         return this._blendType;
     }
 
+    /**
+     *
+     * A mask of bones which should be animated or ignored by this layer.
+     *
+     * @type {object}
+     * @example
+     * entity.anim.baseLayer.mask = {
+     *     // include the spine of the current model and all of its children
+     *     "path/to/spine": {
+     *         children: true
+     *     },
+     *     // include the hip of the current model but not all of its children
+     *     "path/to/hip": true
+     * };
+     */
+    set mask(value) {
+        if (this._controller.assignMask(value)) {
+            this._component.rebind();
+        }
+        this._mask = value;
+    }
+
     get mask() {
         return this._mask;
     }
@@ -221,8 +243,10 @@ class AnimComponentLayer {
      *     // include the hip of the current model but not all of its children
      *     "path/to/hip": true
      * });
+     * @ignore
      */
     assignMask(mask) {
+        Debug.deprecated('The pc.AnimComponentLayer#assignMask function is now deprecated. Assign masks to the pc.AnimComponentLayer#mask property instead.');
         if (this._controller.assignMask(mask)) {
             this._component.rebind();
         }
@@ -272,6 +296,16 @@ class AnimComponentLayer {
         if (this._controller.removeNodeAnimations(nodeName)) {
             this._component.playing = false;
         }
+    }
+
+    /**
+     *  Returns the asset that is associated with the given state.
+     *
+     * @param {string} stateName - The name of the state to get the asset for.
+     * @type {pc.Asset}
+     */
+    getAnimationAsset(stateName) {
+        return this._component.animationAssets[`${this.name}:${stateName}`];
     }
 
     /**

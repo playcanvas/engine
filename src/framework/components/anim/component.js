@@ -133,6 +133,7 @@ class AnimComponent extends Component {
         return this._activate;
     }
 
+
     /**
      * Plays or pauses all animations in the component.
      *
@@ -176,10 +177,11 @@ class AnimComponent extends Component {
         return this._stateGraph;
     }
 
-    set layers(value) {
-        this._layers = value;
-    }
-
+    /**
+     * Returns the animation layers available in this anim component.
+     *
+     * @type {AnimComponentLayer[]}
+     */
     get layers() {
         return this._layers;
     }
@@ -247,7 +249,9 @@ class AnimComponent extends Component {
         this.animationAssets = prevAnimationAssets;
         this.loadAnimationAssets();
         // assign the previous layer masks then rebind all anim targets
-        this.layers.forEach((layer, i) => layer.assignMask(prevMasks[i]));
+        this.layers.forEach((layer, i) => {
+            layer.mask = prevMasks[i];
+        });
         this.rebind();
     }
 
