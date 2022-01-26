@@ -17,6 +17,7 @@ import {
 } from '../../graphics/constants.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
@@ -999,7 +1000,7 @@ class ForwardRenderer {
     // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
     drawInstance(device, meshInstance, mesh, style, normal) {
 
-        Debug.pushGpuMarker(device, meshInstance.node.name);
+        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1030,7 +1031,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style]);
         }
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
 
         return 0;
     }
@@ -1038,7 +1039,7 @@ class ForwardRenderer {
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
 
-        Debug.pushGpuMarker(device, meshInstance.node.name);
+        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1056,7 +1057,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style], undefined, true);
         }
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
 
         return 0;
     }
@@ -1924,8 +1925,8 @@ class ForwardRenderer {
                 continue;
             }
 
-            Debug.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
-            Debug.pushGpuMarker(this.device, layer.name);
+            DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
+            DebugGraphics.pushGpuMarker(this.device, layer.name);
 
             // #if _PROFILER
             drawTime = now();
@@ -2059,8 +2060,8 @@ class ForwardRenderer {
                 }
             }
 
-            Debug.popGpuMarker(this.device);
-            Debug.popGpuMarker(this.device);
+            DebugGraphics.popGpuMarker(this.device);
+            DebugGraphics.popGpuMarker(this.device);
 
             // #if _PROFILER
             layer._renderTime += now() - drawTime;

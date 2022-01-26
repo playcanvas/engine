@@ -2,6 +2,7 @@ import { Debug } from '../core/debug.js';
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./shader.js').Shader} Shader */
@@ -133,7 +134,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         const device = this.device;
 
-        Debug.pushGpuMarker(device, "TransformFeedback");
+        DebugGraphics.pushGpuMarker(device, "TransformFeedback");
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
@@ -153,7 +154,7 @@ class TransformFeedback {
         device.updateEnd();
         device.setRenderTarget(oldRt);
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
 
         // swap buffers
         if (swap) {

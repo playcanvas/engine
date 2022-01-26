@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { now } from '../../../core/time.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
+import { DebugGraphics } from '../../../graphics/debug-graphics.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
 
@@ -283,7 +284,7 @@ class PostEffectQueue {
                     const len = this.effects.length;
                     if (len) {
 
-                        Debug.pushGpuMarker(this.app.graphicsDevice, "Postprocess");
+                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, "Postprocess");
 
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];
@@ -300,12 +301,12 @@ class PostEffectQueue {
                                 }
                             }
 
-                            Debug.pushGpuMarker(this.app.graphicsDevice, fx.name);
+                            DebugGraphics.pushGpuMarker(this.app.graphicsDevice, fx.name);
                             fx.effect.render(fx.inputTarget, destTarget, rect);
-                            Debug.popGpuMarker(this.app.graphicsDevice);
+                            DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                         }
 
-                        Debug.popGpuMarker(this.app.graphicsDevice);
+                        DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                     }
                 }
             };
