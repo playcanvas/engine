@@ -246,6 +246,7 @@ class AnimComponentLayer {
      * @ignore
      */
     assignMask(mask) {
+        Debug.deprecated('The pc.AnimComponentLayer#assignMask function is now deprecated. Assign masks to the pc.AnimComponentLayer#mask property instead.');
         if (this._controller.assignMask(mask)) {
             this._component.rebind();
         }
@@ -295,6 +296,16 @@ class AnimComponentLayer {
         if (this._controller.removeNodeAnimations(nodeName)) {
             this._component.playing = false;
         }
+    }
+
+    /**
+     *  Returns the asset that is associated with the given state.
+     *
+     * @param {string} stateName - The name of the state to get the asset for.
+     * @type {pc.Asset}
+     */
+    getAnimationAsset(stateName) {
+        return this._component.animationAssets[`${this.name}:${stateName}`];
     }
 
     /**
