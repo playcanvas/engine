@@ -5,6 +5,7 @@ import { Vec3 } from '../../math/vec3.js';
 
 import { CULLFACE_NONE } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import { EMITTERSHAPE_BOX } from '../../scene/constants.js';
 
@@ -84,9 +85,7 @@ class ParticleGPUUpdater {
     // This shouldn't change emitter state, only read from it
     update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
 
-        // #if _DEBUG
-        device.pushMarker("ParticleGPU");
-        // #endif
+        DebugGraphics.pushGpuMarker(device, "ParticleGPU");
 
         const emitter = this._emitter;
 
@@ -192,9 +191,7 @@ class ParticleGPUUpdater {
         if (emitter.pack8)
             this._setInputBounds();
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        DebugGraphics.popGpuMarker(device);
     }
 }
 

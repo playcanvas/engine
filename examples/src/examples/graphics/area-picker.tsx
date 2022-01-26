@@ -178,7 +178,7 @@ class AreaPickerExample extends Example {
                 drawRectangle(areaPos.x, areaPos.y, areaSize.x, areaSize.y);
 
                 // get list of meshInstances inside the area from the picker
-                // this scans the pixels inside the render target and maps the id value stored there into meshInstalces
+                // this scans the pixels inside the render target and maps the id value stored there into meshInstances
                 const selection = picker.getSelection(areaPos.x * pickerScale, areaPos.y * pickerScale, areaSize.x * pickerScale, areaSize.y * pickerScale);
 
                 // process all meshInstances it found - highlight them to appropriate color for the area

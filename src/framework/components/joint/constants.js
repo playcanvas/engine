@@ -1,24 +1,23 @@
 /**
- * @private
- * @constant
+ * Specified degree of freedom has free movement.
+ *
  * @type {string}
- * @name MOTION_FREE
- * @description Specified degree of freedom has free movement.
+ * @ignore
  */
 export const MOTION_FREE = 'free';
+
 /**
- * @private
- * @constant
+ * Specified degree of freedom has limited movement.
+ *
  * @type {string}
- * @name MOTION_LIMITED
- * @description Specified degree of freedom has limited movement.
+ * @ignore
  */
 export const MOTION_LIMITED = 'limited';
+
 /**
- * @private
- * @constant
+ * Specified degree of freedom is locked and allows no movement.
+ *
  * @type {string}
- * @name MOTION_LOCKED
- * @description Specified degree of freedom is locked and allows no movement.
+ * @ignore
  */
 export const MOTION_LOCKED = 'locked';

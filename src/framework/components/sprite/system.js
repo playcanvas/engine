@@ -15,16 +15,21 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name SpriteComponentSystem
+ * Manages creation of {@link SpriteComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link SpriteComponent}s.
- * @param {Application} app - The application.
  */
 class SpriteComponentSystem extends ComponentSystem {
+    /**
+     * Create a new SpriteComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 
@@ -49,6 +54,10 @@ class SpriteComponentSystem extends ComponentSystem {
 
         this.app.systems.on('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
+    }
+
+    set defaultMaterial(material) {
+        this._defaultMaterial = material;
     }
 
     get defaultMaterial() {
@@ -88,8 +97,8 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._defaultMaterial;
     }
 
-    set defaultMaterial(material) {
-        this._defaultMaterial = material;
+    set default9SlicedMaterialSlicedMode(material) {
+        this._default9SlicedMaterialSlicedMode = material;
     }
 
     get default9SlicedMaterialSlicedMode() {
@@ -103,8 +112,8 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._default9SlicedMaterialSlicedMode;
     }
 
-    set default9SlicedMaterialSlicedMode(material) {
-        this._default9SlicedMaterialSlicedMode = material;
+    set default9SlicedMaterialTiledMode(material) {
+        this._default9SlicedMaterialTiledMode = material;
     }
 
     get default9SlicedMaterialTiledMode() {
@@ -116,10 +125,6 @@ class SpriteComponentSystem extends ComponentSystem {
             this._default9SlicedMaterialTiledMode = material;
         }
         return this._default9SlicedMaterialTiledMode;
-    }
-
-    set default9SlicedMaterialTiledMode(material) {
-        this._default9SlicedMaterialTiledMode = material;
     }
 
     destroy() {

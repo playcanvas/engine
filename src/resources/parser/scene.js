@@ -1,7 +1,7 @@
 import { Entity } from '../../framework/entity.js';
 
-import { CompressUtils } from '../../compress/compress-utils';
-import { Decompress } from '../../compress/decompress';
+import { CompressUtils } from '../../compress/compress-utils.js';
+import { Decompress } from '../../compress/decompress.js';
 
 class SceneParser {
     constructor(app, isTemplate) {

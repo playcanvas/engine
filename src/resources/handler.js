@@ -1,3 +1,14 @@
+/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+
+/**
+ * Callback used by {@link ResourceHandler#load} when a resource is loaded (or an error occurs).
+ *
+ * @callback resourceHandlerCallback
+ * @param {string|null} err - The error message in the case where the load fails.
+ * @param {*} [response] - The raw data that has been successfully loaded.
+ */
+
 /**
  * @interface
  * @name ResourceHandler
@@ -14,13 +25,14 @@ class ResourceHandler {
      * @param {string} [url.load] - The URL to be used for loading the resource.
      * @param {string} [url.original] - The original URL to be used for identifying the resource
      * format. This is necessary when loading, for example from blob.
-     * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {resourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     load(url, callback, asset) {
         throw new Error('not implemented');
     }
 
+    /* eslint-disable jsdoc/require-returns-check */
     /**
      * @function
      * @name ResourceHandler#open
@@ -30,7 +42,6 @@ class ResourceHandler {
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     open(url, data, asset) {
         throw new Error('not implemented');
     }

@@ -1,5 +1,11 @@
 import { extend } from '../../../core/core.js';
 
+import { Vec3 } from '../../../math/vec3.js';
+
+import { BoundingBox } from '../../../shape/bounding-box.js';
+
+import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+
 import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
@@ -8,22 +14,22 @@ import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
 
-import { BoundingBox } from '../../../shape/bounding-box';
-import { Vec3 } from '../../../math/vec3';
-import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+/** @typedef {import('../../application.js').Application} Application */
 
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name ModelComponentSystem
+ * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
+ * cone etc.
+ *
  * @augments ComponentSystem
- * @classdesc Allows an Entity to render a model or a primitive shape like a box,
- * capsule, sphere, cylinder, cone etc.
- * @description Create a new ModelComponentSystem.
- * @param {Application} app - The Application.
  */
 class ModelComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ModelComponentSystem instance.
+     *
+     * @param {Application} app - The Application.
+     */
     constructor(app) {
         super(app);
 

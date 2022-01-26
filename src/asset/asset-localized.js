@@ -16,6 +16,85 @@ class LocalizedAsset extends EventHandler {
         this._localizedAsset = null;
     }
 
+    set defaultAsset(value) {
+        const id = value instanceof Asset ? value.id : value;
+
+        if (this._defaultAsset === id) return;
+
+        if (this._defaultAsset) {
+            this._unbindDefaultAsset();
+        }
+
+        this._defaultAsset = id;
+
+        if (this._defaultAsset) {
+            this._bindDefaultAsset();
+        }
+
+        // reset localized asset
+        this._onSetLocale(this._app.i18n.locale);
+    }
+
+    get defaultAsset() {
+        return this._defaultAsset;
+    }
+
+    set localizedAsset(value) {
+        const id = value instanceof Asset ? value.id : value;
+        if (this._localizedAsset === id) {
+            return;
+        }
+
+        if (this._localizedAsset) {
+            this._app.assets.off('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
+            this._unbindLocalizedAsset();
+            this._localizedAsset = null;
+        }
+
+        this._localizedAsset = id;
+
+        if (this._localizedAsset) {
+            const asset = this._app.assets.get(this._localizedAsset);
+            if (!asset) {
+                this._app.assets.once('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
+            } else {
+                this._bindLocalizedAsset();
+            }
+        }
+    }
+
+    get localizedAsset() {
+        return this._localizedAsset;
+    }
+
+    set autoLoad(value) {
+        if (this._autoLoad === value) return;
+
+        this._autoLoad = value;
+
+        if (this._autoLoad && this._localizedAsset) {
+            this._unbindLocalizedAsset();
+            this._bindLocalizedAsset();
+        }
+    }
+
+    get autoLoad() {
+        return this._autoLoad;
+    }
+
+    set disableLocalization(value) {
+        if (this._disableLocalization === value) return;
+
+        this._disableLocalization = value;
+
+        // reset localized asset
+        this._onSetLocale(this._app.i18n.locale);
+    }
+
+    get disableLocalization() {
+        return this._disableLocalization;
+    }
+
     _bindDefaultAsset() {
         const asset = this._app.assets.get(this._defaultAsset);
         if (!asset) {
@@ -139,85 +218,6 @@ class LocalizedAsset extends EventHandler {
         this.defaultAsset = null;
         this._app.i18n.off('set:locale', this._onSetLocale, this);
         this.off();
-    }
-
-    get defaultAsset() {
-        return this._defaultAsset;
-    }
-
-    set defaultAsset(value) {
-        const id = value instanceof Asset ? value.id : value;
-
-        if (this._defaultAsset === id) return;
-
-        if (this._defaultAsset) {
-            this._unbindDefaultAsset();
-        }
-
-        this._defaultAsset = id;
-
-        if (this._defaultAsset) {
-            this._bindDefaultAsset();
-        }
-
-        // reset localized asset
-        this._onSetLocale(this._app.i18n.locale);
-    }
-
-    get localizedAsset() {
-        return this._localizedAsset;
-    }
-
-    set localizedAsset(value) {
-        const id = value instanceof Asset ? value.id : value;
-        if (this._localizedAsset === id) {
-            return;
-        }
-
-        if (this._localizedAsset) {
-            this._app.assets.off('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
-            this._unbindLocalizedAsset();
-            this._localizedAsset = null;
-        }
-
-        this._localizedAsset = id;
-
-        if (this._localizedAsset) {
-            const asset = this._app.assets.get(this._localizedAsset);
-            if (!asset) {
-                this._app.assets.once('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
-            } else {
-                this._bindLocalizedAsset();
-            }
-        }
-    }
-
-    get autoLoad() {
-        return this._autoLoad;
-    }
-
-    set autoLoad(value) {
-        if (this._autoLoad === value) return;
-
-        this._autoLoad = value;
-
-        if (this._autoLoad && this._localizedAsset) {
-            this._unbindLocalizedAsset();
-            this._bindLocalizedAsset();
-        }
-    }
-
-    get disableLocalization() {
-        return this._disableLocalization;
-    }
-
-    set disableLocalization(value) {
-        if (this._disableLocalization === value) return;
-
-        this._disableLocalization = value;
-
-        // reset localized asset
-        this._onSetLocale(this._app.i18n.locale);
     }
 }
 

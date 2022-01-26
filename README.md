@@ -9,6 +9,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
+[![Language grade: JavaScript][code-quality-badge]][code-quality-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
@@ -151,18 +152,9 @@ To build the source map to allow for easier engine debugging, you can add `-- -m
 
     npm run build -- -m
 
-This will output to `build/output/playcanvas.js.map`
+This will output to `build/playcanvas.js.map`
 
 Note: The preprocessor is ignored when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
-
-## How to run tests
-
-PlayCanvas uses of Karma for unit testing. There are two ways of running the tests:
-
-| Command                | Description                                                                           |
-|------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | Runs unit tests on a built `playcanvas.js`                                            |
-| `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
 
 ## PlayCanvas Editor
 
@@ -176,6 +168,8 @@ For Editor related bugs and issues, please refer to the [Editor's repo](https://
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
+[code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
+[code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
 [resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine

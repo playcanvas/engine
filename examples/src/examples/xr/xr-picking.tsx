@@ -85,13 +85,13 @@ class XRPickingExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {

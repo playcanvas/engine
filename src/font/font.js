@@ -1,33 +1,39 @@
 import { FONT_MSDF } from './constants.js';
 
+/** @typedef {import('../graphics/texture.js').Texture} Texture */
+
 /**
- * @class
- * @name Font
- * @classdesc Represents the resource of a font asset.
- * @param {Texture[]} textures - The font textures.
- * @param {object} data - The font data.
- * @property {number} intensity The font intensity.
- * @property {Texture[]} textures The font textures.
+ * Represents the resource of a font asset.
  */
 class Font {
+    /**
+     * Create a new Font instance.
+     *
+     * @param {Texture[]} textures - The font textures.
+     * @param {object} data - The font data.
+     */
     constructor(textures, data) {
         this.type = data ? data.type || FONT_MSDF : FONT_MSDF;
 
         this.em = 1;
 
-        // atlas texture
+        /**
+         * The font textures.
+         *
+         * @type {Texture[]}
+         */
         this.textures = textures;
 
-        // intensity
+        /**
+         * The font intensity.
+         *
+         * @type {number}
+         */
         this.intensity = 0.0;
 
         // json data
         this._data = null;
         this.data = data;
-    }
-
-    get data() {
-        return this._data;
     }
 
     set data(value) {
@@ -55,6 +61,10 @@ class Font {
                 }
             }
         }
+    }
+
+    get data() {
+        return this._data;
     }
 }
 

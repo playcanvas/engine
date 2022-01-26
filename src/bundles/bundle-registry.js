@@ -1,11 +1,17 @@
+/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+
 /**
- * @private
- * @class
- * @name BundleRegistry
- * @param {AssetRegistry} assets - The asset registry.
- * @classdesc Keeps track of which assets are in bundles and loads files from bundles.
+ * Keeps track of which assets are in bundles and loads files from bundles.
+ *
+ * @ignore
  */
 class BundleRegistry {
+    /**
+     * Create a new BundleRegistry instance.
+     *
+     * @param {AssetRegistry} assets - The asset registry.
+     */
     constructor(assets) {
         this._assets = assets;
 
@@ -247,10 +253,8 @@ class BundleRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name BundleRegistry#listBundlesForAsset
-     * @description Lists all of the available bundles that reference the specified asset id.
+     * Lists all of the available bundles that reference the specified asset id.
+     *
      * @param {Asset} asset - The asset.
      * @returns {Asset[]} An array of bundle assets or null if the asset is not in any bundle.
      */
@@ -259,10 +263,8 @@ class BundleRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name BundleRegistry#list
-     * @description Lists all of the available bundles. This includes bundles that are not loaded.
+     * Lists all of the available bundles. This includes bundles that are not loaded.
+     *
      * @returns {Asset[]} An array of bundle assets.
      */
     list() {
@@ -275,10 +277,8 @@ class BundleRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name BundleRegistry#hasUrl
-     * @description Returns true if there is a bundle that contains the specified URL.
+     * Returns true if there is a bundle that contains the specified URL.
+     *
      * @param {string} url - The url.
      * @returns {boolean} True or false.
      */
@@ -287,11 +287,9 @@ class BundleRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name BundleRegistry#canLoadUrl
-     * @description Returns true if there is a bundle that contains the specified URL
-     * and that bundle is either loaded or currently being loaded.
+     * Returns true if there is a bundle that contains the specified URL and that bundle is either
+     * loaded or currently being loaded.
+     *
      * @param {string} url - The url.
      * @returns {boolean} True or false.
      */
@@ -300,13 +298,13 @@ class BundleRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name BundleRegistry#loadUrl
-     * @description Loads the specified file URL from a bundle that is either loaded or currently being loaded.
-     * @param {string} url - The URL. Make sure you are using a relative URL that does not contain any query parameters.
-     * @param {Function} callback - The callback is called when the file has been loaded or if an error occurs. The callback
-     * expects the first argument to be the error message (if any) and the second argument is the file blob URL.
+     * Loads the specified file URL from a bundle that is either loaded or currently being loaded.
+     *
+     * @param {string} url - The URL. Make sure you are using a relative URL that does not contain
+     * any query parameters.
+     * @param {Function} callback - The callback is called when the file has been loaded or if an
+     * error occurs. The callback expects the first argument to be the error message (if any) and
+     * the second argument is the file blob URL.
      * @example
      * var url = asset.getFileUrl().split('?')[0]; // get normalized asset URL
      * this.app.bundles.loadFile(url, function (err, blobUrl) {
@@ -337,11 +335,8 @@ class BundleRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name ResourceLoader#destroy
-     * @description Destroys the registry, and releases its resources. Does not unload bundle assets
-     * as these should be unloaded by the {@link AssetRegistry}.
+     * Destroys the registry, and releases its resources. Does not unload bundle assets as these
+     * should be unloaded by the {@link AssetRegistry}.
      */
     destroy() {
         this._assets.off('add', this._onAssetAdded, this);

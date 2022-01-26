@@ -70,7 +70,8 @@ class RenderToTextureExample extends Example {
             colorBuffer: texture,
             depth: true,
             // @ts-ignore
-            flipY: true
+            flipY: true,
+            samples: 2
         });
 
         // create a layer for object that do not render into texture

@@ -11,6 +11,7 @@ HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテ�
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
+[![Language grade: JavaScript][code-quality-badge]][code-quality-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
@@ -147,18 +148,9 @@ Node.jsがインストールされていることを確認します。
 
     npm run build -- -m
 
-これにより`build/output/playcanvas.js.map`が出力されます。
+これにより`build/playcanvas.js.map`が出力されます。
 
 注意: ソースマップを生成する際、プリプロセッサはマッピングを破壊するため無視されます。つまり、ソースマップの生成時には、すべてのデバッグコードとプロファイリングコードがエンジンのビルドに含まれます。
-
-## テスト
-
-PlayCanvasではユニットテストにKarmaを使用しています。テストを実行する方法は2つあります。
-
-| コマンド                | 説明                                                                           |
-|------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | ビルドされた `playcanvas.js` に対してユニットテストを実行します。                                              |
-| `npm run test:watch`   | 変更が検出されたときにユニットテストを再実行する - open http://localhost:9876/debug.html  |
 
 ## PlayCanvasエディター
 
@@ -173,6 +165,8 @@ PlayCanvas エンジンは、HTML5 アプリやゲームを作成するための
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
+[code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
+[code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
 [resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine

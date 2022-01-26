@@ -56,9 +56,9 @@ if (typeof navigator !== 'undefined') {
 const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
 
 /**
+ * Global namespace that stores flags regarding platform environment and features support.
+ *
  * @namespace
- * @name platform
- * @description Global namespace that stores flags regarding platform environment and features support.
  * @example
  * if (pc.platform.touch) {
  *     // touch is supported
@@ -66,122 +66,96 @@ const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
  */
 const platform = {
     /**
-     * @static
-     * @readonly
+     * String identifying the current runtime environment. Either 'browser' or 'node'.
+     *
      * @type {string}
-     * @name platform.environment
-     * @description String identifying the current runtime environment. Either 'browser' or 'node'.
      */
     environment: environment,
 
     /**
-     * @static
-     * @readonly
+     * The global object. This will be the window object when running in a browser and the global
+     * object when running in nodejs.
+     *
      * @type {object}
-     * @name platform.global
-     * @description The global object. This will be the window object when running in a browser and
-     * the global object when running in nodejs.
      */
     global: (environment === 'browser') ? window : global,
 
     /**
-     * @static
-     * @readonly
+     * Convenience boolean indicating whether we're running in the browser.
+     *
      * @type {boolean}
-     * @name platform.isBrowser
-     * @description Convenience boolean indicating whether we're running in the browser.
      */
     browser: environment === 'browser',
 
     /**
-     * @static
-     * @readonly
+     * Is it a desktop or laptop device.
+     *
      * @type {boolean}
-     * @name platform.desktop
-     * @description Is it a desktop or laptop device.
      */
     desktop: desktop,
 
     /**
-     * @static
-     * @readonly
+     * Is it a mobile or tablet device.
+     *
      * @type {boolean}
-     * @name platform.mobile
-     * @description Is it a mobile or tablet device.
      */
     mobile: mobile,
 
     /**
-     * @static
-     * @readonly
+     * If it is iOS.
+     *
      * @type {boolean}
-     * @name platform.ios
-     * @description If it is iOS.
      */
     ios: ios,
 
     /**
-     * @static
-     * @readonly
+     * If it is Android.
+     *
      * @type {boolean}
-     * @name platform.android
-     * @description If it is Android.
      */
     android: android,
 
     /**
-     * @static
-     * @readonly
+     * If it is Windows.
+     *
      * @type {boolean}
-     * @name platform.windows
-     * @description If it is Windows.
      */
     windows: windows,
 
     /**
-     * @static
-     * @readonly
+     * If it is Xbox.
+     *
      * @type {boolean}
-     * @name platform.xbox
-     * @description If it is Xbox.
      */
     xbox: xbox,
 
     /**
-     * @static
-     * @readonly
+     * If platform supports gamepads.
+     *
      * @type {boolean}
-     * @name platform.gamepads
-     * @description If platform supports gamepads.
      */
     gamepads: gamepads,
 
     /**
-     * @static
-     * @readonly
+     * If platform supports touch input.
+     *
      * @type {boolean}
-     * @name platform.touch
-     * @description If platform supports touch input.
      */
     touch: touch,
 
     /**
-     * @static
-     * @readonly
+     * If the platform supports Web Workers.
+     *
      * @type {boolean}
-     * @name platform.workers
-     * @description If the platform supports Web Workers.
      */
     workers: workers,
 
     /**
-     * @private
-     * @static
-     * @readonly
+     * If the platform supports an options object as the third parameter to
+     * `EventTarget.addEventListener()` and the passive property is supported.
+     *
      * @type {boolean}
-     * @name platform.passiveEvents
-     * @description If the platform supports an options object as the third parameter
-     * to `EventTarget.addEventListener()` and the passive property is supported.
+     * @ignore
      */
     passiveEvents: passiveEvents
 };

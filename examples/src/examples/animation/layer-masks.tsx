@@ -149,7 +149,7 @@ class LayerMasksExample extends Example {
 
         // create a mask for the upper body layer
         const upperBodyMask = {
-            // set a path with the children property as true to include that path and all of it's children in the mask
+            // set a path with the children property as true to include that path and all of its children in the mask
             'RootNode/AVATAR/C_spine0001_bind_JNT/C_spine0002_bind_JNT': {
                 children: true
             },
@@ -178,13 +178,11 @@ class LayerMasksExample extends Example {
                 upperBodyLayer.blendType = value;
             }
             if (path === 'upperBodyLayer.useMask') {
-                upperBodyLayer.assignMask(
-                    value ? {
-                        'RootNode/AVATAR/C_spine0001_bind_JNT/C_spine0002_bind_JNT': {
-                            children: true
-                        }
-                    } : null
-                );
+                upperBodyLayer.mask = value ? {
+                    'RootNode/AVATAR/C_spine0001_bind_JNT/C_spine0002_bind_JNT': {
+                        children: true
+                    }
+                } : null;
             }
             if (path === 'options.blend') {
                 modelEntity.anim.baseLayer.weight = 1.0 - value;

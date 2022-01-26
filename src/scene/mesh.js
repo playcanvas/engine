@@ -21,6 +21,10 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 
 import { getApplication } from '../framework/globals.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./morph.js').Morph} Morph */
+/** @typedef {import('./skin.js').Skin} Skin */
+
 let id = 0;
 
 // Helper class used to store vertex / index data streams and related properties, when mesh is programmatically modified
@@ -89,9 +93,7 @@ class GeometryVertexStream {
 }
 
 /**
- * @class
- * @name Mesh
- * @classdesc A graphical primitive. The mesh is defined by a {@link VertexBuffer} and an optional
+ * A graphical primitive. The mesh is defined by a {@link VertexBuffer} and an optional
  * {@link IndexBuffer}. It also contains a primitive definition which controls the type of the
  * primitive and the portion of the vertex or index buffer to use.
  *
@@ -99,12 +101,14 @@ class GeometryVertexStream {
  * There are two ways a mesh can be generated or updated.
  *
  * ### Simple Mesh API
- * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs} that provide a simple way to provide
- * vertex and index data for the Mesh, and hiding the complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
+ * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs}
+ * that provide a simple way to provide vertex and index data for the Mesh, and hiding the
+ * complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
  *
- * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
+ * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to
+ * form a single triangle.
  *
- * ~~~javascript
+ * ```javascript
  * var mesh = new pc.Mesh(device);
  * var positions = [
  *     0, 0, 0, // pos 0
@@ -113,12 +117,12 @@ class GeometryVertexStream {
  * ];
  * mesh.setPositions(positions);
  * mesh.update();
- * ~~~
+ * ```
  *
- * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
- * Float32Array is used for positions and uvs.
+ * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in
+ * channel 0, and an index buffer to form two triangles. Float32Array is used for positions and uvs.
  *
- * ~~~javascript
+ * ```javascript
  * var mesh = new pc.Mesh(device);
  * var positions = new Float32Array([
  *     0, 0, 0, // pos 0
@@ -140,32 +144,29 @@ class GeometryVertexStream {
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
  * mesh.update();
- * ~~~
+ * ```
  *
- * This example demonstrated that vertex attributes such as position and normals, and also indices can be provided using Arrays ([]) and also Typed Arrays
- * (Float32Array and similar). Note that typed arrays have higher performance, and are generaly recommended for per-frame operations or larger meshes,
- * but their construction using new operator is costly operation. If you only need to operate on small number of vertices or indices, consider using the
- * Arrays instead to avoid Type Array allocation overhead.
+ * This example demonstrates that vertex attributes such as position and normals, and also indices
+ * can be provided using Arrays ([]) and also Typed Arrays (Float32Array and similar). Note that
+ * typed arrays have higher performance, and are generally recommended for per-frame operations or
+ * larger meshes, but their construction using new operator is costly operation. If you only need
+ * to operate on a small number of vertices or indices, consider using Arrays to avoid the overhead
+ * associated with allocating Typed Arrays.
  *
  * Follow these links for more complex examples showing the functionality.
+ *
  * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
  * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
  * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
  * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
- * ### Update Vertex and Index buffers.
- * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
- * See {@link VertexBuffer}, {@link IndexBuffer} and {@link VertexFormat} for details.
- * @description Create a new mesh.
- * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
- * from the {@link Application}.
- * @property {VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
- * @property {IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
- * be empty. The first index buffer in the array is used by {@link MeshInstance}s with a renderStyle
- * property set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if renderStyle is
- * set to {@link RENDERSTYLE_WIREFRAME}.
- * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
- * mesh should be interpreted by the graphics device. For details on the primitive object, see.
+ * ### Update Vertex and Index buffers
+ * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
+ * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
+ * {@link IndexBuffer} and {@link VertexFormat} for details.
+ *
+ * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data
+ * in the mesh should be interpreted by the graphics device.
  * @property {number} primitive[].type The type of primitive to render. Can be:
  *
  * - {@link PRIMITIVE_POINTS}
@@ -176,28 +177,57 @@ class GeometryVertexStream {
  * - {@link PRIMITIVE_TRISTRIP}
  * - {@link PRIMITIVE_TRIFAN}
  *
- * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
- * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
- * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
- * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
- * @property {BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
- * @property {Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
- * @property {Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
+ * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the
+ * draw call.
+ * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw
+ * call.
+ * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby
+ * using the currently set index buffer and false otherwise.
+ * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer
+ * property.
  */
 class Mesh extends RefCountedObject {
+    /**
+     * Create a new Mesh instance.
+     *
+     * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If
+     * it is not provided, a device is obtained from the {@link Application}.
+     */
     constructor(graphicsDevice) {
         super();
         this.id = id++;
         this.device = graphicsDevice || getApplication().graphicsDevice;
+
+        /**
+         * The vertex buffer holding the vertex data of the mesh.
+         *
+         * @type {VertexBuffer}
+         */
         this.vertexBuffer = null;
+
+        /**
+         * An array of index buffers. For unindexed meshes, this array can be empty. The first
+         * index buffer in the array is used by {@link MeshInstance}s with a renderStyle property
+         * set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if
+         * renderStyle is set to {@link RENDERSTYLE_WIREFRAME}.
+         *
+         * @type {IndexBuffer[]}
+         */
         this.indexBuffer = [null];
         this.primitive = [{
             type: 0,
             base: 0,
             count: 0
         }];
+
+        /**
+         * The skin data (if any) that drives skinned mesh animations for this mesh.
+         *
+         * @type {Skin|null}
+         */
         this.skin = null;
-        this.morph = null;
+
+        this._morph = null;
         this._geometryData = null;
 
         // AABB for object space mesh vertices
@@ -207,21 +237,60 @@ class Mesh extends RefCountedObject {
         this.boneAabb = null;
     }
 
-    get aabb() {
-        return this._aabb;
+    /**
+     * The morph data (if any) that drives morph target animations for this mesh.
+     *
+     * @type {Morph|null}
+     */
+    set morph(morph) {
+
+        if (morph !== this._morph) {
+            if (this._morph) {
+                this._morph.decRefCount();
+            }
+
+            this._morph = morph;
+
+            if (morph) {
+                morph.incRefCount();
+            }
+        }
     }
 
+    get morph() {
+        return this._morph;
+    }
+
+    /**
+     * The axis-aligned bounding box for the object space vertices of this mesh.
+     *
+     * @type {BoundingBox}
+     */
     set aabb(aabb) {
         this._aabb = aabb;
     }
 
+    get aabb() {
+        return this._aabb;
+    }
+
     /**
-     * @function
-     * @name Mesh#destroy
-     * @description Destroys {@link VertexBuffer} and {@link IndexBuffer} associate with the mesh.
-     * This is normally called by {@link Model#destroy} and does not need to be called manually.
+     * Destroys {@link VertexBuffer} and {@link IndexBuffer} associate with the mesh. This is
+     * normally called by {@link Model#destroy} and does not need to be called manually.
      */
     destroy() {
+
+        const morph = this.morph;
+        if (morph) {
+
+            // this decreases ref count on the morph
+            this.morph = null;
+
+            // destroy morph
+            if (morph.refCount < 1) {
+                morph.destroy();
+            }
+        }
 
         if (this.vertexBuffer) {
             this.vertexBuffer.destroy();
@@ -377,13 +446,13 @@ class Mesh extends RefCountedObject {
         if (!this._geometryData) {
             this._geometryData = new GeometryData();
 
-            // if vertex buffer exists aleady, store the sizes
+            // if vertex buffer exists already, store the sizes
             if (this.vertexBuffer) {
                 this._geometryData.vertexCount = this.vertexBuffer.numVertices;
                 this._geometryData.maxVertices = this.vertexBuffer.numVertices;
             }
 
-            // if index buffer exists aleady, store the sizes
+            // if index buffer exists already, store the sizes
             if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
                 this._geometryData.indexCount = this.indexBuffer[0].numIndices;
                 this._geometryData.maxIndices = this.indexBuffer[0].numIndices;
@@ -392,18 +461,21 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#clear
-     * @description Clears the mesh of existing vertices and indices and resets the
-     * {@link VertexFormat} associated with the mesh. This call is typically followed by calls
-     * to methods such as {@link Mesh#setPositions}, {@link Mesh#setVertexStream} or {@link Mesh#setIndices} and
+     * Clears the mesh of existing vertices and indices and resets the {@link VertexFormat}
+     * associated with the mesh. This call is typically followed by calls to methods such as
+     * {@link Mesh#setPositions}, {@link Mesh#setVertexStream} or {@link Mesh#setIndices} and
      * finally {@link Mesh#update} to rebuild the mesh, allowing different {@link VertexFormat}.
-     * @param {boolean} [verticesDynamic] - Indicates the {@link VertexBuffer} should be created with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
-     * @param {boolean} [indicesDynamic] - Indicates the {@link IndexBuffer} should be created with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
-     * @param {number} [maxVertices] - A {@link VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
-     * no value is provided, a size to fit the provided vertices will be allocated.
-     * @param {number} [maxIndices] - An {@link IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
-     * no value is provided, a size to fit the provided indices will be allocated.
+     *
+     * @param {boolean} [verticesDynamic] - Indicates the {@link VertexBuffer} should be created
+     * with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
+     * @param {boolean} [indicesDynamic] - Indicates the {@link IndexBuffer} should be created with
+     * {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
+     * @param {number} [maxVertices] - A {@link VertexBuffer} will be allocated with at least
+     * maxVertices, allowing additional vertices to be added to it without the allocation. If no
+     * value is provided, a size to fit the provided vertices will be allocated.
+     * @param {number} [maxIndices] - An {@link IndexBuffer} will be allocated with at least
+     * maxIndices, allowing additional indices to be added to it without the allocation. If no
+     * value is provided, a size to fit the provided indices will be allocated.
      */
     clear(verticesDynamic, indicesDynamic, maxVertices = 0, maxIndices = 0) {
         this._initGeometryData();
@@ -417,17 +489,22 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#setVertexStream
-     * @description Sets the vertex data for any supported semantic.
-     * @param {string} semantic - The meaning of the vertex element. For supported semantics, see SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex data for the specified semantic.
-     * @param {number} componentCount - The number of values that form a single Vertex element. For example when setting a 3D position represented by 3 numbers
-     * per vertex, number 3 should be specified.
-     * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
-     * @param {number} [dataType] - The format of data when stored in the {@link VertexBuffer}, see TYPE_* in {@link VertexFormat}. When not specified, {@link TYPE_FLOAT32} is used.
-     * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a 0 to 255 range down to 0 to 1 when fed to a shader.
-     * If false, vertex attribute data is left unchanged. If this property is unspecified, false is assumed.
+     * Sets the vertex data for any supported semantic.
+     *
+     * @param {string} semantic - The meaning of the vertex element. For supported semantics, see
+     * SEMANTIC_* in {@link VertexFormat}.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex
+     * data for the specified semantic.
+     * @param {number} componentCount - The number of values that form a single Vertex element. For
+     * example when setting a 3D position represented by 3 numbers per vertex, number 3 should be
+     * specified.
+     * @param {number} [numVertices] - The number of vertices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
+     * @param {number} [dataType] - The format of data when stored in the {@link VertexBuffer}, see
+     * TYPE_* in {@link VertexFormat}. When not specified, {@link TYPE_FLOAT32} is used.
+     * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a
+     * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+     * unchanged. If this property is unspecified, false is assumed.
      */
     setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false) {
         this._initGeometryData();
@@ -444,12 +521,13 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#getVertexStream
-     * @description Gets the vertex data corresponding to a semantic.
-     * @param {string} semantic - The semantic of the vertex element to get. For supported semantics, see SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An array to populate with the vertex data.
-     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * Gets the vertex data corresponding to a semantic.
+     *
+     * @param {string} semantic - The semantic of the vertex element to get. For supported
+     * semantics, see SEMANTIC_* in {@link VertexFormat}.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An
+     * array to populate with the vertex data. When typed array is supplied, enough space needs to
+     * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getVertexStream(semantic, data) {
@@ -487,73 +565,86 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#setPositions
-     * @description Sets the vertex positions array. Vertices are stored using {@link TYPE_FLOAT32} format.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - Vertex data containing positions.
-     * @param {number} [componentCount] - The number of values that form a single position element. Defaults to 3 if not specified, corresponding to x, y and z coordinates.
-     * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+     * Sets the vertex positions array. Vertices are stored using {@link TYPE_FLOAT32} format.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - Vertex
+     * data containing positions.
+     * @param {number} [componentCount] - The number of values that form a single position element.
+     * Defaults to 3 if not specified, corresponding to x, y and z coordinates.
+     * @param {number} [numVertices] - The number of vertices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
      */
     setPositions(positions, componentCount = GeometryData.DEFAULT_COMPONENTS_POSITION, numVertices) {
         this.setVertexStream(SEMANTIC_POSITION, positions, componentCount, numVertices, TYPE_FLOAT32, false);
     }
 
     /**
-     * @function
-     * @name Mesh#setNormals
-     * @description Sets the vertex normals array. Normals are stored using {@link TYPE_FLOAT32} format.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - Vertex data containing normals.
-     * @param {number} [componentCount] - The number of values that form a single normal element. Defaults to 3 if not specified, corresponding to x, y and z direction.
-     * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+     * Sets the vertex normals array. Normals are stored using {@link TYPE_FLOAT32} format.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - Vertex
+     * data containing normals.
+     * @param {number} [componentCount] - The number of values that form a single normal element.
+     * Defaults to 3 if not specified, corresponding to x, y and z direction.
+     * @param {number} [numVertices] - The number of vertices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
      */
     setNormals(normals, componentCount = GeometryData.DEFAULT_COMPONENTS_NORMAL, numVertices) {
         this.setVertexStream(SEMANTIC_NORMAL, normals, componentCount, numVertices, TYPE_FLOAT32, false);
     }
 
     /**
-     * @function
-     * @name Mesh#setUvs
-     * @description Sets the vertex uv array. Uvs are stored using {@link TYPE_FLOAT32} format.
+     * Sets the vertex uv array. Uvs are stored using {@link TYPE_FLOAT32} format.
+     *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - Vertex data containing uv-coordinates.
-     * @param {number} [componentCount] - The number of values that form a single uv element. Defaults to 2 if not specified, corresponding to u and v coordinates.
-     * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - Vertex
+     * data containing uv-coordinates.
+     * @param {number} [componentCount] - The number of values that form a single uv element.
+     * Defaults to 2 if not specified, corresponding to u and v coordinates.
+     * @param {number} [numVertices] - The number of vertices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
      */
     setUvs(channel, uvs, componentCount = GeometryData.DEFAULT_COMPONENTS_UV, numVertices) {
         this.setVertexStream(SEMANTIC_TEXCOORD + channel, uvs, componentCount, numVertices, TYPE_FLOAT32, false);
     }
 
     /**
-     * @function
-     * @name Mesh#setColors
-     * @description Sets the vertex color array. Colors are stored using {@link TYPE_FLOAT32} format, which is useful for HDR colors.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex data containing colors.
-     * @param {number} [componentCount] - The number of values that form a single color element. Defaults to 4 if not specified, corresponding to r, g, b and a.
-     * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+     * Sets the vertex color array. Colors are stored using {@link TYPE_FLOAT32} format, which is
+     * useful for HDR colors.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex
+     * data containing colors.
+     * @param {number} [componentCount] - The number of values that form a single color element.
+     * Defaults to 4 if not specified, corresponding to r, g, b and a.
+     * @param {number} [numVertices] - The number of vertices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
      */
     setColors(colors, componentCount = GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices) {
         this.setVertexStream(SEMANTIC_COLOR, colors, componentCount, numVertices, TYPE_FLOAT32, false);
     }
 
     /**
-     * @function
-     * @name Mesh#setColors32
-     * @description Sets the vertex color array. Colors are stored using {@link TYPE_UINT8} format, which is useful for LDR colors. Values in the array are expected in
-     * [0..255] range, and are mapped to [0..1] range in the shader.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex data containing colors. The array is
-     * expected to contain 4 components per vertex, corresponding to r, g, b and a.
-     * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+     * Sets the vertex color array. Colors are stored using {@link TYPE_UINT8} format, which is
+     * useful for LDR colors. Values in the array are expected in [0..255] range, and are mapped to
+     * [0..1] range in the shader.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex
+     * data containing colors. The array is expected to contain 4 components per vertex,
+     * corresponding to r, g, b and a.
+     * @param {number} [numVertices] - The number of vertices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
      */
     setColors32(colors, numVertices) {
         this.setVertexStream(SEMANTIC_COLOR, colors, GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices, TYPE_UINT8, true);
     }
 
     /**
-     * @function
-     * @name Mesh#setIndices
-     * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 vertices are specified, in which case 32-bit format is used.
-     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indices that define primitives (lines, triangles, etc.).
-     * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+     * Sets the index array. Indices are stored using 16-bit format by default, unless more than
+     * 65535 vertices are specified, in which case 32-bit format is used.
+     *
+     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indices that
+     * define primitives (lines, triangles, etc.).
+     * @param {number} [numIndices] - The number of indices to be used from data array. If not
+     * provided, the whole data array is used. This allows to use only part of the data array.
      */
     setIndices(indices, numIndices) {
         this._initGeometryData();
@@ -563,11 +654,11 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#getPositions
-     * @description Gets the vertex positions data.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - An array to populate with the vertex data.
-     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * Gets the vertex positions data.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - An
+     * array to populate with the vertex data. When typed array is supplied, enough space needs to
+     * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getPositions(positions) {
@@ -575,11 +666,11 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#getNormals
-     * @description Gets the vertex normals data.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - An array to populate with the vertex data.
-     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * Gets the vertex normals data.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - An
+     * array to populate with the vertex data. When typed array is supplied, enough space needs to
+     * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getNormals(normals) {
@@ -587,12 +678,12 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#getUvs
-     * @description Gets the vertex uv data.
+     * Gets the vertex uv data.
+     *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - An array to populate with the vertex data.
-     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - An
+     * array to populate with the vertex data. When typed array is supplied, enough space needs to
+     * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getUvs(channel, uvs) {
@@ -600,11 +691,11 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#getColors
-     * @description Gets the vertex color data.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - An array to populate with the vertex data.
-     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * Gets the vertex color data.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - An
+     * array to populate with the vertex data. When typed array is supplied, enough space needs to
+     * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getColors(colors) {
@@ -612,11 +703,11 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#getIndices
-     * @description Gets the index data.
-     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - An array to populate with the index data.
-     * When a typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * Gets the index data.
+     *
+     * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - An array to populate with the
+     * index data. When a typed array is supplied, enough space needs to be reserved, otherwise
+     * only partial data is copied.
      * @returns {number} Returns the number of indices populated.
      */
     getIndices(indices) {
@@ -647,15 +738,26 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * @function
-     * @name Mesh#update
-     * @description Applies any changes to vertex stream and indices to mesh. This allocates or reallocates {@link vertexBuffer} or {@link IndexBuffer}
-     * to fit all provided vertices and indices, and fills them with data.
-     * @param {number} [primitiveType] - The type of primitive to render. Can be one of PRIMITIVE_* - see primitive[].type section above. Defaults
-     * to {@link PRIMITIVE_TRIANGLES} if unspecified.
-     * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated only if positions were set since last time update
-     * was called, and componentCount for position was 3, otherwise bounding box is not updated. See {@link Mesh#setPositions}. Defaults to true if unspecified.
-     * Set this to false to avoid update of the bounding box and use aabb property to set it instead.
+     * Applies any changes to vertex stream and indices to mesh. This allocates or reallocates
+     * {@link vertexBuffer} or {@link IndexBuffer} to fit all provided vertices and indices, and
+     * fills them with data.
+     *
+     * @param {number} [primitiveType] - The type of primitive to render.  Can be:
+     *
+     * - {@link PRIMITIVE_POINTS}
+     * - {@link PRIMITIVE_LINES}
+     * - {@link PRIMITIVE_LINELOOP}
+     * - {@link PRIMITIVE_LINESTRIP}
+     * - {@link PRIMITIVE_TRIANGLES}
+     * - {@link PRIMITIVE_TRISTRIP}
+     * - {@link PRIMITIVE_TRIFAN}
+     *
+     * Defaults to {@link PRIMITIVE_TRIANGLES} if unspecified.
+     * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated
+     * only if positions were set since last time update was called, and componentCount for
+     * position was 3, otherwise bounding box is not updated. See {@link Mesh#setPositions}.
+     * Defaults to true if unspecified. Set this to false to avoid update of the bounding box and
+     * use aabb property to set it instead.
      */
     update(primitiveType = PRIMITIVE_TRIANGLES, updateBoundingBox = true) {
 

@@ -21,100 +21,99 @@ export const ABSOLUTE_URL = new RegExp(
 );
 
 /**
- * @constant
+ * Asset type name for animation.
+ *
  * @type {string}
- * @name ASSET_ANIMATION
- * @description Asset type name for animation.
  */
 export const ASSET_ANIMATION = 'animation';
+
 /**
- * @constant
+ * Asset type name for audio.
+ *
  * @type {string}
- * @name ASSET_AUDIO
- * @description Asset type name for audio.
  */
 export const ASSET_AUDIO = 'audio';
+
 /**
- * @constant
+ * Asset type name for image.
+ *
  * @type {string}
- * @name ASSET_IMAGE
- * @description Asset type name for image.
  */
 export const ASSET_IMAGE = 'image';
+
 /**
- * @constant
+ * Asset type name for json.
+ *
  * @type {string}
- * @name ASSET_JSON
- * @description Asset type name for json.
  */
 export const ASSET_JSON = 'json';
+
 /**
- * @constant
+ * Asset type name for model.
+ *
  * @type {string}
- * @name ASSET_MODEL
- * @description Asset type name for model.
  */
 export const ASSET_MODEL = 'model';
+
 /**
- * @constant
+ * Asset type name for material.
+ *
  * @type {string}
- * @name ASSET_MATERIAL
- * @description Asset type name for material.
  */
 export const ASSET_MATERIAL = 'material';
+
 /**
- * @constant
+ * Asset type name for text.
+ *
  * @type {string}
- * @name ASSET_TEXT
- * @description Asset type name for text.
  */
 export const ASSET_TEXT = 'text';
+
 /**
- * @constant
+ * Asset type name for texture.
+ *
  * @type {string}
- * @name ASSET_TEXTURE
- * @description Asset type name for texture.
  */
 export const ASSET_TEXTURE = 'texture';
+
 /**
- * @constant
+ * Asset type name for cubemap.
+ *
  * @type {string}
- * @name ASSET_CUBEMAP
- * @description Asset type name for cubemap.
  */
 export const ASSET_CUBEMAP = 'cubemap';
+
 /**
- * @constant
+ * Asset type name for shader.
+ *
  * @type {string}
- * @name ASSET_SHADER
- * @description Asset type name for shader.
  */
 export const ASSET_SHADER = 'shader';
+
 /**
- * @constant
+ * Asset type name for CSS.
+ *
  * @type {string}
- * @name ASSET_CSS
- * @description Asset type name for CSS.
  */
 export const ASSET_CSS = 'css';
+
 /**
- * @constant
+ * Asset type name for HTML.
+ *
  * @type {string}
- * @name ASSET_HTML
- * @description Asset type name for HTML.
  */
 export const ASSET_HTML = 'html';
+
 /**
- * @constant
+ * Asset type name for script.
+ *
  * @type {string}
- * @name ASSET_SCRIPT
- * @description Asset type name for script.
  */
 export const ASSET_SCRIPT = 'script';
+
 /**
- * @constant
+ * Asset type name for a container.
+ *
  * @type {string}
- * @name ASSET_CONTAINER
- * @description Asset type name for a container.
  */
 export const ASSET_CONTAINER = 'container';
