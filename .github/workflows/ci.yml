@@ -50,9 +50,9 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Build Typescript definitions
-      run: npm run tsd
+      run: npm run build:types
     - name: Compile Typescript definitions
-      run: npm run tsd:compile
+      run: npm run test:types
 
   unit-test-node:
     name: Unit Test (Node)
