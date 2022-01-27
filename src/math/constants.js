@@ -18,6 +18,7 @@ export const CURVE_SMOOTHSTEP = 1;
  *
  * @type {number}
  * @deprecated
+ * @ignore
  */
 export const CURVE_CATMULL = 2;
 
@@ -27,6 +28,7 @@ export const CURVE_CATMULL = 2;
  *
  * @type {number}
  * @deprecated
+ * @ignore
  */
 export const CURVE_CARDINAL = 3;
 

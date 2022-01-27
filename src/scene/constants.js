@@ -507,6 +507,7 @@ export const GAMMA_SRGB = 1;
  *
  * @type {number}
  * @deprecated
+ * @ignore
  */
 export const GAMMA_SRGBFAST = 2; // deprecated
 
