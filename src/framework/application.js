@@ -2006,6 +2006,7 @@ class Application extends EventHandler {
         if (getApplication() === this) {
             setApplication(null);
         }
+        samplesTexCache = {};
     }
 
     /**
