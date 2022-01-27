@@ -763,6 +763,8 @@ class GraphicsDevice extends EventHandler {
     destroy() {
         const gl = this.gl;
 
+        this.fire('destroy');
+
         this.grabPass.destroy();
 
         if (this.webgl2 && this.feedback) {

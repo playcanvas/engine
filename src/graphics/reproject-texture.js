@@ -309,6 +309,45 @@ const packSamplesTex = (device, name, samples) => {
     });
 };
 
+// 
+
+class DeviceResourceCache {
+    constructor(destroyHandler = null) {
+        this.devices = new Map();
+        this.destroyHandler = destroyHandler;
+    }
+
+    has(device, key) {
+        const cache = this.devices.has(device);
+        return !!(cache && cache.has(key));
+    }
+
+    get(device, key) {
+        const cache = this.devices.get(device)
+        return cache ? cache.get(key) : null;
+    }
+
+    set(device, key, value) {
+        if (device && key) {
+            let cache = this.devices.get(device);
+            if (!cache) {
+                cache = new Map();
+                this.devices.set(device, cache);
+
+                if (this.destroyHandler) {
+                    // call custom destroy handler on all items
+                    
+                } else {
+                    // no custom destroy handler, just remove the device cache
+                    device.on('devicelost', () => this.devices.delete(device));
+                    device.on('destroy', () => this.devices.delete(device));
+                }
+            }
+            cache.set(key, value);
+        }
+    }
+}
+
 // cache of float sample data packed into rgba8 textures
 const samplesTexCache = { };
 
