@@ -106,7 +106,7 @@ class ClusteredSpotShadowsExample extends Example {
 
         // setup skydome as ambient light
         app.scene.skyboxMip = 3;
-        app.scene.skyboxIntensity = 0.4;
+        app.scene.skyboxIntensity = 0.1;
         app.scene.setSkybox(assets.cubemap.resources);
 
         // enabled clustered lighting. This is a temporary API and will change in the future

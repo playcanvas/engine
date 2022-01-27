@@ -56,7 +56,6 @@ class RenderAssetExample extends Example {
 
         // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
         app.scene.setSkybox(assets["helipad.dds"].resources);
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxMip = 1;
 
