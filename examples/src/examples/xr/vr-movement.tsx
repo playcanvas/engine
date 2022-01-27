@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class VRMovementExample extends Example {
+
+class VrMovementExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Movement';
 
@@ -249,4 +249,4 @@ class VRMovementExample extends Example {
     }
 }
 
-export default VRMovementExample;
+export default VrMovementExample;

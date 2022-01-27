@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 // Attributes per vertex: position
@@ -50,7 +50,7 @@ void main(void)
 }
 `;
 
-class PointCloudSimulationExample extends Example {
+class PointCloudSimulationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Point Cloud Simulation';
 

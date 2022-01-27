@@ -1,12 +1,13 @@
 import React from 'react';
 // @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.prf.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ClusteredLightingExample extends Example {
+class ClusteredLightingExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Lighting';
+    static ENGINE = 'PERFORMANCE';
 
     load() {
         return <>
@@ -30,7 +31,7 @@ class ClusteredLightingExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clustered lighting parameters to handle many lights:
+        // @ts-ignore adjust default clustered lighting parameters to handle many lights:
         const lighting = app.scene.lighting;
 
         // 1) subdivide space with lights into this many cells:

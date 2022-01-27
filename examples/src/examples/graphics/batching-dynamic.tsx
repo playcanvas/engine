@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class BatchingDynamicExample extends Example {
+
+class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Batching Dynamic';
 

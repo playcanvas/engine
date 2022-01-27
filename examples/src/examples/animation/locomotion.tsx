@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Button from '@playcanvas/pcui/Button/component';
 // @ts-ignore: library file import
@@ -14,7 +14,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 import { Observer } from '@playcanvas/observer';
 import { wasmSupported, loadWasmModuleAsync } from '../../wasm-loader';
 
-class LocomotionExample extends Example {
+class LocomotionExample {
     static CATEGORY = 'Animation';
     static NAME = 'Locomotion';
 

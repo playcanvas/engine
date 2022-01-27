@@ -1,6 +1,6 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -17,7 +17,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class LightsBakedAOExample extends Example {
+class LightsBakedAOExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
 

@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class OBJExample extends Example {
+
+class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
@@ -71,4 +71,4 @@ class OBJExample extends Example {
     }
 }
 
-export default OBJExample;
+export default ObjExample;

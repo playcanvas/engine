@@ -23,12 +23,6 @@ body {
     height: 100%;
 }
 
-/* 
-#app div:nth-child(2) {
-    display: flex;
-    width: 100%;
-} */
-
 #main-view, #main-view-wrapper {
     display: flex;
     width: 100%;
@@ -171,6 +165,14 @@ body {
 
 #sideBar.small-thumbnails .nav-item-text {
     margin-left: 47px;
+}
+
+#sideBar:not(.small-thumbnails) .small-thumbnail {
+    display: none;
+}
+
+#sideBar.small-thumbnails .large-thumbnail {
+    display: none;
 }
 
 #sideBar .nav-item-text a {
