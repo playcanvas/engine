@@ -2,6 +2,7 @@ import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
 import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
+import dts from "rollup-plugin-dts";
 import jscc from 'rollup-plugin-jscc';
 import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
@@ -295,24 +296,35 @@ const target_extras = [
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 
-let targets = [
-    target_release_es5,
-    target_release_es6,
-    target_debug,
-    target_profiler
-];
+const target_types = {
+    input: "types/index.d.ts",
+    output: [{
+        file: "build/playcanvas.d.ts",
+        format: "es"
+    }],
+    plugins: [
+        dts()
+    ]
+};
 
-// Build all targets by default, unless a specific target is chosen
-if (process.env.target) {
+let targets;
+
+if (process.env.target) { // Build a specific target
     switch (process.env.target.toLowerCase()) {
         case "es5":      targets = [target_release_es5]; break;
         case "es6":      targets = [target_release_es6]; break;
         case "debug":    targets = [target_debug]; break;
         case "profiler": targets = [target_profiler]; break;
+        case "types":    targets = [target_types]; break;
     }
+} else { // Build all targets
+    targets = [
+        target_release_es5,
+        target_release_es6,
+        target_debug,
+        target_profiler,
+        ...target_extras
+    ];
 }
-
-// append common targets
-targets.push(...target_extras);
 
 export default targets;
