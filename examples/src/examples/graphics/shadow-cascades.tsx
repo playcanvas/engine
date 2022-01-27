@@ -82,7 +82,6 @@ class ShadowCascadesExample {
         app.scene.skyboxMip = 3;
         app.scene.setSkybox(assets.helipad.resources);
         app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // instantiate the terrain

@@ -12,7 +12,7 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
  * Parser for browser-supported image formats.
  *
  * @implements {TextureParser}
- * @private
+ * @ignore
  */
 class ImgParser {
     constructor(registry) {

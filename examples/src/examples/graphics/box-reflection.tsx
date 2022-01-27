@@ -210,7 +210,7 @@ class BoxReflectionExample {
             layers: [excludedLayer.id], // add it to excluded layer, we don't want the light captured in the reflection
             castShadows: false,
             color: pc.Color.WHITE,
-            intensity: 4,
+            intensity: 0.2,
             range: 1000
         });
 

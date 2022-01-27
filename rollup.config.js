@@ -2,9 +2,11 @@ import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
 import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
+import dts from "rollup-plugin-dts";
 import jscc from 'rollup-plugin-jscc';
 import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const execSync = require('child_process').execSync;
 let revision;
@@ -33,7 +35,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
+                code: code.replace(/ {2}/g, '\t'),
                 map: { mappings: '' }
             };
         }
@@ -56,7 +58,7 @@ function shaderChunks(removeComments) {
                 glsl = glsl.replace(/\r/g, '');
 
                 // 4 spaces to tabs
-                glsl = glsl.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+                glsl = glsl.replace(/ {4}/g, '\t');
 
                 if (removeComments) {
                     // Remove comments
@@ -128,19 +130,39 @@ const moduleOptions = {
 };
 
 const stripOptions = {
-    functions: ['Debug.assert', 'Debug.deprecated', 'Debug.warn', 'Debug.error', 'Debug.log', 'Debug.pushGpuMarker', 'Debug.popGpuMarker',
-        'WorldClustersDebug.render']
+    functions: [
+        'Debug.assert',
+        'Debug.deprecated',
+        'Debug.warn',
+        'Debug.error',
+        'Debug.log',
+        'DebugGraphics.pushGpuMarker',
+        'DebugGraphics.popGpuMarker',
+        'WorldClustersDebug.render'
+    ]
 };
 
 const target_release_es5 = {
     input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
+    output: [
+        {
+            banner: getBanner(''),
+            file: 'build/playcanvas.js',
+            format: 'umd',
+            indent: '\t',
+            name: 'pc'
+        },
+        {
+            banner: getBanner(''),
+            file: 'build/playcanvas.min.js',
+            format: 'umd',
+            indent: '\t',
+            name: 'pc',
+            plugins: [
+                terser()
+            ]
+        }
+    ],
     plugins: [
         jscc({
             values: {}
@@ -159,32 +181,13 @@ const target_release_es5 = {
     ]
 };
 
-const target_release_es5min = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.min.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        strip(stripOptions),
-        babel(es5Options),
-        terser()
-    ]
-};
+if (process.env.treemap) {
+    const visualizerPlugin = visualizer({
+        brotliSize: true,
+        gzipSize: true
+    });
+    target_release_es5.output[1].plugins.push(visualizerPlugin);
+}
 
 const target_release_es6 = {
     input: 'src/index.js',
@@ -283,7 +286,7 @@ function scriptTarget(name, input, output) {
         },
         plugins: [
             babel(es5Options),
-            spacesToTabs
+            spacesToTabs()
         ]
     };
 }
@@ -293,26 +296,35 @@ const target_extras = [
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 
-let targets = [
-    target_release_es5,
-    target_release_es5min,
-    target_release_es6,
-    target_debug,
-    target_profiler
-];
+const target_types = {
+    input: "types/index.d.ts",
+    output: [{
+        file: "build/playcanvas.d.ts",
+        format: "es"
+    }],
+    plugins: [
+        dts()
+    ]
+};
 
-// Build all targets by default, unless a specific target is chosen
-if (process.env.target) {
+let targets;
+
+if (process.env.target) { // Build a specific target
     switch (process.env.target.toLowerCase()) {
         case "es5":      targets = [target_release_es5]; break;
-        case "es5min":   targets = [target_release_es5min]; break;
         case "es6":      targets = [target_release_es6]; break;
         case "debug":    targets = [target_debug]; break;
         case "profiler": targets = [target_profiler]; break;
+        case "types":    targets = [target_types]; break;
     }
+} else { // Build all targets
+    targets = [
+        target_release_es5,
+        target_release_es6,
+        target_debug,
+        target_profiler,
+        ...target_extras
+    ];
 }
-
-// append common targets
-targets.push(...target_extras);
 
 export default targets;

@@ -6,7 +6,7 @@ import { Entity } from '../../framework/entity.js';
  * Implementation of {@link AnimBinder} for animating a skeleton in the graph-node hierarchy.
  *
  * @implements {AnimBinder}
- * @private
+ * @ignore
  */
 class DefaultAnimBinder {
     constructor(graph) {

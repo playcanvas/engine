@@ -421,7 +421,7 @@ class Application extends EventHandler {
             passThrough: true
         });
 
-        const defaultLayerComposition = new LayerComposition(this.graphicsDevice, "default");
+        const defaultLayerComposition = new LayerComposition("default");
         defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
         defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
@@ -896,7 +896,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            const composition = new LayerComposition(this.graphicsDevice, "application");
+            const composition = new LayerComposition("application");
 
             const layers = {};
             for (const key in props.layers) {

@@ -1,7 +1,20 @@
 import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
 import { math } from './math.js';
 
+/** @typedef {import('./curve.js').Curve} Curve */
+
+/**
+ * A class for evaluating a curve at a specific time.
+ *
+ * @ignore
+ */
 class CurveEvaluator {
+    /**
+     * Create a new CurveEvaluator instance.
+     *
+     * @param {Curve} curve - The curve to evaluate.
+     * @param {number} time - The initial time to evaluate the curve at. Defaults to 0.
+     */
     constructor(curve, time = 0) {
         this._curve = curve;
         this._left = -Infinity;
@@ -14,9 +27,15 @@ class CurveEvaluator {
         this._reset(time);
     }
 
-    // Evaluate the curve at the given time. Specify forceReset if the
-    // underlying curve keys have changed since the last evaluation.
-    evaluate(time, forceReset) {
+    /**
+     * Evaluate the curve at the given time. Specify forceReset if the underlying curve keys have
+     * changed since the last evaluation.
+     *
+     * @param {number} time - Time to evaluate the curve at.
+     * @param {boolean} [forceReset=false] - Force reset of the curve.
+     * @returns {number} The evaluated value.
+     */
+    evaluate(time, forceReset = false) {
         if (forceReset || time < this._left || time >= this._right) {
             this._reset(time);
         }
@@ -45,7 +64,12 @@ class CurveEvaluator {
         return result;
     }
 
-    // Calculate weights for the curve interval at the given time
+    /**
+     * Calculate weights for the curve interval at the given time.
+     *
+     * @param {number} time - Time to evaluate the curve at.
+     * @private
+     */
     _reset(time) {
         const keys = this._curve.keys;
         const len = keys.length;
@@ -94,14 +118,25 @@ class CurveEvaluator {
         }
     }
 
-    // returns true if the curve is a hermite and false otherwise
+    /**
+     * Returns whether the curve is a hermite.
+     *
+     * @returns {boolean} True if the curve is a hermite and false otherwise.
+     * @private
+     */
     _isHermite() {
         return this._curve.type === CURVE_CATMULL ||
                this._curve.type === CURVE_CARDINAL ||
                this._curve.type === CURVE_SPLINE;
     }
 
-    // calculate tangents for the hermite curve
+    /**
+     * Calculate tangents for the hermite curve.
+     *
+     * @param {number[][]} keys - The keys of the curve.
+     * @param {number} index - The key index of the key to calculate the tangents for.
+     * @private
+     */
     _calcTangents(keys, index) {
         let a;
         const b = keys[index];
@@ -144,6 +179,17 @@ class CurveEvaluator {
         }
     }
 
+    /**
+     * Evaluate the hermite curve at the given time.
+     *
+     * @param {number} p0 - The first key.
+     * @param {number} p1 - The second key.
+     * @param {number} m0 - The first tangent.
+     * @param {number} m1 - The second tangent.
+     * @param {number} t - Time to evaluate the curve at.
+     * @returns {number} The value of the hermite curve at the given time.
+     * @private
+     */
     _evaluateHermite(p0, p1, m0, m1, t) {
         const t2 = t * t;
         const twot = t + t;

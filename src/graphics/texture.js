@@ -424,7 +424,7 @@ class Texture {
      * Toggles automatic mipmap generation. Can't be used on non power of two textures.
      *
      * @type {boolean}
-     * @private
+     * @ignore
      * @deprecated
      */
     set autoMipmap(v) {
@@ -601,7 +601,7 @@ class Texture {
      * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
      * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
      * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @private
+     * @ignore
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
         if (!_pixelSizeTable) {

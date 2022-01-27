@@ -141,7 +141,7 @@ class I18n extends EventHandler {
      * var availableLocales = { en: 'en-US', fr: 'fr-FR' };
      * var locale = pc.I18n.getText('en-US', availableLocales);
      * // returns 'en'
-     * @private
+     * @ignore
      */
     static findAvailableLocale(desiredLocale, availableLocales) {
         return findAvailableLocale(desiredLocale, availableLocales);

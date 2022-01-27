@@ -8,7 +8,7 @@ import { AnimSnapshot } from './anim-snapshot.js';
  * AnimClip wraps the running state of an animation track. It contains and update the animation
  * 'cursor' and performs looping logic.
  *
- * @private
+ * @ignore
  */
 class AnimClip {
     /**
@@ -20,7 +20,6 @@ class AnimClip {
      * @param {boolean} playing - true if the clip is playing and false otherwise.
      * @param {boolean} loop - Whether the clip should loop.
      * @param {Function} eventHandler - The handler to call when an event is fired by the clip.
-     * @private
      */
     constructor(track, time, speed, playing, loop, eventHandler) {
         this._name = track.name;        // default to track name

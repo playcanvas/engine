@@ -112,7 +112,7 @@ class PostEffectsExample {
         // setup skydome
         app.scene.setSkybox(assets['helipad.dds'].resources);
         app.scene.skyboxMip = 3;
-        app.scene.exposure = 1.6;
+        app.scene.exposure = 1;
 
         // helper function to create a 3d primitive including its material
         function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, brightness: number, allowEmissive = true) {
@@ -165,7 +165,7 @@ class PostEffectsExample {
         }
 
         // create a sphere which represents the point of focus for the bokeh filter
-        const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 2.8, false);
+        const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 1.5, false);
 
         // add an omni light as a child of this sphere
         const light = new pc.Entity();

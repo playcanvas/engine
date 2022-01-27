@@ -22,6 +22,7 @@ class AreaPickerExample {
         // setup skydome
         app.scene.skyboxMip = 2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
+        app.scene.skyboxIntensity = 0.1;
 
         // use a quarter resolution for picker render target (faster but less precise - can miss small objects)
         const pickerScale = 0.25;

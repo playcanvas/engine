@@ -19,7 +19,7 @@ import { getApplication } from './globals.js';
  * @callback createScriptCallback
  * @param {Application} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
- * @private
+ * @ignore
  */
 
 let _legacy = false;
@@ -61,7 +61,7 @@ const script = {
      *
      *     return Scriptable;
      * });
-     * @private
+     * @ignore
      */
     create: function (name, callback) {
         if (!_legacy)
@@ -132,7 +132,7 @@ const script = {
      *
      *     return Scriptable;
      * });
-     * @private
+     * @ignore
      */
     attribute: function (name, type, defaultValue, options) {
         // only works when parsing the script...

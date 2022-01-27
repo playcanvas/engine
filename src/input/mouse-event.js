@@ -6,7 +6,7 @@ import { MOUSEBUTTON_NONE } from './constants.js';
  * Returns true if pointer lock is currently enabled.
  *
  * @returns {boolean} True if pointer lock is currently enabled.
- * @private
+ * @ignore
  */
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);

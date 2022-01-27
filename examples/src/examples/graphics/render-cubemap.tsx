@@ -27,7 +27,6 @@ class RenderCubemapExample {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // setup skydome

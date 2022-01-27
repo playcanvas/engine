@@ -3,7 +3,7 @@
  * on different platforms.
  *
  * @returns {number} The time in milliseconds.
- * @private
+ * @ignore
  */
 const now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
     return window.performance.now();
@@ -12,13 +12,11 @@ const now = (typeof window !== 'undefined') && window.performance && window.perf
 /**
  * A Timer counts milliseconds from when start() is called until when stop() is called.
  *
- * @private
+ * @ignore
  */
 class Timer {
     /**
      * Create a new Timer instance.
-     *
-     * @private
      */
     constructor() {
         this._isRunning = false;
@@ -28,8 +26,6 @@ class Timer {
 
     /**
      * Start the timer.
-     *
-     * @private
      */
     start() {
         this._isRunning = true;
@@ -38,8 +34,6 @@ class Timer {
 
     /**
      * Stop the timer.
-     *
-     * @private
      */
     stop() {
         this._isRunning = false;
@@ -50,7 +44,6 @@ class Timer {
      * Get the number of milliseconds that passed between start() and stop() being called.
      *
      * @returns {number} The elapsed milliseconds.
-     * @private
      */
     getMilliseconds() {
         return this._b - this._a;

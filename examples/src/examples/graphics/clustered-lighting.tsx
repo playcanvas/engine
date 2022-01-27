@@ -89,15 +89,15 @@ class ClusteredLightingExample {
 
         // create many omni lights that do not cast shadows
         let count = 30;
-        const intensity = 1.6;
         for (let i = 0; i < count; i++) {
-            const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+            const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
             const lightPoint = new pc.Entity();
             lightPoint.addComponent("light", {
                 type: "omni",
                 color: color,
                 range: 12,
-                castShadows: false
+                castShadows: false,
+                falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
             });
 
             // attach a render component with a small sphere to each light
@@ -120,7 +120,7 @@ class ClusteredLightingExample {
         // create many spot lights
         count = 16;
         for (let i = 0; i < count; i++) {
-            const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+            const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
             const lightSpot = new pc.Entity();
             lightSpot.addComponent("light", {
                 type: "spot",
@@ -153,7 +153,7 @@ class ClusteredLightingExample {
         dirLight.addComponent("light", {
             type: "directional",
             color: pc.Color.WHITE,
-            intensity: 0.2,
+            intensity: 0.15,
             range: 300,
             shadowDistance: 600,
             castShadows: true,

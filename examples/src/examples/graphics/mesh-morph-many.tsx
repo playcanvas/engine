@@ -21,6 +21,7 @@ class MeshMorphManyExample {
 
         // setup skydome
         app.scene.skyboxMip = 2;
+        app.scene.exposure = 0.6;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size

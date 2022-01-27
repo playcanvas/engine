@@ -80,8 +80,12 @@ const standard = {
         }
 
         if (options.lights) {
+            const isClustered = options.clusteredLightingEnabled;
             for (let i = 0; i < options.lights.length; i++) {
-                key += options.lights[i].key;
+                const light = options.lights[i];
+                if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                    key += light.key;
+                }
             }
         }
 
@@ -449,7 +453,7 @@ const standard = {
             lighting = true;
         }
 
-        if (options.clusteredLightingEnabled && options.useLighting) {
+        if (options.clusteredLightingEnabled) {
             lighting = true;
         }
 
@@ -1292,6 +1296,9 @@ const standard = {
             usesCookie = true;
 
             code += chunks.floatUnpackingPS;
+
+            if (options.lightMaskDynamic)
+                code += "\n#define CLUSTER_MESH_DYNAMIC_LIGHTS";
 
             if (options.clusteredLightingCookiesEnabled)
                 code += "\n#define CLUSTER_COOKIES";

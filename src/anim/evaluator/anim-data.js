@@ -1,7 +1,7 @@
 /**
  * Wraps a set of data used in animation.
  *
- * @private
+ * @ignore
  */
 class AnimData {
     /**
@@ -11,7 +11,6 @@ class AnimData {
      * example, specify 3 for a set of 3-dimensional vectors. The number of elements in data array
      * must be a multiple of components.
      * @param {Float32Array|number[]} data - The set of data.
-     * @private
      */
     constructor(components, data) {
         this._components = components;

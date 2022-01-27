@@ -1,11 +1,13 @@
 import { Vec3 } from '../math/vec3.js';
 
+/** @typedef {import('./ray.js').Ray} Ray */
+
 const tmpVecA = new Vec3();
 
 /**
  * An infinite plane.
  *
- * @private
+ * @ignore
  */
 class Plane {
     /**
@@ -15,7 +17,6 @@ class Plane {
      * this parameter.
      * @param {Vec3} [normal] - Normal of the plane. The constructor takes a reference of this
      * parameter.
-     * @private
      */
     constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
         this.normal = normal;
@@ -30,7 +31,6 @@ class Plane {
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.
-     * @private
      */
     intersectsLine(start, end, point) {
         const d = -this.normal.dot(this.point);
@@ -52,7 +52,6 @@ class Plane {
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.
-     * @private
      */
     intersectsRay(ray, point) {
         const pointToOrigin = tmpVecA.sub2(this.point, ray.origin);

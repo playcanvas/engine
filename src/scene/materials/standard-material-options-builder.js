@@ -8,6 +8,7 @@ import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    MASK_AFFECT_DYNAMIC,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
@@ -182,10 +183,9 @@ class StandardMaterialOptionsBuilder {
         options.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
         options.skyboxIntensity = (scene.skyboxIntensity !== 1);
 
-        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.useCubeMapRotation = (!stdMat.cubeMap && stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
-
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
+
+        let usingSceneEnv = false;
 
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && !isPhong) {
@@ -200,6 +200,7 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = scene.envAtlas.encoding;
+            usingSceneEnv = true;
         } else {
             options.reflectionSource = null;
             options.reflectionEncoding = null;
@@ -219,6 +220,9 @@ class StandardMaterialOptionsBuilder {
                 options.ambientEncoding = null;
             }
         }
+
+        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
+        options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
@@ -253,7 +257,11 @@ class StandardMaterialOptionsBuilder {
 
         if (stdMat.useLighting) {
             const lightsFiltered = [];
-            const mask = objDefs ? (objDefs >> 16) : 1;
+            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+
+            // mask to select lights (dynamic vs lightmapped) when using clustered lighting
+            options.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
+
             if (sortedLights) {
                 this._collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
                 this._collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);

@@ -14,7 +14,7 @@ const _schema = ['enabled'];
  * Creates and manages {@link ZoneComponent} instances.
  *
  * @augments ComponentSystem
- * @private
+ * @ignore
  */
 class ZoneComponentSystem extends ComponentSystem {
     /**

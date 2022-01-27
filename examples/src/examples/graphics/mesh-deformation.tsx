@@ -25,7 +25,7 @@ class MeshDeformationExample {
 
         // setup skydome
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 2;
+        app.scene.exposure = 1;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Create an Entity with a camera component

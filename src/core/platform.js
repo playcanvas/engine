@@ -155,7 +155,7 @@ const platform = {
      * `EventTarget.addEventListener()` and the passive property is supported.
      *
      * @type {boolean}
-     * @private
+     * @ignore
      */
     passiveEvents: passiveEvents
 };

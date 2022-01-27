@@ -28,7 +28,7 @@ class CompoundCollisionExample {
             }
 
             // Create a couple of materials for our objects
-            const red = createMaterial(new pc.Color(1, 0.3, 0.3));
+            const red = createMaterial(new pc.Color(0.7, 0.3, 0.3));
             const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
             // Define a scene hierarchy in JSON format. This is loaded/parsed in
@@ -261,7 +261,7 @@ class CompoundCollisionExample {
                     ]
                 }, {
                     name: 'Directional Light',
-                    rot: [45, 30, 0],
+                    rot: [45, 130, 0],
                     components: [
                         {
                             type: 'light',
@@ -270,6 +270,7 @@ class CompoundCollisionExample {
                                 castShadows: true,
                                 shadowDistance: 8,
                                 shadowBias: 0.1,
+                                intensity: 1,
                                 normalOffsetBias: 0.05
                             }
                         }

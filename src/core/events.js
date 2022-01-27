@@ -9,7 +9,7 @@ const events = {
      * @example
      * var obj = { };
      * pc.events.attach(obj);
-     * @private
+     * @ignore
      */
     attach: function (target) {
         const ev = events;

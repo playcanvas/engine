@@ -177,7 +177,6 @@ export const LIGHTTYPE_DIRECTIONAL = 0;
  * Omni-directional (local) light source.
  *
  * @type {number}
- * @private
  */
 export const LIGHTTYPE_OMNI = 1;
 
@@ -185,6 +184,7 @@ export const LIGHTTYPE_OMNI = 1;
  * Point (local) light source.
  *
  * @type {number}
+ * @ignore
  */
 export const LIGHTTYPE_POINT = LIGHTTYPE_OMNI;
 
@@ -291,7 +291,7 @@ export const SHADOW_COUNT = 6;
  * map of engine SHADOW__*** to a string representation
  *
  * @type {object}
- * @private
+ * @ignore
  */
 export const shadowTypeToString = {};
 shadowTypeToString[SHADOW_PCF3] = "PCF3";
@@ -507,6 +507,7 @@ export const GAMMA_SRGB = 1;
  *
  * @type {number}
  * @deprecated
+ * @ignore
  */
 export const GAMMA_SRGBFAST = 2; // deprecated
 
@@ -617,9 +618,10 @@ export const SHADOWUPDATE_REALTIME = 2;
 export const SORTKEY_FORWARD = 0;
 export const SORTKEY_DEPTH = 1;
 
-export const MASK_DYNAMIC = 1;
-export const MASK_BAKED = 2;
-export const MASK_LIGHTMAP = 4;
+// flags used on the mask property of the Light, and also on mask property of the MeshInstance
+export const MASK_AFFECT_DYNAMIC = 1;
+export const MASK_AFFECT_LIGHTMAPPED = 2;
+export const MASK_BAKE = 4;
 
 /**
  * Render shaded materials with gamma correction and tonemapping.
@@ -762,7 +764,7 @@ export const SORTMODE_FRONT2BACK = 4;
  * Provide custom functions for sorting drawcalls and calculating distance.
  *
  * @type {number}
- * @private
+ * @ignore
  */
 export const SORTMODE_CUSTOM = 5;
 

@@ -3,7 +3,7 @@ import { CompressUtils } from './compress-utils.js';
 /**
  * Reconstruct original object field names in a compressed scene.
  *
- * @private
+ * @ignore
  */
 class Decompress {
     /**
@@ -12,7 +12,6 @@ class Decompress {
      * @param {object} node - The current node of the object being decompressed, initially the
      * 'entities' field of a scene.
      * @param {object} data - Compression metadata.
-     * @private
      */
     constructor(node, data) {
         this._node = node;

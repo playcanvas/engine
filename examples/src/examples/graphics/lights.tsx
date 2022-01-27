@@ -88,7 +88,7 @@ class LightsExample {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // create an entity with the statue
         const entity = assets.statue.resource.instantiateRenderEntity();
@@ -124,17 +124,17 @@ class LightsExample {
         data.set('lights', {
             spot: {
                 enabled: true,
-                intensity: 0.6,
+                intensity: 0.8,
                 cookieIntensity: 1
             },
             omni: {
                 enabled: true,
-                intensity: 0.6,
+                intensity: 0.8,
                 cookieIntensity: 1
             },
             directional: {
                 enabled: true,
-                intensity: 0.6
+                intensity: 0.8
             }
         });
 

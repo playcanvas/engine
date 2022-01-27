@@ -1,5 +1,6 @@
 import { Debug } from "../core/debug.js";
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8 } from "./constants.js";
+import { DebugGraphics } from "./debug-graphics.js";
 import { RenderTarget } from "./render-target.js";
 import { Texture } from "./texture.js";
 
@@ -77,7 +78,7 @@ class GrabPass {
         const width = device.width;
         const height = device.height;
 
-        Debug.pushGpuMarker(device, "grabPass");
+        DebugGraphics.pushGpuMarker(device, "grabPass");
 
         if (device.webgl2 && !device._tempMacChromeBlitFramebufferWorkaround && width === texture._width && height === texture._height) {
             if (resolveRenderTarget) {
@@ -121,7 +122,7 @@ class GrabPass {
             }
         }
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
 
         return true;
     }

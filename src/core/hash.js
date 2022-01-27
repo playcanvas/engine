@@ -3,7 +3,7 @@
  *
  * @param {string} str - String.
  * @returns {number} Hash value.
- * @private
+ * @ignore
  */
 function hashCode(str) {
     let hash = 0;

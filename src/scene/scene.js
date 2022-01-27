@@ -9,7 +9,7 @@ import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, GAMMA_SRGB, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
@@ -171,7 +171,7 @@ class Scene extends EventHandler {
 
         this._fog = FOG_NONE;
 
-        this._gammaCorrection = GAMMA_NONE;
+        this._gammaCorrection = GAMMA_SRGB;
         this._toneMapping = 0;
 
         /**
@@ -312,6 +312,7 @@ class Scene extends EventHandler {
 
     /**
      * List of all active composition mesh instances. Only for backwards compatibility.
+     * TODO: BatchManager is using it - perhaps that could be refactored
      *
      * @type {MeshInstance[]}
      * @private
@@ -322,7 +323,7 @@ class Scene extends EventHandler {
     get drawCalls() {
         let drawCalls = this.layers._meshInstances;
         if (!drawCalls.length) {
-            this.layers._update();
+            this.layers._update(this.device, this.clusteredLightingEnabled);
             drawCalls = this.layers._meshInstances;
         }
         return drawCalls;
@@ -373,7 +374,7 @@ class Scene extends EventHandler {
      * - {@link GAMMA_NONE}
      * - {@link GAMMA_SRGB}
      *
-     * Defaults to {@link GAMMA_NONE}.
+     * Defaults to {@link GAMMA_SRGB}.
      *
      * @type {number}
      */

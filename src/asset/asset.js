@@ -11,6 +11,7 @@ import { getApplication } from '../framework/globals.js';
 import { http } from '../net/http.js';
 
 /** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../resources/loader.js').resourceLoaderCallback} resourceLoaderCallback */
 
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
@@ -393,7 +394,7 @@ class Asset extends EventHandler {
      *
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url.
      * @returns {string} Resulting URL of the asset.
-     * @private
+     * @ignore
      */
     getAbsoluteUrl(relativePath) {
         if (relativePath.startsWith('blob:') || relativePath.startsWith('data:')) {
@@ -409,7 +410,7 @@ class Asset extends EventHandler {
      *
      * @param {string} locale - The desired locale e.g. Ar-AR.
      * @returns {number} An asset id or null if there is no asset specified for the desired locale.
-     * @private
+     * @ignore
      */
     getLocalizedAssetId(locale) {
         // tries to find either the desired locale or a fallback locale
@@ -424,7 +425,7 @@ class Asset extends EventHandler {
      *
      * @param {string} locale - The locale e.g. Ar-AR.
      * @param {number} assetId - The asset id.
-     * @private
+     * @ignore
      */
     addLocalizedAssetId(locale, assetId) {
         this._i18n[locale] = assetId;
@@ -435,7 +436,7 @@ class Asset extends EventHandler {
      * Removes a localized asset.
      *
      * @param {string} locale - The locale e.g. Ar-AR.
-     * @private
+     * @ignore
      */
     removeLocalizedAssetId(locale) {
         const assetId = this._i18n[locale];
@@ -523,7 +524,7 @@ class Asset extends EventHandler {
      * @param {resourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
-     * @private
+     * @ignore
      */
     static fetchArrayBuffer(loadUrl, callback, asset, maxRetries = 0) {
         if (asset?.file?.contents) {

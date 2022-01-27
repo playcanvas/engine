@@ -28,7 +28,7 @@ class EventsExample {
         // setup skydome
         app.scene.skyboxMip = 2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
-
+        app.scene.skyboxIntensity = 0.4;    // make it darker
 
         // Create an Entity with a camera component
         const cameraEntity = new pc.Entity();

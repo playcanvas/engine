@@ -21,7 +21,7 @@ class LinesExample {
 
         // setup skydome
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 1.0;
+        app.scene.exposure = 0.2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
         app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 30, 0);
 

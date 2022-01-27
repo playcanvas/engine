@@ -23,7 +23,6 @@ class LightsExample {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.skyboxMip = 1;

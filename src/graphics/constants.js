@@ -1097,7 +1097,7 @@ export const typedArrayIndexFormatsByteSize = [1, 2, 4];
  * overlap with common important semantics.
  *
  * @type {object}
- * @private
+ * @ignore
  */
 export const semanticToLocation = {};
 

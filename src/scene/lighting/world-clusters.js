@@ -2,7 +2,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { math } from '../../math/math.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 import { PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
-import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
+import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
 
@@ -195,7 +195,7 @@ class WorldClusters {
             this._clusterTextureSizeData[2] = 1.0 / height;
 
             this.releaseClusterTexture();
-            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8);
+            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8, "ClusterTexture");
         }
     }
 
@@ -276,7 +276,8 @@ class WorldClusters {
 
             // use enabled and visible lights
             const light = lights[i];
-            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0) {
+            const runtimeLight = !!(light.mask & (MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED));
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight) {
 
                 // within light limit
                 if (lightIndex < maxLights) {

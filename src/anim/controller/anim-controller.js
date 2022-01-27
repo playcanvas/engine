@@ -19,7 +19,7 @@ import {
  * current time, parameters and available states / transitions. It also ensures the AnimEvaluator
  * is supplied with the correct animations, based on the currently active state.
  *
- * @private
+ * @ignore
  */
 class AnimController {
     /**
@@ -38,7 +38,6 @@ class AnimController {
      * events.
      * @param {Set} consumedTriggers - Used to set triggers back to their default state after they
      * have been consumed by a transition.
-     * @private
      */
     constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
         this._animEvaluator = animEvaluator;

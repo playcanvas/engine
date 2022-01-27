@@ -13,6 +13,7 @@ import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 
@@ -449,7 +450,7 @@ function reprojectTexture(source, target, options = {}) {
         );
     }
 
-    Debug.pushGpuMarker(device, "ReprojectTexture");
+    DebugGraphics.pushGpuMarker(device, "ReprojectTexture");
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
     constantSource.setValue(source);
@@ -516,7 +517,7 @@ function reprojectTexture(source, target, options = {}) {
         }
     }
 
-    Debug.popGpuMarker(device);
+    DebugGraphics.popGpuMarker(device);
 }
 
 export { reprojectTexture };

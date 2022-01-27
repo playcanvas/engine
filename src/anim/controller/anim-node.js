@@ -5,7 +5,7 @@ import { Vec2 } from '../../math/vec2.js';
  * contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will
  * control the weight (contribution to the states final animation) of its child AnimNodes.
  *
- * @private
+ * @ignore
  */
 class AnimNode {
     /**
@@ -19,7 +19,6 @@ class AnimNode {
      * @param {number[]|Vec2} point - The coordinate/vector thats used to determine the weight of
      * this node when it's part of a {@link BlendTree}.
      * @param {number} [speed] - The speed that its {@link AnimTrack} should play at. Defaults to 1.
-     * @private
      */
     constructor(state, parent, name, point, speed = 1) {
         this._state = state;

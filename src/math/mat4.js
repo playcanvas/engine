@@ -534,7 +534,7 @@ class Mat4 {
      * @example
      * // Create a 4x4 perspective projection matrix
      * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
-     * @private
+     * @ignore
      */
     setFrustum(left, right, bottom, top, znear, zfar) {
         const temp1 = 2 * znear;
@@ -682,7 +682,7 @@ class Mat4 {
      * @example
      * // Create a 4x4 translation matrix
      * var tm = new pc.Mat4().setTranslate(10, 10, 10);
-     * @private
+     * @ignore
      */
     setTranslate(x, y, z) {
         const m = this.data;
@@ -717,7 +717,7 @@ class Mat4 {
      * @example
      * // Create a 4x4 scale matrix
      * var sm = new pc.Mat4().setScale(10, 10, 10);
-     * @private
+     * @ignore
      */
     setScale(x, y, z) {
         const m = this.data;
@@ -755,7 +755,7 @@ class Mat4 {
      * @example
      * // Create a 4x4 viewport matrix which scales normalized view volume to full texture viewport
      * var vm = new pc.Mat4().setViewport(0, 0, 1, 1);
-     * @private
+     * @ignore
      */
     setViewport(x, y, width, height) {
         const m = this.data;

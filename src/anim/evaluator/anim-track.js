@@ -6,7 +6,7 @@ import { AnimEvents } from './anim-events.js';
 /**
  * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
  *
- * @private
+ * @ignore
  */
 class AnimTrack {
     /**
@@ -18,7 +18,6 @@ class AnimTrack {
      * @param {AnimData[]} outputs - List of curve value data.
      * @param {AnimCurve[]} curves - The list of curves.
      * @param {AnimEvents} animEvents - A sequence of animation events.
-     * @private
      */
     constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
