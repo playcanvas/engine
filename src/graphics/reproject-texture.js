@@ -286,7 +286,7 @@ const packSamplesTex = (device, name, samples) => {
 
     const w = Math.min(numSamples, 512);
     const h = Math.ceil(numSamples / w);
-    const data = new Uint8ClampedArray(w * h * 4);
+    const data = new Uint8Array(w * h * 4);
 
     // normalize float data and pack into rgba8
     let off = 0;
