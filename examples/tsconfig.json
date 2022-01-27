@@ -2,7 +2,7 @@
     "compilerOptions": {
         "outDir": "./dist/",
         "noImplicitAny": true,
-        "module": "commonjs",
+        "module": "ES2015",
         "target": "es5",
         "allowJs": true,
         "jsx": "react",

@@ -64,9 +64,9 @@ const MainLayout = () => {
                                     languageButtonRef={languageButtonRef}
                                     useTypeScript={useTypeScript}
                                     files={files}
-                                    setFiles={setFiles.bind(this)}
+                                    setFiles={setFiles}
                                 />
-                                <Example files={files} setFiles={setFiles.bind(this)} useTypeScript={useTypeScript} />
+                                <Example files={files} setFiles={setFiles} useTypeScript={useTypeScript} />
                             </Container>
                         </Container>
                     </Route>

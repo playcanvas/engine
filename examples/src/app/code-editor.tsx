@@ -6,7 +6,8 @@ import Panel from '@playcanvas/pcui/Panel/component';
 import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import Button from '@playcanvas/pcui/Button/component';
-import playcanvasTypeDefs from './helpers/playcanvas-type-defs';
+// @ts-ignore: library file import
+import playcanvasTypeDefs from '../../dist/build/playcanvas.d.ts';
 import { File } from './helpers/types';
 import formatters from './helpers/formatters.mjs';
 

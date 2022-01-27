@@ -1,9 +1,10 @@
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
-import typescript from 'rollup-plugin-typescript';
+import typescript from 'rollup-plugin-typescript2';
 import copy from 'rollup-plugin-copy';
 import { terser } from 'rollup-plugin-terser';
+import { string } from 'rollup-plugin-string';
 
 export default {
     input: 'src/app/index.tsx',
@@ -12,6 +13,9 @@ export default {
         format: 'es'
     },
     plugins: [
+        string({
+            include: '**/*.d.ts'
+        }),
         copy({
             targets: [
                 { src: 'src/static/*', dest: 'dist/' },
@@ -25,6 +29,7 @@ export default {
         resolve(),
         typescript(),
         replace({
+            defaultAssignMent: true,
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
         }),
         (process.env.NODE_ENV === 'production' && terser())

@@ -31,7 +31,7 @@ class ClusteredLightingExample {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clustered lighting parameters to handle many lights:
+        // @ts-ignore adjust default clustered lighting parameters to handle many lights:
         const lighting = app.scene.lighting;
 
         // 1) subdivide space with lights into this many cells:

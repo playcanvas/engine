@@ -10,7 +10,6 @@ const paths = {};
 
 Object.keys(exampleData).forEach((categorySlug) => {
     const category = categorySlug.split('-').map(a => capitalizeFirstLetter(a)).join('');
-    console.log(category, exampleClasses);
     const exampleClassesForCategory = exampleClasses[category];
     if (!exampleClassesForCategory) {
         return;

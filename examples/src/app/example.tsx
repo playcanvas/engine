@@ -87,7 +87,7 @@ class Example extends Component <ExampleProps, ExampleState> {
     }
 
     get defaultFiles() {
-        return examples.paths[this.path].files;
+        return (examples as any).paths[this.path].files;
     }
 
     get path() {
