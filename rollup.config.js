@@ -143,13 +143,25 @@ const stripOptions = {
 
 const target_release_es5 = {
     input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
+    output: [
+        {
+            banner: getBanner(''),
+            file: 'build/playcanvas.js',
+            format: 'umd',
+            indent: '\t',
+            name: 'pc'
+        },
+        {
+            banner: getBanner(''),
+            file: 'build/playcanvas.min.js',
+            format: 'umd',
+            indent: '\t',
+            name: 'pc',
+            plugins: [
+                terser()
+            ]
+        }
+    ],
     plugins: [
         jscc({
             values: {}
@@ -168,39 +180,12 @@ const target_release_es5 = {
     ]
 };
 
-const target_release_es5min = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.min.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        strip(stripOptions),
-        babel(es5Options),
-        terser()
-    ]
-};
-
 if (process.env.treemap) {
     const visualizerPlugin = visualizer({
         brotliSize: true,
         gzipSize: true
     });
-    target_release_es5min.plugins.push(visualizerPlugin);
+    target_release_es5.output[1].plugins.push(visualizerPlugin);
 }
 
 const target_release_es6 = {
@@ -312,7 +297,6 @@ const target_extras = [
 
 let targets = [
     target_release_es5,
-    target_release_es5min,
     target_release_es6,
     target_debug,
     target_profiler
@@ -322,7 +306,6 @@ let targets = [
 if (process.env.target) {
     switch (process.env.target.toLowerCase()) {
         case "es5":      targets = [target_release_es5]; break;
-        case "es5min":   targets = [target_release_es5min]; break;
         case "es6":      targets = [target_release_es6]; break;
         case "debug":    targets = [target_debug]; break;
         case "profiler": targets = [target_profiler]; break;
