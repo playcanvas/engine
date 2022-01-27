@@ -374,7 +374,7 @@ class Scene extends EventHandler {
      * - {@link GAMMA_NONE}
      * - {@link GAMMA_SRGB}
      *
-     * Defaults to {@link GAMMA_NONE}.
+     * Defaults to {@link GAMMA_SRGB}.
      *
      * @type {number}
      */
