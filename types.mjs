@@ -10,7 +10,7 @@ const paths = [
 ];
 
 paths.forEach(path => {
-    let dts = (fs.readFileSync(path, 'utf8')).toString();
+    let dts = fs.readFileSync(path, 'utf8');
     dts = dts.replace(regex, 'typeof ScriptType');
     fs.writeFileSync(path, dts);
 });
@@ -18,6 +18,6 @@ paths.forEach(path => {
 // Fix up description parameter for VertexFormat constructor because tsc
 // doesn't recognize it as an array
 const path = './types/graphics/vertex-format.d.ts';
-let dts = (fs.readFileSync(path, 'utf8')).toString();
+let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
