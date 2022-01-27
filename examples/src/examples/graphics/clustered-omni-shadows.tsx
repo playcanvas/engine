@@ -63,6 +63,9 @@ class ClusteredShadowsOmniExample extends Example {
         const app = new pc.Application(canvas, {});
         app.start();
 
+        // set up some general scene rendering properties
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
         data.set('settings', {
             shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
             shadowType: pc.SHADOW_PCF3,      // shadow filter type
@@ -178,7 +181,7 @@ class ClusteredShadowsOmniExample extends Example {
             lightOmni.addComponent("light", {
                 type: "omni",
                 color: pc.Color.WHITE,
-                intensity: 13 / numLights,
+                intensity: 10 / numLights,
                 range: 350,
                 castShadows: true,
                 shadowBias: 0.2,

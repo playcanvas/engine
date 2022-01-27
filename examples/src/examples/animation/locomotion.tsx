@@ -56,7 +56,6 @@ class LocomotionExample extends Example {
             app.scene.skyboxMip = 2;
             app.scene.skyboxIntensity = 0.7;
             app.scene.setSkybox(assets.cubemap.resources);
-            app.scene.gammaCorrection = pc.GAMMA_SRGB;
             app.scene.toneMapping = pc.TONEMAP_ACES;
 
             // Create an Entity with a camera component

@@ -39,7 +39,6 @@ class TextureBasisExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // Set skybox
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxMip = 1;
         app.scene.skyboxIntensity = 0.7;

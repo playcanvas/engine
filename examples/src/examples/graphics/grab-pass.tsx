@@ -100,7 +100,6 @@ class GrabPassExample extends Example {
         app.scene.exposure = 2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // Render meshes to immediate layer, which renders after skybox - to include skybox in the refraction.
