@@ -1,6 +1,5 @@
 /**
  * Wraps a set of data used in animation.
- *
  */
 class AnimData {
     /**
@@ -17,7 +16,7 @@ class AnimData {
     }
 
     /**
-     * The number of components that make up an element.
+     * Gets the number of components that make up an element.
      *
      * @type {number}
      */
@@ -26,7 +25,7 @@ class AnimData {
     }
 
     /**
-     * The data.
+     * Gets the data.
      *
      * @type {Float32Array|number[]}
      */

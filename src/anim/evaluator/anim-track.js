@@ -5,7 +5,6 @@ import { AnimEvents } from './anim-events.js';
 
 /**
  * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
- *
  */
 class AnimTrack {
     /**
@@ -28,7 +27,7 @@ class AnimTrack {
     }
 
     /**
-     * Returns the name of the AnimTrack.
+     * Gets the name of the AnimTrack.
      *
      * @type {string}
      */
@@ -37,7 +36,7 @@ class AnimTrack {
     }
 
     /**
-     * Returns the duration of the AnimTrack.
+     * Gets the duration of the AnimTrack.
      *
      * @type {string}
      */
@@ -46,7 +45,7 @@ class AnimTrack {
     }
 
     /**
-     * Returns the list of curve key data contained in the AnimTrack.
+     * Gets the list of curve key data contained in the AnimTrack.
      *
      * @type {AnimData[]}
      */
@@ -55,7 +54,7 @@ class AnimTrack {
     }
 
     /**
-     * Returns the list of curve values contained in the AnimTrack.
+     * Gets the list of curve values contained in the AnimTrack.
      *
      * @type {AnimData[]}
      */
@@ -64,7 +63,7 @@ class AnimTrack {
     }
 
     /**
-     * Returns the list of curves contained in the AnimTrack.
+     * Gets the list of curves contained in the AnimTrack.
      *
      * @type {AnimCurve[]}
      */
@@ -74,7 +73,7 @@ class AnimTrack {
 
 
     /**
-     * Returns the animation events that will fire during the playback of this anim track.
+     * The animation events that will fire during the playback of this anim track.
      *
      * @type {AnimEvents}
      */
