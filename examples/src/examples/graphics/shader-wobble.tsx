@@ -101,14 +101,15 @@ class ShaderWobbleExample {
         app.root.addChild(entity);
 
         // Set the new material on all meshes in the model, and use original texture from the model on the new material
-        let originalTexture:pc.Texture = null;
+        let originalTexture: pc.Texture = null;
         const renders: Array<pc.RenderComponent> = entity.findComponents("render");
         renders.forEach((render) => {
             const meshInstances = render.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
                 const meshInstance = meshInstances[i];
-                // @ts-ignore
-                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                if (!originalTexture) {
+                    originalTexture = meshInstance.material.diffuseMap;
+                }
                 meshInstance.material = material;
             }
         });

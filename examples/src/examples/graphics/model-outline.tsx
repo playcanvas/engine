@@ -65,7 +65,6 @@ class ModelOutlineExample {
         app.scene.layers.insert(outlineLayer, 0);
 
         // set up layer to render to the render target
-        // @ts-ignore engine-tsd
         outlineLayer.renderTarget = renderTarget;
 
         // get world layer
@@ -136,7 +135,6 @@ class ModelOutlineExample {
                 colorBuffer: texture,
                 depth: true
             });
-            // @ts-ignore engine-tsd
             outlineLayer.renderTarget = renderTarget;
 
             app.scene.layers.insert(outlineLayer, 0);

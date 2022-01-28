@@ -108,14 +108,13 @@ class AreaPickerExample {
         }
 
         // sets material emissive color to specified color
-        function highlightMaterial(material: pc.Material, color: pc.Color) {
-            // @ts-ignore engine-tsd
+        function highlightMaterial(material: pc.StandardMaterial, color: pc.Color) {
             material.emissive = color;
             material.update();
         }
 
         // array of highlighted materials
-        const highlights: any = [];
+        const highlights: pc.StandardMaterial[] = [];
 
         // update each frame
         let time = 0;

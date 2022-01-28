@@ -69,7 +69,6 @@ class RenderToTextureExample {
         const renderTarget = new pc.RenderTarget({
             colorBuffer: texture,
             depth: true,
-            // @ts-ignore
             flipY: true,
             samples: 2
         });
@@ -135,9 +134,9 @@ class RenderToTextureExample {
         tv.setLocalEulerAngles(90, 0, 0);
         tv.render.castShadows = false;
         tv.render.receiveShadows = false;
-        // @ts-ignore engine-tsd
-        tv.render.material.emissiveMap = texture;     // assign the rendered texture as an emissive texture
-        tv.render.material.update();
+        const material = tv.render.material as pc.StandardMaterial;
+        material.emissiveMap = texture;     // assign the rendered texture as an emissive texture
+        material.update();
 
         // setup skydome, use top mipmap level of cubemap (full resolution)
         app.scene.skyboxMip = 0;

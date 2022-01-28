@@ -66,12 +66,10 @@ class TweenExample {
             sphere.addComponent("render", {
                 type: "sphere"
             });
-            // @ts-ignore engine-tsd
-            sphere.render.material.diffuse.set(1, 0, 0);
-            // @ts-ignore engine-tsd
-            sphere.render.material.specular.set(0.6, 0.6, 0.6);
-            // @ts-ignore engine-tsd
-            sphere.render.material.shininess = 20;
+            const material = sphere.render.material as pc.StandardMaterial;
+            material.diffuse.set(1, 0, 0);
+            material.specular.set(0.6, 0.6, 0.6);
+            material.shininess = 20;
 
             sphere.addComponent("script");
             sphere.script.create("tween", {

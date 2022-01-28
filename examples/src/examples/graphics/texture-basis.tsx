@@ -25,7 +25,6 @@ class TextureBasisExample {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        // @ts-ignore engine-tsd
         pc.basisInitialize({
             glueUrl: 'static/lib/basis/basis.wasm.js',
             wasmUrl: 'static/lib/basis/basis.wasm.wasm',
