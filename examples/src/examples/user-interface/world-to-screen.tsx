@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class WorldScreenExample extends Example {
+
+class WorldToScreenExample {
     static CATEGORY = 'User Interface';
     static NAME = 'World to Screen';
 
@@ -195,4 +195,4 @@ class WorldScreenExample extends Example {
     }
 }
 
-export default WorldScreenExample;
+export default WorldToScreenExample;

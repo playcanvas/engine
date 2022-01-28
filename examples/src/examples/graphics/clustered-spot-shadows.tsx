@@ -1,7 +1,7 @@
 import React from 'react';
 // @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -22,7 +22,7 @@ import Button from '@playcanvas/pcui/Button/component';
 // @ts-ignore: library file import
 import Label from '@playcanvas/pcui/Label/component';
 
-class ClusteredSpotShadowsExample extends Example {
+class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Spot Shadows';
     static ENGINE = 'DEBUG';

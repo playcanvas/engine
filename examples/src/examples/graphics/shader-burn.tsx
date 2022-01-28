@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 attribute vec3 aPosition;
@@ -42,7 +42,7 @@ void main(void)
 }
 `;
 
-class ShaderBurnExample extends Example {
+class ShaderBurnExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Burn';
 

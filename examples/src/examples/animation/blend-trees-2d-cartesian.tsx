@@ -1,11 +1,11 @@
-import React, { useEffect, createRef } from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import React, { useEffect } from 'react';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class BlendTrees2DCartesianExample extends Example {
+class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
 
@@ -21,14 +21,13 @@ class BlendTrees2DCartesianExample extends Example {
         </>;
     }
 
-    controls(data: Observer) {
-        const canvasRef = createRef();
+    controls() {
         useEffect(() => {
-            if (!(window as any).pc.app) return;
-            if (!(window as any).controlPanel) return;
-            const canvas: any = canvasRef.current;
             // @ts-ignore engine-tsd
-            const modelEntity: pc.Entity = (window as any).pc.app.root.findByName('model');
+            if (!document.getElementById('exampleIframe').contentWindow.pc) return;
+            const canvas : any = document.getElementById('2d-blend-control');
+            // @ts-ignore engine-tsd
+            const modelEntity: pc.Entity = document.getElementById('exampleIframe').contentWindow.pc.app.root.findByName('model');
             const width = (window as any).controlPanel.offsetWidth;
             const height = width;
             const halfWidth = Math.floor(width / 2);
@@ -101,7 +100,7 @@ class BlendTrees2DCartesianExample extends Example {
             canvas.addEventListener('touchstart', mouseEvent);
         });
         return <>
-            <canvas id='2d-blend-control' ref={canvasRef as React.RefObject<HTMLCanvasElement>} />
+            <canvas id='2d-blend-control' />
         </>;
     }
 

@@ -8,12 +8,13 @@
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../../build/playcanvas-observer.js"></script>
     <script src="../../build/wasm-loader.js"></script>
+    <link rel="stylesheet" href="/styles.css">
     <style>
         body {
             margin: 0;
             overflow-y: hidden;
         }
-        #app-canvas {
+        #application-canvas {
             width: 100%;
             height: 100%;
         }
@@ -21,7 +22,11 @@
 </head>
 
 <body>
-    <canvas id='app-canvas'></canvas>
+    <div id="app">
+        <div id="appInner">
+            <canvas id='application-canvas'></canvas>
+        </div>
+    </div>
     <script>
         {{{ exampleConstValues }}}.forEach(function(s) {
             window[s.k] = s.v;
@@ -29,6 +34,8 @@
 
         function loadExample(exampleFunction, loadFunction, controlsFunction) {
             var data = new observer.Observer({});
+            window.top.observerData = data;
+            window.top.pc = pc;
 
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(document.body),
@@ -41,7 +48,17 @@
                 }
             });
 
-            new pcx.MiniStats(app);
+            var miniStats = new pcx.MiniStats(app);
+
+            var queryString = window.location.search;
+            var urlParams = new URLSearchParams(queryString);
+            if (urlParams.get('miniStats') === 'false') {
+                miniStats.enabled = false;
+            }
+
+            app.on('update', function () {
+                if (window.top._showMiniStats !== undefined) miniStats.enabled = window.top._showMiniStats;
+            });
 
             var assets;
             if (!loadFunction) {
@@ -69,6 +86,8 @@
                 }
                 if (count <= 0) {
                     exampleFunction(app, canvas, manifest, data);
+                    var event = new CustomEvent("exampleLoad");
+                    window.top.dispatchEvent(event);
                 }
             }
 
@@ -79,7 +98,7 @@
             assets.forEach(function (resource) {
                 if (!resource.type) {
                     fetch(resource.url)
-                        .then(function(response) { response.text() })
+                        .then(function(response) { return response.text() })
                         .then(function(data) {
                             var module = {
                                 exports: {}
@@ -116,9 +135,22 @@
             });
         }
 
-        var canvas = document.getElementById('app-canvas');
+        var canvas = document.getElementById('application-canvas');
+        var canvasContainerElement = canvas.parentElement;
         canvas.setAttribute('width', window.innerWidth + 'px');
         canvas.setAttribute('height', window.innerHeight + 'px');
+        var resizeTimeout = null;
+        if (ResizeObserver) {
+            new ResizeObserver(function() {
+                if (resizeTimeout) {
+                    window.clearTimeout(resizeTimeout);
+                }
+                resizeTimeout = setTimeout(function () {
+                    pc.app.resizeCanvas(canvasContainerElement.offsetWidth, canvasContainerElement.offsetHeight);
+                    canvas.width = canvasContainerElement.clientWidth;
+                });
+            }).observe(canvasContainerElement);
+        }
 
         {{{ exampleClass }}}
 
@@ -128,8 +160,16 @@
             fallbackUrl: '../../static/lib/basis/basis.js'
         });
 
+
         var e = new Example();
-        loadExample.bind(this)(e.example, e.load, e.controls);
+
+        var exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
+        if (!exampleFunction) {
+            exampleFunction = e.example
+        } else {
+            exampleFunction = new Function('app', 'canvas', 'assets', 'data', exampleFunction);
+        }
+        loadExample.bind(this)(exampleFunction, e.load, e.controls);
     </script>
 </body>
 

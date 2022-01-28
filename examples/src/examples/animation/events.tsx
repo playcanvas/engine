@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class EventsExample extends Example {
+
+class EventsExample {
     static CATEGORY = 'Animation';
     static NAME = 'Events';
 

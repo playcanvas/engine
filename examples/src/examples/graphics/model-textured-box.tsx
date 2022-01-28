@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class ModelTexturedBoxExample extends Example {
+
+class ModelTexturedBoxExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Textured Box';
 
