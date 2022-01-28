@@ -137,7 +137,6 @@ class MeshMorphManyExample {
 
         // add morph instance - this is where currently set weights are stored
         const morphInstance = new pc.MorphInstance(mesh.morph);
-        // @ts-ignore engine-tsd
         meshInstance.morphInstance = morphInstance;
 
         // Create Entity and add it to the scene

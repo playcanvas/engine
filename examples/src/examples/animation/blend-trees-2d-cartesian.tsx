@@ -79,12 +79,10 @@ class BlendTrees2DCartesianExample {
             const mouseEvent = (e: any) => {
                 if (e.targetTouches) {
                     const offset = canvas.getBoundingClientRect();
-                    // @ts-ignore engine-tsd
-                    position = new pc.Vec2(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                    position = new pc.Vec2(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
                 } else {
                     if (e.buttons) {
-                        // @ts-ignore engine-tsd
-                        position = new pc.Vec2(e.offsetX, e.offsetY).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                        position = new pc.Vec2(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
                     } else {
                         return;
                     }

@@ -79,7 +79,6 @@ class MeshMorphExample {
 
         const createMorphInstance = function (x: number | pc.Vec3, y: number, z: number) {
             // create the base mesh - a sphere, with higher amount of vertices / triangles
-            // @ts-ignore engine-tsd
             const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
             // obtain base mesh vertex / index data
@@ -103,7 +102,6 @@ class MeshMorphExample {
 
             // add morph instance - this is where currently set weights are stored
             const morphInstance = new pc.MorphInstance(mesh.morph);
-            // @ts-ignore engine-tsd
             meshInstance.morphInstance = morphInstance;
 
             // Create Entity and add it to the scene

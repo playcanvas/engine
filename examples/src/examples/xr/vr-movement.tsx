@@ -185,8 +185,7 @@ class VrMovementExample {
                             tmpVec2A.x = t;
 
                             // set movement speed
-                            // @ts-ignore engine-tsd
-                            tmpVec2A.scale(movementSpeed * dt);
+                            tmpVec2A.mulScalar(movementSpeed * dt);
                             // move camera parent based on calculated movement vector
                             cameraParent.translate(tmpVec2A.x, 0, tmpVec2A.y);
                         }
@@ -213,8 +212,7 @@ class VrMovementExample {
                             tmpVec3A.copy(c.getLocalPosition());
                             cameraParent.translateLocal(tmpVec3A);
                             cameraParent.rotateLocal(0, Math.sign(rotate) * rotateSpeed, 0);
-                            // @ts-ignore engine-tsd
-                            cameraParent.translateLocal(tmpVec3A.scale(-1));
+                            cameraParent.translateLocal(tmpVec3A.mulScalar(-1));
                         }
                     }
                 }
@@ -227,8 +225,7 @@ class VrMovementExample {
                     // render controller ray
                     tmpVec3A.copy(inputSource.getOrigin());
                     tmpVec3B.copy(inputSource.getDirection());
-                    // @ts-ignore engine-tsd
-                    tmpVec3B.scale(100).add(tmpVec3A);
+                    tmpVec3B.mulScalar(100).add(tmpVec3A);
                     app.drawLine(tmpVec3A, tmpVec3B, lineColor);
 
                     // render controller

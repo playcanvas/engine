@@ -77,7 +77,6 @@ class EventsExample {
             const j = Math.floor(pos.z + 0.5);
             const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
             colorVec.mulScalar(1 / colorVec.length());
-            // @ts-ignore engine-tsd
             boxes[`${i}${j}`].model.material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
             highlightedBoxes.push(boxes[`${i}${j}`]);
         };
@@ -104,7 +103,7 @@ class EventsExample {
         });
 
         const walkTrack = assets.walkAnim.resource.animations[0].resource;
-        // @ts-ignore engine-tsd
+
         // Add two anim events to the walk animation, one for each foot step. These events should occur just as each foot touches the ground
         walkTrack.events = new pc.AnimEvents([
             {
@@ -130,7 +129,6 @@ class EventsExample {
         app.on('update', (dt) => {
             // on update, iterate over any currently highlighted boxes and reduce their emissive property
             highlightedBoxes.forEach((box: pc.Entity) => {
-                // @ts-ignore engine-tsd
                 const emissive = box.model.material.emissive;
                 emissive.lerp(emissive, pc.Color.BLACK, 0.08);
                 box.model.material.update();
