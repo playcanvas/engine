@@ -16,6 +16,8 @@ class ShapesExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
         // All render component primitive shape types
         const shapes = ["box", "plane", "cone", "cylinder", "sphere", "capsule"];
         let x = -1, y = -1;

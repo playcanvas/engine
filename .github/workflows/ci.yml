@@ -37,8 +37,8 @@ jobs:
     - name: Run ESLint
       run: npm run lint
 
-  typescript-definitions:
-    name: Typescript Definitions
+  typescript-declarations:
+    name: TypeScript Declarations
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -49,10 +49,10 @@ jobs:
         node-version: 12.x
     - name: Install dependencies
       run: npm ci
-    - name: Build Typescript definitions
-      run: npm run tsd
-    - name: Compile Typescript definitions
-      run: npm run tsd:compile
+    - name: Build TypeScript declarations
+      run: npm run build:types
+    - name: Compile TypeScript declarations
+      run: npm run test:types
 
   unit-test-node:
     name: Unit Test (Node)
@@ -67,7 +67,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Run unit tests
-      run: npm run test
+      run: npm test
 
   unit-test-karma:
     name: Unit Test (Karma)
