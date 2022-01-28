@@ -12,7 +12,7 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
-import { Debug } from "../../core/debug";
+import { Debug } from "../../core/debug.js";
 import { DefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
