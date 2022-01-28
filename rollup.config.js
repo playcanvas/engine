@@ -36,7 +36,7 @@ function spacesToTabs() {
             if (!filter(id)) return;
             return {
                 code: code.replace(/ {2}/g, '\t'),
-                map: { mappings: '' }
+                map: null
             };
         }
     };
@@ -83,7 +83,7 @@ function shaderChunks(removeComments) {
             });
 
             return {
-                code: code,
+                code,
                 map: null
             };
         }
