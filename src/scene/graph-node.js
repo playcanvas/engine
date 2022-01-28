@@ -1,4 +1,3 @@
-import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
 
@@ -1297,7 +1296,6 @@ class GraphNode extends EventHandler {
     removeChild(child) {
         const index = this._children.indexOf(child);
         if (index === -1) {
-            Debug.warn(`GraphNode#removeChild: '${child.name}' is not a child of '${this.name}'`);
             return;
         }
 
