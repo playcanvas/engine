@@ -140,34 +140,15 @@ class Progress {
 let app = null;
 
 /**
- * An Application represents and manages your PlayCanvas application. If you are developing using
- * the PlayCanvas Editor, the Application is created for you. You can access your Application
- * instance in your scripts. Below is a skeleton script which shows how you can access the
- * application 'app' property inside the initialize and update functions:
- *
- * ```javascript
- * // Editor example: accessing the pc.Application from a script
- * var MyScript = pc.createScript('myScript');
- *
- * MyScript.prototype.initialize = function() {
- *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     var app = this.app;
- * };
- *
- * MyScript.prototype.update = function(dt) {
- *     // ...and update functions.
- *     var app = this.app;
- * };
- * ```
- *
- * If you are using the Engine without the Editor, you have to create the application instance
- * manually.
+ * An ApplicationLite is a version of the application without many systems imported and initialized,
+ * and this needs to be done manually by the developed after the instance of the ApplicationLite has
+ * been created.
  *
  * @augments EventHandler
  */
 class ApplicationLite extends EventHandler {
     /**
-     * Create a new Application instance.
+     * Create a new ApplicationLite instance.
      *
      * @param {Element} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
@@ -183,7 +164,7 @@ class ApplicationLite extends EventHandler {
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
-     * var app = new pc.Application(canvas, options);
+     * var app = new pc.ApplicationLite(canvas, options);
      *
      * // Start the application's main loop
      * app.start();
