@@ -19,6 +19,11 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
+/** @typedef {import('../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../math/color.js').Color} Color */
+/** @typedef {import('../../math/vec2.js').Vec2} Vec2 */
+/** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
+
 // properties that get created on a standard material
 const _props = {};
 
@@ -32,10 +37,10 @@ let _params = new Set();
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
  * @callback updateShaderCallback
- * @param {object} options - An object with shader generator settings (based on current material
- * and scene properties), that you can change and then return. Properties of the object passed into
+ * @param {*} options - An object with shader generator settings (based on current material and
+ * scene properties), that you can change and then return. Properties of the object passed into
  * this function are documented in {@link StandardMaterial#onUpdateShader}.
- * @returns {object} Returned settings will be used by the shader.
+ * @returns {*} Returned settings will be used by the shader.
  */
 
 /**
@@ -448,7 +453,6 @@ class StandardMaterial extends Material {
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * Create a new StandardMaterial instance.
      *
@@ -492,6 +496,7 @@ class StandardMaterial extends Material {
         this.reset();
     }
 
+    /* eslint-disable jsdoc/check-types */
     reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
