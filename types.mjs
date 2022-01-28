@@ -22,6 +22,7 @@ let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
 
+// Generate TS declarations for getter/setter pairs
 const getDeclarations = (properties) => {
     let declarations = '';
 
@@ -67,10 +68,9 @@ dts = dts.replace('constructor(system: ButtonComponentSystem, entity: Entity);',
 fs.writeFileSync(path, dts);
 
 const cameraComponentProps = [
-    ['aspectRatio', 'number'],
     ['aspectRatioMode', 'number'],
     ['calculateProjection', 'calculateMatrixCallback'],
-    ['calculateTransform', 'calculateTransformCallback'],
+    ['calculateTransform', 'calculateMatrixCallback'],
     ['clearColor', 'Color'],
     ['cullFaces', 'boolean'],
     ['farClip', 'number'],
@@ -174,6 +174,13 @@ const lightComponentProps = [
 path = './types/framework/components/light/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('entity: Entity);', 'entity: Entity);\n' + getDeclarations(lightComponentProps));
+fs.writeFileSync(path, dts);
+
+// TypeScript compiler is defining enabled in ParticleSystemComponent because it doesn't
+// know about the declaration in the Component base class, so remove it.
+path = './types/framework/components/particle-system/component.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace('enabled: any;', '');
 fs.writeFileSync(path, dts);
 
 const standarMaterialProps = [

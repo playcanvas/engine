@@ -16,6 +16,8 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../math/color.js').Color} Color */
+/** @typedef {import('../../../math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').LightComponentSystem} LightComponentSystem */
 
