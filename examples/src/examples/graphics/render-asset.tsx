@@ -35,7 +35,7 @@ class RenderAssetExample {
         app.root.addChild(cubeEntities[0]);
 
         // clone another copy of it and add it to scene
-        cubeEntities[1] = cubeEntities[0].clone();
+        cubeEntities[1] = cubeEntities[0].clone() as pc.Entity;
         cubeEntities[1].setLocalPosition(-7, 12, 0);
         cubeEntities[1].setLocalScale(3, 3, 3);
         app.root.addChild(cubeEntities[1]);

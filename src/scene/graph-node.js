@@ -405,7 +405,6 @@ class GraphNode extends EventHandler {
      * Clone a graph node.
      *
      * @returns {GraphNode} A clone of the specified graph node.
-     * @ignore
      */
     clone() {
         const clone = new GraphNode();
