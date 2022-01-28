@@ -216,11 +216,11 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @callback scriptTypeCallback
+     * @callback scriptTypeInitializeCallback
      */
 
     /**
-     * @callback scriptTypeDeltaTimeCallback
+     * @callback scriptTypeUpdateCallback
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
@@ -232,14 +232,14 @@ class ScriptType extends EventHandler {
     /**
      * Called when script is about to run for the first time.
      *
-     * @type {scriptTypeCallback}
+     * @type {scriptTypeInitializeCallback}
      */
     initialize;
 
     /**
      * Called after all initialize methods are executed in the same tick or enabling chain of actions.
      *
-     * @type {scriptTypeCallback}
+     * @type {scriptTypeInitializeCallback}
      */
     postInitialize;
 
@@ -247,7 +247,7 @@ class ScriptType extends EventHandler {
      * Called for enabled (running state) scripts on each tick. It is passed the delta time in
      * seconds since the last frame.
      *
-     * @type {scriptTypeDeltaTimeCallback}
+     * @type {scriptTypeUpdateCallback}
      */
     update;
 
@@ -255,7 +255,7 @@ class ScriptType extends EventHandler {
      * Called for enabled (running state) scripts on each tick, after update. It is passed the
      * delta time in seconds since the last frame.
      *
-     * @type {scriptTypeDeltaTimeCallback}
+     * @type {scriptTypeUpdateCallback}
      */
     postUpdate;
 
