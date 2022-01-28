@@ -348,6 +348,9 @@ class DeviceCache {
 
     get(device, key, missFunc) {
         return this.cache.get(device, () => {
+            device.on('destroy', () => {
+                this.cache.delete(device);
+            });
             return new SimpleCache();
         }).get(key, () => {
             return missFunc();
