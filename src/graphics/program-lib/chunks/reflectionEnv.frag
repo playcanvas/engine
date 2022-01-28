@@ -28,12 +28,13 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     float level = saturate(1.0 - tGlossiness) * 5.0;
     float ilevel = floor(level);
 
+    // accessing the shiny (top level) reflection - perform manual mipmap lookup
+    float level2 = shinyMipLevel(uv * atlasSize);
+    float ilevel2 = floor(level2);
+
     vec2 uv0, uv1;
     float weight;
     if (ilevel == 0.0) {
-        // accessing the shiny (top level) reflection - perform manual mipmap lookup
-        float level2 = shinyMipLevel(uv * atlasSize);
-        float ilevel2 = floor(level2);
         uv0 = mapMip(uv, ilevel2);
         uv1 = mapMip(uv, ilevel2 + 1.0);
         weight = level2 - ilevel2;
