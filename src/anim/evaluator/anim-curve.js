@@ -24,7 +24,7 @@ class AnimCurve {
     }
 
     /**
-     * Returns a list of paths which identify targets of this curve.
+     * The list of paths which identify targets of this curve.
      *
      * @type {string[]}
      */
@@ -33,7 +33,7 @@ class AnimCurve {
     }
 
     /**
-     * Returns the index of the AnimTrack input which contains the key data for this curve.
+     * The index of the AnimTrack input which contains the key data for this curve.
      *
      * @type {number}
      */
@@ -42,7 +42,7 @@ class AnimCurve {
     }
 
     /**
-     * Returns the index of the AnimTrack input which contains the key data for this curve.
+     * The index of the AnimTrack input which contains the key data for this curve.
      *
      * @type {number}
      */
