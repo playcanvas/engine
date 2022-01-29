@@ -29,8 +29,10 @@ export default {
         resolve(),
         typescript(),
         replace({
-            defaultAssignMent: true,
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+            values: {
+                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+            },
+            preventAssignment: true
         }),
         (process.env.NODE_ENV === 'production' && terser())
     ]

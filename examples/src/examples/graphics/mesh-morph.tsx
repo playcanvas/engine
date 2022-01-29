@@ -49,7 +49,6 @@ class MeshMorphExample {
                 dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz);
 
                 // modify distance to displacement amount - displace nearby points more than distant points
-                displacement = pc.math.clamp(dist, 0, limit);
                 displacement = pc.math.smoothstep(0, limit, dist);
                 displacement = 1 - displacement;
 

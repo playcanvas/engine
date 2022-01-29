@@ -153,12 +153,6 @@ class LinesExample {
                     30 + 20 * Math.cos(time * 0.2 + offset)
                 );
 
-                // half of them uses depth testing, the others do not, and so lines show through the mesh
-                const depthTest = i < 0.5 * numMeshes;
-
-                // half of them are rendered in immediate layer, the other half in world layer
-                const layer = i < 0.5 * numMeshes ? immediateLayer : worldLayer;
-
                 // rotate the meshes
                 entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
 

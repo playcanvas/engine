@@ -98,7 +98,6 @@ class HierarchyExample {
 
         // update each frame
         let time = 0;
-        const switchTime = 0;
         app.on("update", function (dt) {
             time += dt;
 

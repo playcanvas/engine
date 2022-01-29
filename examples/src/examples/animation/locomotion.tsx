@@ -12,7 +12,6 @@ import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
 import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
-import { wasmSupported, loadWasmModuleAsync } from '../../wasm-loader';
 
 class LocomotionExample {
     static CATEGORY = 'Animation';
