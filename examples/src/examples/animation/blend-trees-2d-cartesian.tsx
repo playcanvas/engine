@@ -2,9 +2,6 @@ import React, { useEffect } from 'react';
 import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
 
-// @ts-ignore: library file import
-import { Observer } from '@playcanvas/observer';
-
 class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
