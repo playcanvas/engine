@@ -19,6 +19,7 @@ const DEFAULT_TEXTURE_SIZE = 512;
  * Represents the resource of a canvas font asset.
  *
  * @augments EventHandler
+ * @ignore
  */
 class CanvasFont extends EventHandler {
     /**

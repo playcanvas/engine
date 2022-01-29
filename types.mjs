@@ -97,7 +97,7 @@ const elementComponentProps = [
     ['autoWidth', 'boolean'],
     ['color', 'Color'],
     ['enableMarkup', 'boolean'],
-    ['font', 'Font'],
+    ['font', 'Font|CanvasFont'],
     ['fontAsset', 'number'],
     ['fontSize', 'number'],
     ['key', 'string'],
