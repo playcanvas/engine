@@ -106,7 +106,7 @@ const matD = new Mat4();
  * the textHeight. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
- * @property {Font} font The font used for rendering the text. Only works for
+ * @property {Font|CanvasFont} font The font used for rendering the text. Only works for
  * {@link ELEMENTTYPE_TEXT} types.
  * @property {number} fontSize The size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoFitWidth When true the font size and line height will scale so that the
