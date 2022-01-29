@@ -85,10 +85,6 @@ class LinesExample {
             color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
         }
 
-        // access to two layers used to render lines
-        const worldLayer = app.scene.layers.getLayerByName("World");
-        const immediateLayer = app.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
-
         // Set an update function on the app's update event
         let time = 0;
         app.on("update", function (dt) {
