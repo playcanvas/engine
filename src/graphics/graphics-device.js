@@ -1466,10 +1466,9 @@ class GraphicsDevice extends EventHandler {
      */
     getCopyShader() {
         if (!this._copyShader) {
-            this._copyShader = createShaderFromCode(this,
-                                                    shaderChunks.fullscreenQuadVS,
-                                                    shaderChunks.outputTex2DPS,
-                                                    "outputTex2D");
+            const vs = shaderChunks.fullscreenQuadVS;
+            const fs = shaderChunks.outputTex2DPS;
+            this._copyShader = createShaderFromCode(this, vs, fs, "outputTex2D");
         }
         return this._copyShader;
     }
@@ -2597,11 +2596,30 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Reads a block of pixels from a specified rectangle of the current color framebuffer into an
+     * ArrayBufferView object.
+     *
+     * @param {number} x - The x-coordinate of the rectangle's lower-left corner.
+     * @param {number} y - The y-coordinate of the rectangle's lower-left corner.
+     * @param {number} w - The width of the rectangle, in pixels.
+     * @param {number} h - The height of the rectangle, in pixels.
+     * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
+     * data.
+     * @ignore
+     */
     readPixels(x, y, w, h, pixels) {
         const gl = this.gl;
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     }
 
+    /**
+     * Set the depth value used when the depth buffer is cleared.
+     *
+     * @param {number} depth - The depth value to clear the depth buffer to in the range 0.0
+     * to 1.0.
+     * @ignore
+     */
     setClearDepth(depth) {
         if (depth !== this.clearDepth) {
             this.gl.clearDepth(depth);
@@ -2609,6 +2627,15 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Set the clear color used when the frame buffer is cleared.
+     *
+     * @param {number} r - The red component of the color in the range 0.0 to 1.0.
+     * @param {number} g - The green component of the color in the range 0.0 to 1.0.
+     * @param {number} b - The blue component of the color in the range 0.0 to 1.0.
+     * @param {number} a - The alpha component of the color in the range 0.0 to 1.0.
+     * @ignore
+     */
     setClearColor(r, g, b, a) {
         if ((r !== this.clearRed) || (g !== this.clearGreen) || (b !== this.clearBlue) || (a !== this.clearAlpha)) {
             this.gl.clearColor(r, g, b, a);
@@ -2619,6 +2646,11 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Set the stencil clear value used when the stencil buffer is cleared.
+     *
+     * @param {number} value - The stencil value to clear the stencil buffer to.
+     */
     setClearStencil(value) {
         if (value !== this.clearStencil) {
             this.gl.clearStencil(value);
@@ -2804,8 +2836,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Enables or disables rasterization. Useful with transform feedback, when you only need to
-     * process the data without drawing.
+     * Toggles the rasterization render state. Useful with transform feedback, when you only need
+     * to process the data without drawing.
      *
      * @param {boolean} on - True to enable rasterization and false to disable it.
      * @ignore
@@ -2824,6 +2856,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Toggles the polygon offset render state.
+     *
+     * @param {boolean} on - True to enable polygon offset and false to disable it.
+     * @ignore
+     */
     setDepthBias(on) {
         if (this.depthBiasEnabled === on) return;
 
@@ -2836,6 +2874,15 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Specifies the scale factor and units to calculate depth values. The offset is added before
+     * the depth test is performed and before the value is written into the depth buffer.
+     *
+     * @param {number} constBias - The multiplier by which an implementation-specific value is
+     * multiplied with to create a constant depth offset.
+     * @param {number} slopeBias - The scale factor for the variable depth offset for each polygon.
+     * @ignore
+     */
     setDepthBiasValues(constBias, slopeBias) {
         this.gl.polygonOffset(slopeBias, constBias);
     }
@@ -3217,6 +3264,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Gets the current cull mode.
+     *
+     * @returns {number} The current cull mode.
+     * @ignore
+     */
     getCullMode() {
         return this.cullMode;
     }
@@ -3247,6 +3300,15 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Compiles an individual shader.
+     *
+     * @param {string} src - The shader source code.
+     * @param {boolean} isVertexShader - True if the shader is a vertex shader, false if it is a
+     * fragment shader.
+     * @returns {WebGLShader} The compiled shader.
+     * @ignore
+     */
     compileShaderSource(src, isVertexShader) {
         const gl = this.gl;
 
@@ -3291,8 +3353,13 @@ class GraphicsDevice extends EventHandler {
         return glShader;
     }
 
+    /**
+     * Compile and link a shader program.
+     *
+     * @param {Shader} shader - The shader to compile.
+     * @ignore
+     */
     compileAndLinkShader(shader) {
-
         const definition = shader.definition;
         Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
@@ -3346,12 +3413,24 @@ class GraphicsDevice extends EventHandler {
         // #endif
     }
 
+    /**
+     * Compile and link a shader program and add it to a shader array managed by this device.
+     *
+     * @param {Shader} shader - The shader to compile and link.
+     * @ignore
+     */
     createShader(shader) {
         this.compileAndLinkShader(shader);
 
         this.shaders.push(shader);
     }
 
+    /**
+     * Free the WebGL resources associated with a shader.
+     *
+     * @param {Shader} shader - The shader to free.
+     * @ignore
+     */
     destroyShader(shader) {
         const idx = this.shaders.indexOf(shader);
         if (idx !== -1) {
@@ -3365,24 +3444,17 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    _isShaderCompiled(shader, glShader, source, shaderType) {
-        const gl = this.gl;
-
-        if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
-            const infoLog = gl.getShaderInfoLog(glShader);
-            const [code, error] = this._processError(source, infoLog);
-            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
-            // #if _DEBUG
-            error.shader = shader;
-            console.error(message, error);
-            // #else
-            console.error(message);
-            // #endif
-            return false;
-        }
-        return true;
-    }
-
+    /**
+     * Truncate the WebGL shader compilation log to just include the error line plus the 5 lines
+     * before and after it.
+     *
+     * @param {string} src - The shader source code.
+     * @param {string} infoLog - The info log returned from WebGL on a failed shader compilation.
+     * @returns {Array} An array where the first element is the 10 lines of code around the first
+     * detected error, and the second element an object storing the error messsage, line number and
+     * complete shader source.
+     * @private
+     */
     _processError(src, infoLog) {
         if (!src)
             return "";
@@ -3415,6 +3487,41 @@ class GraphicsDevice extends EventHandler {
         return [code, error];
     }
 
+    /**
+     * Check the compilation status of a shader.
+     *
+     * @param {Shader} shader - The shader to query.
+     * @param {WebGLShader} glShader - The WebGL shader.
+     * @param {string} source - The shader source code.
+     * @param {string} shaderType - The shader type. Can be 'vertex' or 'fragment'.
+     * @returns {boolean} True if the shader compiled successfully, false otherwise.
+     * @private
+     */
+    _isShaderCompiled(shader, glShader, source, shaderType) {
+        const gl = this.gl;
+
+        if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
+            const infoLog = gl.getShaderInfoLog(glShader);
+            const [code, error] = this._processError(source, infoLog);
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
+            // #if _DEBUG
+            error.shader = shader;
+            console.error(message, error);
+            // #else
+            console.error(message);
+            // #endif
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Extract attribute and uniform information from a successfully linked shader.
+     *
+     * @param {Shader} shader - The shader to query.
+     * @returns {boolean} True if the shader was successfully queried and false otherwise.
+     * @ignore
+     */
     postLink(shader) {
         const gl = this.gl;
 
@@ -3529,8 +3636,15 @@ class GraphicsDevice extends EventHandler {
         return true;
     }
 
-    // NB for WebGL2: PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this: https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
-    // NB for WebGL1: Only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are test for being renderable
+    /**
+     * Get the supported HDR pixel format.
+     * Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
+     * https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+     * For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+     *
+     * @returns {number} The HDR pixel format.
+     * @ignore
+     */
     getHdrFormat() {
         if (this.textureHalfFloatRenderable) {
             return PIXELFORMAT_RGBA16F;
@@ -3567,7 +3681,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the width and height of the canvas, then fires the 'resizecanvas' event. Note that the
+     * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
      * specified width and height values will be multiplied by the value of
      * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for the
      * canvas.
@@ -3591,6 +3705,14 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
+     * value of {@link GraphicsDevice#maxPixelRatio} is ignored.
+     *
+     * @param {number} width - The new width of the canvas.
+     * @param {number} height - The new height of the canvas.
+     * @ignore
+     */
     setResolution(width, height) {
         this._width = width;
         this._height = height;
@@ -3624,7 +3746,6 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     clearVertexArrayObjectCache() {
-
         const gl = this.gl;
         this._vaoMap.forEach((item, key, mapObj) => {
             gl.deleteVertexArray(item);
@@ -3633,6 +3754,12 @@ class GraphicsDevice extends EventHandler {
         this._vaoMap.clear();
     }
 
+    /**
+     * Removes a shader from the cache.
+     *
+     * @param {Shader} shader - The shader to remove from the cache.
+     * @ignore
+     */
     removeShaderFromCache(shader) {
         this.programLib.removeFromCache(shader);
     }

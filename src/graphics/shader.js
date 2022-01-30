@@ -9,14 +9,15 @@
  * attributes specified in the vertex shader code.
  */
 class Shader {
+    /* eslint-disable jsdoc/check-types */
     /**
      * Creates a new Shader instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
-     * @param {object} definition.attributes - Object detailing the mapping of vertex shader
-     * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer
-     * data as inputs to the shader.
+     * @param {Object.<string, string>} definition.attributes - Object detailing the mapping of
+     * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
+     * vertex buffer data as inputs to the shader.
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
      * @param {string} definition.fshader - Fragment shader source (GLSL code).
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
@@ -55,6 +56,7 @@ class Shader {
 
         this.device.createShader(this);
     }
+    /* eslint-enable jsdoc/check-types */
 
     /**
      * Initialize a shader back to its default state.
