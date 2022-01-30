@@ -1541,6 +1541,13 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Allocate WebGL resources for a texture and add it to the array of textures managed by this
+     * device.
+     *
+     * @param {Texture} texture - The texture to allocate WebGL resources for.
+     * @ignore
+     */
     initializeTexture(texture) {
         const gl = this.gl;
         let ext;
@@ -1744,6 +1751,12 @@ class GraphicsDevice extends EventHandler {
         this.textures.push(texture);
     }
 
+    /**
+     * Free WebGL resources associated with a texture.
+     *
+     * @param {Texture} texture - The texture to free.
+     * @ignore
+     */
     destroyTexture(texture) {
         if (texture._glTexture) {
             // Remove texture from device's texture cache
@@ -1788,6 +1801,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Updates a texture's vertical flip.
+     *
+     * @param {boolean} flipY - True to flip the texture vertically.
+     * @ignore
+     */
     setUnpackFlipY(flipY) {
         if (this.unpackFlipY !== flipY) {
             this.unpackFlipY = flipY;
@@ -1799,6 +1818,13 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Updates a texture to have its RGB channels premultiplied by its alpha channel or not.
+     *
+     * @param {boolean} premultiplyAlpha - True to premultiply the alpha channel against the RGB
+     * channels.
+     * @ignore
+     */
     setUnpackPremultiplyAlpha(premultiplyAlpha) {
         if (this.unpackPremultiplyAlpha !== premultiplyAlpha) {
             this.unpackPremultiplyAlpha = premultiplyAlpha;
@@ -1810,6 +1836,14 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     *
+     * @param {*} texture - Texture source data.
+     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
+     * otherwise.
+     * @private
+     */
     _isBrowserInterface(texture) {
         return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
@@ -1817,6 +1851,12 @@ class GraphicsDevice extends EventHandler {
                (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
     }
 
+    /**
+     * Uploads a texture to the GPU.
+     *
+     * @param {Texture} texture - The texture to upload.
+     * @ignore
+     */
     uploadTexture(texture) {
         // #if _DEBUG
         if (!texture.device) {
@@ -2058,7 +2098,12 @@ class GraphicsDevice extends EventHandler {
         // #endif
     }
 
-    // Activate the specified texture unit
+    /**
+     * Activate the specified texture unit.
+     *
+     * @param {number} textureUnit - The texture unit to activate.
+     * @ignore
+     */
     activeTexture(textureUnit) {
         if (this.textureUnit !== textureUnit) {
             this.gl.activeTexture(this.gl.TEXTURE0 + textureUnit);
@@ -2066,8 +2111,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    // If the texture is not already bound on the currently active texture
-    // unit, bind it
+    /**
+     * If the texture is not already bound on the currently active texture unit, bind it.
+     *
+     * @param {Texture} texture - The texture to bind.
+     * @ignore
+     */
     bindTexture(texture) {
         const textureTarget = texture._glTarget;
         const textureObject = texture._glTexture;
@@ -2079,8 +2128,14 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
-    // If the texture is not bound on the specified texture unit, active the
-    // texture unit and bind the texture to it
+    /**
+     * If the texture is not bound on the specified texture unit, active the texture unit and bind
+     * the texture to it.
+     *
+     * @param {Texture} texture - The texture to bind.
+     * @param {number} textureUnit - The texture unit to activate and bind the texture to.
+     * @ignore
+     */
     bindTextureOnUnit(texture, textureUnit) {
         const textureTarget = texture._glTarget;
         const textureObject = texture._glTexture;
@@ -2092,6 +2147,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Update the texture parameters for a given texture if they have changed.
+     *
+     * @param {Texture} texture - The texture to update.
+     * @ignore
+     */
     setTextureParameters(texture) {
         const gl = this.gl;
         const flags = texture._parameterFlags;
@@ -2150,6 +2211,13 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Sets the specified texture on the specified texture unit.
+     *
+     * @param {Texture} texture - The texture to set.
+     * @param {number} textureUnit - The texture unit to set the texture on.
+     * @ignore
+     */
     setTexture(texture, textureUnit) {
 
         if (!texture._glTexture)
