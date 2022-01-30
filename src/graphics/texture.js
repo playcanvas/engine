@@ -906,8 +906,14 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
     }
 
+    /**
+     * Generate an in-memory DDS representation of this texture. Only works on RGBA8 textures.
+     * Currently, only used by the Editor to write prefiltered cubemaps to DDS format.
+     *
+     * @returns {ArrayBuffer} Buffer containing the DDS data.
+     * @ignore
+     */
     getDds() {
-
         Debug.assert(this.format === PIXELFORMAT_R8_G8_B8_A8, "This format is not implemented yet");
 
         let fsize = 128;
