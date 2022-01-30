@@ -63,8 +63,8 @@ function collectAttribs(vsCode) {
  * Create a shader from named shader chunks.
  *
  * @param {GraphicsDevice} device - The graphics device.
- * @param {string} vsName - The vertex shader code.
- * @param {string} psName - The fragment shader code.
+ * @param {string} vsName - The vertex shader chunk name.
+ * @param {string} psName - The fragment shader chunk name.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
  * @returns {Shader} The newly created shader.
  */
