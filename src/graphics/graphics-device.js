@@ -52,12 +52,12 @@ const EVENT_RESIZE = 'resizecanvas';
 
 /**
  * Checks that an image's width and height do not exceed the max texture size. If they do, it will
- * be scaled down to that maximum size.
+ * be scaled down to that maximum size and returned as a canvas element.
  *
  * @param {HTMLImageElement} image - The image to downsample.
  * @param {number} size - The maximum allowed size of the image.
- * @returns {HTMLImageElement} The downsampled image.
- * @returns 
+ * @returns {HTMLImageElement|HTMLCanvasElement} The downsampled image.
+ * @ignore
  */
 function downsampleImage(image, size) {
     const srcW = image.width;
