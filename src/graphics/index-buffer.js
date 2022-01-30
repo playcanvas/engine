@@ -101,7 +101,11 @@ class IndexBuffer {
         }
     }
 
-    // called when context was lost, function releases all context related resources
+    /**
+     * Called when the WebGL context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
         this.bufferId = undefined;
     }
@@ -174,9 +178,16 @@ class IndexBuffer {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
     }
 
+    /**
+     * Set preallocated data on the index buffer.
+     *
+     * @param {ArrayBuffer} data - The index data to set.
+     * @returns {boolean} True if the data was set successfully, false otherwise.
+     * @ignore
+     */
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            Debug.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+            Debug.error(`IndexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
             return false;
         }
 
@@ -185,6 +196,12 @@ class IndexBuffer {
         return true;
     }
 
+    /**
+     * Get the appropriate typed array from an index buffer.
+     *
+     * @returns {Uint8Array|Uint16Array|Uint32Array} The typed array containing the index data.
+     * @private
+     */
     _lockTypedArray() {
         const lock = this.lock();
         const indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
@@ -192,8 +209,14 @@ class IndexBuffer {
         return indices;
     }
 
-    // Copies count elements from data into index buffer.
-    // optimized for performance from both typed array as well as array
+    /**
+     * Copies the specified number of elements from data into index buffer. Optimized for
+     * performance from both typed array as well as array.
+     *
+     * @param {Uint8Array|Uint16Array|Uint32Array|number[]} data - The data to write.
+     * @param {number} count - The number of indices to write.
+     * @ignore
+     */
     writeData(data, count) {
         const indices = this._lockTypedArray();
 
@@ -217,7 +240,13 @@ class IndexBuffer {
         this.unlock();
     }
 
-    // copies index data from index buffer into provided data array
+    /**
+     * Copies index data from index buffer into provided data array.
+     *
+     * @param {Uint8Array|Uint16Array|Uint32Array|number[]} data - The data array to write to.
+     * @returns {number} The number of indices read.
+     * @ignore
+     */
     readData(data) {
         // note: there is no need to unlock this buffer, as we are only reading from it
         const indices = this._lockTypedArray();

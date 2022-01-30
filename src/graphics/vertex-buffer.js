@@ -74,7 +74,11 @@ class VertexBuffer {
         }
     }
 
-    // called when context was lost, function releases all context related resources
+    /**
+     * Called when the WebGL context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
         this.bufferId = undefined;
         this._vao = null;

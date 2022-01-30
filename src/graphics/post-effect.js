@@ -74,6 +74,13 @@ class PostEffect {
     }
 }
 
+/**
+ * Create a vertex buffer with 4 vertices representing a fullscreen quad.
+ *
+ * @param {GraphicsDevice} device - The graphics device.
+ * @returns {VertexBuffer} - The fullscreen quad vertex buffer.
+ * @ignore
+ */
 function createFullscreenQuad(device) {
     // Create the vertex format
     const vertexFormat = new VertexFormat(device, [

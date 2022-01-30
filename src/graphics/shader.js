@@ -56,6 +56,11 @@ class Shader {
         this.device.createShader(this);
     }
 
+    /**
+     * Initialize a shader back to its default state.
+     *
+     * @private
+     */
     init() {
         this.attributes = [];
         this.uniforms = [];
@@ -72,7 +77,11 @@ class Shader {
         this.device.destroyShader(this);
     }
 
-    // called when context was lost, function releases all context related resources
+    /**
+     * Called when the WebGL context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
         this.init();
     }
