@@ -266,7 +266,7 @@ class GraphicsDevice extends EventHandler {
      */
     precision;
 
-     /**
+    /**
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}
