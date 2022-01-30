@@ -51,7 +51,6 @@ class GrabPass {
      * Create the texture and render target used by the grab pass.
      */
     create() {
-
         if (!this.texture) {
 
             const texture = new Texture(this.device, {
@@ -125,7 +124,6 @@ class GrabPass {
             gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
-
         } else {
             if (resolveRenderTarget) {
                 renderTarget.resolve(true);
@@ -152,10 +150,9 @@ class GrabPass {
      * Generate mipmaps for the grab pass texture.
      */
     generateMipmaps() {
-
-        // TODO: implement support for webgl1, which requires the texture to be a power of two, by first downscaling
-        // the captured framebuffer texture to smaller power of 2 texture, and then generate mipmaps and use it
-        // for rendering
+        // TODO: implement support for WebGL 1, which requires the texture to be a power of two, by
+        // first downscaling the captured framebuffer texture to smaller power of 2 texture, and
+        // then generate mipmaps and use it for rendering
         if (this.useMipmaps) {
             this.device.gl.generateMipmap(this.texture._glTarget);
         }
@@ -167,7 +164,6 @@ class GrabPass {
      * @returns {boolean} - Whether the grab pass was successfully updated or not.
      */
     prepareTexture() {
-
         // capture the framebuffer
         const updated = this.update();
         if (updated) {

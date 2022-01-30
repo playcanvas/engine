@@ -50,6 +50,15 @@ import { GrabPass } from './grab-pass.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
+/**
+ * Checks that an image's width and height do not exceed the max texture size. If they do, it will
+ * be scaled down to that maximum size.
+ *
+ * @param {HTMLImageElement} image - The image to downsample.
+ * @param {number} size - The maximum allowed size of the image.
+ * @returns {HTMLImageElement} The downsampled image.
+ * @returns 
+ */
 function downsampleImage(image, size) {
     const srcW = image.width;
     const srcH = image.height;
@@ -1112,8 +1121,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Called when the WebGL context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
-
         // release shaders
         for (const shader of this.shaders) {
             shader.loseContext();
@@ -1142,8 +1155,12 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Called when the WebGL context is restored. It reinitializes all context related resources.
+     *
+     * @ignore
+     */
     restoreContext() {
-
         this.initializeExtensions();
         this.initializeCapabilities();
         this.initializeRenderState();
