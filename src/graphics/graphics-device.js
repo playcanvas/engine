@@ -300,6 +300,7 @@ class GraphicsDevice extends EventHandler {
      * being used.
      *
      * @type {boolean}
+     * @ignore
      */
     webgl2;
 
